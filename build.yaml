@@ -1,0 +1,15 @@
+targets:
+  $default:
+    builders:
+      drift_dev:
+        options:
+          # Store DateTime as ISO-8601 UTC text rather than unix seconds.
+          #
+          # The default returns local DateTime values, which silently breaks the
+          # clock rollback guard of §2.1.1: a timestamp written as 12:00 UTC
+          # comes back as 14:00 local, and comparing the two hands the player
+          # free hours. Text storage keeps everything in UTC end to end.
+          #
+          # This has to stay fixed for the lifetime of the schema — flipping it
+          # later is a data migration, not a setting.
+          store_date_time_values_as_text: true

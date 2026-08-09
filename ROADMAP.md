@@ -17,26 +17,32 @@ Dokument wykonawczy do [ARLS-ZA_design_doc_v2.md](ARLS-ZA_design_doc_v2.md). Des
 
 ---
 
-## Etap 0 — Fundament projektu
+## Etap 0 — Fundament projektu ✅ ZAMKNIĘTY
 
 **Cel:** repozytorium, z którego da się zbudować podpisany release, i baza, która przeżyje aktualizację aplikacji.
 
-| # | Zadanie | Odniesienie |
-| :---- | :---- | :---- |
-| 0.1 | Rebranding: `applicationId` i `namespace` → `com.raidodevelopment.arlsza`, `android:label` → `ARLS-ZA Game`, ścieżka `MainActivity.kt`, `name` w `pubspec.yaml` | — |
-| 0.2 | Release signing config (keystore poza repozytorium, `key.properties` w `.gitignore`) | — |
-| 0.3 | `git init`, konwencja commitów, CI: `flutter analyze` + `flutter test` | — |
-| 0.4 | Drift/SQLite: schemat v1, tryb WAL, transakcje, wersja schematu w bazie | §11.1.1–11.1.2 |
-| 0.5 | Podział stanu na warstwy: gorąca (60 s), ciepła (przy zmianie), zimna (przy zdarzeniu) | §11.1.1 |
-| 0.6 | Migawki rotacyjne: 3 sztuki, sumy kontrolne, weryfikacja bazy przy starcie, odtwarzanie z komunikatem | §11.1.3 |
-| 0.7 | Test migracji w CI: ścieżka v1→v2→v3 na wygenerowanych danych | §11.1.4 |
-| 0.8 | Eksport/import profilu do JSON | §11.3 |
-| 0.9 | Deterministyczny RNG z seedem zapisanym w profilu | §11 |
-| 0.10 | Silnik tickowy 1 Hz w izolacie, ticki idempotentne od `last_update`, catch-up po wznowieniu | §11, §2.1.1 |
-| 0.11 | Anti-cheat zegara: `last_update` jako licznik monotoniczny, cofnięcie czasu = tick 0 s | §2.1.1 |
-| 0.12 | Lokalizacja: `flutter_localizations` + ARB, PL i EN, klucze zamiast tekstów w plikach danych | §1.1 |
+| # | Zadanie | Odniesienie | Gdzie |
+| :---- | :---- | :---- | :---- |
+| 0.1 | Rebranding: `applicationId` i `namespace` → `com.raidodevelopment.arlsza`, `android:label` → `ARLS-ZA Game`, ścieżka `MainActivity.kt`, `name` w `pubspec.yaml` | — | `android/app/build.gradle.kts` |
+| 0.2 | Release signing config (keystore poza repozytorium, `key.properties` w `.gitignore`) | — | `android/app/build.gradle.kts` |
+| 0.3 | `git init`, konwencja commitów, CI: `flutter analyze` + `flutter test` | — | `.github/workflows/ci.yml` |
+| 0.4 | Drift/SQLite: schemat v1, tryb WAL, transakcje, wersja schematu w bazie | §11.1.1–11.1.2 | `lib/data/db/` |
+| 0.5 | Podział stanu na warstwy: gorąca (60 s), ciepła (przy zmianie), zimna (przy zdarzeniu) | §11.1.1 | `lib/data/persistence/save_writer.dart` |
+| 0.6 | Migawki rotacyjne: 3 sztuki, sumy kontrolne, weryfikacja bazy przy starcie, odtwarzanie z komunikatem | §11.1.3 | `lib/data/db/snapshot_store.dart` |
+| 0.7 | Test migracji w CI: ścieżka v1→v2→v3 na wygenerowanych danych | §11.1.4 | `test/db/schema_test.dart`, `drift_schemas/` |
+| 0.8 | Eksport/import profilu do JSON | §11.3 | `lib/data/persistence/profile_transfer.dart` |
+| 0.9 | Deterministyczny RNG z seedem zapisanym w profilu | §11 | `lib/core/deterministic_rng.dart` |
+| 0.10 | Silnik tickowy 1 Hz w izolacie, ticki idempotentne od `last_update`, catch-up po wznowieniu | §11, §2.1.1 | `lib/sim/` |
+| 0.11 | Anti-cheat zegara: `last_update` jako licznik monotoniczny, cofnięcie czasu = tick 0 s | §2.1.1 | `lib/core/game_clock.dart` |
+| 0.12 | Lokalizacja: `flutter_localizations` + ARB, PL i EN, klucze zamiast tekstów w plikach danych | §1.1 | `lib/l10n/` |
 
 **Kryterium wyjścia:** aplikacja z podpisanym buildem release, pusty tick 1 Hz działa w izolacie, przeżywa kill procesu i wraca z catch-upem bez dziury w symulacji, test migracji przechodzi w CI.
+
+**Stan:** spełnione. 84 testy, `flutter analyze --fatal-infos` czysty. Kryterium zapisane wykonywalnie w `test/db/save_bootstrap_test.dart` — sesja gubi niezapisane sekundy warstwy gorącej, wraca z catch-upem bez dziury, a powtórzenie tego samego catch-upu daje ten sam stan.
+
+⚠️ **Ustalenie wiążące dla całego schematu:** `DateTime` zapisywany jako tekst ISO-8601 UTC (`build.yaml`, `store_date_time_values_as_text`). Domyślny zapis drift oddaje czas lokalny, co cicho psuje anti-cheat z §2.1.1 — znacznik zapisany jako 12:00 UTC wraca jako 14:00 lokalnego i różnica jest darmowym czasem dla gracza. Zmiana tego ustawienia po wydaniu to migracja danych, nie przełącznik.
+
+⚠️ **Podpisywanie release:** bez `android/key.properties` build release używa kluczy debug i wypisuje ostrzeżenie. Potok wydawniczy przekazuje `-Prequire-signing=true`, co zamienia brak keystore w błąd budowania zamiast w artefakt, którego nie da się opublikować.
 
 ---
 

@@ -1,0 +1,126 @@
+{
+  "@@locale": "en",
+
+  "appTitle": "ARLS-ZA",
+  "@appTitle": {
+    "description": "Application name. Not translated — it is the brand."
+  },
+
+  "appTagline": "Almost Real Life Survival",
+  "@appTagline": {
+    "description": "Subtitle under the app name on the title screen."
+  },
+
+  "continueLabel": "Continue",
+  "@continueLabel": {
+    "description": "Resumes the active character."
+  },
+
+  "newCharacter": "New character",
+  "@newCharacter": {
+    "description": "Starts the character creator."
+  },
+
+  "settings": "Settings",
+
+  "saveRestoredTitle": "Save recovered",
+  "@saveRestoredTitle": {
+    "description": "Shown when a damaged database was replaced by a snapshot."
+  },
+
+  "saveRestoredBody": "The save file was damaged and has been restored from a backup. You lost {minutes} minutes of play.",
+  "@saveRestoredBody": {
+    "description": "Body of the recovery notice. States the cost plainly rather than hiding it.",
+    "placeholders": {
+      "minutes": {
+        "type": "int",
+        "example": "12"
+      }
+    }
+  },
+
+  "saveLostTitle": "Save could not be read",
+  "saveLostBody": "The save file is damaged and no usable backup was found. You can import a profile you exported earlier, or start a new character.",
+
+  "importProfile": "Import profile",
+  "exportProfile": "Export profile",
+
+  "exportDone": "Profile exported.",
+  "importDone": "Profile imported.",
+
+  "importFailed": "Import failed: {reason}",
+  "@importFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String",
+        "example": "checksum mismatch"
+      }
+    }
+  },
+
+  "awayTitle": "While you were away",
+  "@awayTitle": {
+    "description": "Header of the return-after-a-break summary (§16.3)."
+  },
+
+  "awayElapsed": "{days, plural, =0{Less than a day passed.} =1{One day passed.} other{{days} days passed.}}",
+  "@awayElapsed": {
+    "placeholders": {
+      "days": {
+        "type": "int",
+        "example": "3"
+      }
+    }
+  },
+
+  "awayFloored": "Your body was running on reserves. Nothing dropped below the safety floor.",
+  "@awayFloored": {
+    "description": "Explains the §2.1.1 offline floor so the player is not confused by resources stopping at 10%."
+  },
+
+  "clockRolledBack": "The device clock moved backwards. No time was counted.",
+  "@clockRolledBack": {
+    "description": "Shown once when the anti-cheat of §2.1.1 rejects a tick."
+  },
+
+  "bloodVolume": "Blood volume",
+  "dailyRequirement": "Daily requirement",
+  "carryComfort": "Carry weight, comfortable",
+  "carryMax": "Carry weight, maximum",
+  "maxHeartRate": "Maximum heart rate",
+
+  "unitMl": "{value} ml",
+  "@unitMl": {
+    "placeholders": {
+      "value": {
+        "type": "String",
+        "example": "5,290"
+      }
+    }
+  },
+
+  "unitKg": "{value} kg",
+  "@unitKg": {
+    "placeholders": {
+      "value": {
+        "type": "String",
+        "example": "24"
+      }
+    }
+  },
+
+  "unitBpm": "{value} bpm",
+  "@unitBpm": {
+    "placeholders": {
+      "value": {
+        "type": "String",
+        "example": "187"
+      }
+    }
+  },
+
+  "dataStaysOnDevice": "These figures are calculated on your phone and never leave it.",
+  "@dataStaysOnDevice": {
+    "description": "Privacy line shown next to the body parameters (§1.2, §15.4)."
+  }
+}

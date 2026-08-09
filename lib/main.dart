@@ -1,21 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:video_player/video_player.dart';
+
+import 'data/db/save_location.dart';
+import 'data/db/snapshot_store.dart';
+import 'data/persistence/save_bootstrap.dart';
+import 'l10n/app_localizations.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
-  runApp(const MainApp());
+  runApp(const ArlsZaApp());
 }
 
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+class ArlsZaApp extends StatelessWidget {
+  const ArlsZaApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: IntroScreen(),
+      onGenerateTitle: (context) => L10n.of(context).appTitle,
+      localizationsDelegates: const [
+        L10n.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: L10n.supportedLocales,
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFFA82D17),
+          brightness: Brightness.dark,
+        ),
+        scaffoldBackgroundColor: Colors.black,
+        useMaterial3: true,
+      ),
+      home: const IntroScreen(),
     );
   }
 }
@@ -30,11 +52,24 @@ class IntroScreen extends StatefulWidget {
 class _IntroScreenState extends State<IntroScreen> {
   late VideoPlayerController _controller;
 
+  /// The save layer boots while the intro plays, so opening the database,
+  /// verifying it and running any migration costs the player no extra wait.
+  late final Future<SaveSession> _session = _bootSave();
+
+  var _navigated = false;
+
+  Future<SaveSession> _bootSave() async {
+    final paths = await resolveSavePaths();
+    final bootstrap = SaveBootstrap(paths: paths);
+    return bootstrap.boot(now: DateTime.now().toUtc());
+  }
+
   @override
   void initState() {
     super.initState();
     _controller = VideoPlayerController.asset('assets/INTRO.mp4')
       ..initialize().then((_) {
+        if (!mounted) return;
         setState(() {});
         _controller.play();
         _controller.addListener(_onVideoEnd);
@@ -45,17 +80,24 @@ class _IntroScreenState extends State<IntroScreen> {
     if (_controller.value.isInitialized &&
         !_controller.value.isPlaying &&
         _controller.value.position >= _controller.value.duration) {
-      _navigateToHome();
+      _goToTitle();
     }
   }
 
-  void _navigateToHome() {
+  Future<void> _goToTitle() async {
+    if (_navigated || !mounted) return;
+    _navigated = true;
+
+    // Never leave the intro before the save layer has reported in — the player
+    // has to learn about a recovered or lost save (§11.1.3).
+    final session = await _session;
     if (!mounted) return;
-    Navigator.of(context).pushReplacement(
-      PageRouteBuilder(
+
+    await Navigator.of(context).pushReplacement(
+      PageRouteBuilder<void>(
         pageBuilder: (_, animation, _) => FadeTransition(
           opacity: animation,
-          child: const HomeScreen(),
+          child: TitleScreen(session: session),
         ),
         transitionDuration: const Duration(milliseconds: 600),
       ),
@@ -74,7 +116,7 @@ class _IntroScreenState extends State<IntroScreen> {
     return Scaffold(
       backgroundColor: Colors.black,
       body: GestureDetector(
-        onTap: _navigateToHome,
+        onTap: _goToTitle,
         child: SizedBox.expand(
           child: _controller.value.isInitialized
               ? FittedBox(
@@ -92,24 +134,80 @@ class _IntroScreenState extends State<IntroScreen> {
   }
 }
 
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+/// Placeholder title screen. The character creator and the map arrive in
+/// stages 2 and 3; what stage 0 owes is proof the save layer booted.
+class TitleScreen extends StatelessWidget {
+  const TitleScreen({required this.session, super.key});
+
+  final SaveSession session;
 
   @override
   Widget build(BuildContext context) {
+    final l10n = L10n.of(context);
+    final recovery = session.recovery;
+
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Image.asset('assets/icon.png', width: 120),
-            const SizedBox(height: 24),
-            const Text(
-              'Raido Development',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Image.asset('assets/icon.png', width: 120),
+                const SizedBox(height: 24),
+                Text(
+                  l10n.appTitle,
+                  style: Theme.of(context).textTheme.headlineMedium,
+                ),
+                Text(
+                  l10n.appTagline,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                const SizedBox(height: 32),
+                if (recovery.health == SaveHealth.restored)
+                  _Notice(
+                    title: l10n.saveRestoredTitle,
+                    body: l10n.saveRestoredBody(
+                      recovery.timeLost?.inMinutes ?? 0,
+                    ),
+                  ),
+                if (recovery.health == SaveHealth.lost)
+                  _Notice(title: l10n.saveLostTitle, body: l10n.saveLostBody),
+              ],
             ),
-          ],
+          ),
         ),
+      ),
+    );
+  }
+}
+
+class _Notice extends StatelessWidget {
+  const _Notice({required this.title, required this.body});
+
+  final String title;
+  final String body;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        border: Border(
+          left: BorderSide(
+            color: Theme.of(context).colorScheme.error,
+            width: 2,
+          ),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: Theme.of(context).textTheme.titleSmall),
+          const SizedBox(height: 4),
+          Text(body, style: Theme.of(context).textTheme.bodySmall),
+        ],
       ),
     );
   }

@@ -1,5 +1,23 @@
 # Procedura przygotowania aplikacji do publikacji w Google Play
 
+> ## Stan dla ARLS-ZA
+>
+> Kroki 1, 2 i 5 są **już wykonane** — pakiet to `com.raidodevelopment.arlsza`, nazwa w sklepie to `ARLS-ZA Game`, a konfiguracja podpisywania siedzi w `android/app/build.gradle.kts`. Poniższa procedura zostaje jako opis template'u i punkt odniesienia dla kolejnych aplikacji.
+>
+> **Co pozostaje do zrobienia przed pierwszym wydaniem ARLS-ZA:**
+>
+> 1. Wygenerować keystore (krok 4.1) i zapisać go **poza repozytorium**
+> 2. Utworzyć `android/key.properties` (krok 4.2) — plik jest już w `.gitignore`
+> 3. Budować z wymuszonym podpisem, żeby brak keystore był błędem, a nie cichym fallbackiem:
+>
+> ```bash
+> flutter build appbundle --release -Prequire-signing=true
+> ```
+>
+> Bez `key.properties` zwykły `flutter build --release` użyje kluczy debug i wypisze ostrzeżenie. Taki artefakt **nie nadaje się do publikacji** — flaga `-Prequire-signing=true` zamienia to ostrzeżenie w twardy błąd budowania.
+>
+> **Deklaracja Data Safety** (krok 3) dla ARLS-ZA: aplikacja nie zbiera żadnych danych zdrowotnych ani nie integruje się z Health Connect. Wzrost, waga, wiek i płeć są wpisywane w kreatorze postaci, przetwarzane wyłącznie lokalnie i nigdy nie opuszczają urządzenia. Kopia zapasowa Androida i przenoszenie na nowe urządzenie są wyłączone w manifeście (`allowBackup="false"`, `data_extraction_rules.xml`). Jedynym uprawnieniem wymagającym uzasadnienia jest lokalizacja w tle — patrz §16.1 dokumentu projektowego.
+
 Wykonaj poniższe kroki dla każdej nowej aplikacji tworzonej na bazie tego template'u.  
 Zamień `APPNAME` na faktyczną nazwę aplikacji (małe litery, bez spacji, np. `myapp`).
 

@@ -1,0 +1,43 @@
+{
+  "@@locale": "pl",
+
+  "appTitle": "ARLS-ZA",
+  "appTagline": "Almost Real Life Survival",
+
+  "continueLabel": "Kontynuuj",
+  "newCharacter": "Nowa postać",
+  "settings": "Ustawienia",
+
+  "saveRestoredTitle": "Zapis odzyskany",
+  "saveRestoredBody": "Plik zapisu był uszkodzony i został odtworzony z kopii. Straciłeś {minutes} minut gry.",
+
+  "saveLostTitle": "Nie udało się odczytać zapisu",
+  "saveLostBody": "Plik zapisu jest uszkodzony i nie znaleziono sprawnej kopii. Możesz wczytać wcześniej wyeksportowany profil albo zacząć nową postać.",
+
+  "importProfile": "Wczytaj profil",
+  "exportProfile": "Zapisz profil do pliku",
+
+  "exportDone": "Profil zapisany.",
+  "importDone": "Profil wczytany.",
+
+  "importFailed": "Wczytywanie nie powiodło się: {reason}",
+
+  "awayTitle": "Kiedy Cię nie było",
+  "awayElapsed": "{days, plural, =0{Minęło mniej niż doba.} =1{Minęła doba.} few{Minęły {days} dni.} many{Minęło {days} dni.} other{Minęło {days} dni.}}",
+
+  "awayFloored": "Organizm działał na rezerwach. Żaden zasób nie spadł poniżej progu bezpieczeństwa.",
+
+  "clockRolledBack": "Zegar urządzenia cofnął się. Czas nie został naliczony.",
+
+  "bloodVolume": "Objętość krwi",
+  "dailyRequirement": "Zapotrzebowanie dobowe",
+  "carryComfort": "Udźwig komfortowy",
+  "carryMax": "Udźwig maksymalny",
+  "maxHeartRate": "Tętno maksymalne",
+
+  "unitMl": "{value} ml",
+  "unitKg": "{value} kg",
+  "unitBpm": "{value} bpm",
+
+  "dataStaysOnDevice": "Te wartości są liczone na Twoim telefonie i nigdy go nie opuszczają."
+}

@@ -1,11 +1,27 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// Signing material lives outside the repository. See PROCEDURA_RELEASE.md.
+// android/key.properties is gitignored and holds: storeFile, storePassword, keyAlias, keyPassword.
+val keystorePropertiesFile = rootProject.file("key.properties")
+val keystoreProperties = Properties()
+val hasReleaseKeystore = keystorePropertiesFile.exists()
+if (hasReleaseKeystore) {
+    FileInputStream(keystorePropertiesFile).use { keystoreProperties.load(it) }
+}
+
+// Fail the build instead of falling back to debug keys. Set by the release pipeline:
+//   flutter build appbundle --release -Prequire-signing=true
+val requireSigning = (project.findProperty("require-signing") as String?)?.toBoolean() ?: false
+
 android {
-    namespace = "com.example.flutter_template"
+    namespace = "com.raidodevelopment.arlsza"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -15,21 +31,42 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.flutter_template"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
+        applicationId = "com.raidodevelopment.arlsza"
+        minSdk = 26          // vibration amplitude control (design doc §14.2)
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        create("release") {
+            if (hasReleaseKeystore) {
+                storeFile = keystoreProperties.getProperty("storeFile")?.let { file(it) }
+                storePassword = keystoreProperties.getProperty("storePassword")
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            if (hasReleaseKeystore) {
+                signingConfig = signingConfigs.getByName("release")
+            } else {
+                if (requireSigning) {
+                    throw GradleException(
+                        "Release signing requested but android/key.properties is missing. " +
+                            "See PROCEDURA_RELEASE.md."
+                    )
+                }
+                // Local release builds stay usable, but this artifact must never be published.
+                logger.warn(
+                    "WARNING: android/key.properties not found — signing the release build with " +
+                        "DEBUG keys. This artifact cannot be published to Google Play."
+                )
+                signingConfig = signingConfigs.getByName("debug")
+            }
         }
     }
 }
