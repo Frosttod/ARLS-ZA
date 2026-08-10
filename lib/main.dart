@@ -143,7 +143,7 @@ class _IntroScreenState extends State<IntroScreen> {
 
 /// Reference character from §15.4, until the creator arrives in stage 2.
 const _placeholderConstants = SimConstants(
-  bloodMaxMl: 5290,
+  bloodMaxMl: 5319,
   waterDailyMl: 2800,
   caloriesDailyKcal: 2450,
   restingHeartRate: 70,

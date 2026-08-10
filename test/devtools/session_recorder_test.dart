@@ -7,7 +7,7 @@ import 'package:test/test.dart';
 /// must land on the same state every time (§11.2).
 void main() {
   const constants = SimConstants(
-    bloodMaxMl: 5290,
+    bloodMaxMl: 5319,
     waterDailyMl: 2800,
     caloriesDailyKcal: 2450,
     restingHeartRate: 70,

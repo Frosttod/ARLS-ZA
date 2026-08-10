@@ -82,7 +82,7 @@ Mężczyzna: V = 0.3669 × h³ + 0.03219 × w + 0.6041
 
 Kobieta: V = 0.3561 × h³ + 0.03308 × w + 0.1833
 
-Przykład: mężczyzna 180 cm / 80 kg → 0.3669 × 5.832 + 0.03219 × 80 + 0.6041 ≈ **5.29 l (5290 ml)**
+Przykład: mężczyzna 180 cm / 80 kg → 0.3669 × 5.832 + 0.03219 × 80 + 0.6041 = **5.319 l (5319 ml)**
 
 **Podstawowa przemiana materii — Mifflin–St Jeor** (h w cm, w w kg, a = wiek):
 
@@ -1896,7 +1896,7 @@ Kreator z §1.2 uzupełniony o jedno zdanie wyjaśniające przy polach fizjologi
 
 Na koniec — ekran podsumowania parametrów wyliczonych, który jest jednocześnie pierwszym dowodem, że gra liczy naprawdę:
 
-> Twoja objętość krwi: **5290 ml** Zapotrzebowanie dzienne: **2450 kcal / 2800 ml wody** Udźwig komfortowy: **24 kg** · maksymalny: **36 kg** Tętno maksymalne: **187 bpm**
+> Twoja objętość krwi: **5319 ml** Zapotrzebowanie dzienne: **2450 kcal / 2800 ml wody** Udźwig komfortowy: **24 kg** · maksymalny: **36 kg** Tętno maksymalne: **187 bpm**
 
 ⚠️ **Wybór trybu (Hardcore / Softcore) na osobnym ekranie**, z wyraźnym ostrzeżeniem o nieodwracalności. Domyślnie zaznaczony **Softcore**. Hardcore wymaga dodatkowego potwierdzenia.
 

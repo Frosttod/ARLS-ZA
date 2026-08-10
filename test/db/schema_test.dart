@@ -181,7 +181,7 @@ Future<int> _insertProfile(SaveDatabase db, {String name = 'Ocalały'}) =>
       vitals: (id) => VitalsCompanion.insert(
         profileId: Value(id),
         lastUpdate: DateTime.utc(2026, 8, 9),
-        bloodMl: 5290,
+        bloodMl: 5319,
         waterMl: 2800,
         caloriesKcal: 2450,
         heartRateBpm: 70,

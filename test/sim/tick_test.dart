@@ -3,7 +3,7 @@ import 'package:test/test.dart';
 
 /// The character sheet from §15.4: male, 30, 180 cm, 80 kg.
 const constants = SimConstants(
-  bloodMaxMl: 5290,
+  bloodMaxMl: 5319,
   waterDailyMl: 2800,
   caloriesDailyKcal: 2450,
   restingHeartRate: 70,

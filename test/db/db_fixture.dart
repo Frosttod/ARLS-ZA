@@ -8,7 +8,7 @@ import 'package:drift/drift.dart';
 /// The character sheet the design document uses as its worked example (§15.4):
 /// male, 30 years, 180 cm, 80 kg.
 const referenceConstants = SimConstants(
-  bloodMaxMl: 5290,
+  bloodMaxMl: 5319,
   waterDailyMl: 2800,
   caloriesDailyKcal: 2450,
   restingHeartRate: 70,
@@ -50,7 +50,7 @@ Future<int> insertProfile(
 VitalsCompanion vitalsFor(
   int profileId, {
   required DateTime lastUpdate,
-  double bloodMl = 5290,
+  double bloodMl = 5319,
   double waterMl = 2800,
   double caloriesKcal = 2450,
   double heartRateBpm = 70,
