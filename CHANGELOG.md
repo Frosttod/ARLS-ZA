@@ -4,6 +4,56 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Stage 1 — Developer mode
+
+Nothing player-facing. This stage exists so the metabolic model can be balanced
+without walking several kilometres for every build (design doc §11.2).
+
+#### Added
+
+- **Position abstraction** (`lib/location/`) — `PositionSource` is the single
+  entry point for coordinates. The real GPS (stage 3) and the simulator both
+  implement it, so nothing downstream can tell them apart. The dropout watchdog
+  of §3.2 lives in the shared base class rather than being written twice.
+- **GPS simulator** — walks a GPX track at a chosen ground speed, or is steered
+  by hand, or teleports to a coordinate. Speed presets match the MET bands of
+  §2.2. A minimal GPX reader is included; routes loop, so a simulated walk can
+  run indefinitely.
+- **GPS error model** — accuracy drawn from a quality band (open sky, urban,
+  street canyon, indoors) and the position scattered uniformly inside that
+  circle. A stationary character still drifts, which is what makes the dead-zone
+  filter of §3.2 testable. The canyon preset deliberately breaches the 25 m
+  accuracy gate; the indoor preset stops fixes entirely.
+- **Time acceleration** (`ScaledWallClock`) — ×1, ×60, ×3600, plus forward-only
+  skips. It multiplies elapsed time underneath `GameClock`, so the tick engine
+  receives an ordinary `Duration` and never learns time was scaled. Switching
+  scale re-anchors rather than recomputing, so virtual time never jumps
+  backwards into the rollback guard of §2.1.1.
+- **Session recording and replay** — a seed plus an event stream, stored as
+  JSON Lines. Replays are deterministic and go through the same `advance()` the
+  game uses. Events carry simulation time, so a recording made at ×3600 replays
+  identically at ×1. A truncated last line costs one event, not the file.
+- **Developer console and overlay** — time controls, movement and signal
+  controls, coordinate jump, physiology overrides and one-tap fixtures. Every
+  override is recorded, because a balance figure taken from a session where
+  someone quietly refilled the blood is worthless.
+- **Release stripping** (`tool/check_release_strip.dart`) — developer mode is
+  gated on a `const bool`, which lets the AOT compiler remove the branch and
+  everything only it reaches. The tool searches the built artifact for a marker
+  reachable only from devtools code. CI runs it twice: once on a normal release
+  (must pass) and once on a build with devtools forced on (must fail), so a
+  check that stopped finding anything cannot masquerade as a pass.
+- 54 further tests, 138 in total.
+
+#### Known gaps
+
+- The diagnostic overlay does not yet break down `MOA_total`, hit chance, noise
+  radius or enemy state machines (§11.2). Those systems arrive in stage 5; the
+  gap is stated in the panel itself rather than left implicit.
+- The §3.2 filters — Kalman, the 25 m accuracy gate, the 8 m/10 s dead zone —
+  belong to stage 3. The simulator already produces the data that will exercise
+  them.
+
 ### Stage 0 — Foundation
 
 Persistence, simulation clock and build configuration. No gameplay yet: the

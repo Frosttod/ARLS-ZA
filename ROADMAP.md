@@ -9,8 +9,8 @@ Każdy zamknięty etap dostaje sekcję **Dziennik wykonania** z decyzjami podję
 | Etap | Zakres | Status | Zamknięty | Commit |
 | :---- | :---- | :---- | :---- | :---- |
 | 0 | Fundament: trwałość zapisu, zegar, konfiguracja buildu | ✅ zamknięty | 2026-08-10 | `ad55d40` |
-| 1 | Tryb deweloperski i symulator GPS | ⬜ następny | — | — |
-| 2 | Postać i fizjologia | ⬜ | — | — |
+| 1 | Tryb deweloperski i symulator GPS | ✅ zamknięty | 2026-08-10 | `HEAD` |
+| 2 | Postać i fizjologia | ⬜ następny | — | — |
 | 3 | Mapa, GPS, bezpieczeństwo gracza | ⬜ | — | — |
 | 4 | Przedmioty, loot, przeszukanie | ⬜ | — | — |
 | 5 | Walka, przeciwnicy, hałas | ⬜ | — | — |
@@ -19,7 +19,7 @@ Każdy zamknięty etap dostaje sekcję **Dziennik wykonania** z decyzjami podję
 | 8 | Schron, obóz, pętla dobowa | ⬜ | — | — |
 | 9 | Onboarding, dostępność, zgodność | ⬜ | — | — |
 
-**Metryki:** 84 testy · `flutter analyze --fatal-infos` czysty · schemat bazy v1
+**Metryki:** 138 testów · `flutter analyze --fatal-infos` czysty · schemat bazy v1 · release APK 55,1 MB bez devtools
 
 ### Zablokowane na użytkowniku
 
@@ -100,22 +100,63 @@ To jest zamierzone — bez postaci nie ma czego tickować. Spięcie należy do e
 
 ---
 
-## Etap 1 — Tryb deweloperski
+## Etap 1 — Tryb deweloperski ✅ ZAMKNIĘTY
 
 **Cel:** możliwość iterowania nad balansem bez wychodzenia z domu. Bez tego etapu każda kolejna zmiana wymaga kilometrów spaceru.
 
-| # | Zadanie | Odniesienie |
-| :---- | :---- | :---- |
-| 1.1 | Warstwa abstrakcji pozycji — jedno wejście dla prawdziwego GPS i symulatora | §11.2 |
-| 1.2 | Symulator GPS: odtwarzanie tras GPX z regulowaną prędkością, sterowanie strzałkami, skok do współrzędnych | §11.2 |
-| 1.3 | Symulacja błędu pozycji i utraty sygnału w symulatorze | §11.2, §3.2 |
-| 1.4 | Przyspieszenie czasu ×1 / ×60 / ×3600 | §11.2 |
-| 1.5 | Panel fizjologii: wymuszanie tętna, krwi, wody, kalorii, długu snu | §11.2 |
-| 1.6 | Nakładka diagnostyczna: `MOA_total` z rozbiciem, szansa trafienia, promień hałasu, stany przeciwników | §11.2 |
-| 1.7 | Powtórki: zapis sesji (seed + strumień zdarzeń) i deterministyczne odtworzenie | §11.2 |
-| 1.8 | Wycięcie całości z release'u flagą kompilacji | §11.2 |
+| # | Zadanie | Odniesienie | Gdzie |
+| :---- | :---- | :---- | :---- |
+| 1.1 | Warstwa abstrakcji pozycji — jedno wejście dla prawdziwego GPS i symulatora | §11.2 | `lib/location/` |
+| 1.2 | Symulator GPS: odtwarzanie tras GPX z regulowaną prędkością, sterowanie strzałkami, skok do współrzędnych | §11.2 | `lib/devtools/simulated_position_source.dart`, `gpx.dart` |
+| 1.3 | Symulacja błędu pozycji i utraty sygnału w symulatorze | §11.2, §3.2 | `SimSignalQuality` |
+| 1.4 | Przyspieszenie czasu ×1 / ×60 / ×3600 | §11.2 | `lib/core/scaled_wall_clock.dart` |
+| 1.5 | Panel fizjologii: wymuszanie tętna, krwi, wody, kalorii, długu snu | §11.2 | `lib/devtools/dev_console.dart` |
+| 1.6 | Nakładka diagnostyczna: `MOA_total` z rozbiciem, szansa trafienia, promień hałasu, stany przeciwników | §11.2 | `lib/devtools/dev_overlay.dart` — **częściowo, patrz niżej** |
+| 1.7 | Powtórki: zapis sesji (seed + strumień zdarzeń) i deterministyczne odtworzenie | §11.2 | `lib/devtools/session_recorder.dart` |
+| 1.8 | Wycięcie całości z release'u flagą kompilacji | §11.2 | `lib/devtools/dev_mode.dart`, `tool/check_release_strip.dart` |
 
 **Kryterium wyjścia:** doba gry przechodzi w 24 sekundy na trasie GPX, a build release nie zawiera ani jednej linii kodu deweloperskiego (zweryfikowane rozmiarem i analizą artefaktu).
+
+**Stan:** spełnione, zweryfikowane pomiarem.
+
+| Sprawdzenie | Wynik |
+| :---- | :---- |
+| Doba gry przy ×3600 | 24 s, test w `scaled_wall_clock_test.dart` |
+| Release APK | **55,1 MB**, marker nieobecny, `check_release_strip.dart` przechodzi |
+| Release z `--dart-define=arls.devtools=true` | **57,4 MB**, marker obecny, check zawodzi |
+| Różnica | **2,3 MB** wyciętego kodu |
+
+⚠️ **Zadanie 1.6 jest domknięte tylko częściowo, świadomie.** Nakładka pokazuje zegar, warstwę pozycji i fizjologię. Rozbicie `MOA_total`, szansa trafienia, promień hałasu i stany maszyny przeciwników **nie istnieją jeszcze jako systemy** — powstają na etapie 5. Brak jest wypisany wprost w panelu (sekcja „Brakuje — etap 5"), żeby nie zniknął z pola widzenia.
+
+### Dziennik wykonania — etap 1
+
+#### Decyzje podjęte w trakcie
+
+- **Bramka to `const bool`, nie flaga runtime'owa.** `const bool kDevTools` pozwala kompilatorowi AOT uznać `if (kDevTools) { ... }` za martwy kod i usunąć gałąź razem ze wszystkim, do czego tylko ona sięga. Zwykły `bool` zostawiłby cały drzewiec devtools w binarce.
+- **Domyślnie włączone poza release, przełączalne w obie strony** przez `--dart-define=arls.devtools=true|false`. Wymuszenie w release potrzebne do testu, że sam test nie jest pusty.
+- **Przyspieszenie czasu siedzi w zegarze, nie w silniku tickowym.** `ScaledWallClock` mnoży upływ czasu pod `GameClock`, więc `advance()` dostaje zwykły `Duration` i nigdy nie dowiaduje się o mnożniku. Dzięki temu przebieg przyspieszony jest porównywalny ze zwykłym, a funkcja pozostaje czysta.
+- **Zmiana skali re-kotwiczy zamiast przeliczać historię.** Przełączenie ×1 → ×3600 → ×1 nigdy nie cofa czasu wirtualnego, co inaczej wywołałoby fałszywy alarm anti-cheatu z §2.1.1. Osobny test tego pilnuje.
+- **`skipForward` działa wyłącznie do przodu.** Skok wstecz byłby najprostszym sposobem obejścia zabezpieczenia, które reszta kodu traktuje jako pewnik.
+- **Symulator rozprasza pozycję wewnątrz okręgu dokładności**, z `sqrt` na promieniu, żeby rozkład był równomierny po powierzchni. Bez tego dryf kupiłby się wokół prawdziwej pozycji, a filtr martwej strefy z §3.2 nie miałby czego filtrować.
+- **Prawdziwa pozycja nie jest nigdzie eksponowana poza panelem.** Gra widzi wyłącznie zaszumiony odczyt — dokładnie jak w terenie.
+- **Parser GPX napisany ręcznie**, bez pakietu XML. Zależność używana tylko przez devtools i tak siedziałaby w `pubspec.yaml` release'u.
+- **Powtórki w formacie JSON Lines**, dopisywanym liniami. Nagranie przeżywa crash, który miało zarejestrować: urwana ostatnia linia kosztuje jedno zdarzenie, nie plik.
+- **Zdarzenia niosą czas symulacji, nie zegarowy.** Dlatego zmiana skali czasu w trakcie nagrania nie wpływa na odtworzenie — mnożnik jest już wpieczony w znaczniki.
+
+#### Niespodzianki
+
+- 🔴 **Test wycinania był pusty i przechodził z błędnego powodu.** Marker był w stałej, do której nie sięgało żadne żywe wywołanie, więc kompilator wyrzucał go **także z buildu z włączonymi devtools** — check pokazywał „czysto" niezależnie od stanu bramki. Wykryte dopiero przez zbudowanie release'u z `--dart-define=arls.devtools=true` i sprawdzenie, czy check **zawodzi**. Naprawione przez wstawienie markera w faktycznie renderowany widget. **Wniosek: każdy test negatywny wymaga dowodu, że potrafi zawieść.** CI ma teraz osobny krok, który to sprawdza.
+- **`kReleaseMode` z `package:flutter/foundation.dart` wciągał `dart:ui`** do symulatora pozycji i nagrywarki, przez co nie ładowały się pod `dart test`. To ta sama pułapka co `path_provider` w etapie 0. Zastąpione bezpośrednim `bool.fromEnvironment('dart.vm.product')` — tym samym define, z którego korzysta sam Flutter.
+
+#### Punkt wejścia dla następnej sesji
+
+Symulator działa i emituje pozycje, ale **nic ich jeszcze nie konsumuje** — `TitleScreen` tylko je wyświetla w nakładce. Etap 2 musi spiąć trzy rzeczy, które teraz istnieją osobno:
+
+- `SimulatedPositionSource` → prędkość → MET → `TickEngine`
+- `TickEngine` → `SaveWriter.stageHot()` w rytmie 60 s
+- `DevConsole.takePendingOverride()` → wstrzyknięcie wymuszonych wartości do stanu symulacji
+
+⚠️ Filtry z §3.2 (Kalman, odrzucanie `accuracy > 25 m`, martwa strefa 8 m/10 s) **celowo nie powstały** — należą do etapu 3. Symulator już potrafi produkować dane, które ich wymagają: preset „wąwóz miejski" przebija próg 25 m, a dryf na postoju daje fałszywy ruch. To materiał testowy czekający na filtr.
 
 ---
 

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -6,7 +8,12 @@ import 'package:video_player/video_player.dart';
 import 'data/db/save_location.dart';
 import 'data/db/snapshot_store.dart';
 import 'data/persistence/save_bootstrap.dart';
+import 'devtools/dev_mode.dart';
+import 'devtools/dev_overlay.dart';
+import 'devtools/dev_session.dart';
 import 'l10n/app_localizations.dart';
+import 'location/position_fix.dart';
+import 'sim/tick.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -134,50 +141,114 @@ class _IntroScreenState extends State<IntroScreen> {
   }
 }
 
+/// Reference character from §15.4, until the creator arrives in stage 2.
+const _placeholderConstants = SimConstants(
+  bloodMaxMl: 5290,
+  waterDailyMl: 2800,
+  caloriesDailyKcal: 2450,
+  restingHeartRate: 70,
+  maxHeartRate: 187,
+);
+
 /// Placeholder title screen. The character creator and the map arrive in
-/// stages 2 and 3; what stage 0 owes is proof the save layer booted.
-class TitleScreen extends StatelessWidget {
+/// stages 2 and 3; what stages 0 and 1 owe is proof the save layer booted and
+/// that developer mode can drive the position source.
+class TitleScreen extends StatefulWidget {
   const TitleScreen({required this.session, super.key});
 
   final SaveSession session;
 
   @override
+  State<TitleScreen> createState() => _TitleScreenState();
+}
+
+class _TitleScreenState extends State<TitleScreen> {
+  /// Null in a release build — `DevSession.attach` short-circuits on the const
+  /// gate, so nothing here survives tree shaking (§11.2).
+  DevSession? _dev;
+
+  PositionFix? _fix;
+  PositionSignal _signal = PositionSignal.unavailable;
+
+  @override
+  void initState() {
+    super.initState();
+    if (kDevTools) {
+      final dev = DevSession.attach(constants: _placeholderConstants);
+      _dev = dev;
+      if (dev != null) {
+        dev.source.fixes.listen((fix) {
+          if (mounted) setState(() => _fix = fix);
+        });
+        dev.source.signal.listen((signal) {
+          if (mounted) setState(() => _signal = signal);
+        });
+        unawaited(dev.start());
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    unawaited(_dev?.dispose());
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = L10n.of(context);
-    final recovery = session.recovery;
+    final recovery = widget.session.recovery;
+    final dev = _dev;
 
     return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(32),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Image.asset('assets/icon.png', width: 120),
-                const SizedBox(height: 24),
-                Text(
-                  l10n.appTitle,
-                  style: Theme.of(context).textTheme.headlineMedium,
-                ),
-                Text(
-                  l10n.appTagline,
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                const SizedBox(height: 32),
-                if (recovery.health == SaveHealth.restored)
-                  _Notice(
-                    title: l10n.saveRestoredTitle,
-                    body: l10n.saveRestoredBody(
-                      recovery.timeLost?.inMinutes ?? 0,
+      body: Stack(
+        children: [
+          SafeArea(
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Image.asset('assets/icon.png', width: 120),
+                    const SizedBox(height: 24),
+                    Text(
+                      l10n.appTitle,
+                      style: Theme.of(context).textTheme.headlineMedium,
                     ),
-                  ),
-                if (recovery.health == SaveHealth.lost)
-                  _Notice(title: l10n.saveLostTitle, body: l10n.saveLostBody),
-              ],
+                    Text(
+                      l10n.appTagline,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    const SizedBox(height: 32),
+                    if (recovery.health == SaveHealth.restored)
+                      _Notice(
+                        title: l10n.saveRestoredTitle,
+                        body: l10n.saveRestoredBody(
+                          recovery.timeLost?.inMinutes ?? 0,
+                        ),
+                      ),
+                    if (recovery.health == SaveHealth.lost)
+                      _Notice(
+                        title: l10n.saveLostTitle,
+                        body: l10n.saveLostBody,
+                      ),
+                  ],
+                ),
+              ),
             ),
           ),
-        ),
+          if (dev != null)
+            DevOverlay(
+              console: dev.console,
+              snapshot: DevSnapshot(
+                state: null,
+                fix: _fix,
+                signal: _signal,
+                ticksApplied: 0,
+              ),
+            ),
+        ],
       ),
     );
   }
