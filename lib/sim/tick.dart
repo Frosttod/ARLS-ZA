@@ -1,4 +1,4 @@
-/// Simulation state and the tick function (design doc §11, §2.1).
+/// Simulation state and the tick function (design doc §2, §11).
 ///
 /// Two properties are load-bearing and are what the tests here defend:
 ///
@@ -10,14 +10,17 @@
 ///   an isolate and be replayed deterministically from a seed plus an event
 ///   stream (§11.2).
 ///
-/// Stage 0 ships the plumbing with a deliberately trivial physiology model —
-/// resting metabolism only. The real MET curves, sleep and bleeding arrive in
-/// stage 2; the shape of [SimState] and [advance] is what stage 0 has to get
-/// right.
+/// A third property falls out of the first two and matters just as much:
+/// **linearity in elapsed time**. Advancing two weeks in one step and second by
+/// second must land on the same numbers, because a catch-up after an absence
+/// does the former while a live session does the latter.
 library;
 
 import 'dart:convert';
 import 'dart:math' as math;
+
+import 'metabolism.dart';
+import 'physiology.dart';
 
 /// Metabolic zone the character is in (§2.1). Consumption scales by zone,
 /// which is what makes closing the app under a roof cheaper than in the open.
@@ -37,6 +40,13 @@ enum MetabolicZone {
   final double calorieFactor;
   final double waterFactor;
 
+  /// True for the two zones that count as being under a roof, where shelter
+  /// occupations may run and sleep is possible (§2.5.1).
+  bool get isSheltered =>
+      this == MetabolicZone.shelter ||
+      this == MetabolicZone.camp ||
+      this == MetabolicZone.sleep;
+
   static MetabolicZone fromWire(String value) => values.firstWhere(
     (z) => z.wire == value,
     orElse: () => MetabolicZone.open,
@@ -44,7 +54,7 @@ enum MetabolicZone {
 }
 
 /// Constants a tick needs that do not change during a session. Derived once
-/// from the character sheet (§1.3).
+/// from the character sheet (§1.3) by `BodyProfile.toSimConstants`.
 class SimConstants {
   const SimConstants({
     required this.bloodMaxMl,
@@ -52,6 +62,7 @@ class SimConstants {
     required this.caloriesDailyKcal,
     required this.restingHeartRate,
     required this.maxHeartRate,
+    this.bodyMassKg = 80,
   });
 
   final double bloodMaxMl;
@@ -59,6 +70,10 @@ class SimConstants {
   final double caloriesDailyKcal;
   final double restingHeartRate;
   final double maxHeartRate;
+
+  /// Needed by the MET formulas of §2.2 and by the dehydration thresholds,
+  /// which are expressed against body mass.
+  final double bodyMassKg;
 
   /// Floor enforced while the app is closed: offline consumption never drives
   /// a resource below 10% and never kills (§2.1.1).
@@ -70,6 +85,7 @@ class SimConstants {
     'caloriesDailyKcal': caloriesDailyKcal,
     'restingHeartRate': restingHeartRate,
     'maxHeartRate': maxHeartRate,
+    'bodyMassKg': bodyMassKg,
   };
 
   factory SimConstants.fromJson(Map<String, Object?> json) => SimConstants(
@@ -78,7 +94,47 @@ class SimConstants {
     caloriesDailyKcal: (json['caloriesDailyKcal'] as num).toDouble(),
     restingHeartRate: (json['restingHeartRate'] as num).toDouble(),
     maxHeartRate: (json['maxHeartRate'] as num).toDouble(),
+    bodyMassKg: (json['bodyMassKg'] as num?)?.toDouble() ?? 80,
   );
+}
+
+/// What the character is doing right now, as far as the tick is concerned.
+///
+/// Everything here comes from outside the simulation — GPS speed, carried
+/// load, the wound state — and is held constant across a single [advance].
+class TickInput {
+  const TickInput({
+    this.speedKmh = 0,
+    this.loadKg = 0,
+    this.ambientTempC = 15,
+    this.clothingClo = 0,
+    this.bleedTier = BleedTier.none,
+    this.sleeping = false,
+    this.offline = false,
+  });
+
+  /// Ground speed from the position layer. Already filtered — the dead zone of
+  /// §3.2 decides what counts as movement before it reaches here.
+  final double speedKmh;
+
+  final double loadKg;
+
+  /// Neutral default of 15 °C until the weather layer arrives (§17.3).
+  final double ambientTempC;
+
+  final double clothingClo;
+
+  final BleedTier bleedTier;
+
+  /// True while the character is asleep, which pays down the sleep debt
+  /// instead of accruing it (§2.5).
+  final bool sleeping;
+
+  /// True for a catch-up over time the app was closed. Turns on the §2.1.1
+  /// safety valve.
+  final bool offline;
+
+  static const resting = TickInput();
 }
 
 /// The mutable simulation state. Immutable value object; [advance] returns a
@@ -109,6 +165,8 @@ class SimState {
   /// Draw position of the world RNG stream, carried so a resumed session
   /// continues the sequence instead of restarting it (§11).
   final int rngCursor;
+
+  Duration get sleepDebt => Duration(seconds: sleepDebtSeconds);
 
   SimState copyWith({
     DateTime? lastUpdate,
@@ -152,6 +210,21 @@ class SimState {
     rngCursor: (json['rngCursor'] as num?)?.toInt() ?? 0,
   );
 
+  /// Starting state for a freshly created character.
+  factory SimState.fresh({
+    required DateTime at,
+    required SimConstants constants,
+  }) => SimState(
+    lastUpdate: at.toUtc(),
+    bloodMl: constants.bloodMaxMl,
+    waterMl: constants.waterDailyMl,
+    caloriesKcal: constants.caloriesDailyKcal,
+    heartRateBpm: constants.restingHeartRate,
+    sleepDebtSeconds: 0,
+    zone: MetabolicZone.open,
+    rngCursor: 0,
+  );
+
   /// Compares everything except [lastUpdate]. Used by the idempotency test:
   /// replaying a tick must land on the same numbers.
   bool sameValues(SimState other) =>
@@ -169,12 +242,66 @@ class SimState {
   String toString() => jsonEncode(toJson());
 }
 
+/// A read-only view of what the state means, for the HUD and the combat model.
+class SimStatus {
+  const SimStatus({
+    required this.blood,
+    required this.hunger,
+    required this.thirst,
+    required this.sleep,
+    required this.heartRate,
+  });
+
+  final BloodState blood;
+  final HungerState hunger;
+  final ThirstState thirst;
+  final SleepState sleep;
+  final HeartRatePenalty heartRate;
+
+  /// Everything that currently adds to `MOA_total` (§5.1.1).
+  double get totalExtraMoa =>
+      blood.extraMoa + sleep.extraMoa + heartRate.extraMoa;
+
+  /// Multiplier on how long an action takes (§2.3, §2.5.4).
+  double get actionTimeMultiplier =>
+      hunger.actionTimeMultiplier * sleep.actionTimeMultiplier;
+
+  bool get isIncapacitated =>
+      blood.isFatal || hunger.losingConsciousness || thirst.lethal;
+}
+
+/// Interprets a state through the tables of §2.
+SimStatus statusOf({
+  required SimState state,
+  required SimConstants constants,
+}) => SimStatus(
+  blood: bloodState(volumeMl: state.bloodMl, maxMl: constants.bloodMaxMl),
+  hunger: hungerState(
+    caloriesKcal: state.caloriesKcal,
+    dailyKcal: constants.caloriesDailyKcal,
+  ),
+  thirst: thirstState(
+    waterMl: state.waterMl,
+    dailyMl: constants.waterDailyMl,
+    bodyMassKg: constants.bodyMassKg,
+  ),
+  sleep: sleepState(state.sleepDebt),
+  heartRate: heartRatePenalty(
+    currentHr: state.heartRateBpm,
+    maxHr: constants.maxHeartRate,
+  ),
+);
+
 /// Result of advancing the simulation.
 class TickOutcome {
   const TickOutcome({
     required this.state,
     required this.secondsApplied,
     required this.floored,
+    this.caloriesBurned = 0,
+    this.waterLostMl = 0,
+    this.bloodLostMl = 0,
+    this.met = 1.0,
   });
 
   final SimState state;
@@ -186,49 +313,128 @@ class TickOutcome {
   /// return-after-a-break summary so the player understands why nothing hit
   /// zero.
   final bool floored;
+
+  final double caloriesBurned;
+  final double waterLostMl;
+  final double bloodLostMl;
+
+  /// Effective MET applied over the step, for the diagnostic overlay.
+  final double met;
 }
+
+/// Sleep requirement per day (§2.5.3). Anything short of this accrues debt.
+const Duration kDailySleepNeed = Duration(hours: 8);
 
 /// Advances [state] by [elapsed], in whole seconds.
 ///
 /// Pure and total: same inputs, same output, no I/O. `elapsed` must already
 /// have been vetted by `GameClock` — this function trusts it and will happily
 /// apply whatever it is handed.
-///
-/// `offline` selects the §2.1.1 safety valve: while the app was closed no
-/// resource may fall below 10% and nothing may be fatal.
 TickOutcome advance({
   required SimState state,
   required SimConstants constants,
   required Duration elapsed,
-  bool offline = false,
+  TickInput input = TickInput.resting,
+  @Deprecated('pass TickInput(offline: true) instead') bool offline = false,
 }) {
   final seconds = elapsed.inSeconds;
   if (seconds <= 0) {
     return TickOutcome(state: state, secondsApplied: 0, floored: false);
   }
 
+  final isOffline = input.offline || offline;
+  final step = Duration(seconds: seconds);
   final hours = seconds / 3600.0;
 
-  // Stage 0 model: resting metabolism scaled by zone. MET from GPS speed,
-  // sweat, sleep and bleeding land in stage 2 (§2.2–2.6).
-  final calorieBurn =
+  // ---- energy (§2.2) -----------------------------------------------------
+  //
+  // Two contributions, and keeping them apart matters: the basal requirement
+  // is what the zone factor of §2.1 scales, while movement is paid at full
+  // price wherever it happens.
+  final rawMet = metForSpeed(input.speedKmh);
+  final met = effectiveMet(
+    met: rawMet,
+    loadKg: input.loadKg,
+    bodyMassKg: constants.bodyMassKg,
+  );
+
+  final basalKcal =
       constants.caloriesDailyKcal / 24.0 * hours * state.zone.calorieFactor;
-  final waterLoss =
+  final movementKcal = rawMet <= 1.0
+      ? 0.0
+      : kcalOver(met: met, bodyMassKg: constants.bodyMassKg, elapsed: step) -
+            kcalOver(met: 1.0, bodyMassKg: constants.bodyMassKg, elapsed: step);
+
+  final calorieBurn = basalKcal + math.max(0, movementKcal);
+
+  // ---- water (§2.3) ------------------------------------------------------
+  // The baseline requirement of §1.3 covers being alive; sweat is added on top
+  // (§2.3: "Woda_całkowita = Woda_bazowa + straty_z_potem"). The sweat formula
+  // is split because its halves apply at different times — heat and clothing
+  // cost water at any activity level, while the 400 ml/h constant is a rate
+  // for a body that is actually working and would be absurd applied to someone
+  // asleep in a shelter.
+  final basalWater =
       constants.waterDailyMl / 24.0 * hours * state.zone.waterFactor;
 
-  // Heart rate relaxes towards resting with a ~90 s time constant (§2.4).
-  const tauSeconds = 90.0;
-  final relax = math.exp(-seconds / tauSeconds);
-  final heartRate =
-      constants.restingHeartRate +
-      (state.heartRateBpm - constants.restingHeartRate) * relax;
+  final environmentalWater =
+      environmentalSweatMlPerHour(
+        ambientTempC: input.ambientTempC,
+        clothingClo: input.clothingClo,
+      ) *
+      hours;
+
+  final activityWater = rawMet <= 1.0
+      ? 0.0
+      : sweatMlPerHour(
+                  met: met,
+                  ambientTempC: input.ambientTempC,
+                  clothingClo: input.clothingClo,
+                ) *
+                hours -
+            environmentalWater;
+
+  final waterLoss =
+      basalWater + environmentalWater + math.max(0, activityWater);
+
+  // ---- heart rate (§2.4) -------------------------------------------------
+  final heartRate = relaxHeartRate(
+    current: state.heartRateBpm,
+    target: targetHeartRate(
+      met: met,
+      restingHr: constants.restingHeartRate,
+      maxHr: constants.maxHeartRate,
+    ),
+    elapsed: step,
+  );
+
+  // ---- bleeding (§2.6) ---------------------------------------------------
+  //
+  // Uses the heart rate at the start of the step. Taking the average would be
+  // marginally more accurate and would break linearity, which the catch-up
+  // depends on far more than it depends on that margin.
+  final bloodLoss = bleedOver(
+    tier: input.bleedTier,
+    currentHr: state.heartRateBpm,
+    restingHr: constants.restingHeartRate,
+    elapsed: step,
+  );
+
+  // ---- sleep (§2.5) ------------------------------------------------------
+  //
+  // Sleeping pays the debt down at the rate it was accrued; being awake builds
+  // it at the daily requirement spread over the day.
+  final debtChange = input.sleeping
+      ? -seconds
+      : (kDailySleepNeed.inSeconds * seconds / Duration.secondsPerDay).round();
+  final sleepDebt = math.max(0, state.sleepDebtSeconds + debtChange);
 
   var calories = state.caloriesKcal - calorieBurn;
   var water = state.waterMl - waterLoss;
-  var blood = state.bloodMl;
+  var blood = state.bloodMl - bloodLoss;
 
   var floored = false;
-  if (offline) {
+  if (isOffline) {
     final calorieFloor =
         constants.caloriesDailyKcal * SimConstants.offlineFloor;
     final waterFloor = constants.waterDailyMl * SimConstants.offlineFloor;
@@ -249,18 +455,24 @@ TickOutcome advance({
   } else {
     calories = math.max(0, calories);
     water = math.max(0, water);
+    blood = math.max(0, blood);
   }
 
   return TickOutcome(
     state: state.copyWith(
-      lastUpdate: state.lastUpdate.add(Duration(seconds: seconds)),
+      lastUpdate: state.lastUpdate.add(step),
       caloriesKcal: calories,
       waterMl: water,
       bloodMl: blood,
       heartRateBpm: heartRate,
+      sleepDebtSeconds: sleepDebt,
     ),
     secondsApplied: seconds,
     floored: floored,
+    caloriesBurned: state.caloriesKcal - calories,
+    waterLostMl: state.waterMl - water,
+    bloodLostMl: state.bloodMl - blood,
+    met: met,
   );
 }
 
@@ -274,12 +486,28 @@ TickOutcome advanceInChunks({
   required SimConstants constants,
   required Duration elapsed,
   Duration chunk = const Duration(hours: 1),
-  bool offline = false,
+  TickInput input = TickInput.resting,
+  @Deprecated('pass TickInput(offline: true) instead') bool offline = false,
 }) {
   var current = state;
   var remaining = elapsed;
   var applied = 0;
   var floored = false;
+  var calories = 0.0;
+  var water = 0.0;
+  var blood = 0.0;
+
+  final effectiveInput = offline && !input.offline
+      ? TickInput(
+          speedKmh: input.speedKmh,
+          loadKg: input.loadKg,
+          ambientTempC: input.ambientTempC,
+          clothingClo: input.clothingClo,
+          bleedTier: input.bleedTier,
+          sleeping: input.sleeping,
+          offline: true,
+        )
+      : input;
 
   while (remaining > Duration.zero) {
     final step = remaining < chunk ? remaining : chunk;
@@ -287,13 +515,23 @@ TickOutcome advanceInChunks({
       state: current,
       constants: constants,
       elapsed: step,
-      offline: offline,
+      input: effectiveInput,
     );
     current = outcome.state;
     applied += outcome.secondsApplied;
     floored = floored || outcome.floored;
+    calories += outcome.caloriesBurned;
+    water += outcome.waterLostMl;
+    blood += outcome.bloodLostMl;
     remaining -= step;
   }
 
-  return TickOutcome(state: current, secondsApplied: applied, floored: floored);
+  return TickOutcome(
+    state: current,
+    secondsApplied: applied,
+    floored: floored,
+    caloriesBurned: calories,
+    waterLostMl: water,
+    bloodLostMl: blood,
+  );
 }

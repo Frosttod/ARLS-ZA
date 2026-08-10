@@ -11,8 +11,6 @@
 /// That is a design decision, not an oversight.
 library;
 
-import 'dart:math' as math;
-
 import 'tick.dart';
 
 /// Needed by Nadler and Mifflin–St Jeor (§1.3), and by nothing else.
@@ -277,21 +275,4 @@ class BodyValidation {
 
     return BodyValidation(issues);
   }
-}
-
-/// Sweat loss in millilitres per hour (§2.3).
-///
-/// `pot = 400 + 200 × (MET − 1) + 50 × max(0, T − 20) + odzież`
-///
-/// The clothing term is the summed insulation of what is worn, at 100 ml/h per
-/// clo above 22 °C. That is what makes a winter jacket in thirty degrees a
-/// measurable mistake rather than a piece of flavour text.
-double sweatMlPerHour({
-  required double met,
-  required double ambientTempC,
-  double clothingClo = 0,
-}) {
-  final base = 400 + 200 * (met - 1) + 50 * math.max(0, ambientTempC - 20);
-  final clothing = ambientTempC > 22 ? clothingClo * 100 : 0.0;
-  return math.max(0, base + clothing);
 }

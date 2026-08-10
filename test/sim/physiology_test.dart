@@ -301,4 +301,41 @@ void main() {
       );
     });
   });
+
+  group('sweat (§2.3)', () {
+    test('resting at 20 °C loses the base rate', () {
+      expect(sweatMlPerHour(met: 1, ambientTempC: 20), 400);
+    });
+
+    test('effort raises the loss', () {
+      final walking = sweatMlPerHour(met: 3.5, ambientTempC: 20);
+      final running = sweatMlPerHour(met: 9.8, ambientTempC: 20);
+
+      expect(walking, 900);
+      expect(running, greaterThan(walking));
+    });
+
+    test('heat raises the loss above 20 °C only', () {
+      expect(sweatMlPerHour(met: 1, ambientTempC: 10), 400);
+      expect(sweatMlPerHour(met: 1, ambientTempC: 30), 900);
+    });
+
+    test('a winter jacket in thirty degrees is measurably a mistake', () {
+      final bare = sweatMlPerHour(met: 3.5, ambientTempC: 30);
+      final coated = sweatMlPerHour(
+        met: 3.5,
+        ambientTempC: 30,
+        clothingClo: 3.5,
+      );
+
+      expect(coated - bare, 350);
+    });
+
+    test('clothing costs nothing at or below 22 °C', () {
+      expect(
+        sweatMlPerHour(met: 1, ambientTempC: 22, clothingClo: 3.5),
+        sweatMlPerHour(met: 1, ambientTempC: 22),
+      );
+    });
+  });
 }

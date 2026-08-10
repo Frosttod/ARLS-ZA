@@ -298,3 +298,35 @@ double bleedOver({
 }) =>
     bleedMlPerMinute(tier: tier, currentHr: currentHr, restingHr: restingHr) *
     (elapsed.inMicroseconds / Duration.microsecondsPerMinute);
+
+/// Sweat driven by the environment alone — heat and what is being worn.
+///
+/// Split out from [sweatMlPerHour] because the two halves apply at different
+/// times. Heat and clothing cost water whether or not the character is moving;
+/// the 400 ml/h constant in the full formula is a rate *while active* and
+/// would be absurd applied to someone asleep in a shelter.
+double environmentalSweatMlPerHour({
+  required double ambientTempC,
+  double clothingClo = 0,
+}) {
+  final heat = 50 * math.max(0, ambientTempC - 20);
+  final clothing = ambientTempC > 22 ? clothingClo * 100 : 0.0;
+  return heat + clothing;
+}
+
+/// Sweat loss in millilitres per hour (§2.3).
+///
+/// `pot = 400 + 200 × (MET − 1) + 50 × max(0, T − 20) + odzież`
+///
+/// The clothing term is the summed insulation of what is worn, at 100 ml/h per
+/// clo above 22 °C. That is what makes a winter jacket in thirty degrees a
+/// measurable mistake rather than a piece of flavour text.
+double sweatMlPerHour({
+  required double met,
+  required double ambientTempC,
+  double clothingClo = 0,
+}) {
+  final base = 400 + 200 * (met - 1) + 50 * math.max(0, ambientTempC - 20);
+  final clothing = ambientTempC > 22 ? clothingClo * 100 : 0.0;
+  return math.max(0, base + clothing);
+}
