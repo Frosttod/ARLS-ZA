@@ -96,7 +96,7 @@ Fundament jest gotowy, ale **nie jest jeszcze przez nic używany**. `main.dart` 
 
 To jest zamierzone — bez postaci nie ma czego tickować. Spięcie należy do etapu 2, kiedy pojawi się prawdziwy stan do zapisania.
 
-⚠️ Cała weryfikacja etapu 0 szła lokalnie na Windowsie. CI odpaliło się po raz pierwszy przy commicie `ad55d40` — **sprawdzić, czy przechodzi na Ubuntu**.
+✅ CI przeszło na Ubuntu za pierwszym razem (`ad55d40`). Weryfikacja etapu 0 szła lokalnie na Windowsie, więc było to pytanie otwarte — jest zamknięte.
 
 ---
 
@@ -147,6 +147,7 @@ To jest zamierzone — bez postaci nie ma czego tickować. Spięcie należy do e
 
 - 🔴 **Test wycinania był pusty i przechodził z błędnego powodu.** Marker był w stałej, do której nie sięgało żadne żywe wywołanie, więc kompilator wyrzucał go **także z buildu z włączonymi devtools** — check pokazywał „czysto" niezależnie od stanu bramki. Wykryte dopiero przez zbudowanie release'u z `--dart-define=arls.devtools=true` i sprawdzenie, czy check **zawodzi**. Naprawione przez wstawienie markera w faktycznie renderowany widget. **Wniosek: każdy test negatywny wymaga dowodu, że potrafi zawieść.** CI ma teraz osobny krok, który to sprawdza.
 - **`kReleaseMode` z `package:flutter/foundation.dart` wciągał `dart:ui`** do symulatora pozycji i nagrywarki, przez co nie ładowały się pod `dart test`. To ta sama pułapka co `path_provider` w etapie 0. Zastąpione bezpośrednim `bool.fromEnvironment('dart.vm.product')` — tym samym define, z którego korzysta sam Flutter.
+- **`cancel-in-progress: true` anulowało weryfikację commita z kodem.** Dopchnięcie commita z dokumentacją zaraz po `df54653` ubiło jego przebieg CI — na `main` została zmiana, której nikt nie sprawdził. Poprawione: anulowanie działa teraz wyłącznie dla pull requestów, na `main` każdy commit dochodzi do końca.
 
 #### Punkt wejścia dla następnej sesji
 
