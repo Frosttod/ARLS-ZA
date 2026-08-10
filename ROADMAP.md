@@ -9,7 +9,7 @@ Każdy zamknięty etap dostaje sekcję **Dziennik wykonania** z decyzjami podję
 | Etap | Zakres | Status | Zamknięty | Commit |
 | :---- | :---- | :---- | :---- | :---- |
 | 0 | Fundament: trwałość zapisu, zegar, konfiguracja buildu | ✅ zamknięty | 2026-08-10 | `ad55d40` |
-| 1 | Tryb deweloperski i symulator GPS | ✅ zamknięty | 2026-08-10 | `HEAD` |
+| 1 | Tryb deweloperski i symulator GPS | ✅ zamknięty | 2026-08-10 | `df54653` |
 | 2 | Postać i fizjologia | ⬜ następny | — | — |
 | 3 | Mapa, GPS, bezpieczeństwo gracza | ⬜ | — | — |
 | 4 | Przedmioty, loot, przeszukanie | ⬜ | — | — |
