@@ -1,8 +1,34 @@
 # ARLS-ZA — roadmap wdrożenia
 
-Dokument wykonawczy do [ARLS-ZA_design_doc_v2.md](ARLS-ZA_design_doc_v2.md). Design doc mówi **co** i **dlaczego**; ten plik mówi **w jakiej kolejności** i **kiedy etap jest skończony**.
+Dokument wykonawczy do [ARLS-ZA_design_doc_v2.md](ARLS-ZA_design_doc_v2.md). Design doc mówi **co** i **dlaczego**; ten plik mówi **w jakiej kolejności**, **kiedy etap jest skończony** i **co ustaliliśmy przy klawiaturze**.
 
-**Stan na dziś:** projekt to goły template Fluttera — [lib/main.dart](lib/main.dart) (116 linii: intro wideo + ekran logo), jedna zależność `video_player`, brak warstwy danych, brak testów. Wszystko poniżej jest do zrobienia.
+Każdy zamknięty etap dostaje sekcję **Dziennik wykonania** z decyzjami podjętymi w trakcie, niespodziankami i punktem wejścia dla następnej sesji. Jeśli nie ma czego tam wpisać, etap prawdopodobnie nie został naprawdę skończony.
+
+## Status
+
+| Etap | Zakres | Status | Zamknięty | Commit |
+| :---- | :---- | :---- | :---- | :---- |
+| 0 | Fundament: trwałość zapisu, zegar, konfiguracja buildu | ✅ zamknięty | 2026-08-10 | `ad55d40` |
+| 1 | Tryb deweloperski i symulator GPS | ⬜ następny | — | — |
+| 2 | Postać i fizjologia | ⬜ | — | — |
+| 3 | Mapa, GPS, bezpieczeństwo gracza | ⬜ | — | — |
+| 4 | Przedmioty, loot, przeszukanie | ⬜ | — | — |
+| 5 | Walka, przeciwnicy, hałas | ⬜ | — | — |
+| 6 | Ognisko z pełnym cyklem | ⬜ | — | — |
+| 7 | Audio pozycyjne i haptyka | ⬜ | — | — |
+| 8 | Schron, obóz, pętla dobowa | ⬜ | — | — |
+| 9 | Onboarding, dostępność, zgodność | ⬜ | — | — |
+
+**Metryki:** 84 testy · `flutter analyze --fatal-infos` czysty · schemat bazy v1
+
+### Zablokowane na użytkowniku
+
+Rzeczy, których nie da się zrobić z poziomu repozytorium.
+
+| Co | Dlaczego blokuje | Od etapu |
+| :---- | :---- | :---- |
+| Keystore i `android/key.properties` | bez tego `flutter build --release` używa kluczy debug, a takiego artefaktu nie da się opublikować. Instrukcja na górze [PROCEDURA_RELEASE.md](PROCEDURA_RELEASE.md) | 0 |
+| GitHub Pages dla `ARLS-ZA-Game` | strona projektu nie jest publicznie widoczna. Settings → Pages → branch `main`, folder `/ (root)` | — |
 
 ---
 
@@ -38,11 +64,39 @@ Dokument wykonawczy do [ARLS-ZA_design_doc_v2.md](ARLS-ZA_design_doc_v2.md). Des
 
 **Kryterium wyjścia:** aplikacja z podpisanym buildem release, pusty tick 1 Hz działa w izolacie, przeżywa kill procesu i wraca z catch-upem bez dziury w symulacji, test migracji przechodzi w CI.
 
-**Stan:** spełnione. 84 testy, `flutter analyze --fatal-infos` czysty. Kryterium zapisane wykonywalnie w `test/db/save_bootstrap_test.dart` — sesja gubi niezapisane sekundy warstwy gorącej, wraca z catch-upem bez dziury, a powtórzenie tego samego catch-upu daje ten sam stan.
+**Stan:** spełnione. Kryterium zapisane wykonywalnie w `test/db/save_bootstrap_test.dart` — sesja gubi niezapisane sekundy warstwy gorącej, wraca z catch-upem bez dziury, a powtórzenie tego samego catch-upu daje ten sam stan.
 
-⚠️ **Ustalenie wiążące dla całego schematu:** `DateTime` zapisywany jako tekst ISO-8601 UTC (`build.yaml`, `store_date_time_values_as_text`). Domyślny zapis drift oddaje czas lokalny, co cicho psuje anti-cheat z §2.1.1 — znacznik zapisany jako 12:00 UTC wraca jako 14:00 lokalnego i różnica jest darmowym czasem dla gracza. Zmiana tego ustawienia po wydaniu to migracja danych, nie przełącznik.
+### Dziennik wykonania — etap 0
 
-⚠️ **Podpisywanie release:** bez `android/key.properties` build release używa kluczy debug i wypisuje ostrzeżenie. Potok wydawniczy przekazuje `-Prequire-signing=true`, co zamienia brak keystore w błąd budowania zamiast w artefakt, którego nie da się opublikować.
+#### Decyzje podjęte w trakcie
+
+Rozstrzygnięcia, których nie było w dokumencie projektowym, a bez których nie dało się napisać kodu.
+
+- ⚠️ **`DateTime` zapisywany jako tekst ISO-8601 UTC**, nie jako sekundy uniksowe (`build.yaml`, `store_date_time_values_as_text`). Wiążące na całe życie schematu — zmiana po wydaniu to migracja danych, nie przełącznik. Powód niżej, w niespodziankach.
+- **Warstwa bazy jest wolna od Fluttera.** `path_provider` wciągał `dart:ui` do `database.dart`, przez co testy nie ładowały się pod `dart test`, a izolat silnika tickowego miałby ten sam problem. Rozwiązywanie katalogu zapisu stoi osobno w `lib/data/db/save_location.dart`.
+- **Klucze obce przez `customConstraints`, nie przez `.references()`.** Drift w tej wersji cicho gubi `.references(Profiles, #id)` — wypisuje ostrzeżenie i generuje kolumnę bez ograniczenia. Test czyta `sqlite_master` i sprawdza, że `FOREIGN KEY` naprawdę jest w `CREATE TABLE`; sama deklaracja niczego nie gwarantuje.
+- **`schemaVersion` musi być literałem**, nie odwołaniem do stałej — `drift_dev schema dump` czyta go statycznie i nie pójdzie za referencją. Spójności z `kSchemaVersion` pilnuje test.
+- ⚠️ **Build release bez keystore kończy się kluczami debug i ostrzeżeniem, nie błędem.** Twardy błąd włącza `-Prequire-signing=true`, którego używa potok wydawniczy. Wariant „zawsze twardy błąd" psułby `flutter build --release` każdemu, kto sklonuje repozytorium.
+- **Import profilu zawsze wstawia nową postać**, nigdy nie nadpisuje istniejącej. Pomyłkowe przywrócenie kopii nie może skasować żywej passy.
+- **Migracja odpala się dopiero po migawce przedmigracyjnej**, która nie podlega rotacji okresowej. To jedyna rzecz stojąca między złą migracją a zapisami wszystkich graczy.
+
+#### Niespodzianki
+
+- **Drift oddaje `DateTime` w czasie lokalnym.** Znacznik zapisany jako `12:00 UTC` wracał z bazy jako `14:00` bez flagi UTC. Trafiłoby to prosto w porównanie w anti-cheacie zegara z §2.1.1 — dwie godziny darmowego czasu przy każdym odczycie na CEST. Złapał to test bootstrapu, nie przegląd kodu. **Wniosek na przyszłość: każdy typ przechodzący przez granicę bazy wymaga testu round-tripu**, nawet jeśli wygląda na trywialny.
+- **`flutter test` i `dart test` to różne środowiska.** Testy czystej logiki pod `dart test` są znacznie szybsze, ale wywalają się na każdym imporcie ciągnącym Flutter. To wymusiło rozdzielenie warstw — z korzyścią dla architektury.
+- Gradle wsypywał `android/build/reports/` do commita; `.gitignore` template'u pokrywał tylko `/build` w katalogu głównym.
+
+#### Punkt wejścia dla następnej sesji
+
+Fundament jest gotowy, ale **nie jest jeszcze przez nic używany**. `main.dart` woła `SaveBootstrap.boot()` i pokazuje wynik odzyskiwania — na tym koniec. Brakuje spięcia:
+
+- pętli, która pobiera stan z `TickEngine` i podaje go do `SaveWriter.stageHot()`
+- reakcji na cykl życia aplikacji: `AppLifecycleState.paused` → `writer.quiesce()` plus `persistClockMark()`
+- wywołań `SnapshotStore.isDue()` w rytmie gry
+
+To jest zamierzone — bez postaci nie ma czego tickować. Spięcie należy do etapu 2, kiedy pojawi się prawdziwy stan do zapisania.
+
+⚠️ Cała weryfikacja etapu 0 szła lokalnie na Windowsie. CI odpaliło się po raz pierwszy przy commicie `ad55d40` — **sprawdzić, czy przechodzi na Ubuntu**.
 
 ---
 
