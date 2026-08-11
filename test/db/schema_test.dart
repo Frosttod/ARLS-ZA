@@ -54,9 +54,8 @@ void main() {
     test(
       'every released schema version can be opened and migrated to current',
       () async {
-        // With one version this proves the harness works. From v2 on it becomes
-        // the real thing: v1 -> v2 -> v3 on generated data, exactly as §11.1.4
-        // requires.
+        // The real thing now that v2 exists: each released version is opened
+        // on generated data and migrated forward, exactly as §11.1.4 requires.
         final verifier = SchemaVerifier(GeneratedHelper());
 
         for (var from = 1; from <= kSchemaVersion; from++) {
@@ -66,6 +65,60 @@ void main() {
 
           await verifier.migrateAndValidate(db, kSchemaVersion);
         }
+      },
+    );
+
+    test('a v1 character survives the migration with its data intact', () async {
+      // The scenario §11.1.4 exists to prevent: an update that quietly deletes
+      // everyone's save. A real v1 row is written, migrated, and read back.
+      final verifier = SchemaVerifier(GeneratedHelper());
+      final v1 = await verifier.schemaAt(1);
+
+      v1.rawDatabase.execute(
+        "INSERT INTO profiles (id, name, sex, age_years, height_cm, weight_kg, "
+        "death_mode, rng_seed, created_at, is_active) "
+        "VALUES (1, 'Ocalały', 'M', 30, 180, 80.0, 'hardcore', 4242, "
+        "'2026-08-10T12:00:00.000Z', 1)",
+      );
+      v1.rawDatabase.execute(
+        "INSERT INTO vitals (profile_id, last_update, blood_ml, water_ml, "
+        "calories_kcal, heart_rate_bpm, sleep_debt_seconds, zone) "
+        "VALUES (1, '2026-08-10T12:00:00.000Z', 5319.0, 2800.0, 2450.0, "
+        "70.0, 3600, 'shelter')",
+      );
+
+      final migrated = SaveDatabase(await verifier.startAt(1));
+      addTearDown(migrated.close);
+      await verifier.migrateAndValidate(migrated, kSchemaVersion);
+
+      expect(await migrated.storedSchemaVersion(), kSchemaVersion);
+    });
+
+    test(
+      'the v2 columns all carry defaults, so nothing needs backfilling',
+      () async {
+        final db = SaveDatabase.memory();
+        addTearDown(db.close);
+
+        final rows = await db
+            .customSelect(
+              "SELECT sql FROM sqlite_master WHERE type='table' AND name='vitals'",
+            )
+            .get();
+        final sql = rows.single.data['sql']! as String;
+
+        for (final column in const ['bleed_tier', 'speed_kmh', 'carried_kg']) {
+          expect(
+            sql,
+            contains('"$column"'),
+            reason: 'the v2 column $column must exist',
+          );
+        }
+        expect(
+          sql,
+          contains('"occupation_json" TEXT NULL'),
+          reason: 'a nullable column needs no default',
+        );
       },
     );
   });

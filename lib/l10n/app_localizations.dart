@@ -258,6 +258,240 @@ abstract class L10n {
   /// In en, this message translates to:
   /// **'These figures are calculated on your phone and never leave it.'**
   String get dataStaysOnDevice;
+
+  /// No description provided for @createCharacter.
+  ///
+  /// In en, this message translates to:
+  /// **'Create your character'**
+  String get createCharacter;
+
+  /// No description provided for @creatorIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Your height, weight, age and sex are used to compute blood volume, water and calorie needs, and carry weight.'**
+  String get creatorIntro;
+
+  /// No description provided for @fieldName.
+  ///
+  /// In en, this message translates to:
+  /// **'Name'**
+  String get fieldName;
+
+  /// No description provided for @fieldSex.
+  ///
+  /// In en, this message translates to:
+  /// **'Sex'**
+  String get fieldSex;
+
+  /// No description provided for @sexMale.
+  ///
+  /// In en, this message translates to:
+  /// **'Male'**
+  String get sexMale;
+
+  /// No description provided for @sexFemale.
+  ///
+  /// In en, this message translates to:
+  /// **'Female'**
+  String get sexFemale;
+
+  /// No description provided for @fieldAge.
+  ///
+  /// In en, this message translates to:
+  /// **'Age'**
+  String get fieldAge;
+
+  /// No description provided for @fieldHeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Height'**
+  String get fieldHeight;
+
+  /// No description provided for @fieldWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight'**
+  String get fieldWeight;
+
+  /// No description provided for @computedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your body, computed'**
+  String get computedTitle;
+
+  /// No description provided for @deathModeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose how death works'**
+  String get deathModeTitle;
+
+  /// No description provided for @deathModeWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'This choice cannot be changed later.'**
+  String get deathModeWarning;
+
+  /// No description provided for @hardcoreTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hardcore'**
+  String get hardcoreTitle;
+
+  /// No description provided for @hardcoreBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Death ends the character. Skills, shelter and stored gear are gone; the streak goes to the Chronicle.'**
+  String get hardcoreBody;
+
+  /// No description provided for @softcoreTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Softcore'**
+  String get softcoreTitle;
+
+  /// No description provided for @softcoreBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You lose consciousness instead of dying. Skills and shelter survive; the streak resets.'**
+  String get softcoreBody;
+
+  /// No description provided for @beginSurvival.
+  ///
+  /// In en, this message translates to:
+  /// **'Begin'**
+  String get beginSurvival;
+
+  /// No description provided for @errNameTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'At least 4 characters.'**
+  String get errNameTooShort;
+
+  /// No description provided for @errNameTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'At most 16 characters.'**
+  String get errNameTooLong;
+
+  /// No description provided for @errNameInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Letters, digits and spaces only.'**
+  String get errNameInvalid;
+
+  /// No description provided for @errNameEdgeSpaces.
+  ///
+  /// In en, this message translates to:
+  /// **'No leading or trailing spaces.'**
+  String get errNameEdgeSpaces;
+
+  /// No description provided for @errNameDoubleSpaces.
+  ///
+  /// In en, this message translates to:
+  /// **'No doubled spaces.'**
+  String get errNameDoubleSpaces;
+
+  /// No description provided for @errAgeRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Between 16 and 80.'**
+  String get errAgeRange;
+
+  /// No description provided for @errHeightRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Between 120 and 220 cm.'**
+  String get errHeightRange;
+
+  /// No description provided for @errWeightRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Between 35 and 200 kg.'**
+  String get errWeightRange;
+
+  /// No description provided for @errBmiTooLow.
+  ///
+  /// In en, this message translates to:
+  /// **'These figures do not describe a body the model can work with. Check the height and weight.'**
+  String get errBmiTooLow;
+
+  /// No description provided for @errBmiTooHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'These figures do not describe a body the model can work with. Check the height and weight.'**
+  String get errBmiTooHigh;
+
+  /// No description provided for @hudBlood.
+  ///
+  /// In en, this message translates to:
+  /// **'Blood'**
+  String get hudBlood;
+
+  /// No description provided for @hudWater.
+  ///
+  /// In en, this message translates to:
+  /// **'Water'**
+  String get hudWater;
+
+  /// No description provided for @hudCalories.
+  ///
+  /// In en, this message translates to:
+  /// **'Calories'**
+  String get hudCalories;
+
+  /// No description provided for @hudHeartRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Heart rate'**
+  String get hudHeartRate;
+
+  /// No description provided for @hudCarry.
+  ///
+  /// In en, this message translates to:
+  /// **'Carry'**
+  String get hudCarry;
+
+  /// No description provided for @hudNoSignal.
+  ///
+  /// In en, this message translates to:
+  /// **'No signal'**
+  String get hudNoSignal;
+
+  /// No description provided for @hudWeakSignal.
+  ///
+  /// In en, this message translates to:
+  /// **'Weak signal'**
+  String get hudWeakSignal;
+
+  /// No description provided for @statusBleeding.
+  ///
+  /// In en, this message translates to:
+  /// **'Bleeding'**
+  String get statusBleeding;
+
+  /// No description provided for @statusDehydrated.
+  ///
+  /// In en, this message translates to:
+  /// **'Dehydrated'**
+  String get statusDehydrated;
+
+  /// No description provided for @statusStarving.
+  ///
+  /// In en, this message translates to:
+  /// **'Starving'**
+  String get statusStarving;
+
+  /// No description provided for @statusSleepDeprived.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep-deprived'**
+  String get statusSleepDeprived;
+
+  /// No description provided for @statusShock.
+  ///
+  /// In en, this message translates to:
+  /// **'Shock'**
+  String get statusShock;
 }
 
 class _L10nDelegate extends LocalizationsDelegate<L10n> {

@@ -10,7 +10,7 @@ Każdy zamknięty etap dostaje sekcję **Dziennik wykonania** z decyzjami podję
 | :---- | :---- | :---- | :---- | :---- |
 | 0 | Fundament: trwałość zapisu, zegar, konfiguracja buildu | ✅ zamknięty | 2026-08-10 | `ad55d40` |
 | 1 | Tryb deweloperski i symulator GPS | ✅ zamknięty | 2026-08-10 | `df54653` |
-| 2 | Postać i fizjologia | ⬜ następny | — | — |
+| 2 | Postać i fizjologia | 🟡 w toku | — | `f2b1056`, `5555db2` |
 | 3 | Mapa, GPS, bezpieczeństwo gracza | ⬜ | — | — |
 | 4 | Przedmioty, loot, przeszukanie | ⬜ | — | — |
 | 5 | Walka, przeciwnicy, hałas | ⬜ | — | — |
@@ -19,7 +19,7 @@ Każdy zamknięty etap dostaje sekcję **Dziennik wykonania** z decyzjami podję
 | 8 | Schron, obóz, pętla dobowa | ⬜ | — | — |
 | 9 | Onboarding, dostępność, zgodność | ⬜ | — | — |
 
-**Metryki:** 138 testów · `flutter analyze --fatal-infos` czysty · schemat bazy v1 · release APK 55,1 MB bez devtools
+**Metryki:** 292 testy · `flutter analyze --fatal-infos` czysty · schemat bazy **v2** · release APK 55,1 MB bez devtools
 
 ### Zablokowane na użytkowniku
 
@@ -182,6 +182,35 @@ Symulator działa i emituje pozycje, ale **nic ich jeszcze nie konsumuje** — `
 | 2.13 | HUD: krew, statusy, woda, kalorie, udźwig (masa i objętość) | §3.6, §18.1a |
 
 **Kryterium wyjścia:** przy ×3600 doba symulacji daje liczby zgodne z tabelami §2 w granicach błędu zaokrągleń; postać z zamkniętą aplikacją przez 14 dni budzi się osłabiona, ale żywa.
+
+**Stan:** spełnione. Kryterium zapisane wykonywalnie w `test/sim/tick_physiology_test.dart` i `test/game/game_loop_test.dart`.
+
+### Dziennik wykonania — etap 2
+
+#### Decyzje podjęte w trakcie
+
+- **Zapas wody może zejść poniżej zera.** §2.3 miesza dwie skale: rezerwa to zapotrzebowanie **dobowe** (35 ml/kg), a progi ciężkości to ułamki **masy ciała** (2%, 5%, 10%). Dla 80 kg rezerwa ma 2800 ml, a silne osłabienie wymaga 4000 ml deficytu — przy obcięciu na zerze dwa z trzech progów byłyby nieosiągalne. Deficyt musi więc narastać ponad dobę; dolna granica to próg krytyczny z §2.3.
+- **Pot rozdzielony na środowiskowy i wysiłkowy.** Upał i odzież kosztują wodę przy każdej aktywności, ale stała 400 ml/h ze wzoru to tempo *pracującego* ciała. Dodanie pełnego wzoru dawałoby 12 l na dobę komuś śpiącemu w schronie.
+- **Podstawa energetyczna z Mifflina, dopłata za ruch z MET.** To dwa różne źródła (2450 kcal/dobę wobec 2016 kcal/dobę z MET 1.0), więc ruch liczony jest jako nadwyżka ponad MET spoczynkowy, a nie jako pełny koszt.
+- **Prędkość liczona z kolejnych odczytów, nie z pola dostarczanego przez GPS.** Symulator podaje `speedMps`, prawdziwy chip czasem nie — symulacja nie może zachowywać się inaczej zależnie od tego, który jest podłączony.
+- **Utrata sygnału zeruje ruch, nie zamraża go.** Naliczanie ostatniej znanej prędkości przez czas bez sygnału obciążałoby gracza za dryf GPS (§3.2).
+- **Tryb śmierci nie ma domyślnego zaznaczenia.** Wybór jest nieodwracalny (§9), a preselekcja to wybór dokonany za gracza.
+- **Zajęcie zapisywane jako JSON, nie jako kolumny.** Zajęcia będą zyskiwać pola wraz z systemami schronu z §8 i §18; każde z nich byłoby inaczej osobną migracją.
+- **Statusy w HUD jako słowa, nie same ikony i kolory.** Ikona, której gracz jeszcze nie zna, jest ozdobą; §12 wymaga czytelności dla czytnika ekranu i przy daltonizmie.
+
+#### Niespodzianki
+
+- 🔴 **Dokument projektowy zawierał błąd arytmetyczny.** Objętość krwi dla 180 cm / 80 kg to **5319 ml**, nie 5290 — wzór Nadlera i dane wejściowe były poprawne, błędna była podana suma. Liczba zdążyła się rozejść na makietę §15.4, obie wersje strony projektu i wszystkie fikstury testowe. Poprawione wszędzie.
+- 🔴 **Człon temperaturowy potu skracał się do zera.** Liczenie dopłaty jako „pot przy tym MET minus pot w spoczynku, ta sama temperatura" usuwa całą zależność od upału — letnie popołudnie kosztowało tyle samo wody co mroźne.
+- 🔴 **Dwa progi odwodnienia były martwe.** Patrz decyzja o ujemnym zapasie wyżej. Test HUD to wychwycił, bo chip „ODWODNIENIE" nigdy się nie zapalał.
+- **Podmiany tekstu w plikach po `dart format` cicho nie trafiają.** Dwa razy zmiana nie została zastosowana, bo formatowanie zmieniło wcięcia, a skrypt szukał dokładnego dopasowania. Wykryte dopiero przez test, który nadal zawodził po „naprawie".
+- **Widgety poniżej 600 px nie istnieją w teście.** `ListView` buduje leniwie, a domyślna powierzchnia testowa ma 800×600 — połowa kreatora nie była w drzewie. Testy ustawiają wysoki ekran.
+
+#### Punkt wejścia dla następnej sesji
+
+Do zamknięcia etapu 2 zostaje **wpięcie kreatora i HUD w `main.dart`**: ekran startowy powinien wykrywać brak aktywnej postaci, prowadzić do kreatora, zakładać profil i uruchamiać `GameLoop` z HUD-em na wierzchu. Sam `GameLoop` i obie warstwy UI są gotowe i przetestowane osobno.
+
+⚠️ **Nadmiarowy zapas wody nie jest jeszcze uzupełniany przez picie** — mechanika przedmiotów należy do etapu 4. Do tego czasu deficyt tylko rośnie.
 
 ---
 

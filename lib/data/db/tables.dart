@@ -87,6 +87,32 @@ class Vitals extends Table {
   /// sequence instead of restarting it.
   TextColumn get rngCursors => text().withDefault(const Constant('{}'))();
 
+  // ---------------------------------------------------------- schema v2 ---
+  //
+  // Added when the physiology of §2 replaced the placeholder model. Additive
+  // only: every column below has a default, so a v1 row loads without needing
+  // anything backfilled (§11.1.4).
+
+  /// Current bleeding tier (§2.6): none | superficial | moderate | severe |
+  /// arterial. A wound has to survive the app being killed — otherwise closing
+  /// the app would be first aid.
+  TextColumn get bleedTier => text().withDefault(const Constant('none'))();
+
+  /// Occupation in progress, as JSON (§2.1a). Null when the character is idle.
+  ///
+  /// Stored opaquely rather than as columns: occupations gain fields as the
+  /// shelter systems of §8 and §18 arrive, and each of those would otherwise
+  /// be a schema migration.
+  TextColumn get occupationJson => text().nullable()();
+
+  /// Ground speed from the last accepted fix, in km/h. Persisted so a catch-up
+  /// after a crash does not restart the character from a standstill.
+  RealColumn get speedKmh => real().withDefault(const Constant(0))();
+
+  /// What the character is carrying, in kilograms. Feeds the load surcharge of
+  /// §2.2 until the real inventory arrives in stage 4.
+  RealColumn get carriedKg => real().withDefault(const Constant(0))();
+
   @override
   Set<Column> get primaryKey => {profileId};
 

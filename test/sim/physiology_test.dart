@@ -98,6 +98,17 @@ void main() {
       );
     });
 
+    test('the severity thresholds need more than one day of deficit', () {
+      // §2.3 mixes two scales: the reserve is the daily requirement while the
+      // thresholds are fractions of body mass. For 80 kg, severe weakness needs
+      // 4000 ml of deficit against a 2800 ml reserve — so the deficit has to be
+      // able to accumulate past a single day, and the tick lets water fall
+      // below zero for exactly that reason.
+      expect(withDeficit(2800).severelyWeakened, isFalse);
+      expect(withDeficit(4100).severelyWeakened, isTrue);
+      expect(withDeficit(8100).critical, isTrue);
+    });
+
     test('at half the reserve neither penalty has started yet', () {
       // Worth pinning down: 50% of the water reserve is only a 1.75% deficit
       // against body mass, below the 2% threshold. The two scales are not

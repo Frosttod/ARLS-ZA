@@ -325,6 +325,14 @@ class TickOutcome {
 /// Sleep requirement per day (§2.5.3). Anything short of this accrues debt.
 const Duration kDailySleepNeed = Duration(hours: 8);
 
+/// How far below the daily reserve water may fall before the model stops.
+///
+/// The floor is the 10% of body mass §2.3 calls critical, expressed relative
+/// to the reserve. Past this the character is dying of thirst and the outcome
+/// no longer depends on the exact figure.
+double _lethalWaterDeficitMl(SimConstants constants) =>
+    math.max(0, 0.10 * constants.bodyMassKg * 1000 - constants.waterDailyMl);
+
 /// Advances [state] by [elapsed], in whole seconds.
 ///
 /// Pure and total: same inputs, same output, no I/O. `elapsed` must already
@@ -454,8 +462,18 @@ TickOutcome advance({
     }
   } else {
     calories = math.max(0, calories);
-    water = math.max(0, water);
     blood = math.max(0, blood);
+
+    // Water is allowed past zero, and that is deliberate.
+    //
+    // §2.3 mixes two scales: the reserve is the *daily* requirement
+    // (35 ml/kg), while the severity thresholds are fractions of *body mass*
+    // (2%, 5%, 10%). For an 80 kg character the reserve is 2800 ml but severe
+    // weakness needs a 4000 ml deficit — so clamping at zero would make two of
+    // the three published thresholds unreachable. Letting the value go
+    // negative lets the deficit accumulate across days, which is what a
+    // multi-day dehydration actually is.
+    water = math.max(-_lethalWaterDeficitMl(constants), water);
   }
 
   return TickOutcome(

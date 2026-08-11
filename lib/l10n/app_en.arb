@@ -1,33 +1,26 @@
 {
   "@@locale": "en",
-
   "appTitle": "ARLS-ZA",
   "@appTitle": {
     "description": "Application name. Not translated — it is the brand."
   },
-
   "appTagline": "Almost Real Life Survival",
   "@appTagline": {
     "description": "Subtitle under the app name on the title screen."
   },
-
   "continueLabel": "Continue",
   "@continueLabel": {
     "description": "Resumes the active character."
   },
-
   "newCharacter": "New character",
   "@newCharacter": {
     "description": "Starts the character creator."
   },
-
   "settings": "Settings",
-
   "saveRestoredTitle": "Save recovered",
   "@saveRestoredTitle": {
     "description": "Shown when a damaged database was replaced by a snapshot."
   },
-
   "saveRestoredBody": "The save file was damaged and has been restored from a backup. You lost {minutes} minutes of play.",
   "@saveRestoredBody": {
     "description": "Body of the recovery notice. States the cost plainly rather than hiding it.",
@@ -38,16 +31,12 @@
       }
     }
   },
-
   "saveLostTitle": "Save could not be read",
   "saveLostBody": "The save file is damaged and no usable backup was found. You can import a profile you exported earlier, or start a new character.",
-
   "importProfile": "Import profile",
   "exportProfile": "Export profile",
-
   "exportDone": "Profile exported.",
   "importDone": "Profile imported.",
-
   "importFailed": "Import failed: {reason}",
   "@importFailed": {
     "placeholders": {
@@ -57,12 +46,10 @@
       }
     }
   },
-
   "awayTitle": "While you were away",
   "@awayTitle": {
     "description": "Header of the return-after-a-break summary (§16.3)."
   },
-
   "awayElapsed": "{days, plural, =0{Less than a day passed.} =1{One day passed.} other{{days} days passed.}}",
   "@awayElapsed": {
     "placeholders": {
@@ -72,23 +59,19 @@
       }
     }
   },
-
   "awayFloored": "Your body was running on reserves. Nothing dropped below the safety floor.",
   "@awayFloored": {
     "description": "Explains the §2.1.1 offline floor so the player is not confused by resources stopping at 10%."
   },
-
   "clockRolledBack": "The device clock moved backwards. No time was counted.",
   "@clockRolledBack": {
     "description": "Shown once when the anti-cheat of §2.1.1 rejects a tick."
   },
-
   "bloodVolume": "Blood volume",
   "dailyRequirement": "Daily requirement",
   "carryComfort": "Carry weight, comfortable",
   "carryMax": "Carry weight, maximum",
   "maxHeartRate": "Maximum heart rate",
-
   "unitMl": "{value} ml",
   "@unitMl": {
     "placeholders": {
@@ -98,7 +81,6 @@
       }
     }
   },
-
   "unitKg": "{value} kg",
   "@unitKg": {
     "placeholders": {
@@ -108,7 +90,6 @@
       }
     }
   },
-
   "unitBpm": "{value} bpm",
   "@unitBpm": {
     "placeholders": {
@@ -118,9 +99,47 @@
       }
     }
   },
-
   "dataStaysOnDevice": "These figures are calculated on your phone and never leave it.",
   "@dataStaysOnDevice": {
     "description": "Privacy line shown next to the body parameters (§1.2, §15.4)."
-  }
+  },
+  "createCharacter": "Create your character",
+  "creatorIntro": "Your height, weight, age and sex are used to compute blood volume, water and calorie needs, and carry weight.",
+  "fieldName": "Name",
+  "fieldSex": "Sex",
+  "sexMale": "Male",
+  "sexFemale": "Female",
+  "fieldAge": "Age",
+  "fieldHeight": "Height",
+  "fieldWeight": "Weight",
+  "computedTitle": "Your body, computed",
+  "deathModeTitle": "Choose how death works",
+  "deathModeWarning": "This choice cannot be changed later.",
+  "hardcoreTitle": "Hardcore",
+  "hardcoreBody": "Death ends the character. Skills, shelter and stored gear are gone; the streak goes to the Chronicle.",
+  "softcoreTitle": "Softcore",
+  "softcoreBody": "You lose consciousness instead of dying. Skills and shelter survive; the streak resets.",
+  "beginSurvival": "Begin",
+  "errNameTooShort": "At least 4 characters.",
+  "errNameTooLong": "At most 16 characters.",
+  "errNameInvalid": "Letters, digits and spaces only.",
+  "errNameEdgeSpaces": "No leading or trailing spaces.",
+  "errNameDoubleSpaces": "No doubled spaces.",
+  "errAgeRange": "Between 16 and 80.",
+  "errHeightRange": "Between 120 and 220 cm.",
+  "errWeightRange": "Between 35 and 200 kg.",
+  "errBmiTooLow": "These figures do not describe a body the model can work with. Check the height and weight.",
+  "errBmiTooHigh": "These figures do not describe a body the model can work with. Check the height and weight.",
+  "hudBlood": "Blood",
+  "hudWater": "Water",
+  "hudCalories": "Calories",
+  "hudHeartRate": "Heart rate",
+  "hudCarry": "Carry",
+  "hudNoSignal": "No signal",
+  "hudWeakSignal": "Weak signal",
+  "statusBleeding": "Bleeding",
+  "statusDehydrated": "Dehydrated",
+  "statusStarving": "Starving",
+  "statusSleepDeprived": "Sleep-deprived",
+  "statusShock": "Shock"
 }

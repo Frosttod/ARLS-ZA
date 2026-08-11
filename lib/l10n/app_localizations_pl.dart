@@ -113,4 +113,126 @@ class L10nPl extends L10n {
   @override
   String get dataStaysOnDevice =>
       'Te wartości są liczone na Twoim telefonie i nigdy go nie opuszczają.';
+
+  @override
+  String get createCharacter => 'Stwórz postać';
+
+  @override
+  String get creatorIntro =>
+      'Twój wzrost, waga, wiek i płeć służą do obliczenia objętości krwi, zapotrzebowania na wodę i kalorie oraz udźwigu.';
+
+  @override
+  String get fieldName => 'Nazwa';
+
+  @override
+  String get fieldSex => 'Płeć';
+
+  @override
+  String get sexMale => 'Mężczyzna';
+
+  @override
+  String get sexFemale => 'Kobieta';
+
+  @override
+  String get fieldAge => 'Wiek';
+
+  @override
+  String get fieldHeight => 'Wzrost';
+
+  @override
+  String get fieldWeight => 'Waga';
+
+  @override
+  String get computedTitle => 'Twoje ciało, wyliczone';
+
+  @override
+  String get deathModeTitle => 'Wybierz, jak działa śmierć';
+
+  @override
+  String get deathModeWarning => 'Tego wyboru nie da się później zmienić.';
+
+  @override
+  String get hardcoreTitle => 'Hardcore';
+
+  @override
+  String get hardcoreBody =>
+      'Śmierć kończy postać. Umiejętności, schron i magazyn przepadają; passa trafia do Kroniki.';
+
+  @override
+  String get softcoreTitle => 'Softcore';
+
+  @override
+  String get softcoreBody =>
+      'Zamiast śmierci tracisz przytomność. Umiejętności i schron zostają; passa jest zerowana.';
+
+  @override
+  String get beginSurvival => 'Zaczynam';
+
+  @override
+  String get errNameTooShort => 'Co najmniej 4 znaki.';
+
+  @override
+  String get errNameTooLong => 'Najwyżej 16 znaków.';
+
+  @override
+  String get errNameInvalid => 'Tylko litery, cyfry i spacje.';
+
+  @override
+  String get errNameEdgeSpaces => 'Bez spacji na początku i końcu.';
+
+  @override
+  String get errNameDoubleSpaces => 'Bez podwójnych spacji.';
+
+  @override
+  String get errAgeRange => 'Od 16 do 80 lat.';
+
+  @override
+  String get errHeightRange => 'Od 120 do 220 cm.';
+
+  @override
+  String get errWeightRange => 'Od 35 do 200 kg.';
+
+  @override
+  String get errBmiTooLow =>
+      'Te wartości nie opisują ciała, na którym model umie pracować. Sprawdź wzrost i wagę.';
+
+  @override
+  String get errBmiTooHigh =>
+      'Te wartości nie opisują ciała, na którym model umie pracować. Sprawdź wzrost i wagę.';
+
+  @override
+  String get hudBlood => 'Krew';
+
+  @override
+  String get hudWater => 'Woda';
+
+  @override
+  String get hudCalories => 'Kalorie';
+
+  @override
+  String get hudHeartRate => 'Tętno';
+
+  @override
+  String get hudCarry => 'Udźwig';
+
+  @override
+  String get hudNoSignal => 'Brak sygnału';
+
+  @override
+  String get hudWeakSignal => 'Słaby sygnał';
+
+  @override
+  String get statusBleeding => 'Krwawienie';
+
+  @override
+  String get statusDehydrated => 'Odwodnienie';
+
+  @override
+  String get statusStarving => 'Głód';
+
+  @override
+  String get statusSleepDeprived => 'Niewyspanie';
+
+  @override
+  String get statusShock => 'Wstrząs';
 }

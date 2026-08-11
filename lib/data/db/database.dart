@@ -29,7 +29,7 @@ import 'tables.dart';
 part 'database.g.dart';
 
 /// Bumped only alongside a migration step in [_migration]. Never reused.
-const int kSchemaVersion = 1;
+const int kSchemaVersion = 2;
 
 /// Keys used in [MetaEntries].
 abstract final class MetaKeys {
@@ -63,10 +63,10 @@ class SaveDatabase extends _$SaveDatabase {
   SaveDatabase.memory() : super(NativeDatabase.memory());
 
   /// Must be a literal: `drift_dev schema dump` reads it statically and cannot
-  /// follow a constant reference. `schema_version_test.dart` keeps it in step
-  /// with [kSchemaVersion].
+  /// follow a constant reference. `schema_test.dart` keeps it in step with
+  /// [kSchemaVersion].
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -75,13 +75,19 @@ class SaveDatabase extends _$SaveDatabase {
       await _writeSchemaVersion(kSchemaVersion);
     },
     onUpgrade: (m, from, to) async {
-      // Additive only. Each step is its own block, applied in sequence, so
-      // a device jumping v1 -> v3 runs v1->v2 then v2->v3 (§11.1.4).
-      //
-      // Template for the next one:
-      //   if (from < 2) {
-      //     await m.addColumn(vitals, vitals.someNewColumn);
-      //   }
+      // Additive only. Each step is its own block, applied in sequence, so a
+      // device jumping v1 -> v3 runs v1->v2 then v2->v3 (§11.1.4).
+
+      if (from < 2) {
+        // The physiology of §2 needs somewhere to keep the wound, the
+        // occupation and the movement inputs. All four carry defaults, so an
+        // existing v1 character loads without anything being backfilled.
+        await m.addColumn(vitals, vitals.bleedTier);
+        await m.addColumn(vitals, vitals.occupationJson);
+        await m.addColumn(vitals, vitals.speedKmh);
+        await m.addColumn(vitals, vitals.carriedKg);
+      }
+
       await _writeSchemaVersion(to);
     },
     beforeOpen: (details) async {

@@ -1,43 +1,69 @@
 {
   "@@locale": "pl",
-
   "appTitle": "ARLS-ZA",
   "appTagline": "Almost Real Life Survival",
-
   "continueLabel": "Kontynuuj",
   "newCharacter": "Nowa postać",
   "settings": "Ustawienia",
-
   "saveRestoredTitle": "Zapis odzyskany",
   "saveRestoredBody": "Plik zapisu był uszkodzony i został odtworzony z kopii. Straciłeś {minutes} minut gry.",
-
   "saveLostTitle": "Nie udało się odczytać zapisu",
   "saveLostBody": "Plik zapisu jest uszkodzony i nie znaleziono sprawnej kopii. Możesz wczytać wcześniej wyeksportowany profil albo zacząć nową postać.",
-
   "importProfile": "Wczytaj profil",
   "exportProfile": "Zapisz profil do pliku",
-
   "exportDone": "Profil zapisany.",
   "importDone": "Profil wczytany.",
-
   "importFailed": "Wczytywanie nie powiodło się: {reason}",
-
   "awayTitle": "Kiedy Cię nie było",
   "awayElapsed": "{days, plural, =0{Minęło mniej niż doba.} =1{Minęła doba.} few{Minęły {days} dni.} many{Minęło {days} dni.} other{Minęło {days} dni.}}",
-
   "awayFloored": "Organizm działał na rezerwach. Żaden zasób nie spadł poniżej progu bezpieczeństwa.",
-
   "clockRolledBack": "Zegar urządzenia cofnął się. Czas nie został naliczony.",
-
   "bloodVolume": "Objętość krwi",
   "dailyRequirement": "Zapotrzebowanie dobowe",
   "carryComfort": "Udźwig komfortowy",
   "carryMax": "Udźwig maksymalny",
   "maxHeartRate": "Tętno maksymalne",
-
   "unitMl": "{value} ml",
   "unitKg": "{value} kg",
   "unitBpm": "{value} bpm",
-
-  "dataStaysOnDevice": "Te wartości są liczone na Twoim telefonie i nigdy go nie opuszczają."
+  "dataStaysOnDevice": "Te wartości są liczone na Twoim telefonie i nigdy go nie opuszczają.",
+  "createCharacter": "Stwórz postać",
+  "creatorIntro": "Twój wzrost, waga, wiek i płeć służą do obliczenia objętości krwi, zapotrzebowania na wodę i kalorie oraz udźwigu.",
+  "fieldName": "Nazwa",
+  "fieldSex": "Płeć",
+  "sexMale": "Mężczyzna",
+  "sexFemale": "Kobieta",
+  "fieldAge": "Wiek",
+  "fieldHeight": "Wzrost",
+  "fieldWeight": "Waga",
+  "computedTitle": "Twoje ciało, wyliczone",
+  "deathModeTitle": "Wybierz, jak działa śmierć",
+  "deathModeWarning": "Tego wyboru nie da się później zmienić.",
+  "hardcoreTitle": "Hardcore",
+  "hardcoreBody": "Śmierć kończy postać. Umiejętności, schron i magazyn przepadają; passa trafia do Kroniki.",
+  "softcoreTitle": "Softcore",
+  "softcoreBody": "Zamiast śmierci tracisz przytomność. Umiejętności i schron zostają; passa jest zerowana.",
+  "beginSurvival": "Zaczynam",
+  "errNameTooShort": "Co najmniej 4 znaki.",
+  "errNameTooLong": "Najwyżej 16 znaków.",
+  "errNameInvalid": "Tylko litery, cyfry i spacje.",
+  "errNameEdgeSpaces": "Bez spacji na początku i końcu.",
+  "errNameDoubleSpaces": "Bez podwójnych spacji.",
+  "errAgeRange": "Od 16 do 80 lat.",
+  "errHeightRange": "Od 120 do 220 cm.",
+  "errWeightRange": "Od 35 do 200 kg.",
+  "errBmiTooLow": "Te wartości nie opisują ciała, na którym model umie pracować. Sprawdź wzrost i wagę.",
+  "errBmiTooHigh": "Te wartości nie opisują ciała, na którym model umie pracować. Sprawdź wzrost i wagę.",
+  "hudBlood": "Krew",
+  "hudWater": "Woda",
+  "hudCalories": "Kalorie",
+  "hudHeartRate": "Tętno",
+  "hudCarry": "Udźwig",
+  "hudNoSignal": "Brak sygnału",
+  "hudWeakSignal": "Słaby sygnał",
+  "statusBleeding": "Krwawienie",
+  "statusDehydrated": "Odwodnienie",
+  "statusStarving": "Głód",
+  "statusSleepDeprived": "Niewyspanie",
+  "statusShock": "Wstrząs"
 }

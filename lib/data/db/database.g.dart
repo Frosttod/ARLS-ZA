@@ -1064,6 +1064,53 @@ class $VitalsTable extends Vitals with TableInfo<$VitalsTable, Vital> {
     requiredDuringInsert: false,
     defaultValue: const Constant('{}'),
   );
+  static const VerificationMeta _bleedTierMeta = const VerificationMeta(
+    'bleedTier',
+  );
+  @override
+  late final GeneratedColumn<String> bleedTier = GeneratedColumn<String>(
+    'bleed_tier',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('none'),
+  );
+  static const VerificationMeta _occupationJsonMeta = const VerificationMeta(
+    'occupationJson',
+  );
+  @override
+  late final GeneratedColumn<String> occupationJson = GeneratedColumn<String>(
+    'occupation_json',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _speedKmhMeta = const VerificationMeta(
+    'speedKmh',
+  );
+  @override
+  late final GeneratedColumn<double> speedKmh = GeneratedColumn<double>(
+    'speed_kmh',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _carriedKgMeta = const VerificationMeta(
+    'carriedKg',
+  );
+  @override
+  late final GeneratedColumn<double> carriedKg = GeneratedColumn<double>(
+    'carried_kg',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     profileId,
@@ -1078,6 +1125,10 @@ class $VitalsTable extends Vitals with TableInfo<$VitalsTable, Vital> {
     longitude,
     accuracyM,
     rngCursors,
+    bleedTier,
+    occupationJson,
+    speedKmh,
+    carriedKg,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1182,6 +1233,33 @@ class $VitalsTable extends Vitals with TableInfo<$VitalsTable, Vital> {
         rngCursors.isAcceptableOrUnknown(data['rng_cursors']!, _rngCursorsMeta),
       );
     }
+    if (data.containsKey('bleed_tier')) {
+      context.handle(
+        _bleedTierMeta,
+        bleedTier.isAcceptableOrUnknown(data['bleed_tier']!, _bleedTierMeta),
+      );
+    }
+    if (data.containsKey('occupation_json')) {
+      context.handle(
+        _occupationJsonMeta,
+        occupationJson.isAcceptableOrUnknown(
+          data['occupation_json']!,
+          _occupationJsonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('speed_kmh')) {
+      context.handle(
+        _speedKmhMeta,
+        speedKmh.isAcceptableOrUnknown(data['speed_kmh']!, _speedKmhMeta),
+      );
+    }
+    if (data.containsKey('carried_kg')) {
+      context.handle(
+        _carriedKgMeta,
+        carriedKg.isAcceptableOrUnknown(data['carried_kg']!, _carriedKgMeta),
+      );
+    }
     return context;
   }
 
@@ -1239,6 +1317,22 @@ class $VitalsTable extends Vitals with TableInfo<$VitalsTable, Vital> {
         DriftSqlType.string,
         data['${effectivePrefix}rng_cursors'],
       )!,
+      bleedTier: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}bleed_tier'],
+      )!,
+      occupationJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}occupation_json'],
+      ),
+      speedKmh: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}speed_kmh'],
+      )!,
+      carriedKg: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}carried_kg'],
+      )!,
     );
   }
 
@@ -1273,6 +1367,26 @@ class Vital extends DataClass implements Insertable<Vital> {
   /// Draw position of each RNG stream, so a resumed session continues the
   /// sequence instead of restarting it.
   final String rngCursors;
+
+  /// Current bleeding tier (§2.6): none | superficial | moderate | severe |
+  /// arterial. A wound has to survive the app being killed — otherwise closing
+  /// the app would be first aid.
+  final String bleedTier;
+
+  /// Occupation in progress, as JSON (§2.1a). Null when the character is idle.
+  ///
+  /// Stored opaquely rather than as columns: occupations gain fields as the
+  /// shelter systems of §8 and §18 arrive, and each of those would otherwise
+  /// be a schema migration.
+  final String? occupationJson;
+
+  /// Ground speed from the last accepted fix, in km/h. Persisted so a catch-up
+  /// after a crash does not restart the character from a standstill.
+  final double speedKmh;
+
+  /// What the character is carrying, in kilograms. Feeds the load surcharge of
+  /// §2.2 until the real inventory arrives in stage 4.
+  final double carriedKg;
   const Vital({
     required this.profileId,
     required this.lastUpdate,
@@ -1286,6 +1400,10 @@ class Vital extends DataClass implements Insertable<Vital> {
     this.longitude,
     this.accuracyM,
     required this.rngCursors,
+    required this.bleedTier,
+    this.occupationJson,
+    required this.speedKmh,
+    required this.carriedKg,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1308,6 +1426,12 @@ class Vital extends DataClass implements Insertable<Vital> {
       map['accuracy_m'] = Variable<double>(accuracyM);
     }
     map['rng_cursors'] = Variable<String>(rngCursors);
+    map['bleed_tier'] = Variable<String>(bleedTier);
+    if (!nullToAbsent || occupationJson != null) {
+      map['occupation_json'] = Variable<String>(occupationJson);
+    }
+    map['speed_kmh'] = Variable<double>(speedKmh);
+    map['carried_kg'] = Variable<double>(carriedKg);
     return map;
   }
 
@@ -1331,6 +1455,12 @@ class Vital extends DataClass implements Insertable<Vital> {
           ? const Value.absent()
           : Value(accuracyM),
       rngCursors: Value(rngCursors),
+      bleedTier: Value(bleedTier),
+      occupationJson: occupationJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(occupationJson),
+      speedKmh: Value(speedKmh),
+      carriedKg: Value(carriedKg),
     );
   }
 
@@ -1352,6 +1482,10 @@ class Vital extends DataClass implements Insertable<Vital> {
       longitude: serializer.fromJson<double?>(json['longitude']),
       accuracyM: serializer.fromJson<double?>(json['accuracyM']),
       rngCursors: serializer.fromJson<String>(json['rngCursors']),
+      bleedTier: serializer.fromJson<String>(json['bleedTier']),
+      occupationJson: serializer.fromJson<String?>(json['occupationJson']),
+      speedKmh: serializer.fromJson<double>(json['speedKmh']),
+      carriedKg: serializer.fromJson<double>(json['carriedKg']),
     );
   }
   @override
@@ -1370,6 +1504,10 @@ class Vital extends DataClass implements Insertable<Vital> {
       'longitude': serializer.toJson<double?>(longitude),
       'accuracyM': serializer.toJson<double?>(accuracyM),
       'rngCursors': serializer.toJson<String>(rngCursors),
+      'bleedTier': serializer.toJson<String>(bleedTier),
+      'occupationJson': serializer.toJson<String?>(occupationJson),
+      'speedKmh': serializer.toJson<double>(speedKmh),
+      'carriedKg': serializer.toJson<double>(carriedKg),
     };
   }
 
@@ -1386,6 +1524,10 @@ class Vital extends DataClass implements Insertable<Vital> {
     Value<double?> longitude = const Value.absent(),
     Value<double?> accuracyM = const Value.absent(),
     String? rngCursors,
+    String? bleedTier,
+    Value<String?> occupationJson = const Value.absent(),
+    double? speedKmh,
+    double? carriedKg,
   }) => Vital(
     profileId: profileId ?? this.profileId,
     lastUpdate: lastUpdate ?? this.lastUpdate,
@@ -1399,6 +1541,12 @@ class Vital extends DataClass implements Insertable<Vital> {
     longitude: longitude.present ? longitude.value : this.longitude,
     accuracyM: accuracyM.present ? accuracyM.value : this.accuracyM,
     rngCursors: rngCursors ?? this.rngCursors,
+    bleedTier: bleedTier ?? this.bleedTier,
+    occupationJson: occupationJson.present
+        ? occupationJson.value
+        : this.occupationJson,
+    speedKmh: speedKmh ?? this.speedKmh,
+    carriedKg: carriedKg ?? this.carriedKg,
   );
   Vital copyWithCompanion(VitalsCompanion data) {
     return Vital(
@@ -1424,6 +1572,12 @@ class Vital extends DataClass implements Insertable<Vital> {
       rngCursors: data.rngCursors.present
           ? data.rngCursors.value
           : this.rngCursors,
+      bleedTier: data.bleedTier.present ? data.bleedTier.value : this.bleedTier,
+      occupationJson: data.occupationJson.present
+          ? data.occupationJson.value
+          : this.occupationJson,
+      speedKmh: data.speedKmh.present ? data.speedKmh.value : this.speedKmh,
+      carriedKg: data.carriedKg.present ? data.carriedKg.value : this.carriedKg,
     );
   }
 
@@ -1441,7 +1595,11 @@ class Vital extends DataClass implements Insertable<Vital> {
           ..write('latitude: $latitude, ')
           ..write('longitude: $longitude, ')
           ..write('accuracyM: $accuracyM, ')
-          ..write('rngCursors: $rngCursors')
+          ..write('rngCursors: $rngCursors, ')
+          ..write('bleedTier: $bleedTier, ')
+          ..write('occupationJson: $occupationJson, ')
+          ..write('speedKmh: $speedKmh, ')
+          ..write('carriedKg: $carriedKg')
           ..write(')'))
         .toString();
   }
@@ -1460,6 +1618,10 @@ class Vital extends DataClass implements Insertable<Vital> {
     longitude,
     accuracyM,
     rngCursors,
+    bleedTier,
+    occupationJson,
+    speedKmh,
+    carriedKg,
   );
   @override
   bool operator ==(Object other) =>
@@ -1476,7 +1638,11 @@ class Vital extends DataClass implements Insertable<Vital> {
           other.latitude == this.latitude &&
           other.longitude == this.longitude &&
           other.accuracyM == this.accuracyM &&
-          other.rngCursors == this.rngCursors);
+          other.rngCursors == this.rngCursors &&
+          other.bleedTier == this.bleedTier &&
+          other.occupationJson == this.occupationJson &&
+          other.speedKmh == this.speedKmh &&
+          other.carriedKg == this.carriedKg);
 }
 
 class VitalsCompanion extends UpdateCompanion<Vital> {
@@ -1492,6 +1658,10 @@ class VitalsCompanion extends UpdateCompanion<Vital> {
   final Value<double?> longitude;
   final Value<double?> accuracyM;
   final Value<String> rngCursors;
+  final Value<String> bleedTier;
+  final Value<String?> occupationJson;
+  final Value<double> speedKmh;
+  final Value<double> carriedKg;
   const VitalsCompanion({
     this.profileId = const Value.absent(),
     this.lastUpdate = const Value.absent(),
@@ -1505,6 +1675,10 @@ class VitalsCompanion extends UpdateCompanion<Vital> {
     this.longitude = const Value.absent(),
     this.accuracyM = const Value.absent(),
     this.rngCursors = const Value.absent(),
+    this.bleedTier = const Value.absent(),
+    this.occupationJson = const Value.absent(),
+    this.speedKmh = const Value.absent(),
+    this.carriedKg = const Value.absent(),
   });
   VitalsCompanion.insert({
     this.profileId = const Value.absent(),
@@ -1519,6 +1693,10 @@ class VitalsCompanion extends UpdateCompanion<Vital> {
     this.longitude = const Value.absent(),
     this.accuracyM = const Value.absent(),
     this.rngCursors = const Value.absent(),
+    this.bleedTier = const Value.absent(),
+    this.occupationJson = const Value.absent(),
+    this.speedKmh = const Value.absent(),
+    this.carriedKg = const Value.absent(),
   }) : lastUpdate = Value(lastUpdate),
        bloodMl = Value(bloodMl),
        waterMl = Value(waterMl),
@@ -1537,6 +1715,10 @@ class VitalsCompanion extends UpdateCompanion<Vital> {
     Expression<double>? longitude,
     Expression<double>? accuracyM,
     Expression<String>? rngCursors,
+    Expression<String>? bleedTier,
+    Expression<String>? occupationJson,
+    Expression<double>? speedKmh,
+    Expression<double>? carriedKg,
   }) {
     return RawValuesInsertable({
       if (profileId != null) 'profile_id': profileId,
@@ -1551,6 +1733,10 @@ class VitalsCompanion extends UpdateCompanion<Vital> {
       if (longitude != null) 'longitude': longitude,
       if (accuracyM != null) 'accuracy_m': accuracyM,
       if (rngCursors != null) 'rng_cursors': rngCursors,
+      if (bleedTier != null) 'bleed_tier': bleedTier,
+      if (occupationJson != null) 'occupation_json': occupationJson,
+      if (speedKmh != null) 'speed_kmh': speedKmh,
+      if (carriedKg != null) 'carried_kg': carriedKg,
     });
   }
 
@@ -1567,6 +1753,10 @@ class VitalsCompanion extends UpdateCompanion<Vital> {
     Value<double?>? longitude,
     Value<double?>? accuracyM,
     Value<String>? rngCursors,
+    Value<String>? bleedTier,
+    Value<String?>? occupationJson,
+    Value<double>? speedKmh,
+    Value<double>? carriedKg,
   }) {
     return VitalsCompanion(
       profileId: profileId ?? this.profileId,
@@ -1581,6 +1771,10 @@ class VitalsCompanion extends UpdateCompanion<Vital> {
       longitude: longitude ?? this.longitude,
       accuracyM: accuracyM ?? this.accuracyM,
       rngCursors: rngCursors ?? this.rngCursors,
+      bleedTier: bleedTier ?? this.bleedTier,
+      occupationJson: occupationJson ?? this.occupationJson,
+      speedKmh: speedKmh ?? this.speedKmh,
+      carriedKg: carriedKg ?? this.carriedKg,
     );
   }
 
@@ -1623,6 +1817,18 @@ class VitalsCompanion extends UpdateCompanion<Vital> {
     if (rngCursors.present) {
       map['rng_cursors'] = Variable<String>(rngCursors.value);
     }
+    if (bleedTier.present) {
+      map['bleed_tier'] = Variable<String>(bleedTier.value);
+    }
+    if (occupationJson.present) {
+      map['occupation_json'] = Variable<String>(occupationJson.value);
+    }
+    if (speedKmh.present) {
+      map['speed_kmh'] = Variable<double>(speedKmh.value);
+    }
+    if (carriedKg.present) {
+      map['carried_kg'] = Variable<double>(carriedKg.value);
+    }
     return map;
   }
 
@@ -1640,7 +1846,11 @@ class VitalsCompanion extends UpdateCompanion<Vital> {
           ..write('latitude: $latitude, ')
           ..write('longitude: $longitude, ')
           ..write('accuracyM: $accuracyM, ')
-          ..write('rngCursors: $rngCursors')
+          ..write('rngCursors: $rngCursors, ')
+          ..write('bleedTier: $bleedTier, ')
+          ..write('occupationJson: $occupationJson, ')
+          ..write('speedKmh: $speedKmh, ')
+          ..write('carriedKg: $carriedKg')
           ..write(')'))
         .toString();
   }
@@ -3328,6 +3538,10 @@ typedef $$VitalsTableCreateCompanionBuilder =
       Value<double?> longitude,
       Value<double?> accuracyM,
       Value<String> rngCursors,
+      Value<String> bleedTier,
+      Value<String?> occupationJson,
+      Value<double> speedKmh,
+      Value<double> carriedKg,
     });
 typedef $$VitalsTableUpdateCompanionBuilder =
     VitalsCompanion Function({
@@ -3343,6 +3557,10 @@ typedef $$VitalsTableUpdateCompanionBuilder =
       Value<double?> longitude,
       Value<double?> accuracyM,
       Value<String> rngCursors,
+      Value<String> bleedTier,
+      Value<String?> occupationJson,
+      Value<double> speedKmh,
+      Value<double> carriedKg,
     });
 
 class $$VitalsTableFilterComposer
@@ -3411,6 +3629,26 @@ class $$VitalsTableFilterComposer
 
   ColumnFilters<String> get rngCursors => $composableBuilder(
     column: $table.rngCursors,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get bleedTier => $composableBuilder(
+    column: $table.bleedTier,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get occupationJson => $composableBuilder(
+    column: $table.occupationJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get speedKmh => $composableBuilder(
+    column: $table.speedKmh,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get carriedKg => $composableBuilder(
+    column: $table.carriedKg,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -3483,6 +3721,26 @@ class $$VitalsTableOrderingComposer
     column: $table.rngCursors,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get bleedTier => $composableBuilder(
+    column: $table.bleedTier,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get occupationJson => $composableBuilder(
+    column: $table.occupationJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get speedKmh => $composableBuilder(
+    column: $table.speedKmh,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get carriedKg => $composableBuilder(
+    column: $table.carriedKg,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$VitalsTableAnnotationComposer
@@ -3539,6 +3797,20 @@ class $$VitalsTableAnnotationComposer
     column: $table.rngCursors,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get bleedTier =>
+      $composableBuilder(column: $table.bleedTier, builder: (column) => column);
+
+  GeneratedColumn<String> get occupationJson => $composableBuilder(
+    column: $table.occupationJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get speedKmh =>
+      $composableBuilder(column: $table.speedKmh, builder: (column) => column);
+
+  GeneratedColumn<double> get carriedKg =>
+      $composableBuilder(column: $table.carriedKg, builder: (column) => column);
 }
 
 class $$VitalsTableTableManager
@@ -3581,6 +3853,10 @@ class $$VitalsTableTableManager
                 Value<double?> longitude = const Value.absent(),
                 Value<double?> accuracyM = const Value.absent(),
                 Value<String> rngCursors = const Value.absent(),
+                Value<String> bleedTier = const Value.absent(),
+                Value<String?> occupationJson = const Value.absent(),
+                Value<double> speedKmh = const Value.absent(),
+                Value<double> carriedKg = const Value.absent(),
               }) => VitalsCompanion(
                 profileId: profileId,
                 lastUpdate: lastUpdate,
@@ -3594,6 +3870,10 @@ class $$VitalsTableTableManager
                 longitude: longitude,
                 accuracyM: accuracyM,
                 rngCursors: rngCursors,
+                bleedTier: bleedTier,
+                occupationJson: occupationJson,
+                speedKmh: speedKmh,
+                carriedKg: carriedKg,
               ),
           createCompanionCallback:
               ({
@@ -3609,6 +3889,10 @@ class $$VitalsTableTableManager
                 Value<double?> longitude = const Value.absent(),
                 Value<double?> accuracyM = const Value.absent(),
                 Value<String> rngCursors = const Value.absent(),
+                Value<String> bleedTier = const Value.absent(),
+                Value<String?> occupationJson = const Value.absent(),
+                Value<double> speedKmh = const Value.absent(),
+                Value<double> carriedKg = const Value.absent(),
               }) => VitalsCompanion.insert(
                 profileId: profileId,
                 lastUpdate: lastUpdate,
@@ -3622,6 +3906,10 @@ class $$VitalsTableTableManager
                 longitude: longitude,
                 accuracyM: accuracyM,
                 rngCursors: rngCursors,
+                bleedTier: bleedTier,
+                occupationJson: occupationJson,
+                speedKmh: speedKmh,
+                carriedKg: carriedKg,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
