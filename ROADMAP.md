@@ -29,6 +29,7 @@ Rzeczy, których nie da się zrobić z poziomu repozytorium.
 | :---- | :---- | :---- |
 | Keystore i `android/key.properties` | bez tego `flutter build --release` używa kluczy debug, a takiego artefaktu nie da się opublikować. Instrukcja na górze [PROCEDURA_RELEASE.md](PROCEDURA_RELEASE.md) | 0 |
 | GitHub Pages dla `ARLS-ZA-Game` | strona projektu nie jest publicznie widoczna. Settings → Pages → branch `main`, folder `/ (root)` | — |
+| Zbudowanie i wystawienie pakietów PMTiles | katalog w `assets/regions.json` ma 16 województw, ale bez sum kontrolnych i pod adresem, który jeszcze nie istnieje. Pakiet bez sumy kontrolnej jest **celowo odrzucany** — mapa, której nikt nie zweryfikuje, to mapa, z którą nikt nie powinien wchodzić do miasta. Trzeba zbudować pliki (Protomaps/tippecanoe z wycinków OSM), policzyć SHA-256 i wystawić jako release `maps-v1` | 3 |
 
 ---
 
