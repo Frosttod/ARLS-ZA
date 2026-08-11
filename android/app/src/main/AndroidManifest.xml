@@ -1,4 +1,25 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- The game measures a real body moving through a real city, so the position is not a
+         feature but the input (design doc §3). Fine location is required; coarse is declared
+         alongside it because Android 12 and later let the user grant only the approximate
+         one, and the game has to keep running — degraded — when they do (§16.1). -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+
+    <!-- Optional by design. Refusing it leaves foreground-only play, which §16.1 treats as a
+         full variant of the game rather than a degraded one. -->
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
+
+    <!-- A walk lasts an hour with the screen off. Without the foreground service Android
+         stops delivering fixes within minutes and the session silently stops counting
+         (§3.3). The persistent notification is the price and is not dismissible. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+
+    <!-- GPS hardware is required, not merely used: without it there is no game. -->
+    <uses-feature android:name="android.hardware.location.gps" android:required="true"/>
+
     <application
         android:label="ARLS-ZA Game"
         android:name="${applicationName}"

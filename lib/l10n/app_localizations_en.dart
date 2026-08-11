@@ -233,4 +233,53 @@ class L10nEn extends L10n {
 
   @override
   String get statusShock => 'Shock';
+
+  @override
+  String get locationTitle => 'The game needs your position';
+
+  @override
+  String get locationBody =>
+      'ARLS-ZA measures a real body moving through a real place. Without a position there is nothing to measure. The data never leaves your phone.';
+
+  @override
+  String get locationGrant => 'Grant access';
+
+  @override
+  String get locationSettings => 'Open settings';
+
+  @override
+  String get locationDeniedTitle => 'Location access refused';
+
+  @override
+  String get locationDeniedBody =>
+      'There is no game without a position. You can change this in the system settings.';
+
+  @override
+  String get locationServiceOffTitle => 'Location is switched off';
+
+  @override
+  String get locationServiceOffBody =>
+      'This is a device-wide setting, not this game\'s. Switch location on and come back.';
+
+  @override
+  String get locationForegroundOnlyTitle => 'The game runs on screen only';
+
+  @override
+  String get locationForegroundOnlyBody =>
+      'Background location was not granted, so the simulation pauses when you put the app away. This is a full variant of the game — you lose nothing but walking with the screen off.';
+
+  @override
+  String get locationNotificationTitle => 'ARLS-ZA — expedition in progress';
+
+  @override
+  String get locationNotificationBody =>
+      'The game is counting your movement. Tap to return.';
+
+  @override
+  String get integritySuspendedMock =>
+      'Mocked location detected. Play is suspended.';
+
+  @override
+  String get integritySuspendedVehicle =>
+      'You are in a vehicle. Play is suspended until you are back on your own feet.';
 }

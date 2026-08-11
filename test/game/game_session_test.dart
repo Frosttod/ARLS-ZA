@@ -5,6 +5,7 @@ import 'package:arls_za/core/scaled_wall_clock.dart';
 import 'package:arls_za/data/db/database.dart';
 import 'package:arls_za/data/persistence/save_bootstrap.dart';
 import 'package:arls_za/game/game_session.dart';
+import 'package:arls_za/location/device_position_source.dart';
 import 'package:arls_za/sim/body.dart';
 import 'package:test/test.dart';
 
@@ -117,9 +118,15 @@ void main() {
     );
   });
 
-  test('a release build has nothing to drive the position with yet', () {
-    // Stage 3 brings the real source. Until then the honest answer is null,
-    // rather than a simulator smuggled into a shipped build (§11.2).
-    expect(buildPositionSource(null), isNull);
+  test('a build without developer mode gets the real chip (§11.2)', () {
+    // The simulator is reachable only through a DevSession, which only exists
+    // in a build that carries developer mode at all. Anything else walks on
+    // real ground.
+    final source = buildPositionSource(
+      notice: const ForegroundNotice(title: 'ARLS-ZA', body: 'counting'),
+    );
+
+    expect(source, isA<DevicePositionSource>());
+    expect(source.isSimulated, isFalse);
   });
 }

@@ -65,5 +65,19 @@
   "statusDehydrated": "Odwodnienie",
   "statusStarving": "Głód",
   "statusSleepDeprived": "Niewyspanie",
-  "statusShock": "Wstrząs"
+  "statusShock": "Wstrząs",
+  "locationTitle": "Gra potrzebuje twojej pozycji",
+  "locationBody": "ARLS-ZA mierzy prawdziwy ruch prawdziwego ciała. Bez pozycji nie ma czego mierzyć. Dane nie opuszczają telefonu.",
+  "locationGrant": "Udziel dostępu",
+  "locationSettings": "Otwórz ustawienia",
+  "locationDeniedTitle": "Dostęp do lokalizacji odrzucony",
+  "locationDeniedBody": "Bez pozycji nie da się grać. Możesz to zmienić w ustawieniach systemu.",
+  "locationServiceOffTitle": "Lokalizacja jest wyłączona",
+  "locationServiceOffBody": "To ustawienie całego telefonu, nie tej gry. Włącz lokalizację i wróć.",
+  "locationForegroundOnlyTitle": "Gra działa tylko na ekranie",
+  "locationForegroundOnlyBody": "Nie masz zgody na lokalizację w tle, więc symulacja zatrzymuje się, gdy schowasz aplikację. To pełnoprawny wariant gry — nic nie tracisz poza chodzeniem z wygaszonym ekranem.",
+  "locationNotificationTitle": "ARLS-ZA — trwa wyprawa",
+  "locationNotificationBody": "Gra liczy twój ruch. Dotknij, aby wrócić.",
+  "integritySuspendedMock": "Wykryto fałszywą lokalizację. Rozgrywka wstrzymana.",
+  "integritySuspendedVehicle": "Jedziesz. Rozgrywka wstrzymana do czasu powrotu na własne nogi."
 }

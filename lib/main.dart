@@ -14,6 +14,8 @@ import 'devtools/dev_session.dart';
 import 'game/game_loop.dart';
 import 'game/game_session.dart';
 import 'l10n/app_localizations.dart';
+import 'location/device_position_source.dart';
+import 'location/location_access.dart';
 import 'location/position_fix.dart';
 import 'ui/character_creator.dart';
 import 'ui/hud.dart';
@@ -167,6 +169,15 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   GameSnapshot? _snapshot;
   bool _loading = true;
 
+  /// The real GPS, when that is what is driving the game. Held so the location
+  /// gate can send the player to the right settings page and ask again.
+  DevicePositionSource? _device;
+
+  /// Set when the operating system will not give us a position (§16.1). The
+  /// game stops at the gate rather than running a simulation on movement that
+  /// will never arrive.
+  LocationAccess? _blocked;
+
   /// Where the simulated clock stood when the loop started, so the developer
   /// overlay can report how much game time this session has consumed.
   DateTime? _sessionStart;
@@ -195,18 +206,34 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       _dev = DevSession.attach(constants: character.constants);
     }
 
-    final source = buildPositionSource(_dev);
-    if (source == null) {
-      // Nothing can drive the position yet. Say so rather than running a
-      // simulation on movement that will never arrive — the real GPS is
-      // stage 3.
-      if (mounted) {
+    final l10n = L10n.of(context);
+    final source = buildPositionSource(
+      notice: ForegroundNotice(
+        title: l10n.locationNotificationTitle,
+        body: l10n.locationNotificationBody,
+      ),
+      dev: _dev,
+    );
+
+    if (source is DevicePositionSource) {
+      _device = source;
+
+      // Ask before the loop starts. Starting a loop that will never receive a
+      // fix leaves the player watching a HUD that never changes, with nothing
+      // saying why.
+      final access = await source.requestAccess();
+      if (!mounted) {
+        await source.dispose();
+        return;
+      }
+      if (!access.canPlay) {
         setState(() {
           _character = character;
+          _blocked = access;
           _loading = false;
         });
+        return;
       }
-      return;
     }
 
     final loop = await _factory.startLoop(
@@ -229,6 +256,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     setState(() {
       _character = character;
       _loop = loop;
+      _blocked = null;
       _loading = false;
     });
   }
@@ -280,6 +308,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final dev = _dev;
     final snapshot = _snapshot;
     final character = _character;
+    final blocked = _blocked;
 
     return Scaffold(
       body: Stack(
@@ -329,6 +358,18 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
                                     title: l10n.saveLostTitle,
                                     body: l10n.saveLostBody,
                                   ),
+                                if (blocked != null)
+                                  _LocationGate(
+                                    access: blocked,
+                                    onRetry: _retryAccess,
+                                  ),
+                                if (blocked == null &&
+                                    _device?.access ==
+                                        LocationAccess.foregroundOnly)
+                                  _Notice(
+                                    title: l10n.locationForegroundOnlyTitle,
+                                    body: l10n.locationForegroundOnlyBody,
+                                  ),
                                 if (character == null)
                                   FilledButton(
                                     onPressed: _openCreator,
@@ -359,6 +400,26 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     );
   }
 
+  /// The player has been to the settings, or wants to be asked again.
+  Future<void> _retryAccess() async {
+    final device = _device;
+    final character = _character;
+    if (device == null || character == null) return;
+
+    if (device.access.needsSystemSettings) {
+      await device.openRelevantSettings();
+      // Android gives us nothing to await here: the player may come back
+      // having changed the setting, or not at all. The button stays, so the
+      // next tap re-asks.
+      return;
+    }
+
+    setState(() => _loading = true);
+    await device.dispose();
+    _device = null;
+    await _enter(character);
+  }
+
   void _openCreator() {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -382,6 +443,52 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         PositionSignal.degraded => l10n.hudWeakSignal,
         PositionSignal.good => null,
       };
+}
+
+/// What to say when the operating system will not give us a position (§16.1).
+///
+/// Each state gets its own words and its own button. "Location refused" with a
+/// button that opens the wrong settings page is worse than saying nothing.
+class _LocationGate extends StatelessWidget {
+  const _LocationGate({required this.access, required this.onRetry});
+
+  final LocationAccess access;
+  final Future<void> Function() onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = L10n.of(context);
+
+    final (title, body) = switch (access) {
+      LocationAccess.serviceDisabled => (
+        l10n.locationServiceOffTitle,
+        l10n.locationServiceOffBody,
+      ),
+      LocationAccess.deniedForever => (
+        l10n.locationDeniedTitle,
+        l10n.locationDeniedBody,
+      ),
+      // Not yet asked, or asked and dismissed. Explain what it is for before
+      // asking again, rather than firing the system prompt a second time with
+      // no context (§16.1).
+      _ => (l10n.locationTitle, l10n.locationBody),
+    };
+
+    return Column(
+      children: [
+        _Notice(title: title, body: body),
+        const SizedBox(height: 16),
+        FilledButton(
+          onPressed: () => unawaited(onRetry()),
+          child: Text(
+            access.needsSystemSettings
+                ? l10n.locationSettings
+                : l10n.locationGrant,
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 class _Notice extends StatelessWidget {

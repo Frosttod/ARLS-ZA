@@ -492,6 +492,90 @@ abstract class L10n {
   /// In en, this message translates to:
   /// **'Shock'**
   String get statusShock;
+
+  /// No description provided for @locationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The game needs your position'**
+  String get locationTitle;
+
+  /// No description provided for @locationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'ARLS-ZA measures a real body moving through a real place. Without a position there is nothing to measure. The data never leaves your phone.'**
+  String get locationBody;
+
+  /// No description provided for @locationGrant.
+  ///
+  /// In en, this message translates to:
+  /// **'Grant access'**
+  String get locationGrant;
+
+  /// No description provided for @locationSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open settings'**
+  String get locationSettings;
+
+  /// No description provided for @locationDeniedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Location access refused'**
+  String get locationDeniedTitle;
+
+  /// No description provided for @locationDeniedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'There is no game without a position. You can change this in the system settings.'**
+  String get locationDeniedBody;
+
+  /// No description provided for @locationServiceOffTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Location is switched off'**
+  String get locationServiceOffTitle;
+
+  /// No description provided for @locationServiceOffBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This is a device-wide setting, not this game\'s. Switch location on and come back.'**
+  String get locationServiceOffBody;
+
+  /// No description provided for @locationForegroundOnlyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'The game runs on screen only'**
+  String get locationForegroundOnlyTitle;
+
+  /// No description provided for @locationForegroundOnlyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Background location was not granted, so the simulation pauses when you put the app away. This is a full variant of the game — you lose nothing but walking with the screen off.'**
+  String get locationForegroundOnlyBody;
+
+  /// No description provided for @locationNotificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'ARLS-ZA — expedition in progress'**
+  String get locationNotificationTitle;
+
+  /// No description provided for @locationNotificationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The game is counting your movement. Tap to return.'**
+  String get locationNotificationBody;
+
+  /// No description provided for @integritySuspendedMock.
+  ///
+  /// In en, this message translates to:
+  /// **'Mocked location detected. Play is suspended.'**
+  String get integritySuspendedMock;
+
+  /// No description provided for @integritySuspendedVehicle.
+  ///
+  /// In en, this message translates to:
+  /// **'You are in a vehicle. Play is suspended until you are back on your own feet.'**
+  String get integritySuspendedVehicle;
 }
 
 class _L10nDelegate extends LocalizationsDelegate<L10n> {

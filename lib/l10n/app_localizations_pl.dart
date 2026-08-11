@@ -235,4 +235,53 @@ class L10nPl extends L10n {
 
   @override
   String get statusShock => 'Wstrząs';
+
+  @override
+  String get locationTitle => 'Gra potrzebuje twojej pozycji';
+
+  @override
+  String get locationBody =>
+      'ARLS-ZA mierzy prawdziwy ruch prawdziwego ciała. Bez pozycji nie ma czego mierzyć. Dane nie opuszczają telefonu.';
+
+  @override
+  String get locationGrant => 'Udziel dostępu';
+
+  @override
+  String get locationSettings => 'Otwórz ustawienia';
+
+  @override
+  String get locationDeniedTitle => 'Dostęp do lokalizacji odrzucony';
+
+  @override
+  String get locationDeniedBody =>
+      'Bez pozycji nie da się grać. Możesz to zmienić w ustawieniach systemu.';
+
+  @override
+  String get locationServiceOffTitle => 'Lokalizacja jest wyłączona';
+
+  @override
+  String get locationServiceOffBody =>
+      'To ustawienie całego telefonu, nie tej gry. Włącz lokalizację i wróć.';
+
+  @override
+  String get locationForegroundOnlyTitle => 'Gra działa tylko na ekranie';
+
+  @override
+  String get locationForegroundOnlyBody =>
+      'Nie masz zgody na lokalizację w tle, więc symulacja zatrzymuje się, gdy schowasz aplikację. To pełnoprawny wariant gry — nic nie tracisz poza chodzeniem z wygaszonym ekranem.';
+
+  @override
+  String get locationNotificationTitle => 'ARLS-ZA — trwa wyprawa';
+
+  @override
+  String get locationNotificationBody =>
+      'Gra liczy twój ruch. Dotknij, aby wrócić.';
+
+  @override
+  String get integritySuspendedMock =>
+      'Wykryto fałszywą lokalizację. Rozgrywka wstrzymana.';
+
+  @override
+  String get integritySuspendedVehicle =>
+      'Jedziesz. Rozgrywka wstrzymana do czasu powrotu na własne nogi.';
 }

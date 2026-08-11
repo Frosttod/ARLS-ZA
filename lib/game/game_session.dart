@@ -14,6 +14,7 @@ import '../data/db/database.dart';
 import '../data/persistence/save_bootstrap.dart';
 import '../devtools/dev_mode.dart';
 import '../devtools/dev_session.dart';
+import '../location/device_position_source.dart';
 import '../location/position_source.dart';
 import '../sim/body.dart';
 import '../sim/tick.dart';
@@ -136,12 +137,15 @@ class GameSessionFactory {
   }
 }
 
-/// Where the position comes from.
+/// Where the position comes from (§11.2).
 ///
-/// Stage 3 adds the real `geolocator` source; until then a build without
-/// developer mode has nothing to drive it with, which is stated plainly rather
-/// than faked.
-PositionSource? buildPositionSource(DevSession? dev) {
+/// The developer simulator wins when it is present, and it can only be present
+/// in a build that carries developer mode at all. Everything else gets the real
+/// chip. Downstream nothing can tell the difference, which is the whole point.
+PositionSource buildPositionSource({
+  required ForegroundNotice notice,
+  DevSession? dev,
+}) {
   if (kDevTools && dev != null) return dev.source;
-  return null;
+  return DevicePositionSource(notice: notice);
 }
