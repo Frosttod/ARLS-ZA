@@ -81,5 +81,16 @@
   "integritySuspendedMock": "Wykryto fałszywą lokalizację. Rozgrywka wstrzymana.",
   "integritySuspendedVehicle": "Jedziesz. Rozgrywka wstrzymana do czasu powrotu na własne nogi.",
   "hudLowBattery": "Bateria <20% — wracaj do schronu",
-  "hudEconomy": "Tryb oszczędny"
+  "hudEconomy": "Tryb oszczędny",
+  "safetyNoCombatMoving": "Nie graj podczas jazdy",
+  "safetyNightVisibility": "Ciemno. Bądź widoczny i patrz, gdzie idziesz.",
+  "safetyBriefingTitle": "Zanim wyjdziesz",
+  "safetyBriefingIntro": "Ta gra mierzy prawdziwy ruch prawdziwego ciała po prawdziwym mieście. Wszystko poniżej dotyczy ciebie, nie postaci.",
+  "safetyRuleTraffic": "Patrz na drogę, nie na telefon. Gra nie zna samochodów.",
+  "safetyRuleNoDriving": "Nie graj w ruchu pojazdu. Powyżej 15 km/h walka jest zablokowana, a powyżej 40 km/h rozgrywka zostaje wstrzymana.",
+  "safetyRuleNoTrespass": "Gra nigdy nie każe ci wejść na teren prywatny, na tory ani do wody. Jeśli znacznik wygląda inaczej — nie idź tam.",
+  "safetyRuleRespect": "Szpitale, szkoły, cmentarze i miejsca kultu są wyłączone ze spawnu. Nie graj tam mimo to.",
+  "safetyRuleNight": "Po zmroku bądź widoczny. Jasne ubranie, opaska odblaskowa, uszy wolne.",
+  "safetyRuleStop": "Zmęczenie, ból, burza, obcy ludzie — kończ sesję. Postać poczeka.",
+  "safetyBriefingAccept": "Rozumiem i biorę to na siebie"
 }

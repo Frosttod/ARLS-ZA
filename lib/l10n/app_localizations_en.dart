@@ -288,4 +288,45 @@ class L10nEn extends L10n {
 
   @override
   String get hudEconomy => 'Power saving';
+
+  @override
+  String get safetyNoCombatMoving => 'Do not play while travelling';
+
+  @override
+  String get safetyNightVisibility =>
+      'It is dark. Be visible, and watch where you are going.';
+
+  @override
+  String get safetyBriefingTitle => 'Before you go out';
+
+  @override
+  String get safetyBriefingIntro =>
+      'This game measures a real body moving through a real city. Everything below is about you, not the character.';
+
+  @override
+  String get safetyRuleTraffic =>
+      'Watch the road, not the phone. The game knows nothing about cars.';
+
+  @override
+  String get safetyRuleNoDriving =>
+      'Do not play while travelling. Above 15 km/h combat is blocked; above 40 km/h play is suspended.';
+
+  @override
+  String get safetyRuleNoTrespass =>
+      'The game will never send you onto private land, onto a railway or into water. If a marker looks like it does — do not go.';
+
+  @override
+  String get safetyRuleRespect =>
+      'Hospitals, schools, cemeteries and places of worship are excluded from spawns. Do not play there anyway.';
+
+  @override
+  String get safetyRuleNight =>
+      'After dark, be visible. Light clothing, a reflective band, ears free.';
+
+  @override
+  String get safetyRuleStop =>
+      'Tiredness, pain, a storm, strangers — end the session. The character will wait.';
+
+  @override
+  String get safetyBriefingAccept => 'I understand and accept this';
 }

@@ -10,6 +10,7 @@ import 'package:arls_za/game/game_loop.dart';
 import 'package:arls_za/location/movement_integrity.dart';
 import 'package:arls_za/location/position_source.dart';
 import 'package:arls_za/location/power_source.dart';
+import 'package:arls_za/safety/player_safety.dart';
 import 'package:arls_za/sim/body.dart';
 import 'package:arls_za/sim/occupation.dart';
 import 'package:arls_za/sim/tick.dart';
@@ -437,6 +438,75 @@ void main() {
       final snapshot = await rig.loop.snapshots.first;
       expect(snapshot.economy, isFalse);
       expect(rig.source.currentCadence, PositionCadence.moving);
+    });
+  });
+
+  group('player safety (§3.5)', () {
+    test('a fight is refused above fifteen km/h', () async {
+      final rig = await buildLoop();
+      addTearDown(() async {
+        await rig.loop.dispose();
+        await rig.source.dispose();
+        await rig.session.close();
+      });
+
+      rig.source
+        ..mode = SimMovementMode.route
+        // 25 km/h. A bicycle, not a sprint.
+        ..speedMps = 7;
+
+      await rig.loop.start();
+      for (var step = 0; step < 6; step++) {
+        rig.source.step();
+        await pump();
+        rig.wall.advance(const Duration(seconds: 5));
+      }
+
+      final snapshot = await rig.loop.snapshots.first;
+      expect(snapshot.combatBlocked, CombatBlock.movingTooFast);
+    });
+
+    test('a fight is allowed at walking pace', () async {
+      final rig = await buildLoop();
+      addTearDown(() async {
+        await rig.loop.dispose();
+        await rig.source.dispose();
+        await rig.session.close();
+      });
+
+      rig.source
+        ..mode = SimMovementMode.route
+        ..speedMps = SimSpeedPreset.briskWalk.mps;
+
+      await rig.loop.start();
+      for (var step = 0; step < 6; step++) {
+        rig.source.step();
+        await pump();
+        rig.wall.advance(const Duration(seconds: 5));
+      }
+
+      final snapshot = await rig.loop.snapshots.first;
+      expect(snapshot.combatBlocked, CombatBlock.none);
+    });
+
+    test('a suspended run blocks a fight even standing still', () async {
+      final rig = await buildLoop();
+      addTearDown(() async {
+        await rig.loop.dispose();
+        await rig.source.dispose();
+        await rig.session.close();
+      });
+
+      rig.source
+        ..mode = SimMovementMode.stationary
+        ..reportMocked = true;
+
+      await rig.loop.start();
+      rig.source.step();
+      await pump();
+
+      final snapshot = await rig.loop.snapshots.first;
+      expect(snapshot.combatBlocked, CombatBlock.runSuspended);
     });
   });
 

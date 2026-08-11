@@ -29,6 +29,7 @@ import '../location/position_fix.dart';
 import '../location/position_source.dart';
 import '../location/power_source.dart';
 import '../location/sampling_policy.dart';
+import '../safety/player_safety.dart';
 import '../sim/daylight.dart';
 import '../sim/occupation.dart';
 import '../sim/physiology.dart';
@@ -48,6 +49,7 @@ class GameSnapshot {
     this.integrityReason = IntegrityReason.none,
     this.economy = false,
     this.batteryPercent = 100,
+    this.combatBlocked = CombatBlock.none,
     this.clockRolledBack = false,
     this.lastFlushAt,
   });
@@ -72,6 +74,11 @@ class GameSnapshot {
   final bool economy;
 
   final int batteryPercent;
+
+  /// Whether a fight may start (§3.5). Not a balance rule: somebody fighting a
+  /// zombie at 20 km/h is on a bicycle, in a car, or crossing a road without
+  /// looking.
+  final CombatBlock combatBlocked;
 
   /// True once the anti-cheat of §2.1.1 has rejected a tick, so the HUD can
   /// say so rather than appearing frozen.
@@ -362,6 +369,12 @@ class GameLoop {
         integrityReason: _integrity.reason,
         economy: _economy,
         batteryPercent: _power.percent,
+        combatBlocked: combatBlock(
+          // The filtered speed of §3.2, not the raw one: a bad fix must not be
+          // able to cancel a fight.
+          speedKmh: _speedKmh,
+          runSuspended: _integrity.isSuspended,
+        ),
         clockRolledBack: _rolledBack,
         lastFlushAt: writer.lastHotFlush,
       ),

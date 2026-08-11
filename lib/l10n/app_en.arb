@@ -157,5 +157,16 @@
   "integritySuspendedMock": "Mocked location detected. Play is suspended.",
   "integritySuspendedVehicle": "You are in a vehicle. Play is suspended until you are back on your own feet.",
   "hudLowBattery": "Battery below 20% — head for the shelter",
-  "hudEconomy": "Power saving"
+  "hudEconomy": "Power saving",
+  "safetyNoCombatMoving": "Do not play while travelling",
+  "safetyNightVisibility": "It is dark. Be visible, and watch where you are going.",
+  "safetyBriefingTitle": "Before you go out",
+  "safetyBriefingIntro": "This game measures a real body moving through a real city. Everything below is about you, not the character.",
+  "safetyRuleTraffic": "Watch the road, not the phone. The game knows nothing about cars.",
+  "safetyRuleNoDriving": "Do not play while travelling. Above 15 km/h combat is blocked; above 40 km/h play is suspended.",
+  "safetyRuleNoTrespass": "The game will never send you onto private land, onto a railway or into water. If a marker looks like it does — do not go.",
+  "safetyRuleRespect": "Hospitals, schools, cemeteries and places of worship are excluded from spawns. Do not play there anyway.",
+  "safetyRuleNight": "After dark, be visible. Light clothing, a reflective band, ears free.",
+  "safetyRuleStop": "Tiredness, pain, a storm, strangers — end the session. The character will wait.",
+  "safetyBriefingAccept": "I understand and accept this"
 }

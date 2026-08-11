@@ -588,6 +588,72 @@ abstract class L10n {
   /// In en, this message translates to:
   /// **'Power saving'**
   String get hudEconomy;
+
+  /// No description provided for @safetyNoCombatMoving.
+  ///
+  /// In en, this message translates to:
+  /// **'Do not play while travelling'**
+  String get safetyNoCombatMoving;
+
+  /// No description provided for @safetyNightVisibility.
+  ///
+  /// In en, this message translates to:
+  /// **'It is dark. Be visible, and watch where you are going.'**
+  String get safetyNightVisibility;
+
+  /// No description provided for @safetyBriefingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Before you go out'**
+  String get safetyBriefingTitle;
+
+  /// No description provided for @safetyBriefingIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'This game measures a real body moving through a real city. Everything below is about you, not the character.'**
+  String get safetyBriefingIntro;
+
+  /// No description provided for @safetyRuleTraffic.
+  ///
+  /// In en, this message translates to:
+  /// **'Watch the road, not the phone. The game knows nothing about cars.'**
+  String get safetyRuleTraffic;
+
+  /// No description provided for @safetyRuleNoDriving.
+  ///
+  /// In en, this message translates to:
+  /// **'Do not play while travelling. Above 15 km/h combat is blocked; above 40 km/h play is suspended.'**
+  String get safetyRuleNoDriving;
+
+  /// No description provided for @safetyRuleNoTrespass.
+  ///
+  /// In en, this message translates to:
+  /// **'The game will never send you onto private land, onto a railway or into water. If a marker looks like it does — do not go.'**
+  String get safetyRuleNoTrespass;
+
+  /// No description provided for @safetyRuleRespect.
+  ///
+  /// In en, this message translates to:
+  /// **'Hospitals, schools, cemeteries and places of worship are excluded from spawns. Do not play there anyway.'**
+  String get safetyRuleRespect;
+
+  /// No description provided for @safetyRuleNight.
+  ///
+  /// In en, this message translates to:
+  /// **'After dark, be visible. Light clothing, a reflective band, ears free.'**
+  String get safetyRuleNight;
+
+  /// No description provided for @safetyRuleStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Tiredness, pain, a storm, strangers — end the session. The character will wait.'**
+  String get safetyRuleStop;
+
+  /// No description provided for @safetyBriefingAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'I understand and accept this'**
+  String get safetyBriefingAccept;
 }
 
 class _L10nDelegate extends LocalizationsDelegate<L10n> {

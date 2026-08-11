@@ -290,4 +290,45 @@ class L10nPl extends L10n {
 
   @override
   String get hudEconomy => 'Tryb oszczędny';
+
+  @override
+  String get safetyNoCombatMoving => 'Nie graj podczas jazdy';
+
+  @override
+  String get safetyNightVisibility =>
+      'Ciemno. Bądź widoczny i patrz, gdzie idziesz.';
+
+  @override
+  String get safetyBriefingTitle => 'Zanim wyjdziesz';
+
+  @override
+  String get safetyBriefingIntro =>
+      'Ta gra mierzy prawdziwy ruch prawdziwego ciała po prawdziwym mieście. Wszystko poniżej dotyczy ciebie, nie postaci.';
+
+  @override
+  String get safetyRuleTraffic =>
+      'Patrz na drogę, nie na telefon. Gra nie zna samochodów.';
+
+  @override
+  String get safetyRuleNoDriving =>
+      'Nie graj w ruchu pojazdu. Powyżej 15 km/h walka jest zablokowana, a powyżej 40 km/h rozgrywka zostaje wstrzymana.';
+
+  @override
+  String get safetyRuleNoTrespass =>
+      'Gra nigdy nie każe ci wejść na teren prywatny, na tory ani do wody. Jeśli znacznik wygląda inaczej — nie idź tam.';
+
+  @override
+  String get safetyRuleRespect =>
+      'Szpitale, szkoły, cmentarze i miejsca kultu są wyłączone ze spawnu. Nie graj tam mimo to.';
+
+  @override
+  String get safetyRuleNight =>
+      'Po zmroku bądź widoczny. Jasne ubranie, opaska odblaskowa, uszy wolne.';
+
+  @override
+  String get safetyRuleStop =>
+      'Zmęczenie, ból, burza, obcy ludzie — kończ sesję. Postać poczeka.';
+
+  @override
+  String get safetyBriefingAccept => 'Rozumiem i biorę to na siebie';
 }

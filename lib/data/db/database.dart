@@ -117,6 +117,23 @@ class SaveDatabase extends _$SaveDatabase {
     mode: InsertMode.insertOrReplace,
   );
 
+  // ------------------------------------------------------------ settings ---
+
+  /// Player-facing settings, as opposed to [MetaEntries], which is the
+  /// database's own bookkeeping. Kept apart so a factory reset of one does not
+  /// take the other with it.
+  Future<String?> readSetting(String key) async {
+    final row = await (select(
+      settings,
+    )..where((t) => t.key.equals(key))).getSingleOrNull();
+    return row?.value;
+  }
+
+  Future<void> writeSetting(String key, String value) => into(settings).insert(
+    SettingsCompanion.insert(key: key, value: value),
+    mode: InsertMode.insertOrReplace,
+  );
+
   Future<DateTime?> readMetaTimestamp(String key) async {
     final raw = await readMeta(key);
     if (raw == null) return null;

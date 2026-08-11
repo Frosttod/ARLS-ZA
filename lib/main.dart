@@ -19,7 +19,9 @@ import 'location/device_power_source.dart';
 import 'location/location_access.dart';
 import 'location/movement_integrity.dart';
 import 'location/position_fix.dart';
+import 'safety/player_safety.dart';
 import 'ui/character_creator.dart';
+import 'ui/safety_briefing.dart';
 import 'ui/hud.dart';
 
 void main() {
@@ -175,6 +177,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// gate can send the player to the right settings page and ask again.
   DevicePositionSource? _device;
 
+  /// True until §3.5 has been read and accepted. Nothing else runs first.
+  bool _needsBriefing = false;
+
   /// Set when the operating system will not give us a position (§16.1). The
   /// game stops at the gate rather than running a simulation on movement that
   /// will never arrive.
@@ -192,6 +197,22 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _boot() async {
+    // §3.5 is read before anything happens, including before a character
+    // exists. The rules are about the person holding the phone, not the one in
+    // the game.
+    final accepted = briefingAccepted(
+      await widget.session.db.readSetting(kSafetyBriefingKey),
+    );
+    if (!mounted) return;
+
+    if (!accepted) {
+      setState(() {
+        _needsBriefing = true;
+        _loading = false;
+      });
+      return;
+    }
+
     final existing = await _factory.loadActive();
     if (!mounted) return;
 
@@ -200,6 +221,20 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       return;
     }
     await _enter(existing);
+  }
+
+  Future<void> _acceptBriefing() async {
+    await widget.session.db.writeSetting(
+      kSafetyBriefingKey,
+      '$kSafetyBriefingVersion',
+    );
+    if (!mounted) return;
+
+    setState(() {
+      _needsBriefing = false;
+      _loading = true;
+    });
+    await _boot();
   }
 
   /// Starts the simulation for [character] and shows the HUD.
@@ -306,6 +341,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    if (_needsBriefing) {
+      return SafetyBriefingScreen(onAccept: () => unawaited(_acceptBriefing()));
+    }
+
     final l10n = L10n.of(context);
     final recovery = widget.session.recovery;
     final dev = _dev;
@@ -458,6 +497,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       PositionSignal.good => null,
     },
     if (snapshot.economy) l10n.hudLowBattery,
+    if (snapshot.combatBlocked == CombatBlock.movingTooFast)
+      l10n.safetyNoCombatMoving,
   ];
 }
 
