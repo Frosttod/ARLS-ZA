@@ -29,7 +29,7 @@ class Hud extends StatelessWidget {
     required this.state,
     required this.status,
     required this.constants,
-    this.signalWarning,
+    this.warnings = const [],
     this.carryComfortKg,
     this.carriedKg = 0,
     super.key,
@@ -39,8 +39,11 @@ class Hud extends StatelessWidget {
   final SimStatus status;
   final SimConstants constants;
 
-  /// Set when the position layer has something to say (§3.2).
-  final String? signalWarning;
+  /// What the systems layer wants said in words: no signal, a flat battery,
+  /// a suspended run (§3.2, §3.3, §3.4). Shown alongside the body statuses,
+  /// because from the player's side they are the same kind of thing — a reason
+  /// the game is not behaving as they expect.
+  final List<String> warnings;
 
   final double? carryComfortKg;
   final double carriedKg;
@@ -90,7 +93,7 @@ class Hud extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 6),
-              _StatusRow(status: status, signalWarning: signalWarning),
+              _StatusRow(status: status, warnings: warnings),
               if (carryComfortKg != null) ...[
                 const SizedBox(height: 4),
                 _CarryReadout(
@@ -277,16 +280,16 @@ class _HeartRate extends StatelessWidget {
 /// learned yet is decoration; a word is readable on the first run and by a
 /// screen reader (§12).
 class _StatusRow extends StatelessWidget {
-  const _StatusRow({required this.status, this.signalWarning});
+  const _StatusRow({required this.status, this.warnings = const []});
 
   final SimStatus status;
-  final String? signalWarning;
+  final List<String> warnings;
 
   @override
   Widget build(BuildContext context) {
     final l10n = L10n.of(context);
     final chips = <String>[
-      ?signalWarning,
+      ...warnings,
       if (status.blood.shockClass != ShockClass.none) l10n.statusShock,
       if (status.thirst.accuracyPenalty < 1) l10n.statusDehydrated,
       if (status.hunger.actionTimeMultiplier > 1) l10n.statusStarving,

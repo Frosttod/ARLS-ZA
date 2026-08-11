@@ -16,6 +16,7 @@ import '../devtools/dev_mode.dart';
 import '../devtools/dev_session.dart';
 import '../location/device_position_source.dart';
 import '../location/position_source.dart';
+import '../location/power_source.dart';
 import '../sim/body.dart';
 import '../sim/tick.dart';
 import 'game_loop.dart';
@@ -123,6 +124,7 @@ class GameSessionFactory {
     required ActiveCharacter character,
     required PositionSource source,
     GameClock? clock,
+    PowerSource? power,
   }) async {
     final loop = GameLoop(
       session: session,
@@ -131,6 +133,7 @@ class GameSessionFactory {
       constants: character.constants,
       initialState: character.state,
       clock: clock,
+      power: power,
     );
     await loop.start();
     return loop;

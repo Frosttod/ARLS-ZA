@@ -284,4 +284,10 @@ class L10nPl extends L10n {
   @override
   String get integritySuspendedVehicle =>
       'Jedziesz. Rozgrywka wstrzymana do czasu powrotu na własne nogi.';
+
+  @override
+  String get hudLowBattery => 'Bateria <20% — wracaj do schronu';
+
+  @override
+  String get hudEconomy => 'Tryb oszczędny';
 }

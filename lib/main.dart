@@ -15,7 +15,9 @@ import 'game/game_loop.dart';
 import 'game/game_session.dart';
 import 'l10n/app_localizations.dart';
 import 'location/device_position_source.dart';
+import 'location/device_power_source.dart';
 import 'location/location_access.dart';
+import 'location/movement_integrity.dart';
 import 'location/position_fix.dart';
 import 'ui/character_creator.dart';
 import 'ui/hud.dart';
@@ -240,6 +242,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       character: character,
       source: source,
       clock: _dev?.gameClock,
+      power: DevicePowerSource(),
     );
     loop.snapshots.listen((snapshot) {
       if (!mounted) return;
@@ -320,7 +323,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
                   state: snapshot.state,
                   status: snapshot.status,
                   constants: character.constants,
-                  signalWarning: _signalWarning(l10n, snapshot.signal),
+                  warnings: _warnings(l10n, snapshot),
                   carryComfortKg: character.body.carryComfortKg,
                 ),
               Expanded(
@@ -437,12 +440,25 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     return snapshot.state.lastUpdate.difference(start).inSeconds;
   }
 
-  static String? _signalWarning(L10n l10n, PositionSignal signal) =>
-      switch (signal) {
-        PositionSignal.lost || PositionSignal.unavailable => l10n.hudNoSignal,
-        PositionSignal.degraded => l10n.hudWeakSignal,
-        PositionSignal.good => null,
-      };
+  /// Everything the systems layer wants said in words, in the order it matters.
+  ///
+  /// A suspended run comes first: while it holds, nothing else the HUD says is
+  /// being applied anyway (§3.4).
+  static List<String> _warnings(L10n l10n, GameSnapshot snapshot) => [
+    ?switch (snapshot.integrityReason) {
+      IntegrityReason.mockProvider => l10n.integritySuspendedMock,
+      IntegrityReason.vehicleSpeed
+          when snapshot.integrity == IntegrityState.suspended =>
+        l10n.integritySuspendedVehicle,
+      _ => null,
+    },
+    ?switch (snapshot.signal) {
+      PositionSignal.lost || PositionSignal.unavailable => l10n.hudNoSignal,
+      PositionSignal.degraded => l10n.hudWeakSignal,
+      PositionSignal.good => null,
+    },
+    if (snapshot.economy) l10n.hudLowBattery,
+  ];
 }
 
 /// What to say when the operating system will not give us a position (§16.1).

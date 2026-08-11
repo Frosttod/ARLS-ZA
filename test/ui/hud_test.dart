@@ -21,7 +21,7 @@ void main() {
   Future<void> pumpHud(
     WidgetTester tester,
     SimState state, {
-    String? signalWarning,
+    List<String> warnings = const [],
     double carriedKg = 0,
   }) async {
     await tester.pumpWidget(
@@ -39,7 +39,7 @@ void main() {
             state: state,
             status: statusOf(state: state, constants: constants),
             constants: constants,
-            signalWarning: signalWarning,
+            warnings: warnings,
             carryComfortKg: profile.carryComfortKg,
             carriedKg: carriedKg,
           ),
@@ -117,9 +117,30 @@ void main() {
   testWidgets('a signal warning is surfaced alongside the body statuses', (
     tester,
   ) async {
-    await pumpHud(tester, healthy(), signalWarning: 'BRAK SYGNAŁU');
+    await pumpHud(tester, healthy(), warnings: const ['BRAK SYGNAŁU']);
 
     expect(find.text('BRAK SYGNAŁU'), findsOneWidget);
+  });
+
+  testWidgets('warnings stack — a flat battery does not hide a lost signal', (
+    tester,
+  ) async {
+    // §3.2, §3.3 and §3.4 can all be true at once, and each is a different
+    // reason the game is not doing what the player expects.
+    await pumpHud(
+      tester,
+      healthy().copyWith(bloodMl: constants.bloodMaxMl * 0.75),
+      warnings: const ['ROZGRYWKA WSTRZYMANA', 'BRAK SYGNAŁU', 'BATERIA'],
+    );
+
+    expect(find.text('ROZGRYWKA WSTRZYMANA'), findsOneWidget);
+    expect(find.text('BRAK SYGNAŁU'), findsOneWidget);
+    expect(find.text('BATERIA'), findsOneWidget);
+    expect(
+      find.text('WSTRZĄS'),
+      findsOneWidget,
+      reason: 'the body statuses are not crowded out by the system ones',
+    );
   });
 
   testWidgets('carry load is shown against the comfortable limit', (

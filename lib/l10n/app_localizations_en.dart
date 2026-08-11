@@ -282,4 +282,10 @@ class L10nEn extends L10n {
   @override
   String get integritySuspendedVehicle =>
       'You are in a vehicle. Play is suspended until you are back on your own feet.';
+
+  @override
+  String get hudLowBattery => 'Battery below 20% — head for the shelter';
+
+  @override
+  String get hudEconomy => 'Power saving';
 }

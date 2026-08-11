@@ -576,6 +576,18 @@ abstract class L10n {
   /// In en, this message translates to:
   /// **'You are in a vehicle. Play is suspended until you are back on your own feet.'**
   String get integritySuspendedVehicle;
+
+  /// No description provided for @hudLowBattery.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery below 20% — head for the shelter'**
+  String get hudLowBattery;
+
+  /// No description provided for @hudEconomy.
+  ///
+  /// In en, this message translates to:
+  /// **'Power saving'**
+  String get hudEconomy;
 }
 
 class _L10nDelegate extends LocalizationsDelegate<L10n> {

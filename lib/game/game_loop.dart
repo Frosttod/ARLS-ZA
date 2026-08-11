@@ -27,6 +27,8 @@ import '../location/fix_filter.dart';
 import '../location/movement_integrity.dart';
 import '../location/position_fix.dart';
 import '../location/position_source.dart';
+import '../location/power_source.dart';
+import '../location/sampling_policy.dart';
 import '../sim/daylight.dart';
 import '../sim/occupation.dart';
 import '../sim/physiology.dart';
@@ -44,6 +46,8 @@ class GameSnapshot {
     this.fix,
     this.integrity = IntegrityState.ok,
     this.integrityReason = IntegrityReason.none,
+    this.economy = false,
+    this.batteryPercent = 100,
     this.clockRolledBack = false,
     this.lastFlushAt,
   });
@@ -63,6 +67,12 @@ class GameSnapshot {
   final IntegrityState integrity;
   final IntegrityReason integrityReason;
 
+  /// Reduced map, no animations (§3.3). True once the battery is low enough
+  /// that the session is at risk of ending before the walk does.
+  final bool economy;
+
+  final int batteryPercent;
+
   /// True once the anti-cheat of §2.1.1 has rejected a tick, so the HUD can
   /// say so rather than appearing frozen.
   final bool clockRolledBack;
@@ -79,8 +89,11 @@ class GameLoop {
     required this.constants,
     required SimState initialState,
     GameClock? clock,
+    PowerSource? power,
     this.cadence = const Duration(seconds: 1),
+    this.powerInterval = const Duration(seconds: 60),
   }) : _state = initialState,
+       power = power ?? const ConstantPowerSource(),
        clock = clock ?? session.clock {
     this.clock.restore(initialState.lastUpdate);
   }
@@ -91,6 +104,14 @@ class GameLoop {
   final SimConstants constants;
   final GameClock clock;
   final Duration cadence;
+
+  /// Where the battery level comes from (§3.3).
+  final PowerSource power;
+
+  /// How often to ask. The level moves by a per cent every few minutes, and
+  /// every read crosses a platform channel, so asking each tick would cost more
+  /// than it saves.
+  final Duration powerInterval;
 
   SaveWriter get writer => session.writer;
 
@@ -107,6 +128,21 @@ class GameLoop {
   /// §3.4. Kept alongside the filter because both answer the same question from
   /// different ends: is this movement real, and is it human.
   final MovementIntegrity _integrity = MovementIntegrity();
+
+  /// §3.3. Decides how often to ask the chip where we are.
+  final SamplingPolicy _sampling = SamplingPolicy();
+
+  PowerState _power = PowerState.unknown;
+  DateTime? _powerReadAt;
+  bool _economy = false;
+  PositionCadence _cadence = PositionCadence.moving;
+
+  /// Raised for one snapshot when the battery first drops below the threshold,
+  /// so the UI can suggest heading back to the shelter (§3.3).
+  bool _lowBatteryWarning = false;
+  bool get lowBatteryWarning => _lowBatteryWarning;
+
+  bool _samplingBusy = false;
   bool _rolledBack = false;
   bool _appForeground = true;
 
@@ -157,6 +193,11 @@ class GameLoop {
     _speedKmh = accepted.speedMps * 3.6;
     _lastFix = accepted.fix;
     _integrity.observeSpeed(accepted.speedMps, accepted.fix.timestamp);
+
+    // The sampling rate reacts to movement, and movement arrives here rather
+    // than on the tick. Waiting for the next tick would leave someone who has
+    // just started walking being sampled at 0.05 Hz (§3.3).
+    unawaited(_applySampling(accepted.fix.timestamp));
   }
 
   /// Advances the simulation to now and stages the result for writing.
@@ -190,6 +231,7 @@ class GameLoop {
 
     _state = outcome.state;
     _advanceOccupation(elapsed);
+    await _applySampling(advanceResult.now);
 
     writer.stageHot(_toCompanion());
     await writer.flushIfDue(advanceResult.now);
@@ -215,6 +257,48 @@ class GameLoop {
       sleeping: asleep && sheltered,
       offline: offline || !_appForeground,
     );
+  }
+
+  /// Re-reads the battery when it is due, then sets the sampling rate the
+  /// character's current activity deserves (§3.3).
+  Future<void> _applySampling(DateTime now) async {
+    // Fixes and ticks both ask for this, and both can be in flight at once.
+    // Two concurrent runs would fight over the cadence.
+    if (_samplingBusy) return;
+    _samplingBusy = true;
+    try {
+      await _decideSampling(now);
+    } finally {
+      _samplingBusy = false;
+    }
+  }
+
+  Future<void> _decideSampling(DateTime now) async {
+    final due =
+        _powerReadAt == null || now.difference(_powerReadAt!) >= powerInterval;
+    if (due) {
+      _powerReadAt = now;
+      _power = await power.read();
+    }
+
+    final decision = _sampling.decide(
+      activity: activityFrom(
+        // Combat arrives in stage 5; until then nothing asks for 1 Hz.
+        inCombat: false,
+        sheltered: _state.zone.isSheltered,
+        speedKmh: _speedKmh,
+      ),
+      batteryPercent: _power.percent,
+      charging: _power.charging,
+    );
+
+    _economy = decision.economy;
+    _lowBatteryWarning = decision.warnLowBattery;
+
+    if (decision.cadence != _cadence) {
+      _cadence = decision.cadence;
+      await source.setCadence(decision.cadence);
+    }
   }
 
   void _advanceOccupation(Duration elapsed) {
@@ -276,6 +360,8 @@ class GameLoop {
         fix: fix,
         integrity: _integrity.state,
         integrityReason: _integrity.reason,
+        economy: _economy,
+        batteryPercent: _power.percent,
         clockRolledBack: _rolledBack,
         lastFlushAt: writer.lastHotFlush,
       ),
@@ -313,6 +399,7 @@ class GameLoop {
     await _tick();
     await writer.quiesce(now);
     await persistClockMark(session.db, clock);
+    _cadence = PositionCadence.resting;
     await source.setCadence(PositionCadence.resting);
   }
 
@@ -324,6 +411,7 @@ class GameLoop {
     // it: the estimate in between is meaningless, and the jump would read as a
     // sprint (§3.2).
     _filter.reset();
+    _cadence = PositionCadence.moving;
     await source.setCadence(PositionCadence.moving);
     await _tick(offline: true);
     _timer ??= Timer.periodic(cadence, (_) => unawaited(_tick()));

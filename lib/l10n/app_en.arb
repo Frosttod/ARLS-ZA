@@ -155,5 +155,7 @@
   "locationNotificationTitle": "ARLS-ZA — expedition in progress",
   "locationNotificationBody": "The game is counting your movement. Tap to return.",
   "integritySuspendedMock": "Mocked location detected. Play is suspended.",
-  "integritySuspendedVehicle": "You are in a vehicle. Play is suspended until you are back on your own feet."
+  "integritySuspendedVehicle": "You are in a vehicle. Play is suspended until you are back on your own feet.",
+  "hudLowBattery": "Battery below 20% — head for the shelter",
+  "hudEconomy": "Power saving"
 }

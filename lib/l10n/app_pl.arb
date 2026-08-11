@@ -79,5 +79,7 @@
   "locationNotificationTitle": "ARLS-ZA — trwa wyprawa",
   "locationNotificationBody": "Gra liczy twój ruch. Dotknij, aby wrócić.",
   "integritySuspendedMock": "Wykryto fałszywą lokalizację. Rozgrywka wstrzymana.",
-  "integritySuspendedVehicle": "Jedziesz. Rozgrywka wstrzymana do czasu powrotu na własne nogi."
+  "integritySuspendedVehicle": "Jedziesz. Rozgrywka wstrzymana do czasu powrotu na własne nogi.",
+  "hudLowBattery": "Bateria <20% — wracaj do schronu",
+  "hudEconomy": "Tryb oszczędny"
 }

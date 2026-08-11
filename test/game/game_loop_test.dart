@@ -8,6 +8,8 @@ import 'package:arls_za/data/persistence/save_bootstrap.dart';
 import 'package:arls_za/devtools/simulated_position_source.dart';
 import 'package:arls_za/game/game_loop.dart';
 import 'package:arls_za/location/movement_integrity.dart';
+import 'package:arls_za/location/position_source.dart';
+import 'package:arls_za/location/power_source.dart';
 import 'package:arls_za/sim/body.dart';
 import 'package:arls_za/sim/occupation.dart';
 import 'package:arls_za/sim/tick.dart';
@@ -57,7 +59,7 @@ void main() {
       int profileId,
     })
   >
-  buildLoop({SimState? initial}) async {
+  buildLoop({SimState? initial, PowerSource? power}) async {
     final wall = ManualWallClock(t0);
     final scaled = ScaledWallClock(base: wall);
     final clock = GameClock(wallClock: scaled);
@@ -101,6 +103,7 @@ void main() {
       constants: constants,
       initialState: initial ?? SimState.fresh(at: t0, constants: constants),
       clock: clock,
+      power: power,
     );
 
     return (
@@ -335,6 +338,105 @@ void main() {
       final snapshot = await rig.loop.snapshots.first;
       expect(snapshot.integrity, IntegrityState.suspended);
       expect(snapshot.integrityReason, IntegrityReason.vehicleSpeed);
+    });
+  });
+
+  group('sampling and the battery (§3.3)', () {
+    test('walking is sampled at 0.2 Hz and standing still at 0.05', () async {
+      final rig = await buildLoop();
+      addTearDown(() async {
+        await rig.loop.dispose();
+        await rig.source.dispose();
+        await rig.session.close();
+      });
+
+      rig.source
+        ..mode = SimMovementMode.route
+        ..speedMps = SimSpeedPreset.briskWalk.mps;
+
+      await rig.loop.start();
+      for (var step = 0; step < 10; step++) {
+        rig.source.step();
+        await pump();
+        rig.wall.advance(const Duration(seconds: 5));
+      }
+      await pump();
+
+      expect(rig.source.currentCadence, PositionCadence.moving);
+
+      // Stop dead. The rate should follow within a tick or two.
+      rig.source.mode = SimMovementMode.stationary;
+      for (var step = 0; step < 10; step++) {
+        rig.source.step();
+        await pump();
+        rig.wall.advance(const Duration(seconds: 5));
+      }
+      await pump();
+
+      expect(rig.source.currentCadence, PositionCadence.resting);
+    });
+
+    test('a low battery coarsens the sampling of a walk (§3.3)', () async {
+      final rig = await buildLoop(
+        power: const ConstantPowerSource(
+          PowerState(percent: 12, charging: false),
+        ),
+      );
+      addTearDown(() async {
+        await rig.loop.dispose();
+        await rig.source.dispose();
+        await rig.session.close();
+      });
+
+      rig.source
+        ..mode = SimMovementMode.route
+        ..speedMps = SimSpeedPreset.briskWalk.mps;
+
+      await rig.loop.start();
+      for (var step = 0; step < 10; step++) {
+        rig.source.step();
+        await pump();
+        rig.wall.advance(const Duration(seconds: 5));
+      }
+      await pump();
+
+      expect(
+        rig.source.currentCadence,
+        PositionCadence.resting,
+        reason: 'a flat battery ends the session; a coarse fix only blurs it',
+      );
+
+      final snapshot = await rig.loop.snapshots.first;
+      expect(snapshot.economy, isTrue);
+      expect(snapshot.batteryPercent, 12);
+    });
+
+    test('a charged phone never enters economy mode', () async {
+      final rig = await buildLoop(
+        power: const ConstantPowerSource(
+          PowerState(percent: 90, charging: false),
+        ),
+      );
+      addTearDown(() async {
+        await rig.loop.dispose();
+        await rig.source.dispose();
+        await rig.session.close();
+      });
+
+      rig.source
+        ..mode = SimMovementMode.route
+        ..speedMps = SimSpeedPreset.briskWalk.mps;
+
+      await rig.loop.start();
+      for (var step = 0; step < 10; step++) {
+        rig.source.step();
+        await pump();
+        rig.wall.advance(const Duration(seconds: 5));
+      }
+
+      final snapshot = await rig.loop.snapshots.first;
+      expect(snapshot.economy, isFalse);
+      expect(rig.source.currentCadence, PositionCadence.moving);
     });
   });
 

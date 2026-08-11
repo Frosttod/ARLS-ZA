@@ -49,6 +49,12 @@ abstract class PositionSource {
 
   PositionSignal get currentSignal;
 
+  /// The rate fixes are currently being asked for (§3.3). Reported rather than
+  /// assumed, because the sampling policy and the source can disagree — a
+  /// source that has been stopped is at [PositionCadence.off] whatever the
+  /// policy last decided.
+  PositionCadence get currentCadence;
+
   /// Whether this source is the developer simulator. The HUD says so, because
   /// a build that silently fakes movement is a build that produces meaningless
   /// balance data.

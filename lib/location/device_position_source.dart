@@ -68,6 +68,10 @@ class DevicePositionSource extends BasePositionSource {
   @override
   bool get isSimulated => false;
 
+  @override
+  PositionCadence get currentCadence =>
+      _sub == null ? PositionCadence.off : _cadence;
+
   /// Asks the platform where it stands, prompting once if that could help.
   ///
   /// Returns without prompting when the service is off or the refusal is

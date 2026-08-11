@@ -142,6 +142,9 @@ class SimulatedPositionSource extends BasePositionSource {
   bool get isSimulated => true;
 
   @override
+  PositionCadence get currentCadence => _cadence;
+
+  @override
   Future<void> start({PositionCadence cadence = PositionCadence.moving}) async {
     _cadence = cadence;
     _lastStep = clock.nowUtc();
