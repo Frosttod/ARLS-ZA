@@ -1,0 +1,118 @@
+import 'dart:io';
+
+import 'package:arls_za/map/region_pack.dart';
+import 'package:test/test.dart';
+
+/// The bundled catalogue is data the game cannot run without (§3.1). A typo in
+/// it is a region nobody can download, which is not the sort of thing a code
+/// review catches.
+void main() {
+  late RegionCatalogue catalogue;
+
+  setUpAll(() {
+    catalogue = RegionCatalogue.parse(
+      File('assets/regions.json').readAsStringSync(),
+    );
+  });
+
+  group('the bundled catalogue', () {
+    test('lists all sixteen voivodeships, each with a distinct id', () {
+      expect(catalogue.packs, hasLength(16));
+      expect(
+        catalogue.packs.map((pack) => pack.id).toSet(),
+        hasLength(16),
+        reason: 'ids are file names — a collision overwrites a pack',
+      );
+    });
+
+    test('every pack has a plausible size and a well-formed extent', () {
+      for (final pack in catalogue.packs) {
+        expect(
+          pack.bytes,
+          inInclusiveRange(20 * 1024 * 1024, 400 * 1024 * 1024),
+          reason: '${pack.id}: §3.1 expects 50–200 MB per region',
+        );
+        expect(
+          pack.bounds.north,
+          greaterThan(pack.bounds.south),
+          reason: pack.id,
+        );
+        expect(
+          pack.bounds.east,
+          greaterThan(pack.bounds.west),
+          reason: pack.id,
+        );
+      }
+    });
+
+    test('every extent falls inside Poland', () {
+      for (final pack in catalogue.packs) {
+        expect(pack.bounds.south, greaterThan(48.9), reason: pack.id);
+        expect(pack.bounds.north, lessThan(55.0), reason: pack.id);
+        expect(pack.bounds.west, greaterThan(14.0), reason: pack.id);
+        expect(pack.bounds.east, lessThan(24.2), reason: pack.id);
+      }
+    });
+
+    test('the id is the file name, so a pack is findable without it', () {
+      for (final pack in catalogue.packs) {
+        expect(pack.fileName, '${pack.id}.pmtiles');
+      }
+    });
+  });
+
+  group('finding a region from a position', () {
+    test('Warsaw lands in Mazowieckie', () {
+      expect(catalogue.forPosition(52.2297, 21.0122)?.id, 'mazowieckie');
+    });
+
+    test('Kraków lands in Małopolskie', () {
+      expect(catalogue.forPosition(50.0647, 19.9450)?.id, 'malopolskie');
+    });
+
+    test('a position outside Poland matches nothing', () {
+      // Berlin. The picker then asks rather than guessing.
+      expect(catalogue.forPosition(52.52, 13.405), isNull);
+    });
+  });
+
+  group('bounds', () {
+    const warsawArea = GeoBounds(
+      south: 52.0,
+      west: 20.8,
+      north: 52.4,
+      east: 21.3,
+    );
+
+    test('a point inside is nought metres outside', () {
+      expect(warsawArea.metresOutside(52.2, 21.0), 0);
+    });
+
+    test('a point due north is measured in metres, not degrees', () {
+      // A tenth of a degree of latitude is about 11 km.
+      expect(warsawArea.metresOutside(52.5, 21.0), closeTo(11054, 50));
+    });
+
+    test('a corner is measured diagonally, not along one axis', () {
+      final diagonal = warsawArea.metresOutside(52.5, 21.4);
+      final due = warsawArea.metresOutside(52.5, 21.0);
+
+      expect(
+        diagonal,
+        greaterThan(due),
+        reason: 'a point past two edges is further away than one past one',
+      );
+    });
+
+    test('inflating grows the rectangle by the metres asked for', () {
+      final grown = warsawArea.inflated(1000);
+
+      expect(grown.contains(52.4, 21.0), isTrue);
+      expect(
+        grown.metresOutside(52.4 + 1000 / 110540 - 0.0001, 21.0),
+        0,
+        reason: 'a kilometre north of the old edge is now inside',
+      );
+    });
+  });
+}

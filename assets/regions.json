@@ -1,0 +1,135 @@
+{
+  "_comment": "Offline map packs, one per voivodeship (design doc §3.1). Bounds are approximate and are used only to preselect a region in the picker; the authoritative extent of an installed pack comes from the PMTiles header. Sizes and checksums are placeholders until the packs are actually built and hosted — see ROADMAP, 'Zablokowane na użytkowniku'.",
+  "version": 1,
+  "baseUrl": "https://github.com/Frosttod/ARLS-ZA/releases/download/maps-v1/",
+  "regions": [
+    {
+      "id": "dolnoslaskie",
+      "name": "Dolnośląskie",
+      "bounds": [14.82, 50.11, 17.9, 51.8],
+      "bytes": 115343360,
+      "sha256": "",
+      "url": "dolnoslaskie.pmtiles"
+    },
+    {
+      "id": "kujawsko-pomorskie",
+      "name": "Kujawsko-pomorskie",
+      "bounds": [17.19, 52.29, 19.83, 53.83],
+      "bytes": 83886080,
+      "sha256": "",
+      "url": "kujawsko-pomorskie.pmtiles"
+    },
+    {
+      "id": "lubelskie",
+      "name": "Lubelskie",
+      "bounds": [21.51, 50.24, 24.15, 52.35],
+      "bytes": 94371840,
+      "sha256": "",
+      "url": "lubelskie.pmtiles"
+    },
+    {
+      "id": "lubuskie",
+      "name": "Lubuskie",
+      "bounds": [14.12, 51.36, 16.44, 53.13],
+      "bytes": 62914560,
+      "sha256": "",
+      "url": "lubuskie.pmtiles"
+    },
+    {
+      "id": "lodzkie",
+      "name": "Łódzkie",
+      "bounds": [18.09, 50.9, 20.66, 52.4],
+      "bytes": 88080384,
+      "sha256": "",
+      "url": "lodzkie.pmtiles"
+    },
+    {
+      "id": "malopolskie",
+      "name": "Małopolskie",
+      "bounds": [19.08, 49.07, 21.44, 50.59],
+      "bytes": 104857600,
+      "sha256": "",
+      "url": "malopolskie.pmtiles"
+    },
+    {
+      "id": "mazowieckie",
+      "name": "Mazowieckie",
+      "bounds": [19.25, 51.02, 23.14, 53.55],
+      "bytes": 178257920,
+      "sha256": "",
+      "url": "mazowieckie.pmtiles"
+    },
+    {
+      "id": "opolskie",
+      "name": "Opolskie",
+      "bounds": [16.85, 49.98, 18.86, 51.19],
+      "bytes": 57671680,
+      "sha256": "",
+      "url": "opolskie.pmtiles"
+    },
+    {
+      "id": "podkarpackie",
+      "name": "Podkarpackie",
+      "bounds": [21.06, 48.99, 23.55, 50.88],
+      "bytes": 88080384,
+      "sha256": "",
+      "url": "podkarpackie.pmtiles"
+    },
+    {
+      "id": "podlaskie",
+      "name": "Podlaskie",
+      "bounds": [21.46, 52.16, 23.94, 54.42],
+      "bytes": 83886080,
+      "sha256": "",
+      "url": "podlaskie.pmtiles"
+    },
+    {
+      "id": "pomorskie",
+      "name": "Pomorskie",
+      "bounds": [16.7, 53.49, 19.67, 54.85],
+      "bytes": 94371840,
+      "sha256": "",
+      "url": "pomorskie.pmtiles"
+    },
+    {
+      "id": "slaskie",
+      "name": "Śląskie",
+      "bounds": [17.87, 49.39, 19.95, 51.13],
+      "bytes": 125829120,
+      "sha256": "",
+      "url": "slaskie.pmtiles"
+    },
+    {
+      "id": "swietokrzyskie",
+      "name": "Świętokrzyskie",
+      "bounds": [19.68, 50.16, 21.86, 51.4],
+      "bytes": 62914560,
+      "sha256": "",
+      "url": "swietokrzyskie.pmtiles"
+    },
+    {
+      "id": "warminsko-mazurskie",
+      "name": "Warmińsko-mazurskie",
+      "bounds": [19.05, 53.07, 22.9, 54.51],
+      "bytes": 94371840,
+      "sha256": "",
+      "url": "warminsko-mazurskie.pmtiles"
+    },
+    {
+      "id": "wielkopolskie",
+      "name": "Wielkopolskie",
+      "bounds": [15.68, 51.06, 19.19, 53.71],
+      "bytes": 136314880,
+      "sha256": "",
+      "url": "wielkopolskie.pmtiles"
+    },
+    {
+      "id": "zachodniopomorskie",
+      "name": "Zachodniopomorskie",
+      "bounds": [14.12, 52.6, 17.11, 54.5],
+      "bytes": 104857600,
+      "sha256": "",
+      "url": "zachodniopomorskie.pmtiles"
+    }
+  ]
+}
