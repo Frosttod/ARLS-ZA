@@ -4,6 +4,65 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Stage 2 — Character and physiology
+
+The first system that can be balanced. A character sheet now turns into a body
+that spends calories, water, sleep and blood in real time, and the game says so
+on screen.
+
+#### Added
+
+- **Character sheet and derived body** (`lib/sim/body.dart`) — name, sex, age,
+  height and weight, validated on range and on a BMI of 12–60 so no formula is
+  fed nonsense (§1.2). From those four figures come blood volume (Nadler),
+  basal metabolic rate (Mifflin–St Jeor), maximum heart rate (Tanaka), daily
+  water at 35 ml/kg, resting heart rate and the carry limits. Carry weight is
+  the same for both sexes, which is a deliberate choice and has a test saying
+  so.
+- **Metabolism** (`lib/sim/metabolism.dart`) — MET from ground speed, a load
+  surcharge after Pandolf, and energy spent as the excess over resting rather
+  than as the full MET cost, because the daily baseline already comes from
+  Mifflin–St Jeor. Heart rate chases its target and relaxes back on an
+  exponential with τ ≈ 90 s.
+- **Hunger, thirst, sleep and blood** (`lib/sim/physiology.dart`) — the
+  threshold tables of §2.3–§2.6, ATLS shock classes, bleed tiers scaled by
+  exertion, and sweat split into an environmental part that heat and clothing
+  charge for at any activity and an activity part on top.
+- **Daylight without a network** (`lib/sim/daylight.dart`) — solar declination
+  and hour angle give sunrise and sunset anywhere offline, including polar day
+  and polar night (§17.2). Automatic sleep depends on it.
+- **One occupation at a time** (`lib/sim/occupation.dart`) — the rule of §2.1a,
+  with occupations, actions and background processes kept apart. Stored as
+  JSON, so the shelter systems of §8 and §18 can add fields without a migration
+  each.
+- **Full tick model** (`lib/sim/tick.dart`) — pure, idempotent and linear in
+  elapsed time, so fourteen days of catch-up gives the same state as fourteen
+  days of playing. Metabolic zones scale the drain: field 100%, camp 50%,
+  shelter 35%, sleep 20%.
+- **Game loop** (`lib/game/game_loop.dart`) — joins position to speed to MET to
+  the tick to the save writer, and flushes at the cadences of §11.1.1. Speed is
+  computed from consecutive fixes rather than read off the fix, because a real
+  chip does not always supply it. Losing signal zeroes movement instead of
+  freezing the last known speed, so GPS drift is not charged to the player.
+- **Session composition** (`lib/game/game_session.dart`) — creates a character
+  and its opening vitals in one transaction, reads the active one back, and
+  starts the loop. Kept out of the widgets so the sequence is testable without
+  pumping a UI.
+- **Character creator and HUD** (`lib/ui/`) — the creator shows every derived
+  figure as the player types and leaves the irreversible death mode unselected.
+  The HUD reports blood in millilitres as well as per cent, water, calories,
+  heart rate and carry load, and names every status in words rather than
+  leaning on icons and colour alone (§12).
+- **Schema v2** — four columns added to the existing tables under an additive
+  migration, with the pre-migration snapshot taken first.
+
+#### Fixed
+
+- **Blood volume for the reference character.** Nadler gives **5319 ml** for
+  180 cm / 80 kg, not the 5290 ml stated in the design document. The figure had
+  already spread to the §15.4 mockup, both language versions of the project
+  site and every test fixture; corrected in all of them.
+
 ### Stage 1 — Developer mode
 
 Nothing player-facing. This stage exists so the metabolic model can be balanced

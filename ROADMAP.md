@@ -10,7 +10,7 @@ Każdy zamknięty etap dostaje sekcję **Dziennik wykonania** z decyzjami podję
 | :---- | :---- | :---- | :---- | :---- |
 | 0 | Fundament: trwałość zapisu, zegar, konfiguracja buildu | ✅ zamknięty | 2026-08-10 | `ad55d40` |
 | 1 | Tryb deweloperski i symulator GPS | ✅ zamknięty | 2026-08-10 | `df54653` |
-| 2 | Postać i fizjologia | 🟡 w toku | — | `f2b1056`, `5555db2` |
+| 2 | Postać i fizjologia | ✅ zamknięty | 2026-08-11 | `f2b1056`, `5555db2`, `2b0a37e` |
 | 3 | Mapa, GPS, bezpieczeństwo gracza | ⬜ | — | — |
 | 4 | Przedmioty, loot, przeszukanie | ⬜ | — | — |
 | 5 | Walka, przeciwnicy, hałas | ⬜ | — | — |
@@ -19,7 +19,7 @@ Każdy zamknięty etap dostaje sekcję **Dziennik wykonania** z decyzjami podję
 | 8 | Schron, obóz, pętla dobowa | ⬜ | — | — |
 | 9 | Onboarding, dostępność, zgodność | ⬜ | — | — |
 
-**Metryki:** 292 testy · `flutter analyze --fatal-infos` czysty · schemat bazy **v2** · release APK 55,1 MB bez devtools
+**Metryki:** 297 testów · `flutter analyze --fatal-infos` czysty · schemat bazy **v2** · release APK 58,1 MB bez devtools
 
 ### Zablokowane na użytkowniku
 
@@ -183,7 +183,7 @@ Symulator działa i emituje pozycje, ale **nic ich jeszcze nie konsumuje** — `
 
 **Kryterium wyjścia:** przy ×3600 doba symulacji daje liczby zgodne z tabelami §2 w granicach błędu zaokrągleń; postać z zamkniętą aplikacją przez 14 dni budzi się osłabiona, ale żywa.
 
-**Stan:** spełnione. Kryterium zapisane wykonywalnie w `test/sim/tick_physiology_test.dart` i `test/game/game_loop_test.dart`.
+**Stan:** spełnione. Kryterium zapisane wykonywalnie w `test/sim/tick_physiology_test.dart`, `test/game/game_loop_test.dart` i `test/game/game_session_test.dart`.
 
 ### Dziennik wykonania — etap 2
 
@@ -195,6 +195,9 @@ Symulator działa i emituje pozycje, ale **nic ich jeszcze nie konsumuje** — `
 - **Prędkość liczona z kolejnych odczytów, nie z pola dostarczanego przez GPS.** Symulator podaje `speedMps`, prawdziwy chip czasem nie — symulacja nie może zachowywać się inaczej zależnie od tego, który jest podłączony.
 - **Utrata sygnału zeruje ruch, nie zamraża go.** Naliczanie ostatniej znanej prędkości przez czas bez sygnału obciążałoby gracza za dryf GPS (§3.2).
 - **Tryb śmierci nie ma domyślnego zaznaczenia.** Wybór jest nieodwracalny (§9), a preselekcja to wybór dokonany za gracza.
+- **Kompozycja gry wyjęta z widgetów do `GameSessionFactory`.** Zakładanie profilu, odczyt aktywnej postaci i start pętli to sekwencja, którą trzeba testować bez pompowania UI. `main.dart` zostaje listą ekranów.
+- **Bez trybu deweloperskiego gra nie udaje, że ma pozycję.** `buildPositionSource` zwraca `null` w buildzie release — prawdziwe źródło GPS należy do etapu 3, a symulator przemycony do wydania byłby dokładnie tym, przed czym broni §11.2.
+- **`BodySpec` dostał równość wartościową.** Karta postaci to wartość: te same cztery liczby to ta sama postać, niezależnie od tego, czy przyszły z kreatora, czy z wiersza odczytanego z dysku.
 - **Zajęcie zapisywane jako JSON, nie jako kolumny.** Zajęcia będą zyskiwać pola wraz z systemami schronu z §8 i §18; każde z nich byłoby inaczej osobną migracją.
 - **Statusy w HUD jako słowa, nie same ikony i kolory.** Ikona, której gracz jeszcze nie zna, jest ozdobą; §12 wymaga czytelności dla czytnika ekranu i przy daltonizmie.
 
@@ -208,9 +211,13 @@ Symulator działa i emituje pozycje, ale **nic ich jeszcze nie konsumuje** — `
 
 #### Punkt wejścia dla następnej sesji
 
-Do zamknięcia etapu 2 zostaje **wpięcie kreatora i HUD w `main.dart`**: ekran startowy powinien wykrywać brak aktywnej postaci, prowadzić do kreatora, zakładać profil i uruchamiać `GameLoop` z HUD-em na wierzchu. Sam `GameLoop` i obie warstwy UI są gotowe i przetestowane osobno.
+Etap 2 jest domknięty: `TitleScreen` wykrywa brak aktywnej postaci, prowadzi do kreatora, zakłada profil przez `GameSessionFactory` i uruchamia `GameLoop` z HUD-em nad treścią, a `AppLifecycleState` woła `onPaused`/`onResumed` w dwóch momentach, w których proces najłatwiej zginie (§11.1.5).
+
+Etap 3 zaczyna się od **prawdziwego źródła pozycji**: `PositionSource` na `geolocator`, wybierane w `buildPositionSource` obok symulatora. Cała reszta pętli już tego nie zauważy — to jedyny punkt styku (§11.2).
 
 ⚠️ **Nadmiarowy zapas wody nie jest jeszcze uzupełniany przez picie** — mechanika przedmiotów należy do etapu 4. Do tego czasu deficyt tylko rośnie.
+
+⚠️ **W buildzie release nie ma jeszcze czym poruszyć postacią** — bez trybu deweloperskiego gra pokazuje kreator i ekran startowy, ale pętla nie rusza, bo nie ma źródła pozycji. Znika to razem z etapem 3.
 
 ---
 

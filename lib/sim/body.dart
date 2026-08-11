@@ -75,6 +75,20 @@ class BodySpec {
     heightCm: heightCm ?? this.heightCm,
     weightKg: weightKg ?? this.weightKg,
   );
+
+  /// A character sheet is a value: two sheets with the same four figures are
+  /// the same character, whether one came from the creator and the other from
+  /// a row read back off disk.
+  @override
+  bool operator ==(Object other) =>
+      other is BodySpec &&
+      other.sex == sex &&
+      other.ageYears == ageYears &&
+      other.heightCm == heightCm &&
+      other.weightKg == weightKg;
+
+  @override
+  int get hashCode => Object.hash(sex, ageYears, heightCm, weightKg);
 }
 
 /// Everything derived from a [BodySpec].
