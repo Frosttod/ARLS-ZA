@@ -7,6 +7,7 @@ import 'package:arls_za/data/db/database.dart';
 import 'package:arls_za/data/persistence/save_bootstrap.dart';
 import 'package:arls_za/devtools/simulated_position_source.dart';
 import 'package:arls_za/game/game_loop.dart';
+import 'package:arls_za/location/movement_integrity.dart';
 import 'package:arls_za/sim/body.dart';
 import 'package:arls_za/sim/occupation.dart';
 import 'package:arls_za/sim/tick.dart';
@@ -213,6 +214,127 @@ void main() {
             'the game must not charge the player for a position it does '
             'not trust',
       );
+    });
+  });
+
+  group('movement the game refuses to believe (§3.2, §3.4)', () {
+    test('a phone lying still burns nothing but resting metabolism', () async {
+      final rig = await buildLoop();
+      addTearDown(() async {
+        await rig.loop.dispose();
+        await rig.source.dispose();
+        await rig.session.close();
+      });
+
+      // Standing still with the error model on — the rig runs without noise by
+      // default, and a noiseless stationary source would prove nothing. The
+      // reported position now wanders inside its accuracy circle all night.
+      // None of that is walking.
+      rig.source
+        ..mode = SimMovementMode.stationary
+        ..noiseEnabled = true;
+
+      await rig.loop.start();
+
+      // Twenty minutes at the walking cadence of 0.2 Hz. The interval matters:
+      // five metres of scatter over five seconds is a metre a second, which is
+      // a walk. Over a minute it is nothing, so a test that sampled slowly
+      // would pass no matter what the filter did.
+      for (var step = 0; step < 240; step++) {
+        rig.source.step();
+        await pump();
+        rig.wall.advance(const Duration(seconds: 5));
+      }
+      await rig.loop.onPaused(rig.wall.nowUtc());
+
+      final stored = await rig.session.db.vitalsFor(rig.profileId);
+      final burned = constants.caloriesDailyKcal - stored!.caloriesKcal;
+
+      // Twenty minutes of resting metabolism for this body is about 34 kcal.
+      // The same twenty minutes credited as walking is three times that.
+      expect(burned, lessThan(50), reason: 'GPS scatter is not exercise');
+      expect(stored.speedKmh, 0);
+    });
+
+    test('a mocked provider suspends the run at once (§3.4)', () async {
+      final rig = await buildLoop();
+      addTearDown(() async {
+        await rig.loop.dispose();
+        await rig.source.dispose();
+        await rig.session.close();
+      });
+
+      rig.source
+        ..mode = SimMovementMode.route
+        ..speedMps = SimSpeedPreset.run.mps;
+
+      await rig.loop.start();
+      rig.source.step();
+      await pump();
+
+      rig.source.reportMocked = true;
+      rig.wall.advance(const Duration(minutes: 1));
+      rig.source.step();
+      await pump();
+
+      final snapshot = await rig.loop.snapshots.first;
+      expect(snapshot.integrity, IntegrityState.suspended);
+      expect(snapshot.integrityReason, IntegrityReason.mockProvider);
+    });
+
+    test('a mocked position never reaches the simulation', () async {
+      final rig = await buildLoop();
+      addTearDown(() async {
+        await rig.loop.dispose();
+        await rig.source.dispose();
+        await rig.session.close();
+      });
+
+      rig.source
+        ..mode = SimMovementMode.route
+        ..speedMps = SimSpeedPreset.run.mps
+        ..reportMocked = true;
+
+      await rig.loop.start();
+      for (var minute = 0; minute < 10; minute++) {
+        rig.source.step();
+        await pump();
+        rig.wall.advance(const Duration(minutes: 1));
+      }
+      await rig.loop.onPaused(rig.wall.nowUtc());
+
+      final stored = await rig.session.db.vitalsFor(rig.profileId);
+      expect(
+        stored!.latitude,
+        isNull,
+        reason: 'a fix from a mock provider must not be saved as a position',
+      );
+      expect(stored.speedKmh, 0);
+    });
+
+    test('a car suspends the run after half a minute (§3.4)', () async {
+      final rig = await buildLoop();
+      addTearDown(() async {
+        await rig.loop.dispose();
+        await rig.source.dispose();
+        await rig.session.close();
+      });
+
+      rig.source
+        ..mode = SimMovementMode.route
+        // 72 km/h. Well past the 40 km/h threshold, well past any sprint.
+        ..speedMps = 20;
+
+      await rig.loop.start();
+      for (var step = 0; step < 6; step++) {
+        rig.source.step();
+        await pump();
+        rig.wall.advance(const Duration(seconds: 10));
+      }
+
+      final snapshot = await rig.loop.snapshots.first;
+      expect(snapshot.integrity, IntegrityState.suspended);
+      expect(snapshot.integrityReason, IntegrityReason.vehicleSpeed);
     });
   });
 

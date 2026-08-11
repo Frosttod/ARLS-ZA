@@ -23,6 +23,8 @@ import '../core/game_clock.dart';
 import '../data/db/database.dart';
 import '../data/persistence/save_bootstrap.dart';
 import '../data/persistence/save_writer.dart';
+import '../location/fix_filter.dart';
+import '../location/movement_integrity.dart';
 import '../location/position_fix.dart';
 import '../location/position_source.dart';
 import '../sim/daylight.dart';
@@ -40,6 +42,8 @@ class GameSnapshot {
     required this.isNight,
     required this.occupation,
     this.fix,
+    this.integrity = IntegrityState.ok,
+    this.integrityReason = IntegrityReason.none,
     this.clockRolledBack = false,
     this.lastFlushAt,
   });
@@ -50,7 +54,14 @@ class GameSnapshot {
   final double speedKmh;
   final bool isNight;
   final Occupation? occupation;
+
+  /// The smoothed position, not the raw reading (§3.2).
   final PositionFix? fix;
+
+  /// Whether the movement still looks like a person walking (§3.4). While
+  /// suspended nothing is credited, and the HUD has to say why.
+  final IntegrityState integrity;
+  final IntegrityReason integrityReason;
 
   /// True once the anti-cheat of §2.1.1 has rejected a tick, so the HUD can
   /// say so rather than appearing frozen.
@@ -87,6 +98,15 @@ class GameLoop {
   Occupation? _occupation;
   PositionFix? _lastFix;
   double _speedKmh = 0;
+
+  /// Raw fixes are never used directly: everything the simulation sees has been
+  /// through the accuracy gate, the Kalman filter and the stationary test
+  /// (§3.2).
+  final FixFilter _filter = FixFilter();
+
+  /// §3.4. Kept alongside the filter because both answer the same question from
+  /// different ends: is this movement real, and is it human.
+  final MovementIntegrity _integrity = MovementIntegrity();
   bool _rolledBack = false;
   bool _appForeground = true;
 
@@ -116,21 +136,27 @@ class GameLoop {
     _timer = Timer.periodic(cadence, (_) => unawaited(_tick()));
   }
 
-  void _onFix(PositionFix fix) {
-    final previous = _lastFix;
-    _lastFix = fix;
+  void _onFix(PositionFix raw) {
+    final outcome = _filter.accept(raw);
 
-    if (previous == null) return;
+    if (outcome is FixDropped) {
+      // A mocked fix is the one rejection the player has to hear about; the
+      // other two are ordinary weather.
+      _integrity.observeMocked(mocked: outcome.reason == FixRejection.mocked);
+      if (outcome.reason == FixRejection.mocked) _publish();
+      return;
+    }
 
-    // Speed from consecutive fixes rather than from the provider's own field:
-    // the simulator supplies one and the real chip sometimes does not, and the
-    // simulation must not behave differently depending on which is running.
-    final seconds =
-        fix.timestamp.difference(previous.timestamp).inMilliseconds / 1000.0;
-    if (seconds <= 0) return;
+    final accepted = outcome as FixAccepted;
+    _integrity.observeMocked(mocked: false);
 
-    final metres = previous.distanceTo(fix);
-    _speedKmh = metres / seconds * 3.6;
+    // Speed comes from consecutive fixes rather than from the provider's own
+    // field: the simulator supplies one and the real chip sometimes does not,
+    // and the simulation must not behave differently depending on which is
+    // running.
+    _speedKmh = accepted.speedMps * 3.6;
+    _lastFix = accepted.fix;
+    _integrity.observeSpeed(accepted.speedMps, accepted.fix.timestamp);
   }
 
   /// Advances the simulation to now and stages the result for writing.
@@ -180,7 +206,10 @@ class GameLoop {
       // A lost signal means the position cannot be trusted, so movement is not
       // counted at all — the alternative is charging the player for GPS drift
       // (§3.2).
-      speedKmh: source.currentSignal == PositionSignal.good ? _speedKmh : 0,
+      speedKmh:
+          source.currentSignal == PositionSignal.good && !_integrity.isSuspended
+          ? _speedKmh
+          : 0,
       loadKg: 0, // inventory arrives in stage 4
       bleedTier: BleedTier.none, // combat arrives in stage 5
       sleeping: asleep && sheltered,
@@ -245,6 +274,8 @@ class GameLoop {
               ),
         occupation: _occupation,
         fix: fix,
+        integrity: _integrity.state,
+        integrityReason: _integrity.reason,
         clockRolledBack: _rolledBack,
         lastFlushAt: writer.lastHotFlush,
       ),
@@ -288,6 +319,11 @@ class GameLoop {
   /// The app came back. Catch up before resuming the cadence.
   Future<void> onResumed() async {
     _appForeground = true;
+
+    // A fix from before the pause must not be smoothed against one from after
+    // it: the estimate in between is meaningless, and the jump would read as a
+    // sprint (§3.2).
+    _filter.reset();
     await source.setCadence(PositionCadence.moving);
     await _tick(offline: true);
     _timer ??= Timer.periodic(cadence, (_) => unawaited(_tick()));

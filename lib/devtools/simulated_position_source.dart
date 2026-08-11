@@ -125,6 +125,13 @@ class SimulatedPositionSource extends BasePositionSource {
   /// bug: turn the noise off, see whether it survives.
   bool noiseEnabled = true;
 
+  /// Marks every fix as coming from a mock provider (§3.4).
+  ///
+  /// §11.2 is the reason this exists: anything the real provider can do to us,
+  /// the simulator has to be able to do too. Without it the anti-cheat could
+  /// only ever be tested by installing a location spoofer on a real phone.
+  bool reportMocked = false;
+
   GpxTrack get track => _track;
 
   /// Where the character really is, for the diagnostic overlay.
@@ -266,6 +273,7 @@ class SimulatedPositionSource extends BasePositionSource {
       return truth.copyWith(
         accuracyM: quality.minAccuracyM,
         speedMps: speedMps,
+        isMocked: reportMocked,
       );
     }
 
@@ -282,7 +290,11 @@ class SimulatedPositionSource extends BasePositionSource {
 
     return truth
         .offset(metres: radius, bearingDeg: bearing, accuracyM: accuracy)
-        .copyWith(headingDeg: headingDeg, speedMps: speedMps);
+        .copyWith(
+          headingDeg: headingDeg,
+          speedMps: speedMps,
+          isMocked: reportMocked,
+        );
   }
 
   PositionFix _truthFix(DateTime now) => PositionFix(
