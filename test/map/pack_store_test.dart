@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:arls_za/map/pack_store.dart';
+import 'package:arls_za/map/pmtiles_header.dart';
 import 'package:arls_za/map/region_pack.dart';
 import 'package:crypto/crypto.dart';
 import 'package:test/test.dart';
@@ -179,6 +180,37 @@ void main() {
       expect(outcome, InstallOutcome.cancelled);
       expect(await store.isInstalled(pack), isFalse);
     });
+  });
+
+  test('an installed pack is asked what it actually covers (§16.6)', () async {
+    // The first 127 bytes of the Wielkopolskie pack, as Planetiler wrote it.
+    final header = base64Decode(
+      'UE1UaWxlcwN/AAAAAAAAAH4AAAAAAAAAQzSyDgAAAAAZBQAAAAAAAFw5sg4AAAAAsHoCAAAAAAAA'
+      'QAAAAAAAAEP0sQ4AAAAApVABAAAAAADVTAEAAAAAALBLAQAAAAAAAQICAQAPENdkCezNch6s5mYL'
+      'BBT/Hwfe3mUK+PA4Hw==',
+    );
+    final store = storeWith(_FakeDownloader(Uint8List.fromList(header)));
+    final pack = packOf(
+      sha: sha256.convert(header).toString(),
+      bytes: header.length,
+    );
+    await store.install(pack, freeBytes: 1 << 30);
+
+    final read = (await store.headerFor(pack))!;
+
+    expect(read.maxZoom, 15);
+    expect(read.tileKind, TileKind.mvt);
+    expect(
+      read.bounds.west,
+      closeTo(15.760, 0.001),
+      reason: 'the catalogue guesses a wider rectangle for this region',
+    );
+  });
+
+  test('a pack that is not installed has no header to read', () async {
+    final store = storeWith(_FakeDownloader(payload));
+
+    expect(await store.headerFor(packOf()), isNull);
   });
 
   test('installed packs are read off the disk, not from a record', () async {

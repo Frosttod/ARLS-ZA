@@ -20,6 +20,7 @@ import 'dart:io';
 
 import 'package:crypto/crypto.dart';
 
+import 'pmtiles_header.dart';
 import 'region_pack.dart';
 
 /// How a pack install ended.
@@ -99,6 +100,24 @@ class PackStore {
       }
     }
     return ids;
+  }
+
+  /// The installed pack's own description of itself (§16.6), or null if it is
+  /// not installed.
+  ///
+  /// Reads 127 bytes, not 235 MB: everything the game needs to know about a
+  /// pack is in the fixed header.
+  Future<PmtilesHeader?> headerFor(RegionPack pack) async {
+    final file = fileFor(pack);
+    if (!file.existsSync()) return null;
+
+    final handle = await file.open();
+    try {
+      final bytes = await handle.read(kPmtilesHeaderBytes);
+      return readPmtilesHeader(bytes);
+    } finally {
+      await handle.close();
+    }
   }
 
   Future<void> delete(RegionPack pack) async {
