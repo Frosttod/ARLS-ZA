@@ -10,7 +10,7 @@ Każdy zamknięty etap dostaje sekcję **Dziennik wykonania** z decyzjami podję
 | :---- | :---- | :---- | :---- | :---- |
 | 0 | Fundament: trwałość zapisu, zegar, konfiguracja buildu | ✅ zamknięty | 2026-08-10 | `ad55d40` |
 | 1 | Tryb deweloperski i symulator GPS | ✅ zamknięty | 2026-08-10 | `df54653` |
-| 2 | Postać i fizjologia | ✅ zamknięty | 2026-08-11 | `f2b1056`, `5555db2`, `2b0a37e` |
+| 2 | Postać i fizjologia | ✅ zamknięty | 2026-08-11 | `f2b1056`, `5555db2`, `2b0a37e`, `d869661` |
 | 3 | Mapa, GPS, bezpieczeństwo gracza | ⬜ | — | — |
 | 4 | Przedmioty, loot, przeszukanie | ⬜ | — | — |
 | 5 | Walka, przeciwnicy, hałas | ⬜ | — | — |
