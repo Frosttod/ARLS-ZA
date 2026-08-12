@@ -780,6 +780,64 @@ void main() {
     });
   });
 
+  group('waking up somewhere else (§16.6)', () {
+    test('a journey between sessions is not credited as walking', () async {
+      // The design promise: the app was shut, so nothing measured the 350 km,
+      // and nothing may charge for it. This is what keeps it true.
+      final rig = await buildLoop();
+      addTearDown(() async {
+        await rig.loop.dispose();
+        await rig.source.dispose();
+        await rig.session.close();
+      });
+
+      await rig.loop.start();
+      rig.source.step();
+      await pump();
+      await rig.loop.onPaused(rig.wall.nowUtc());
+      final before = rig.loop.state.caloriesKcal;
+
+      // Eight hours away, and the world moved 350 km underneath them.
+      rig.wall.advance(const Duration(hours: 8));
+      rig.source.jumpTo(50.0647, 19.9450);
+      await rig.loop.onResumed();
+      rig.source.step();
+      await pump();
+      await rig.loop.onPaused(rig.wall.nowUtc());
+
+      final burned = before - rig.loop.state.caloriesKcal;
+      expect(
+        burned,
+        lessThan(900),
+        reason: 'eight hours of resting metabolism, not a march to Kraków',
+      );
+      expect(rig.loop.state.caloriesKcal, greaterThan(0));
+    });
+
+    test('the position after the jump is the new one', () async {
+      final rig = await buildLoop();
+      addTearDown(() async {
+        await rig.loop.dispose();
+        await rig.source.dispose();
+        await rig.session.close();
+      });
+
+      await rig.loop.start();
+      rig.source.jumpTo(50.0647, 19.9450);
+      rig.source.step();
+      await pump();
+
+      // The clock has to move, or the tick has nothing to advance and never
+      // stages a row — the hot layer writes what the tick produced (§11.1.1).
+      rig.wall.advance(const Duration(minutes: 1));
+      await rig.loop.onPaused(rig.wall.nowUtc());
+
+      final stored = await rig.session.db.vitalsFor(rig.profileId);
+      expect(stored!.latitude, closeTo(50.0647, 0.01));
+      expect(stored.longitude, closeTo(19.9450, 0.01));
+    });
+  });
+
   group('anti-cheat (§2.1.1)', () {
     test('winding the device clock back yields no free time', () async {
       final rig = await buildLoop();

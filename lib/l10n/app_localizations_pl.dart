@@ -485,4 +485,20 @@ class L10nPl extends L10n {
   @override
   String get settingsRestartNeeded =>
       'Zmiana zadziała po ponownym uruchomieniu gry.';
+
+  @override
+  String get relocationTitle => 'Znowu urwał mi się film';
+
+  @override
+  String relocationBody(int km) {
+    return 'Nie mam pojęcia, jak się tu znalazłem. Ostatnie, co pamiętam, było jakieś $km km stąd.';
+  }
+
+  @override
+  String relocationNoMapBody(int km) {
+    return 'Nie mam pojęcia, jak się tu znalazłem. Ostatnie, co pamiętam, było jakieś $km km stąd — i nie mam mapy tej okolicy.';
+  }
+
+  @override
+  String get relocationDismiss => 'Trudno';
 }

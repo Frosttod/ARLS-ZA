@@ -11,7 +11,7 @@ Każdy zamknięty etap dostaje sekcję **Dziennik wykonania** z decyzjami podję
 | 0 | Fundament: trwałość zapisu, zegar, konfiguracja buildu | ✅ zamknięty | 2026-08-10 | `ad55d40` |
 | 1 | Tryb deweloperski i symulator GPS | ✅ zamknięty | 2026-08-10 | `df54653` |
 | 2 | Postać i fizjologia | ✅ zamknięty | 2026-08-11 | `f2b1056`, `5555db2`, `2b0a37e`, `d869661` |
-| 3 | Mapa, GPS, bezpieczeństwo gracza | 🟡 w toku (12/13) | — | `f035626` … `43510ef` (15 commitów) |
+| 3 | Mapa, GPS, bezpieczeństwo gracza | 🟡 13/13 zadań, czeka na spacer terenowy | — | `f035626` … `43510ef` (15 commitów) |
 | 4 | Przedmioty, loot, przeszukanie | ⬜ | — | — |
 | 5 | Walka, przeciwnicy, hałas | ⬜ | — | — |
 | 6 | Ognisko z pełnym cyklem | ⬜ | — | — |
@@ -19,7 +19,7 @@ Każdy zamknięty etap dostaje sekcję **Dziennik wykonania** z decyzjami podję
 | 8 | Schron, obóz, pętla dobowa | ⬜ | — | — |
 | 9 | Onboarding, dostępność, zgodność | ⬜ | — | — |
 
-**Metryki:** 501 testów · `flutter analyze --fatal-infos` czysty · schemat bazy **v2** · release APK 89,5 MB bez devtools
+**Metryki:** 511 testów · `flutter analyze --fatal-infos` czysty · schemat bazy **v2** · release APK 89,5 MB bez devtools
 
 ### Zablokowane na użytkowniku
 
@@ -241,7 +241,7 @@ Etap 3 zaczyna się od **prawdziwego źródła pozycji**: `PositionSource` na `g
 | 3.9 | ✅ Blokada walki przy >15 km/h | §3.5 |
 | 3.10 | ✅ Widok mapy: gracz, stożek kierunku, znaczniki, dolne menu | §3.6 |
 | 3.11 | ✅ Zapis pozycji do warstwy gorącej przy każdym `onPause`, checkpoint WAL | §11.1.2, §11.1.5 |
-| 3.12 | Przeniesienie: wykrycie skoku pozycji między sesjami, komunikat fabularny, decyzja o pakiecie | §16.6, §19.1 |
+| 3.12 | ✅ Przeniesienie: wykrycie skoku pozycji między sesjami, komunikat fabularny, decyzja o pakiecie | §16.6, §19.1 |
 | 3.13 | ✅ Marsz z wygaszonym ekranem naliczany (wariant A) | §3.3, §16.1 |
 
 ### Zweryfikowane na urządzeniu (motorola edge 50 neo, Android 16)
@@ -284,9 +284,9 @@ Rzeczy, których nie było w roadmapie, a które wyszły z pierwszych uruchomie�
 | Poza pakietami, ale region jest w katalogu | Notatka fabularna + ekran wyboru regionu z podświetlonym właściwym województwem. Do pobrania — nie ma mapy, nie ma POI, nie ma lootu (§10) |
 | Poza pakietami i regionu nie ma w katalogu | Rozgrywka wstrzymana z wyjaśnieniem. Wyjście: wrócić w zasięg albo pobrać inny region |
 
-**Komunikat.** Tonem świata, nie interfejsu — gracz jest ocalałym, a nie użytkownikiem aplikacji. Wariant: *„Znowu urwał mi się film. Nie mam pojęcia, jak się tu znalazłem. Tablica przy drodze: {city}."*
+**Komunikat.** Tonem świata, nie interfejsu — gracz jest ocalałym, a nie użytkownikiem aplikacji: *„Znowu urwał mi się film. Nie mam pojęcia, jak się tu znalazłem. Ostatnie, co pamiętam, było jakieś 350 km stąd."*
 
-⚠️ **Pułapka fleksyjna (§19.1.1).** Nazwa miasta musi stać w mianowniku — dlatego zdanie kończy się dwukropkiem i nazwą, a nie „jak trafiłem do {city}", co wymagałoby dopełniacza („do Warszawy"). Ten sam problem będzie w każdej notatce z §19.1.
+**Zmiana wobec projektu: bez nazwy miasta.** Pierwotny wariant kończył się „Tablica przy drodze: {city}", ale gra nie ma geokodowania odwrotnego i nie będzie miała — nazwa wymagałaby zapytania do sieci, czego §1.2 zabrania. Warstwa `place` w kafelkach ją niesie, ale odpytywanie kafelków to osobna maszyneria. **Dystans jest jedyną rzeczą, którą gra wie na pewno i może powiedzieć bez pytania kogokolwiek** — i brzmi w tej scenie równie dobrze. Pułapka fleksyjna z §19.1.1 tym samym znika z tego komunikatu, ale wróci przy notatkach z §19.1.
 
 **Czego ten projekt *nie* rozstrzyga:** czy gracz może przenieść schron (§8). Podróż z powrotem po 500 km to nie mechanika, to brak mechaniki. Do decyzji przy etapie 8.
 

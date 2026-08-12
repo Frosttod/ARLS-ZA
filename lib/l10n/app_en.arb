@@ -229,5 +229,23 @@
   "settingsMaps": "Offline maps",
   "settingsSimulator": "GPS simulator",
   "settingsSimulatorBody": "The game then walks a recorded track instead of your real position. For testing only.",
-  "settingsRestartNeeded": "The change takes effect the next time the game starts."
+  "settingsRestartNeeded": "The change takes effect the next time the game starts.",
+  "relocationTitle": "I blacked out again",
+  "relocationBody": "No idea how I got here. The last thing I remember was some {km} km away.",
+  "relocationNoMapBody": "No idea how I got here. The last thing I remember was some {km} km away — and I have no map of this place.",
+  "relocationDismiss": "So be it",
+  "@relocationBody": {
+    "placeholders": {
+      "km": {
+        "type": "int"
+      }
+    }
+  },
+  "@relocationNoMapBody": {
+    "placeholders": {
+      "km": {
+        "type": "int"
+      }
+    }
+  }
 }

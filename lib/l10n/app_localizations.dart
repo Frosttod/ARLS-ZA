@@ -936,6 +936,30 @@ abstract class L10n {
   /// In en, this message translates to:
   /// **'The change takes effect the next time the game starts.'**
   String get settingsRestartNeeded;
+
+  /// No description provided for @relocationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'I blacked out again'**
+  String get relocationTitle;
+
+  /// No description provided for @relocationBody.
+  ///
+  /// In en, this message translates to:
+  /// **'No idea how I got here. The last thing I remember was some {km} km away.'**
+  String relocationBody(int km);
+
+  /// No description provided for @relocationNoMapBody.
+  ///
+  /// In en, this message translates to:
+  /// **'No idea how I got here. The last thing I remember was some {km} km away — and I have no map of this place.'**
+  String relocationNoMapBody(int km);
+
+  /// No description provided for @relocationDismiss.
+  ///
+  /// In en, this message translates to:
+  /// **'So be it'**
+  String get relocationDismiss;
 }
 
 class _L10nDelegate extends LocalizationsDelegate<L10n> {

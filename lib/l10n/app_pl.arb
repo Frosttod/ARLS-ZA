@@ -153,5 +153,23 @@
   "settingsMaps": "Mapy offline",
   "settingsSimulator": "Symulator GPS",
   "settingsSimulatorBody": "Gra używa wtedy nagranej trasy zamiast prawdziwej pozycji. Tylko do testów.",
-  "settingsRestartNeeded": "Zmiana zadziała po ponownym uruchomieniu gry."
+  "settingsRestartNeeded": "Zmiana zadziała po ponownym uruchomieniu gry.",
+  "relocationTitle": "Znowu urwał mi się film",
+  "relocationBody": "Nie mam pojęcia, jak się tu znalazłem. Ostatnie, co pamiętam, było jakieś {km} km stąd.",
+  "relocationNoMapBody": "Nie mam pojęcia, jak się tu znalazłem. Ostatnie, co pamiętam, było jakieś {km} km stąd — i nie mam mapy tej okolicy.",
+  "relocationDismiss": "Trudno",
+  "@relocationBody": {
+    "placeholders": {
+      "km": {
+        "type": "int"
+      }
+    }
+  },
+  "@relocationNoMapBody": {
+    "placeholders": {
+      "km": {
+        "type": "int"
+      }
+    }
+  }
 }

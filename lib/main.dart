@@ -13,6 +13,7 @@ import 'devtools/dev_overlay.dart';
 import 'devtools/dev_session.dart';
 import 'game/game_loop.dart';
 import 'game/game_session.dart';
+import 'game/relocation.dart';
 import 'l10n/app_localizations.dart';
 import 'location/device_position_source.dart';
 import 'location/device_power_source.dart';
@@ -21,6 +22,7 @@ import 'location/movement_integrity.dart';
 import 'location/position_fix.dart';
 import 'map/map_bootstrap.dart';
 import 'map/map_source.dart';
+import 'map/geometry.dart';
 import 'map/pack_manager.dart';
 import 'map/pack_store.dart';
 import 'map/region_pack.dart';
@@ -235,6 +237,13 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// So the region screen opens itself on a first run and never again.
   bool _askedForMap = false;
 
+  /// Where the previous session ended, read once at boot. What the first
+  /// trusted fix is compared against (§16.6).
+  GeoPoint? _lastKnown;
+
+  /// Told once per session, not once per fix.
+  bool _relocationTold = false;
+
   /// True only in a developer build where the simulator has been switched on
   /// (§11.2). Everything else walks on real ground.
   bool _useSimulator = false;
@@ -350,6 +359,14 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
   /// Starts the simulation for [character] and shows the HUD.
   Future<void> _enter(ActiveCharacter character) async {
+    // Read before the loop starts writing over it: this is the only moment the
+    // *previous* session's position is still on disk (§16.6).
+    final previous = await _factory.lastKnownPosition(character.profile.id);
+    _lastKnown = previous == null
+        ? null
+        : GeoPoint(previous.latitude, previous.longitude);
+    if (!mounted) return;
+
     if (kDevTools && _useSimulator) {
       _dev = DevSession.attach(constants: character.constants);
     }
@@ -397,6 +414,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         _sessionStart ??= snapshot.state.lastUpdate;
         _snapshot = snapshot;
       });
+      unawaited(_checkRelocation(snapshot));
     });
 
     if (!mounted) {
@@ -465,6 +483,61 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final character = _character;
     if (character == null) return null;
     return _factory.lastKnownPosition(character.profile.id);
+  }
+
+  /// Did this session open somewhere else? (§16.6)
+  ///
+  /// Only the first trusted fix is asked. A fix that failed the accuracy gate
+  /// or came from a mock provider is not a journey, and the filter has already
+  /// dropped those — what reaches a snapshot has passed both (§3.2, §3.4).
+  Future<void> _checkRelocation(GameSnapshot snapshot) async {
+    if (_relocationTold) return;
+
+    final fix = snapshot.fix;
+    if (fix == null || snapshot.signal != PositionSignal.good) return;
+
+    _relocationTold = true;
+    final here = GeoPoint(fix.latitude, fix.longitude);
+
+    final covered =
+        _mapSource != null &&
+        (await _packs?.activePack(
+              nearLatitude: here.latitude,
+              nearLongitude: here.longitude,
+            )) !=
+            null;
+
+    final moved = detectRelocation(
+      lastKnown: _lastKnown,
+      trusted: here,
+      mapCoversHere: covered,
+    );
+    if (!moved.happened || !mounted) return;
+
+    final l10n = L10n.of(context);
+    await showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.relocationTitle),
+        content: Text(
+          moved.verdict == RelocationVerdict.covered
+              ? l10n.relocationBody(moved.kilometres)
+              : l10n.relocationNoMapBody(moved.kilometres),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(l10n.relocationDismiss),
+          ),
+        ],
+      ),
+    );
+
+    // Nothing to draw and nowhere for §10 to put anything: the region screen
+    // is the only useful next step.
+    if (moved.verdict == RelocationVerdict.uncovered && mounted) {
+      await _openRegionPicker();
+    }
   }
 
   /// The player chose the network map rather than waiting for a download.

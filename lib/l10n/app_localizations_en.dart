@@ -483,4 +483,20 @@ class L10nEn extends L10n {
   @override
   String get settingsRestartNeeded =>
       'The change takes effect the next time the game starts.';
+
+  @override
+  String get relocationTitle => 'I blacked out again';
+
+  @override
+  String relocationBody(int km) {
+    return 'No idea how I got here. The last thing I remember was some $km km away.';
+  }
+
+  @override
+  String relocationNoMapBody(int km) {
+    return 'No idea how I got here. The last thing I remember was some $km km away — and I have no map of this place.';
+  }
+
+  @override
+  String get relocationDismiss => 'So be it';
 }
