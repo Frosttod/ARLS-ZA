@@ -72,6 +72,12 @@ class DevicePositionSource extends BasePositionSource {
   PositionCadence get currentCadence =>
       _sub == null ? PositionCadence.off : _cadence;
 
+  /// Only with the foreground service, which only runs on the background
+  /// permission. With foreground-only access Android stops delivering fixes
+  /// when the app leaves the screen (§16.1).
+  @override
+  bool get tracksInBackground => allowBackground && _sub != null;
+
   /// Asks the platform where it stands, prompting once if that could help.
   ///
   /// Returns without prompting when the service is off or the refusal is

@@ -144,6 +144,11 @@ class SimulatedPositionSource extends BasePositionSource {
   @override
   PositionCadence get currentCadence => _cadence;
 
+  /// The simulator runs on an ordinary timer, which the screen going off does
+  /// not stop.
+  @override
+  bool get tracksInBackground => true;
+
   @override
   Future<void> start({PositionCadence cadence = PositionCadence.moving}) async {
     _cadence = cadence;

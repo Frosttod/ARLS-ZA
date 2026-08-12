@@ -35,6 +35,13 @@ import '../sim/occupation.dart';
 import '../sim/physiology.dart';
 import '../sim/tick.dart';
 
+/// The longest gap the loop is willing to treat as observed (§2.1.1, §3.3).
+///
+/// The tick runs every second while anything is watching, so a step longer than
+/// this means the process was asleep, throttled or dead. Five minutes is far
+/// beyond any scheduling jitter and far short of a journey.
+const Duration kUnmeasuredGap = Duration(minutes: 5);
+
 /// Everything the UI needs to draw a frame.
 class GameSnapshot {
   const GameSnapshot({
@@ -153,6 +160,11 @@ class GameLoop {
   bool _rolledBack = false;
   bool _appForeground = true;
 
+  /// True while the app is away *and* the source is still delivering fixes
+  /// (§3.3). The simulation keeps running in that state; without it the time
+  /// away is offline.
+  bool _tracking = false;
+
   Timer? _timer;
   StreamSubscription<PositionFix>? _fixSub;
   StreamSubscription<PositionSignal>? _signalSub;
@@ -218,7 +230,15 @@ class GameLoop {
     }
 
     final elapsed = advanceResult.elapsed;
-    final input = _buildInput(offline: offline);
+
+    // A single step covering more than a few minutes means nobody was
+    // measuring, whatever the flags say. A foreground service can be killed
+    // without telling us, and Doze stops delivering fixes while leaving the
+    // process alive — in both cases the loop wakes up holding a gap it did not
+    // observe. Charging a fortnight of that as if it had been walked is
+    // exactly what the offline valve of §2.1.1 exists to prevent.
+    final unmeasured = elapsed > kUnmeasuredGap;
+    final input = _buildInput(offline: offline || unmeasured);
 
     // A long gap is replayed in chunks so the model has no chance to
     // accumulate error, and so a fortnight does not become one arithmetic step.
@@ -262,7 +282,9 @@ class GameLoop {
       loadKg: 0, // inventory arrives in stage 4
       bleedTier: BleedTier.none, // combat arrives in stage 5
       sleeping: asleep && sheltered,
-      offline: offline || !_appForeground,
+      // Away from the screen but still being tracked is not offline: the walk
+      // is real and measured (§3.3). Away with nothing measuring is.
+      offline: offline || (!_appForeground && !_tracking),
     );
   }
 
@@ -315,7 +337,7 @@ class GameLoop {
     final progress = advanceOccupation(
       occupation: current,
       elapsed: elapsed,
-      appOpen: _appForeground,
+      appOpen: _appForeground || _tracking,
       inShelterZone: _state.zone.isSheltered,
       gpsHealthy: source.currentSignal != PositionSignal.lost,
     );
@@ -401,32 +423,58 @@ class GameLoop {
     _publish();
   }
 
-  /// The app went to the background: flush everything and checkpoint the WAL,
-  /// because this is the moment the process is most likely to be killed
-  /// (§11.1.5).
+  /// The app went to the background.
+  ///
+  /// Two things happen here and they are independent. Everything is flushed and
+  /// the WAL checkpointed, because this is the moment the process is most
+  /// likely to be killed (§11.1.5) — that is unconditional.
+  ///
+  /// Whether the simulation keeps running depends on the source. With the
+  /// foreground service alive the fixes keep coming, so a walk with the phone
+  /// in a pocket goes on being counted, which is the entire reason §3.3 pays
+  /// for that service. Without it Android stops delivering fixes, and a tick
+  /// that kept running would credit the player with standing still — so the
+  /// loop stops and the time away is replayed under the offline valve of
+  /// §2.1.1 instead.
   Future<void> onPaused(DateTime now) async {
     _appForeground = false;
-    _timer?.cancel();
-    _timer = null;
+    _tracking = source.tracksInBackground;
+
+    if (!_tracking) {
+      _timer?.cancel();
+      _timer = null;
+    }
 
     await _tick();
     await writer.quiesce(now);
     await persistClockMark(session.db, clock);
-    _cadence = PositionCadence.resting;
-    await source.setCadence(PositionCadence.resting);
+
+    if (!_tracking) {
+      _cadence = PositionCadence.resting;
+      await source.setCadence(PositionCadence.resting);
+    }
   }
 
-  /// The app came back. Catch up before resuming the cadence.
+  /// The app came back.
   Future<void> onResumed() async {
+    final wasTracking = _tracking;
     _appForeground = true;
+    _tracking = false;
 
-    // A fix from before the pause must not be smoothed against one from after
-    // it: the estimate in between is meaningless, and the jump would read as a
-    // sprint (§3.2).
-    _filter.reset();
-    _cadence = PositionCadence.moving;
-    await source.setCadence(PositionCadence.moving);
-    await _tick(offline: true);
+    if (!wasTracking) {
+      // A fix from before the pause must not be smoothed against one from
+      // after it: the estimate in between is meaningless, and the jump would
+      // read as a sprint (§3.2). When the source never stopped there is no
+      // gap, and resetting would throw away a path that was measured properly.
+      _filter.reset();
+      _cadence = PositionCadence.moving;
+      await source.setCadence(PositionCadence.moving);
+    }
+
+    // Only a session that stopped needs an offline catch-up. One that kept
+    // ticking has nothing to catch up on, and replaying it under the offline
+    // valve would quietly refund the walk it just charged for.
+    await _tick(offline: !wasTracking);
     _timer ??= Timer.periodic(cadence, (_) => unawaited(_tick()));
   }
 

@@ -693,6 +693,93 @@ void main() {
     });
   });
 
+  group('a walk with the screen off (§3.3)', () {
+    test('keeps counting while the source is still delivering fixes', () async {
+      final rig = await buildLoop();
+      addTearDown(() async {
+        await rig.loop.dispose();
+        await rig.source.dispose();
+        await rig.session.close();
+      });
+
+      rig.source
+        ..mode = SimMovementMode.route
+        ..speedMps = SimSpeedPreset.briskWalk.mps;
+
+      await rig.loop.start();
+      await rig.loop.onPaused(rig.wall.nowUtc());
+
+      // Ten minutes of walking with the phone in a pocket, stepped in
+      // one-minute pieces so no single advance looks like an unobserved gap.
+      final before = rig.loop.state.caloriesKcal;
+      for (var minute = 0; minute < 10; minute++) {
+        rig.source.step();
+        await pump();
+        rig.wall.advance(const Duration(minutes: 1));
+        rig.source.step();
+        await pump();
+        await rig.loop.onPaused(rig.wall.nowUtc());
+      }
+
+      final burned = before - rig.loop.state.caloriesKcal;
+      expect(
+        burned,
+        greaterThan(35),
+        reason: 'ten minutes of walking costs more than resting metabolism',
+      );
+    });
+
+    test('an unobserved gap is offline however the source boasts', () async {
+      // The simulator always claims to track in the background, and a real
+      // foreground service can be killed without saying so. What settles it is
+      // the size of the step: nothing observes a fortnight in one advance.
+      final rig = await buildLoop();
+      addTearDown(() async {
+        await rig.loop.dispose();
+        await rig.source.dispose();
+        await rig.session.close();
+      });
+
+      rig.loop.setZone(MetabolicZone.shelter);
+      await rig.loop.start();
+      await rig.loop.onPaused(rig.wall.nowUtc());
+
+      rig.wall.advance(const Duration(days: 14));
+      await rig.loop.onResumed();
+
+      expect(rig.loop.status().isIncapacitated, isFalse);
+      expect(
+        rig.loop.state.caloriesKcal,
+        closeTo(constants.caloriesDailyKcal * 0.10, 1),
+        reason: 'the offline floor of §2.1.1 still catches it',
+      );
+    });
+
+    test('a source that stops at the screen makes the time offline', () async {
+      final rig = await buildLoop();
+      addTearDown(() async {
+        await rig.loop.dispose();
+        await rig.source.dispose();
+        await rig.session.close();
+      });
+
+      rig.loop.setZone(MetabolicZone.shelter);
+      await rig.loop.start();
+
+      // Foreground-only permission: Android stops the stream with the screen.
+      rig.source.setQuality(SimSignalQuality.none);
+      await rig.loop.onPaused(rig.wall.nowUtc());
+
+      rig.wall.advance(const Duration(hours: 20));
+      await rig.loop.onResumed();
+
+      expect(
+        rig.loop.state.caloriesKcal,
+        greaterThanOrEqualTo(constants.caloriesDailyKcal * 0.10 - 1),
+      );
+    });
+  });
+
   group('anti-cheat (§2.1.1)', () {
     test('winding the device clock back yields no free time', () async {
       final rig = await buildLoop();

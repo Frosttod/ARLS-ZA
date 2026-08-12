@@ -240,7 +240,7 @@ Etap 3 zaczyna się od **prawdziwego źródła pozycji**: `PositionSource` na `g
 | 3.10 | Widok mapy: gracz, stożek kierunku, znaczniki, dolne menu | §3.6 |
 | 3.11 | Zapis pozycji do warstwy gorącej przy każdym `onPause`, checkpoint WAL | §11.1.2, §11.1.5 |
 | 3.12 | Przeniesienie: wykrycie skoku pozycji między sesjami, komunikat fabularny, decyzja o pakiecie | §16.6, §19.1 |
-| 3.13 | Rozstrzygnięcie, czy marsz z wygaszonym ekranem jest naliczany (patrz decyzja niżej) | §3.3, §16.1 |
+| 3.13 | ✅ Marsz z wygaszonym ekranem naliczany (wariant A) | §3.3, §16.1 |
 
 ⚠️ **Etap 3 to pierwszy moment, w którym §3.5 przestaje być teorią.** Strefy wykluczone i blokada walki w ruchu muszą działać, zanim ktokolwiek poza deweloperem uruchomi grę w terenie.
 
@@ -281,7 +281,22 @@ To sprzeczne z tym, po co §3.3 każe trzymać foreground service. Dwie spójne 
 
 **Rekomendacja: A dla wersji docelowej, B jako pierwsze wydanie.** Gra o przetrwaniu, która przestaje liczyć, gdy schowasz telefon do kieszeni, mierzy coś innego niż obiecuje. Ale pierwsze wydanie nie musi się od razu bić z recenzją Play, a przełączenie B→A to usunięcie dwóch linii w `onPaused` i uprawnienie w manifeście — nie przebudowa.
 
-**Do rozstrzygnięcia przez użytkownika.** Do tego czasu obowiązuje B, bo tak działa kod.
+**Rozstrzygnięte: wariant A.** Wdrożone. Źródło pozycji deklaruje `tracksInBackground`, a pętla przestaje flagować czas offline, dopóki fiksy przychodzą.
+
+Przy okazji wyszło coś, czego nie było w żadnym wariancie. Foreground service **można ubić bez powiadomienia**, a Doze wstrzymuje fiksy zostawiając proces przy życiu — w obu przypadkach pętla budzi się z luką, której nie obserwowała. Sama flaga uprawnienia tego nie odróżnia. Rozstrzyga **wielkość kroku**: pojedynczy `advance` dłuższy niż `kUnmeasuredGap` (5 minut) jest traktowany jako offline niezależnie od tego, co deklaruje źródło. Zawór §2.1.1 nadal łapie dwutygodniową nieobecność, a dziesięć minut marszu z telefonem w kieszeni liczy się normalnie. Trzy testy w `game_loop_test.dart` pilnują obu końców.
+
+⚠️ Wariant A oznacza formularz Google z **nagraniem wideo** uzasadniającym lokalizację w tle. Bez tego wydanie nie przejdzie recenzji.
+
+### Weryfikacja pakietu wielkopolskiego
+
+Nie „plik istnieje", tylko rozpakowany katalog PMTiles i zdekodowane kafelki. 85 205 kafelków, zoom 0–15, MVT. Warstwy w najgęstszych kafelkach: `landcover`, `landuse`, `place`, `transportation`, `transportation_name`, `building`, `housenumber`, `poi`, `water`, `water_name`, `boundary`, `waterway`, `park`, `mountain_peak`, `aeroway`, `aerodrome_label`.
+
+Wszystkie nazwy, na których stoi styl (`landcover`, `park`, `water`, `waterway`, `building`, `transportation`, `boundary`), są obecne. Wartości `transportation.class` też się zgadzają: `path`, `minor`, `tertiary`, `service`, `rail`, `track`, `transit`.
+
+Dwa wnioski na przyszłość:
+
+- 🟢 **Warstwa `poi` niesie ~99 tys. obiektów** z polami `class`, `subclass`, `rank`. To jest źródło danych dla lootu z §10, którego etap 4 dotąd nie miał. Nie trzeba osobnego pobierania OSM.
+- 🔴 **`SpawnFilter` czyta surowe tagi OSM, a kafelki niosą schemat znormalizowany.** Szpital w kaflu to `landuse.class=hospital`, nie `amenity=hospital`; szkoła to `landuse.class=school`. Reguły §3.5 są poprawne, ale przy podłączaniu do kafelków (etap 4) potrzebny jest adapter z OpenMapTiles na tagi. Bez niego filtr przepuści wszystko.
 
 **Kryterium wyjścia:** godzinny spacer po mieście daje spójny ślad bez fałszywego ruchu na postoju, zużycie baterii mieści się w założeniach §3.3, a proces przeżywa agresywne oszczędzanie energii (test na urządzeniu Xiaomi/Samsung).
 

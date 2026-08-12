@@ -60,6 +60,14 @@ abstract class PositionSource {
   /// balance data.
   bool get isSimulated;
 
+  /// Whether fixes keep arriving once the app leaves the screen (§3.3).
+  ///
+  /// The simulation asks before deciding whether a walk with the phone in a
+  /// pocket counts. A source that stops when the screen does cannot be
+  /// distinguished from a player standing still, and charging them for a walk
+  /// nobody measured would be worse than not counting it.
+  bool get tracksInBackground;
+
   Future<void> start({PositionCadence cadence = PositionCadence.moving});
 
   /// Changes the sampling rate without tearing the source down.
