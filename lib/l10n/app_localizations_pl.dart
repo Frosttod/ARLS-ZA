@@ -481,4 +481,8 @@ class L10nPl extends L10n {
   @override
   String get settingsSimulatorBody =>
       'Gra używa wtedy nagranej trasy zamiast prawdziwej pozycji. Tylko do testów.';
+
+  @override
+  String get settingsRestartNeeded =>
+      'Zmiana zadziała po ponownym uruchomieniu gry.';
 }

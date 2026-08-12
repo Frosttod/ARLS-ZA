@@ -33,6 +33,7 @@ import 'ui/hud.dart';
 import 'ui/map_view.dart';
 import 'ui/maplibre_surface.dart';
 import 'ui/region_picker.dart';
+import 'ui/settings_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -107,7 +108,7 @@ class _IntroScreenState extends State<IntroScreen> {
     final bootstrap = SaveBootstrap(paths: paths);
     final session = await bootstrap.boot(now: DateTime.now().toUtc());
 
-    final settings = AppSettings(session.db);
+    final settings = AppSettings(DatabaseSettingsStore(session.db));
     await settings.load();
     widget.onSettings(settings);
     _settings = settings;
@@ -475,6 +476,36 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     Navigator.of(context).popUntil((route) => route.isFirst);
   }
 
+  Future<void> _openSettings() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => SettingsScreen(
+          settings: widget.settings,
+          onOpenMaps: () => unawaited(_openRegionPicker()),
+          simulatorEnabled: _useSimulator,
+          onSimulatorChanged: (value) => unawaited(_setSimulator(value)),
+        ),
+      ),
+    );
+  }
+
+  /// Switching the source is a restart of the session, not a live swap: the
+  /// filter, the loop and the map are all built around one of them (§11.2).
+  Future<void> _setSimulator(bool value) async {
+    await widget.session.db.writeSetting(
+      kSimulatorSettingKey,
+      value ? 'true' : 'false',
+    );
+    if (!mounted) return;
+
+    setState(() => _useSimulator = value);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(L10n.of(context).settingsRestartNeeded)),
+      );
+    }
+  }
+
   Future<void> _openRegionPicker() async {
     final packs = _packs ??= await bootMapPacks();
     if (!mounted) return;
@@ -605,7 +636,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
               // systems behind it. Settings is the one that already has
               // something to do.
               if (entry == MapMenuEntry.settings) {
-                unawaited(_openRegionPicker());
+                unawaited(_openSettings());
               }
             },
           ),

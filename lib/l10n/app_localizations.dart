@@ -930,6 +930,12 @@ abstract class L10n {
   /// In en, this message translates to:
   /// **'The game then walks a recorded track instead of your real position. For testing only.'**
   String get settingsSimulatorBody;
+
+  /// No description provided for @settingsRestartNeeded.
+  ///
+  /// In en, this message translates to:
+  /// **'The change takes effect the next time the game starts.'**
+  String get settingsRestartNeeded;
 }
 
 class _L10nDelegate extends LocalizationsDelegate<L10n> {

@@ -228,5 +228,6 @@
   "settingsLanguage": "Language",
   "settingsMaps": "Offline maps",
   "settingsSimulator": "GPS simulator",
-  "settingsSimulatorBody": "The game then walks a recorded track instead of your real position. For testing only."
+  "settingsSimulatorBody": "The game then walks a recorded track instead of your real position. For testing only.",
+  "settingsRestartNeeded": "The change takes effect the next time the game starts."
 }

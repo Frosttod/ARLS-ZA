@@ -479,4 +479,8 @@ class L10nEn extends L10n {
   @override
   String get settingsSimulatorBody =>
       'The game then walks a recorded track instead of your real position. For testing only.';
+
+  @override
+  String get settingsRestartNeeded =>
+      'The change takes effect the next time the game starts.';
 }

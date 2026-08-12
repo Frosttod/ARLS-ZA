@@ -24,11 +24,49 @@ const String kThemeSettingKey = 'app.theme';
 /// supports — a list of languages somebody has actually translated.
 const List<Locale> kGameLocales = [Locale('pl'), Locale('en')];
 
+/// Where the two settings are kept.
+///
+/// An interface rather than the database directly, so a widget test can drive
+/// the screen without one. That is not only tidiness: a real write inside a
+/// pump loop never completes under the test binding's clock, and the test hangs
+/// rather than failing — which is a much worse way to learn about a mistake.
+abstract class SettingsStore {
+  Future<String?> read(String key);
+  Future<void> write(String key, String value);
+}
+
+/// The real one, over the save database.
+class DatabaseSettingsStore implements SettingsStore {
+  const DatabaseSettingsStore(this.db);
+
+  final SaveDatabase db;
+
+  @override
+  Future<String?> read(String key) => db.readSetting(key);
+
+  @override
+  Future<void> write(String key, String value) => db.writeSetting(key, value);
+}
+
+/// Keeps settings in memory. For tests, and for a screen shown before the save
+/// layer is open.
+class MemorySettingsStore implements SettingsStore {
+  MemorySettingsStore([Map<String, String>? initial]) : _values = {...?initial};
+
+  final Map<String, String> _values;
+
+  @override
+  Future<String?> read(String key) async => _values[key];
+
+  @override
+  Future<void> write(String key, String value) async => _values[key] = value;
+}
+
 /// Reads and writes the two settings, and tells the app when they change.
 class AppSettings extends ChangeNotifier {
-  AppSettings(this._db);
+  AppSettings(this._store);
 
-  final SaveDatabase _db;
+  final SettingsStore _store;
 
   Locale? _locale;
   ThemeMode _themeMode = ThemeMode.dark;
@@ -43,8 +81,8 @@ class AppSettings extends ChangeNotifier {
   bool get languageChosen => _locale != null;
 
   Future<void> load() async {
-    final language = await _db.readSetting(kLocaleSettingKey);
-    final theme = await _db.readSetting(kThemeSettingKey);
+    final language = await _store.read(kLocaleSettingKey);
+    final theme = await _store.read(kThemeSettingKey);
 
     _locale = _localeFrom(language);
     _themeMode = _themeFrom(theme);
@@ -54,13 +92,13 @@ class AppSettings extends ChangeNotifier {
   Future<void> setLocale(Locale value) async {
     _locale = value;
     notifyListeners();
-    await _db.writeSetting(kLocaleSettingKey, value.languageCode);
+    await _store.write(kLocaleSettingKey, value.languageCode);
   }
 
   Future<void> setThemeMode(ThemeMode value) async {
     _themeMode = value;
     notifyListeners();
-    await _db.writeSetting(kThemeSettingKey, value.name);
+    await _store.write(kThemeSettingKey, value.name);
   }
 }
 
