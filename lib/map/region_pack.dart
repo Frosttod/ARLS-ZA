@@ -146,11 +146,18 @@ class RegionPack {
   /// (§16.6).
   ///
   /// Not a property of PMTiles — every archive is addressable by byte range —
-  /// but of the host. It has to answer a `Range` request with 206 *directly*.
-  /// GitHub Releases does not: it answers 302 with a signed URL that expires,
-  /// and MapLibre's tile source does not chase that for every tile. Offering
-  /// the button anyway would produce a blank map, which is worse than not
-  /// offering it.
+  /// but of the host, which has to answer a `Range` request with 206
+  /// **directly**.
+  ///
+  /// Measured, twice, because the first answer was a guess and the guess was
+  /// confirmed the expensive way. A range request to a GitHub release asset
+  /// without following redirects returns `302` and zero bytes; following it
+  /// returns `206` and the bytes. MapLibre's tile source does not follow it per
+  /// tile, and two runs on a phone drew a blank map. Offering the button anyway
+  /// promises something the host cannot deliver.
+  ///
+  /// A per-region flag as well as a catalogue-wide default, so a city-sized
+  /// pack on a direct host can stream while a voivodeship on Releases cannot.
   final bool streamable;
 
   /// Human-sized, for the picker.

@@ -1,8 +1,8 @@
 {
-  "_comment": "Offline map packs, one per voivodeship (design doc §3.1). Bounds are approximate and are used only to preselect a region in the picker; the authoritative extent of an installed pack comes from the PMTiles header. A region with an empty sha256 has not been built or hosted yet and is refused on purpose (§16.6) — fill it in with 'dart run tool/update_region_catalogue.dart <dir>'. 'streamable' says whether the host can be read by byte range. GitHub Releases answers 206 but only after a 302 to a signed, expiring URL; whether MapLibre chases that per tile is an open question the device has to answer. Set it false if streaming turns out to render blank.",
+  "_comment": "Offline map packs, one per voivodeship (design doc §3.1). Bounds are approximate and are used only to preselect a region in the picker; the authoritative extent of an installed pack comes from the PMTiles header. A region with an empty sha256 has not been built or hosted yet and is refused on purpose (§16.6) — fill it in with 'dart run tool/update_region_catalogue.dart <dir>'. 'streamable' requires a host that answers a Range request with 206 DIRECTLY: measured against GitHub Releases, a range request without following redirects returns 302 and zero bytes, and MapLibre does not chase that per tile — two devices confirmed a blank map. It is a per-region flag as well as a catalogue-wide default, so a small pack on a direct host can stream while a large one on Releases does not.",
   "version": 1,
   "baseUrl": "https://github.com/Frosttod/ARLS-ZA/releases/download/maps-v1/",
-  "streamable": true,
+  "streamable": false,
   "regions": [
     {
       "id": "dolnoslaskie",
