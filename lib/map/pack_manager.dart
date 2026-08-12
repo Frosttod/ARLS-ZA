@@ -9,6 +9,7 @@ library;
 import 'dart:io';
 
 import 'free_space.dart';
+import 'map_source.dart';
 import 'pack_coverage.dart';
 import 'pack_store.dart';
 import 'pmtiles_header.dart';
@@ -35,6 +36,11 @@ class RegionStatus {
 
   /// True when the file is here but is not something the style can draw.
   bool get unusable => installed && header != null && !header!.isUsable;
+
+  /// Whether the archive can be read over the network instead of installed
+  /// (§16.6). Every published pack can: PMTiles is addressed by byte range, so
+  /// the same file serves both ways.
+  bool get streamable => downloadable && pack.url.startsWith('http');
 }
 
 class PackManager {
@@ -124,6 +130,21 @@ class PackManager {
   }
 
   Future<void> delete(RegionPack pack) => store.delete(pack);
+
+  /// Where the map should read tiles from for [status].
+  ///
+  /// An installed pack always wins: it is faster, it costs no traffic, and it
+  /// tells nobody where the player is. Streaming is the fallback that lets
+  /// somebody start playing in the time it takes to grant a permission rather
+  /// than the time it takes to download a voivodeship.
+  MapSource? sourceFor(RegionStatus? status) {
+    if (status == null) return null;
+    if (status.installed && !status.unusable) {
+      return InstalledPack(store.fileFor(status.pack).path);
+    }
+    if (status.streamable) return StreamedPack(status.pack.url);
+    return null;
+  }
 
   Future<PmtilesHeader?> _headerOrNull(RegionPack pack) async {
     try {

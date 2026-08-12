@@ -822,6 +822,36 @@ abstract class L10n {
   /// In en, this message translates to:
   /// **'You'**
   String get mapPlayerLabel;
+
+  /// No description provided for @regionPlayNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Play now'**
+  String get regionPlayNow;
+
+  /// No description provided for @regionStreamed.
+  ///
+  /// In en, this message translates to:
+  /// **'Map from the network'**
+  String get regionStreamed;
+
+  /// No description provided for @regionStreamWarnTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Map from the network, not from the phone'**
+  String get regionStreamWarnTitle;
+
+  /// No description provided for @regionStreamWarnBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You can start straight away — the game fetches only the pieces of map you are looking at. Two things worth knowing: you need a signal for the whole session, and the host of the map learns roughly where you are. A downloaded pack sends nothing and works in a forest.'**
+  String get regionStreamWarnBody;
+
+  /// No description provided for @regionStreamWarnAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'Understood, stream it'**
+  String get regionStreamWarnAccept;
 }
 
 class _L10nDelegate extends LocalizationsDelegate<L10n> {

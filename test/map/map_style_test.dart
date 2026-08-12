@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:arls_za/map/map_source.dart';
 import 'package:arls_za/map/map_style.dart';
 import 'package:test/test.dart';
 
@@ -11,10 +12,11 @@ void main() {
       '/data/user/0/com.raidodevelopment.arlsza/files/'
       'maps/wielkopolskie.pmtiles';
 
-  Map<String, Object?> style() => mapStyle(packPath: packPath);
+  Map<String, Object?> style() =>
+      mapStyle(source: const InstalledPack(packPath));
 
   group('offline, without exception', () {
-    test('no part of the style names a network host', () {
+    test('an installed pack names no network host at all', () {
       // Walks the whole structure rather than checking the fields we happen to
       // remember. A sprite or glyphs URL added later has to fail this.
       final found = <String>[];
@@ -32,6 +34,35 @@ void main() {
 
       walk(style());
       expect(found, isEmpty, reason: 'the game has no servers');
+    });
+
+    test('a streamed pack names exactly one, and it is the tiles', () {
+      // Streaming is a choice the player makes (§16.6). What must never creep
+      // in is a second address — a sprite sheet or a font server — because
+      // those fail in a forest whether or not the tiles are local.
+      final found = <String>[];
+      void walk(Object? node) {
+        switch (node) {
+          case String value when value.contains('http'):
+            found.add(value);
+          case Map<Object?, Object?> map:
+            map.values.forEach(walk);
+          case List<Object?> list:
+            list.forEach(walk);
+        }
+      }
+
+      walk(
+        mapStyle(
+          source: const StreamedPack(
+            'https://example.invalid/maps/wielkopolskie.pmtiles',
+          ),
+        ),
+      );
+
+      expect(found, [
+        'pmtiles://https://example.invalid/maps/wielkopolskie.pmtiles',
+      ]);
     });
 
     test('no glyphs and no sprite, so no font stack to ship', () {
@@ -61,9 +92,17 @@ void main() {
     test('a Windows path is turned into a URL, not pasted into one', () {
       // The developer build runs on a desktop often enough for this to matter.
       expect(
-        pmtilesUrl(r'C:\Users\przem\packs\wielkopolskie.pmtiles'),
+        const InstalledPack(r'C:\Users\przem\packs\wielkopolskie.pmtiles').url,
         'pmtiles://file:///C:/Users/przem/packs/wielkopolskie.pmtiles',
       );
+    });
+
+    test('a streamed pack keeps its https url intact', () {
+      const href = 'https://example.invalid/maps/wielkopolskie.pmtiles';
+
+      expect(const StreamedPack(href).url, 'pmtiles://$href');
+      expect(const StreamedPack(href).needsNetwork, isTrue);
+      expect(const InstalledPack('/x.pmtiles').needsNetwork, isFalse);
     });
 
     test('every layer draws from that one source', () {
@@ -120,7 +159,7 @@ void main() {
     test('the style survives a round trip through JSON', () {
       // It is handed to the platform as a string, so anything unencodable here
       // becomes a blank map on a phone rather than an error in a test.
-      final encoded = mapStyleJson(packPath: packPath);
+      final encoded = mapStyleJson(source: const InstalledPack(packPath));
 
       expect(jsonDecode(encoded), style());
     });

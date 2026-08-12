@@ -8,10 +8,12 @@
 ///
 /// **Two rules this file exists to keep.**
 ///
-/// *Nothing may reference a network host.* The game has no servers (§1.2) and
-/// is expected to work with the radio off; a style with a sprite URL renders
-/// fine on the developer's desk and fails in a forest. There is a test that
-/// walks the finished style looking for `http`.
+/// *Nothing may reference a network host except the tile source itself.* The
+/// game has no servers (§1.2); a style with a sprite or glyph URL renders fine
+/// on a desk and fails in a forest. There is a test that walks the finished
+/// style looking for `http` outside the source. The source may be remote when
+/// the player has chosen to stream rather than install (see [MapSource]), and
+/// that is the only address in the file.
 ///
 /// *No text labels, and therefore no glyphs.* Labelled maps need a font stack
 /// served as PBF ranges — several megabytes to bundle, for street names §3.6
@@ -25,6 +27,8 @@
 library;
 
 import 'dart:convert';
+
+import 'map_source.dart';
 
 /// Colours for the night-time, low-light reading the game is played in.
 ///
@@ -53,19 +57,9 @@ class MapPalette {
   final String boundary;
 }
 
-/// The URL MapLibre Native uses to read a local PMTiles archive.
-///
-/// The `pmtiles://` prefix selects the protocol handler; what follows is an
-/// ordinary URL, so a local pack is `pmtiles://file:///…`.
-String pmtilesUrl(String absolutePath) {
-  final normalised = absolutePath.replaceAll(r'\', '/');
-  final withRoot = normalised.startsWith('/') ? normalised : '/$normalised';
-  return 'pmtiles://file://$withRoot';
-}
-
-/// Builds the style for a pack at [packPath].
+/// Builds the style for [source].
 Map<String, Object?> mapStyle({
-  required String packPath,
+  required MapSource source,
   MapPalette palette = const MapPalette(),
   int maxZoom = 15,
 }) {
@@ -73,7 +67,7 @@ Map<String, Object?> mapStyle({
     'version': 8,
     'name': 'ARLS-ZA',
     'sources': {
-      'openmaptiles': {'type': 'vector', 'url': pmtilesUrl(packPath)},
+      'openmaptiles': {'type': 'vector', 'url': source.url},
     },
     'layers': [
       {
@@ -179,12 +173,10 @@ Map<String, Object?> mapStyle({
 }
 
 String mapStyleJson({
-  required String packPath,
+  required MapSource source,
   MapPalette palette = const MapPalette(),
   int maxZoom = 15,
-}) => jsonEncode(
-  mapStyle(packPath: packPath, palette: palette, maxZoom: maxZoom),
-);
+}) => jsonEncode(mapStyle(source: source, palette: palette, maxZoom: maxZoom));
 
 /// A width that grows with zoom, so a street is a hairline on a district view
 /// and a walkable ribbon at street level.

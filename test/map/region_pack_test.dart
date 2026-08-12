@@ -54,6 +54,39 @@ void main() {
       }
     });
 
+    test('the base url is resolved into every pack (§16.6)', () {
+      // The catalogue keeps the host in one place; everything downstream — the
+      // downloader, and the streamed map source — needs a usable address and
+      // has no business knowing a base existed.
+      for (final pack in catalogue.packs) {
+        expect(pack.url, startsWith('https://'), reason: pack.id);
+        expect(pack.url, endsWith('${pack.id}.pmtiles'), reason: pack.id);
+      }
+    });
+
+    test('an absolute url in a region overrides the base', () {
+      final catalogue = RegionCatalogue.parse('''
+{
+  "baseUrl": "https://example.invalid/maps/",
+  "regions": [
+    {
+      "id": "elsewhere",
+      "name": "Elsewhere",
+      "bounds": [15.0, 51.0, 16.0, 52.0],
+      "bytes": 52428800,
+      "sha256": "abc",
+      "url": "https://other.invalid/elsewhere.pmtiles"
+    }
+  ]
+}
+''');
+
+      expect(
+        catalogue.packs.single.url,
+        'https://other.invalid/elsewhere.pmtiles',
+      );
+    });
+
     test('the id is the file name, so a pack is findable without it', () {
       for (final pack in catalogue.packs) {
         expect(pack.fileName, '${pack.id}.pmtiles');

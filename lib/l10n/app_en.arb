@@ -210,5 +210,10 @@
   "mapMarkerLoot": "Loot box",
   "mapMarkerDropped": "Dropped item",
   "mapMarkerShelter": "Shelter",
-  "mapPlayerLabel": "You"
+  "mapPlayerLabel": "You",
+  "regionPlayNow": "Play now",
+  "regionStreamed": "Map from the network",
+  "regionStreamWarnTitle": "Map from the network, not from the phone",
+  "regionStreamWarnBody": "You can start straight away — the game fetches only the pieces of map you are looking at. Two things worth knowing: you need a signal for the whole session, and the host of the map learns roughly where you are. A downloaded pack sends nothing and works in a forest.",
+  "regionStreamWarnAccept": "Understood, stream it"
 }

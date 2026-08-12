@@ -17,6 +17,7 @@ import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 
 import '../location/position_fix.dart';
+import '../map/map_source.dart';
 import '../map/map_style.dart';
 import 'map_markers.dart';
 
@@ -26,7 +27,7 @@ const double kStreetZoom = 16.5;
 
 class MapLibreSurface extends StatefulWidget {
   const MapLibreSurface({
-    required this.packPath,
+    required this.source,
     required this.centre,
     required this.markers,
     required this.following,
@@ -35,8 +36,9 @@ class MapLibreSurface extends StatefulWidget {
     super.key,
   });
 
-  /// The installed PMTiles archive.
-  final String packPath;
+  /// Where the tiles come from: a verified pack on the device, or the same
+  /// archive streamed by byte range from its host (§16.6).
+  final MapSource source;
 
   final PositionFix? centre;
   final List<MapMarker> markers;
@@ -64,7 +66,7 @@ class _MapLibreSurfaceState extends State<MapLibreSurface> {
     final centre = widget.centre;
 
     return MapLibreMap(
-      styleString: mapStyleJson(packPath: widget.packPath),
+      styleString: mapStyleJson(source: widget.source),
       initialCameraPosition: CameraPosition(
         target: centre == null
             ? const LatLng(52.0, 19.0)

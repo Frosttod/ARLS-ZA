@@ -93,6 +93,7 @@ void main() {
     double? latitude,
     double? longitude,
     VoidCallback? onDone,
+    void Function(RegionPack pack)? onPlayStreamed,
   }) async {
     tester.view.physicalSize = const Size(1080, 3200);
     tester.view.devicePixelRatio = 1.0;
@@ -113,6 +114,7 @@ void main() {
           nearLatitude: latitude,
           nearLongitude: longitude,
           onDone: onDone,
+          onPlayStreamed: onPlayStreamed,
         ),
       ),
     );
@@ -242,6 +244,87 @@ void main() {
 
     expect(find.textContaining('sumą kontrolną'), findsOneWidget);
     expect(find.text('Pobrany'), findsNothing);
+  });
+
+  group('playing without downloading (§16.6)', () {
+    testWidgets('every published region offers it', (tester) async {
+      final manager = managerWith([
+        packOf(
+          id: 'wielkopolskie',
+          name: 'Wielkopolskie',
+          bounds: wielkopolska,
+        ),
+      ]);
+
+      await pumpPicker(tester, manager, onPlayStreamed: (_) {});
+
+      expect(
+        find.text('Graj teraz'),
+        findsOneWidget,
+        reason: 'nobody should wait for 235 MB to see whether they like it',
+      );
+    });
+
+    testWidgets('an unpublished region offers neither way in', (tester) async {
+      final manager = managerWith([
+        packOf(id: 'lubuskie', name: 'Lubuskie', bounds: wielkopolska, sha: ''),
+      ]);
+
+      await pumpPicker(tester, manager, onPlayStreamed: (_) {});
+
+      expect(find.text('Graj teraz'), findsNothing);
+      expect(find.text('Pobierz'), findsNothing);
+    });
+
+    testWidgets('the cost is stated before it is paid', (tester) async {
+      final manager = managerWith([
+        packOf(
+          id: 'wielkopolskie',
+          name: 'Wielkopolskie',
+          bounds: wielkopolska,
+        ),
+      ]);
+      RegionPack? chosen;
+      await pumpPicker(
+        tester,
+        manager,
+        onPlayStreamed: (pack) => chosen = pack,
+      );
+
+      await tester.tap(find.text('Graj teraz'));
+      await settle(tester);
+
+      // Both costs, in words: a signal for the whole session, and the host
+      // learning roughly where the player is.
+      expect(find.textContaining('zasięgu przez całą sesję'), findsOneWidget);
+      expect(find.textContaining('gdzie jesteś'), findsOneWidget);
+      expect(chosen, isNull, reason: 'nothing happens until it is accepted');
+
+      await tester.tap(find.text('Rozumiem, gram z sieci'));
+      await settle(tester);
+
+      expect(chosen!.id, 'wielkopolskie');
+    });
+
+    testWidgets('declining leaves the player where they were', (tester) async {
+      final manager = managerWith([
+        packOf(
+          id: 'wielkopolskie',
+          name: 'Wielkopolskie',
+          bounds: wielkopolska,
+        ),
+      ]);
+      var chosen = false;
+      await pumpPicker(tester, manager, onPlayStreamed: (_) => chosen = true);
+
+      await tester.tap(find.text('Graj teraz'));
+      await settle(tester);
+      await tester.tap(find.text('Przerwij'));
+      await settle(tester);
+
+      expect(chosen, isFalse);
+      expect(find.text('Pobierz'), findsOneWidget);
+    });
   });
 
   testWidgets('deleting a pack puts the download button back', (tester) async {

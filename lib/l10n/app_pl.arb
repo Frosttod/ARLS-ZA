@@ -134,5 +134,10 @@
   "mapMarkerLoot": "Skrzynia",
   "mapMarkerDropped": "Porzucony przedmiot",
   "mapMarkerShelter": "Schron",
-  "mapPlayerLabel": "Ty"
+  "mapPlayerLabel": "Ty",
+  "regionPlayNow": "Graj teraz",
+  "regionStreamed": "Mapa z sieci",
+  "regionStreamWarnTitle": "Mapa z sieci zamiast z telefonu",
+  "regionStreamWarnBody": "Możesz zacząć od razu — gra pobierze tylko te fragmenty mapy, które akurat widzisz. Dwie rzeczy warto wiedzieć: potrzebujesz zasięgu przez całą sesję, a serwer z mapą dowie się z grubsza, gdzie jesteś. Pobrany pakiet nie wysyła nic i działa w lesie.",
+  "regionStreamWarnAccept": "Rozumiem, gram z sieci"
 }

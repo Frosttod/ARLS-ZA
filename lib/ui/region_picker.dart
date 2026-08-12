@@ -11,6 +11,11 @@
 ///   "finish", not "start over".
 /// * A region nobody has published is shown greyed with a reason, not hidden.
 ///   Missing from a list reads as a bug; "not published yet" reads as a fact.
+/// * **Every published region can also be played without downloading it.**
+///   PMTiles is addressed by byte range, so the same archive streams from its
+///   host. That is offered plainly, with what it costs — a signal for the whole
+///   session, and the host learning roughly where the player is. Somebody who
+///   wants to try the game should not have to wait for 235 MB first.
 library;
 
 import 'dart:async';
@@ -28,6 +33,7 @@ class RegionPickerScreen extends StatefulWidget {
     this.nearLatitude,
     this.nearLongitude,
     this.onDone,
+    this.onPlayStreamed,
     super.key,
   });
 
@@ -40,6 +46,10 @@ class RegionPickerScreen extends StatefulWidget {
 
   /// Called once at least one pack is installed.
   final VoidCallback? onDone;
+
+  /// Called when the player chooses to read the map over the network instead
+  /// (§16.6), after they have been told what that costs.
+  final void Function(RegionPack pack)? onPlayStreamed;
 
   @override
   State<RegionPickerScreen> createState() => _RegionPickerScreenState();
@@ -132,6 +142,35 @@ class _RegionPickerScreenState extends State<RegionPickerScreen> {
     }
   }
 
+  /// Offers the network map, once, with what it costs.
+  ///
+  /// A confirmation rather than a straight tap: the cost is not obvious from
+  /// the button, and one of the two costs is the player's location leaving the
+  /// device — which the rest of the game promises never happens.
+  Future<void> _stream(RegionPack pack) async {
+    final l10n = L10n.of(context);
+    final accepted = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.regionStreamWarnTitle),
+        content: Text(l10n.regionStreamWarnBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.regionCancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(l10n.regionStreamWarnAccept),
+          ),
+        ],
+      ),
+    );
+
+    if (accepted != true || !mounted) return;
+    widget.onPlayStreamed?.call(pack);
+  }
+
   Future<void> _delete(RegionPack pack) async {
     await widget.manager.delete(pack);
     await _refresh();
@@ -171,6 +210,9 @@ class _RegionPickerScreenState extends State<RegionPickerScreen> {
                       : null,
                   onDownload: () =>
                       unawaited(_download(_statuses[index - 1].pack)),
+                  onStream: widget.onPlayStreamed == null
+                      ? null
+                      : () => unawaited(_stream(_statuses[index - 1].pack)),
                   onCancel: () => setState(() => _cancelRequested = true),
                   onDelete: () => unawaited(_delete(_statuses[index - 1].pack)),
                 );
@@ -189,6 +231,7 @@ class _RegionRow extends StatelessWidget {
     required this.progress,
     required this.failure,
     required this.onDownload,
+    required this.onStream,
     required this.onCancel,
     required this.onDelete,
   });
@@ -204,6 +247,9 @@ class _RegionRow extends StatelessWidget {
   final double progress;
   final InstallOutcome? failure;
   final VoidCallback onDownload;
+
+  /// Null when the screen has nowhere to hand a streamed session to.
+  final VoidCallback? onStream;
   final VoidCallback onCancel;
   final VoidCallback onDelete;
 
@@ -278,9 +324,23 @@ class _RegionRow extends StatelessWidget {
     if (!status.downloadable) {
       return const SizedBox.shrink();
     }
-    return FilledButton(
-      onPressed: otherBusy ? null : onDownload,
-      child: Text(failure == null ? l10n.regionDownload : l10n.regionRetry),
+
+    // Two ways in, with the offline one as the filled button: it is the one
+    // the game is built around, and the one that costs the player nothing
+    // afterwards.
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (status.streamable && onStream != null)
+          TextButton(
+            onPressed: otherBusy ? null : onStream,
+            child: Text(l10n.regionPlayNow),
+          ),
+        FilledButton(
+          onPressed: otherBusy ? null : onDownload,
+          child: Text(failure == null ? l10n.regionDownload : l10n.regionRetry),
+        ),
+      ],
     );
   }
 

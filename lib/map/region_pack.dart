@@ -102,14 +102,23 @@ class RegionPack {
     required this.url,
   });
 
-  factory RegionPack.fromJson(Map<String, Object?> json) => RegionPack(
-    id: json['id']! as String,
-    name: json['name']! as String,
-    bounds: GeoBounds.fromJson(json['bounds']! as List<Object?>),
-    bytes: (json['bytes']! as num).toInt(),
-    sha256: json['sha256']! as String,
-    url: json['url']! as String,
-  );
+  factory RegionPack.fromJson(
+    Map<String, Object?> json, {
+    String baseUrl = '',
+  }) {
+    final url = json['url']! as String;
+    return RegionPack(
+      id: json['id']! as String,
+      name: json['name']! as String,
+      bounds: GeoBounds.fromJson(json['bounds']! as List<Object?>),
+      bytes: (json['bytes']! as num).toInt(),
+      sha256: json['sha256']! as String,
+      // Resolved here rather than at the point of use. Everything downstream —
+      // the downloader, and the streamed map source of §16.6 — needs an
+      // address it can use without also knowing about the catalogue.
+      url: url.startsWith('http') ? url : '$baseUrl$url',
+    );
+  }
 
   /// Stable identifier. Also the file name, so a pack can be found on disk
   /// without consulting the catalogue.
@@ -142,10 +151,11 @@ class RegionCatalogue {
 
   factory RegionCatalogue.parse(String source) {
     final decoded = jsonDecode(source) as Map<String, Object?>;
+    final baseUrl = decoded['baseUrl'] as String? ?? '';
     final regions = decoded['regions']! as List<Object?>;
     return RegionCatalogue([
       for (final region in regions)
-        RegionPack.fromJson(region! as Map<String, Object?>),
+        RegionPack.fromJson(region! as Map<String, Object?>, baseUrl: baseUrl),
     ]);
   }
 

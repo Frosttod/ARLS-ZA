@@ -424,4 +424,20 @@ class L10nPl extends L10n {
 
   @override
   String get mapPlayerLabel => 'Ty';
+
+  @override
+  String get regionPlayNow => 'Graj teraz';
+
+  @override
+  String get regionStreamed => 'Mapa z sieci';
+
+  @override
+  String get regionStreamWarnTitle => 'Mapa z sieci zamiast z telefonu';
+
+  @override
+  String get regionStreamWarnBody =>
+      'Możesz zacząć od razu — gra pobierze tylko te fragmenty mapy, które akurat widzisz. Dwie rzeczy warto wiedzieć: potrzebujesz zasięgu przez całą sesję, a serwer z mapą dowie się z grubsza, gdzie jesteś. Pobrany pakiet nie wysyła nic i działa w lesie.';
+
+  @override
+  String get regionStreamWarnAccept => 'Rozumiem, gram z sieci';
 }

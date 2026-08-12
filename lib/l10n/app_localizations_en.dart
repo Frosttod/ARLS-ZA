@@ -421,4 +421,21 @@ class L10nEn extends L10n {
 
   @override
   String get mapPlayerLabel => 'You';
+
+  @override
+  String get regionPlayNow => 'Play now';
+
+  @override
+  String get regionStreamed => 'Map from the network';
+
+  @override
+  String get regionStreamWarnTitle =>
+      'Map from the network, not from the phone';
+
+  @override
+  String get regionStreamWarnBody =>
+      'You can start straight away — the game fetches only the pieces of map you are looking at. Two things worth knowing: you need a signal for the whole session, and the host of the map learns roughly where you are. A downloaded pack sends nothing and works in a forest.';
+
+  @override
+  String get regionStreamWarnAccept => 'Understood, stream it';
 }
