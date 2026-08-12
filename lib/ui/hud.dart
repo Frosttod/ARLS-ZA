@@ -15,13 +15,60 @@ import '../l10n/app_localizations.dart';
 import '../sim/physiology.dart';
 import '../sim/tick.dart';
 
-/// Colours shared by the HUD, derived from the design of the project site.
-abstract final class HudColors {
-  static const ink = Color(0xFF14181A);
-  static const paper = Color(0xFFE4E5DF);
-  static const data = Color(0xFF17565C);
-  static const alert = Color(0xFFA82D17);
-  static const muted = Color(0xFF4A524F);
+/// Colours the HUD reads in, in both themes (§12).
+///
+/// Named for their job rather than their shade, because the shades swap: what
+/// is nearly black behind the bars at night is nearly white at noon, and the
+/// text goes the other way. Naming them ink and paper survived exactly as long
+/// as there was one palette.
+///
+/// [alert] keeps its hue in both — a red that turns into a different colour in
+/// daylight is not a warning, it is decoration.
+class HudColors {
+  const HudColors({
+    required this.panel,
+    required this.text,
+    required this.data,
+    required this.alert,
+    required this.muted,
+  });
+
+  /// Night, and the design the project site was drawn in.
+  static const HudColors dark = HudColors(
+    panel: Color(0xFF14181A),
+    text: Color(0xFFE4E5DF),
+    data: Color(0xFF17565C),
+    alert: Color(0xFFA82D17),
+    muted: Color(0xFF4A524F),
+  );
+
+  /// Daylight. The data and muted tones are darkened rather than mirrored: a
+  /// teal that reads well on near-black is invisible on near-white.
+  static const HudColors light = HudColors(
+    panel: Color(0xFFF2EFEA),
+    text: Color(0xFF14181A),
+    data: Color(0xFF0E4249),
+    alert: Color(0xFF8E2412),
+    muted: Color(0xFF6B726E),
+  );
+
+  /// The panel behind the bars, and the surface everything else sits on.
+  final Color panel;
+
+  /// Readings and labels.
+  final Color text;
+
+  /// The bars themselves.
+  final Color data;
+
+  /// Warnings, and blood past a shock class.
+  final Color alert;
+
+  /// Secondary labels and the unfilled part of a bar.
+  final Color muted;
+
+  static HudColors of(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark ? dark : light;
 }
 
 class Hud extends StatelessWidget {
@@ -50,10 +97,11 @@ class Hud extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colours = HudColors.of(context);
     final l10n = L10n.of(context);
 
     return Material(
-      color: HudColors.ink.withValues(alpha: 0.88),
+      color: colours.panel.withValues(alpha: 0.88),
       child: SafeArea(
         bottom: false,
         child: Padding(
@@ -121,12 +169,13 @@ class _BloodReadout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colours = HudColors.of(context);
     final blood = status.blood;
     final colour = switch (blood.shockClass) {
-      ShockClass.none => HudColors.paper,
+      ShockClass.none => colours.text,
       ShockClass.compensated => const Color(0xFFE8B33A),
       ShockClass.decompensated => const Color(0xFFE07B39),
-      ShockClass.critical => HudColors.alert,
+      ShockClass.critical => colours.alert,
     };
 
     return Semantics(
@@ -136,10 +185,10 @@ class _BloodReadout extends StatelessWidget {
         children: [
           Text(
             label.toUpperCase(),
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 9,
               letterSpacing: 1.5,
-              color: HudColors.muted,
+              color: colours.muted,
             ),
           ),
           Text(
@@ -154,9 +203,9 @@ class _BloodReadout extends StatelessWidget {
           ),
           Text(
             '${blood.volumeMl.round()} ml',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 10,
-              color: HudColors.muted,
+              color: colours.muted,
               fontFeatures: [FontFeature.tabularFigures()],
             ),
           ),
@@ -181,12 +230,13 @@ class _ThinBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colours = HudColors.of(context);
     final clamped = fraction.clamp(0.0, 1.0);
     final colour = critical
-        ? HudColors.alert
+        ? colours.alert
         : warning
         ? const Color(0xFFE8B33A)
-        : HudColors.data;
+        : colours.data;
 
     return Semantics(
       label: '$label ${(clamped * 100).round()}%',
@@ -196,10 +246,10 @@ class _ThinBar extends StatelessWidget {
             width: 52,
             child: Text(
               label.toUpperCase(),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 9,
                 letterSpacing: 1.2,
-                color: HudColors.muted,
+                color: colours.muted,
               ),
             ),
           ),
@@ -208,7 +258,7 @@ class _ThinBar extends StatelessWidget {
               child: LinearProgressIndicator(
                 value: clamped,
                 minHeight: 5,
-                backgroundColor: HudColors.muted.withValues(alpha: 0.35),
+                backgroundColor: colours.muted.withValues(alpha: 0.35),
                 valueColor: AlwaysStoppedAnimation(colour),
               ),
             ),
@@ -219,9 +269,9 @@ class _ThinBar extends StatelessWidget {
             child: Text(
               '${(clamped * 100).round()}%',
               textAlign: TextAlign.right,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 10,
-                color: HudColors.paper,
+                color: colours.text,
                 fontFeatures: [FontFeature.tabularFigures()],
               ),
             ),
@@ -242,12 +292,13 @@ class _HeartRate extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colours = HudColors.of(context);
     final l10n = L10n.of(context);
     final ratio = maxBpm <= 0 ? 0.0 : bpm / maxBpm;
     final colour = switch (ratio) {
-      < 0.60 => HudColors.paper,
+      < 0.60 => colours.text,
       < 0.85 => const Color(0xFFE8B33A),
-      _ => HudColors.alert,
+      _ => colours.alert,
     };
 
     return Semantics(
@@ -255,7 +306,7 @@ class _HeartRate extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          const Icon(Icons.favorite, size: 12, color: HudColors.muted),
+          Icon(Icons.favorite, size: 12, color: colours.muted),
           Text(
             '${bpm.round()}',
             style: TextStyle(
@@ -266,10 +317,7 @@ class _HeartRate extends StatelessWidget {
               fontFeatures: const [FontFeature.tabularFigures()],
             ),
           ),
-          const Text(
-            'bpm',
-            style: TextStyle(fontSize: 9, color: HudColors.muted),
-          ),
+          Text('bpm', style: TextStyle(fontSize: 9, color: colours.muted)),
         ],
       ),
     );
@@ -287,6 +335,7 @@ class _StatusRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colours = HudColors.of(context);
     final l10n = L10n.of(context);
     final chips = <String>[
       ...warnings,
@@ -305,15 +354,13 @@ class _StatusRow extends StatelessWidget {
         for (final chip in chips)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(
-              border: Border.all(color: HudColors.alert),
-            ),
+            decoration: BoxDecoration(border: Border.all(color: colours.alert)),
             child: Text(
               chip.toUpperCase(),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 9,
                 letterSpacing: 1.2,
-                color: HudColors.alert,
+                color: colours.alert,
               ),
             ),
           ),
@@ -339,6 +386,7 @@ class _CarryReadout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colours = HudColors.of(context);
     final over = comfortKg > 0 && carriedKg > comfortKg;
 
     return Semantics(
@@ -349,10 +397,10 @@ class _CarryReadout extends StatelessWidget {
         children: [
           Text(
             label.toUpperCase(),
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 9,
               letterSpacing: 1.2,
-              color: HudColors.muted,
+              color: colours.muted,
             ),
           ),
           const SizedBox(width: 6),
@@ -360,7 +408,7 @@ class _CarryReadout extends StatelessWidget {
             '${carriedKg.toStringAsFixed(1)} / ${comfortKg.toStringAsFixed(1)} kg',
             style: TextStyle(
               fontSize: 10,
-              color: over ? const Color(0xFFE8B33A) : HudColors.paper,
+              color: over ? const Color(0xFFE8B33A) : colours.text,
               fontFeatures: const [FontFeature.tabularFigures()],
             ),
           ),

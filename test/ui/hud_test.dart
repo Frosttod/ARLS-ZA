@@ -23,9 +23,11 @@ void main() {
     SimState state, {
     List<String> warnings = const [],
     double carriedKg = 0,
+    Brightness brightness = Brightness.dark,
   }) async {
     await tester.pumpWidget(
       MaterialApp(
+        theme: ThemeData(brightness: brightness),
         locale: const Locale('pl'),
         localizationsDelegates: const [
           L10n.delegate,
@@ -162,6 +164,51 @@ void main() {
 
     // Class II costs a tenth of the carry load: 24 kg becomes 21.6 kg.
     expect(find.text('18.0 / 21.6 kg'), findsOneWidget);
+  });
+
+  group('both themes (§12)', () {
+    Color panelOf(WidgetTester tester) =>
+        tester.widget<Material>(find.byType(Material).first).color!;
+
+    testWidgets('the panel behind the bars follows the theme', (tester) async {
+      // The bug this replaces: a light interface with the HUD still painted
+      // for night, which is unreadable in the daylight it was switched on for.
+      await pumpHud(tester, healthy());
+      final dark = panelOf(tester);
+
+      await pumpHud(tester, healthy(), brightness: Brightness.light);
+      final light = panelOf(tester);
+
+      expect(dark, isNot(light));
+      expect(dark.computeLuminance(), lessThan(0.2));
+      expect(light.computeLuminance(), greaterThan(0.7));
+    });
+
+    testWidgets('readings stay legible against their own panel', (
+      tester,
+    ) async {
+      for (final brightness in Brightness.values) {
+        await pumpHud(tester, healthy(), brightness: brightness);
+
+        final colours = brightness == Brightness.dark
+            ? HudColors.dark
+            : HudColors.light;
+        final contrast =
+            (colours.text.computeLuminance() - colours.panel.computeLuminance())
+                .abs();
+
+        expect(contrast, greaterThan(0.5), reason: '$brightness');
+      }
+    });
+
+    test('the warning colour keeps its hue in both', () {
+      // A red that becomes another colour in daylight is not a warning, it is
+      // decoration.
+      final dark = HSLColor.fromColor(HudColors.dark.alert);
+      final light = HSLColor.fromColor(HudColors.light.alert);
+
+      expect((dark.hue - light.hue).abs(), lessThan(15));
+    });
   });
 
   testWidgets('every reading carries a screen-reader label (§12)', (
