@@ -92,5 +92,36 @@
   "safetyRuleRespect": "Szpitale, szkoły, cmentarze i miejsca kultu są wyłączone ze spawnu. Nie graj tam mimo to.",
   "safetyRuleNight": "Po zmroku bądź widoczny. Jasne ubranie, opaska odblaskowa, uszy wolne.",
   "safetyRuleStop": "Zmęczenie, ból, burza, obcy ludzie — kończ sesję. Postać poczeka.",
-  "safetyBriefingAccept": "Rozumiem i biorę to na siebie"
+  "safetyBriefingAccept": "Rozumiem i biorę to na siebie",
+  "regionTitle": "Wybierz region",
+  "regionIntro": "Gra działa bez sieci, więc mapa musi być na telefonie. Pobierz pakiet dla okolicy, po której będziesz chodzić.",
+  "regionSizeMb": "{mb} MB",
+  "regionInstalled": "Pobrany",
+  "regionUnavailable": "Niedostępny",
+  "regionDownload": "Pobierz",
+  "regionDelete": "Usuń",
+  "regionCancel": "Przerwij",
+  "regionRetry": "Spróbuj ponownie",
+  "regionNearYou": "W twojej okolicy",
+  "regionDownloading": "Pobieranie… {percent}%",
+  "regionErrSpace": "Za mało miejsca. Zwolnij trochę i spróbuj ponownie.",
+  "regionErrNetwork": "Pobieranie przerwane. To, co się ściągnęło, zostaje — kolejna próba dokończy.",
+  "regionErrCorrupt": "Pobrany plik nie zgadza się z sumą kontrolną. Został usunięty.",
+  "regionErrUnpublished": "Ten region nie został jeszcze wydany.",
+  "regionLeftPackTitle": "Jesteś poza pobraną mapą",
+  "regionLeftPackBody": "Bez kafelków nie ma czego rysować ani gdzie stawiać znaczników. Pobierz pakiet dla tej okolicy albo wróć w zasięg poprzedniego.",
+  "@regionSizeMb": {
+    "placeholders": {
+      "mb": {
+        "type": "String"
+      }
+    }
+  },
+  "@regionDownloading": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  }
 }

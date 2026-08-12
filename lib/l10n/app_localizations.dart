@@ -654,6 +654,108 @@ abstract class L10n {
   /// In en, this message translates to:
   /// **'I understand and accept this'**
   String get safetyBriefingAccept;
+
+  /// No description provided for @regionTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a region'**
+  String get regionTitle;
+
+  /// No description provided for @regionIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'The game runs without a network, so the map has to be on the phone. Download the pack for the area you will be walking.'**
+  String get regionIntro;
+
+  /// No description provided for @regionSizeMb.
+  ///
+  /// In en, this message translates to:
+  /// **'{mb} MB'**
+  String regionSizeMb(String mb);
+
+  /// No description provided for @regionInstalled.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloaded'**
+  String get regionInstalled;
+
+  /// No description provided for @regionUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Unavailable'**
+  String get regionUnavailable;
+
+  /// No description provided for @regionDownload.
+  ///
+  /// In en, this message translates to:
+  /// **'Download'**
+  String get regionDownload;
+
+  /// No description provided for @regionDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get regionDelete;
+
+  /// No description provided for @regionCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get regionCancel;
+
+  /// No description provided for @regionRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Try again'**
+  String get regionRetry;
+
+  /// No description provided for @regionNearYou.
+  ///
+  /// In en, this message translates to:
+  /// **'Near you'**
+  String get regionNearYou;
+
+  /// No description provided for @regionDownloading.
+  ///
+  /// In en, this message translates to:
+  /// **'Downloading… {percent}%'**
+  String regionDownloading(int percent);
+
+  /// No description provided for @regionErrSpace.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough room. Free some up and try again.'**
+  String get regionErrSpace;
+
+  /// No description provided for @regionErrNetwork.
+  ///
+  /// In en, this message translates to:
+  /// **'The download was interrupted. What arrived is kept — the next attempt finishes it.'**
+  String get regionErrNetwork;
+
+  /// No description provided for @regionErrCorrupt.
+  ///
+  /// In en, this message translates to:
+  /// **'The file that arrived does not match its checksum. It has been deleted.'**
+  String get regionErrCorrupt;
+
+  /// No description provided for @regionErrUnpublished.
+  ///
+  /// In en, this message translates to:
+  /// **'This region has not been published yet.'**
+  String get regionErrUnpublished;
+
+  /// No description provided for @regionLeftPackTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You are off the downloaded map'**
+  String get regionLeftPackTitle;
+
+  /// No description provided for @regionLeftPackBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Without tiles there is nothing to draw and nowhere to place markers. Download the pack for this area, or return to the one you have.'**
+  String get regionLeftPackBody;
 }
 
 class _L10nDelegate extends LocalizationsDelegate<L10n> {

@@ -331,4 +331,64 @@ class L10nPl extends L10n {
 
   @override
   String get safetyBriefingAccept => 'Rozumiem i biorę to na siebie';
+
+  @override
+  String get regionTitle => 'Wybierz region';
+
+  @override
+  String get regionIntro =>
+      'Gra działa bez sieci, więc mapa musi być na telefonie. Pobierz pakiet dla okolicy, po której będziesz chodzić.';
+
+  @override
+  String regionSizeMb(String mb) {
+    return '$mb MB';
+  }
+
+  @override
+  String get regionInstalled => 'Pobrany';
+
+  @override
+  String get regionUnavailable => 'Niedostępny';
+
+  @override
+  String get regionDownload => 'Pobierz';
+
+  @override
+  String get regionDelete => 'Usuń';
+
+  @override
+  String get regionCancel => 'Przerwij';
+
+  @override
+  String get regionRetry => 'Spróbuj ponownie';
+
+  @override
+  String get regionNearYou => 'W twojej okolicy';
+
+  @override
+  String regionDownloading(int percent) {
+    return 'Pobieranie… $percent%';
+  }
+
+  @override
+  String get regionErrSpace =>
+      'Za mało miejsca. Zwolnij trochę i spróbuj ponownie.';
+
+  @override
+  String get regionErrNetwork =>
+      'Pobieranie przerwane. To, co się ściągnęło, zostaje — kolejna próba dokończy.';
+
+  @override
+  String get regionErrCorrupt =>
+      'Pobrany plik nie zgadza się z sumą kontrolną. Został usunięty.';
+
+  @override
+  String get regionErrUnpublished => 'Ten region nie został jeszcze wydany.';
+
+  @override
+  String get regionLeftPackTitle => 'Jesteś poza pobraną mapą';
+
+  @override
+  String get regionLeftPackBody =>
+      'Bez kafelków nie ma czego rysować ani gdzie stawiać znaczników. Pobierz pakiet dla tej okolicy albo wróć w zasięg poprzedniego.';
 }

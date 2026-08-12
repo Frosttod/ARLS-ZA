@@ -168,5 +168,36 @@
   "safetyRuleRespect": "Hospitals, schools, cemeteries and places of worship are excluded from spawns. Do not play there anyway.",
   "safetyRuleNight": "After dark, be visible. Light clothing, a reflective band, ears free.",
   "safetyRuleStop": "Tiredness, pain, a storm, strangers — end the session. The character will wait.",
-  "safetyBriefingAccept": "I understand and accept this"
+  "safetyBriefingAccept": "I understand and accept this",
+  "regionTitle": "Choose a region",
+  "regionIntro": "The game runs without a network, so the map has to be on the phone. Download the pack for the area you will be walking.",
+  "regionSizeMb": "{mb} MB",
+  "regionInstalled": "Downloaded",
+  "regionUnavailable": "Unavailable",
+  "regionDownload": "Download",
+  "regionDelete": "Delete",
+  "regionCancel": "Cancel",
+  "regionRetry": "Try again",
+  "regionNearYou": "Near you",
+  "regionDownloading": "Downloading… {percent}%",
+  "regionErrSpace": "Not enough room. Free some up and try again.",
+  "regionErrNetwork": "The download was interrupted. What arrived is kept — the next attempt finishes it.",
+  "regionErrCorrupt": "The file that arrived does not match its checksum. It has been deleted.",
+  "regionErrUnpublished": "This region has not been published yet.",
+  "regionLeftPackTitle": "You are off the downloaded map",
+  "regionLeftPackBody": "Without tiles there is nothing to draw and nowhere to place markers. Download the pack for this area, or return to the one you have.",
+  "@regionSizeMb": {
+    "placeholders": {
+      "mb": {
+        "type": "String"
+      }
+    }
+  },
+  "@regionDownloading": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  }
 }

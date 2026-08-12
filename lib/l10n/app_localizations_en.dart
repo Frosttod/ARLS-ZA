@@ -329,4 +329,63 @@ class L10nEn extends L10n {
 
   @override
   String get safetyBriefingAccept => 'I understand and accept this';
+
+  @override
+  String get regionTitle => 'Choose a region';
+
+  @override
+  String get regionIntro =>
+      'The game runs without a network, so the map has to be on the phone. Download the pack for the area you will be walking.';
+
+  @override
+  String regionSizeMb(String mb) {
+    return '$mb MB';
+  }
+
+  @override
+  String get regionInstalled => 'Downloaded';
+
+  @override
+  String get regionUnavailable => 'Unavailable';
+
+  @override
+  String get regionDownload => 'Download';
+
+  @override
+  String get regionDelete => 'Delete';
+
+  @override
+  String get regionCancel => 'Cancel';
+
+  @override
+  String get regionRetry => 'Try again';
+
+  @override
+  String get regionNearYou => 'Near you';
+
+  @override
+  String regionDownloading(int percent) {
+    return 'Downloading… $percent%';
+  }
+
+  @override
+  String get regionErrSpace => 'Not enough room. Free some up and try again.';
+
+  @override
+  String get regionErrNetwork =>
+      'The download was interrupted. What arrived is kept — the next attempt finishes it.';
+
+  @override
+  String get regionErrCorrupt =>
+      'The file that arrived does not match its checksum. It has been deleted.';
+
+  @override
+  String get regionErrUnpublished => 'This region has not been published yet.';
+
+  @override
+  String get regionLeftPackTitle => 'You are off the downloaded map';
+
+  @override
+  String get regionLeftPackBody =>
+      'Without tiles there is nothing to draw and nowhere to place markers. Download the pack for this area, or return to the one you have.';
 }
