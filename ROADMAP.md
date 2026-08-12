@@ -11,7 +11,7 @@ Każdy zamknięty etap dostaje sekcję **Dziennik wykonania** z decyzjami podję
 | 0 | Fundament: trwałość zapisu, zegar, konfiguracja buildu | ✅ zamknięty | 2026-08-10 | `ad55d40` |
 | 1 | Tryb deweloperski i symulator GPS | ✅ zamknięty | 2026-08-10 | `df54653` |
 | 2 | Postać i fizjologia | ✅ zamknięty | 2026-08-11 | `f2b1056`, `5555db2`, `2b0a37e`, `d869661` |
-| 3 | Mapa, GPS, bezpieczeństwo gracza | 🟡 w toku (12/13) | — | `f035626`, `b682a63`, `df580da`, `8a4890b`, `5177607`, `2b8abc4`, `c03006d`, `9426c0e`, `60de86b` |
+| 3 | Mapa, GPS, bezpieczeństwo gracza | 🟡 w toku (12/13) | — | `f035626` … `43510ef` (15 commitów) |
 | 4 | Przedmioty, loot, przeszukanie | ⬜ | — | — |
 | 5 | Walka, przeciwnicy, hałas | ⬜ | — | — |
 | 6 | Ognisko z pełnym cyklem | ⬜ | — | — |
@@ -19,7 +19,7 @@ Każdy zamknięty etap dostaje sekcję **Dziennik wykonania** z decyzjami podję
 | 8 | Schron, obóz, pętla dobowa | ⬜ | — | — |
 | 9 | Onboarding, dostępność, zgodność | ⬜ | — | — |
 
-**Metryki:** 500 testów · `flutter analyze --fatal-infos` czysty · schemat bazy **v2** · release APK 89,5 MB bez devtools
+**Metryki:** 501 testów · `flutter analyze --fatal-infos` czysty · schemat bazy **v2** · release APK 89,5 MB bez devtools
 
 ### Zablokowane na użytkowniku
 
@@ -29,8 +29,9 @@ Rzeczy, których nie da się zrobić z poziomu repozytorium.
 | :---- | :---- | :---- |
 | Keystore i `android/key.properties` | bez tego `flutter build --release` używa kluczy debug, a takiego artefaktu nie da się opublikować. Instrukcja na górze [PROCEDURA_RELEASE.md](PROCEDURA_RELEASE.md) | 0 |
 | GitHub Pages dla `ARLS-ZA-Game` | strona projektu nie jest publicznie widoczna. Settings → Pages → branch `main`, folder `/ (root)` | — |
-| Hosting pakietów, który obsługuje zakresy bajtów **bez przekierowania** | Zmierzone: żądanie zakresu do release'u GitHuba bez podążania za przekierowaniem zwraca `302` i **zero bajtów**; z podążaniem `206` i dane. MapLibre nie goni tego przy każdym kafelku — dwa uruchomienia na telefonie dały pustą mapę. Dlatego `streamable: false` i przycisk „Graj teraz" nie istnieje. Pobieranie na dysk działa bez zmian, bo klient Darta podąża za przekierowaniem.<br><br>**Najtańsze wyjście: GitHub Pages** — serwuje pliki wprost, obsługuje zakresy, zero kosztów. Limit 100 MB na plik, więc województwo się nie zmieści, ale wycinek miasta tak: `pmtiles extract wielkopolskie.pmtiles poznan.pmtiles --bbox=16.73,52.29,17.16,52.51`. Taki pakiet dopisuje się do katalogu z `"streamable": true` przy samym regionie. Alternatywy bez limitu: Cloudflare R2, S3 | 3 |
-| Zbudowanie i wystawienie pakietów PMTiles | katalog w `assets/regions.json` ma 16 województw, ale bez sum kontrolnych i pod adresem, który jeszcze nie istnieje. Pakiet bez sumy kontrolnej jest **celowo odrzucany** — mapa, której nikt nie zweryfikuje, to mapa, z którą nikt nie powinien wchodzić do miasta. Trzeba zbudować pliki (Protomaps/tippecanoe z wycinków OSM), policzyć SHA-256 i wystawić jako release `maps-v1` | 3 |
+| Hosting pakietów, który obsługuje zakresy bajtów **bez przekierowania** | Zmierzone: żądanie zakresu do release'u GitHuba bez podążania za przekierowaniem zwraca `302` i **zero bajtów**; z podążaniem `206` i dane. MapLibre nie goni tego przy każdym kafelku — dwa uruchomienia na telefonie dały pustą mapę. Dlatego `streamable: false` i przycisk „Graj teraz" nie istnieje. Pobieranie na dysk działa bez zmian, bo klient Darta podąża za przekierowaniem.<br><br>**Najtańsze wyjście: GitHub Pages** — serwuje pliki wprost, obsługuje zakresy, zero kosztów. Limit 100 MB na plik, więc województwo się nie zmieści, ale wycinek miasta tak: `planetiler --osm-path=… --output=poznan.pmtiles --bounds=16.73,52.29,17.16,52.51`. Taki pakiet dopisuje się do katalogu z `"streamable": true` przy samym regionie. Alternatywy bez limitu: Cloudflare R2, S3 | 3 |
+| Zbudowanie pozostałych pakietów PMTiles | ✅ Wielkopolskie zbudowane Planetilerem i wystawione jako `maps-v1` (235 MB, suma kontrolna w katalogu, pobieranie działa na telefonie). Pozostałe 15 województw ma puste sumy i jest **celowo odrzucanych** — mapa, której nikt nie zweryfikuje, to mapa, z którą nikt nie powinien wchodzić do miasta | 3 |
+| Pakiet miejski Poznania na GitHub Pages | wpis `poznan` czeka w katalogu z pustą sumą. Zbudować `--bounds=16.73,52.29,17.16,52.51 --maxzoom=16`, wrzucić do `ARLS-ZA-Game/maps/`, włączyć Pages. Odblokowuje mapę bez pobierania | 3 |
 
 ---
 
@@ -242,6 +243,26 @@ Etap 3 zaczyna się od **prawdziwego źródła pozycji**: `PositionSource` na `g
 | 3.11 | ✅ Zapis pozycji do warstwy gorącej przy każdym `onPause`, checkpoint WAL | §11.1.2, §11.1.5 |
 | 3.12 | Przeniesienie: wykrycie skoku pozycji między sesjami, komunikat fabularny, decyzja o pakiecie | §16.6, §19.1 |
 | 3.13 | ✅ Marsz z wygaszonym ekranem naliczany (wariant A) | §3.3, §16.1 |
+
+### Zweryfikowane na urządzeniu (motorola edge 50 neo, Android 16)
+
+- ✅ **Mapa renderuje z pliku PMTiles.** `pmtiles://file://`, schemat OpenMapTiles, ciemna paleta, stożek kierunku, dolne menu.
+- ✅ **Prawdziwy GPS**, dokładność ±3,2 m, fiks po kilku sekundach.
+- ✅ **Pobieranie pakietu** z release'u GitHuba, z wznawianiem po zerwaniu.
+- ❌ **Mapa z sieci nie działa** z GitHub Releases — zmierzone, patrz tabela blokad.
+- ⬜ **Niesprawdzone:** zużycie baterii przez godzinę, przeżywalność procesu przy agresywnym oszczędzaniu energii, spójność śladu na dłuższym spacerze. To jest kryterium wyjścia i wymaga wyjścia w teren.
+
+### Zrobione poza planem (na zgłoszenia z telefonu)
+
+Rzeczy, których nie było w roadmapie, a które wyszły z pierwszych uruchomień. Formalnie należą do etapu 9 (onboarding, dostępność), ale bez nich testowanie było niewygodne.
+
+| Co | Dlaczego teraz |
+| :---- | :---- |
+| Ekran wyboru języka jako pierwszy ekran | §3.5 mówi o ruchu drogowym; gracz, który tego nie przeczyta, nie został poinstruowany |
+| Jasny motyw + ekran ustawień | czarna mapa w czerwcowe południe jest nieczytelna (§12) |
+| Wpisywanie liczb w kreatorze obok suwaków | wzrost 120–220 cm na kilkuset pikselach — centymetr ma poniżej piksela |
+| Pobieranie przeżywające opuszczenie ekranu | 235 MB żyje dłużej niż ekran, który je zaczął |
+| Symulator jako świadomy wybór, nie domyślny build debugowy | build debugowy brał symulator i pomijał pytanie o GPS, przez co testy w terenie wyglądały na zepsute |
 
 ⚠️ **Etap 3 to pierwszy moment, w którym §3.5 przestaje być teorią.** Strefy wykluczone i blokada walki w ruchu muszą działać, zanim ktokolwiek poza deweloperem uruchomi grę w terenie.
 
