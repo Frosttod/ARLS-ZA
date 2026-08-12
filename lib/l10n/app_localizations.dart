@@ -756,6 +756,72 @@ abstract class L10n {
   /// In en, this message translates to:
   /// **'Without tiles there is nothing to draw and nowhere to place markers. Download the pack for this area, or return to the one you have.'**
   String get regionLeftPackBody;
+
+  /// No description provided for @menuProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'PROFILE'**
+  String get menuProfile;
+
+  /// No description provided for @menuInventory.
+  ///
+  /// In en, this message translates to:
+  /// **'INVENTORY'**
+  String get menuInventory;
+
+  /// No description provided for @menuShelter.
+  ///
+  /// In en, this message translates to:
+  /// **'SHELTER'**
+  String get menuShelter;
+
+  /// No description provided for @menuSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'SETTINGS'**
+  String get menuSettings;
+
+  /// No description provided for @mapRecentre.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to me'**
+  String get mapRecentre;
+
+  /// No description provided for @mapNoPack.
+  ///
+  /// In en, this message translates to:
+  /// **'No map for this area'**
+  String get mapNoPack;
+
+  /// No description provided for @mapMarkerEnemy.
+  ///
+  /// In en, this message translates to:
+  /// **'Enemy'**
+  String get mapMarkerEnemy;
+
+  /// No description provided for @mapMarkerLoot.
+  ///
+  /// In en, this message translates to:
+  /// **'Loot box'**
+  String get mapMarkerLoot;
+
+  /// No description provided for @mapMarkerDropped.
+  ///
+  /// In en, this message translates to:
+  /// **'Dropped item'**
+  String get mapMarkerDropped;
+
+  /// No description provided for @mapMarkerShelter.
+  ///
+  /// In en, this message translates to:
+  /// **'Shelter'**
+  String get mapMarkerShelter;
+
+  /// No description provided for @mapPlayerLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get mapPlayerLabel;
 }
 
 class _L10nDelegate extends LocalizationsDelegate<L10n> {

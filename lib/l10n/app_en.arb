@@ -199,5 +199,16 @@
         "type": "int"
       }
     }
-  }
+  },
+  "menuProfile": "PROFILE",
+  "menuInventory": "INVENTORY",
+  "menuShelter": "SHELTER",
+  "menuSettings": "SETTINGS",
+  "mapRecentre": "Back to me",
+  "mapNoPack": "No map for this area",
+  "mapMarkerEnemy": "Enemy",
+  "mapMarkerLoot": "Loot box",
+  "mapMarkerDropped": "Dropped item",
+  "mapMarkerShelter": "Shelter",
+  "mapPlayerLabel": "You"
 }

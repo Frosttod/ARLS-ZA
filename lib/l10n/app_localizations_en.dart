@@ -388,4 +388,37 @@ class L10nEn extends L10n {
   @override
   String get regionLeftPackBody =>
       'Without tiles there is nothing to draw and nowhere to place markers. Download the pack for this area, or return to the one you have.';
+
+  @override
+  String get menuProfile => 'PROFILE';
+
+  @override
+  String get menuInventory => 'INVENTORY';
+
+  @override
+  String get menuShelter => 'SHELTER';
+
+  @override
+  String get menuSettings => 'SETTINGS';
+
+  @override
+  String get mapRecentre => 'Back to me';
+
+  @override
+  String get mapNoPack => 'No map for this area';
+
+  @override
+  String get mapMarkerEnemy => 'Enemy';
+
+  @override
+  String get mapMarkerLoot => 'Loot box';
+
+  @override
+  String get mapMarkerDropped => 'Dropped item';
+
+  @override
+  String get mapMarkerShelter => 'Shelter';
+
+  @override
+  String get mapPlayerLabel => 'You';
 }

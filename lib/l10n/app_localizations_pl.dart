@@ -391,4 +391,37 @@ class L10nPl extends L10n {
   @override
   String get regionLeftPackBody =>
       'Bez kafelków nie ma czego rysować ani gdzie stawiać znaczników. Pobierz pakiet dla tej okolicy albo wróć w zasięg poprzedniego.';
+
+  @override
+  String get menuProfile => 'PROFIL';
+
+  @override
+  String get menuInventory => 'EKWIPUNEK';
+
+  @override
+  String get menuShelter => 'SCHRON';
+
+  @override
+  String get menuSettings => 'USTAWIENIA';
+
+  @override
+  String get mapRecentre => 'Wróć do siebie';
+
+  @override
+  String get mapNoPack => 'Brak mapy dla tej okolicy';
+
+  @override
+  String get mapMarkerEnemy => 'Przeciwnik';
+
+  @override
+  String get mapMarkerLoot => 'Skrzynia';
+
+  @override
+  String get mapMarkerDropped => 'Porzucony przedmiot';
+
+  @override
+  String get mapMarkerShelter => 'Schron';
+
+  @override
+  String get mapPlayerLabel => 'Ty';
 }

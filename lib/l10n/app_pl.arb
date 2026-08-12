@@ -123,5 +123,16 @@
         "type": "int"
       }
     }
-  }
+  },
+  "menuProfile": "PROFIL",
+  "menuInventory": "EKWIPUNEK",
+  "menuShelter": "SCHRON",
+  "menuSettings": "USTAWIENIA",
+  "mapRecentre": "Wróć do siebie",
+  "mapNoPack": "Brak mapy dla tej okolicy",
+  "mapMarkerEnemy": "Przeciwnik",
+  "mapMarkerLoot": "Skrzynia",
+  "mapMarkerDropped": "Porzucony przedmiot",
+  "mapMarkerShelter": "Schron",
+  "mapPlayerLabel": "Ty"
 }
