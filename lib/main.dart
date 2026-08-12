@@ -19,10 +19,17 @@ import 'location/device_power_source.dart';
 import 'location/location_access.dart';
 import 'location/movement_integrity.dart';
 import 'location/position_fix.dart';
+import 'map/map_bootstrap.dart';
+import 'map/map_source.dart';
+import 'map/pack_manager.dart';
+import 'map/region_pack.dart';
 import 'safety/player_safety.dart';
 import 'ui/character_creator.dart';
 import 'ui/safety_briefing.dart';
 import 'ui/hud.dart';
+import 'ui/map_view.dart';
+import 'ui/maplibre_surface.dart';
+import 'ui/region_picker.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -180,6 +187,16 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// True until §3.5 has been read and accepted. Nothing else runs first.
   bool _needsBriefing = false;
 
+  /// The map layer. Built once, on the first boot after the briefing.
+  PackManager? _packs;
+
+  /// Where the tiles are read from, or null while there is no map at all — the
+  /// region screen is then what the player sees (§16.6).
+  MapSource? _mapSource;
+
+  /// So the region screen opens itself on a first run and never again.
+  bool _askedForMap = false;
+
   /// Set when the operating system will not give us a position (§16.1). The
   /// game stops at the gate rather than running a simulation on movement that
   /// will never arrive.
@@ -297,6 +314,78 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       _blocked = null;
       _loading = false;
     });
+
+    await _resolveMap();
+  }
+
+  /// Finds a map for where the player is standing (§16.6).
+  ///
+  /// Runs after the loop has started, so the first fix — if there is one — can
+  /// pick the right region. With no fix yet it falls back to whatever is
+  /// installed, which on a second run is the right answer anyway.
+  Future<void> _resolveMap() async {
+    final packs = _packs ??= await bootMapPacks();
+    final near = await _bestKnownPosition();
+
+    final active = await packs.activePack(
+      nearLatitude: near?.latitude,
+      nearLongitude: near?.longitude,
+    );
+    final source = packs.sourceFor(active);
+
+    if (!mounted) return;
+    setState(() => _mapSource = source);
+
+    // §16.6 calls this the first-run screen, and it is: with no map there is
+    // nothing to draw, nowhere to put a marker and no §10 to run. Opening it
+    // unasked is right exactly once, which is what [_askedForMap] guards.
+    if (source == null && !_askedForMap) {
+      _askedForMap = true;
+      await _openRegionPicker();
+    }
+  }
+
+  /// The live fix if there is one, otherwise the last position on disk.
+  ///
+  /// A GPS lock takes seconds and the region screen is the first thing a player
+  /// sees. Falling back to the save is what makes "near you" mean anything on
+  /// the second run, and on the first it is honestly unknown.
+  Future<({double latitude, double longitude})?> _bestKnownPosition() async {
+    final fix = _snapshot?.fix;
+    if (fix != null) {
+      return (latitude: fix.latitude, longitude: fix.longitude);
+    }
+
+    final character = _character;
+    if (character == null) return null;
+    return _factory.lastKnownPosition(character.profile.id);
+  }
+
+  /// The player chose the network map rather than waiting for a download.
+  void _playStreamed(RegionPack pack) {
+    Navigator.of(context).popUntil((route) => route.isFirst);
+    setState(() => _mapSource = StreamedPack(pack.url));
+  }
+
+  Future<void> _openRegionPicker() async {
+    final packs = _packs ??= await bootMapPacks();
+    if (!mounted) return;
+
+    final near = await _bestKnownPosition();
+    if (!mounted) return;
+
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => RegionPickerScreen(
+          manager: packs,
+          nearLatitude: near?.latitude,
+          nearLongitude: near?.longitude,
+          onPlayStreamed: _playStreamed,
+          onDone: () => unawaited(_resolveMap()),
+        ),
+      ),
+    );
+    if (mounted) await _resolveMap();
   }
 
   Future<void> _createCharacter(CharacterDraft draft) async {
@@ -351,6 +440,66 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final snapshot = _snapshot;
     final character = _character;
     final blocked = _blocked;
+
+    final source = _mapSource;
+    if (source != null && snapshot != null && character != null) {
+      return Stack(
+        children: [
+          MapScreen(
+            tileBuilder:
+                (
+                  context, {
+                  required centre,
+                  required markers,
+                  required following,
+                  required economy,
+                  required onUserPanned,
+                }) => MapLibreSurface(
+                  source: source,
+                  centre: centre,
+                  markers: markers,
+                  following: following,
+                  economy: economy,
+                  onUserPanned: onUserPanned,
+                ),
+            fix: snapshot.fix,
+            headingDeg: snapshot.fix?.headingDeg,
+            economy: snapshot.economy,
+            // There is always a map here — this branch only runs with a
+            // source. Whether the player has walked off its *edge* is the
+            // coverage question of §16.6, and it arrives with 3.12.
+            hasPack: true,
+            hud: Hud(
+              state: snapshot.state,
+              status: snapshot.status,
+              constants: character.constants,
+              warnings: _warnings(l10n, snapshot),
+              carryComfortKg: character.body.carryComfortKg,
+            ),
+            onMenu: (entry) {
+              // Only the map is built; the rest of §3.6 arrives with the
+              // systems behind it. Settings is the one that already has
+              // something to do.
+              if (entry == MapMenuEntry.settings) {
+                unawaited(_openRegionPicker());
+              }
+            },
+          ),
+          if (dev != null)
+            DevOverlay(
+              console: dev.console,
+              snapshot: DevSnapshot(
+                state: snapshot.state,
+                fix: snapshot.fix,
+                signal: snapshot.signal,
+                ticksApplied: _simulatedSeconds(snapshot),
+                lastFlushAt: snapshot.lastFlushAt,
+                clockRolledBack: snapshot.clockRolledBack,
+              ),
+            ),
+        ],
+      );
+    }
 
     return Scaffold(
       body: Stack(

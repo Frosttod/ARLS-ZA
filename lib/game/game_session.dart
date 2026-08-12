@@ -119,6 +119,22 @@ class GameSessionFactory {
     return ActiveCharacter(profile: profile!, body: body, state: state);
   }
 
+  /// The last position written to the save, or null if there never was one.
+  ///
+  /// The region screen opens before the first fix arrives — a lock takes
+  /// seconds and the screen is the first thing a player sees — so without this
+  /// it cannot tell which region is under their feet and offers sixteen in
+  /// catalogue order (§16.6).
+  Future<({double latitude, double longitude})?> lastKnownPosition(
+    int profileId,
+  ) async {
+    final vitals = await db.vitalsFor(profileId);
+    final latitude = vitals?.latitude;
+    final longitude = vitals?.longitude;
+    if (latitude == null || longitude == null) return null;
+    return (latitude: latitude, longitude: longitude);
+  }
+
   /// Starts the loop for [character] over [source].
   Future<GameLoop> startLoop({
     required ActiveCharacter character,

@@ -7,6 +7,7 @@ import 'package:arls_za/data/persistence/save_bootstrap.dart';
 import 'package:arls_za/game/game_session.dart';
 import 'package:arls_za/location/device_position_source.dart';
 import 'package:arls_za/sim/body.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:test/test.dart';
 
 /// The composition root of §1.3: it is the only place that turns a character
@@ -116,6 +117,57 @@ void main() {
       first.profile.rngSeed,
       reason: 'a run that redraws its seed cannot be replayed',
     );
+  });
+
+  group('the last position on disk (§16.6)', () {
+    test('is null for a character that has never had a fix', () async {
+      final session = await boot();
+      addTearDown(session.close);
+      final factory = GameSessionFactory(session);
+
+      final created = await factory.create(
+        name: 'Marta',
+        spec: spec,
+        deathMode: DeathMode.softcore,
+        now: t0,
+      );
+
+      expect(await factory.lastKnownPosition(created.profile.id), isNull);
+    });
+
+    test('comes back once one has been written', () async {
+      // The region screen opens before the first lock arrives, so this is what
+      // makes "near you" mean anything on the second run.
+      final session = await boot();
+      addTearDown(session.close);
+      final factory = GameSessionFactory(session);
+      final created = await factory.create(
+        name: 'Marta',
+        spec: spec,
+        deathMode: DeathMode.softcore,
+        now: t0,
+      );
+
+      // insertOrReplace, so the whole row goes back — a partial companion
+      // would drop the vitals the character was created with.
+      await session.db.writeVitals(
+        VitalsCompanion(
+          profileId: Value(created.profile.id),
+          lastUpdate: Value(created.state.lastUpdate),
+          bloodMl: Value(created.state.bloodMl),
+          waterMl: Value(created.state.waterMl),
+          caloriesKcal: Value(created.state.caloriesKcal),
+          heartRateBpm: Value(created.state.heartRateBpm),
+          latitude: const Value(52.4064),
+          longitude: const Value(16.9252),
+        ),
+      );
+
+      final known = await factory.lastKnownPosition(created.profile.id);
+
+      expect(known!.latitude, closeTo(52.4064, 0.0001));
+      expect(known.longitude, closeTo(16.9252, 0.0001));
+    });
   });
 
   test('a build without developer mode gets the real chip (§11.2)', () {
