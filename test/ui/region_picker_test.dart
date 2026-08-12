@@ -25,6 +25,7 @@ void main() {
     required String name,
     required GeoBounds bounds,
     String? sha,
+    bool streamable = false,
   }) => RegionPack(
     id: id,
     name: name,
@@ -32,6 +33,7 @@ void main() {
     bytes: payload.length,
     sha256: sha ?? checksum,
     url: 'https://example.invalid/$id.pmtiles',
+    streamable: streamable,
   );
 
   const wielkopolska = GeoBounds(
@@ -247,12 +249,33 @@ void main() {
   });
 
   group('playing without downloading (§16.6)', () {
-    testWidgets('every published region offers it', (tester) async {
+    testWidgets('a host that cannot serve ranges offers no such button', (
+      tester,
+    ) async {
+      // Not a property of PMTiles but of where the pack lives. GitHub Releases
+      // redirects to a signed URL that MapLibre will not chase, so offering
+      // the button there would promise a blank map.
       final manager = managerWith([
         packOf(
           id: 'wielkopolskie',
           name: 'Wielkopolskie',
           bounds: wielkopolska,
+        ),
+      ]);
+
+      await pumpPicker(tester, manager, onPlayStreamed: (_) {});
+
+      expect(find.text('Graj teraz'), findsNothing);
+      expect(find.text('Pobierz'), findsOneWidget);
+    });
+
+    testWidgets('a host that can serve ranges offers it', (tester) async {
+      final manager = managerWith([
+        packOf(
+          id: 'wielkopolskie',
+          name: 'Wielkopolskie',
+          bounds: wielkopolska,
+          streamable: true,
         ),
       ]);
 
@@ -282,6 +305,7 @@ void main() {
           id: 'wielkopolskie',
           name: 'Wielkopolskie',
           bounds: wielkopolska,
+          streamable: true,
         ),
       ]);
       RegionPack? chosen;
@@ -312,6 +336,7 @@ void main() {
           id: 'wielkopolskie',
           name: 'Wielkopolskie',
           bounds: wielkopolska,
+          streamable: true,
         ),
       ]);
       var chosen = false;

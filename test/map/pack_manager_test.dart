@@ -220,6 +220,52 @@ void main() {
     });
   });
 
+  group('a download that outlives its screen (§16.6)', () {
+    test('reports progress and its outcome to anyone listening', () async {
+      final manager = managerWith([packOf(id: 'wielkopolskie')]);
+      final seen = <DownloadState>[];
+      manager.downloads.listen(seen.add);
+
+      manager.startInstall(packOf(id: 'wielkopolskie'));
+      while (manager.isDownloading) {
+        await Future<void>.delayed(const Duration(milliseconds: 5));
+      }
+      await Future<void>.delayed(const Duration(milliseconds: 5));
+
+      expect(seen.first.fraction, 0);
+      expect(seen.last.outcome, InstallOutcome.installed);
+      expect(
+        await manager.store.isInstalled(packOf(id: 'wielkopolskie')),
+        isTrue,
+      );
+    });
+
+    test('a second start is refused while one is running', () async {
+      // Two large downloads over a phone connection finish later than one
+      // after the other, and the progress bar stops meaning anything.
+      final manager = managerWith([packOf(id: 'wielkopolskie')]);
+
+      manager.startInstall(packOf(id: 'wielkopolskie'));
+      final first = manager.currentDownload;
+      manager.startInstall(packOf(id: 'malopolskie'));
+
+      expect(manager.currentDownload!.packId, first!.packId);
+    });
+
+    test('the last state stays readable after it ends', () async {
+      // A screen opened after the fact has to be able to say what happened.
+      final manager = managerWith([packOf(id: 'wielkopolskie')]);
+
+      manager.startInstall(packOf(id: 'wielkopolskie'));
+      while (manager.isDownloading) {
+        await Future<void>.delayed(const Duration(milliseconds: 5));
+      }
+
+      expect(manager.currentDownload!.finished, isTrue);
+      expect(manager.currentDownload!.outcome, InstallOutcome.installed);
+    });
+  });
+
   group('free space', () {
     test('too little room refuses the download', () async {
       final manager = PackManager(

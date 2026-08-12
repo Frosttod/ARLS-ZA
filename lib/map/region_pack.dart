@@ -100,11 +100,13 @@ class RegionPack {
     required this.bytes,
     required this.sha256,
     required this.url,
+    this.streamable = false,
   });
 
   factory RegionPack.fromJson(
     Map<String, Object?> json, {
     String baseUrl = '',
+    bool streamable = false,
   }) {
     final url = json['url']! as String;
     return RegionPack(
@@ -117,6 +119,7 @@ class RegionPack {
       // the downloader, and the streamed map source of §16.6 — needs an
       // address it can use without also knowing about the catalogue.
       url: url.startsWith('http') ? url : '$baseUrl$url',
+      streamable: json['streamable'] as bool? ?? streamable,
     );
   }
 
@@ -139,6 +142,17 @@ class RegionPack {
   final String sha256;
   final String url;
 
+  /// Whether this pack can be read over the network instead of installed
+  /// (§16.6).
+  ///
+  /// Not a property of PMTiles — every archive is addressable by byte range —
+  /// but of the host. It has to answer a `Range` request with 206 *directly*.
+  /// GitHub Releases does not: it answers 302 with a signed URL that expires,
+  /// and MapLibre's tile source does not chase that for every tile. Offering
+  /// the button anyway would produce a blank map, which is worse than not
+  /// offering it.
+  final bool streamable;
+
   /// Human-sized, for the picker.
   String get megabytes => (bytes / (1024 * 1024)).toStringAsFixed(0);
 
@@ -152,10 +166,18 @@ class RegionCatalogue {
   factory RegionCatalogue.parse(String source) {
     final decoded = jsonDecode(source) as Map<String, Object?>;
     final baseUrl = decoded['baseUrl'] as String? ?? '';
+
+    // A whole-catalogue default, because streaming is a property of where the
+    // packs are hosted rather than of any one region.
+    final streamable = decoded['streamable'] as bool? ?? false;
     final regions = decoded['regions']! as List<Object?>;
     return RegionCatalogue([
       for (final region in regions)
-        RegionPack.fromJson(region! as Map<String, Object?>, baseUrl: baseUrl),
+        RegionPack.fromJson(
+          region! as Map<String, Object?>,
+          baseUrl: baseUrl,
+          streamable: streamable,
+        ),
     ]);
   }
 

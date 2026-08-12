@@ -1,7 +1,8 @@
 {
-  "_comment": "Offline map packs, one per voivodeship (design doc §3.1). Bounds are approximate and are used only to preselect a region in the picker; the authoritative extent of an installed pack comes from the PMTiles header. A region with an empty sha256 has not been built or hosted yet and is refused on purpose (§16.6) — fill it in with 'dart run tool/update_region_catalogue.dart <dir>' once the file exists.",
+  "_comment": "Offline map packs, one per voivodeship (design doc §3.1). Bounds are approximate and are used only to preselect a region in the picker; the authoritative extent of an installed pack comes from the PMTiles header. A region with an empty sha256 has not been built or hosted yet and is refused on purpose (§16.6) — fill it in with 'dart run tool/update_region_catalogue.dart <dir>'. 'streamable' says whether the host answers Range requests directly: GitHub Releases redirects to a signed URL that expires, which MapLibre's tile source does not chase, so streaming stays off until the packs live somewhere that serves them directly.",
   "version": 1,
   "baseUrl": "https://github.com/Frosttod/ARLS-ZA/releases/download/maps-v1/",
+  "streamable": false,
   "regions": [
     {
       "id": "dolnoslaskie",

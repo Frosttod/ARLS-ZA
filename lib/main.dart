@@ -22,6 +22,7 @@ import 'location/position_fix.dart';
 import 'map/map_bootstrap.dart';
 import 'map/map_source.dart';
 import 'map/pack_manager.dart';
+import 'map/pack_store.dart';
 import 'map/region_pack.dart';
 import 'safety/player_safety.dart';
 import 'ui/character_creator.dart';
@@ -190,6 +191,11 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// The map layer. Built once, on the first boot after the briefing.
   PackManager? _packs;
 
+  /// Watches downloads for as long as the game runs, not for as long as the
+  /// region screen is open (§16.6). A pack that finishes while the player is
+  /// back on the map has to put itself on the map.
+  StreamSubscription<DownloadState>? _downloadWatch;
+
   /// Where the tiles are read from, or null while there is no map at all — the
   /// region screen is then what the player sees (§16.6).
   MapSource? _mapSource;
@@ -352,6 +358,11 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// installed, which on a second run is the right answer anyway.
   Future<void> _resolveMap() async {
     final packs = _packs ??= await bootMapPacks();
+    _downloadWatch ??= packs.downloads.listen((state) {
+      if (state.outcome == InstallOutcome.installed) {
+        unawaited(_resolveMap());
+      }
+    });
     final near = await _bestKnownPosition();
 
     final active = await packs.activePack(
@@ -463,6 +474,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    unawaited(_downloadWatch?.cancel());
     unawaited(_loop?.dispose());
     unawaited(_dev?.dispose());
     super.dispose();

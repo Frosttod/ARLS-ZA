@@ -11,6 +11,10 @@
 ///   "finish", not "start over".
 /// * A region nobody has published is shown greyed with a reason, not hidden.
 ///   Missing from a list reads as a bug; "not published yet" reads as a fact.
+/// * **The download belongs to the manager, not to this screen.** 235 MB
+///   outlives the screen that started it, and a player who goes back to the
+///   game to wait should not find it cancelled. Opening this screen halfway
+///   through picks the progress back up.
 /// * **Every published region can also be played without downloading it.**
 ///   PMTiles is addressed by byte range, so the same archive streams from its
 ///   host. That is offered plainly, with what it costs — a signal for the whole
@@ -59,21 +63,56 @@ class _RegionPickerScreenState extends State<RegionPickerScreen> {
   List<RegionStatus> _statuses = const [];
   bool _loading = true;
 
-  /// The pack being downloaded, if any. Only one at a time: two 200 MB
-  /// downloads over a phone connection finish later than one after the other,
-  /// and the progress bar stops meaning anything.
-  String? _busyId;
-  double _progress = 0;
-  bool _cancelRequested = false;
+  StreamSubscription<DownloadState>? _watch;
+
+  /// The download in flight, owned by the manager. Read here, never held.
+  DownloadState? _download;
 
   /// The last failure, so the row can say what happened rather than silently
   /// returning to its resting state.
   ({String id, InstallOutcome outcome})? _failure;
 
+  String? get _busyId =>
+      _download != null && !_download!.finished ? _download!.packId : null;
+
+  double get _progress => _download?.fraction ?? 0;
+
   @override
   void initState() {
     super.initState();
+
+    // Whatever is already running belongs on screen the moment it opens.
+    _download = widget.manager.currentDownload;
+    _watch = widget.manager.downloads.listen(_onDownload);
     unawaited(_refresh());
+  }
+
+  @override
+  void dispose() {
+    unawaited(_watch?.cancel());
+    super.dispose();
+  }
+
+  void _onDownload(DownloadState state) {
+    if (!mounted) return;
+    setState(() {
+      _download = state;
+      if (state.finished) {
+        _failure =
+            state.outcome == InstallOutcome.installed ||
+                state.outcome == InstallOutcome.alreadyPresent ||
+                state.outcome == InstallOutcome.cancelled
+            ? null
+            : (id: state.packId, outcome: state.outcome!);
+      }
+    });
+
+    if (state.outcome == InstallOutcome.installed) {
+      unawaited(_refresh());
+      widget.onDone?.call();
+    } else if (state.finished) {
+      unawaited(_refresh());
+    }
   }
 
   Future<void> _refresh() async {
@@ -108,38 +147,9 @@ class _RegionPickerScreenState extends State<RegionPickerScreen> {
       _isNear &&
       status.pack.bounds.contains(widget.nearLatitude!, widget.nearLongitude!);
 
-  Future<void> _download(RegionPack pack) async {
-    setState(() {
-      _busyId = pack.id;
-      _progress = 0;
-      _cancelRequested = false;
-      _failure = null;
-    });
-
-    final outcome = await widget.manager.install(
-      pack,
-      onProgress: (progress) {
-        if (!mounted) return;
-        setState(() => _progress = progress.fraction);
-      },
-      isCancelled: () async => _cancelRequested,
-    );
-
-    if (!mounted) return;
-    setState(() {
-      _busyId = null;
-      _failure =
-          outcome == InstallOutcome.installed ||
-              outcome == InstallOutcome.alreadyPresent ||
-              outcome == InstallOutcome.cancelled
-          ? null
-          : (id: pack.id, outcome: outcome);
-    });
-
-    await _refresh();
-    if (outcome == InstallOutcome.installed && mounted) {
-      widget.onDone?.call();
-    }
+  void _startDownload(RegionPack pack) {
+    setState(() => _failure = null);
+    widget.manager.startInstall(pack);
   }
 
   /// Offers the network map, once, with what it costs.
@@ -208,12 +218,11 @@ class _RegionPickerScreenState extends State<RegionPickerScreen> {
                   failure: _failure?.id == _statuses[index - 1].pack.id
                       ? _failure!.outcome
                       : null,
-                  onDownload: () =>
-                      unawaited(_download(_statuses[index - 1].pack)),
+                  onDownload: () => _startDownload(_statuses[index - 1].pack),
                   onStream: widget.onPlayStreamed == null
                       ? null
                       : () => unawaited(_stream(_statuses[index - 1].pack)),
-                  onCancel: () => setState(() => _cancelRequested = true),
+                  onCancel: widget.manager.cancelDownload,
                   onDelete: () => unawaited(_delete(_statuses[index - 1].pack)),
                 );
               },

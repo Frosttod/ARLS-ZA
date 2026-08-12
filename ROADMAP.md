@@ -19,7 +19,7 @@ Każdy zamknięty etap dostaje sekcję **Dziennik wykonania** z decyzjami podję
 | 8 | Schron, obóz, pętla dobowa | ⬜ | — | — |
 | 9 | Onboarding, dostępność, zgodność | ⬜ | — | — |
 
-**Metryki:** 481 testów · `flutter analyze --fatal-infos` czysty · schemat bazy **v2** · release APK 87,5 MB bez devtools
+**Metryki:** 488 testów · `flutter analyze --fatal-infos` czysty · schemat bazy **v2** · release APK 87,5 MB bez devtools
 
 ### Zablokowane na użytkowniku
 
@@ -29,6 +29,7 @@ Rzeczy, których nie da się zrobić z poziomu repozytorium.
 | :---- | :---- | :---- |
 | Keystore i `android/key.properties` | bez tego `flutter build --release` używa kluczy debug, a takiego artefaktu nie da się opublikować. Instrukcja na górze [PROCEDURA_RELEASE.md](PROCEDURA_RELEASE.md) | 0 |
 | GitHub Pages dla `ARLS-ZA-Game` | strona projektu nie jest publicznie widoczna. Settings → Pages → branch `main`, folder `/ (root)` | — |
+| Hosting pakietów, który obsługuje zakresy bajtów bez przekierowania | GitHub Releases odpowiada `302` z adresem podpisanym i wygasającym; MapLibre nie podąża za tym przy każdym kafelku, więc **mapa z sieci nie działa** i przycisk „Graj teraz" jest wyłączony (`streamable: false` w katalogu). Do włączenia strumieniowania potrzebny jest host serwujący plik wprost — Cloudflare R2, S3 albo własny statyczny serwer. Pobieranie na dysk działa bez zmian | 3 |
 | Zbudowanie i wystawienie pakietów PMTiles | katalog w `assets/regions.json` ma 16 województw, ale bez sum kontrolnych i pod adresem, który jeszcze nie istnieje. Pakiet bez sumy kontrolnej jest **celowo odrzucany** — mapa, której nikt nie zweryfikuje, to mapa, z którą nikt nie powinien wchodzić do miasta. Trzeba zbudować pliki (Protomaps/tippecanoe z wycinków OSM), policzyć SHA-256 i wystawić jako release `maps-v1` | 3 |
 
 ---
