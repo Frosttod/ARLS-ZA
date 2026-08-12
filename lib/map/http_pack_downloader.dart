@@ -14,10 +14,27 @@ import 'package:http/http.dart' as http;
 import 'pack_store.dart';
 
 class HttpPackDownloader implements PackDownloader {
-  HttpPackDownloader({http.Client? client, this.baseUrl = ''})
-    : _client = client ?? http.Client();
+  HttpPackDownloader({
+    http.Client? client,
+    this.baseUrl = '',
+    this.attempts = 4,
+    this.backoff = const Duration(seconds: 2),
+  }) : _client = client ?? http.Client();
 
   final http.Client _client;
+
+  /// How many times to pick the download back up before giving the failure to
+  /// the player.
+  ///
+  /// A 235 MB download over a phone connection is interrupted often enough
+  /// that reporting the first drop as an error is reporting the weather.
+  /// Because the archive resumes from what already arrived, a retry costs only
+  /// the bytes that were missing.
+  final int attempts;
+
+  /// Waited between attempts, doubling each time. A connection that just died
+  /// is rarely alive a millisecond later.
+  final Duration backoff;
 
   /// Prepended to the pack's own url when that is relative, so the host can be
   /// changed in one place.
@@ -25,6 +42,28 @@ class HttpPackDownloader implements PackDownloader {
 
   @override
   Stream<List<int>> fetch(String url, {int offset = 0}) async* {
+    var from = offset;
+    var wait = backoff;
+
+    for (var attempt = 1; ; attempt++) {
+      try {
+        await for (final chunk in _once(url, from)) {
+          from += chunk.length;
+          yield chunk;
+        }
+        return;
+      } on Object {
+        // A refusal is not worth retrying: a 404 will still be a 404. Only a
+        // connection that died part-way is, and that is what leaves `from`
+        // ahead of where this attempt started.
+        if (attempt >= attempts) rethrow;
+        await Future<void>.delayed(wait);
+        wait *= 2;
+      }
+    }
+  }
+
+  Stream<List<int>> _once(String url, int offset) async* {
     final resolved = url.startsWith('http') ? url : '$baseUrl$url';
     final request = http.Request('GET', Uri.parse(resolved));
     if (offset > 0) request.headers['Range'] = 'bytes=$offset-';

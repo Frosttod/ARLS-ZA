@@ -197,6 +197,13 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// So the region screen opens itself on a first run and never again.
   bool _askedForMap = false;
 
+  /// The region the player chose to stream rather than download (§16.6).
+  ///
+  /// Held separately from [_mapSource] because resolving the map again — after
+  /// the region screen closes, say — asks what is *installed*, and would
+  /// otherwise throw the choice away and leave the player on a blank screen.
+  RegionPack? _streamedChoice;
+
   /// Set when the operating system will not give us a position (§16.1). The
   /// game stops at the gate rather than running a simulation on movement that
   /// will never arrive.
@@ -228,6 +235,26 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         _loading = false;
       });
       return;
+    }
+
+    // The position is not a feature of this game, it is the input (§3). Asking
+    // before a character exists means a player who will not grant it finds out
+    // in one screen rather than after filling in a character sheet.
+    //
+    // Skipped when developer mode is driving: the simulator needs no
+    // permission, and firing a system prompt that nothing will use would be
+    // noise (§11.2).
+    if (!kDevTools) {
+      final access = await requestLocationAccess();
+      if (!mounted) return;
+
+      if (!access.canPlay) {
+        setState(() {
+          _blocked = access;
+          _loading = false;
+        });
+        return;
+      }
     }
 
     final existing = await _factory.loadActive();
@@ -331,7 +358,13 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       nearLatitude: near?.latitude,
       nearLongitude: near?.longitude,
     );
-    final source = packs.sourceFor(active);
+
+    // An installed pack always wins; a chosen stream is the fallback, and only
+    // then is there genuinely no map.
+    final streamed = _streamedChoice;
+    final source =
+        packs.sourceFor(active) ??
+        (streamed == null ? null : StreamedPack(streamed.url));
 
     if (!mounted) return;
     setState(() => _mapSource = source);
@@ -363,8 +396,11 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
   /// The player chose the network map rather than waiting for a download.
   void _playStreamed(RegionPack pack) {
+    setState(() {
+      _streamedChoice = pack;
+      _mapSource = StreamedPack(pack.url);
+    });
     Navigator.of(context).popUntil((route) => route.isFirst);
-    setState(() => _mapSource = StreamedPack(pack.url));
   }
 
   Future<void> _openRegionPicker() async {
@@ -381,7 +417,11 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
           nearLatitude: near?.latitude,
           nearLongitude: near?.longitude,
           onPlayStreamed: _playStreamed,
-          onDone: () => unawaited(_resolveMap()),
+
+          // A finished download is the whole reason the screen was open.
+          // Leaving it up and making the player find the back gesture reads
+          // as the download not having worked.
+          onDone: () => Navigator.of(context).popUntil((r) => r.isFirst),
         ),
       ),
     );
@@ -442,7 +482,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final blocked = _blocked;
 
     final source = _mapSource;
-    if (source != null && snapshot != null && character != null) {
+    // Deliberately not waiting for a snapshot. The first one arrives with the
+    // first fix, and a lock takes seconds — showing the region in the meantime
+    // beats a title screen the player has already left.
+    if (source != null && character != null) {
       return Stack(
         children: [
           MapScreen(
@@ -462,20 +505,22 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
                   economy: economy,
                   onUserPanned: onUserPanned,
                 ),
-            fix: snapshot.fix,
-            headingDeg: snapshot.fix?.headingDeg,
-            economy: snapshot.economy,
+            fix: snapshot?.fix,
+            headingDeg: snapshot?.fix?.headingDeg,
+            economy: snapshot?.economy ?? false,
             // There is always a map here — this branch only runs with a
             // source. Whether the player has walked off its *edge* is the
             // coverage question of §16.6, and it arrives with 3.12.
             hasPack: true,
-            hud: Hud(
-              state: snapshot.state,
-              status: snapshot.status,
-              constants: character.constants,
-              warnings: _warnings(l10n, snapshot),
-              carryComfortKg: character.body.carryComfortKg,
-            ),
+            hud: snapshot == null
+                ? null
+                : Hud(
+                    state: snapshot.state,
+                    status: snapshot.status,
+                    constants: character.constants,
+                    warnings: _warnings(l10n, snapshot),
+                    carryComfortKg: character.body.carryComfortKg,
+                  ),
             onMenu: (entry) {
               // Only the map is built; the rest of §3.6 arrives with the
               // systems behind it. Settings is the one that already has
@@ -489,12 +534,12 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
             DevOverlay(
               console: dev.console,
               snapshot: DevSnapshot(
-                state: snapshot.state,
-                fix: snapshot.fix,
-                signal: snapshot.signal,
+                state: snapshot?.state,
+                fix: snapshot?.fix,
+                signal: snapshot?.signal ?? PositionSignal.unavailable,
                 ticksApplied: _simulatedSeconds(snapshot),
-                lastFlushAt: snapshot.lastFlushAt,
-                clockRolledBack: snapshot.clockRolledBack,
+                lastFlushAt: snapshot?.lastFlushAt,
+                clockRolledBack: snapshot?.clockRolledBack ?? false,
               ),
             ),
         ],
@@ -595,7 +640,30 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   Future<void> _retryAccess() async {
     final device = _device;
     final character = _character;
-    if (device == null || character == null) return;
+
+    // The gate can fire before there is a character at all — the permission is
+    // now asked for during boot. Then the way back is simply to ask again.
+    if (device == null || character == null) {
+      final blocked = _blocked;
+      if (blocked != null && blocked.needsSystemSettings) {
+        await openSettingsFor(blocked);
+        return;
+      }
+
+      final access = await requestLocationAccess();
+      if (!mounted) return;
+
+      if (access.canPlay) {
+        setState(() {
+          _blocked = null;
+          _loading = true;
+        });
+        await _boot();
+      } else {
+        setState(() => _blocked = access);
+      }
+      return;
+    }
 
     if (device.access.needsSystemSettings) {
       await device.openRelevantSettings();

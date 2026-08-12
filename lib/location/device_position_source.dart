@@ -36,6 +36,44 @@ class ForegroundNotice {
   final String body;
 }
 
+/// Asks the platform for location access, prompting once if that could help.
+///
+/// Free-standing because the game asks before it has anything to ask *with*:
+/// §3.5's briefing comes first, then this, and only then a character. A player
+/// should learn that the game needs their position before they have spent five
+/// minutes on a character sheet — not after.
+///
+/// Returns without prompting when the service is off or the refusal is
+/// permanent: a prompt the system will never show looks like being ignored.
+Future<LocationAccess> requestLocationAccess() async {
+  final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+  var access = resolveAccess(
+    serviceEnabled: serviceEnabled,
+    permission: _translate(await Geolocator.checkPermission()),
+  );
+
+  if (access.isAskable) {
+    access = resolveAccess(
+      serviceEnabled: serviceEnabled,
+      permission: _translate(await Geolocator.requestPermission()),
+    );
+  }
+  return access;
+}
+
+/// Opens the page the player actually needs: the device location settings when
+/// the service is off, this app's permission page otherwise.
+///
+/// Sending somebody to the wrong settings screen is worse than sending them
+/// nowhere — they will look, not find it, and conclude the game is broken.
+Future<void> openSettingsFor(LocationAccess access) async {
+  if (access == LocationAccess.serviceDisabled) {
+    await Geolocator.openLocationSettings();
+    return;
+  }
+  await Geolocator.openAppSettings();
+}
+
 class DevicePositionSource extends BasePositionSource {
   DevicePositionSource({required this.notice, super.signalTimeout});
 
@@ -55,15 +93,8 @@ class DevicePositionSource extends BasePositionSource {
   /// to happen rather than worked around.
   bool get allowBackground => _access == LocationAccess.granted;
 
-  /// Opens the page the player actually needs: the device location settings
-  /// when the service is off, this app's permission page otherwise.
-  Future<void> openRelevantSettings() async {
-    if (_access == LocationAccess.serviceDisabled) {
-      await Geolocator.openLocationSettings();
-      return;
-    }
-    await Geolocator.openAppSettings();
-  }
+  /// Opens the page the player actually needs for the current refusal.
+  Future<void> openRelevantSettings() => openSettingsFor(_access);
 
   @override
   bool get isSimulated => false;
@@ -79,24 +110,8 @@ class DevicePositionSource extends BasePositionSource {
   bool get tracksInBackground => allowBackground && _sub != null;
 
   /// Asks the platform where it stands, prompting once if that could help.
-  ///
-  /// Returns without prompting when the service is off or the refusal is
-  /// permanent: a prompt that the system will never show looks to the player
-  /// like the game ignoring them.
   Future<LocationAccess> requestAccess() async {
-    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    var access = resolveAccess(
-      serviceEnabled: serviceEnabled,
-      permission: _translate(await Geolocator.checkPermission()),
-    );
-
-    if (access.isAskable) {
-      access = resolveAccess(
-        serviceEnabled: serviceEnabled,
-        permission: _translate(await Geolocator.requestPermission()),
-      );
-    }
-
+    final access = await requestLocationAccess();
     _access = access;
     return access;
   }
