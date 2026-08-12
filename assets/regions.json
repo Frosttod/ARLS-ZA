@@ -1,9 +1,23 @@
 {
-  "_comment": "Offline map packs, one per voivodeship (design doc §3.1). Bounds are approximate and are used only to preselect a region in the picker; the authoritative extent of an installed pack comes from the PMTiles header. A region with an empty sha256 has not been built or hosted yet and is refused on purpose (§16.6) — fill it in with 'dart run tool/update_region_catalogue.dart <dir>'. 'streamable' requires a host that answers a Range request with 206 DIRECTLY: measured against GitHub Releases, a range request without following redirects returns 302 and zero bytes, and MapLibre does not chase that per tile — two devices confirmed a blank map. It is a per-region flag as well as a catalogue-wide default, so a small pack on a direct host can stream while a large one on Releases does not.",
+  "_comment": "Offline map packs, one per voivodeship (design doc §3.1). Bounds are approximate and are used only to preselect a region in the picker; the authoritative extent of an installed pack comes from the PMTiles header. A region with an empty sha256 has not been built or hosted yet and is refused on purpose (§16.6) — fill it in with 'dart run tool/update_region_catalogue.dart <dir>'. 'streamable' requires a host that answers a Range request with 206 DIRECTLY: measured against GitHub Releases, a range request without following redirects returns 302 and zero bytes, and MapLibre does not chase that per tile — two devices confirmed a blank map. It is a per-region flag as well as a catalogue-wide default, so a small pack on a direct host can stream while a large one on Releases does not. City packs come first in the list: they are small enough to stream and small enough to download over a phone connection, which makes them the better first contact with the game than a voivodeship.",
   "version": 1,
   "baseUrl": "https://github.com/Frosttod/ARLS-ZA/releases/download/maps-v1/",
   "streamable": false,
   "regions": [
+    {
+      "id": "poznan",
+      "name": "Poznań",
+      "bounds": [
+        16.73,
+        52.29,
+        17.16,
+        52.51
+      ],
+      "bytes": 41943040,
+      "sha256": "",
+      "url": "https://frosttod.github.io/ARLS-ZA-Game/maps/poznan.pmtiles",
+      "streamable": true
+    },
     {
       "id": "dolnoslaskie",
       "name": "Dolnośląskie",

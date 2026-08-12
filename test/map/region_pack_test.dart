@@ -16,20 +16,49 @@ void main() {
   });
 
   group('the bundled catalogue', () {
-    test('lists all sixteen voivodeships, each with a distinct id', () {
-      expect(catalogue.packs, hasLength(16));
+    test('lists all sixteen voivodeships, and may list cities too', () {
+      const voivodeships = {
+        'dolnoslaskie',
+        'kujawsko-pomorskie',
+        'lubelskie',
+        'lubuskie',
+        'lodzkie',
+        'malopolskie',
+        'mazowieckie',
+        'opolskie',
+        'podkarpackie',
+        'podlaskie',
+        'pomorskie',
+        'slaskie',
+        'swietokrzyskie',
+        'warminsko-mazurskie',
+        'wielkopolskie',
+        'zachodniopomorskie',
+      };
+      final ids = catalogue.packs.map((pack) => pack.id).toList();
+
+      expect(ids.toSet(), containsAll(voivodeships));
       expect(
-        catalogue.packs.map((pack) => pack.id).toSet(),
-        hasLength(16),
+        ids.toSet(),
+        hasLength(ids.length),
         reason: 'ids are file names — a collision overwrites a pack',
       );
+    });
+
+    test('a streamable pack names a host that is not GitHub Releases', () {
+      // Measured: a release asset answers a range request with 302 and zero
+      // bytes unless the client follows redirects, which MapLibre does not do
+      // per tile. Anything offered for streaming has to be somewhere else.
+      for (final pack in catalogue.packs.where((p) => p.streamable)) {
+        expect(pack.url, isNot(contains('releases/download')), reason: pack.id);
+      }
     });
 
     test('every pack has a plausible size and a well-formed extent', () {
       for (final pack in catalogue.packs) {
         expect(
           pack.bytes,
-          inInclusiveRange(20 * 1024 * 1024, 400 * 1024 * 1024),
+          inInclusiveRange(5 * 1024 * 1024, 400 * 1024 * 1024),
           reason: '${pack.id}: §3.1 expects 50–200 MB per region',
         );
         expect(
