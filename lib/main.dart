@@ -25,7 +25,9 @@ import 'map/pack_manager.dart';
 import 'map/pack_store.dart';
 import 'map/region_pack.dart';
 import 'safety/player_safety.dart';
+import 'ui/app_settings.dart';
 import 'ui/character_creator.dart';
+import 'ui/language_picker.dart';
 import 'ui/safety_briefing.dart';
 import 'ui/hud.dart';
 import 'ui/map_view.dart';
@@ -38,11 +40,28 @@ void main() {
   runApp(const ArlsZaApp());
 }
 
-class ArlsZaApp extends StatelessWidget {
+class ArlsZaApp extends StatefulWidget {
   const ArlsZaApp({super.key});
 
   @override
+  State<ArlsZaApp> createState() => _ArlsZaAppState();
+}
+
+class _ArlsZaAppState extends State<ArlsZaApp> {
+  /// Set once the save layer is open. Until then the app follows the system,
+  /// which is the best guess available before anything has been read.
+  AppSettings? _settings;
+
+  void _adoptSettings(AppSettings settings) {
+    if (_settings == settings) return;
+    setState(() => _settings = settings);
+    settings.addListener(() => setState(() {}));
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final settings = _settings;
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       onGenerateTitle: (context) => L10n.of(context).appTitle,
@@ -53,21 +72,21 @@ class ArlsZaApp extends StatelessWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: L10n.supportedLocales,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFFA82D17),
-          brightness: Brightness.dark,
-        ),
-        scaffoldBackgroundColor: Colors.black,
-        useMaterial3: true,
-      ),
-      home: const IntroScreen(),
+      locale: settings?.locale,
+      theme: buildTheme(Brightness.light),
+      darkTheme: buildTheme(Brightness.dark),
+      themeMode: settings?.themeMode ?? ThemeMode.dark,
+      home: IntroScreen(onSettings: _adoptSettings),
     );
   }
 }
 
 class IntroScreen extends StatefulWidget {
-  const IntroScreen({super.key});
+  const IntroScreen({required this.onSettings, super.key});
+
+  /// Handed up as soon as the database is open, so the whole app can follow the
+  /// player's language and theme.
+  final void Function(AppSettings) onSettings;
 
   @override
   State<IntroScreen> createState() => _IntroScreenState();
@@ -81,11 +100,19 @@ class _IntroScreenState extends State<IntroScreen> {
   late final Future<SaveSession> _session = _bootSave();
 
   var _navigated = false;
+  AppSettings? _settings;
 
   Future<SaveSession> _bootSave() async {
     final paths = await resolveSavePaths();
     final bootstrap = SaveBootstrap(paths: paths);
-    return bootstrap.boot(now: DateTime.now().toUtc());
+    final session = await bootstrap.boot(now: DateTime.now().toUtc());
+
+    final settings = AppSettings(session.db);
+    await settings.load();
+    widget.onSettings(settings);
+    _settings = settings;
+
+    return session;
   }
 
   @override
@@ -121,7 +148,7 @@ class _IntroScreenState extends State<IntroScreen> {
       PageRouteBuilder<void>(
         pageBuilder: (_, animation, _) => FadeTransition(
           opacity: animation,
-          child: TitleScreen(session: session),
+          child: TitleScreen(session: session, settings: _settings!),
         ),
         transitionDuration: const Duration(milliseconds: 600),
       ),
@@ -161,9 +188,10 @@ class _IntroScreenState extends State<IntroScreen> {
 /// Title screen. Routes to the creator on a first run, or resumes the active
 /// character and puts the HUD on screen.
 class TitleScreen extends StatefulWidget {
-  const TitleScreen({required this.session, super.key});
+  const TitleScreen({required this.session, required this.settings, super.key});
 
   final SaveSession session;
+  final AppSettings settings;
 
   @override
   State<TitleScreen> createState() => _TitleScreenState();
@@ -185,7 +213,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// gate can send the player to the right settings page and ask again.
   DevicePositionSource? _device;
 
-  /// True until §3.5 has been read and accepted. Nothing else runs first.
+  /// True until a language has been chosen. Nothing at all runs first.
+  bool _needsLanguage = false;
+
+  /// True until §3.5 has been read and accepted.
   bool _needsBriefing = false;
 
   /// The map layer. Built once, on the first boot after the briefing.
@@ -231,6 +262,16 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _boot() async {
+    // Language before the rules. §3.5 is about traffic and strangers, and a
+    // player who cannot read it has not been briefed.
+    if (!widget.settings.languageChosen) {
+      setState(() {
+        _needsLanguage = true;
+        _loading = false;
+      });
+      return;
+    }
+
     // §3.5 is read before anything happens, including before a character
     // exists. The rules are about the person holding the phone, not the one in
     // the game.
@@ -279,6 +320,17 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       return;
     }
     await _enter(existing);
+  }
+
+  Future<void> _chooseLanguage(Locale locale) async {
+    await widget.settings.setLocale(locale);
+    if (!mounted) return;
+
+    setState(() {
+      _needsLanguage = false;
+      _loading = true;
+    });
+    await _boot();
   }
 
   Future<void> _acceptBriefing() async {
@@ -491,6 +543,12 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    if (_needsLanguage) {
+      return LanguagePickerScreen(
+        onChosen: (locale) => unawaited(_chooseLanguage(locale)),
+      );
+    }
+
     if (_needsBriefing) {
       return SafetyBriefingScreen(onAccept: () => unawaited(_acceptBriefing()));
     }

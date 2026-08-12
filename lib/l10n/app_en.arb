@@ -215,5 +215,18 @@
   "regionStreamed": "Map from the network",
   "regionStreamWarnTitle": "Map from the network, not from the phone",
   "regionStreamWarnBody": "You can start straight away — the game fetches only the pieces of map you are looking at. Two things worth knowing: you need a signal for the whole session, and the host of the map learns roughly where you are. A downloaded pack sends nothing and works in a forest.",
-  "regionStreamWarnAccept": "Understood, stream it"
+  "regionStreamWarnAccept": "Understood, stream it",
+  "languageTitle": "Choose a language",
+  "languageBody": "The safety rules you are about to read are about traffic and strangers. Pick the language you will actually understand them in.",
+  "languagePolish": "Polski",
+  "languageEnglish": "English",
+  "themeTitle": "Appearance",
+  "themeDark": "Dark",
+  "themeLight": "Light",
+  "themeSystem": "Match the system",
+  "settingsTitle": "Settings",
+  "settingsLanguage": "Language",
+  "settingsMaps": "Offline maps",
+  "settingsSimulator": "GPS simulator",
+  "settingsSimulatorBody": "The game then walks a recorded track instead of your real position. For testing only."
 }

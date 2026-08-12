@@ -139,5 +139,18 @@
   "regionStreamed": "Mapa z sieci",
   "regionStreamWarnTitle": "Mapa z sieci zamiast z telefonu",
   "regionStreamWarnBody": "Możesz zacząć od razu — gra pobierze tylko te fragmenty mapy, które akurat widzisz. Dwie rzeczy warto wiedzieć: potrzebujesz zasięgu przez całą sesję, a serwer z mapą dowie się z grubsza, gdzie jesteś. Pobrany pakiet nie wysyła nic i działa w lesie.",
-  "regionStreamWarnAccept": "Rozumiem, gram z sieci"
+  "regionStreamWarnAccept": "Rozumiem, gram z sieci",
+  "languageTitle": "Wybierz język",
+  "languageBody": "Zasady bezpieczeństwa, które przeczytasz za chwilę, dotyczą ruchu drogowego i obcych ludzi. Wybierz język, w którym naprawdę je zrozumiesz.",
+  "languagePolish": "Polski",
+  "languageEnglish": "English",
+  "themeTitle": "Wygląd",
+  "themeDark": "Ciemny",
+  "themeLight": "Jasny",
+  "themeSystem": "Jak w systemie",
+  "settingsTitle": "Ustawienia",
+  "settingsLanguage": "Język",
+  "settingsMaps": "Mapy offline",
+  "settingsSimulator": "Symulator GPS",
+  "settingsSimulatorBody": "Gra używa wtedy nagranej trasy zamiast prawdziwej pozycji. Tylko do testów."
 }

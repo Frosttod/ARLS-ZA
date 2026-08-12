@@ -31,6 +31,13 @@ class CharacterDraft {
   BodyProfile get profile => BodyProfile.from(spec);
 }
 
+/// The fields, named so a test can address one rather than "the text field".
+/// The creator has four, and picking one by type is picking at random.
+const Key kCreatorNameFieldKey = Key('creator.name');
+const Key kCreatorAgeKey = Key('creator.age');
+const Key kCreatorHeightKey = Key('creator.height');
+const Key kCreatorWeightKey = Key('creator.weight');
+
 class CharacterCreatorScreen extends StatefulWidget {
   const CharacterCreatorScreen({required this.onCreate, super.key});
 
@@ -92,6 +99,9 @@ class _CharacterCreatorScreenState extends State<CharacterCreatorScreen> {
             const SizedBox(height: 24),
 
             TextField(
+              // Named because the creator now has four text fields and a test
+              // that says "the text field" would be picking one at random.
+              key: kCreatorNameFieldKey,
               controller: _nameController,
               maxLength: BodyLimits.nameMax,
               inputFormatters: [
@@ -114,6 +124,7 @@ class _CharacterCreatorScreenState extends State<CharacterCreatorScreen> {
             ),
 
             _NumberField(
+              key: kCreatorAgeKey,
               label: l10n.fieldAge,
               value: _age.toDouble(),
               min: BodyLimits.ageMin.toDouble(),
@@ -125,6 +136,7 @@ class _CharacterCreatorScreenState extends State<CharacterCreatorScreen> {
               onChanged: (value) => setState(() => _age = value.round()),
             ),
             _NumberField(
+              key: kCreatorHeightKey,
               label: l10n.fieldHeight,
               value: _height.toDouble(),
               min: BodyLimits.heightMinCm.toDouble(),
@@ -136,6 +148,7 @@ class _CharacterCreatorScreenState extends State<CharacterCreatorScreen> {
               onChanged: (value) => setState(() => _height = value.round()),
             ),
             _NumberField(
+              key: kCreatorWeightKey,
               label: l10n.fieldWeight,
               value: _weight,
               min: BodyLimits.weightMinKg,
@@ -254,9 +267,19 @@ class _SexSelector extends StatelessWidget {
   }
 }
 
-class _NumberField extends StatelessWidget {
+/// A slider with the number beside it, and the number is editable (§1.2).
+///
+/// The slider is right for exploring a range and wrong for landing on a value:
+/// height runs from 120 to 220 cm across a few hundred pixels, so a centimetre
+/// is under a pixel wide and 178 is a matter of luck. Typing it is exact, and
+/// the two stay in step — dragging rewrites the field, typing moves the slider.
+///
+/// Out-of-range typing is left alone while the field has focus. Clamping mid-
+/// keystroke turns "1" on the way to "180" into "120" and eats the rest.
+class _NumberField extends StatefulWidget {
   const _NumberField({
     required this.label,
+    super.key,
     required this.value,
     required this.min,
     required this.max,
@@ -274,6 +297,49 @@ class _NumberField extends StatelessWidget {
   final ValueChanged<double> onChanged;
 
   @override
+  State<_NumberField> createState() => _NumberFieldState();
+}
+
+class _NumberFieldState extends State<_NumberField> {
+  late final TextEditingController _controller = TextEditingController(
+    text: _format(widget.value),
+  );
+  final FocusNode _focus = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _focus.addListener(() {
+      // Leaving the field is when a half-typed number becomes a final answer.
+      if (!_focus.hasFocus) _controller.text = _format(widget.value);
+    });
+  }
+
+  @override
+  void didUpdateWidget(_NumberField old) {
+    super.didUpdateWidget(old);
+    if (!_focus.hasFocus && widget.value != old.value) {
+      _controller.text = _format(widget.value);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _focus.dispose();
+    super.dispose();
+  }
+
+  static String _format(double value) =>
+      value.toStringAsFixed(value == value.roundToDouble() ? 0 : 1);
+
+  void _onTyped(String text) {
+    final parsed = double.tryParse(text.replaceAll(',', '.'));
+    if (parsed == null) return;
+    widget.onChanged(parsed);
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
@@ -283,28 +349,46 @@ class _NumberField extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(label, style: theme.textTheme.bodyMedium),
-              Text(
-                '${value.toStringAsFixed(value == value.roundToDouble() ? 0 : 1)} $suffix',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                  fontWeight: FontWeight.bold,
+              Expanded(
+                child: Text(widget.label, style: theme.textTheme.bodyMedium),
+              ),
+              SizedBox(
+                width: 84,
+                child: TextField(
+                  controller: _controller,
+                  focusNode: _focus,
+                  textAlign: TextAlign.right,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                    fontWeight: FontWeight.bold,
+                  ),
+                  decoration: InputDecoration(
+                    isDense: true,
+                    suffixText: widget.suffix,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 6),
+                  ),
+                  onChanged: _onTyped,
                 ),
               ),
             ],
           ),
           Slider(
-            value: value.clamp(min, max),
-            min: min,
-            max: max,
-            divisions: (max - min).round(),
-            onChanged: onChanged,
+            value: widget.value.clamp(widget.min, widget.max),
+            min: widget.min,
+            max: widget.max,
+            divisions: (widget.max - widget.min).round(),
+            onChanged: (next) {
+              _controller.text = _format(next);
+              widget.onChanged(next);
+            },
           ),
-          if (error != null)
+          if (widget.error != null)
             Text(
-              error!,
+              widget.error!,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.error,
               ),

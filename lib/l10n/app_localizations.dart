@@ -852,6 +852,84 @@ abstract class L10n {
   /// In en, this message translates to:
   /// **'Understood, stream it'**
   String get regionStreamWarnAccept;
+
+  /// No description provided for @languageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a language'**
+  String get languageTitle;
+
+  /// No description provided for @languageBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The safety rules you are about to read are about traffic and strangers. Pick the language you will actually understand them in.'**
+  String get languageBody;
+
+  /// No description provided for @languagePolish.
+  ///
+  /// In en, this message translates to:
+  /// **'Polski'**
+  String get languagePolish;
+
+  /// No description provided for @languageEnglish.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get languageEnglish;
+
+  /// No description provided for @themeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance'**
+  String get themeTitle;
+
+  /// No description provided for @themeDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get themeDark;
+
+  /// No description provided for @themeLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get themeLight;
+
+  /// No description provided for @themeSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'Match the system'**
+  String get themeSystem;
+
+  /// No description provided for @settingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settingsTitle;
+
+  /// No description provided for @settingsLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get settingsLanguage;
+
+  /// No description provided for @settingsMaps.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline maps'**
+  String get settingsMaps;
+
+  /// No description provided for @settingsSimulator.
+  ///
+  /// In en, this message translates to:
+  /// **'GPS simulator'**
+  String get settingsSimulator;
+
+  /// No description provided for @settingsSimulatorBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The game then walks a recorded track instead of your real position. For testing only.'**
+  String get settingsSimulatorBody;
 }
 
 class _L10nDelegate extends LocalizationsDelegate<L10n> {

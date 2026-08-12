@@ -84,7 +84,7 @@ void main() {
   ) async {
     await pumpCreator(tester);
 
-    await tester.enterText(find.byType(TextField), 'Ocalały');
+    await tester.enterText(find.byKey(kCreatorNameFieldKey), 'Ocalały');
     await tester.pump();
     expect(tester.widget<FilledButton>(submitButton()).onPressed, isNull);
 
@@ -97,7 +97,7 @@ void main() {
   testWidgets('a short name blocks submission and says why', (tester) async {
     await pumpCreator(tester);
 
-    await tester.enterText(find.byType(TextField), 'Jan');
+    await tester.enterText(find.byKey(kCreatorNameFieldKey), 'Jan');
     await tester.tap(find.text('Softcore'));
     await tester.pumpAndSettle();
 
@@ -108,7 +108,7 @@ void main() {
   testWidgets('a name with symbols is rejected', (tester) async {
     await pumpCreator(tester);
 
-    await tester.enterText(find.byType(TextField), 'Ala_Ma_Kota');
+    await tester.enterText(find.byKey(kCreatorNameFieldKey), 'Ala_Ma_Kota');
     await tester.pumpAndSettle();
 
     expect(find.text('Tylko litery, cyfry i spacje.'), findsOneWidget);
@@ -151,14 +151,14 @@ void main() {
     CharacterDraft? created;
     await pumpCreator(tester, onCreate: (draft) => created = draft);
 
-    await tester.enterText(find.byType(TextField), '  Ocalały  ');
+    await tester.enterText(find.byKey(kCreatorNameFieldKey), '  Ocalały  ');
     await tester.tap(find.text('Hardcore'));
     await tester.pumpAndSettle();
 
     // Edge spaces are a validation error, so submission is still blocked.
     expect(tester.widget<FilledButton>(submitButton()).onPressed, isNull);
 
-    await tester.enterText(find.byType(TextField), 'Ocalały');
+    await tester.enterText(find.byKey(kCreatorNameFieldKey), 'Ocalały');
     await tester.pumpAndSettle();
     await tester.tap(submitButton());
     await tester.pumpAndSettle();
@@ -168,6 +168,65 @@ void main() {
     expect(created!.deathMode, DeathMode.hardcore);
     expect(created!.spec.heightCm, 180);
     expect(created!.profile.bloodVolumeMl, closeTo(5319, 1));
+  });
+
+  group('typing a number instead of hunting for it (§1.2)', () {
+    Finder textIn(Key key) =>
+        find.descendant(of: find.byKey(key), matching: find.byType(TextField));
+    Finder sliderIn(Key key) =>
+        find.descendant(of: find.byKey(key), matching: find.byType(Slider));
+
+    testWidgets('every measurement can be typed exactly', (tester) async {
+      // Height runs 120–220 cm across a few hundred pixels, so a centimetre is
+      // under a pixel wide and 178 is a matter of luck with a slider alone.
+      await pumpCreator(tester);
+
+      expect(
+        find.byType(TextField),
+        findsNWidgets(4),
+        reason: 'name, age, height, weight',
+      );
+    });
+
+    testWidgets('a typed height reaches the derived figures', (tester) async {
+      await pumpCreator(tester);
+
+      final height = textIn(kCreatorHeightKey);
+      await tester.enterText(height, '196');
+      await tester.pumpAndSettle();
+
+      // Nadler is height-cubed, so a tall character is unmistakable: 196 cm at
+      // the default weight puts blood volume well past six litres.
+      expect(find.textContaining('6'), findsWidgets);
+    });
+
+    testWidgets('dragging the slider rewrites the field', (tester) async {
+      await pumpCreator(tester);
+      final age = textIn(kCreatorAgeKey);
+      final before = tester.widget<TextField>(age).controller!.text;
+
+      await tester.drag(sliderIn(kCreatorAgeKey), const Offset(60, 0));
+      await tester.pumpAndSettle();
+
+      expect(
+        tester.widget<TextField>(age).controller!.text,
+        isNot(before),
+        reason: 'the two have to stay in step or the number lies',
+      );
+    });
+
+    testWidgets('a half-typed number is not clamped mid-keystroke', (
+      tester,
+    ) async {
+      // "1" on the way to "180" must not become "120" and eat the rest.
+      await pumpCreator(tester);
+      final height = textIn(kCreatorHeightKey);
+
+      await tester.enterText(height, '1');
+      await tester.pumpAndSettle();
+
+      expect(tester.widget<TextField>(height).controller!.text, '1');
+    });
   });
 
   testWidgets('renders in English too', (tester) async {

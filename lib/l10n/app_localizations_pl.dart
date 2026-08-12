@@ -440,4 +440,45 @@ class L10nPl extends L10n {
 
   @override
   String get regionStreamWarnAccept => 'Rozumiem, gram z sieci';
+
+  @override
+  String get languageTitle => 'Wybierz język';
+
+  @override
+  String get languageBody =>
+      'Zasady bezpieczeństwa, które przeczytasz za chwilę, dotyczą ruchu drogowego i obcych ludzi. Wybierz język, w którym naprawdę je zrozumiesz.';
+
+  @override
+  String get languagePolish => 'Polski';
+
+  @override
+  String get languageEnglish => 'English';
+
+  @override
+  String get themeTitle => 'Wygląd';
+
+  @override
+  String get themeDark => 'Ciemny';
+
+  @override
+  String get themeLight => 'Jasny';
+
+  @override
+  String get themeSystem => 'Jak w systemie';
+
+  @override
+  String get settingsTitle => 'Ustawienia';
+
+  @override
+  String get settingsLanguage => 'Język';
+
+  @override
+  String get settingsMaps => 'Mapy offline';
+
+  @override
+  String get settingsSimulator => 'Symulator GPS';
+
+  @override
+  String get settingsSimulatorBody =>
+      'Gra używa wtedy nagranej trasy zamiast prawdziwej pozycji. Tylko do testów.';
 }

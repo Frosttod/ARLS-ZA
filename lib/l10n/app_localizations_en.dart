@@ -438,4 +438,45 @@ class L10nEn extends L10n {
 
   @override
   String get regionStreamWarnAccept => 'Understood, stream it';
+
+  @override
+  String get languageTitle => 'Choose a language';
+
+  @override
+  String get languageBody =>
+      'The safety rules you are about to read are about traffic and strangers. Pick the language you will actually understand them in.';
+
+  @override
+  String get languagePolish => 'Polski';
+
+  @override
+  String get languageEnglish => 'English';
+
+  @override
+  String get themeTitle => 'Appearance';
+
+  @override
+  String get themeDark => 'Dark';
+
+  @override
+  String get themeLight => 'Light';
+
+  @override
+  String get themeSystem => 'Match the system';
+
+  @override
+  String get settingsTitle => 'Settings';
+
+  @override
+  String get settingsLanguage => 'Language';
+
+  @override
+  String get settingsMaps => 'Offline maps';
+
+  @override
+  String get settingsSimulator => 'GPS simulator';
+
+  @override
+  String get settingsSimulatorBody =>
+      'The game then walks a recorded track instead of your real position. For testing only.';
 }
