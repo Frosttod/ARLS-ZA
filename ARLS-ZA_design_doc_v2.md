@@ -1976,7 +1976,7 @@ Bez danych nie da się zbalansować gry. Minimalny zestaw (Crashlytics + zdarzen
 
 ### 16.6. 🟡 Pierwsze uruchomienie i pakiety map
 
-§3.1 zakłada pobranie 50–200 MB kafelków. Brak projektu: ekran wyboru regionu, obsługa braku miejsca, zachowanie po wyjeździe poza pobrany obszar, aktualizacja pakietów.
+§3.1 zakłada pobranie 50–200 MB kafelków. Rozstrzygnięte w [ROADMAP.md](ROADMAP.md), etap 3: ekran wyboru regionu, obsługa braku miejsca, wykrycie wyjazdu poza pakiet z histerezą i czasem ustalenia, oraz przeniesienie gracza między sesjami (skok pozycji, komunikat fabularny, decyzja o pakiecie). Nierozstrzygnięte: aktualizacja pakietów, gdy wyjdzie nowsza wersja kafelków.
 
 ### 16.7. 🟢 Warstwa prawna — blokuje publikację
 

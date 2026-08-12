@@ -239,8 +239,49 @@ Etap 3 zaczyna się od **prawdziwego źródła pozycji**: `PositionSource` na `g
 | 3.9 | Blokada walki przy >15 km/h | §3.5 |
 | 3.10 | Widok mapy: gracz, stożek kierunku, znaczniki, dolne menu | §3.6 |
 | 3.11 | Zapis pozycji do warstwy gorącej przy każdym `onPause`, checkpoint WAL | §11.1.2, §11.1.5 |
+| 3.12 | Przeniesienie: wykrycie skoku pozycji między sesjami, komunikat fabularny, decyzja o pakiecie | §16.6, §19.1 |
+| 3.13 | Rozstrzygnięcie, czy marsz z wygaszonym ekranem jest naliczany (patrz decyzja niżej) | §3.3, §16.1 |
 
 ⚠️ **Etap 3 to pierwszy moment, w którym §3.5 przestaje być teorią.** Strefy wykluczone i blokada walki w ruchu muszą działać, zanim ktokolwiek poza deweloperem uruchomi grę w terenie.
+
+### Projekt: przeniesienie gracza między sesjami (3.12)
+
+§16.6 wymienia „zachowanie po wyjeździe poza pobrany obszar" jako brakujący projekt. Oto on.
+
+**Sytuacja.** Gracz kończy sesję wieczorem w Poznaniu, jedzie nocą pociągiem, odpala grę w Krakowie. Aplikacja była zamknięta, więc nic nie mierzyła — z punktu widzenia symulacji minęło osiem godzin offline i tyle. Ale *miejsce* się zmieniło, a na tym stoi cała reszta gry.
+
+**Czego nie trzeba naprawiać.** Anti-cheat §3.4 nie zadziała i nie powinien: podróż odbyła się bez ani jednego fiksu, więc nie ma z czego policzyć prędkości. Filtr §3.2 startuje czysty, więc 500 km nie zostanie zaliczone jako ruch. Zawór offline §2.1.1 już obsługuje osiem godzin nieobecności. **Przeniesienie nie może zostać naliczone jako przebyty dystans** — dziś wynika to z `_filter.reset()` i catch-upu z flagą `offline`; do etapu 3 dochodzi test, który to przypina.
+
+**Wykrycie.** Pierwszy zaufany fiks po starcie sesji dalej niż **25 km** od ostatniej zapisanej pozycji. Zaufany znaczy: przeszedł bramkę 25 m i nie jest z mock providera. Próg nie służy do policzenia niczego — służy do **wyjaśnienia**. Zbyt czuły próg jest nieszkodliwy (gracz dostaje jedno zdanie za dużo), zbyt tępy zostawia go z pustym ekranem bez powodu.
+
+**Trzy przypadki i trzy zachowania:**
+
+| Gdzie się obudził | Co robi gra |
+| :---- | :---- |
+| W zasięgu pobranego pakietu | Gra idzie dalej. Jedna notatka fabularna. Schron zostaje tam, gdzie był — 500 km stąd (konsekwencja dla §8) |
+| Poza pakietami, ale region jest w katalogu | Notatka fabularna + ekran wyboru regionu z podświetlonym właściwym województwem. Do pobrania — nie ma mapy, nie ma POI, nie ma lootu (§10) |
+| Poza pakietami i regionu nie ma w katalogu | Rozgrywka wstrzymana z wyjaśnieniem. Wyjście: wrócić w zasięg albo pobrać inny region |
+
+**Komunikat.** Tonem świata, nie interfejsu — gracz jest ocalałym, a nie użytkownikiem aplikacji. Wariant: *„Znowu urwał mi się film. Nie mam pojęcia, jak się tu znalazłem. Tablica przy drodze: {city}."*
+
+⚠️ **Pułapka fleksyjna (§19.1.1).** Nazwa miasta musi stać w mianowniku — dlatego zdanie kończy się dwukropkiem i nazwą, a nie „jak trafiłem do {city}", co wymagałoby dopełniacza („do Warszawy"). Ten sam problem będzie w każdej notatce z §19.1.
+
+**Czego ten projekt *nie* rozstrzyga:** czy gracz może przenieść schron (§8). Podróż z powrotem po 500 km to nie mechanika, to brak mechaniki. Do decyzji przy etapie 8.
+
+### Decyzja do podjęcia: marsz z wygaszonym ekranem (3.13)
+
+**Stan faktyczny, sprawdzony w kodzie.** Manifest deklaruje `ACCESS_BACKGROUND_LOCATION`, a `DevicePositionSource` uruchamia foreground service z wake lockiem, gdy zgoda jest pełna. Fiksy w tle **przychodzą**. Ale `GameLoop.onPaused` kasuje timer ticków i ustawia `_appForeground = false`, a `_buildInput` przekazuje wtedy `offline: true`. Efekt: **usługa działa, pozycja się aktualizuje, a symulacja stoi.** Po powrocie catch-up leci z zaworem offline, a `_filter.reset()` wyrzuca przejechaną ścieżkę.
+
+To sprzeczne z tym, po co §3.3 każe trzymać foreground service. Dwie spójne drogi:
+
+| Wariant | Co daje | Co kosztuje |
+| :---- | :---- | :---- |
+| **A — naliczać marsz w tle** | godzinny spacer z telefonem w kieszeni liczy się tak samo jak z telefonem w ręku; gra mierzy to, co obiecuje | tick w tle na wolnej kadencji, realne zużycie baterii, i formularz Google z **nagraniem wideo** uzasadniającym lokalizację w tle |
+| **B — tylko na ekranie** | zgodne z dzisiejszym zachowaniem, prostsza recenzja w Play, brak wideo; §16.1 traktuje ten tryb jako pełnoprawny | gracz musi trzymać grę na wierzchu przez cały spacer, co przy godzinnej sesji jest realnym kosztem |
+
+**Rekomendacja: A dla wersji docelowej, B jako pierwsze wydanie.** Gra o przetrwaniu, która przestaje liczyć, gdy schowasz telefon do kieszeni, mierzy coś innego niż obiecuje. Ale pierwsze wydanie nie musi się od razu bić z recenzją Play, a przełączenie B→A to usunięcie dwóch linii w `onPaused` i uprawnienie w manifeście — nie przebudowa.
+
+**Do rozstrzygnięcia przez użytkownika.** Do tego czasu obowiązuje B, bo tak działa kod.
 
 **Kryterium wyjścia:** godzinny spacer po mieście daje spójny ślad bez fałszywego ruchu na postoju, zużycie baterii mieści się w założeniach §3.3, a proces przeżywa agresywne oszczędzanie energii (test na urządzeniu Xiaomi/Samsung).
 
