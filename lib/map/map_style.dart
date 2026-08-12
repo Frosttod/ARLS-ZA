@@ -30,22 +30,58 @@ import 'dart:convert';
 
 import 'map_source.dart';
 
-/// Colours for the night-time, low-light reading the game is played in.
+/// The two map palettes.
 ///
-/// Deliberately low contrast between ground and buildings, with roads brighter
-/// than either: at arm's length while walking, the only thing that has to be
-/// legible at a glance is where the streets go.
+/// The principle is the same in both and it is the only one that matters at
+/// arm's length while walking: **roads carry the most contrast against the
+/// ground**, and buildings sit close to the ground so a city block does not
+/// read as a wall of shapes. What flips is the direction — on a dark map the
+/// streets are the light thing, on a light map they are the dark one.
+///
+/// The dark palette is what the game is designed around (§3.6). The light one
+/// exists because the same screen is read at noon in June, when a black map
+/// under a bright sky cannot be read at all (§12).
 class MapPalette {
   const MapPalette({
-    this.background = '#0b0d0e',
-    this.water = '#0d1b24',
-    this.green = '#0f1512',
-    this.building = '#171a1c',
-    this.minorRoad = '#2b3034',
-    this.majorRoad = '#3c4348',
-    this.railway = '#2a2320',
-    this.boundary = '#232a2e',
+    required this.background,
+    required this.water,
+    required this.green,
+    required this.building,
+    required this.minorRoad,
+    required this.majorRoad,
+    required this.railway,
+    required this.boundary,
   });
+
+  /// Night, and the default.
+  static const MapPalette dark = MapPalette(
+    background: '#0b0d0e',
+    water: '#0d1b24',
+    green: '#0f1512',
+    building: '#171a1c',
+    minorRoad: '#2b3034',
+    majorRoad: '#3c4348',
+    railway: '#2a2320',
+    boundary: '#232a2e',
+  );
+
+  /// Daylight. Not the dark palette inverted: paper-white ground would glare,
+  /// so the background is warm off-white and the greens and blues keep enough
+  /// saturation to be told apart from it in sunlight.
+  static const MapPalette light = MapPalette(
+    background: '#F2EFEA',
+    water: '#BBD4E4',
+    green: '#DCE6D4',
+    building: '#E2DDD6',
+    minorRoad: '#B4ADA3',
+    majorRoad: '#8C837A',
+    railway: '#A99B8E',
+    boundary: '#C6BEB4',
+  );
+
+  /// Which palette belongs with a screen is a widget's question, and this file
+  /// deliberately knows nothing about Flutter — it has to stay loadable under
+  /// `dart test`. The surface picks.
 
   final String background;
   final String water;
@@ -60,7 +96,7 @@ class MapPalette {
 /// Builds the style for [source].
 Map<String, Object?> mapStyle({
   required MapSource source,
-  MapPalette palette = const MapPalette(),
+  MapPalette palette = MapPalette.dark,
   int maxZoom = 15,
 }) {
   return {
@@ -174,7 +210,7 @@ Map<String, Object?> mapStyle({
 
 String mapStyleJson({
   required MapSource source,
-  MapPalette palette = const MapPalette(),
+  MapPalette palette = MapPalette.dark,
   int maxZoom = 15,
 }) => jsonEncode(mapStyle(source: source, palette: palette, maxZoom: maxZoom));
 

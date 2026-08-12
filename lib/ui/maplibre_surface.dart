@@ -64,9 +64,17 @@ class _MapLibreSurfaceState extends State<MapLibreSurface> {
   @override
   Widget build(BuildContext context) {
     final centre = widget.centre;
+    final palette = Theme.of(context).brightness == Brightness.dark
+        ? MapPalette.dark
+        : MapPalette.light;
 
     return MapLibreMap(
-      styleString: mapStyleJson(source: widget.source),
+      // The style is baked into the platform view when it is created, so a
+      // change of palette has to build a new one. Keying on the brightness is
+      // what makes switching the theme actually repaint the map rather than
+      // leaving a black city under a white interface.
+      key: ValueKey(palette == MapPalette.dark),
+      styleString: mapStyleJson(source: widget.source, palette: palette),
       initialCameraPosition: CameraPosition(
         target: centre == null
             ? const LatLng(52.0, 19.0)

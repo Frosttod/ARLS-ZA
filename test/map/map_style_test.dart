@@ -116,6 +116,95 @@ void main() {
     });
   });
 
+  group('the two palettes (§12)', () {
+    Map<String, Object?> layer(String id, MapPalette palette) =>
+        (mapStyle(
+                  source: const InstalledPack(packPath),
+                  palette: palette,
+                )['layers']!
+                as List<Object?>)
+            .cast<Map<String, Object?>>()
+            .firstWhere((l) => l['id'] == id);
+
+    /// Rough luminance of a `#rrggbb` string, 0 to 1.
+    double luminance(String hex) {
+      final value = int.parse(hex.substring(1), radix: 16);
+      final r = (value >> 16) & 0xFF;
+      final g = (value >> 8) & 0xFF;
+      final b = value & 0xFF;
+      return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+    }
+
+    String colourOf(String id, MapPalette palette, String key) =>
+        (layer(id, palette)['paint']! as Map<String, Object?>)[key]! as String;
+
+    test('dark is dark and light is light', () {
+      expect(luminance(MapPalette.dark.background), lessThan(0.2));
+      expect(
+        luminance(MapPalette.light.background),
+        greaterThan(0.8),
+        reason: 'a black map under a bright sky cannot be read at all',
+      );
+    });
+
+    test('roads carry the contrast in both, in opposite directions', () {
+      // The one thing that has to be legible at arm's length while walking is
+      // where the streets go. On a dark map they are the light thing; on a
+      // light map they are the dark one.
+      final darkRoad = luminance(
+        colourOf('road-major', MapPalette.dark, 'line-color'),
+      );
+      final lightRoad = luminance(
+        colourOf('road-major', MapPalette.light, 'line-color'),
+      );
+
+      expect(darkRoad, greaterThan(luminance(MapPalette.dark.background)));
+      expect(lightRoad, lessThan(luminance(MapPalette.light.background)));
+    });
+
+    test('major roads outrank minor ones in both', () {
+      for (final palette in [MapPalette.dark, MapPalette.light]) {
+        final major = luminance(colourOf('road-major', palette, 'line-color'));
+        final minor = luminance(colourOf('road-minor', palette, 'line-color'));
+        final ground = luminance(palette.background);
+
+        expect(
+          (major - ground).abs(),
+          greaterThan((minor - ground).abs()),
+          reason: 'a trunk road has to read before a service road does',
+        );
+      }
+    });
+
+    test('buildings sit close to the ground, not against it', () {
+      // A city block of high-contrast outlines reads as a wall of shapes.
+      for (final palette in [MapPalette.dark, MapPalette.light]) {
+        expect(
+          (luminance(palette.building) - luminance(palette.background)).abs(),
+          lessThan(0.15),
+          reason: '$palette',
+        );
+      }
+    });
+
+    test('the palette reaches every layer that has a colour', () {
+      final dark = mapStyle(
+        source: const InstalledPack(packPath),
+        palette: MapPalette.dark,
+      );
+      final light = mapStyle(
+        source: const InstalledPack(packPath),
+        palette: MapPalette.light,
+      );
+
+      expect(
+        dark.toString(),
+        isNot(light.toString()),
+        reason: 'a palette that changes nothing is a palette nobody applied',
+      );
+    });
+  });
+
   group('what is drawn', () {
     List<String> layerIds() => [
       for (final layer in style()['layers']! as List<Object?>)
