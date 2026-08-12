@@ -66,3 +66,19 @@ void assertDevTools([String? what]) {
 /// Prefer a plain `if (kDevTools)` at the call site where the whole block
 /// should vanish; use this where a value is needed inline.
 T? whenDevTools<T>(T Function() body) => kDevTools ? body() : null;
+
+/// Whether the developer simulator is driving the position (§11.2).
+///
+/// Stored as a player setting rather than decided by the build, because a
+/// debug build has two jobs and they want opposite sources. Balancing §2 needs
+/// a GPX track at ×3600; walking the streets to test §3.2 needs the chip. A
+/// build that silently picks the simulator makes the second job look broken —
+/// no permission prompt, and a position somewhere the player has never been.
+///
+/// Default off. The simulator is opted into, never fallen into. Release builds
+/// ignore this entirely: [kDevTools] is false and there is no simulator to
+/// reach.
+const String kSimulatorSettingKey = 'dev.simulator';
+
+bool simulatorEnabled(String? storedValue) =>
+    kDevTools && storedValue == 'true';

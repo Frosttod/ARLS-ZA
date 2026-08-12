@@ -6,6 +6,7 @@ import 'package:arls_za/data/db/database.dart';
 import 'package:arls_za/data/persistence/save_bootstrap.dart';
 import 'package:arls_za/game/game_session.dart';
 import 'package:arls_za/location/device_position_source.dart';
+import 'package:arls_za/devtools/dev_mode.dart';
 import 'package:arls_za/sim/body.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:test/test.dart';
@@ -170,15 +171,33 @@ void main() {
     });
   });
 
-  test('a build without developer mode gets the real chip (§11.2)', () {
-    // The simulator is reachable only through a DevSession, which only exists
-    // in a build that carries developer mode at all. Anything else walks on
-    // real ground.
-    final source = buildPositionSource(
-      notice: const ForegroundNotice(title: 'ARLS-ZA', body: 'counting'),
-    );
+  group('which source drives the game (§11.2)', () {
+    const notice = ForegroundNotice(title: 'ARLS-ZA', body: 'counting');
 
-    expect(source, isA<DevicePositionSource>());
-    expect(source.isSimulated, isFalse);
+    test('the real chip is what you get without asking otherwise', () {
+      // Including in a debug build. A build that silently picks the simulator
+      // makes field testing look broken: no permission prompt, and a position
+      // somewhere the player has never been.
+      final source = buildPositionSource(notice: notice);
+
+      expect(source, isA<DevicePositionSource>());
+      expect(source.isSimulated, isFalse);
+    });
+
+    test('asking for the simulator without one still gets the chip', () {
+      final source = buildPositionSource(notice: notice, useSimulator: true);
+
+      expect(source.isSimulated, isFalse);
+    });
+
+    test('the setting only means anything in a developer build', () {
+      expect(simulatorEnabled(null), isFalse);
+      expect(simulatorEnabled('false'), isFalse);
+      expect(
+        simulatorEnabled('true'),
+        kDevTools,
+        reason: 'a release build has no simulator to reach',
+      );
+    });
   });
 }

@@ -158,13 +158,15 @@ class GameSessionFactory {
 
 /// Where the position comes from (§11.2).
 ///
-/// The developer simulator wins when it is present, and it can only be present
-/// in a build that carries developer mode at all. Everything else gets the real
-/// chip. Downstream nothing can tell the difference, which is the whole point.
+/// The simulator is used only when it has been asked for — see
+/// [kSimulatorSettingKey]. Everything else, including an ordinary debug build,
+/// gets the real chip. Downstream nothing can tell the difference, which is the
+/// whole point.
 PositionSource buildPositionSource({
   required ForegroundNotice notice,
   DevSession? dev,
+  bool useSimulator = false,
 }) {
-  if (kDevTools && dev != null) return dev.source;
+  if (kDevTools && useSimulator && dev != null) return dev.source;
   return DevicePositionSource(notice: notice);
 }

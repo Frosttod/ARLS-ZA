@@ -203,6 +203,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// So the region screen opens itself on a first run and never again.
   bool _askedForMap = false;
 
+  /// True only in a developer build where the simulator has been switched on
+  /// (§11.2). Everything else walks on real ground.
+  bool _useSimulator = false;
+
   /// The region the player chose to stream rather than download (§16.6).
   ///
   /// Held separately from [_mapSource] because resolving the map again — after
@@ -243,14 +247,18 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       return;
     }
 
+    _useSimulator = simulatorEnabled(
+      await widget.session.db.readSetting(kSimulatorSettingKey),
+    );
+    if (!mounted) return;
+
     // The position is not a feature of this game, it is the input (§3). Asking
     // before a character exists means a player who will not grant it finds out
     // in one screen rather than after filling in a character sheet.
     //
-    // Skipped when developer mode is driving: the simulator needs no
-    // permission, and firing a system prompt that nothing will use would be
-    // noise (§11.2).
-    if (!kDevTools) {
+    // Skipped only when the simulator is actually driving: it needs no
+    // permission, and a prompt nothing will use is noise (§11.2).
+    if (!_useSimulator) {
       final access = await requestLocationAccess();
       if (!mounted) return;
 
@@ -289,7 +297,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
   /// Starts the simulation for [character] and shows the HUD.
   Future<void> _enter(ActiveCharacter character) async {
-    if (kDevTools) {
+    if (kDevTools && _useSimulator) {
       _dev = DevSession.attach(constants: character.constants);
     }
 
@@ -300,6 +308,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         body: l10n.locationNotificationBody,
       ),
       dev: _dev,
+      useSimulator: _useSimulator,
     );
 
     if (source is DevicePositionSource) {

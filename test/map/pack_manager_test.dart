@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
@@ -242,14 +243,34 @@ void main() {
 
     test('a second start is refused while one is running', () async {
       // Two large downloads over a phone connection finish later than one
-      // after the other, and the progress bar stops meaning anything.
-      final manager = managerWith([packOf(id: 'wielkopolskie')]);
+      // after the other, and the progress bar stops meaning anything. The
+      // first download is held open deliberately: asserting this against a
+      // downloader that finishes instantly is a race, not a test.
+      final gate = Completer<void>();
+      final manager = PackManager(
+        catalogue: RegionCatalogue([
+          packOf(id: 'wielkopolskie'),
+          packOf(id: 'malopolskie'),
+        ]),
+        store: PackStore(
+          directory: tempDir,
+          downloader: _BlockingDownloader(headerBytes, gate.future),
+          freeSpaceMargin: 0,
+        ),
+        freeSpace: const FixedFreeSpace(1 << 30),
+      );
 
       manager.startInstall(packOf(id: 'wielkopolskie'));
-      final first = manager.currentDownload;
+      await Future<void>.delayed(Duration.zero);
+      expect(manager.isDownloading, isTrue);
+
       manager.startInstall(packOf(id: 'malopolskie'));
 
-      expect(manager.currentDownload!.packId, first!.packId);
+      expect(manager.currentDownload!.packId, 'wielkopolskie');
+      gate.complete();
+      while (manager.isDownloading) {
+        await Future<void>.delayed(const Duration(milliseconds: 5));
+      }
     });
 
     test('the last state stays readable after it ends', () async {
@@ -308,6 +329,21 @@ class _PerPackDownloader implements PackDownloader {
   @override
   Stream<List<int>> fetch(String url, {int offset = 0}) =>
       Stream.value(byUrl[url]!.sublist(offset));
+}
+
+/// Serves its payload only once [release] completes, so a test can hold a
+/// download open and assert what happens meanwhile.
+class _BlockingDownloader implements PackDownloader {
+  const _BlockingDownloader(this.payload, this.release);
+
+  final Uint8List payload;
+  final Future<void> release;
+
+  @override
+  Stream<List<int>> fetch(String url, {int offset = 0}) async* {
+    await release;
+    yield payload.sublist(offset);
+  }
 }
 
 class _FixedDownloader implements PackDownloader {
