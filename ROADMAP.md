@@ -11,7 +11,7 @@ Każdy zamknięty etap dostaje sekcję **Dziennik wykonania** z decyzjami podję
 | 0 | Fundament: trwałość zapisu, zegar, konfiguracja buildu | ✅ zamknięty | 2026-08-10 | `ad55d40` |
 | 1 | Tryb deweloperski i symulator GPS | ✅ zamknięty | 2026-08-10 | `df54653` |
 | 2 | Postać i fizjologia | ✅ zamknięty | 2026-08-11 | `f2b1056`, `5555db2`, `2b0a37e`, `d869661` |
-| 3 | Mapa, GPS, bezpieczeństwo gracza | ⬜ | — | — |
+| 3 | Mapa, GPS, bezpieczeństwo gracza | 🟡 w toku (11/13) | — | `f035626`, `b682a63`, `df580da`, `8a4890b`, `5177607`, `2b8abc4`, `c03006d`, `9426c0e`, `60de86b` |
 | 4 | Przedmioty, loot, przeszukanie | ⬜ | — | — |
 | 5 | Walka, przeciwnicy, hałas | ⬜ | — | — |
 | 6 | Ognisko z pełnym cyklem | ⬜ | — | — |
@@ -19,7 +19,7 @@ Każdy zamknięty etap dostaje sekcję **Dziennik wykonania** z decyzjami podję
 | 8 | Schron, obóz, pętla dobowa | ⬜ | — | — |
 | 9 | Onboarding, dostępność, zgodność | ⬜ | — | — |
 
-**Metryki:** 297 testów · `flutter analyze --fatal-infos` czysty · schemat bazy **v2** · release APK 58,1 MB bez devtools
+**Metryki:** 456 testów · `flutter analyze --fatal-infos` czysty · schemat bazy **v2** · release APK 87,5 MB bez devtools
 
 ### Zablokowane na użytkowniku
 
@@ -228,17 +228,17 @@ Etap 3 zaczyna się od **prawdziwego źródła pozycji**: `PositionSource` na `g
 
 | # | Zadanie | Odniesienie |
 | :---- | :---- | :---- |
-| 3.1 | MapLibre GL Native + PMTiles, pakiet kafelków na region | §3.1 |
-| 3.2 | Ekran pierwszego uruchomienia: wybór regionu, obsługa braku miejsca, wyjazd poza pakiet | §16.6 |
-| 3.3 | `geolocator` + foreground service z powiadomieniem trwałym | §3.3 |
-| 3.4 | Filtr Kalmana, odrzucanie `accuracy > 25 m`, martwa strefa 8 m/10 s, pauza po 60 s utraty sygnału | §3.2 |
-| 3.5 | Adaptacyjne próbkowanie 1 / 0,2 / 0,05 Hz, tryb oszczędny, ostrzeżenie przy <20% baterii | §3.3 |
-| 3.6 | Tryb tylko-foreground jako pełnoprawny wariant gry przy odmowie zgody na lokalizację w tle | §16.1 |
-| 3.7 | Anti-cheat: mock provider, >40 km/h przez >30 s → zawieszenie rozgrywki | §3.4 |
-| 3.8 | Strefy wykluczone ze spawnu po tagach OSM (drogi, tory, wody, tereny prywatne, szpitale, szkoły, cmentarze, obiekty kultu, komisariaty, obiekty wojskowe) | §3.5 |
-| 3.9 | Blokada walki przy >15 km/h | §3.5 |
+| 3.1 | ✅ MapLibre GL Native + PMTiles, pakiet kafelków na region | §3.1 |
+| 3.2 | ✅ Ekran pierwszego uruchomienia: wybór regionu, obsługa braku miejsca, wyjazd poza pakiet | §16.6 |
+| 3.3 | ✅ `geolocator` + foreground service z powiadomieniem trwałym | §3.3 |
+| 3.4 | ✅ Filtr Kalmana, odrzucanie `accuracy > 25 m`, martwa strefa 8 m/10 s, pauza po 60 s utraty sygnału | §3.2 |
+| 3.5 | ✅ Adaptacyjne próbkowanie 1 / 0,2 / 0,05 Hz, tryb oszczędny, ostrzeżenie przy <20% baterii | §3.3 |
+| 3.6 | ✅ Tryb tylko-foreground jako pełnoprawny wariant gry przy odmowie zgody na lokalizację w tle | §16.1 |
+| 3.7 | ✅ Anti-cheat: mock provider, >40 km/h przez >30 s → zawieszenie rozgrywki | §3.4 |
+| 3.8 | ✅ Strefy wykluczone ze spawnu po tagach OSM (drogi, tory, wody, tereny prywatne, szpitale, szkoły, cmentarze, obiekty kultu, komisariaty, obiekty wojskowe) | §3.5 |
+| 3.9 | ✅ Blokada walki przy >15 km/h | §3.5 |
 | 3.10 | Widok mapy: gracz, stożek kierunku, znaczniki, dolne menu | §3.6 |
-| 3.11 | Zapis pozycji do warstwy gorącej przy każdym `onPause`, checkpoint WAL | §11.1.2, §11.1.5 |
+| 3.11 | ✅ Zapis pozycji do warstwy gorącej przy każdym `onPause`, checkpoint WAL | §11.1.2, §11.1.5 |
 | 3.12 | Przeniesienie: wykrycie skoku pozycji między sesjami, komunikat fabularny, decyzja o pakiecie | §16.6, §19.1 |
 | 3.13 | ✅ Marsz z wygaszonym ekranem naliczany (wariant A) | §3.3, §16.1 |
 
