@@ -10,6 +10,10 @@
 # reach a city block. The catalogue's bounds are the source of truth, so adding
 # a region there is all it takes to have one built.
 #
+# The defaults for -MaxZoom and -OnlyLayers halve the output with nothing lost
+# to the game; both are explained where they are declared. Opole: 208 MB at the
+# obvious settings, 101 MB at these, with an identical POI count.
+#
 # Usage:
 #   .\tool\build_region_packs.ps1 -OsmPath $env:USERPROFILE\Downloads\MAPS\poland-260812.osm.pbf
 #   .\tool\build_region_packs.ps1 -OsmPath ... -Only wielkopolskie,mazowieckie
@@ -25,8 +29,19 @@ param(
     [string]$OutDir = '',
     [string]$PlanetilerJar = '',
     [string]$JavaExe = "C:\Program Files\Android\Android Studio\jbr\bin\java.exe",
-    [int]$MaxZoom = 15,
+    # Fourteen, not fifteen, and measured rather than guessed. Zoom 15 is 47%
+    # of a pack's bytes, and the game never renders from it: the view is
+    # clamped to a kilometre across (§3.6) and MapLibre overzooms vector tiles
+    # cleanly. Below 14 the ground falls away -- a z13 tile of Opole carries 10
+    # POI and 5 buildings against 24904 and 1062 at z14, and §10's loot lives
+    # in that POI layer.
+    [int]$MaxZoom = 14,
     [string[]]$Only = @(),
+    # The nine layers the game actually reads: seven the style draws, plus poi
+    # for §10's loot and landuse for §3.5's exclusions. Dropping the rest --
+    # house numbers, street and water names, peaks, airfields -- costs nothing
+    # because nothing ever opens them, and the map carries no labels at all.
+    [string]$OnlyLayers = 'landcover,park,water,waterway,building,transportation,boundary,poi,landuse,place',
     [string]$Heap = "6g"
 )
 
@@ -81,6 +96,7 @@ foreach ($region in $regions) {
         "--output=$out"
         "--bounds=$bounds"
         "--maxzoom=$MaxZoom"
+        "--only-layers=$OnlyLayers"
         '--download'
         "--download-dir=$downloadDir"
         '--force'
