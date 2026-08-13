@@ -13,8 +13,8 @@
         17.16,
         52.51
       ],
-      "bytes": 51146014,
-      "sha256": "1915ec05a65ca46473a28c278e78f8f876406cf2285c122ecc90a6143a032f55",
+      "bytes": 32214563,
+      "sha256": "a92bfa93305ac862dda33c41baefa73f4c2e73e1dc12309e2d530ceff3b5361b",
       "url": "https://frosttod.github.io/ARLS-ZA-Game/maps/poznan.pmtiles",
       "streamable": true
     },
@@ -27,8 +27,8 @@
         17.9,
         51.8
       ],
-      "bytes": 115343360,
-      "sha256": "",
+      "bytes": 311527301,
+      "sha256": "cfd3e2c57341cca15af710f28e6dbc26aa3343f8894e425d9f915c1fc8578fd1",
       "url": "dolnoslaskie.pmtiles"
     },
     {
@@ -40,8 +40,8 @@
         19.83,
         53.83
       ],
-      "bytes": 83886080,
-      "sha256": "",
+      "bytes": 265667535,
+      "sha256": "5ecbb5ec2823cbd446ad4908d64edea0655d0076ac373571e3277568c30cb5d3",
       "url": "kujawsko-pomorskie.pmtiles"
     },
     {
@@ -53,8 +53,8 @@
         24.15,
         52.35
       ],
-      "bytes": 94371840,
-      "sha256": "",
+      "bytes": 327013386,
+      "sha256": "09970648cb07f07b30c628eebac814ef66e57a45914881917a2316acf0a6181f",
       "url": "lubelskie.pmtiles"
     },
     {
@@ -66,8 +66,8 @@
         16.44,
         53.13
       ],
-      "bytes": 62914560,
-      "sha256": "",
+      "bytes": 170360448,
+      "sha256": "1ca7d0b69c92a57bf86e8eb1eb8a15e97c6bae035a2707b84e276ffe431f25b4",
       "url": "lubuskie.pmtiles"
     },
     {
@@ -79,8 +79,8 @@
         20.66,
         52.4
       ],
-      "bytes": 88080384,
-      "sha256": "",
+      "bytes": 311590516,
+      "sha256": "4f8d694c06d92efc008ce3f4fc13ccc65297e6947ec4c989cb8dde800607e4ca",
       "url": "lodzkie.pmtiles"
     },
     {
@@ -92,8 +92,8 @@
         21.44,
         50.59
       ],
-      "bytes": 104857600,
-      "sha256": "",
+      "bytes": 381192584,
+      "sha256": "258e1688d7f76309823309f656a73ee36321bb92d069239c37e35279e379a767",
       "url": "malopolskie.pmtiles"
     },
     {
@@ -105,8 +105,8 @@
         23.14,
         53.55
       ],
-      "bytes": 178257920,
-      "sha256": "",
+      "bytes": 784093228,
+      "sha256": "0d85ca348b18a0d0c627301b3503fb59ce0453692d36b89300fd07b37f5d211f",
       "url": "mazowieckie.pmtiles"
     },
     {
@@ -118,8 +118,8 @@
         18.86,
         51.19
       ],
-      "bytes": 57671680,
-      "sha256": "",
+      "bytes": 208045595,
+      "sha256": "d20885f3be378aa8853acf9e921c392717e9100f643c581d5325f80fe4c46d15",
       "url": "opolskie.pmtiles"
     },
     {
@@ -131,8 +131,8 @@
         23.55,
         50.88
       ],
-      "bytes": 88080384,
-      "sha256": "",
+      "bytes": 325950694,
+      "sha256": "16574631bc9894baf6d2d8a97da88e00d1e667826031e75ef3d13ee59f782163",
       "url": "podkarpackie.pmtiles"
     },
     {
@@ -144,8 +144,8 @@
         23.94,
         54.42
       ],
-      "bytes": 83886080,
-      "sha256": "",
+      "bytes": 267138395,
+      "sha256": "83d45bf03424751300abdcd9d7faeac0358c62843335c4b41f86af943eca42a2",
       "url": "podlaskie.pmtiles"
     },
     {
@@ -157,8 +157,8 @@
         19.67,
         54.85
       ],
-      "bytes": 94371840,
-      "sha256": "",
+      "bytes": 227117543,
+      "sha256": "ee4a6a744c7ca292ec89a23baf8da25c137ed5a51c1d3a169ece3c18edd188d2",
       "url": "pomorskie.pmtiles"
     },
     {
@@ -170,8 +170,8 @@
         19.95,
         51.13
       ],
-      "bytes": 125829120,
-      "sha256": "",
+      "bytes": 388613400,
+      "sha256": "60c2ea953978a9ad23d6c2eea263d3f0dc9ab45fd9e897c385c6c371afd4b270",
       "url": "slaskie.pmtiles"
     },
     {
@@ -183,8 +183,8 @@
         21.86,
         51.4
       ],
-      "bytes": 62914560,
-      "sha256": "",
+      "bytes": 242120770,
+      "sha256": "068f622dd79b0f2011d11ac467354dd43dae65678e9b14003622adad8d5663d6",
       "url": "swietokrzyskie.pmtiles"
     },
     {
@@ -196,8 +196,8 @@
         22.9,
         54.51
       ],
-      "bytes": 94371840,
-      "sha256": "",
+      "bytes": 254744622,
+      "sha256": "4871415da8357fed28053f16354100cb59dcc2dc10a6ed66408c7448231a549f",
       "url": "warminsko-mazurskie.pmtiles"
     },
     {
@@ -209,8 +209,8 @@
         19.19,
         53.71
       ],
-      "bytes": 246723596,
-      "sha256": "3b3ef417596d278809bedd65397ddeb5d333f8155faea97aab23f972cbe3efe0",
+      "bytes": 607700013,
+      "sha256": "772369c687195b02052a94ee77b7f0abe77b7686b5b754b3563624e4e37bb439",
       "url": "wielkopolskie.pmtiles"
     },
     {
@@ -222,8 +222,8 @@
         17.11,
         54.5
       ],
-      "bytes": 104857600,
-      "sha256": "",
+      "bytes": 239805598,
+      "sha256": "b4a5453100a76de2ace2d4b2cb402d46c66e93fc2c2099ac36fe6f748cad1647",
       "url": "zachodniopomorskie.pmtiles"
     }
   ]
