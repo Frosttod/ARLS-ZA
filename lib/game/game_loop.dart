@@ -410,7 +410,11 @@ class GameLoop {
               ),
         occupation: _occupation,
         fix: fix,
-        displayFix: _displayFix ?? fix,
+        // The smoothed one when there is one: it is the same position with
+        // the scatter taken out, and a pin that twitches while the player
+        // stands still undermines every reading beside it. The raw fix is the
+        // fallback for indoors, where nothing passes the gate at all.
+        displayFix: fix ?? _displayFix,
         integrity: _integrity.state,
         integrityReason: _integrity.reason,
         economy: _economy,

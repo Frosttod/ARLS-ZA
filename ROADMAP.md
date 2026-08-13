@@ -11,7 +11,7 @@ Każdy zamknięty etap dostaje sekcję **Dziennik wykonania** z decyzjami podję
 | 0 | Fundament: trwałość zapisu, zegar, konfiguracja buildu | ✅ zamknięty | 2026-08-10 | `ad55d40` |
 | 1 | Tryb deweloperski i symulator GPS | ✅ zamknięty | 2026-08-10 | `df54653` |
 | 2 | Postać i fizjologia | ✅ zamknięty | 2026-08-11 | `f2b1056`, `5555db2`, `2b0a37e`, `d869661` |
-| 3 | Mapa, GPS, bezpieczeństwo gracza | 🟡 13/13 zadań, czeka na spacer terenowy | — | `f035626` … `43510ef` (15 commitów) |
+| 3 | Mapa, GPS, bezpieczeństwo gracza | 🟡 13/13 zadań, po pierwszym spacerze | — | `f035626` … `43510ef` (15 commitów) |
 | 4 | Przedmioty, loot, przeszukanie | ⬜ | — | — |
 | 5 | Walka, przeciwnicy, hałas | ⬜ | — | — |
 | 6 | Ognisko z pełnym cyklem | ⬜ | — | — |
@@ -19,7 +19,7 @@ Każdy zamknięty etap dostaje sekcję **Dziennik wykonania** z decyzjami podję
 | 8 | Schron, obóz, pętla dobowa | ⬜ | — | — |
 | 9 | Onboarding, dostępność, zgodność | ⬜ | — | — |
 
-**Metryki:** 511 testów · `flutter analyze --fatal-infos` czysty · schemat bazy **v2** · release APK 89,5 MB bez devtools
+**Metryki:** 528 testów · `flutter analyze --fatal-infos` czysty · schemat bazy **v2** · release APK 89,5 MB bez devtools
 
 ### Zablokowane na użytkowniku
 
@@ -244,13 +244,29 @@ Etap 3 zaczyna się od **prawdziwego źródła pozycji**: `PositionSource` na `g
 | 3.12 | ✅ Przeniesienie: wykrycie skoku pozycji między sesjami, komunikat fabularny, decyzja o pakiecie | §16.6, §19.1 |
 | 3.13 | ✅ Marsz z wygaszonym ekranem naliczany (wariant A) | §3.3, §16.1 |
 
+### Co pokazał pierwszy spacer
+
+Trzy zgłoszenia z terenu, wszystkie z jedną klasą przyczyny: **traktowałem bramkę dokładności §3.2 jako odpowiedź na więcej pytań, niż ona odpowiada.**
+
+| Objaw | Przyczyna | Poprawka |
+| :---- | :---- | :---- |
+| Bardzo długie łapanie pozycji po wznowieniu | zmiana kadencji **restartuje żądanie lokalizacji**, a świeże potrzebuje sekund na pierwszy fiks. Marsz–postój–marsz przełączał 0,2/0,05 Hz na każdym krawężniku | wolniejsza kadencja wstrzymana o minutę, **jednokierunkowo** — przyspieszanie natychmiast |
+| „Inne aplikacje łapią od razu, nawet w mieszkaniu" | nic nie pokazywało ostatniej znanej pozycji, a **wszystkie fiksy sieciowe (30–60 m) były odrzucane** jako zbyt szerokie | ostatnia znana pozycja przy starcie (do 2 minut wstecz) + osobna pozycja „do narysowania", niezależna od bramki ruchu |
+| „SŁABY SYGNAŁ" przez większość spaceru | ostrzeżenie po **jednym** szerokim fiksie, a pierwsze po zimnym starcie mają rutynowo 40–60 m | degradacja dopiero po 30 s bez dokładnego fiksu |
+
+⚠️ **Wniosek do zapamiętania.** Bramka 25 m odpowiada wyłącznie na pytanie „czy to jest ruch". Nie odpowiada na „gdzie narysować gracza" ani na „czy powiedzieć mu o sygnale". Zlanie tych trzech pytań w jedno kosztowało spacer.
+
+Symetryczne wstrzymanie kadencji było **gorsze niż jego brak** — pierwszy fiks sesji jest zawsze raportowany jako postój, więc każdy spacer startowałby na 0,05 Hz. Złapały to testy, nie przegląd kodu.
+
 ### Zweryfikowane na urządzeniu (motorola edge 50 neo, Android 16)
 
 - ✅ **Mapa renderuje z pliku PMTiles.** `pmtiles://file://`, schemat OpenMapTiles, ciemna paleta, stożek kierunku, dolne menu.
 - ✅ **Prawdziwy GPS**, dokładność ±3,2 m, fiks po kilku sekundach.
 - ✅ **Pobieranie pakietu** z release'u GitHuba, z wznawianiem po zerwaniu.
 - ❌ **Mapa z sieci nie działa** z GitHub Releases — zmierzone, patrz tabela blokad.
-- ⬜ **Niesprawdzone:** zużycie baterii przez godzinę, przeżywalność procesu przy agresywnym oszczędzaniu energii, spójność śladu na dłuższym spacerze. To jest kryterium wyjścia i wymaga wyjścia w teren.
+- ✅ **Uprawnienia i optymalizacja baterii** — ekran ustawień pokazuje stan wszystkich trzech przełączników i odświeża się po powrocie z ustawień systemowych.
+- ✅ **Łapanie pozycji w budynku** — bez opóźnień po poprawkach z pierwszego spaceru.
+- ⬜ **Niesprawdzone:** zużycie baterii przez godzinę, przeżywalność procesu przy agresywnym oszczędzaniu energii, spójność śladu na dłuższym spacerze. To jest kryterium wyjścia i wymaga **czystego** spaceru na poprawionym buildzie.
 
 ### Zrobione poza planem (na zgłoszenia z telefonu)
 
