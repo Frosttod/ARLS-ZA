@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:arls_za/map/geometry.dart';
 import 'package:arls_za/map/region_pack.dart';
 import 'package:test/test.dart';
 
@@ -135,6 +136,61 @@ void main() {
     test('a position outside Poland matches nothing', () {
       // Berlin. The picker then asks rather than guessing.
       expect(catalogue.forPosition(52.52, 13.405), isNull);
+    });
+  });
+
+  group('how far out a player may zoom (§3.6)', () {
+    test('a kilometre across a phone lands near street level', () {
+      // The number that matters is the distance, not the zoom: a survivor with
+      // a phone knows their street and the next junction, not the district.
+      final zoom = zoomForWidth(
+        metresAcross: 1000,
+        pixelWidth: 1080,
+        latitude: 52.4,
+      );
+
+      expect(zoom, closeTo(16.7, 0.3));
+    });
+
+    test('a wider screen shows the same distance at a closer zoom', () {
+      // Which is exactly why this is computed rather than written down: the
+      // same zoom number is a different distance on a different phone.
+      final narrow = zoomForWidth(
+        metresAcross: 1000,
+        pixelWidth: 720,
+        latitude: 52.4,
+      );
+      final wide = zoomForWidth(
+        metresAcross: 1000,
+        pixelWidth: 1440,
+        latitude: 52.4,
+      );
+
+      expect(wide, greaterThan(narrow));
+      expect(
+        wide - narrow,
+        closeTo(1, 0.01),
+        reason:
+            'twice the width is one '
+            'zoom level',
+      );
+    });
+
+    test('the far north needs a wider zoom for the same metres', () {
+      // Web mercator stretches towards the poles, so a tile covers less ground
+      // in Gdańsk than in Zakopane and the same kilometre needs pulling back.
+      final gdansk = zoomForWidth(
+        metresAcross: 1000,
+        pixelWidth: 1080,
+        latitude: 54.4,
+      );
+      final zakopane = zoomForWidth(
+        metresAcross: 1000,
+        pixelWidth: 1080,
+        latitude: 49.3,
+      );
+
+      expect(gdansk, lessThan(zakopane));
     });
   });
 

@@ -2,11 +2,13 @@
 ///
 /// Structure worth explaining, because it is not the obvious one:
 ///
-/// * **The camera follows the player, and the player is a Flutter overlay in
-///   the middle of the screen.** Nothing has to be projected from coordinates
-///   to pixels, and the dot cannot drift out of view. When the player drags the
-///   map, following stops and a "back to me" button appears — a map that snaps
-///   back the moment you let go cannot be read ahead of you.
+/// * **The camera is locked to the player, and the player is a Flutter overlay
+///   in the middle of the screen.** Nothing has to be projected from
+///   coordinates to pixels, and the dot cannot drift out of view. The map
+///   cannot be dragged at all: it is not a chart read from above but what the
+///   character can see from where they stand. Zoom belongs to the player, the
+///   position does not — and it is clamped, because a survivor with a phone
+///   does not have a satellite.
 /// * **The tile map is injected.** `MapLibreMap` is a platform view and does
 ///   not exist in a widget test, so [MapScreen] takes a builder. The real app
 ///   passes the MapLibre one; tests pass a coloured box and check everything
@@ -33,9 +35,7 @@ typedef TileSurfaceBuilder =
       BuildContext context, {
       required PositionFix? centre,
       required List<MapMarker> markers,
-      required bool following,
       required bool economy,
-      required void Function() onUserPanned,
     });
 
 class MapScreen extends StatefulWidget {
@@ -79,10 +79,6 @@ class MapScreen extends StatefulWidget {
 }
 
 class _MapScreenState extends State<MapScreen> {
-  /// True while the camera tracks the player. Dragging the map turns it off;
-  /// only the button turns it back on.
-  bool _following = true;
-
   @override
   Widget build(BuildContext context) {
     final l10n = L10n.of(context);
@@ -95,18 +91,13 @@ class _MapScreenState extends State<MapScreen> {
               context,
               centre: widget.fix,
               markers: widget.markers,
-              following: _following,
               economy: widget.economy,
-              onUserPanned: () {
-                if (_following) setState(() => _following = false);
-              },
             ),
           ),
 
-          // The player sits in the middle of the screen only while the camera
-          // is following. Once the map has been dragged, the middle of the
-          // screen is not where they are.
-          if (_following && widget.fix != null)
+          // Always the middle of the screen: the camera cannot be moved away
+          // from the player, so the middle is always where they are.
+          if (widget.fix != null)
             Center(
               child: Semantics(
                 label: l10n.mapPlayerLabel,
@@ -128,17 +119,6 @@ class _MapScreenState extends State<MapScreen> {
               right: 16,
               bottom: 96,
               child: _Banner(text: l10n.mapNoPack),
-            ),
-
-          if (!_following)
-            Positioned(
-              right: 16,
-              bottom: 96,
-              child: FloatingActionButton.extended(
-                onPressed: () => setState(() => _following = true),
-                icon: const Icon(Icons.my_location),
-                label: Text(l10n.mapRecentre),
-              ),
             ),
 
           Positioned(

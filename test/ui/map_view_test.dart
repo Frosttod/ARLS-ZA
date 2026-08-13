@@ -22,8 +22,7 @@ void main() {
   );
 
   /// Records what the screen asked the surface to draw.
-  late List<({bool following, List<MapMarker> markers, bool economy})> asked;
-  late void Function() panned;
+  late List<({List<MapMarker> markers, bool economy})> asked;
 
   setUp(() {
     asked = [];
@@ -33,12 +32,9 @@ void main() {
     BuildContext context, {
     required PositionFix? centre,
     required List<MapMarker> markers,
-    required bool following,
     required bool economy,
-    required void Function() onUserPanned,
   }) {
-    asked.add((following: following, markers: markers, economy: economy));
-    panned = onUserPanned;
+    asked.add((markers: markers, economy: economy));
     return const ColoredBox(color: Color(0xFF0B0D0E));
   }
 
@@ -115,46 +111,25 @@ void main() {
     });
   });
 
-  group('following the player', () {
-    testWidgets('starts on, and the recentre button is absent', (tester) async {
+  group('the camera cannot be moved (§3.6)', () {
+    testWidgets('there is no way to leave the player behind', (tester) async {
+      // The map is not a chart read from above — it is what the character can
+      // see from where they stand. So there is no recentre button, because
+      // there is nothing to recentre from.
       await pumpMap(tester, at: fix);
 
-      expect(asked.last.following, isTrue);
-      expect(find.text('Wróć do siebie'), findsNothing);
-    });
-
-    testWidgets('a drag stops it and offers the way back', (tester) async {
-      await pumpMap(tester, at: fix);
-
-      panned();
-      await tester.pumpAndSettle();
-
-      expect(asked.last.following, isFalse);
-      expect(
-        find.text('Wróć do siebie'),
-        findsOneWidget,
-        reason: 'a map that snaps back cannot be read ahead of you',
-      );
-      expect(
-        find.byType(PlayerPin),
-        findsNothing,
-        reason: 'once dragged, the middle of the screen is not where they are',
-      );
-    });
-
-    testWidgets('the button turns it back on and takes itself away', (
-      tester,
-    ) async {
-      await pumpMap(tester, at: fix);
-      panned();
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.text('Wróć do siebie'));
-      await tester.pumpAndSettle();
-
-      expect(asked.last.following, isTrue);
       expect(find.text('Wróć do siebie'), findsNothing);
       expect(find.byType(PlayerPin), findsOneWidget);
+    });
+
+    testWidgets('the pin stays in the middle across rebuilds', (tester) async {
+      await pumpMap(tester, at: fix);
+      final first = tester.getCenter(find.byType(PlayerPin));
+
+      await pumpMap(tester, at: fix, heading: 180);
+      final second = tester.getCenter(find.byType(PlayerPin));
+
+      expect(first, second);
     });
   });
 

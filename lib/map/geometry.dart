@@ -118,3 +118,27 @@ double distanceToArea(GeoPoint point, List<GeoPoint> ring) {
 
   return distanceToPolyline(point, closed);
 }
+
+/// Web-mercator resolution at the equator, in metres per pixel at zoom 0.
+const double _equatorMetresPerPixel = 156543.03392;
+
+/// The zoom level at which [metresAcross] fills a viewport [pixelWidth] wide.
+///
+/// The game clamps how far out a player may zoom (§3.6): you know the street
+/// you are on and the next junction, not what is over the hill. Expressing that
+/// as a distance rather than a zoom number is the only way it means the same
+/// thing on a small phone and a large one, and at the top of the country and
+/// the bottom.
+double zoomForWidth({
+  required double metresAcross,
+  required double pixelWidth,
+  required double latitude,
+}) {
+  if (metresAcross <= 0 || pixelWidth <= 0) return 0;
+
+  final metresPerPixel = metresAcross / pixelWidth;
+  final atThisLatitude =
+      _equatorMetresPerPixel * math.cos(latitude * math.pi / 180).abs();
+
+  return math.log(atThisLatitude / metresPerPixel) / math.ln2;
+}

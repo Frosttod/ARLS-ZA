@@ -677,16 +677,12 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
                   context, {
                   required centre,
                   required markers,
-                  required following,
                   required economy,
-                  required onUserPanned,
                 }) => MapLibreSurface(
                   source: source,
                   centre: centre,
                   markers: markers,
-                  following: following,
                   economy: economy,
-                  onUserPanned: onUserPanned,
                 ),
             fix: snapshot?.fix,
             headingDeg: snapshot?.fix?.headingDeg,

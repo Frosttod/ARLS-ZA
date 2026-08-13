@@ -17,22 +17,34 @@ import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 
 import '../location/position_fix.dart';
+import '../map/geometry.dart';
 import '../map/map_source.dart';
 import '../map/map_style.dart';
 import 'map_markers.dart';
 
 /// Zoom the map opens at: close enough to see which side of the street the
 /// player is on, wide enough to see the next junction.
-const double kStreetZoom = 16.5;
+const double kStreetZoom = 17.5;
+
+/// The widest view the game allows, in metres across the screen (§3.6).
+///
+/// A kilometre. The character knows the street they are on and the junction
+/// ahead; they do not have a satellite. Pulling back to see a whole district
+/// would answer questions the survivor has no way to answer, and the map is the
+/// player's knowledge, not the game's.
+const double kWidestViewM = 1000;
+
+/// The closest the map goes. Past this the tiles have nothing more to say —
+/// the packs are built to zoom 15 and everything beyond is the renderer
+/// stretching what it has.
+const double kClosestZoom = 19;
 
 class MapLibreSurface extends StatefulWidget {
   const MapLibreSurface({
     required this.source,
     required this.centre,
     required this.markers,
-    required this.following,
     required this.economy,
-    required this.onUserPanned,
     super.key,
   });
 
@@ -42,12 +54,9 @@ class MapLibreSurface extends StatefulWidget {
 
   final PositionFix? centre;
   final List<MapMarker> markers;
-  final bool following;
 
   /// §3.3: no animation, so the camera jumps rather than glides.
   final bool economy;
-
-  final VoidCallback onUserPanned;
 
   @override
   State<MapLibreSurface> createState() => _MapLibreSurfaceState();
@@ -95,9 +104,29 @@ class _MapLibreSurfaceState extends State<MapLibreSurface> {
       rotateGesturesEnabled: false,
       tiltGesturesEnabled: false,
 
-      onCameraTrackingDismissed: widget.onUserPanned,
+      // The map cannot be dragged (§3.6). It is not a chart the player reads
+      // from above — it is what the character can see from where they stand,
+      // and it stays under them. Zoom is theirs; the position is not.
+      scrollGesturesEnabled: false,
+      minMaxZoomPreference: MinMaxZoomPreference(
+        _widestZoom(context, centre),
+        kClosestZoom,
+      ),
     );
   }
+
+  /// The zoom at which a kilometre fills the screen here.
+  ///
+  /// Computed rather than hard-coded because a zoom number means a different
+  /// distance on a small phone than a large one, and a different one in Gdańsk
+  /// than in Zakopane.
+  double _widestZoom(BuildContext context, PositionFix? centre) => zoomForWidth(
+    metresAcross: kWidestViewM,
+    pixelWidth:
+        MediaQuery.sizeOf(context).width *
+        MediaQuery.devicePixelRatioOf(context),
+    latitude: centre?.latitude ?? 52,
+  );
 
   @override
   void didUpdateWidget(MapLibreSurface oldWidget) {
@@ -115,7 +144,7 @@ class _MapLibreSurfaceState extends State<MapLibreSurface> {
 
   Future<void> _syncCamera(MapLibreMapController controller) async {
     final centre = widget.centre;
-    if (!widget.following || centre == null) return;
+    if (centre == null) return;
 
     final target = CameraUpdate.newLatLng(
       LatLng(centre.latitude, centre.longitude),
