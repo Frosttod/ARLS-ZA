@@ -12,14 +12,14 @@ Każdy zamknięty etap dostaje sekcję **Dziennik wykonania** z decyzjami podję
 | 1 | Tryb deweloperski i symulator GPS | ✅ zamknięty | 2026-08-10 | `df54653` |
 | 2 | Postać i fizjologia | ✅ zamknięty | 2026-08-11 | `f2b1056`, `5555db2`, `2b0a37e`, `d869661` |
 | 3 | Mapa, GPS, bezpieczeństwo gracza | 🟡 13/13 zadań, po pierwszym spacerze | — | `f035626` … `43510ef` (15 commitów) |
-| 4 | Przedmioty, loot, przeszukanie | ⬜ | — | — |
+| 4 | Przedmioty, loot, przeszukanie | 🟡 6/11 zadań (4.1–4.6) | — | `2b1cb31` … `fd49afd` |
 | 5 | Walka, przeciwnicy, hałas | ⬜ | — | — |
 | 6 | Ognisko z pełnym cyklem | ⬜ | — | — |
 | 7 | Audio pozycyjne i haptyka | ⬜ | — | — |
 | 8 | Schron, obóz, pętla dobowa | ⬜ | — | — |
 | 9 | Onboarding, dostępność, zgodność | ⬜ | — | — |
 
-**Metryki:** 528 testów · `flutter analyze --fatal-infos` czysty · schemat bazy **v2** · release APK 89,5 MB bez devtools
+**Metryki:** 681 testów · `flutter analyze` czysty · schemat bazy **v4** · release APK 89,5 MB bez devtools
 
 ### Zablokowane na użytkowniku
 
