@@ -6,16 +6,43 @@ import 'package:test/test.dart';
 /// meant to last several. The rate has to follow the character, and the battery
 /// has to be able to slow it down without ever changing what the game is.
 void main() {
+  final t0 = DateTime.utc(2026, 8, 13, 12);
+
   SamplingDecision decide(
     SamplingPolicy policy, {
     required Activity activity,
     int battery = 80,
     bool charging = false,
+    Duration after = Duration.zero,
   }) => policy.decide(
     activity: activity,
     batteryPercent: battery,
     charging: charging,
+    at: t0.add(after),
   );
+
+  /// Lets a wanted rate settle, so tests about *what* rate is chosen are not
+  /// also tests about how long it takes.
+  ///
+  /// Ends at [settledAt], and anything a test does afterwards has to be later
+  /// than that — the hold is measured on the clock it is handed.
+  const settledAt = Duration(seconds: 61);
+
+  SamplingDecision settled(
+    SamplingPolicy policy, {
+    required Activity activity,
+    int battery = 80,
+    bool charging = false,
+  }) {
+    decide(policy, activity: activity, battery: battery, charging: charging);
+    return decide(
+      policy,
+      activity: activity,
+      battery: battery,
+      charging: charging,
+      after: settledAt,
+    );
+  }
 
   group('the rate follows the character', () {
     test('each activity gets the rate §3.3 names for it', () {
@@ -26,11 +53,11 @@ void main() {
         PositionCadence.combat,
       );
       expect(
-        decide(policy, activity: Activity.walking).cadence,
+        settled(policy, activity: Activity.walking).cadence,
         PositionCadence.moving,
       );
       expect(
-        decide(policy, activity: Activity.standing).cadence,
+        settled(policy, activity: Activity.standing).cadence,
         PositionCadence.resting,
       );
       expect(
@@ -67,7 +94,7 @@ void main() {
       final policy = SamplingPolicy();
 
       expect(
-        decide(policy, activity: Activity.walking, battery: 15).cadence,
+        settled(policy, activity: Activity.walking, battery: 15).cadence,
         PositionCadence.resting,
       );
       expect(
@@ -100,9 +127,109 @@ void main() {
         charging: true,
       );
 
-      expect(decision.cadence, PositionCadence.moving);
+      expect(
+        settled(
+          policy,
+          activity: Activity.walking,
+          battery: 5,
+          charging: true,
+        ).cadence,
+        PositionCadence.moving,
+      );
       expect(decision.economy, isFalse);
       expect(decision.warnLowBattery, isFalse);
+    });
+  });
+
+  group('a pause at a crossing is not a change of pace (§3.3)', () {
+    test('the rate is held until the new one has lasted a minute', () async {
+      // Changing the rate restarts the platform's location request, and a
+      // fresh request takes seconds to produce a fix. Thrashing it at every
+      // kerb is what makes a walk look like a permanently weak signal.
+      final policy = SamplingPolicy();
+      settled(policy, activity: Activity.walking);
+
+      expect(
+        decide(
+          policy,
+          activity: Activity.standing,
+          after: settledAt + const Duration(seconds: 20),
+        ).cadence,
+        PositionCadence.moving,
+        reason: 'twenty seconds at a light is not standing still',
+      );
+      expect(
+        decide(
+          policy,
+          activity: Activity.standing,
+          after: settledAt + const Duration(seconds: 90),
+        ).cadence,
+        PositionCadence.resting,
+      );
+    });
+
+    test('stepping off again before the hold expires changes nothing', () {
+      final policy = SamplingPolicy();
+      settled(policy, activity: Activity.walking);
+
+      decide(
+        policy,
+        activity: Activity.standing,
+        after: settledAt + const Duration(seconds: 30),
+      );
+      final resumed = decide(
+        policy,
+        activity: Activity.walking,
+        after: settledAt + const Duration(seconds: 40),
+      );
+
+      expect(resumed.cadence, PositionCadence.moving);
+    });
+
+    test('speeding up is immediate — only slowing down waits', () {
+      // A session opens with the first fix reported as stationary. A symmetric
+      // hold would start every walk at 0.05 Hz and take a minute to notice.
+      final policy = SamplingPolicy();
+      settled(policy, activity: Activity.standing);
+
+      expect(
+        decide(
+          policy,
+          activity: Activity.walking,
+          after: settledAt + const Duration(seconds: 1),
+        ).cadence,
+        PositionCadence.moving,
+      );
+    });
+
+    test('combat is exempt in both directions (§5.2)', () {
+      // Waiting a minute for the rate to catch up would be the same as not
+      // having it.
+      final policy = SamplingPolicy();
+      settled(policy, activity: Activity.standing);
+
+      expect(
+        decide(policy, activity: Activity.combat).cadence,
+        PositionCadence.combat,
+      );
+      expect(
+        decide(
+          policy,
+          activity: Activity.walking,
+          after: settledAt + const Duration(seconds: 1),
+        ).cadence,
+        PositionCadence.moving,
+      );
+    });
+
+    test('going quiet for a shelter occupation is immediate', () {
+      final policy = SamplingPolicy();
+      settled(policy, activity: Activity.walking);
+
+      expect(
+        decide(policy, activity: Activity.sheltered).cadence,
+        PositionCadence.off,
+      );
     });
   });
 

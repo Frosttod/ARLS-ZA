@@ -319,6 +319,7 @@ class GameLoop {
       ),
       batteryPercent: _power.percent,
       charging: _power.charging,
+      at: now,
     );
 
     _economy = decision.economy;

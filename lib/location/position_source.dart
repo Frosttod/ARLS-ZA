@@ -82,15 +82,26 @@ abstract class PositionSource {
 /// watchdog. Both the simulator and the real provider extend this, so the
 /// "signal lost after 60 s" rule cannot be implemented twice and differently.
 abstract class BasePositionSource implements PositionSource {
-  BasePositionSource({this.signalTimeout = const Duration(seconds: 60)});
+  BasePositionSource({
+    this.signalTimeout = const Duration(seconds: 60),
+    this.degradeAfter = const Duration(seconds: 30),
+  });
 
   /// How long without a fix before the position stops being trusted (§3.2).
   final Duration signalTimeout;
+
+  /// How long wide fixes have to keep arriving before the player is told the
+  /// signal is weak. A cold start is wide for a few seconds and then is not.
+  final Duration degradeAfter;
 
   final _fixes = StreamController<PositionFix>.broadcast();
   final _signal = StreamController<PositionSignal>.broadcast();
 
   PositionFix? _lastFix;
+
+  /// When a fix inside the accuracy gate last arrived.
+  DateTime? _lastAccurate;
+
   PositionSignal _currentSignal = PositionSignal.unavailable;
   Timer? _watchdog;
 
@@ -109,17 +120,28 @@ abstract class BasePositionSource implements PositionSource {
   /// Publishes a fix and restarts the dropout watchdog.
   ///
   /// Accuracy is judged here rather than by each caller: worse than 25 m and
-  /// the fix is published but the signal is marked degraded, so the simulation
-  /// can decide to ignore the movement (§3.2).
+  /// the fix cannot be trusted for movement (§3.2).
+  ///
+  /// But a *warning* is not the same as a rejection. The first fixes after a
+  /// cold start are routinely 40 or 60 metres wide and tighten within seconds,
+  /// and announcing a weak signal each time teaches the player that the HUD is
+  /// wrong. So the signal only degrades once nothing accurate has arrived for
+  /// [degradeAfter]; the simulation still ignores every wide fix immediately,
+  /// which is the part that matters.
   void emitFix(PositionFix fix, {double accuracyGateM = 25.0}) {
     if (_fixes.isClosed) return;
     _lastFix = fix;
     _fixes.add(fix);
-    _setSignal(
-      fix.accuracyM > accuracyGateM
-          ? PositionSignal.degraded
-          : PositionSignal.good,
-    );
+
+    final now = fix.timestamp;
+    if (fix.accuracyM <= accuracyGateM) {
+      _lastAccurate = now;
+      _setSignal(PositionSignal.good);
+    } else {
+      final since = _lastAccurate;
+      final waited = since == null ? degradeAfter : now.difference(since);
+      if (waited >= degradeAfter) _setSignal(PositionSignal.degraded);
+    }
     _armWatchdog();
   }
 

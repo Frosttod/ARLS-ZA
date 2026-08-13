@@ -84,6 +84,12 @@ Future<void> openSettingsFor(LocationAccess access) async {
   await Geolocator.openAppSettings();
 }
 
+/// How old the platform's last known position may be and still be published.
+///
+/// Two minutes: long enough to cover walking out of a building, short enough
+/// that it cannot be somewhere the player no longer is.
+const Duration kLastKnownMaxAge = Duration(minutes: 2);
+
 class DevicePositionSource extends BasePositionSource {
   DevicePositionSource({required this.notice, super.signalTimeout});
 
@@ -137,6 +143,35 @@ class DevicePositionSource extends BasePositionSource {
     }
 
     await _listen();
+    await _seedFromLastKnown();
+  }
+
+  /// Publishes the platform's last known position, if it is recent enough.
+  ///
+  /// This is the difference between a map that is there when the player opens
+  /// the app and one that stares at them for twenty seconds. A cold GPS
+  /// acquisition takes that long outdoors and longer in a street; every other
+  /// app on the phone feels instant because it shows the last known position
+  /// first, and so should this one.
+  ///
+  /// Age is the whole question. A position from two minutes ago is where the
+  /// player is, near enough to point a camera at. One from yesterday is a
+  /// different city, and feeding it in would look to §16.6 like a journey
+  /// somebody took in their sleep — so it is dropped rather than published.
+  Future<void> _seedFromLastKnown() async {
+    if (lastFix != null) return;
+
+    try {
+      final last = await Geolocator.getLastKnownPosition();
+      if (last == null || lastFix != null) return;
+
+      final age = DateTime.now().toUtc().difference(last.timestamp.toUtc());
+      if (age > kLastKnownMaxAge || age.isNegative) return;
+
+      emitFix(_toFix(last));
+    } on Object {
+      // Some devices refuse. Nothing is lost: the stream is already running.
+    }
   }
 
   @override

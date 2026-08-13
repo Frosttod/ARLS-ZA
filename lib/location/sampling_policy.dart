@@ -64,11 +64,29 @@ class SamplingDecision {
 /// given. A warning repeated every second is noise the player learns to ignore,
 /// which is the same as having no warning at all.
 class SamplingPolicy {
-  SamplingPolicy({this.lowBatteryPercent = kLowBatteryPercent});
+  SamplingPolicy({
+    this.lowBatteryPercent = kLowBatteryPercent,
+    this.settleFor = const Duration(seconds: 60),
+  });
 
   final int lowBatteryPercent;
 
+  /// How long a new rate has to be wanted before it is adopted.
+  ///
+  /// Changing the rate restarts the platform's location request, and a fresh
+  /// request takes seconds to produce its first fix. Without this, a player
+  /// waiting at a crossing flips walking-standing-walking and the stream is
+  /// torn down each time: the fixes never settle, the accuracy never improves,
+  /// and the HUD spends the walk saying the signal is weak. The battery saving
+  /// of §3.3 is meant for someone who has genuinely stopped, not for someone
+  /// pausing at a kerb.
+  final Duration settleFor;
+
   bool _warned = false;
+
+  PositionCadence? _pending;
+  DateTime? _pendingSince;
+  PositionCadence? _current;
 
   /// Resets the warning, so plugging in and unplugging again warns once more.
   void resetWarning() => _warned = false;
@@ -77,6 +95,7 @@ class SamplingPolicy {
     required Activity activity,
     required int batteryPercent,
     required bool charging,
+    DateTime? at,
   }) {
     final low = !charging && batteryPercent <= lowBatteryPercent;
 
@@ -85,10 +104,72 @@ class SamplingPolicy {
     if (!low) _warned = false;
 
     return SamplingDecision(
-      cadence: _cadenceFor(activity, economy: low),
+      cadence: _settled(
+        _cadenceFor(activity, economy: low),
+        at ?? DateTime.now().toUtc(),
+      ),
       economy: low,
       warnLowBattery: warn,
     );
+  }
+
+  /// Holds a *slower* rate until it has been wanted for [settleFor]. Speeding
+  /// up is immediate.
+  ///
+  /// The asymmetry is the whole point. Slowing down is the battery saving of
+  /// §3.3, and it is worth waiting a minute to be sure the player has really
+  /// stopped rather than paused at a kerb — each change restarts the platform's
+  /// location request, and a fresh request takes seconds to produce a fix.
+  /// Speeding up is responsiveness, and delaying it would cost exactly what the
+  /// hold was meant to save: a session opens with the first fix reported as
+  /// stationary, so a symmetric hold would start every walk at 0.05 Hz and take
+  /// a minute to notice it was a walk.
+  PositionCadence _settled(PositionCadence wanted, DateTime now) {
+    _current ??= wanted;
+    if (wanted == _current) {
+      _pending = null;
+      _pendingSince = null;
+      return _current!;
+    }
+
+    // Two deliberate acts, exempt in both directions. A shelter occupation is
+    // a commitment to standing still, not a pause at a kerb (§2.1a.4), and
+    // combat is decided on distance — waiting a minute either to reach 1 Hz or
+    // to leave it would be the same as not having the rate at all (§5.2).
+    final deliberate =
+        wanted == PositionCadence.off ||
+        wanted == PositionCadence.combat ||
+        _current == PositionCadence.combat;
+
+    if (deliberate || !_isSlower(wanted, than: _current!)) {
+      _current = wanted;
+      _pending = null;
+      _pendingSince = null;
+      return wanted;
+    }
+
+    if (_pending != wanted) {
+      _pending = wanted;
+      _pendingSince = now;
+      return _current!;
+    }
+
+    if (now.difference(_pendingSince!) >= settleFor) {
+      _current = wanted;
+      _pending = null;
+      _pendingSince = null;
+    }
+    return _current!;
+  }
+
+  /// Off is the slowest of all; otherwise a longer interval is slower.
+  static bool _isSlower(
+    PositionCadence value, {
+    required PositionCadence than,
+  }) {
+    if (value == PositionCadence.off) return than != PositionCadence.off;
+    if (than == PositionCadence.off) return false;
+    return value.interval > than.interval;
   }
 
   PositionCadence _cadenceFor(Activity activity, {required bool economy}) {

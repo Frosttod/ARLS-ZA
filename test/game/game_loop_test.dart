@@ -365,9 +365,11 @@ void main() {
 
       expect(rig.source.currentCadence, PositionCadence.moving);
 
-      // Stop dead. The rate should follow within a tick or two.
+      // Stop dead. Slowing down is held for a minute on purpose — a pause at
+      // a crossing must not restart the platform's location request — so this
+      // has to stand still for longer than that before the rate follows.
       rig.source.mode = SimMovementMode.stationary;
-      for (var step = 0; step < 10; step++) {
+      for (var step = 0; step < 20; step++) {
         rig.source.step();
         await pump();
         rig.wall.advance(const Duration(seconds: 5));
