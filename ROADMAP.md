@@ -350,7 +350,7 @@ Dwa wnioski na przyszłość:
 | 4.2 | ✅ 110 przedmiotów w dziesięciu plikach, `loot_tables.json` — 20 tabel (11 OSM + 9 proceduralnych) | §10.3, Załącznik |
 | 4.3 | ✅ Ekwipunek z dwoma limitami: masa i objętość, oba paski w HUD | §18.1a |
 | 4.4 | ✅ Plecaki (udźwig + pojemność), odzież i pancerz (dwie osie ochrony) | §4.4, §4.5 |
-| 4.5 | Loot z POI OSM, respawn 4–8 h, max 15 aktywnych w promieniu 2 km | §10 |
+| 4.5 | ✅ Loot z POI (własny czytnik PMTiles + MVT), respawn 4–8 h, max 15 w promieniu 2 km, 5 gwarantowanych w 600 m | §10 |
 | 4.6 | Zapasowa warstwa proceduralna przy gęstości POI < 8, flaga `procedural` | §10.1 |
 | 4.7 | Przeszukanie terenu (rozpoznanie): 45 s bezruchu, promień, co odsłania | §10.2 |
 | 4.8 | Przeszukanie obiektu jako czynność czasowa: 30 / 90 / 180 s, hałas, przerwanie | §19.3, §10.3.5 |
