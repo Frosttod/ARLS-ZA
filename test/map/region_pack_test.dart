@@ -65,7 +65,7 @@ void main() {
         expect(
           pack.bytes,
           inInclusiveRange(5 * 1024 * 1024, 1024 * 1024 * 1024),
-          reason: '${pack.id}',
+          reason: pack.id,
         );
         expect(
           pack.bounds.north,
