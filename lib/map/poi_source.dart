@@ -80,7 +80,13 @@ class PoiSource {
         final at = feature.centre;
         if (at == null) continue;
 
-        final position = _toLatLon(tile.x, tile.y, kPoiZoom, at, decoded.extent);
+        final position = tileLocalToLatLon(
+          tile.x,
+          tile.y,
+          kPoiZoom,
+          at,
+          decoded.extent,
+        );
         if (position.distanceTo(centre) > radiusM) continue;
 
         found.add(
@@ -142,7 +148,7 @@ class PoiSource {
 }
 
 /// Tile-local coordinates back to the ground.
-GeoPoint _toLatLon(
+GeoPoint tileLocalToLatLon(
   int tileX,
   int tileY,
   int zoom,

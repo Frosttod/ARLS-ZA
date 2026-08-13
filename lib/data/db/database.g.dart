@@ -3540,6 +3540,612 @@ class InventoryLinesCompanion extends UpdateCompanion<InventoryLine> {
   }
 }
 
+class $LootBoxesTable extends LootBoxes
+    with TableInfo<$LootBoxesTable, LootBoxe> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $LootBoxesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _profileIdMeta = const VerificationMeta(
+    'profileId',
+  );
+  @override
+  late final GeneratedColumn<int> profileId = GeneratedColumn<int>(
+    'profile_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _poiIdMeta = const VerificationMeta('poiId');
+  @override
+  late final GeneratedColumn<String> poiId = GeneratedColumn<String>(
+    'poi_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _latitudeMeta = const VerificationMeta(
+    'latitude',
+  );
+  @override
+  late final GeneratedColumn<double> latitude = GeneratedColumn<double>(
+    'latitude',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _longitudeMeta = const VerificationMeta(
+    'longitude',
+  );
+  @override
+  late final GeneratedColumn<double> longitude = GeneratedColumn<double>(
+    'longitude',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _tableIdMeta = const VerificationMeta(
+    'tableId',
+  );
+  @override
+  late final GeneratedColumn<String> tableId = GeneratedColumn<String>(
+    'table_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _spawnedAtMeta = const VerificationMeta(
+    'spawnedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> spawnedAt = GeneratedColumn<DateTime>(
+    'spawned_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _lootedAtMeta = const VerificationMeta(
+    'lootedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> lootedAt = GeneratedColumn<DateTime>(
+    'looted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _respawnAtMeta = const VerificationMeta(
+    'respawnAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> respawnAt = GeneratedColumn<DateTime>(
+    'respawn_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    profileId,
+    poiId,
+    latitude,
+    longitude,
+    tableId,
+    name,
+    spawnedAt,
+    lootedAt,
+    respawnAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'loot_boxes';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<LootBoxe> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('profile_id')) {
+      context.handle(
+        _profileIdMeta,
+        profileId.isAcceptableOrUnknown(data['profile_id']!, _profileIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_profileIdMeta);
+    }
+    if (data.containsKey('poi_id')) {
+      context.handle(
+        _poiIdMeta,
+        poiId.isAcceptableOrUnknown(data['poi_id']!, _poiIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_poiIdMeta);
+    }
+    if (data.containsKey('latitude')) {
+      context.handle(
+        _latitudeMeta,
+        latitude.isAcceptableOrUnknown(data['latitude']!, _latitudeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_latitudeMeta);
+    }
+    if (data.containsKey('longitude')) {
+      context.handle(
+        _longitudeMeta,
+        longitude.isAcceptableOrUnknown(data['longitude']!, _longitudeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_longitudeMeta);
+    }
+    if (data.containsKey('table_id')) {
+      context.handle(
+        _tableIdMeta,
+        tableId.isAcceptableOrUnknown(data['table_id']!, _tableIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_tableIdMeta);
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    }
+    if (data.containsKey('spawned_at')) {
+      context.handle(
+        _spawnedAtMeta,
+        spawnedAt.isAcceptableOrUnknown(data['spawned_at']!, _spawnedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_spawnedAtMeta);
+    }
+    if (data.containsKey('looted_at')) {
+      context.handle(
+        _lootedAtMeta,
+        lootedAt.isAcceptableOrUnknown(data['looted_at']!, _lootedAtMeta),
+      );
+    }
+    if (data.containsKey('respawn_at')) {
+      context.handle(
+        _respawnAtMeta,
+        respawnAt.isAcceptableOrUnknown(data['respawn_at']!, _respawnAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  LootBoxe map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return LootBoxe(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      profileId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}profile_id'],
+      )!,
+      poiId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}poi_id'],
+      )!,
+      latitude: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}latitude'],
+      )!,
+      longitude: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}longitude'],
+      )!,
+      tableId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}table_id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      ),
+      spawnedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}spawned_at'],
+      )!,
+      lootedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}looted_at'],
+      ),
+      respawnAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}respawn_at'],
+      ),
+    );
+  }
+
+  @override
+  $LootBoxesTable createAlias(String alias) {
+    return $LootBoxesTable(attachedDatabase, alias);
+  }
+}
+
+class LootBoxe extends DataClass implements Insertable<LootBoxe> {
+  final int id;
+  final int profileId;
+
+  /// From `Poi.id`: position to six decimals plus what the place is.
+  final String poiId;
+  final double latitude;
+  final double longitude;
+
+  /// Which table of §10.3 this place draws from.
+  final String tableId;
+
+  /// The name off the tile, where the map had one. Shown on the marker.
+  final String? name;
+  final DateTime spawnedAt;
+
+  /// Null while it still has something in it.
+  final DateTime? lootedAt;
+
+  /// Rolled when it is emptied, never on a schedule — a fixed interval would
+  /// let a player time a whole city off one box (§10).
+  final DateTime? respawnAt;
+  const LootBoxe({
+    required this.id,
+    required this.profileId,
+    required this.poiId,
+    required this.latitude,
+    required this.longitude,
+    required this.tableId,
+    this.name,
+    required this.spawnedAt,
+    this.lootedAt,
+    this.respawnAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['profile_id'] = Variable<int>(profileId);
+    map['poi_id'] = Variable<String>(poiId);
+    map['latitude'] = Variable<double>(latitude);
+    map['longitude'] = Variable<double>(longitude);
+    map['table_id'] = Variable<String>(tableId);
+    if (!nullToAbsent || name != null) {
+      map['name'] = Variable<String>(name);
+    }
+    map['spawned_at'] = Variable<DateTime>(spawnedAt);
+    if (!nullToAbsent || lootedAt != null) {
+      map['looted_at'] = Variable<DateTime>(lootedAt);
+    }
+    if (!nullToAbsent || respawnAt != null) {
+      map['respawn_at'] = Variable<DateTime>(respawnAt);
+    }
+    return map;
+  }
+
+  LootBoxesCompanion toCompanion(bool nullToAbsent) {
+    return LootBoxesCompanion(
+      id: Value(id),
+      profileId: Value(profileId),
+      poiId: Value(poiId),
+      latitude: Value(latitude),
+      longitude: Value(longitude),
+      tableId: Value(tableId),
+      name: name == null && nullToAbsent ? const Value.absent() : Value(name),
+      spawnedAt: Value(spawnedAt),
+      lootedAt: lootedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lootedAt),
+      respawnAt: respawnAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(respawnAt),
+    );
+  }
+
+  factory LootBoxe.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return LootBoxe(
+      id: serializer.fromJson<int>(json['id']),
+      profileId: serializer.fromJson<int>(json['profileId']),
+      poiId: serializer.fromJson<String>(json['poiId']),
+      latitude: serializer.fromJson<double>(json['latitude']),
+      longitude: serializer.fromJson<double>(json['longitude']),
+      tableId: serializer.fromJson<String>(json['tableId']),
+      name: serializer.fromJson<String?>(json['name']),
+      spawnedAt: serializer.fromJson<DateTime>(json['spawnedAt']),
+      lootedAt: serializer.fromJson<DateTime?>(json['lootedAt']),
+      respawnAt: serializer.fromJson<DateTime?>(json['respawnAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'profileId': serializer.toJson<int>(profileId),
+      'poiId': serializer.toJson<String>(poiId),
+      'latitude': serializer.toJson<double>(latitude),
+      'longitude': serializer.toJson<double>(longitude),
+      'tableId': serializer.toJson<String>(tableId),
+      'name': serializer.toJson<String?>(name),
+      'spawnedAt': serializer.toJson<DateTime>(spawnedAt),
+      'lootedAt': serializer.toJson<DateTime?>(lootedAt),
+      'respawnAt': serializer.toJson<DateTime?>(respawnAt),
+    };
+  }
+
+  LootBoxe copyWith({
+    int? id,
+    int? profileId,
+    String? poiId,
+    double? latitude,
+    double? longitude,
+    String? tableId,
+    Value<String?> name = const Value.absent(),
+    DateTime? spawnedAt,
+    Value<DateTime?> lootedAt = const Value.absent(),
+    Value<DateTime?> respawnAt = const Value.absent(),
+  }) => LootBoxe(
+    id: id ?? this.id,
+    profileId: profileId ?? this.profileId,
+    poiId: poiId ?? this.poiId,
+    latitude: latitude ?? this.latitude,
+    longitude: longitude ?? this.longitude,
+    tableId: tableId ?? this.tableId,
+    name: name.present ? name.value : this.name,
+    spawnedAt: spawnedAt ?? this.spawnedAt,
+    lootedAt: lootedAt.present ? lootedAt.value : this.lootedAt,
+    respawnAt: respawnAt.present ? respawnAt.value : this.respawnAt,
+  );
+  LootBoxe copyWithCompanion(LootBoxesCompanion data) {
+    return LootBoxe(
+      id: data.id.present ? data.id.value : this.id,
+      profileId: data.profileId.present ? data.profileId.value : this.profileId,
+      poiId: data.poiId.present ? data.poiId.value : this.poiId,
+      latitude: data.latitude.present ? data.latitude.value : this.latitude,
+      longitude: data.longitude.present ? data.longitude.value : this.longitude,
+      tableId: data.tableId.present ? data.tableId.value : this.tableId,
+      name: data.name.present ? data.name.value : this.name,
+      spawnedAt: data.spawnedAt.present ? data.spawnedAt.value : this.spawnedAt,
+      lootedAt: data.lootedAt.present ? data.lootedAt.value : this.lootedAt,
+      respawnAt: data.respawnAt.present ? data.respawnAt.value : this.respawnAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LootBoxe(')
+          ..write('id: $id, ')
+          ..write('profileId: $profileId, ')
+          ..write('poiId: $poiId, ')
+          ..write('latitude: $latitude, ')
+          ..write('longitude: $longitude, ')
+          ..write('tableId: $tableId, ')
+          ..write('name: $name, ')
+          ..write('spawnedAt: $spawnedAt, ')
+          ..write('lootedAt: $lootedAt, ')
+          ..write('respawnAt: $respawnAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    profileId,
+    poiId,
+    latitude,
+    longitude,
+    tableId,
+    name,
+    spawnedAt,
+    lootedAt,
+    respawnAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is LootBoxe &&
+          other.id == this.id &&
+          other.profileId == this.profileId &&
+          other.poiId == this.poiId &&
+          other.latitude == this.latitude &&
+          other.longitude == this.longitude &&
+          other.tableId == this.tableId &&
+          other.name == this.name &&
+          other.spawnedAt == this.spawnedAt &&
+          other.lootedAt == this.lootedAt &&
+          other.respawnAt == this.respawnAt);
+}
+
+class LootBoxesCompanion extends UpdateCompanion<LootBoxe> {
+  final Value<int> id;
+  final Value<int> profileId;
+  final Value<String> poiId;
+  final Value<double> latitude;
+  final Value<double> longitude;
+  final Value<String> tableId;
+  final Value<String?> name;
+  final Value<DateTime> spawnedAt;
+  final Value<DateTime?> lootedAt;
+  final Value<DateTime?> respawnAt;
+  const LootBoxesCompanion({
+    this.id = const Value.absent(),
+    this.profileId = const Value.absent(),
+    this.poiId = const Value.absent(),
+    this.latitude = const Value.absent(),
+    this.longitude = const Value.absent(),
+    this.tableId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.spawnedAt = const Value.absent(),
+    this.lootedAt = const Value.absent(),
+    this.respawnAt = const Value.absent(),
+  });
+  LootBoxesCompanion.insert({
+    this.id = const Value.absent(),
+    required int profileId,
+    required String poiId,
+    required double latitude,
+    required double longitude,
+    required String tableId,
+    this.name = const Value.absent(),
+    required DateTime spawnedAt,
+    this.lootedAt = const Value.absent(),
+    this.respawnAt = const Value.absent(),
+  }) : profileId = Value(profileId),
+       poiId = Value(poiId),
+       latitude = Value(latitude),
+       longitude = Value(longitude),
+       tableId = Value(tableId),
+       spawnedAt = Value(spawnedAt);
+  static Insertable<LootBoxe> custom({
+    Expression<int>? id,
+    Expression<int>? profileId,
+    Expression<String>? poiId,
+    Expression<double>? latitude,
+    Expression<double>? longitude,
+    Expression<String>? tableId,
+    Expression<String>? name,
+    Expression<DateTime>? spawnedAt,
+    Expression<DateTime>? lootedAt,
+    Expression<DateTime>? respawnAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (profileId != null) 'profile_id': profileId,
+      if (poiId != null) 'poi_id': poiId,
+      if (latitude != null) 'latitude': latitude,
+      if (longitude != null) 'longitude': longitude,
+      if (tableId != null) 'table_id': tableId,
+      if (name != null) 'name': name,
+      if (spawnedAt != null) 'spawned_at': spawnedAt,
+      if (lootedAt != null) 'looted_at': lootedAt,
+      if (respawnAt != null) 'respawn_at': respawnAt,
+    });
+  }
+
+  LootBoxesCompanion copyWith({
+    Value<int>? id,
+    Value<int>? profileId,
+    Value<String>? poiId,
+    Value<double>? latitude,
+    Value<double>? longitude,
+    Value<String>? tableId,
+    Value<String?>? name,
+    Value<DateTime>? spawnedAt,
+    Value<DateTime?>? lootedAt,
+    Value<DateTime?>? respawnAt,
+  }) {
+    return LootBoxesCompanion(
+      id: id ?? this.id,
+      profileId: profileId ?? this.profileId,
+      poiId: poiId ?? this.poiId,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+      tableId: tableId ?? this.tableId,
+      name: name ?? this.name,
+      spawnedAt: spawnedAt ?? this.spawnedAt,
+      lootedAt: lootedAt ?? this.lootedAt,
+      respawnAt: respawnAt ?? this.respawnAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (profileId.present) {
+      map['profile_id'] = Variable<int>(profileId.value);
+    }
+    if (poiId.present) {
+      map['poi_id'] = Variable<String>(poiId.value);
+    }
+    if (latitude.present) {
+      map['latitude'] = Variable<double>(latitude.value);
+    }
+    if (longitude.present) {
+      map['longitude'] = Variable<double>(longitude.value);
+    }
+    if (tableId.present) {
+      map['table_id'] = Variable<String>(tableId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (spawnedAt.present) {
+      map['spawned_at'] = Variable<DateTime>(spawnedAt.value);
+    }
+    if (lootedAt.present) {
+      map['looted_at'] = Variable<DateTime>(lootedAt.value);
+    }
+    if (respawnAt.present) {
+      map['respawn_at'] = Variable<DateTime>(respawnAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LootBoxesCompanion(')
+          ..write('id: $id, ')
+          ..write('profileId: $profileId, ')
+          ..write('poiId: $poiId, ')
+          ..write('latitude: $latitude, ')
+          ..write('longitude: $longitude, ')
+          ..write('tableId: $tableId, ')
+          ..write('name: $name, ')
+          ..write('spawnedAt: $spawnedAt, ')
+          ..write('lootedAt: $lootedAt, ')
+          ..write('respawnAt: $respawnAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$SaveDatabase extends GeneratedDatabase {
   _$SaveDatabase(QueryExecutor e) : super(e);
   $SaveDatabaseManager get managers => $SaveDatabaseManager(this);
@@ -3554,6 +4160,7 @@ abstract class _$SaveDatabase extends GeneratedDatabase {
     this,
   );
   late final $InventoryLinesTable inventoryLines = $InventoryLinesTable(this);
+  late final $LootBoxesTable lootBoxes = $LootBoxesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -3566,6 +4173,7 @@ abstract class _$SaveDatabase extends GeneratedDatabase {
     settings,
     snapshotRecords,
     inventoryLines,
+    lootBoxes,
   ];
   @override
   DriftDatabaseOptions get options =>
@@ -5329,6 +5937,289 @@ typedef $$InventoryLinesTableProcessedTableManager =
       InventoryLine,
       PrefetchHooks Function()
     >;
+typedef $$LootBoxesTableCreateCompanionBuilder =
+    LootBoxesCompanion Function({
+      Value<int> id,
+      required int profileId,
+      required String poiId,
+      required double latitude,
+      required double longitude,
+      required String tableId,
+      Value<String?> name,
+      required DateTime spawnedAt,
+      Value<DateTime?> lootedAt,
+      Value<DateTime?> respawnAt,
+    });
+typedef $$LootBoxesTableUpdateCompanionBuilder =
+    LootBoxesCompanion Function({
+      Value<int> id,
+      Value<int> profileId,
+      Value<String> poiId,
+      Value<double> latitude,
+      Value<double> longitude,
+      Value<String> tableId,
+      Value<String?> name,
+      Value<DateTime> spawnedAt,
+      Value<DateTime?> lootedAt,
+      Value<DateTime?> respawnAt,
+    });
+
+class $$LootBoxesTableFilterComposer
+    extends Composer<_$SaveDatabase, $LootBoxesTable> {
+  $$LootBoxesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get profileId => $composableBuilder(
+    column: $table.profileId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get poiId => $composableBuilder(
+    column: $table.poiId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get latitude => $composableBuilder(
+    column: $table.latitude,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get longitude => $composableBuilder(
+    column: $table.longitude,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tableId => $composableBuilder(
+    column: $table.tableId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get spawnedAt => $composableBuilder(
+    column: $table.spawnedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lootedAt => $composableBuilder(
+    column: $table.lootedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get respawnAt => $composableBuilder(
+    column: $table.respawnAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$LootBoxesTableOrderingComposer
+    extends Composer<_$SaveDatabase, $LootBoxesTable> {
+  $$LootBoxesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get profileId => $composableBuilder(
+    column: $table.profileId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get poiId => $composableBuilder(
+    column: $table.poiId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get latitude => $composableBuilder(
+    column: $table.latitude,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get longitude => $composableBuilder(
+    column: $table.longitude,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tableId => $composableBuilder(
+    column: $table.tableId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get spawnedAt => $composableBuilder(
+    column: $table.spawnedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lootedAt => $composableBuilder(
+    column: $table.lootedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get respawnAt => $composableBuilder(
+    column: $table.respawnAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$LootBoxesTableAnnotationComposer
+    extends Composer<_$SaveDatabase, $LootBoxesTable> {
+  $$LootBoxesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get profileId =>
+      $composableBuilder(column: $table.profileId, builder: (column) => column);
+
+  GeneratedColumn<String> get poiId =>
+      $composableBuilder(column: $table.poiId, builder: (column) => column);
+
+  GeneratedColumn<double> get latitude =>
+      $composableBuilder(column: $table.latitude, builder: (column) => column);
+
+  GeneratedColumn<double> get longitude =>
+      $composableBuilder(column: $table.longitude, builder: (column) => column);
+
+  GeneratedColumn<String> get tableId =>
+      $composableBuilder(column: $table.tableId, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get spawnedAt =>
+      $composableBuilder(column: $table.spawnedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get lootedAt =>
+      $composableBuilder(column: $table.lootedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get respawnAt =>
+      $composableBuilder(column: $table.respawnAt, builder: (column) => column);
+}
+
+class $$LootBoxesTableTableManager
+    extends
+        RootTableManager<
+          _$SaveDatabase,
+          $LootBoxesTable,
+          LootBoxe,
+          $$LootBoxesTableFilterComposer,
+          $$LootBoxesTableOrderingComposer,
+          $$LootBoxesTableAnnotationComposer,
+          $$LootBoxesTableCreateCompanionBuilder,
+          $$LootBoxesTableUpdateCompanionBuilder,
+          (LootBoxe, BaseReferences<_$SaveDatabase, $LootBoxesTable, LootBoxe>),
+          LootBoxe,
+          PrefetchHooks Function()
+        > {
+  $$LootBoxesTableTableManager(_$SaveDatabase db, $LootBoxesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$LootBoxesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$LootBoxesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$LootBoxesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> profileId = const Value.absent(),
+                Value<String> poiId = const Value.absent(),
+                Value<double> latitude = const Value.absent(),
+                Value<double> longitude = const Value.absent(),
+                Value<String> tableId = const Value.absent(),
+                Value<String?> name = const Value.absent(),
+                Value<DateTime> spawnedAt = const Value.absent(),
+                Value<DateTime?> lootedAt = const Value.absent(),
+                Value<DateTime?> respawnAt = const Value.absent(),
+              }) => LootBoxesCompanion(
+                id: id,
+                profileId: profileId,
+                poiId: poiId,
+                latitude: latitude,
+                longitude: longitude,
+                tableId: tableId,
+                name: name,
+                spawnedAt: spawnedAt,
+                lootedAt: lootedAt,
+                respawnAt: respawnAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int profileId,
+                required String poiId,
+                required double latitude,
+                required double longitude,
+                required String tableId,
+                Value<String?> name = const Value.absent(),
+                required DateTime spawnedAt,
+                Value<DateTime?> lootedAt = const Value.absent(),
+                Value<DateTime?> respawnAt = const Value.absent(),
+              }) => LootBoxesCompanion.insert(
+                id: id,
+                profileId: profileId,
+                poiId: poiId,
+                latitude: latitude,
+                longitude: longitude,
+                tableId: tableId,
+                name: name,
+                spawnedAt: spawnedAt,
+                lootedAt: lootedAt,
+                respawnAt: respawnAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$LootBoxesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$SaveDatabase,
+      $LootBoxesTable,
+      LootBoxe,
+      $$LootBoxesTableFilterComposer,
+      $$LootBoxesTableOrderingComposer,
+      $$LootBoxesTableAnnotationComposer,
+      $$LootBoxesTableCreateCompanionBuilder,
+      $$LootBoxesTableUpdateCompanionBuilder,
+      (LootBoxe, BaseReferences<_$SaveDatabase, $LootBoxesTable, LootBoxe>),
+      LootBoxe,
+      PrefetchHooks Function()
+    >;
 
 class $SaveDatabaseManager {
   final _$SaveDatabase _db;
@@ -5347,4 +6238,6 @@ class $SaveDatabaseManager {
       $$SnapshotRecordsTableTableManager(_db, _db.snapshotRecords);
   $$InventoryLinesTableTableManager get inventoryLines =>
       $$InventoryLinesTableTableManager(_db, _db.inventoryLines);
+  $$LootBoxesTableTableManager get lootBoxes =>
+      $$LootBoxesTableTableManager(_db, _db.lootBoxes);
 }

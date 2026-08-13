@@ -17,6 +17,10 @@ import 'inventory/inventory_store.dart';
 import 'items/item_assets.dart';
 import 'items/item_catalogue.dart';
 import 'items/item_names.dart';
+import 'loot/loot_spawner.dart';
+import 'loot/loot_store.dart';
+import 'loot/loot_table.dart';
+import 'loot/loot_world.dart';
 import 'game/game_session.dart';
 import 'game/relocation.dart';
 import 'l10n/app_localizations.dart';
@@ -40,6 +44,7 @@ import 'ui/language_picker.dart';
 import 'ui/safety_briefing.dart';
 import 'ui/hud.dart';
 import 'ui/inventory_screen.dart';
+import 'ui/map_markers.dart';
 import 'ui/map_view.dart';
 import 'ui/maplibre_surface.dart';
 import 'ui/region_picker.dart';
@@ -232,6 +237,15 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// Item names, read alongside the catalogue (§1.1, §4.1).
   ItemNames? _names;
 
+  /// The loot layer (§10). Null until the tables have been read; it does
+  /// nothing at all until there is an installed pack to read places out of.
+  LootWorld? _world;
+
+  /// What is standing on the map right now. Held here because the map view is
+  /// rebuilt constantly and re-reading the tiles for every frame would keep the
+  /// phone busy for no gain.
+  List<LootBox> _boxes = const [];
+
   /// Both HUD bars read these. Zero without a catalogue, which only happens if
   /// every bundled data file failed to parse — a broken build, not a state the
   /// player can reach.
@@ -352,6 +366,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     // overlay and the game runs on whatever parsed (§4.1).
     _catalogue = await loadItemCatalogue();
     _names = await loadItemNames();
+    final tables = LootTableSet.parse(
+      await rootBundle.loadString('assets/data/loot_tables.json'),
+    );
+    _world = LootWorld(tables: tables);
     if (!mounted) return;
 
     await _readPermissions();
@@ -540,6 +558,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         _snapshot = snapshot;
       });
       unawaited(_checkRelocation(snapshot));
+      unawaited(_spawnLoot(snapshot));
     });
 
     if (!mounted) {
@@ -593,6 +612,12 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       _mapSource = source;
       _packCentre = centre;
     });
+
+    // The loot layer reads the same file the renderer draws (§10). A streamed
+    // pack gives it nothing: it is read over the network, and a POI query
+    // across it would be hundreds of range requests every time somebody walks.
+    await _world?.useSource(source);
+    await _loadLootBoxes();
 
     // §16.6 calls this the first-run screen, and it is: with no map there is
     // nothing to draw, nowhere to put a marker and no §10 to run. Opening it
@@ -780,6 +805,65 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     ).save(character.profile.id, _inventory);
   }
 
+  /// What was on the map when the app last closed.
+  ///
+  /// Read before anything is spawned, so a player who walked towards a marker
+  /// and closed the app finds the same marker in the same place.
+  Future<void> _loadLootBoxes() async {
+    final character = _character;
+    if (character == null) return;
+
+    final boxes = await LootStore(widget.session.db).load(character.profile.id);
+    if (!mounted) return;
+
+    setState(() => _boxes = boxes);
+  }
+
+  /// Puts loot on the map around wherever the player now is (§10).
+  ///
+  /// Driven off the fix rather than a timer: the thing that makes new loot
+  /// worth spawning is the player having walked somewhere, and nothing else.
+  Future<void> _spawnLoot(GameSnapshot snapshot) async {
+    final world = _world;
+    final character = _character;
+    final fix = snapshot.fix;
+    if (world == null || character == null || fix == null) return;
+    if (!world.isReady) return;
+
+    final at = GeoPoint(fix.latitude, fix.longitude);
+    if (!world.shouldReplan(at)) return;
+
+    final plan = await world.plan(
+      centre: at,
+      existing: _boxes,
+      now: snapshot.state.lastUpdate,
+      seed: character.profile.rngSeed,
+    );
+    if (plan == null || !mounted) return;
+
+    await LootStore(widget.session.db).save(character.profile.id, plan);
+    if (!mounted) return;
+
+    setState(() => _boxes = plan.boxes);
+  }
+
+  /// §3.6: loot is yellow. An emptied box is not drawn at all — a marker that
+  /// stays after there is nothing behind it is a walk taken for nothing.
+  List<MapMarker> _lootMarkers() {
+    final now = _snapshot?.state.lastUpdate ?? DateTime.now().toUtc();
+
+    return [
+      for (final box in _boxes)
+        if (box.isActiveAt(now))
+          MapMarker(
+            id: box.poiId,
+            kind: MarkerKind.loot,
+            at: box.position,
+            label: box.name,
+          ),
+    ];
+  }
+
   /// Sends the player wherever the current refusal can actually be changed.
   Future<void> _fixLocation() async {
     final access = _permissions?.location ?? LocationAccess.denied;
@@ -874,6 +958,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     unawaited(_downloadWatch?.cancel());
     unawaited(_loop?.dispose());
     unawaited(_dev?.dispose());
+    unawaited(_world?.dispose());
     super.dispose();
   }
 
@@ -918,6 +1003,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
                   fallbackCentre: _packCentre,
                 ),
             fix: snapshot?.displayFix,
+            markers: _lootMarkers(),
             headingDeg: snapshot?.fix?.headingDeg,
             economy: snapshot?.economy ?? false,
             // There is always a map here — this branch only runs with a

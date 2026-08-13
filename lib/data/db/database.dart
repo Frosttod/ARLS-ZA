@@ -29,7 +29,7 @@ import 'tables.dart';
 part 'database.g.dart';
 
 /// Bumped only alongside a migration step in [_migration]. Never reused.
-const int kSchemaVersion = 3;
+const int kSchemaVersion = 4;
 
 /// Keys used in [MetaEntries].
 abstract final class MetaKeys {
@@ -55,6 +55,7 @@ abstract final class MetaKeys {
     Settings,
     SnapshotRecords,
     InventoryLines,
+    LootBoxes,
   ],
 )
 class SaveDatabase extends _$SaveDatabase {
@@ -67,7 +68,7 @@ class SaveDatabase extends _$SaveDatabase {
   /// follow a constant reference. `schema_test.dart` keeps it in step with
   /// [kSchemaVersion].
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -95,6 +96,13 @@ class SaveDatabase extends _$SaveDatabase {
         // stays where it is so a v2 save keeps its load surcharge until the
         // first real pickup replaces it.
         await m.createTable(inventoryLines);
+      }
+
+      if (from < 4) {
+        // §10 puts loot on the map. A table of its own because a box outlives
+        // any single session and has to be the same box when the player comes
+        // back to it.
+        await m.createTable(lootBoxes);
       }
 
       await _writeSchemaVersion(to);
@@ -209,6 +217,33 @@ class SaveDatabase extends _$SaveDatabase {
       inventoryLines,
     )..where((t) => t.profileId.equals(profileId))).go();
     await batch((b) => b.insertAll(inventoryLines, lines));
+  });
+
+  // --------------------------------------------------------------- loot ---
+
+  Future<List<LootBoxe>> lootBoxesFor(int profileId) => (select(
+    lootBoxes,
+  )..where((t) => t.profileId.equals(profileId))).get();
+
+  /// Writes what the spawner decided.
+  ///
+  /// Additions and updates rather than a wholesale replace: a box is something
+  /// the player may be walking towards, and rewriting the table would give it a
+  /// new row id every pass for no reason. [forgotten] are the ones that fell
+  /// out of range.
+  Future<void> writeLootBoxes(
+    int profileId, {
+    required List<LootBoxesCompanion> boxes,
+    List<String> forgotten = const [],
+  }) => transaction(() async {
+    for (final box in boxes) {
+      await into(lootBoxes).insert(box, mode: InsertMode.insertOrReplace);
+    }
+    if (forgotten.isEmpty) return;
+    await (delete(lootBoxes)..where(
+          (t) => t.profileId.equals(profileId) & t.poiId.isIn(forgotten),
+        ))
+        .go();
   });
 
   // -------------------------------------------------------- maintenance ---

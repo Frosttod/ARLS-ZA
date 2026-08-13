@@ -213,3 +213,42 @@ class InventoryLines extends Table {
     'FOREIGN KEY (profile_id) REFERENCES profiles (id) ON DELETE CASCADE',
   ];
 }
+
+/// Lootboxes standing on the map (§10).
+///
+/// One row per place, keyed by the POI it sits on, so "one box per place"
+/// survives a restart. Position is stored with it rather than looked up again:
+/// the box has to be findable even if the player uninstalls the map pack it
+/// came from, and a marker that moved because a tile was reread would be a
+/// marker the player walked to for nothing.
+class LootBoxes extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get profileId => integer()();
+
+  /// From `Poi.id`: position to six decimals plus what the place is.
+  TextColumn get poiId => text()();
+
+  RealColumn get latitude => real()();
+  RealColumn get longitude => real()();
+
+  /// Which table of §10.3 this place draws from.
+  TextColumn get tableId => text()();
+
+  /// The name off the tile, where the map had one. Shown on the marker.
+  TextColumn get name => text().nullable()();
+
+  DateTimeColumn get spawnedAt => dateTime()();
+
+  /// Null while it still has something in it.
+  DateTimeColumn get lootedAt => dateTime().nullable()();
+
+  /// Rolled when it is emptied, never on a schedule — a fixed interval would
+  /// let a player time a whole city off one box (§10).
+  DateTimeColumn get respawnAt => dateTime().nullable()();
+
+  @override
+  List<String> get customConstraints => [
+    'FOREIGN KEY (profile_id) REFERENCES profiles (id) ON DELETE CASCADE',
+    'UNIQUE (profile_id, poi_id)',
+  ];
+}
