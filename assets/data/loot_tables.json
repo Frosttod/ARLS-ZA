@@ -1,0 +1,383 @@
+{
+  "_comment": "Loot tables (§10.3): eleven tied to OSM tags and nine for the procedural points of §10.1. match holds the raw OSM tags the doc names — the tiles carry the normalised OpenMapTiles schema instead, so a mapping layer sits between these and the map, and it is written once rather than guessed per table. Procedural tables carry rare_weight_multiplier 0.55 and may hold no firearm and no advanced book (§10.3.5): a player who lives in a small town gets less per point and more points, not a worse game.",
+  "schema": 1,
+  "tables": [
+    {
+      "id": "poi_pharmacy",
+      "source": "osm",
+      "match": ["amenity=pharmacy", "healthcare=pharmacy"],
+      "entries": [
+        {"item": "med_bandage", "weight": 30, "min": 1, "max": 4},
+        {"item": "med_painkillers", "weight": 25, "min": 1, "max": 3},
+        {"item": "med_antiseptic", "weight": 20, "min": 1, "max": 2},
+        {"item": "med_pressure_dressing", "weight": 15, "min": 1, "max": 2},
+        {"item": "med_first_aid_kit", "weight": 10, "min": 1, "max": 1},
+        {"item": "med_antibiotics", "weight": 6, "min": 1, "max": 2},
+        {"item": "med_suture_kit", "weight": 4, "min": 1, "max": 1},
+        {"item": "mat_alcohol", "weight": 12, "min": 1, "max": 2},
+        {"item": "lit_leaflet_first_aid", "weight": 14, "min": 1, "max": 1},
+        {"item": "lit_guide_first_aid", "weight": 7, "min": 1, "max": 1},
+        {"item": "food_energy_bar", "weight": 10, "min": 1, "max": 3},
+        {"item": "drink_water_bottle_500", "weight": 8, "min": 1, "max": 2}
+      ]
+    },
+    {
+      "id": "poi_hardware",
+      "source": "osm",
+      "match": ["shop=doityourself", "shop=hardware", "shop=trade"],
+      "entries": [
+        {"item": "mat_nails", "weight": 28, "min": 1, "max": 3},
+        {"item": "mat_wire", "weight": 22, "min": 1, "max": 3},
+        {"item": "mat_duct_tape", "weight": 20, "min": 1, "max": 2},
+        {"item": "mat_glue", "weight": 18, "min": 1, "max": 2},
+        {"item": "mat_wood", "weight": 25, "min": 1, "max": 4},
+        {"item": "mat_metal", "weight": 22, "min": 1, "max": 3},
+        {"item": "mat_plastic", "weight": 20, "min": 1, "max": 4},
+        {"item": "melee_hammer", "weight": 12, "min": 1, "max": 1},
+        {"item": "melee_screwdriver", "weight": 14, "min": 1, "max": 2},
+        {"item": "melee_shovel", "weight": 8, "min": 1, "max": 1},
+        {"item": "melee_axe", "weight": 8, "min": 1, "max": 1},
+        {"item": "melee_machete", "weight": 6, "min": 1, "max": 1},
+        {"item": "tool_saw", "weight": 9, "min": 1, "max": 1},
+        {"item": "tool_wrench_set", "weight": 7, "min": 1, "max": 1},
+        {"item": "tool_multitool", "weight": 6, "min": 1, "max": 1},
+        {"item": "tool_lighter", "weight": 10, "min": 1, "max": 2},
+        {"item": "tool_lockpicks", "weight": 3, "min": 1, "max": 1}
+      ]
+    },
+    {
+      "id": "poi_grocery",
+      "source": "osm",
+      "match": ["shop=supermarket", "shop=convenience", "shop=greengrocer"],
+      "entries": [
+        {"item": "food_canned_meat", "weight": 22, "min": 1, "max": 3},
+        {"item": "food_canned_vegetables", "weight": 24, "min": 1, "max": 3},
+        {"item": "food_crackers", "weight": 20, "min": 1, "max": 2},
+        {"item": "food_energy_bar", "weight": 22, "min": 1, "max": 4},
+        {"item": "food_instant_soup", "weight": 18, "min": 1, "max": 3},
+        {"item": "food_chocolate", "weight": 14, "min": 1, "max": 2},
+        {"item": "food_sandwich", "weight": 8, "min": 1, "max": 2},
+        {"item": "food_dried_meat", "weight": 10, "min": 1, "max": 2},
+        {"item": "drink_water_bottle_500", "weight": 20, "min": 1, "max": 4},
+        {"item": "drink_water_bottle_1500", "weight": 14, "min": 1, "max": 2},
+        {"item": "drink_energy", "weight": 12, "min": 1, "max": 2},
+        {"item": "tool_can_opener", "weight": 8, "min": 1, "max": 1},
+        {"item": "tool_matches", "weight": 10, "min": 1, "max": 2},
+        {"item": "pack_shopping_bag", "weight": 16, "min": 1, "max": 2},
+        {"item": "mat_battery", "weight": 12, "min": 1, "max": 4}
+      ]
+    },
+    {
+      "id": "poi_sports",
+      "source": "osm",
+      "match": ["shop=sports", "shop=outdoor"],
+      "entries": [
+        {"item": "pack_school", "weight": 16, "min": 1, "max": 1},
+        {"item": "pack_daypack", "weight": 14, "min": 1, "max": 1},
+        {"item": "pack_tactical", "weight": 6, "min": 1, "max": 1},
+        {"item": "pack_trekking", "weight": 3, "min": 1, "max": 1},
+        {"item": "cloth_boots", "weight": 14, "min": 1, "max": 1},
+        {"item": "cloth_fleece", "weight": 16, "min": 1, "max": 1},
+        {"item": "cloth_thermal_underwear", "weight": 12, "min": 1, "max": 1},
+        {"item": "cloth_winter_trousers", "weight": 10, "min": 1, "max": 1},
+        {"item": "cloth_hat", "weight": 14, "min": 1, "max": 1},
+        {"item": "cloth_rain_shell", "weight": 12, "min": 1, "max": 1},
+        {"item": "melee_knife", "weight": 14, "min": 1, "max": 1},
+        {"item": "tool_headlamp", "weight": 10, "min": 1, "max": 1},
+        {"item": "tool_water_filter", "weight": 6, "min": 1, "max": 1},
+        {"item": "tool_binoculars", "weight": 5, "min": 1, "max": 1},
+        {"item": "food_energy_bar", "weight": 14, "min": 1, "max": 3},
+        {"item": "lit_guide_survival", "weight": 8, "min": 1, "max": 1}
+      ]
+    },
+    {
+      "id": "poi_weapons",
+      "source": "osm",
+      "match": ["shop=weapons", "shop=hunting", "amenity=police"],
+      "entries": [
+        {"item": "ammo_9x19", "weight": 26, "min": 5, "max": 24},
+        {"item": "ammo_12ga_buck", "weight": 16, "min": 3, "max": 10},
+        {"item": "ammo_38special", "weight": 12, "min": 4, "max": 12},
+        {"item": "ammo_22lr", "weight": 18, "min": 10, "max": 50},
+        {"item": "ammo_12ga_slug", "weight": 10, "min": 2, "max": 8},
+        {"item": "weapon_rifle_22lr", "weight": 12, "min": 1, "max": 1},
+        {"item": "weapon_pistol_9mm", "weight": 10, "min": 1, "max": 1},
+        {"item": "weapon_revolver_38", "weight": 8, "min": 1, "max": 1},
+        {"item": "weapon_shotgun_pump", "weight": 7, "min": 1, "max": 1},
+        {"item": "weapon_smg_9mm", "weight": 4, "min": 1, "max": 1},
+        {"item": "armor_vest_soft", "weight": 8, "min": 1, "max": 1},
+        {"item": "armor_helmet_ballistic", "weight": 5, "min": 1, "max": 1},
+        {"item": "tool_gun_cleaning_kit", "weight": 10, "min": 1, "max": 1},
+        {"item": "tool_suppressor", "weight": 2, "min": 1, "max": 1},
+        {"item": "med_tourniquet", "weight": 8, "min": 1, "max": 1},
+        {"item": "lit_magazine_guns", "weight": 12, "min": 1, "max": 1},
+        {"item": "lit_leaflet_range_safety", "weight": 14, "min": 1, "max": 1},
+        {"item": "tool_flashlight", "weight": 10, "min": 1, "max": 1}
+      ]
+    },
+    {
+      "id": "poi_library",
+      "source": "osm",
+      "match": ["amenity=library", "shop=books"],
+      "entries": [
+        {"item": "lit_magazine_hunting", "weight": 16, "min": 1, "max": 2},
+        {"item": "lit_magazine_guns", "weight": 16, "min": 1, "max": 2},
+        {"item": "lit_magazine_diy", "weight": 16, "min": 1, "max": 2},
+        {"item": "lit_guide_first_aid", "weight": 12, "min": 1, "max": 1},
+        {"item": "lit_guide_survival", "weight": 12, "min": 1, "max": 1},
+        {"item": "lit_guide_gunsmithing", "weight": 10, "min": 1, "max": 1},
+        {"item": "lit_guide_repairs", "weight": 12, "min": 1, "max": 1},
+        {"item": "lit_textbook_medicine", "weight": 7, "min": 1, "max": 1},
+        {"item": "lit_textbook_ballistics", "weight": 6, "min": 1, "max": 1},
+        {"item": "lit_textbook_engineering", "weight": 7, "min": 1, "max": 1},
+        {"item": "lit_textbook_fieldcraft", "weight": 7, "min": 1, "max": 1},
+        {"item": "lit_encyclopedia_medicine", "weight": 3, "min": 1, "max": 1},
+        {"item": "lit_encyclopedia_weapons", "weight": 3, "min": 1, "max": 1},
+        {"item": "lit_encyclopedia_engineering", "weight": 3, "min": 1, "max": 1},
+        {"item": "lit_encyclopedia_nature", "weight": 3, "min": 1, "max": 1},
+        {"item": "lit_note", "weight": 10, "min": 1, "max": 1}
+      ]
+    },
+    {
+      "id": "poi_industrial",
+      "source": "osm",
+      "match": ["building=industrial", "landuse=industrial", "man_made=works"],
+      "entries": [
+        {"item": "mat_metal", "weight": 30, "min": 1, "max": 5},
+        {"item": "mat_plastic", "weight": 22, "min": 1, "max": 4},
+        {"item": "mat_component", "weight": 16, "min": 1, "max": 3},
+        {"item": "mat_wire", "weight": 20, "min": 1, "max": 4},
+        {"item": "mat_fuel", "weight": 10, "min": 1, "max": 1},
+        {"item": "mat_rope", "weight": 12, "min": 1, "max": 2},
+        {"item": "tool_wrench_set", "weight": 10, "min": 1, "max": 1},
+        {"item": "tool_saw", "weight": 8, "min": 1, "max": 1},
+        {"item": "tool_headlamp", "weight": 8, "min": 1, "max": 1},
+        {"item": "melee_crowbar", "weight": 12, "min": 1, "max": 1},
+        {"item": "cloth_gloves", "weight": 14, "min": 1, "max": 1},
+        {"item": "armor_bite_sleeves", "weight": 5, "min": 1, "max": 1}
+      ]
+    },
+    {
+      "id": "poi_hospital",
+      "source": "osm",
+      "match": ["amenity=hospital", "amenity=clinic", "amenity=doctors"],
+      "entries": [
+        {"item": "med_bandage", "weight": 26, "min": 2, "max": 6},
+        {"item": "med_pressure_dressing", "weight": 20, "min": 1, "max": 3},
+        {"item": "med_antiseptic", "weight": 18, "min": 1, "max": 3},
+        {"item": "med_suture_kit", "weight": 10, "min": 1, "max": 1},
+        {"item": "med_antibiotics", "weight": 10, "min": 1, "max": 2},
+        {"item": "med_splint", "weight": 8, "min": 1, "max": 1},
+        {"item": "med_tourniquet", "weight": 6, "min": 1, "max": 1},
+        {"item": "med_saline", "weight": 4, "min": 1, "max": 2},
+        {"item": "med_first_aid_kit", "weight": 12, "min": 1, "max": 2},
+        {"item": "med_painkillers", "weight": 16, "min": 1, "max": 3},
+        {"item": "lit_textbook_medicine", "weight": 8, "min": 1, "max": 1},
+        {"item": "lit_encyclopedia_medicine", "weight": 3, "min": 1, "max": 1}
+      ]
+    },
+    {
+      "id": "poi_military",
+      "source": "osm",
+      "match": ["landuse=military", "military=barracks", "military=bunker"],
+      "entries": [
+        {"item": "ammo_545x39", "weight": 24, "min": 8, "max": 30},
+        {"item": "ammo_762x39", "weight": 18, "min": 6, "max": 24},
+        {"item": "ammo_9x19", "weight": 16, "min": 5, "max": 20},
+        {"item": "weapon_rifle_545", "weight": 7, "min": 1, "max": 1},
+        {"item": "weapon_rifle_762x39", "weight": 6, "min": 1, "max": 1},
+        {"item": "weapon_rifle_mosin", "weight": 5, "min": 1, "max": 1},
+        {"item": "armor_vest_plate", "weight": 3, "min": 1, "max": 1},
+        {"item": "armor_helmet_ballistic", "weight": 8, "min": 1, "max": 1},
+        {"item": "pack_tactical", "weight": 9, "min": 1, "max": 1},
+        {"item": "med_tourniquet", "weight": 12, "min": 1, "max": 2},
+        {"item": "med_pressure_dressing", "weight": 14, "min": 1, "max": 3},
+        {"item": "food_canned_meat", "weight": 16, "min": 1, "max": 4},
+        {"item": "tool_binoculars", "weight": 7, "min": 1, "max": 1},
+        {"item": "tool_suppressor", "weight": 2, "min": 1, "max": 1},
+        {"item": "lit_textbook_fieldcraft", "weight": 8, "min": 1, "max": 1}
+      ]
+    },
+    {
+      "id": "poi_school",
+      "source": "osm",
+      "match": ["amenity=school", "amenity=college", "amenity=university"],
+      "entries": [
+        {"item": "lit_textbook_engineering", "weight": 12, "min": 1, "max": 1},
+        {"item": "lit_textbook_medicine", "weight": 8, "min": 1, "max": 1},
+        {"item": "lit_textbook_fieldcraft", "weight": 8, "min": 1, "max": 1},
+        {"item": "lit_encyclopedia_nature", "weight": 5, "min": 1, "max": 1},
+        {"item": "lit_encyclopedia_engineering", "weight": 4, "min": 1, "max": 1},
+        {"item": "lit_magazine_diy", "weight": 14, "min": 1, "max": 2},
+        {"item": "mat_glue", "weight": 18, "min": 1, "max": 3},
+        {"item": "mat_component", "weight": 12, "min": 1, "max": 2},
+        {"item": "mat_plastic", "weight": 16, "min": 1, "max": 3},
+        {"item": "food_crackers", "weight": 12, "min": 1, "max": 2},
+        {"item": "melee_bat", "weight": 10, "min": 1, "max": 1},
+        {"item": "med_first_aid_kit", "weight": 8, "min": 1, "max": 1}
+      ]
+    },
+    {
+      "id": "poi_warehouse",
+      "source": "osm",
+      "match": ["building=warehouse", "landuse=retail", "shop=wholesale"],
+      "entries": [
+        {"item": "food_canned_meat", "weight": 20, "min": 2, "max": 6},
+        {"item": "food_canned_vegetables", "weight": 20, "min": 2, "max": 6},
+        {"item": "food_crackers", "weight": 16, "min": 1, "max": 4},
+        {"item": "drink_water_bottle_1500", "weight": 18, "min": 1, "max": 4},
+        {"item": "mat_plastic", "weight": 22, "min": 2, "max": 6},
+        {"item": "mat_metal", "weight": 18, "min": 1, "max": 4},
+        {"item": "mat_fabric", "weight": 16, "min": 1, "max": 5},
+        {"item": "mat_wood", "weight": 14, "min": 1, "max": 4},
+        {"item": "pack_school", "weight": 8, "min": 1, "max": 1},
+        {"item": "pack_daypack", "weight": 5, "min": 1, "max": 1},
+        {"item": "tool_flashlight", "weight": 10, "min": 1, "max": 1},
+        {"item": "tool_crank_radio", "weight": 4, "min": 1, "max": 1},
+        {"item": "mat_battery", "weight": 14, "min": 2, "max": 6}
+      ]
+    },
+
+    {
+      "id": "proc_abandoned_car",
+      "source": "procedural",
+      "match": ["highway=*+parking", "amenity=parking"],
+      "entries": [
+        {"item": "mat_metal", "weight": 24, "min": 1, "max": 3},
+        {"item": "mat_wire", "weight": 20, "min": 1, "max": 3},
+        {"item": "mat_component", "weight": 12, "min": 1, "max": 2},
+        {"item": "mat_fuel", "weight": 14, "min": 1, "max": 1},
+        {"item": "mat_duct_tape", "weight": 12, "min": 1, "max": 1},
+        {"item": "med_first_aid_kit", "weight": 10, "min": 1, "max": 1},
+        {"item": "tool_multitool", "weight": 6, "min": 1, "max": 1},
+        {"item": "tool_flashlight", "weight": 10, "min": 1, "max": 1},
+        {"item": "drink_water_bottle_500", "weight": 12, "min": 1, "max": 2}
+      ]
+    },
+    {
+      "id": "proc_abandoned_house",
+      "source": "procedural",
+      "match": ["building=house", "building=detached", "building=residential"],
+      "entries": [
+        {"item": "food_canned_vegetables", "weight": 18, "min": 1, "max": 2},
+        {"item": "food_crackers", "weight": 16, "min": 1, "max": 2},
+        {"item": "food_chocolate", "weight": 10, "min": 1, "max": 1},
+        {"item": "drink_water_bottle_500", "weight": 16, "min": 1, "max": 2},
+        {"item": "cloth_tshirt", "weight": 16, "min": 1, "max": 2},
+        {"item": "cloth_trousers", "weight": 14, "min": 1, "max": 1},
+        {"item": "cloth_winter_jacket", "weight": 8, "min": 1, "max": 1},
+        {"item": "mat_fabric", "weight": 20, "min": 1, "max": 4},
+        {"item": "melee_knife", "weight": 12, "min": 1, "max": 1},
+        {"item": "melee_hammer", "weight": 10, "min": 1, "max": 1},
+        {"item": "tool_can_opener", "weight": 10, "min": 1, "max": 1},
+        {"item": "tool_sewing_kit", "weight": 10, "min": 1, "max": 1},
+        {"item": "med_bandage", "weight": 12, "min": 1, "max": 2},
+        {"item": "lit_magazine_diy", "weight": 8, "min": 1, "max": 1},
+        {"item": "lit_note", "weight": 6, "min": 1, "max": 1}
+      ]
+    },
+    {
+      "id": "proc_barn",
+      "source": "procedural",
+      "match": ["building=barn", "building=farm_auxiliary"],
+      "entries": [
+        {"item": "mat_wood", "weight": 28, "min": 2, "max": 6},
+        {"item": "mat_rope", "weight": 18, "min": 1, "max": 2},
+        {"item": "mat_leather", "weight": 12, "min": 1, "max": 2},
+        {"item": "mat_fuel", "weight": 10, "min": 1, "max": 1},
+        {"item": "melee_axe", "weight": 12, "min": 1, "max": 1},
+        {"item": "melee_shovel", "weight": 14, "min": 1, "max": 1},
+        {"item": "food_apple", "weight": 14, "min": 1, "max": 4},
+        {"item": "food_dried_meat", "weight": 8, "min": 1, "max": 2},
+        {"item": "tool_matches", "weight": 10, "min": 1, "max": 1}
+      ]
+    },
+    {
+      "id": "proc_garage",
+      "source": "procedural",
+      "match": ["building=garage", "building=garages", "shop=car_repair"],
+      "entries": [
+        {"item": "tool_wrench_set", "weight": 14, "min": 1, "max": 1},
+        {"item": "tool_multitool", "weight": 10, "min": 1, "max": 1},
+        {"item": "tool_lockpicks", "weight": 4, "min": 1, "max": 1},
+        {"item": "mat_fuel", "weight": 16, "min": 1, "max": 2},
+        {"item": "mat_metal", "weight": 22, "min": 1, "max": 4},
+        {"item": "mat_component", "weight": 12, "min": 1, "max": 2},
+        {"item": "mat_duct_tape", "weight": 16, "min": 1, "max": 2},
+        {"item": "mat_wire", "weight": 16, "min": 1, "max": 3},
+        {"item": "melee_crowbar", "weight": 12, "min": 1, "max": 1},
+        {"item": "cloth_gloves", "weight": 12, "min": 1, "max": 1}
+      ]
+    },
+    {
+      "id": "proc_waste",
+      "source": "procedural",
+      "match": ["amenity=waste_disposal", "amenity=recycling"],
+      "entries": [
+        {"item": "mat_plastic", "weight": 30, "min": 1, "max": 5},
+        {"item": "mat_metal", "weight": 24, "min": 1, "max": 3},
+        {"item": "mat_fabric", "weight": 20, "min": 1, "max": 3},
+        {"item": "mat_wire", "weight": 14, "min": 1, "max": 2},
+        {"item": "mat_glue", "weight": 8, "min": 1, "max": 1},
+        {"item": "mat_battery", "weight": 10, "min": 1, "max": 3},
+        {"item": "food_crackers", "weight": 5, "min": 1, "max": 1}
+      ]
+    },
+    {
+      "id": "proc_shelter",
+      "source": "procedural",
+      "match": ["amenity=shelter", "tourism=picnic_site"],
+      "entries": [
+        {"item": "mat_wood", "weight": 30, "min": 1, "max": 4},
+        {"item": "mat_fabric", "weight": 18, "min": 1, "max": 2},
+        {"item": "tool_matches", "weight": 14, "min": 1, "max": 1},
+        {"item": "tool_lighter", "weight": 10, "min": 1, "max": 1},
+        {"item": "food_energy_bar", "weight": 14, "min": 1, "max": 2},
+        {"item": "drink_water_bottle_500", "weight": 14, "min": 1, "max": 1},
+        {"item": "lit_note", "weight": 8, "min": 1, "max": 1}
+      ]
+    },
+    {
+      "id": "proc_hunting_stand",
+      "source": "procedural",
+      "match": ["amenity=hunting_stand"],
+      "entries": [
+        {"item": "ammo_762x54r", "weight": 8, "min": 2, "max": 6},
+        {"item": "ammo_12ga_buck", "weight": 10, "min": 2, "max": 6},
+        {"item": "melee_knife", "weight": 16, "min": 1, "max": 1},
+        {"item": "tool_binoculars", "weight": 6, "min": 1, "max": 1},
+        {"item": "food_dried_meat", "weight": 16, "min": 1, "max": 2},
+        {"item": "mat_rope", "weight": 14, "min": 1, "max": 1},
+        {"item": "lit_magazine_hunting", "weight": 14, "min": 1, "max": 1},
+        {"item": "cloth_gloves", "weight": 12, "min": 1, "max": 1}
+      ]
+    },
+    {
+      "id": "proc_water_point",
+      "source": "procedural",
+      "match": ["man_made=water_tower", "amenity=drinking_water", "man_made=water_well"],
+      "entries": [
+        {"item": "drink_water_dirty", "weight": 34, "min": 1, "max": 3},
+        {"item": "drink_water_bottle_1500", "weight": 16, "min": 1, "max": 2},
+        {"item": "drink_water_bottle_500", "weight": 20, "min": 1, "max": 3},
+        {"item": "tool_water_filter", "weight": 5, "min": 1, "max": 1},
+        {"item": "mat_plastic", "weight": 18, "min": 1, "max": 3},
+        {"item": "mat_metal", "weight": 12, "min": 1, "max": 2}
+      ]
+    },
+    {
+      "id": "proc_roadside",
+      "source": "procedural",
+      "match": ["highway=*"],
+      "note": "The last layer of §10.1, spaced along roads where OSM knows nothing else. Deliberately thin: it exists so the game works, not so it pays.",
+      "entries": [
+        {"item": "mat_plastic", "weight": 26, "min": 1, "max": 2},
+        {"item": "mat_metal", "weight": 22, "min": 1, "max": 2},
+        {"item": "mat_fabric", "weight": 16, "min": 1, "max": 2},
+        {"item": "mat_wire", "weight": 14, "min": 1, "max": 2},
+        {"item": "food_crackers", "weight": 10, "min": 1, "max": 1},
+        {"item": "drink_water_bottle_500", "weight": 12, "min": 1, "max": 1}
+      ]
+    }
+  ]
+}
