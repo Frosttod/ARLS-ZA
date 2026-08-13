@@ -784,7 +784,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
                   economy: economy,
                   fallbackCentre: _packCentre,
                 ),
-            fix: snapshot?.fix,
+            fix: snapshot?.displayFix,
             headingDeg: snapshot?.fix?.headingDeg,
             economy: snapshot?.economy ?? false,
             // There is always a map here — this branch only runs with a

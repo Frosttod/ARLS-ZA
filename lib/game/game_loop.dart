@@ -52,6 +52,7 @@ class GameSnapshot {
     required this.isNight,
     required this.occupation,
     this.fix,
+    this.displayFix,
     this.integrity = IntegrityState.ok,
     this.integrityReason = IntegrityReason.none,
     this.economy = false,
@@ -68,8 +69,19 @@ class GameSnapshot {
   final bool isNight;
   final Occupation? occupation;
 
-  /// The smoothed position, not the raw reading (§3.2).
+  /// The smoothed position the simulation trusts, or null while nothing has
+  /// passed the accuracy gate (§3.2).
   final PositionFix? fix;
+
+  /// The best position the phone has, gate or no gate.
+  ///
+  /// Deliberately separate. §3.2's 25 m gate decides what counts as *movement*
+  /// — indoors every fix is 30 to 60 metres wide and none of it is walking. But
+  /// it says nothing about where the player is standing, and refusing to draw
+  /// them until the sky clears is how the map ended up pointing at nowhere in
+  /// particular. Every other navigation app shows the wide fix with a wide
+  /// circle round it, and so should this one.
+  final PositionFix? displayFix;
 
   /// Whether the movement still looks like a person walking (§3.4). While
   /// suspended nothing is credited, and the HUD has to say why.
@@ -139,6 +151,9 @@ class GameLoop {
   /// (§3.2).
   final FixFilter _filter = FixFilter();
 
+  /// The last reading of any width, for the map. See [GameSnapshot.displayFix].
+  PositionFix? _displayFix;
+
   /// §3.4. Kept alongside the filter because both answer the same question from
   /// different ends: is this movement real, and is it human.
   final MovementIntegrity _integrity = MovementIntegrity();
@@ -193,6 +208,13 @@ class GameLoop {
 
   void _onFix(PositionFix raw) {
     final outcome = _filter.accept(raw);
+
+    // Anything not from a mock provider is worth drawing, however wide. A
+    // player standing in their kitchen should see themselves in their street.
+    if (!raw.isMocked) {
+      _displayFix = raw;
+      _publish();
+    }
 
     if (outcome is FixDropped) {
       // A mocked fix is the one rejection the player has to hear about; the
@@ -388,6 +410,7 @@ class GameLoop {
               ),
         occupation: _occupation,
         fix: fix,
+        displayFix: _displayFix ?? fix,
         integrity: _integrity.state,
         integrityReason: _integrity.reason,
         economy: _economy,

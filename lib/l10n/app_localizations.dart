@@ -1050,6 +1050,18 @@ abstract class L10n {
   /// In en, this message translates to:
   /// **'Set it up'**
   String get permStartupFix;
+
+  /// No description provided for @mapWaitingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Finding you'**
+  String get mapWaitingTitle;
+
+  /// No description provided for @mapWaitingBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The game waits for a signal before drawing the map — otherwise it would show a place you are not.'**
+  String get mapWaitingBody;
 }
 
 class _L10nDelegate extends LocalizationsDelegate<L10n> {

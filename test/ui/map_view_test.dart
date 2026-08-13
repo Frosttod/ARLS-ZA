@@ -69,7 +69,14 @@ void main() {
         ),
       ),
     );
-    await tester.pumpAndSettle();
+
+    // With no position the screen shows an indeterminate spinner, and
+    // `pumpAndSettle` waits for a frame pipeline that never goes quiet.
+    if (at == null) {
+      await tester.pump();
+    } else {
+      await tester.pumpAndSettle();
+    }
   }
 
   group('the player', () {
@@ -86,12 +93,47 @@ void main() {
       expect(centre.dy, closeTo(screen.dy, 1));
     });
 
-    testWidgets('is not drawn before the first fix', (tester) async {
-      // The map still draws — a player waiting for a lock should see the
-      // region, not a spinner.
+    testWidgets('nothing is drawn until the phone knows where it is', (
+      tester,
+    ) async {
+      // Drawing a city the player is not standing in is worse than saying
+      // nothing: it reads as the game being lost rather than waiting.
       await pumpMap(tester);
 
       expect(find.byType(PlayerPin), findsNothing);
+      expect(find.text('Szukam pozycji'), findsOneWidget);
+      expect(
+        asked,
+        isEmpty,
+        reason: 'the tile surface is not built at all yet',
+      );
+    });
+
+    testWidgets('the menu stays reachable while waiting', (tester) async {
+      // Long enough to matter indoors, and the settings screen is exactly
+      // where somebody would go to find out why.
+      await pumpMap(tester);
+
+      expect(find.text('USTAWIENIA'), findsOneWidget);
+    });
+
+    testWidgets('a wide fix is still a position worth drawing (§3.2)', (
+      tester,
+    ) async {
+      // Indoors every fix is 30 to 60 metres. None of it is walking, and all
+      // of it is where the player is standing.
+      await pumpMap(
+        tester,
+        at: PositionFix(
+          latitude: 52.4064,
+          longitude: 16.9252,
+          accuracyM: 55,
+          timestamp: DateTime.utc(2026, 8, 13, 12),
+        ),
+      );
+
+      expect(find.byType(PlayerPin), findsOneWidget);
+      expect(find.text('Szukam pozycji'), findsNothing);
     });
 
     testWidgets('carries a label for the screen reader (§12)', (tester) async {

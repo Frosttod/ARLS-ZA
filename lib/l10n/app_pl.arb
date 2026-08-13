@@ -186,5 +186,7 @@
   "permStartupTitle": "Zanim wyjdziesz na spacer",
   "permStartupBody": "Żeby gra liczyła marsz z telefonem w kieszeni, potrzebuje zgody na lokalizację w tle i wyłączonej optymalizacji baterii. Bez nich działa tylko z aplikacją na wierzchu.",
   "permStartupLater": "Później",
-  "permStartupFix": "Ustaw teraz"
+  "permStartupFix": "Ustaw teraz",
+  "mapWaitingTitle": "Szukam pozycji",
+  "mapWaitingBody": "Gra czeka na sygnał, zanim pokaże mapę — inaczej pokazałaby okolicę, w której cię nie ma."
 }

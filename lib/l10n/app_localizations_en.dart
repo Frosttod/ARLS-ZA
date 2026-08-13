@@ -547,4 +547,11 @@ class L10nEn extends L10n {
 
   @override
   String get permStartupFix => 'Set it up';
+
+  @override
+  String get mapWaitingTitle => 'Finding you';
+
+  @override
+  String get mapWaitingBody =>
+      'The game waits for a signal before drawing the map — otherwise it would show a place you are not.';
 }

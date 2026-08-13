@@ -262,5 +262,7 @@
   "permStartupTitle": "Before you go walking",
   "permStartupBody": "To count a walk with the phone in your pocket, the game needs background location and battery optimisation switched off. Without them it only runs while it is on screen.",
   "permStartupLater": "Later",
-  "permStartupFix": "Set it up"
+  "permStartupFix": "Set it up",
+  "mapWaitingTitle": "Finding you",
+  "mapWaitingBody": "The game waits for a signal before drawing the map — otherwise it would show a place you are not."
 }

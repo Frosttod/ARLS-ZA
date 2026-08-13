@@ -53,8 +53,8 @@ class MapScreen extends StatefulWidget {
 
   final TileSurfaceBuilder tileBuilder;
 
-  /// Where the player is. Null before the first fix — the map still draws, so
-  /// the player sees the region rather than a blank screen with a spinner.
+  /// Where the player is, of whatever accuracy (§3.2 gates movement, not
+  /// drawing). Null only before anything at all has arrived.
   final PositionFix? fix;
 
   /// Course over ground. Null while stationary, and then no cone is drawn:
@@ -83,6 +83,54 @@ class _MapScreenState extends State<MapScreen> {
   Widget build(BuildContext context) {
     final l10n = L10n.of(context);
 
+    // No position, no map. Drawing a city the player is not standing in is
+    // worse than saying nothing: it looks like the game is lost rather than
+    // waiting, and the first thing they do is doubt the map. A phone indoors
+    // still knows roughly where it is, so this window is short.
+    if (widget.fix == null) {
+      return Scaffold(
+        body: Stack(
+          children: [
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const CircularProgressIndicator(),
+                    const SizedBox(height: 24),
+                    Text(
+                      l10n.mapWaitingTitle,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      l10n.mapWaitingBody,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            if (widget.hud != null)
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: SafeArea(child: widget.hud!),
+              ),
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: _BottomMenu(onSelected: widget.onMenu),
+            ),
+          ],
+        ),
+      );
+    }
+
     return Scaffold(
       body: Stack(
         children: [
@@ -97,13 +145,12 @@ class _MapScreenState extends State<MapScreen> {
 
           // Always the middle of the screen: the camera cannot be moved away
           // from the player, so the middle is always where they are.
-          if (widget.fix != null)
-            Center(
-              child: Semantics(
-                label: l10n.mapPlayerLabel,
-                child: PlayerPin(headingDeg: widget.headingDeg),
-              ),
+          Center(
+            child: Semantics(
+              label: l10n.mapPlayerLabel,
+              child: PlayerPin(headingDeg: widget.headingDeg),
             ),
+          ),
 
           if (widget.hud != null)
             Positioned(

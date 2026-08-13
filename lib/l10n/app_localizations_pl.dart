@@ -549,4 +549,11 @@ class L10nPl extends L10n {
 
   @override
   String get permStartupFix => 'Ustaw teraz';
+
+  @override
+  String get mapWaitingTitle => 'Szukam pozycji';
+
+  @override
+  String get mapWaitingBody =>
+      'Gra czeka na sygnał, zanim pokaże mapę — inaczej pokazałaby okolicę, w której cię nie ma.';
 }
