@@ -43,3 +43,8 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Planetiler's auxiliary downloads (coastlines, Natural Earth, lake centrelines).
+# 1.4 GB of cache that lands here whenever the build script runs with the repo
+# as the working directory, and that GitHub refuses at 100 MB a file.
+/data/
