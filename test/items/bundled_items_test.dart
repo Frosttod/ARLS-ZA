@@ -261,7 +261,12 @@ void main() {
     });
 
     test('a backpack that holds more also weighs more', () {
-      final packs = catalogue.ofKind(ItemKind.backpack).toList()
+      // A bag is exempt: it holds more than a schoolbag and weighs less,
+      // because what it costs is a hand rather than mass (occupies_hands).
+      final packs = catalogue
+          .ofKind(ItemKind.backpack)
+          .where((pack) => pack.props['occupies_hands'] != true)
+          .toList()
         ..sort(
           (a, b) => (a.props['capacity_l']! as int).compareTo(
             b.props['capacity_l']! as int,

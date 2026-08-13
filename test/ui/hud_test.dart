@@ -23,6 +23,8 @@ void main() {
     SimState state, {
     List<String> warnings = const [],
     double carriedKg = 0,
+    double carriedVolumeL = 0,
+    double capacityL = 65,
     Brightness brightness = Brightness.dark,
   }) async {
     await tester.pumpWidget(
@@ -43,7 +45,10 @@ void main() {
             constants: constants,
             warnings: warnings,
             carryComfortKg: profile.carryComfortKg,
+            carryMaxKg: profile.carryMaxKg,
             carriedKg: carriedKg,
+            carriedVolumeL: carriedVolumeL,
+            capacityL: capacityL,
           ),
         ),
       ),
@@ -145,25 +150,50 @@ void main() {
     );
   });
 
-  testWidgets('carry load is shown against the comfortable limit', (
-    tester,
-  ) async {
-    await pumpHud(tester, healthy(), carriedKg: 18);
-
-    expect(find.text('18.0 / 24.0 kg'), findsOneWidget);
-  });
-
-  testWidgets('shock lowers the carry limit it displays (§2.6)', (
-    tester,
-  ) async {
-    await pumpHud(
+  group('both carry limits (§18.1a)', () {
+    testWidgets('mass reads against the hard limit, not the comfortable one', (
       tester,
-      healthy().copyWith(bloodMl: constants.bloodMaxMl * 0.75),
-      carriedKg: 18,
-    );
+    ) async {
+      // The bar has to run to the point where the game refuses to pick things
+      // up. The comfortable load is a mark on it, not its end.
+      await pumpHud(tester, healthy(), carriedKg: 18);
 
-    // Class II costs a tenth of the carry load: 24 kg becomes 21.6 kg.
-    expect(find.text('18.0 / 21.6 kg'), findsOneWidget);
+      expect(find.text('18.0 / 36 kg'), findsOneWidget);
+    });
+
+    testWidgets('bulk is shown beside it, because neither predicts the other', (
+      tester,
+    ) async {
+      await pumpHud(tester, healthy(), carriedVolumeL: 40, capacityL: 65);
+
+      expect(find.text('40 / 65 l'), findsOneWidget);
+    });
+
+    testWidgets('shock lowers the carry limit it displays (§2.6)', (
+      tester,
+    ) async {
+      await pumpHud(
+        tester,
+        healthy().copyWith(bloodMl: constants.bloodMaxMl * 0.75),
+        carriedKg: 18,
+      );
+
+      // Class II costs a tenth of the carry load: 36 kg becomes 32.4 kg.
+      expect(find.text('18.0 / 32 kg'), findsOneWidget);
+    });
+
+    testWidgets('a pack with no room is legible without reading the colour', (
+      tester,
+    ) async {
+      // §12: colour never carries information on its own.
+      await pumpHud(tester, healthy(), carriedVolumeL: 65, capacityL: 65);
+
+      expect(find.text('65 / 65 l'), findsOneWidget);
+      expect(
+        find.bySemanticsLabel(RegExp('65 of 65 litres')),
+        findsOneWidget,
+      );
+    });
   });
 
   group('both themes (§12)', () {

@@ -216,6 +216,9 @@ class L10nPl extends L10n {
   String get hudCarry => 'Udźwig';
 
   @override
+  String get hudBulk => 'Objętość';
+
+  @override
   String get hudNoSignal => 'Brak sygnału';
 
   @override

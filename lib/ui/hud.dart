@@ -11,6 +11,7 @@ library;
 
 import 'package:flutter/material.dart';
 
+import '../inventory/inventory.dart' show kPocketCapacityL;
 import '../l10n/app_localizations.dart';
 import '../sim/physiology.dart';
 import '../sim/tick.dart';
@@ -78,7 +79,10 @@ class Hud extends StatelessWidget {
     required this.constants,
     this.warnings = const [],
     this.carryComfortKg,
+    this.carryMaxKg,
     this.carriedKg = 0,
+    this.carriedVolumeL = 0,
+    this.capacityL = kPocketCapacityL,
     super.key,
   });
 
@@ -92,8 +96,16 @@ class Hud extends StatelessWidget {
   /// the game is not behaving as they expect.
   final List<String> warnings;
 
+  /// §1.3's two thresholds. The comfortable one costs calories to exceed, the
+  /// hard one cannot be exceeded at all.
   final double? carryComfortKg;
+  final double? carryMaxKg;
+
   final double carriedKg;
+
+  /// §18.1a's second limit. Without it a pocket holds a wardrobe.
+  final double carriedVolumeL;
+  final double capacityL;
 
   @override
   Widget build(BuildContext context) {
@@ -143,11 +155,17 @@ class Hud extends StatelessWidget {
               const SizedBox(height: 6),
               _StatusRow(status: status, warnings: warnings),
               if (carryComfortKg != null) ...[
-                const SizedBox(height: 4),
+                const SizedBox(height: 6),
                 _CarryReadout(
-                  label: l10n.hudCarry,
+                  massLabel: l10n.hudCarry,
+                  bulkLabel: l10n.hudBulk,
                   carriedKg: carriedKg,
+                  // Blood loss costs carry capacity (§2.6): class II takes 10%.
                   comfortKg: carryComfortKg! * status.blood.carryPenalty,
+                  maxKg: (carryMaxKg ?? carryComfortKg! * 1.5) *
+                      status.blood.carryPenalty,
+                  volumeL: carriedVolumeL,
+                  capacityL: capacityL,
                 ),
               ],
             ],
@@ -373,43 +391,162 @@ class _StatusRow extends StatelessWidget {
 ///
 /// Over the limit is not blocked — the game cannot slow a real person down —
 /// so the readout says "you are paying more for this", not "you cannot".
+/// Both carry limits, side by side (§18.1a).
+///
+/// They are shown together because they fail differently and a player has to
+/// see which one is about to stop them: mass is what a rucksack of metal runs
+/// into, bulk is what a rucksack of plastic runs into, and neither figure
+/// predicts the other.
+///
+/// Mass has two thresholds. Past the comfortable one the bar turns amber and
+/// nothing else happens — §1.3 forbids slowing a real walking player, so the
+/// price is metabolic. The hard limit is the end of the bar, and there the
+/// game refuses to pick things up.
 class _CarryReadout extends StatelessWidget {
   const _CarryReadout({
-    required this.label,
+    required this.massLabel,
+    required this.bulkLabel,
     required this.carriedKg,
     required this.comfortKg,
+    required this.maxKg,
+    required this.volumeL,
+    required this.capacityL,
+  });
+
+  final String massLabel;
+  final String bulkLabel;
+  final double carriedKg;
+  final double comfortKg;
+  final double maxKg;
+  final double volumeL;
+  final double capacityL;
+
+  @override
+  Widget build(BuildContext context) {
+    final overComfort = comfortKg > 0 && carriedKg > comfortKg;
+
+    return Row(
+      children: [
+        Expanded(
+          child: _LimitBar(
+            label: massLabel,
+            value: '${carriedKg.toStringAsFixed(1)} / '
+                '${maxKg.toStringAsFixed(0)} kg',
+            fraction: maxKg > 0 ? carriedKg / maxKg : 0,
+            // Where the load stops being free. Drawn rather than described,
+            // because the number moves with the pack and with blood loss.
+            markAt: maxKg > 0 ? comfortKg / maxKg : null,
+            warning: overComfort,
+            semantics:
+                '$massLabel ${carriedKg.toStringAsFixed(1)} of '
+                '${maxKg.toStringAsFixed(0)} kilograms',
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _LimitBar(
+            label: bulkLabel,
+            value: '${volumeL.toStringAsFixed(0)} / '
+                '${capacityL.toStringAsFixed(0)} l',
+            fraction: capacityL > 0 ? volumeL / capacityL : 0,
+            warning: capacityL > 0 && volumeL > capacityL * 0.9,
+            semantics:
+                '$bulkLabel ${volumeL.toStringAsFixed(0)} of '
+                '${capacityL.toStringAsFixed(0)} litres',
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _LimitBar extends StatelessWidget {
+  const _LimitBar({
+    required this.label,
+    required this.value,
+    required this.fraction,
+    required this.warning,
+    required this.semantics,
+    this.markAt,
   });
 
   final String label;
-  final double carriedKg;
-  final double comfortKg;
+  final String value;
+  final double fraction;
+
+  /// Where to draw the comfortable-load tick, as a share of the bar. Null on a
+  /// limit that has only one threshold.
+  final double? markAt;
+
+  final bool warning;
+  final String semantics;
 
   @override
   Widget build(BuildContext context) {
     final colours = HudColors.of(context);
-    final over = comfortKg > 0 && carriedKg > comfortKg;
+    final clamped = fraction.clamp(0.0, 1.0);
+    final full = fraction >= 0.999;
+    final colour = full
+        ? colours.alert
+        : warning
+        ? const Color(0xFFE8B33A)
+        : colours.data;
 
     return Semantics(
-      label:
-          '$label ${carriedKg.toStringAsFixed(1)} '
-          'of ${comfortKg.toStringAsFixed(1)} kilograms',
-      child: Row(
+      label: semantics,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label.toUpperCase(),
-            style: TextStyle(
-              fontSize: 9,
-              letterSpacing: 1.2,
-              color: colours.muted,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                label.toUpperCase(),
+                style: TextStyle(
+                  fontSize: 9,
+                  letterSpacing: 1.2,
+                  color: colours.muted,
+                ),
+              ),
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 10,
+                  color: warning || full ? colour : colours.text,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 6),
-          Text(
-            '${carriedKg.toStringAsFixed(1)} / ${comfortKg.toStringAsFixed(1)} kg',
-            style: TextStyle(
-              fontSize: 10,
-              color: over ? const Color(0xFFE8B33A) : colours.text,
-              fontFeatures: const [FontFeature.tabularFigures()],
+          const SizedBox(height: 2),
+          LayoutBuilder(
+            builder: (context, constraints) => Stack(
+              children: [
+                Container(
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: colours.muted.withValues(alpha: 0.25),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                Container(
+                  height: 4,
+                  width: constraints.maxWidth * clamped,
+                  decoration: BoxDecoration(
+                    color: colour,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                if (markAt != null && markAt! < 1)
+                  Positioned(
+                    left: constraints.maxWidth * markAt!.clamp(0.0, 1.0) - 0.5,
+                    child: Container(
+                      height: 4,
+                      width: 1,
+                      color: colours.text.withValues(alpha: 0.55),
+                    ),
+                  ),
+              ],
             ),
           ),
         ],

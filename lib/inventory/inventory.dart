@@ -1,0 +1,372 @@
+/// What a player is carrying, and the two limits on it (§18.1a).
+///
+/// **No stack-count limit anywhere.** §18.1a is explicit: a hard cap on pieces
+/// would break the game's own recipes — Store L3 wants 36 wood, Workshop L3
+/// wants 42 metal — and would never bind in practice, because mass or bulk
+/// binds first. Twelve pieces of wood is 24 kg, and that is the whole limit.
+///
+/// **Two limits that behave differently.** Mass has a comfortable figure and a
+/// hard one (§1.3: 0.30 and 0.45 of body mass). Going over the comfortable one
+/// is allowed — §1.3 forbids slowing a real walking player, so the price is
+/// metabolic (§2.3) and never a block. Going over the hard one is refused: the
+/// player physically cannot lift it. Volume has one limit and it is hard.
+///
+/// **Worn clothing costs mass but not volume**, and neither does the pack
+/// itself. A coat on your back does not fill your rucksack. This is the whole
+/// reason §10.3.4's combat kit fits: half of it is being worn.
+library;
+
+import '../items/item.dart';
+import '../items/item_catalogue.dart';
+import '../sim/body.dart';
+
+/// Pockets. §18.1a's floor for a player with no bag at all.
+const double kPocketCapacityL = 12;
+
+/// §18.1a: the shelter store has both limits too, three litres per kilogram.
+/// Without it 312 pieces of plastic fit by mass and would need 624 litres.
+const double kStoreLitresPerKg = 3;
+
+/// One line in the inventory.
+///
+/// A stackable item is one entry with a count. Anything carrying its own state
+/// — a worn rifle, a part-read book (§4.6.3) — is one entry per piece, because
+/// two of them are not interchangeable.
+class CarriedItem {
+  const CarriedItem({
+    required this.itemId,
+    this.count = 1,
+    this.condition,
+    this.pagesTotal,
+    this.pagesRead = 0,
+  });
+
+  final String itemId;
+  final int count;
+
+  /// 0–100 for anything that wears out, null for anything that does not.
+  final double? condition;
+
+  /// Rolled per copy at generation (§4.6.4), so two copies of one title differ
+  /// in mass, reading time and XP.
+  final int? pagesTotal;
+  final int pagesRead;
+
+  CarriedItem copyWith({int? count, double? condition, int? pagesRead}) =>
+      CarriedItem(
+        itemId: itemId,
+        count: count ?? this.count,
+        condition: condition ?? this.condition,
+        pagesTotal: pagesTotal,
+        pagesRead: pagesRead ?? this.pagesRead,
+      );
+
+  /// Mass of this line, using the rolled page count where there is one.
+  double massKg(ItemDefinition definition) {
+    final pages = pagesTotal;
+    if (pages != null) {
+      final perPage = (definition.props['g_per_page'] as num?)?.toDouble() ?? 0;
+      final cover = (definition.props['cover_g'] as num?)?.toDouble() ?? 0;
+      return (pages * perPage + cover) / 1000 * count;
+    }
+    return definition.weightKg * count;
+  }
+
+  double volumeL(ItemDefinition definition) {
+    final pages = pagesTotal;
+    if (pages != null) {
+      final perPage = (definition.props['l_per_page'] as num?)?.toDouble() ?? 0;
+      return pages * perPage * count;
+    }
+    return definition.volumeL * count;
+  }
+}
+
+/// Why something would not go in.
+enum RefusalReason {
+  /// Over the hard carry limit of §1.3. Not a warning — it cannot be lifted.
+  tooHeavy,
+
+  /// The pack is full. §18.1a's second axis, and the one that catches plastic
+  /// and fabric long before their mass does.
+  noRoom,
+
+  /// No such item in the catalogue. A content pack that was removed, usually.
+  unknownItem,
+}
+
+class InventoryChange {
+  const InventoryChange.accepted(this.inventory)
+    : refusal = null,
+      acceptedCount = null;
+  const InventoryChange.partial(this.inventory, this.acceptedCount, this.refusal);
+  const InventoryChange.refused(this.inventory, this.refusal)
+    : acceptedCount = 0;
+
+  final Inventory inventory;
+  final RefusalReason? refusal;
+
+  /// How many pieces fitted, when not all of them did. Null when everything did.
+  final int? acceptedCount;
+
+  bool get isAccepted => refusal == null;
+}
+
+/// The limits in force right now: body plus whatever is on the player's back.
+class CarryLimits {
+  const CarryLimits({
+    required this.comfortKg,
+    required this.maxKg,
+    required this.capacityL,
+  });
+
+  final double comfortKg;
+  final double maxKg;
+  final double capacityL;
+
+  factory CarryLimits.of(BodyProfile body, ItemDefinition? pack) {
+    final comfortBonus =
+        (pack?.props['comfort_carry_bonus_kg'] as num?)?.toDouble() ?? 0;
+    final maxBonus =
+        (pack?.props['max_carry_bonus_kg'] as num?)?.toDouble() ?? 0;
+
+    return CarryLimits(
+      comfortKg: body.carryComfortKg + comfortBonus,
+      maxKg: body.carryMaxKg + maxBonus,
+      capacityL:
+          (pack?.props['capacity_l'] as num?)?.toDouble() ?? kPocketCapacityL,
+    );
+  }
+}
+
+class Inventory {
+  const Inventory({
+    this.carried = const [],
+    this.worn = const [],
+    this.packId,
+  });
+
+  /// In the pack. Costs mass and volume.
+  final List<CarriedItem> carried;
+
+  /// On the body: clothing, armour, a weapon in hand. Costs mass only.
+  final List<CarriedItem> worn;
+
+  /// The pack itself. Costs mass, and is what sets [CarryLimits.capacityL].
+  final String? packId;
+
+  double massKg(ItemCatalogue catalogue) {
+    var total = 0.0;
+    for (final line in [...carried, ...worn]) {
+      final definition = catalogue[line.itemId];
+      if (definition != null) total += line.massKg(definition);
+    }
+    final pack = packId == null ? null : catalogue[packId!];
+    return total + (pack?.weightKg ?? 0);
+  }
+
+  /// Only what is inside the pack. A coat on your back does not fill it, and
+  /// neither does the pack.
+  double volumeL(ItemCatalogue catalogue) {
+    var total = 0.0;
+    for (final line in carried) {
+      final definition = catalogue[line.itemId];
+      if (definition != null) total += line.volumeL(definition);
+    }
+    return total;
+  }
+
+  CarryLimits limits(BodyProfile body, ItemCatalogue catalogue) =>
+      CarryLimits.of(body, packId == null ? null : catalogue[packId!]);
+
+  /// True when the load is past comfortable. Never blocks anything — it raises
+  /// the metabolic cost of walking (§2.3), which is the only lever §1.3 allows.
+  bool isOverComfort(BodyProfile body, ItemCatalogue catalogue) =>
+      massKg(catalogue) > limits(body, catalogue).comfortKg;
+
+  /// How loaded the player is, as a fraction of the hard limit. Feeds the
+  /// accuracy penalty of §5.1.5 and both HUD bars.
+  double loadFraction(BodyProfile body, ItemCatalogue catalogue) =>
+      massKg(catalogue) / limits(body, catalogue).maxKg;
+
+  double fillFraction(BodyProfile body, ItemCatalogue catalogue) =>
+      volumeL(catalogue) / limits(body, catalogue).capacityL;
+
+  /// Puts [count] of an item in the pack, taking as many as fit.
+  ///
+  /// Partial acceptance is deliberate: a player standing over forty rounds of
+  /// ammunition with room for twelve should get twelve, not a refusal.
+  InventoryChange add(
+    String itemId,
+    ItemCatalogue catalogue, {
+    required BodyProfile body,
+    int count = 1,
+    double? condition,
+    int? pagesTotal,
+  }) {
+    final definition = catalogue[itemId];
+    if (definition == null) {
+      return InventoryChange.refused(this, RefusalReason.unknownItem);
+    }
+
+    final limit = limits(body, catalogue);
+    final one = CarriedItem(
+      itemId: itemId,
+      condition: condition,
+      pagesTotal: pagesTotal,
+    );
+    final massEach = one.massKg(definition);
+    final volumeEach = one.volumeL(definition);
+
+    final massRoom = limit.maxKg - massKg(catalogue);
+    final volumeRoom = limit.capacityL - volumeL(catalogue);
+
+    var fits = count;
+    var reason = RefusalReason.tooHeavy;
+    if (massEach > 0) {
+      final byMass = (massRoom / massEach).floor();
+      if (byMass < fits) {
+        fits = byMass;
+        reason = RefusalReason.tooHeavy;
+      }
+    }
+    if (volumeEach > 0) {
+      final byVolume = (volumeRoom / volumeEach).floor();
+      if (byVolume < fits) {
+        fits = byVolume;
+        reason = RefusalReason.noRoom;
+      }
+    }
+
+    if (fits <= 0) return InventoryChange.refused(this, reason);
+
+    final next = _withAdded(
+      definition,
+      CarriedItem(
+        itemId: itemId,
+        count: fits,
+        condition: condition,
+        pagesTotal: pagesTotal,
+      ),
+    );
+
+    return fits == count
+        ? InventoryChange.accepted(next)
+        : InventoryChange.partial(next, fits, reason);
+  }
+
+  Inventory _withAdded(ItemDefinition definition, CarriedItem line) {
+    final lines = [...carried];
+
+    if (definition.stackable && !definition.hasInstanceState) {
+      final index = lines.indexWhere((entry) => entry.itemId == line.itemId);
+      if (index >= 0) {
+        lines[index] = lines[index].copyWith(
+          count: lines[index].count + line.count,
+        );
+        return Inventory(carried: lines, worn: worn, packId: packId);
+      }
+    } else if (line.count > 1) {
+      // One entry per piece: each has its own condition or its own pages.
+      for (var i = 0; i < line.count; i++) {
+        lines.add(line.copyWith(count: 1));
+      }
+      return Inventory(carried: lines, worn: worn, packId: packId);
+    }
+
+    lines.add(line);
+    return Inventory(carried: lines, worn: worn, packId: packId);
+  }
+
+  /// Removes pieces of an item. Returns the inventory unchanged if there were
+  /// not that many — dropping what you do not have is a bug, not a partial.
+  Inventory? remove(String itemId, {int count = 1}) {
+    final lines = [...carried];
+    var left = count;
+
+    for (var i = lines.length - 1; i >= 0 && left > 0; i--) {
+      if (lines[i].itemId != itemId) continue;
+      final taken = lines[i].count <= left ? lines[i].count : left;
+      left -= taken;
+      if (taken == lines[i].count) {
+        lines.removeAt(i);
+      } else {
+        lines[i] = lines[i].copyWith(count: lines[i].count - taken);
+      }
+    }
+
+    if (left > 0) return null;
+    return Inventory(carried: lines, worn: worn, packId: packId);
+  }
+
+  /// Swaps the pack. The old one goes into the new one's contents by mass, so
+  /// a downgrade can leave the player over the volume limit — which is allowed
+  /// here and reported by [overflowL], because the alternative is the game
+  /// deciding on its own what to throw away.
+  Inventory withPack(String? newPackId) =>
+      Inventory(carried: carried, worn: worn, packId: newPackId);
+
+  /// How many litres past the limit the pack is. Zero unless a pack was
+  /// swapped for a smaller one.
+  double overflowL(BodyProfile body, ItemCatalogue catalogue) {
+    final over = volumeL(catalogue) - limits(body, catalogue).capacityL;
+    return over > 0 ? over : 0;
+  }
+
+  /// Puts something on the body. Worn items cost mass but not volume.
+  Inventory wear(String itemId) =>
+      Inventory(carried: carried, worn: [...worn, CarriedItem(itemId: itemId)], packId: packId);
+
+  int countOf(String itemId) => carried
+      .where((line) => line.itemId == itemId)
+      .fold(0, (sum, line) => sum + line.count);
+
+  /// Total insulation on the body, in clo (§4.4). Feeds the sweat model of
+  /// §2.3; a garment not worn insulates nobody.
+  double insulationClo(ItemCatalogue catalogue) {
+    var total = 0.0;
+    for (final line in worn) {
+      final value = catalogue[line.itemId]?.props['insulation_clo'];
+      if (value is num) total += value.toDouble();
+    }
+    return total;
+  }
+
+  /// Ballistic protection for one hit, given where it landed.
+  ///
+  /// §4.4: coverage and protection are separate, and a hit outside the covered
+  /// fraction ignores both. Blunt damage bypasses half of a vest's protection.
+  double protectionAgainst({
+    required ItemCatalogue catalogue,
+    required String slot,
+    required double hitRoll,
+    bool blunt = false,
+  }) {
+    var best = 0.0;
+    for (final line in worn) {
+      final piece = catalogue[line.itemId];
+      if (piece == null || piece.props['slot'] != slot) continue;
+
+      final coverage = (piece.props['coverage_pct'] as num?)?.toDouble() ?? 0;
+      if (hitRoll * 100 > coverage) continue;
+
+      var level = (piece.props['protection_level'] as num?)?.toDouble() ?? 0;
+      if (blunt) {
+        final bypass =
+            (piece.props['blunt_bypass_pct'] as num?)?.toDouble() ?? 0;
+        level *= 1 - bypass / 100;
+      }
+      if (level > best) best = level;
+    }
+    return best;
+  }
+}
+
+/// The shelter store (§18.1a): both limits, three litres per kilogram.
+class StoreLimits {
+  const StoreLimits(this.capacityKg);
+
+  final double capacityKg;
+
+  double get capacityL => capacityKg * kStoreLitresPerKg;
+}

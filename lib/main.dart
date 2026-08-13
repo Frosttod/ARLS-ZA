@@ -12,6 +12,9 @@ import 'devtools/dev_mode.dart';
 import 'devtools/dev_overlay.dart';
 import 'devtools/dev_session.dart';
 import 'game/game_loop.dart';
+import 'inventory/inventory.dart';
+import 'items/item_assets.dart';
+import 'items/item_catalogue.dart';
 import 'game/game_session.dart';
 import 'game/relocation.dart';
 import 'l10n/app_localizations.dart';
@@ -28,6 +31,7 @@ import 'map/pack_manager.dart';
 import 'map/pack_store.dart';
 import 'map/region_pack.dart';
 import 'safety/player_safety.dart';
+import 'sim/body.dart';
 import 'ui/app_settings.dart';
 import 'ui/character_creator.dart';
 import 'ui/language_picker.dart';
@@ -213,6 +217,29 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   GameSnapshot? _snapshot;
   bool _loading = true;
 
+  /// Everything the game knows about items (§4.1), read once at boot from the
+  /// bundled files and any content pack the player has.
+  ItemCatalogue? _catalogue;
+
+  /// What the player is carrying. Empty until there is something to pick up —
+  /// the two HUD bars still read off it, so they show the real limits from the
+  /// first frame rather than appearing when the first item does.
+  // Reassigned as soon as there is something to pick up (§10, stage 4.5).
+  final Inventory _inventory = const Inventory();
+
+  /// Both HUD bars read these. Zero without a catalogue, which only happens if
+  /// every bundled data file failed to parse — a broken build, not a state the
+  /// player can reach.
+  double get _carriedKg =>
+      _catalogue == null ? 0 : _inventory.massKg(_catalogue!);
+
+  double get _carriedVolumeL =>
+      _catalogue == null ? 0 : _inventory.volumeL(_catalogue!);
+
+  double _capacityL(BodyProfile body) => _catalogue == null
+      ? kPocketCapacityL
+      : _inventory.limits(body, _catalogue!).capacityL;
+
   /// The real GPS, when that is what is driving the game. Held so the location
   /// gate can send the player to the right settings page and ask again.
   DevicePositionSource? _device;
@@ -313,6 +340,12 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     _useSimulator = simulatorEnabled(
       await widget.session.db.readSetting(kSimulatorSettingKey),
     );
+    if (!mounted) return;
+
+    // Read once. A problem here is a shipped data file being wrong, which the
+    // build should already have caught — so it is logged for the developer
+    // overlay and the game runs on whatever parsed (§4.1).
+    _catalogue = await loadItemCatalogue();
     if (!mounted) return;
 
     await _readPermissions();
@@ -799,6 +832,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
                     constants: character.constants,
                     warnings: _warnings(l10n, snapshot),
                     carryComfortKg: character.body.carryComfortKg,
+                    carryMaxKg: character.body.carryMaxKg,
+                    carriedKg: _carriedKg,
+                    carriedVolumeL: _carriedVolumeL,
+                    capacityL: _capacityL(character.body),
                   ),
             onMenu: (entry) {
               // Only the map is built; the rest of §3.6 arrives with the
@@ -845,6 +882,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
                     constants: character.constants,
                     warnings: _warnings(l10n, snapshot),
                     carryComfortKg: character.body.carryComfortKg,
+                    carryMaxKg: character.body.carryMaxKg,
+                    carriedKg: _carriedKg,
+                    carriedVolumeL: _carriedVolumeL,
+                    capacityL: _capacityL(character.body),
                   ),
                 ),
               ),
@@ -865,6 +906,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
                   constants: character.constants,
                   warnings: _warnings(l10n, snapshot),
                   carryComfortKg: character.body.carryComfortKg,
+                  carryMaxKg: character.body.carryMaxKg,
+                  carriedKg: _carriedKg,
+                  carriedVolumeL: _carriedVolumeL,
+                  capacityL: _capacityL(character.body),
                 ),
               Expanded(
                 child: SafeArea(

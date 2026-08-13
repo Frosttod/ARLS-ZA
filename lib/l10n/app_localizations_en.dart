@@ -214,6 +214,9 @@ class L10nEn extends L10n {
   String get hudCarry => 'Carry';
 
   @override
+  String get hudBulk => 'Bulk';
+
+  @override
   String get hudNoSignal => 'No signal';
 
   @override

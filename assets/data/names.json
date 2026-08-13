@@ -51,6 +51,7 @@
     "item.pack_daypack.name": {"pl": "Plecak turystyczny", "en": "Daypack"},
     "item.pack_tactical.name": {"pl": "Plecak taktyczny", "en": "Tactical backpack"},
     "item.pack_trekking.name": {"pl": "Plecak trekkingowy", "en": "Trekking backpack"},
+    "item.pack_military.name": {"pl": "Plecak wojskowy", "en": "Military rucksack"},
 
     "item.food_canned_meat.name": {"pl": "Konserwa mięsna", "en": "Canned meat"},
     "item.food_canned_vegetables.name": {"pl": "Konserwa warzywna", "en": "Canned vegetables"},

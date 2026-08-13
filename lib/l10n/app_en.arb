@@ -135,6 +135,7 @@
   "hudCalories": "Calories",
   "hudHeartRate": "Heart rate",
   "hudCarry": "Carry",
+  "hudBulk": "Bulk",
   "hudNoSignal": "No signal",
   "hudWeakSignal": "Weak signal",
   "statusBleeding": "Bleeding",

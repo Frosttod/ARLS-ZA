@@ -1,25 +1,7 @@
 {
-  "_comment": "Backpacks (§4.5). They raise both limits and weigh something themselves, so a bigger pack is not free. The trekking pack is the one §10.3.4 fixes: it lifts comfort carry from 24 to 36 kg and gives the 65 l that the full combat kit (30.2 l) is measured against — a third fewer trips to the shelter. That is why it is very rare: finding it is a turning point, not a cosmetic upgrade.",
+  "_comment": "Backpacks (§4.5, §18.1a). The capacities and carry bonuses are §18.1a's table: bag +4 kg / 30 l, daypack +8 / 45, trekking +12 / 65, military +16 / 90. Without one a player has pockets and 12 l (§18.1a), which is why the first bag matters more than any later upgrade. The school bag sits below the doc's smallest on purpose — it is the one a player finds first, and starting at 30 l would make that find the last inventory decision they ever take. Packs weigh what they hold: 65 l is 1.8 kg (§4.5).",
   "schema": 1,
   "items": [
-    {
-      "id": "pack_shopping_bag",
-      "type": "backpack",
-      "name_key": "item.pack_shopping_bag.name",
-      "weight_kg": 0.1,
-      "volume_l": 0.3,
-      "stackable": false,
-      "condition": 100,
-      "condition_decay_per_use": 1.5,
-      "rarity": "common",
-      "loot_tags": ["residential", "shop"],
-      "props": {
-        "capacity_l": 20,
-        "comfort_carry_bonus_kg": 2,
-        "max_carry_bonus_kg": 3,
-        "occupies_hands": true
-      }
-    },
     {
       "id": "pack_school",
       "type": "backpack",
@@ -32,9 +14,28 @@
       "rarity": "common",
       "loot_tags": ["residential", "school", "shop"],
       "props": {
-        "capacity_l": 25,
+        "capacity_l": 22,
+        "comfort_carry_bonus_kg": 3,
+        "max_carry_bonus_kg": 3
+      }
+    },
+    {
+      "id": "pack_shopping_bag",
+      "type": "backpack",
+      "name_key": "item.pack_shopping_bag.name",
+      "weight_kg": 0.3,
+      "volume_l": 0.5,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 1.5,
+      "rarity": "common",
+      "loot_tags": ["residential", "shop"],
+      "props": {
+        "capacity_l": 30,
         "comfort_carry_bonus_kg": 4,
-        "max_carry_bonus_kg": 5
+        "max_carry_bonus_kg": 4,
+        "occupies_hands": true,
+        "note": "§18.1a's bag. Holds as much as a daypack's worth of bulk but hangs off one arm, so it is carried instead of a weapon."
       }
     },
     {
@@ -49,9 +50,9 @@
       "rarity": "common",
       "loot_tags": ["residential", "shop", "sport"],
       "props": {
-        "capacity_l": 35,
-        "comfort_carry_bonus_kg": 7,
-        "max_carry_bonus_kg": 9
+        "capacity_l": 45,
+        "comfort_carry_bonus_kg": 8,
+        "max_carry_bonus_kg": 8
       }
     },
     {
@@ -66,9 +67,9 @@
       "rarity": "rare",
       "loot_tags": ["military", "police", "sport"],
       "props": {
-        "capacity_l": 45,
-        "comfort_carry_bonus_kg": 9,
-        "max_carry_bonus_kg": 11
+        "capacity_l": 55,
+        "comfort_carry_bonus_kg": 10,
+        "max_carry_bonus_kg": 10
       }
     },
     {
@@ -86,6 +87,25 @@
         "capacity_l": 65,
         "comfort_carry_bonus_kg": 12,
         "max_carry_bonus_kg": 12,
+        "hip_belt": true,
+        "note": "§10.3.4: comfort carry 24 -> 36 kg, a third fewer trips to the shelter."
+      }
+    },
+    {
+      "id": "pack_military",
+      "type": "backpack",
+      "name_key": "item.pack_military.name",
+      "weight_kg": 2.6,
+      "volume_l": 4.5,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 0.1,
+      "rarity": "very_rare",
+      "loot_tags": ["military"],
+      "props": {
+        "capacity_l": 90,
+        "comfort_carry_bonus_kg": 16,
+        "max_carry_bonus_kg": 16,
         "hip_belt": true
       }
     }
