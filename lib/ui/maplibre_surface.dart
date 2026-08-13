@@ -12,7 +12,10 @@
 library;
 
 import 'dart:async';
+import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart' show Factory;
+import 'package:flutter/gestures.dart' show OneSequenceGestureRecognizer;
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 
@@ -93,6 +96,14 @@ class MapLibreSurface extends StatefulWidget {
 class _MapLibreSurfaceState extends State<MapLibreSurface> {
   MapLibreMapController? _controller;
 
+  /// The camera's zoom, held here because the game drives it rather than
+  /// MapLibre. Every change is applied together with the player's position, so
+  /// there is no moment at which the two disagree.
+  double _zoom = kStreetZoom;
+
+  /// Where the zoom stood when the current pinch began.
+  double? _zoomAtGestureStart;
+
   /// Circles currently on the map, by marker id. Kept so a marker that moved
   /// is updated rather than removed and re-added — a marker that blinks every
   /// second is one nobody can tap.
@@ -105,7 +116,7 @@ class _MapLibreSurfaceState extends State<MapLibreSurface> {
         ? MapPalette.dark
         : MapPalette.light;
 
-    return MapLibreMap(
+    final map = MapLibreMap(
       // The style is baked into the platform view when it is created, so a
       // change of palette has to build a new one. Keying on the brightness is
       // what makes switching the theme actually repaint the map rather than
@@ -128,10 +139,8 @@ class _MapLibreSurfaceState extends State<MapLibreSurface> {
       onMapCreated: (controller) => _controller = controller,
       onStyleLoadedCallback: () => unawaited(_sync()),
 
-      // A pinch zooms about the fingers, which slides the ground out from under
-      // the player: the pin is drawn at the middle of the screen and the map is
-      // not. Snapping back when the gesture settles keeps the one promise this
-      // view makes — you are always looking at where you are standing.
+      // Belt and braces. MapLibre's own gestures are off, but a style reload
+      // or a rotation can still leave the camera somewhere it was not put.
       onCameraIdle: () => unawaited(_recentre()),
 
       // The player is drawn by MapScreen as an overlay; MapLibre's own dot
@@ -149,12 +158,69 @@ class _MapLibreSurfaceState extends State<MapLibreSurface> {
       // from above — it is what the character can see from where they stand,
       // and it stays under them. Zoom is theirs; the position is not.
       scrollGesturesEnabled: false,
+      dragEnabled: false,
+
+      // ⚠️ MapLibre's own zoom is off, and the game does it instead.
+      //
+      // Both of its zoom gestures anchor on the fingers: a pinch scales about
+      // the midpoint between them, a double tap about the tap. Either one
+      // slides the ground out from under the player, who is drawn at the middle
+      // of the screen and does not move. `doubleClickZoomEnabled` would only
+      // help on the web. Driving the camera ourselves is the only way the pin
+      // stays where the player is, which is the one promise this view makes.
+      zoomGesturesEnabled: false,
+
+      // Nothing claimed on behalf of the platform view, so the detector above
+      // wins the arena rather than competing with the embedded map for the
+      // same fingers.
+      gestureRecognizers: const <Factory<OneSequenceGestureRecognizer>>{},
       minMaxZoomPreference: MinMaxZoomPreference(
         _widestZoom(context, centre),
         kClosestZoom,
       ),
     );
+
+    return GestureDetector(
+      // Opaque, so the gestures reach here rather than the platform view. There
+      // is nothing on the map to tap: the player is an overlay and the menu is
+      // above this again.
+      behavior: HitTestBehavior.opaque,
+      onDoubleTap: () => unawaited(_zoomBy(1)),
+      onScaleStart: (_) => _zoomAtGestureStart = _zoom,
+      onScaleUpdate: (details) {
+        final start = _zoomAtGestureStart;
+        // A scale of 1 is a drag, not a pinch, and dragging does nothing here.
+        if (start == null || details.scale == 1.0) return;
+        unawaited(_zoomTo(start + math.log(details.scale) / math.ln2));
+      },
+      onScaleEnd: (_) => _zoomAtGestureStart = null,
+      child: map,
+    );
   }
+
+  /// Applies a zoom, always about the player.
+  ///
+  /// Position and zoom go in one camera update rather than two: sending them
+  /// separately gives a frame where the map has scaled but not yet moved, which
+  /// is exactly the jump this whole arrangement exists to prevent.
+  Future<void> _zoomTo(double zoom) async {
+    final controller = _controller;
+    if (controller == null) return;
+
+    final clamped = zoom.clamp(_widestZoom(context, widget.centre), kClosestZoom);
+    if ((clamped - _zoom).abs() < 0.001) return;
+    _zoom = clamped;
+
+    final centre = widget.centre;
+    final target = centre != null
+        ? LatLng(centre.latitude, centre.longitude)
+        : controller.cameraPosition?.target;
+    if (target == null) return;
+
+    await controller.moveCamera(CameraUpdate.newLatLngZoom(target, clamped));
+  }
+
+  Future<void> _zoomBy(double steps) => _zoomTo(_zoom + steps);
 
   /// The zoom at which a kilometre fills the screen here.
   ///
