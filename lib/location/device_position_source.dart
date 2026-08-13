@@ -36,6 +36,16 @@ class ForegroundNotice {
   final String body;
 }
 
+/// What the system allows right now, without prompting for anything.
+///
+/// Separate from [requestLocationAccess] because a screen that reports the
+/// state must not change it: opening the settings would otherwise fire a
+/// permission dialog every time.
+Future<LocationAccess> currentLocationAccess() async => resolveAccess(
+  serviceEnabled: await Geolocator.isLocationServiceEnabled(),
+  permission: _translate(await Geolocator.checkPermission()),
+);
+
 /// Asks the platform for location access, prompting once if that could help.
 ///
 /// Free-standing because the game asks before it has anything to ask *with*:

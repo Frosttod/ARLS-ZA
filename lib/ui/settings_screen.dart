@@ -17,11 +17,11 @@ import '../location/location_access.dart';
 import '../location/system_permissions.dart';
 import 'app_settings.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({
     required this.settings,
     required this.onOpenMaps,
-    this.permissions,
+    this.readPermissions,
     this.onFixLocation,
     this.onFixBattery,
     this.simulatorEnabled = false,
@@ -32,19 +32,68 @@ class SettingsScreen extends StatelessWidget {
   final AppSettings settings;
   final VoidCallback onOpenMaps;
 
-  /// What the system currently allows (§3.3, §16.1). Null while it is being
-  /// read — the section is then simply absent rather than showing a guess.
-  final SystemPermissions? permissions;
+  /// Reads what the system currently allows (§3.3, §16.1).
+  ///
+  /// A function rather than a value, because this screen is a pushed route:
+  /// handed a snapshot, it would still be showing the state from the moment it
+  /// opened after the player had walked to the system settings, changed
+  /// something and come back — which is precisely when they look at it.
+  final Future<SystemPermissions> Function()? readPermissions;
 
-  final VoidCallback? onFixLocation;
-  final VoidCallback? onFixBattery;
+  final Future<void> Function()? onFixLocation;
+  final Future<void> Function()? onFixBattery;
 
   /// Only meaningful in a developer build (§11.2).
   final bool simulatorEnabled;
   final void Function(bool)? onSimulatorChanged;
 
   @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen>
+    with WidgetsBindingObserver {
+  SystemPermissions? _permissions;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    unawaited(_refresh());
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  /// Coming back from the system settings is the only moment any of this
+  /// changes, and Android tells an app nothing about it.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) unawaited(_refresh());
+  }
+
+  Future<void> _refresh() async {
+    final read = widget.readPermissions;
+    if (read == null) return;
+
+    final permissions = await read();
+    if (!mounted) return;
+    setState(() => _permissions = permissions);
+  }
+
+  Future<void> _fix(Future<void> Function()? action) async {
+    if (action == null) return;
+    await action();
+    await _refresh();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final settings = widget.settings;
+    final permissions = _permissions;
     final l10n = L10n.of(context);
     final theme = Theme.of(context);
 
@@ -101,20 +150,20 @@ class SettingsScreen extends StatelessWidget {
             _Heading(l10n.permTitle),
             _PermissionTile(
               title: l10n.permLocation,
-              status: _locationStatus(l10n, permissions!.location),
-              good: permissions!.location == LocationAccess.granted,
-              onFix: onFixLocation,
+              status: _locationStatus(l10n, permissions.location),
+              good: permissions.location == LocationAccess.granted,
+              onFix: () => unawaited(_fix(widget.onFixLocation)),
             ),
             _PermissionTile(
               title: l10n.permBattery,
-              status: switch (permissions!.batteryOptimised) {
+              status: switch (permissions.batteryOptimised) {
                 true => l10n.permBatteryOn,
                 false => l10n.permBatteryOff,
                 null => l10n.permBatteryUnknown,
               },
-              good: permissions!.batteryOptimised == false,
-              onFix: permissions!.batteryOptimised == true
-                  ? onFixBattery
+              good: permissions.batteryOptimised == false,
+              onFix: permissions.batteryOptimised == true
+                  ? () => unawaited(_fix(widget.onFixBattery))
                   : null,
             ),
           ],
@@ -123,15 +172,15 @@ class SettingsScreen extends StatelessWidget {
           ListTile(
             title: Text(l10n.settingsMaps),
             trailing: const Icon(Icons.chevron_right),
-            onTap: onOpenMaps,
+            onTap: widget.onOpenMaps,
           ),
 
           // §11.2: the simulator is opted into, and only where one exists.
           if (kDevTools) ...[
             const Divider(),
             SwitchListTile(
-              value: simulatorEnabled,
-              onChanged: onSimulatorChanged,
+              value: widget.simulatorEnabled,
+              onChanged: widget.onSimulatorChanged,
               title: Text(l10n.settingsSimulator),
               subtitle: Text(
                 l10n.settingsSimulatorBody,

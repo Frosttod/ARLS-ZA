@@ -45,6 +45,7 @@ class MapLibreSurface extends StatefulWidget {
     required this.centre,
     required this.markers,
     required this.economy,
+    this.fallbackCentre,
     super.key,
   });
 
@@ -53,6 +54,16 @@ class MapLibreSurface extends StatefulWidget {
   final MapSource source;
 
   final PositionFix? centre;
+
+  /// Where to point the camera before the first fix arrives — the installed
+  /// pack's own centre, read from its header.
+  ///
+  /// Without it the map opens at an arbitrary point and, if that point is
+  /// outside the pack, draws nothing at all: a blank screen that looks like a
+  /// broken renderer rather than a GPS that has not locked yet. Indoors, which
+  /// is where a player first opens the game, that is the normal case.
+  final GeoPoint? fallbackCentre;
+
   final List<MapMarker> markers;
 
   /// §3.3: no animation, so the camera jumps rather than glides.
@@ -85,9 +96,16 @@ class _MapLibreSurfaceState extends State<MapLibreSurface> {
       key: ValueKey(palette == MapPalette.dark),
       styleString: mapStyleJson(source: widget.source, palette: palette),
       initialCameraPosition: CameraPosition(
-        target: centre == null
-            ? const LatLng(52.0, 19.0)
-            : LatLng(centre.latitude, centre.longitude),
+        target: centre != null
+            ? LatLng(centre.latitude, centre.longitude)
+            : widget.fallbackCentre != null
+            ? LatLng(
+                widget.fallbackCentre!.latitude,
+                widget.fallbackCentre!.longitude,
+              )
+            // Nothing installed and no fix: the geometric centre of Poland is
+            // as good a guess as any, and the region screen is already open.
+            : const LatLng(52.0, 19.0),
         zoom: kStreetZoom,
       ),
       onMapCreated: (controller) => _controller = controller,

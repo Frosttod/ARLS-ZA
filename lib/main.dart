@@ -238,6 +238,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// So the region screen opens itself on a first run and never again.
   bool _askedForMap = false;
 
+  /// The middle of the installed pack, from its own header. Where the camera
+  /// points until the first fix arrives (§16.6).
+  GeoPoint? _packCentre;
+
   /// Where the previous session ended, read once at boot. What the first
   /// trusted fix is compared against (§16.6).
   GeoPoint? _lastKnown;
@@ -361,13 +365,23 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   Future<void> _readPermissions() async {
     if (_useSimulator) return;
 
-    final permissions = SystemPermissions(
-      location: await requestLocationAccess(),
-      batteryOptimised: await const SystemSettings().isBatteryOptimised(),
-    );
+    final permissions = await _currentPermissions();
     if (!mounted) return;
     setState(() => _permissions = permissions);
   }
+
+  /// Asks the system, without touching any state.
+  ///
+  /// Handed to the settings screen so it can re-read for itself: a pushed
+  /// route given a value keeps showing the value it was built with, which is
+  /// stale exactly when the player is looking at it — right after they walked
+  /// to the system settings and changed something.
+  Future<SystemPermissions> _currentPermissions() async => SystemPermissions(
+    // checkPermission only; asking here would fire a prompt every time the
+    // settings screen is opened.
+    location: await currentLocationAccess(),
+    batteryOptimised: await const SystemSettings().isBatteryOptimised(),
+  );
 
   /// Offered once, after the map is up, and dismissible.
   ///
@@ -517,8 +531,16 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         packs.sourceFor(active) ??
         (streamed == null ? null : StreamedPack(streamed.url));
 
+    final header = active?.header;
+    final centre = header == null
+        ? null
+        : GeoPoint(header.centre.latitude, header.centre.longitude);
+
     if (!mounted) return;
-    setState(() => _mapSource = source);
+    setState(() {
+      _mapSource = source;
+      _packCentre = centre;
+    });
 
     // §16.6 calls this the first-run screen, and it is: with no map there is
     // nothing to draw, nowhere to put a marker and no §10 to run. Opening it
@@ -615,10 +637,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         builder: (_) => SettingsScreen(
           settings: widget.settings,
           onOpenMaps: () => unawaited(_openRegionPicker()),
-          permissions: _permissions,
-          onFixLocation: () => unawaited(_fixLocation()),
-          onFixBattery: () =>
-              unawaited(const SystemSettings().openBatterySettings()),
+          readPermissions: _currentPermissions,
+          onFixLocation: _fixLocation,
+          onFixBattery: const SystemSettings().openBatterySettings,
           simulatorEnabled: _useSimulator,
           onSimulatorChanged: (value) => unawaited(_setSimulator(value)),
         ),
@@ -761,6 +782,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
                   centre: centre,
                   markers: markers,
                   economy: economy,
+                  fallbackCentre: _packCentre,
                 ),
             fix: snapshot?.fix,
             headingDeg: snapshot?.fix?.headingDeg,
