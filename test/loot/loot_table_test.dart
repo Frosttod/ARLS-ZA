@@ -43,10 +43,37 @@ void main() {
       );
     });
 
-    test('every table can be reached from a tag', () {
-      final unreachable = tables.tables.where((t) => t.match.isEmpty);
+    test('every table is either matchable or declared generated', () {
+      // A table matching nothing never fires, and does so silently. The four
+      // that cannot be matched say so instead: the OpenMapTiles building layer
+      // carries no type, so a house or a barn has to be generated (§10.1).
+      final silent = tables.tables.where(
+        (t) => t.match.isEmpty && !t.generated,
+      );
 
-      expect(unreachable.map((t) => t.id), isEmpty);
+      expect(silent.map((t) => t.id), isEmpty);
+    });
+
+    test('every selector is one the tiles can actually carry', () {
+      // Measured with tool/probe_pack.dart. A selector naming a layer that
+      // does not exist is the failure this catches — `building.class=house`
+      // looks right and matches nothing, for ever.
+      const layers = {'poi', 'landuse', 'transportation', 'water', 'waterway'};
+
+      for (final table in tables.tables) {
+        for (final selector in table.match) {
+          final parts = selector.split('=');
+          expect(parts, hasLength(2), reason: selector);
+          final head = parts.first.split('.');
+          expect(head, hasLength(2), reason: selector);
+          expect(layers, contains(head.first), reason: selector);
+          expect(
+            const {'class', 'subclass'},
+            contains(head.last),
+            reason: selector,
+          );
+        }
+      }
     });
 
     test('no two tables claim the same tag', () {

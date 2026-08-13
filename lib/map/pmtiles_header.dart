@@ -35,6 +35,26 @@ enum TileKind {
   avif,
 }
 
+/// How a run of bytes inside the archive is packed.
+enum PmtilesCompression {
+  unknown,
+  none,
+  gzip,
+  brotli,
+  zstd;
+
+  static PmtilesCompression fromWire(int value) => switch (value) {
+    1 => PmtilesCompression.none,
+    2 => PmtilesCompression.gzip,
+    3 => PmtilesCompression.brotli,
+    4 => PmtilesCompression.zstd,
+    _ => PmtilesCompression.unknown,
+  };
+}
+
+/// A slice of the file: where it starts and how long it runs.
+typedef PmtilesRange = ({int offset, int length});
+
 /// A pack's own description of itself.
 class PmtilesHeader {
   const PmtilesHeader({
@@ -46,7 +66,24 @@ class PmtilesHeader {
     required this.centre,
     required this.centreZoom,
     required this.tileCount,
+    this.rootDirectory = (offset: 0, length: 0),
+    this.leafDirectories = (offset: 0, length: 0),
+    this.tileData = (offset: 0, length: 0),
+    this.internalCompression = PmtilesCompression.unknown,
+    this.tileCompression = PmtilesCompression.unknown,
   });
+
+  /// Where the directories and the tiles live. Needed by anything that reads
+  /// the archive itself rather than handing the file to the renderer — which
+  /// the game has to do for §10, because loot spawns from what is on the map
+  /// whether or not the map is being drawn.
+  final PmtilesRange rootDirectory;
+  final PmtilesRange leafDirectories;
+  final PmtilesRange tileData;
+
+  /// How the directories are packed, and how each tile is.
+  final PmtilesCompression internalCompression;
+  final PmtilesCompression tileCompression;
 
   final int specVersion;
   final TileKind tileKind;
@@ -113,9 +150,19 @@ PmtilesHeader readPmtilesHeader(Uint8List bytes) {
   double degrees(int offset) =>
       data.getInt32(offset, Endian.little) / 10000000.0;
 
+  PmtilesRange range(int offsetAt, int lengthAt) => (
+    offset: data.getUint64(offsetAt, Endian.little),
+    length: data.getUint64(lengthAt, Endian.little),
+  );
+
   return PmtilesHeader(
     specVersion: specVersion,
     tileKind: _tileKind(data.getUint8(99)),
+    rootDirectory: range(8, 16),
+    leafDirectories: range(40, 48),
+    tileData: range(56, 64),
+    internalCompression: PmtilesCompression.fromWire(data.getUint8(97)),
+    tileCompression: PmtilesCompression.fromWire(data.getUint8(98)),
     minZoom: data.getUint8(100),
     maxZoom: data.getUint8(101),
     bounds: GeoBounds(

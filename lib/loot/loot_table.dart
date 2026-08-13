@@ -96,16 +96,22 @@ class LootTable {
     required this.source,
     required this.match,
     required this.entries,
+    this.generated = false,
   });
 
   final String id;
   final LootSource source;
 
-  /// The OSM tags §10 names for this kind of place. Tiles carry the normalised
-  /// OpenMapTiles schema instead, so something has to map between the two —
-  /// these stay as the doc wrote them so that mapping is written once, in one
-  /// place, rather than guessed table by table.
+  /// OpenMapTiles selectors, in the form `poi.subclass=pharmacy`. What a tile
+  /// can actually be checked against — see `omt_schema.dart`, where the mapping
+  /// from §10's OSM tags was measured against a built pack rather than
+  /// remembered.
   final List<String> match;
+
+  /// True where the tiles cannot produce this place at all and §10.1 has to
+  /// generate it. The OpenMapTiles building layer carries no type, so a house,
+  /// a barn and a hunting stand are unfindable however the selector is written.
+  final bool generated;
 
   final List<LootEntry> entries;
 
@@ -276,6 +282,7 @@ class LootTableSet {
             for (final tag in (entry['match'] as List? ?? const []))
               if (tag is String) tag,
           ],
+          generated: entry['generated'] == true,
           entries: entries,
         ),
       );
