@@ -56,3 +56,4 @@ flutter:
     - assets/icon.png
     - assets/INTRO.mp4
     - assets/regions.json
+    - assets/data/

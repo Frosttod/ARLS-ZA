@@ -1,0 +1,177 @@
+{
+  "_comment": "Medicine (§4.7, §2.6). Each entry stops a specific class of bleeding from §2.6's table, and only that class: a dressing does nothing against an arterial bleed at 350 ml/min, which is what makes the tourniquet worth its weight. Use times are the doc's own — tourniquet 45 s, pressure dressing 90 s, suturing 12-20 min — and the Medicine skill takes up to 30% off them (§7.1). stops_bleeding_class names the worst grade it handles.",
+  "schema": 1,
+  "items": [
+    {
+      "id": "med_bandage",
+      "type": "medical",
+      "name_key": "item.med_bandage.name",
+      "weight_kg": 0.03,
+      "volume_l": 0.1,
+      "stackable": true,
+      "rarity": "common",
+      "loot_tags": ["pharmacy", "residential", "hospital", "vehicle"],
+      "props": {
+        "use_seconds": 45,
+        "stops_bleeding_class": "superficial",
+        "infection_risk_reduction": 0.2
+      }
+    },
+    {
+      "id": "med_pressure_dressing",
+      "type": "medical",
+      "name_key": "item.med_pressure_dressing.name",
+      "weight_kg": 0.08,
+      "volume_l": 0.25,
+      "stackable": true,
+      "rarity": "uncommon",
+      "loot_tags": ["pharmacy", "hospital", "military", "police"],
+      "props": {
+        "use_seconds": 90,
+        "stops_bleeding_class": "moderate",
+        "infection_risk_reduction": 0.3
+      }
+    },
+    {
+      "id": "med_tourniquet",
+      "type": "medical",
+      "name_key": "item.med_tourniquet.name",
+      "weight_kg": 0.12,
+      "volume_l": 0.2,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 20,
+      "rarity": "rare",
+      "loot_tags": ["military", "police", "hospital", "ambulance"],
+      "props": {
+        "use_seconds": 45,
+        "stops_bleeding_class": "arterial",
+        "limbs_only": true,
+        "reusable": true,
+        "note": "The only answer to 350 ml/min (§2.6). Limbs only — a torso bleed is not something a strap can reach."
+      }
+    },
+    {
+      "id": "med_suture_kit",
+      "type": "medical",
+      "name_key": "item.med_suture_kit.name",
+      "weight_kg": 0.15,
+      "volume_l": 0.3,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 25,
+      "rarity": "rare",
+      "loot_tags": ["hospital", "pharmacy", "veterinary"],
+      "props": {
+        "use_seconds": 960,
+        "use_seconds_range": [720, 1200],
+        "stops_bleeding_class": "strong",
+        "requires_stationary": true,
+        "infection_risk_reduction": 0.5
+      }
+    },
+    {
+      "id": "med_first_aid_kit",
+      "type": "medical",
+      "name_key": "item.med_first_aid_kit.name",
+      "weight_kg": 0.6,
+      "volume_l": 1.6,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 25,
+      "rarity": "uncommon",
+      "loot_tags": ["pharmacy", "hospital", "vehicle", "residential"],
+      "props": {
+        "use_seconds": 120,
+        "stops_bleeding_class": "moderate",
+        "uses": 4,
+        "infection_risk_reduction": 0.35,
+        "note": "Four uses in one box. Heavier per dressing than loose bandages, lighter than carrying four kinds."
+      }
+    },
+    {
+      "id": "med_painkillers",
+      "type": "medical",
+      "name_key": "item.med_painkillers.name",
+      "weight_kg": 0.02,
+      "volume_l": 0.05,
+      "stackable": true,
+      "rarity": "common",
+      "loot_tags": ["pharmacy", "residential", "shop"],
+      "props": {
+        "use_seconds": 20,
+        "stops_bleeding_class": null,
+        "pain_reduction": 0.5,
+        "duration_hours": 4
+      }
+    },
+    {
+      "id": "med_antibiotics",
+      "type": "medical",
+      "name_key": "item.med_antibiotics.name",
+      "weight_kg": 0.03,
+      "volume_l": 0.06,
+      "stackable": true,
+      "rarity": "rare",
+      "loot_tags": ["pharmacy", "hospital", "veterinary"],
+      "props": {
+        "use_seconds": 20,
+        "stops_bleeding_class": null,
+        "treats_infection": true,
+        "course_hours": 72
+      }
+    },
+    {
+      "id": "med_antiseptic",
+      "type": "medical",
+      "name_key": "item.med_antiseptic.name",
+      "weight_kg": 0.1,
+      "volume_l": 0.2,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 20,
+      "rarity": "common",
+      "loot_tags": ["pharmacy", "residential", "hospital"],
+      "props": {
+        "use_seconds": 30,
+        "stops_bleeding_class": null,
+        "infection_risk_reduction": 0.6
+      }
+    },
+    {
+      "id": "med_splint",
+      "type": "medical",
+      "name_key": "item.med_splint.name",
+      "weight_kg": 0.35,
+      "volume_l": 1.2,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 50,
+      "rarity": "uncommon",
+      "loot_tags": ["hospital", "ambulance", "sport"],
+      "props": {
+        "use_seconds": 180,
+        "stops_bleeding_class": null,
+        "treats_fracture": true,
+        "requires_stationary": true
+      }
+    },
+    {
+      "id": "med_saline",
+      "type": "medical",
+      "name_key": "item.med_saline.name",
+      "weight_kg": 0.55,
+      "volume_l": 0.6,
+      "stackable": true,
+      "rarity": "very_rare",
+      "loot_tags": ["hospital", "ambulance"],
+      "props": {
+        "use_seconds": 600,
+        "stops_bleeding_class": null,
+        "restores_blood_ml": 500,
+        "requires_stationary": true,
+        "note": "The only thing that puts volume back. Ten minutes on a drip, which is why it is used in a shelter and not in a street."
+      }
+    }
+  ]
+}

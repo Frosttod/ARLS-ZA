@@ -1,0 +1,255 @@
+{
+  "_comment": "Tools (§4.7): craft_time_modifier and required_for, plus the few that change how the world is searched or heard. The binocular bonus is deliberately small — §10.2 warns that jumping the search radius from 100 to 300 m on one item makes the game feel broken before it is found, so the ceiling is reached with Scouting and not from a pair of lenses. The suppressor is §5.6.1's long-term goal: roughly 3.5x less noise radius, which changes how a player fights rather than adding a percent to a stat.",
+  "schema": 1,
+  "items": [
+    {
+      "id": "tool_multitool",
+      "type": "tool",
+      "name_key": "item.tool_multitool.name",
+      "weight_kg": 0.25,
+      "volume_l": 0.3,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 0.1,
+      "rarity": "uncommon",
+      "loot_tags": ["garage", "industrial", "residential", "sport"],
+      "props": {
+        "craft_time_modifier": -0.15,
+        "required_for": ["repair_basic", "craft_traps", "salvage_metal"],
+        "opens_cans": true
+      }
+    },
+    {
+      "id": "tool_can_opener",
+      "type": "tool",
+      "name_key": "item.tool_can_opener.name",
+      "weight_kg": 0.08,
+      "volume_l": 0.1,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 0.2,
+      "rarity": "common",
+      "loot_tags": ["residential", "shop"],
+      "props": {
+        "opens_cans": true,
+        "required_for": []
+      }
+    },
+    {
+      "id": "tool_flashlight",
+      "type": "tool",
+      "name_key": "item.tool_flashlight.name",
+      "weight_kg": 0.2,
+      "volume_l": 0.35,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 0.05,
+      "rarity": "common",
+      "loot_tags": ["residential", "garage", "shop", "vehicle"],
+      "props": {
+        "light_radius_m": 25,
+        "battery_hours": 6,
+        "visible_to_enemies": true,
+        "note": "Light works both ways: it is seen further than it reaches."
+      }
+    },
+    {
+      "id": "tool_headlamp",
+      "type": "tool",
+      "name_key": "item.tool_headlamp.name",
+      "weight_kg": 0.12,
+      "volume_l": 0.25,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 0.05,
+      "rarity": "uncommon",
+      "loot_tags": ["sport", "garage", "industrial"],
+      "props": {
+        "light_radius_m": 18,
+        "battery_hours": 8,
+        "visible_to_enemies": true,
+        "hands_free": true
+      }
+    },
+    {
+      "id": "tool_binoculars",
+      "type": "tool",
+      "name_key": "item.tool_binoculars.name",
+      "weight_kg": 0.7,
+      "volume_l": 1.2,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 0.02,
+      "rarity": "rare",
+      "loot_tags": ["hunting", "military", "sport"],
+      "props": {
+        "search_radius_bonus_m": 60,
+        "spot_enemy_bonus": 0.25
+      }
+    },
+    {
+      "id": "tool_suppressor",
+      "type": "tool",
+      "name_key": "item.tool_suppressor.name",
+      "weight_kg": 0.4,
+      "volume_l": 0.5,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 0.3,
+      "rarity": "very_rare",
+      "loot_tags": ["police", "military"],
+      "props": {
+        "attaches_to": ["9x19", "5.45x39", "7.62x39", "22lr"],
+        "noise_range_multiplier": 0.29
+      }
+    },
+    {
+      "id": "tool_lighter",
+      "type": "tool",
+      "name_key": "item.tool_lighter.name",
+      "weight_kg": 0.02,
+      "volume_l": 0.03,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 1.0,
+      "rarity": "common",
+      "loot_tags": ["residential", "shop", "vehicle"],
+      "props": {
+        "starts_fire": true,
+        "required_for": ["light_fire", "cook"]
+      }
+    },
+    {
+      "id": "tool_matches",
+      "type": "tool",
+      "name_key": "item.tool_matches.name",
+      "weight_kg": 0.02,
+      "volume_l": 0.04,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 5.0,
+      "rarity": "common",
+      "loot_tags": ["residential", "shop", "rural"],
+      "props": {
+        "starts_fire": true,
+        "fails_when_wet": true,
+        "required_for": ["light_fire", "cook"]
+      }
+    },
+    {
+      "id": "tool_saw",
+      "type": "tool",
+      "name_key": "item.tool_saw.name",
+      "weight_kg": 1.0,
+      "volume_l": 2.0,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 0.3,
+      "rarity": "uncommon",
+      "loot_tags": ["garage", "industrial", "garden"],
+      "props": {
+        "craft_time_modifier": -0.2,
+        "required_for": ["cut_timber", "build_palisade"]
+      }
+    },
+    {
+      "id": "tool_wrench_set",
+      "type": "tool",
+      "name_key": "item.tool_wrench_set.name",
+      "weight_kg": 1.8,
+      "volume_l": 2.4,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 0.05,
+      "rarity": "uncommon",
+      "loot_tags": ["garage", "industrial", "vehicle"],
+      "props": {
+        "craft_time_modifier": -0.25,
+        "required_for": ["repair_generator", "salvage_vehicle", "build_workbench"]
+      }
+    },
+    {
+      "id": "tool_water_filter",
+      "type": "tool",
+      "name_key": "item.tool_water_filter.name",
+      "weight_kg": 0.3,
+      "volume_l": 0.6,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 1.5,
+      "rarity": "rare",
+      "loot_tags": ["sport", "shop", "military"],
+      "props": {
+        "purifies_ml_per_use": 1000,
+        "use_seconds": 120,
+        "required_for": ["purify_water"]
+      }
+    },
+    {
+      "id": "tool_crank_radio",
+      "type": "tool",
+      "name_key": "item.tool_crank_radio.name",
+      "weight_kg": 0.5,
+      "volume_l": 1.0,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 0.05,
+      "rarity": "rare",
+      "loot_tags": ["residential", "shop", "military"],
+      "props": {
+        "needs_no_battery": true,
+        "receives_broadcasts": true
+      }
+    },
+    {
+      "id": "tool_lockpicks",
+      "type": "tool",
+      "name_key": "item.tool_lockpicks.name",
+      "weight_kg": 0.1,
+      "volume_l": 0.15,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 2.0,
+      "rarity": "rare",
+      "loot_tags": ["garage", "police", "residential"],
+      "props": {
+        "opens_locks": true,
+        "use_seconds": 60,
+        "quiet": true,
+        "note": "The silent alternative to a crowbar, which opens the same door and is heard doing it."
+      }
+    },
+    {
+      "id": "tool_sewing_kit",
+      "type": "tool",
+      "name_key": "item.tool_sewing_kit.name",
+      "weight_kg": 0.1,
+      "volume_l": 0.2,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 4.0,
+      "rarity": "common",
+      "loot_tags": ["residential", "shop"],
+      "props": {
+        "craft_time_modifier": -0.1,
+        "required_for": ["repair_clothing"]
+      }
+    },
+    {
+      "id": "tool_gun_cleaning_kit",
+      "type": "tool",
+      "name_key": "item.tool_gun_cleaning_kit.name",
+      "weight_kg": 0.35,
+      "volume_l": 0.6,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 3.0,
+      "rarity": "uncommon",
+      "loot_tags": ["hunting", "police", "military"],
+      "props": {
+        "required_for": ["repair_firearm"],
+        "use_seconds": 300
+      }
+    }
+  ]
+}

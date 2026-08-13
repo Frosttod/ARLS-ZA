@@ -1,0 +1,269 @@
+{
+  "_comment": "Clothing and armour (§4.4). Two independent axes, never mixed: insulation_clo feeds the sweat formula of §2.3, while protection_level plus coverage_pct reduce §2.6 damage only when that location is the one hit. The doc's own examples fix the coverage scale — helmet 12% (head), vest 55% (torso) — and a hit to a limb ignores both. Clo values are per garment, so a winter set adds up rather than each piece claiming to dress the whole body.",
+  "schema": 1,
+  "items": [
+    {
+      "id": "cloth_tshirt",
+      "type": "armor",
+      "name_key": "item.cloth_tshirt.name",
+      "weight_kg": 0.15,
+      "volume_l": 0.8,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 0.05,
+      "rarity": "common",
+      "loot_tags": ["residential", "shop"],
+      "props": {
+        "slot": "torso_base",
+        "insulation_clo": 0.1,
+        "protection_level": 0,
+        "coverage_pct": 0
+      }
+    },
+    {
+      "id": "cloth_thermal_underwear",
+      "type": "armor",
+      "name_key": "item.cloth_thermal_underwear.name",
+      "weight_kg": 0.35,
+      "volume_l": 1.4,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 0.05,
+      "rarity": "uncommon",
+      "loot_tags": ["residential", "shop", "sport"],
+      "props": {
+        "slot": "torso_base",
+        "insulation_clo": 0.8,
+        "protection_level": 0,
+        "coverage_pct": 0
+      }
+    },
+    {
+      "id": "cloth_fleece",
+      "type": "armor",
+      "name_key": "item.cloth_fleece.name",
+      "weight_kg": 0.45,
+      "volume_l": 2.5,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 0.05,
+      "rarity": "common",
+      "loot_tags": ["residential", "shop", "sport"],
+      "props": {
+        "slot": "torso_mid",
+        "insulation_clo": 1.0,
+        "protection_level": 0,
+        "coverage_pct": 0
+      }
+    },
+    {
+      "id": "cloth_winter_jacket",
+      "type": "armor",
+      "name_key": "item.cloth_winter_jacket.name",
+      "weight_kg": 1.2,
+      "volume_l": 6.0,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 0.04,
+      "rarity": "common",
+      "loot_tags": ["residential", "shop"],
+      "props": {
+        "slot": "torso_outer",
+        "insulation_clo": 2.2,
+        "windproof": true,
+        "protection_level": 0,
+        "coverage_pct": 0
+      }
+    },
+    {
+      "id": "cloth_rain_shell",
+      "type": "armor",
+      "name_key": "item.cloth_rain_shell.name",
+      "weight_kg": 0.4,
+      "volume_l": 1.6,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 0.05,
+      "rarity": "uncommon",
+      "loot_tags": ["residential", "shop", "sport"],
+      "props": {
+        "slot": "torso_outer",
+        "insulation_clo": 0.4,
+        "waterproof": true,
+        "windproof": true,
+        "protection_level": 0,
+        "coverage_pct": 0
+      }
+    },
+    {
+      "id": "cloth_trousers",
+      "type": "armor",
+      "name_key": "item.cloth_trousers.name",
+      "weight_kg": 0.5,
+      "volume_l": 2.0,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 0.05,
+      "rarity": "common",
+      "loot_tags": ["residential", "shop"],
+      "props": {
+        "slot": "legs",
+        "insulation_clo": 0.5,
+        "protection_level": 0,
+        "coverage_pct": 0
+      }
+    },
+    {
+      "id": "cloth_winter_trousers",
+      "type": "armor",
+      "name_key": "item.cloth_winter_trousers.name",
+      "weight_kg": 0.8,
+      "volume_l": 3.2,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 0.04,
+      "rarity": "uncommon",
+      "loot_tags": ["residential", "shop", "sport"],
+      "props": {
+        "slot": "legs",
+        "insulation_clo": 1.3,
+        "windproof": true,
+        "protection_level": 0,
+        "coverage_pct": 0
+      }
+    },
+    {
+      "id": "cloth_boots",
+      "type": "armor",
+      "name_key": "item.cloth_boots.name",
+      "weight_kg": 1.1,
+      "volume_l": 3.5,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 0.03,
+      "rarity": "common",
+      "loot_tags": ["residential", "shop", "military"],
+      "props": {
+        "slot": "feet",
+        "insulation_clo": 0.35,
+        "waterproof": true,
+        "protection_level": 0,
+        "coverage_pct": 0,
+        "injury_risk_modifier": -0.2
+      }
+    },
+    {
+      "id": "cloth_gloves",
+      "type": "armor",
+      "name_key": "item.cloth_gloves.name",
+      "weight_kg": 0.1,
+      "volume_l": 0.5,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 0.06,
+      "rarity": "common",
+      "loot_tags": ["residential", "shop", "industrial"],
+      "props": {
+        "slot": "hands",
+        "insulation_clo": 0.2,
+        "protection_level": 0,
+        "coverage_pct": 0
+      }
+    },
+    {
+      "id": "cloth_hat",
+      "type": "armor",
+      "name_key": "item.cloth_hat.name",
+      "weight_kg": 0.08,
+      "volume_l": 0.6,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 0.05,
+      "rarity": "common",
+      "loot_tags": ["residential", "shop"],
+      "props": {
+        "slot": "head",
+        "insulation_clo": 0.3,
+        "protection_level": 0,
+        "coverage_pct": 0
+      }
+    },
+    {
+      "id": "armor_helmet_ballistic",
+      "type": "armor",
+      "name_key": "item.armor_helmet_ballistic.name",
+      "weight_kg": 1.4,
+      "volume_l": 4.5,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 0.5,
+      "rarity": "rare",
+      "loot_tags": ["military", "police"],
+      "props": {
+        "slot": "head",
+        "insulation_clo": 0.15,
+        "protection_level": 2,
+        "coverage_pct": 12,
+        "blunt_bypass_pct": 50
+      }
+    },
+    {
+      "id": "armor_vest_soft",
+      "type": "armor",
+      "name_key": "item.armor_vest_soft.name",
+      "weight_kg": 2.6,
+      "volume_l": 6.0,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 0.5,
+      "rarity": "rare",
+      "loot_tags": ["police", "military"],
+      "props": {
+        "slot": "torso_armor",
+        "insulation_clo": 0.3,
+        "protection_level": 2,
+        "coverage_pct": 55,
+        "blunt_bypass_pct": 50
+      }
+    },
+    {
+      "id": "armor_vest_plate",
+      "type": "armor",
+      "name_key": "item.armor_vest_plate.name",
+      "weight_kg": 8.5,
+      "volume_l": 9.0,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 0.4,
+      "rarity": "very_rare",
+      "loot_tags": ["military"],
+      "props": {
+        "slot": "torso_armor",
+        "insulation_clo": 0.3,
+        "protection_level": 4,
+        "coverage_pct": 40,
+        "coverage_note": "plates cover less than soft armour, and stop far more",
+        "blunt_bypass_pct": 50
+      }
+    },
+    {
+      "id": "armor_bite_sleeves",
+      "type": "armor",
+      "name_key": "item.armor_bite_sleeves.name",
+      "weight_kg": 0.6,
+      "volume_l": 2.0,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 1.0,
+      "rarity": "uncommon",
+      "loot_tags": ["industrial", "garden", "veterinary"],
+      "props": {
+        "slot": "arms",
+        "insulation_clo": 0.25,
+        "protection_level": 1,
+        "coverage_pct": 18,
+        "bite_protection": true
+      }
+    }
+  ]
+}

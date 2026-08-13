@@ -1,0 +1,93 @@
+{
+  "_comment": "Backpacks (§4.5). They raise both limits and weigh something themselves, so a bigger pack is not free. The trekking pack is the one §10.3.4 fixes: it lifts comfort carry from 24 to 36 kg and gives the 65 l that the full combat kit (30.2 l) is measured against — a third fewer trips to the shelter. That is why it is very rare: finding it is a turning point, not a cosmetic upgrade.",
+  "schema": 1,
+  "items": [
+    {
+      "id": "pack_shopping_bag",
+      "type": "backpack",
+      "name_key": "item.pack_shopping_bag.name",
+      "weight_kg": 0.1,
+      "volume_l": 0.3,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 1.5,
+      "rarity": "common",
+      "loot_tags": ["residential", "shop"],
+      "props": {
+        "capacity_l": 20,
+        "comfort_carry_bonus_kg": 2,
+        "max_carry_bonus_kg": 3,
+        "occupies_hands": true
+      }
+    },
+    {
+      "id": "pack_school",
+      "type": "backpack",
+      "name_key": "item.pack_school.name",
+      "weight_kg": 0.6,
+      "volume_l": 2.0,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 0.3,
+      "rarity": "common",
+      "loot_tags": ["residential", "school", "shop"],
+      "props": {
+        "capacity_l": 25,
+        "comfort_carry_bonus_kg": 4,
+        "max_carry_bonus_kg": 5
+      }
+    },
+    {
+      "id": "pack_daypack",
+      "type": "backpack",
+      "name_key": "item.pack_daypack.name",
+      "weight_kg": 0.9,
+      "volume_l": 2.5,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 0.2,
+      "rarity": "common",
+      "loot_tags": ["residential", "shop", "sport"],
+      "props": {
+        "capacity_l": 35,
+        "comfort_carry_bonus_kg": 7,
+        "max_carry_bonus_kg": 9
+      }
+    },
+    {
+      "id": "pack_tactical",
+      "type": "backpack",
+      "name_key": "item.pack_tactical.name",
+      "weight_kg": 1.4,
+      "volume_l": 3.0,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 0.15,
+      "rarity": "rare",
+      "loot_tags": ["military", "police", "sport"],
+      "props": {
+        "capacity_l": 45,
+        "comfort_carry_bonus_kg": 9,
+        "max_carry_bonus_kg": 11
+      }
+    },
+    {
+      "id": "pack_trekking",
+      "type": "backpack",
+      "name_key": "item.pack_trekking.name",
+      "weight_kg": 1.8,
+      "volume_l": 3.5,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 0.12,
+      "rarity": "very_rare",
+      "loot_tags": ["sport", "shop", "residential"],
+      "props": {
+        "capacity_l": 65,
+        "comfort_carry_bonus_kg": 12,
+        "max_carry_bonus_kg": 12,
+        "hip_belt": true
+      }
+    }
+  ]
+}

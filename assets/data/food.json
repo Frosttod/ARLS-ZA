@@ -1,0 +1,226 @@
+{
+  "_comment": "Food and water (§4.7). Measured against the daily need of §2.2: 2450 kcal and 2800 ml for the reference character. Eating takes real time (§4.7: a sandwich 60-90 s, 500 ml of water 25 s) — long enough to matter when something is walking towards you. water_ml is what the item gives, not what it costs; dry food gives none, which is the reason canned goods beat crackers on a long trip. perishable_hours is spoilage from the moment it is opened or found; sealed goods carry null and keep.",
+  "schema": 1,
+  "items": [
+    {
+      "id": "food_canned_meat",
+      "type": "food",
+      "name_key": "item.food_canned_meat.name",
+      "weight_kg": 0.4,
+      "volume_l": 0.4,
+      "stackable": true,
+      "rarity": "common",
+      "loot_tags": ["residential", "shop", "warehouse"],
+      "props": {
+        "kcal": 520,
+        "water_ml": 120,
+        "consume_seconds": 90,
+        "perishable_hours": null,
+        "needs_opener": true
+      }
+    },
+    {
+      "id": "food_canned_vegetables",
+      "type": "food",
+      "name_key": "item.food_canned_vegetables.name",
+      "weight_kg": 0.4,
+      "volume_l": 0.4,
+      "stackable": true,
+      "rarity": "common",
+      "loot_tags": ["residential", "shop", "warehouse"],
+      "props": {
+        "kcal": 210,
+        "water_ml": 220,
+        "consume_seconds": 90,
+        "perishable_hours": null,
+        "needs_opener": true
+      }
+    },
+    {
+      "id": "food_energy_bar",
+      "type": "food",
+      "name_key": "item.food_energy_bar.name",
+      "weight_kg": 0.06,
+      "volume_l": 0.08,
+      "stackable": true,
+      "rarity": "common",
+      "loot_tags": ["shop", "residential", "sport", "vending"],
+      "props": {
+        "kcal": 250,
+        "water_ml": 0,
+        "consume_seconds": 40,
+        "perishable_hours": null
+      }
+    },
+    {
+      "id": "food_crackers",
+      "type": "food",
+      "name_key": "item.food_crackers.name",
+      "weight_kg": 0.2,
+      "volume_l": 0.9,
+      "stackable": true,
+      "rarity": "common",
+      "loot_tags": ["shop", "residential", "warehouse"],
+      "props": {
+        "kcal": 780,
+        "water_ml": 0,
+        "consume_seconds": 120,
+        "perishable_hours": null,
+        "note": "Dry. Cheap calories that cost water to eat."
+      }
+    },
+    {
+      "id": "food_sandwich",
+      "type": "food",
+      "name_key": "item.food_sandwich.name",
+      "weight_kg": 0.15,
+      "volume_l": 0.4,
+      "stackable": true,
+      "rarity": "uncommon",
+      "loot_tags": ["shop", "residential"],
+      "props": {
+        "kcal": 350,
+        "water_ml": 40,
+        "consume_seconds": 75,
+        "perishable_hours": 24
+      }
+    },
+    {
+      "id": "food_dried_meat",
+      "type": "food",
+      "name_key": "item.food_dried_meat.name",
+      "weight_kg": 0.1,
+      "volume_l": 0.2,
+      "stackable": true,
+      "rarity": "uncommon",
+      "loot_tags": ["shop", "rural", "hunting"],
+      "props": {
+        "kcal": 410,
+        "water_ml": 0,
+        "consume_seconds": 90,
+        "perishable_hours": null
+      }
+    },
+    {
+      "id": "food_instant_soup",
+      "type": "food",
+      "name_key": "item.food_instant_soup.name",
+      "weight_kg": 0.07,
+      "volume_l": 0.35,
+      "stackable": true,
+      "rarity": "common",
+      "loot_tags": ["shop", "residential", "warehouse"],
+      "props": {
+        "kcal": 300,
+        "water_ml": 0,
+        "consume_seconds": 120,
+        "perishable_hours": null,
+        "requires_water_ml": 400,
+        "requires_fire": true
+      }
+    },
+    {
+      "id": "food_chocolate",
+      "type": "food",
+      "name_key": "item.food_chocolate.name",
+      "weight_kg": 0.1,
+      "volume_l": 0.12,
+      "stackable": true,
+      "rarity": "uncommon",
+      "loot_tags": ["shop", "residential", "vending"],
+      "props": {
+        "kcal": 540,
+        "water_ml": 0,
+        "consume_seconds": 60,
+        "perishable_hours": null
+      }
+    },
+    {
+      "id": "food_apple",
+      "type": "food",
+      "name_key": "item.food_apple.name",
+      "weight_kg": 0.18,
+      "volume_l": 0.25,
+      "stackable": true,
+      "rarity": "common",
+      "loot_tags": ["rural", "garden", "residential"],
+      "props": {
+        "kcal": 95,
+        "water_ml": 150,
+        "consume_seconds": 60,
+        "perishable_hours": 96
+      }
+    },
+    {
+      "id": "drink_water_bottle_500",
+      "type": "food",
+      "name_key": "item.drink_water_bottle_500.name",
+      "weight_kg": 0.52,
+      "volume_l": 0.55,
+      "stackable": true,
+      "rarity": "common",
+      "loot_tags": ["shop", "residential", "vending", "warehouse"],
+      "props": {
+        "kcal": 0,
+        "water_ml": 500,
+        "consume_seconds": 25,
+        "perishable_hours": null,
+        "potable": true
+      }
+    },
+    {
+      "id": "drink_water_bottle_1500",
+      "type": "food",
+      "name_key": "item.drink_water_bottle_1500.name",
+      "weight_kg": 1.55,
+      "volume_l": 1.6,
+      "stackable": true,
+      "rarity": "common",
+      "loot_tags": ["shop", "residential", "warehouse"],
+      "props": {
+        "kcal": 0,
+        "water_ml": 1500,
+        "consume_seconds": 70,
+        "perishable_hours": null,
+        "potable": true
+      }
+    },
+    {
+      "id": "drink_water_dirty",
+      "type": "food",
+      "name_key": "item.drink_water_dirty.name",
+      "weight_kg": 1.05,
+      "volume_l": 1.1,
+      "stackable": true,
+      "rarity": "common",
+      "loot_tags": ["any"],
+      "props": {
+        "kcal": 0,
+        "water_ml": 1000,
+        "consume_seconds": 50,
+        "perishable_hours": null,
+        "potable": false,
+        "illness_chance": 0.35,
+        "note": "Drinkable in the sense that it can be swallowed."
+      }
+    },
+    {
+      "id": "drink_energy",
+      "type": "food",
+      "name_key": "item.drink_energy.name",
+      "weight_kg": 0.28,
+      "volume_l": 0.3,
+      "stackable": true,
+      "rarity": "uncommon",
+      "loot_tags": ["shop", "vending", "residential"],
+      "props": {
+        "kcal": 110,
+        "water_ml": 250,
+        "consume_seconds": 25,
+        "perishable_hours": null,
+        "potable": true,
+        "caffeine_mg": 80
+      }
+    }
+  ]
+}

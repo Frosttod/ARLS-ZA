@@ -1,0 +1,386 @@
+{
+  "_comment": "Books (§4.6). Nothing here stacks: every copy rolls its own page count (§4.6.4) and keeps its own progress_pages (§4.6.3). weight_kg and volume_l are the mid-length copy, present because §4.1 requires both of every item; the real ones come from pages × g_per_page + cover_g at the moment the instance is generated, which is why the encyclopedia can weigh 2 kg. xp_per_page, not xp_per_title: a 400-page manual must not pay the same as a 150-page one for three times the reading (§4.6.4). The four skills are §7.1's.",
+  "schema": 1,
+  "items": [
+    {
+      "id": "lit_note",
+      "type": "literature",
+      "name_key": "item.lit_note.name",
+      "weight_kg": 0.002,
+      "volume_l": 0.003,
+      "stackable": false,
+      "rarity": "common",
+      "loot_tags": ["residential", "shop", "any"],
+      "props": {
+        "form": "note",
+        "skill": null,
+        "pages_min": 1,
+        "pages_max": 3,
+        "g_per_page": 1.0,
+        "cover_g": 0,
+        "l_per_page": 0.0016,
+        "xp_per_page": 0,
+        "speed_multiplier": 1.3,
+        "note": "§19.1 world-story note. Zero XP by design: it is there to be read, not farmed."
+      }
+    },
+    {
+      "id": "lit_leaflet_first_aid",
+      "type": "literature",
+      "name_key": "item.lit_leaflet_first_aid.name",
+      "weight_kg": 0.003,
+      "volume_l": 0.004,
+      "stackable": false,
+      "rarity": "common",
+      "loot_tags": ["pharmacy", "hospital", "residential"],
+      "props": {
+        "form": "leaflet",
+        "skill": "medicine",
+        "pages_min": 1,
+        "pages_max": 4,
+        "g_per_page": 1.0,
+        "cover_g": 0,
+        "l_per_page": 0.0016,
+        "xp_per_page": 80,
+        "speed_multiplier": 1.3
+      }
+    },
+    {
+      "id": "lit_leaflet_range_safety",
+      "type": "literature",
+      "name_key": "item.lit_leaflet_range_safety.name",
+      "weight_kg": 0.003,
+      "volume_l": 0.004,
+      "stackable": false,
+      "rarity": "common",
+      "loot_tags": ["police", "military", "hunting"],
+      "props": {
+        "form": "leaflet",
+        "skill": "weapons",
+        "pages_min": 1,
+        "pages_max": 4,
+        "g_per_page": 1.0,
+        "cover_g": 0,
+        "l_per_page": 0.0016,
+        "xp_per_page": 80,
+        "speed_multiplier": 1.3
+      }
+    },
+    {
+      "id": "lit_magazine_hunting",
+      "type": "literature",
+      "name_key": "item.lit_magazine_hunting.name",
+      "weight_kg": 0.12,
+      "volume_l": 0.13,
+      "stackable": false,
+      "rarity": "common",
+      "loot_tags": ["hunting", "residential", "rural"],
+      "props": {
+        "form": "magazine",
+        "skill": "scouting",
+        "pages_min": 20,
+        "pages_max": 60,
+        "g_per_page": 2.5,
+        "cover_g": 20,
+        "l_per_page": 0.0031,
+        "xp_per_page": 30,
+        "speed_multiplier": 1.0
+      }
+    },
+    {
+      "id": "lit_magazine_guns",
+      "type": "literature",
+      "name_key": "item.lit_magazine_guns.name",
+      "weight_kg": 0.12,
+      "volume_l": 0.13,
+      "stackable": false,
+      "rarity": "common",
+      "loot_tags": ["hunting", "police", "shop"],
+      "props": {
+        "form": "magazine",
+        "skill": "weapons",
+        "pages_min": 20,
+        "pages_max": 60,
+        "g_per_page": 2.5,
+        "cover_g": 20,
+        "l_per_page": 0.0031,
+        "xp_per_page": 30,
+        "speed_multiplier": 1.0
+      }
+    },
+    {
+      "id": "lit_magazine_diy",
+      "type": "literature",
+      "name_key": "item.lit_magazine_diy.name",
+      "weight_kg": 0.12,
+      "volume_l": 0.13,
+      "stackable": false,
+      "rarity": "common",
+      "loot_tags": ["residential", "garage", "shop"],
+      "props": {
+        "form": "magazine",
+        "skill": "engineering",
+        "pages_min": 20,
+        "pages_max": 60,
+        "g_per_page": 2.5,
+        "cover_g": 20,
+        "l_per_page": 0.0031,
+        "xp_per_page": 30,
+        "speed_multiplier": 1.0
+      }
+    },
+    {
+      "id": "lit_guide_first_aid",
+      "type": "literature",
+      "name_key": "item.lit_guide_first_aid.name",
+      "weight_kg": 0.21,
+      "volume_l": 0.25,
+      "stackable": false,
+      "rarity": "uncommon",
+      "loot_tags": ["pharmacy", "hospital", "residential", "school"],
+      "props": {
+        "form": "guide",
+        "skill": "medicine",
+        "pages_min": 80,
+        "pages_max": 200,
+        "g_per_page": 1.3,
+        "cover_g": 30,
+        "l_per_page": 0.0016,
+        "xp_per_page": 32,
+        "speed_multiplier": 0.7
+      }
+    },
+    {
+      "id": "lit_guide_survival",
+      "type": "literature",
+      "name_key": "item.lit_guide_survival.name",
+      "weight_kg": 0.21,
+      "volume_l": 0.25,
+      "stackable": false,
+      "rarity": "uncommon",
+      "loot_tags": ["sport", "residential", "rural", "shop"],
+      "props": {
+        "form": "guide",
+        "skill": "scouting",
+        "pages_min": 80,
+        "pages_max": 200,
+        "g_per_page": 1.3,
+        "cover_g": 30,
+        "l_per_page": 0.0016,
+        "xp_per_page": 32,
+        "speed_multiplier": 0.7
+      }
+    },
+    {
+      "id": "lit_guide_gunsmithing",
+      "type": "literature",
+      "name_key": "item.lit_guide_gunsmithing.name",
+      "weight_kg": 0.21,
+      "volume_l": 0.25,
+      "stackable": false,
+      "rarity": "uncommon",
+      "loot_tags": ["hunting", "police", "military"],
+      "props": {
+        "form": "guide",
+        "skill": "weapons",
+        "pages_min": 80,
+        "pages_max": 200,
+        "g_per_page": 1.3,
+        "cover_g": 30,
+        "l_per_page": 0.0016,
+        "xp_per_page": 32,
+        "speed_multiplier": 0.7
+      }
+    },
+    {
+      "id": "lit_guide_repairs",
+      "type": "literature",
+      "name_key": "item.lit_guide_repairs.name",
+      "weight_kg": 0.21,
+      "volume_l": 0.25,
+      "stackable": false,
+      "rarity": "uncommon",
+      "loot_tags": ["garage", "industrial", "residential"],
+      "props": {
+        "form": "guide",
+        "skill": "engineering",
+        "pages_min": 80,
+        "pages_max": 200,
+        "g_per_page": 1.3,
+        "cover_g": 30,
+        "l_per_page": 0.0016,
+        "xp_per_page": 32,
+        "speed_multiplier": 0.7
+      }
+    },
+    {
+      "id": "lit_textbook_medicine",
+      "type": "literature",
+      "name_key": "item.lit_textbook_medicine.name",
+      "weight_kg": 0.49,
+      "volume_l": 0.52,
+      "stackable": false,
+      "rarity": "rare",
+      "loot_tags": ["hospital", "school", "pharmacy"],
+      "props": {
+        "form": "textbook",
+        "skill": "medicine",
+        "pages_min": 150,
+        "pages_max": 400,
+        "g_per_page": 1.5,
+        "cover_g": 80,
+        "l_per_page": 0.0016,
+        "xp_per_page": 33,
+        "speed_multiplier": 0.45
+      }
+    },
+    {
+      "id": "lit_textbook_ballistics",
+      "type": "literature",
+      "name_key": "item.lit_textbook_ballistics.name",
+      "weight_kg": 0.49,
+      "volume_l": 0.52,
+      "stackable": false,
+      "rarity": "rare",
+      "loot_tags": ["military", "hunting", "school"],
+      "props": {
+        "form": "textbook",
+        "skill": "weapons",
+        "pages_min": 150,
+        "pages_max": 400,
+        "g_per_page": 1.5,
+        "cover_g": 80,
+        "l_per_page": 0.0016,
+        "xp_per_page": 33,
+        "speed_multiplier": 0.45
+      }
+    },
+    {
+      "id": "lit_textbook_engineering",
+      "type": "literature",
+      "name_key": "item.lit_textbook_engineering.name",
+      "weight_kg": 0.49,
+      "volume_l": 0.52,
+      "stackable": false,
+      "rarity": "rare",
+      "loot_tags": ["school", "industrial", "garage"],
+      "props": {
+        "form": "textbook",
+        "skill": "engineering",
+        "pages_min": 150,
+        "pages_max": 400,
+        "g_per_page": 1.5,
+        "cover_g": 80,
+        "l_per_page": 0.0016,
+        "xp_per_page": 33,
+        "speed_multiplier": 0.45
+      }
+    },
+    {
+      "id": "lit_textbook_fieldcraft",
+      "type": "literature",
+      "name_key": "item.lit_textbook_fieldcraft.name",
+      "weight_kg": 0.49,
+      "volume_l": 0.52,
+      "stackable": false,
+      "rarity": "rare",
+      "loot_tags": ["military", "school", "sport"],
+      "props": {
+        "form": "textbook",
+        "skill": "scouting",
+        "pages_min": 150,
+        "pages_max": 400,
+        "g_per_page": 1.5,
+        "cover_g": 80,
+        "l_per_page": 0.0016,
+        "xp_per_page": 33,
+        "speed_multiplier": 0.45
+      }
+    },
+    {
+      "id": "lit_encyclopedia_medicine",
+      "type": "literature",
+      "name_key": "item.lit_encyclopedia_medicine.name",
+      "weight_kg": 1.57,
+      "volume_l": 1.83,
+      "stackable": false,
+      "rarity": "very_rare",
+      "loot_tags": ["hospital", "school", "library"],
+      "props": {
+        "form": "encyclopedia",
+        "skill": "medicine",
+        "pages_min": 400,
+        "pages_max": 900,
+        "g_per_page": 1.8,
+        "cover_g": 400,
+        "l_per_page": 0.0022,
+        "xp_per_page": 31,
+        "speed_multiplier": 0.4,
+        "note": "Up to 2 kg — 8% of comfort carry. Worth reading where it lies."
+      }
+    },
+    {
+      "id": "lit_encyclopedia_weapons",
+      "type": "literature",
+      "name_key": "item.lit_encyclopedia_weapons.name",
+      "weight_kg": 1.57,
+      "volume_l": 1.83,
+      "stackable": false,
+      "rarity": "very_rare",
+      "loot_tags": ["military", "library", "hunting"],
+      "props": {
+        "form": "encyclopedia",
+        "skill": "weapons",
+        "pages_min": 400,
+        "pages_max": 900,
+        "g_per_page": 1.8,
+        "cover_g": 400,
+        "l_per_page": 0.0022,
+        "xp_per_page": 31,
+        "speed_multiplier": 0.4
+      }
+    },
+    {
+      "id": "lit_encyclopedia_engineering",
+      "type": "literature",
+      "name_key": "item.lit_encyclopedia_engineering.name",
+      "weight_kg": 1.57,
+      "volume_l": 1.83,
+      "stackable": false,
+      "rarity": "very_rare",
+      "loot_tags": ["school", "library", "industrial"],
+      "props": {
+        "form": "encyclopedia",
+        "skill": "engineering",
+        "pages_min": 400,
+        "pages_max": 900,
+        "g_per_page": 1.8,
+        "cover_g": 400,
+        "l_per_page": 0.0022,
+        "xp_per_page": 31,
+        "speed_multiplier": 0.4
+      }
+    },
+    {
+      "id": "lit_encyclopedia_nature",
+      "type": "literature",
+      "name_key": "item.lit_encyclopedia_nature.name",
+      "weight_kg": 1.57,
+      "volume_l": 1.83,
+      "stackable": false,
+      "rarity": "very_rare",
+      "loot_tags": ["school", "library", "rural"],
+      "props": {
+        "form": "encyclopedia",
+        "skill": "scouting",
+        "pages_min": 400,
+        "pages_max": 900,
+        "g_per_page": 1.8,
+        "cover_g": 400,
+        "l_per_page": 0.0022,
+        "xp_per_page": 31,
+        "speed_multiplier": 0.4
+      }
+    }
+  ]
+}

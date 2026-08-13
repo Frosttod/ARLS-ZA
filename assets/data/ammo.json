@@ -1,0 +1,94 @@
+{
+  "_comment": "Ammunition (§4.2, §10.3.3). caliber must match a firearm's exactly — that string is the whole reason ammunition is a resource rather than a number, and a typo makes a calibre unusable rather than universal. Weights are per round, so 60 rounds of 5.45 come to 0.64 kg, the figure §10.3.4's combat kit is built from. Rifle ammunition appears only in military sites, hunting shops and hunting stands (§10.3.3); police stations give almost nothing but 9 mm.",
+  "schema": 1,
+  "items": [
+    {
+      "id": "ammo_22lr",
+      "type": "material",
+      "name_key": "item.ammo_22lr.name",
+      "weight_kg": 0.003,
+      "volume_l": 0.002,
+      "stackable": true,
+      "rarity": "common",
+      "loot_tags": ["hunting", "rural", "residential"],
+      "props": {"caliber": "22lr"}
+    },
+    {
+      "id": "ammo_38special",
+      "type": "material",
+      "name_key": "item.ammo_38special.name",
+      "weight_kg": 0.012,
+      "volume_l": 0.005,
+      "stackable": true,
+      "rarity": "uncommon",
+      "loot_tags": ["police", "residential"],
+      "props": {"caliber": "38special"}
+    },
+    {
+      "id": "ammo_9x19",
+      "type": "material",
+      "name_key": "item.ammo_9x19.name",
+      "weight_kg": 0.012,
+      "volume_l": 0.005,
+      "stackable": true,
+      "rarity": "common",
+      "loot_tags": ["police", "military"],
+      "props": {"caliber": "9x19"}
+    },
+    {
+      "id": "ammo_545x39",
+      "type": "material",
+      "name_key": "item.ammo_545x39.name",
+      "weight_kg": 0.0107,
+      "volume_l": 0.006,
+      "stackable": true,
+      "rarity": "uncommon",
+      "loot_tags": ["military"],
+      "props": {"caliber": "5.45x39"}
+    },
+    {
+      "id": "ammo_762x39",
+      "type": "material",
+      "name_key": "item.ammo_762x39.name",
+      "weight_kg": 0.0163,
+      "volume_l": 0.008,
+      "stackable": true,
+      "rarity": "uncommon",
+      "loot_tags": ["military", "hunting"],
+      "props": {"caliber": "7.62x39"}
+    },
+    {
+      "id": "ammo_762x54r",
+      "type": "material",
+      "name_key": "item.ammo_762x54r.name",
+      "weight_kg": 0.022,
+      "volume_l": 0.01,
+      "stackable": true,
+      "rarity": "uncommon",
+      "loot_tags": ["hunting", "military", "rural"],
+      "props": {"caliber": "7.62x54r"}
+    },
+    {
+      "id": "ammo_12ga_buck",
+      "type": "material",
+      "name_key": "item.ammo_12ga_buck.name",
+      "weight_kg": 0.045,
+      "volume_l": 0.02,
+      "stackable": true,
+      "rarity": "common",
+      "loot_tags": ["hunting", "police", "rural"],
+      "props": {"caliber": "12ga", "load": "buckshot"}
+    },
+    {
+      "id": "ammo_12ga_slug",
+      "type": "material",
+      "name_key": "item.ammo_12ga_slug.name",
+      "weight_kg": 0.048,
+      "volume_l": 0.02,
+      "stackable": true,
+      "rarity": "uncommon",
+      "loot_tags": ["hunting", "rural"],
+      "props": {"caliber": "12ga", "load": "slug"}
+    }
+  ]
+}

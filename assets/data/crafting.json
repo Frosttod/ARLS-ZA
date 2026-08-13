@@ -1,0 +1,164 @@
+{
+  "_comment": "Crafting materials (§4.7), and the five that §18.2 builds the shelter from. Their unit masses are not chosen here — they are solved out of §18.2's own table and reproduce all thirteen module rows exactly: wood 2.0 kg, metal 1.5, plastic 0.4, fabric 0.3, component 0.8. Camp = 12x2.0 + 4x1.5 + 6x0.3 = 31.8 kg, Workshop L3 = 121.4 kg, and the full build comes to the 731 kg of §18.2. Change one of these five and every build cost in the game moves with it.",
+  "schema": 1,
+  "items": [
+    {
+      "id": "mat_wood",
+      "type": "crafting",
+      "name_key": "item.mat_wood.name",
+      "weight_kg": 2.0,
+      "volume_l": 4.0,
+      "stackable": true,
+      "rarity": "common",
+      "loot_tags": ["rural", "forest", "garden", "industrial"],
+      "props": {"build_material": true}
+    },
+    {
+      "id": "mat_metal",
+      "type": "crafting",
+      "name_key": "item.mat_metal.name",
+      "weight_kg": 1.5,
+      "volume_l": 1.2,
+      "stackable": true,
+      "rarity": "common",
+      "loot_tags": ["industrial", "garage", "vehicle", "shop"],
+      "props": {"build_material": true}
+    },
+    {
+      "id": "mat_plastic",
+      "type": "crafting",
+      "name_key": "item.mat_plastic.name",
+      "weight_kg": 0.4,
+      "volume_l": 2.5,
+      "stackable": true,
+      "rarity": "common",
+      "loot_tags": ["residential", "shop", "industrial", "warehouse"],
+      "props": {"build_material": true}
+    },
+    {
+      "id": "mat_fabric",
+      "type": "crafting",
+      "name_key": "item.mat_fabric.name",
+      "weight_kg": 0.3,
+      "volume_l": 2.0,
+      "stackable": true,
+      "rarity": "common",
+      "loot_tags": ["residential", "shop", "hotel"],
+      "props": {"build_material": true}
+    },
+    {
+      "id": "mat_component",
+      "type": "crafting",
+      "name_key": "item.mat_component.name",
+      "weight_kg": 0.8,
+      "volume_l": 0.6,
+      "stackable": true,
+      "rarity": "uncommon",
+      "loot_tags": ["industrial", "garage", "shop", "vehicle"],
+      "props": {"build_material": true}
+    },
+    {
+      "id": "mat_rope",
+      "type": "crafting",
+      "name_key": "item.mat_rope.name",
+      "weight_kg": 0.9,
+      "volume_l": 2.0,
+      "stackable": true,
+      "rarity": "uncommon",
+      "loot_tags": ["garage", "sport", "industrial", "rural"],
+      "props": {"build_material": false}
+    },
+    {
+      "id": "mat_duct_tape",
+      "type": "crafting",
+      "name_key": "item.mat_duct_tape.name",
+      "weight_kg": 0.25,
+      "volume_l": 0.5,
+      "stackable": true,
+      "rarity": "uncommon",
+      "loot_tags": ["garage", "industrial", "residential"],
+      "props": {"build_material": false, "repairs": true}
+    },
+    {
+      "id": "mat_wire",
+      "type": "crafting",
+      "name_key": "item.mat_wire.name",
+      "weight_kg": 0.4,
+      "volume_l": 0.4,
+      "stackable": true,
+      "rarity": "common",
+      "loot_tags": ["industrial", "garage", "vehicle"],
+      "props": {"build_material": false}
+    },
+    {
+      "id": "mat_nails",
+      "type": "crafting",
+      "name_key": "item.mat_nails.name",
+      "weight_kg": 0.5,
+      "volume_l": 0.3,
+      "stackable": true,
+      "rarity": "common",
+      "loot_tags": ["garage", "industrial", "shop"],
+      "props": {"build_material": false}
+    },
+    {
+      "id": "mat_battery",
+      "type": "crafting",
+      "name_key": "item.mat_battery.name",
+      "weight_kg": 0.05,
+      "volume_l": 0.03,
+      "stackable": true,
+      "rarity": "common",
+      "loot_tags": ["shop", "residential", "garage", "vending"],
+      "props": {"build_material": false, "powers": ["tool_flashlight", "tool_headlamp"]}
+    },
+    {
+      "id": "mat_fuel",
+      "type": "crafting",
+      "name_key": "item.mat_fuel.name",
+      "weight_kg": 3.8,
+      "volume_l": 5.0,
+      "stackable": true,
+      "rarity": "uncommon",
+      "loot_tags": ["vehicle", "garage", "industrial", "rural"],
+      "props": {"build_material": false, "litres": 5, "flammable": true}
+    },
+    {
+      "id": "mat_leather",
+      "type": "crafting",
+      "name_key": "item.mat_leather.name",
+      "weight_kg": 0.6,
+      "volume_l": 1.2,
+      "stackable": true,
+      "rarity": "uncommon",
+      "loot_tags": ["residential", "shop", "rural"],
+      "props": {"build_material": false}
+    },
+    {
+      "id": "mat_glue",
+      "type": "crafting",
+      "name_key": "item.mat_glue.name",
+      "weight_kg": 0.15,
+      "volume_l": 0.2,
+      "stackable": true,
+      "rarity": "common",
+      "loot_tags": ["garage", "shop", "school"],
+      "props": {"build_material": false}
+    },
+    {
+      "id": "mat_alcohol",
+      "type": "crafting",
+      "name_key": "item.mat_alcohol.name",
+      "weight_kg": 0.55,
+      "volume_l": 0.6,
+      "stackable": true,
+      "rarity": "uncommon",
+      "loot_tags": ["shop", "residential", "pharmacy"],
+      "props": {
+        "build_material": false,
+        "flammable": true,
+        "note": "Fuel, antiseptic, or a bad idea. Not drinking water either way."
+      }
+    }
+  ]
+}
