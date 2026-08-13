@@ -152,7 +152,12 @@ class _SettingsScreenState extends State<SettingsScreen>
               title: l10n.permLocation,
               status: _locationStatus(l10n, permissions.location),
               good: permissions.location == LocationAccess.granted,
-              onFix: () => unawaited(_fix(widget.onFixLocation)),
+              // Nothing to fix when it is already full. A button offering to
+              // repair something that works invites a player to go and break
+              // it.
+              onFix: permissions.location == LocationAccess.granted
+                  ? null
+                  : () => unawaited(_fix(widget.onFixLocation)),
             ),
             _PermissionTile(
               title: l10n.permBattery,
