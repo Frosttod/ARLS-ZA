@@ -39,6 +39,23 @@ const double kWidestViewM = 1000;
 /// stretching what it has.
 const double kClosestZoom = 19;
 
+/// The furthest out the game lets a player pull, given the width of their
+/// screen in **logical** pixels.
+///
+/// The unit is the whole point. A web-mercator zoom level is defined against a
+/// 256-pixel tile in the device-independent units MapLibre lays out in, so
+/// handing this physical pixels makes the limit about three times tighter than
+/// §3.6 asks for: on a phone at three times density, a "kilometre across" came
+/// out as 330 metres.
+double widestGameZoom({
+  required double logicalWidth,
+  required double latitude,
+}) => zoomForWidth(
+  metresAcross: kWidestViewM,
+  pixelWidth: logicalWidth,
+  latitude: latitude,
+);
+
 class MapLibreSurface extends StatefulWidget {
   const MapLibreSurface({
     required this.source,
@@ -111,6 +128,12 @@ class _MapLibreSurfaceState extends State<MapLibreSurface> {
       onMapCreated: (controller) => _controller = controller,
       onStyleLoadedCallback: () => unawaited(_sync()),
 
+      // A pinch zooms about the fingers, which slides the ground out from under
+      // the player: the pin is drawn at the middle of the screen and the map is
+      // not. Snapping back when the gesture settles keeps the one promise this
+      // view makes — you are always looking at where you are standing.
+      onCameraIdle: () => unawaited(_recentre()),
+
       // The player is drawn by MapScreen as an overlay; MapLibre's own dot
       // would be a second, differently-placed truth.
       myLocationEnabled: false,
@@ -138,13 +161,17 @@ class _MapLibreSurfaceState extends State<MapLibreSurface> {
   /// Computed rather than hard-coded because a zoom number means a different
   /// distance on a small phone than a large one, and a different one in Gdańsk
   /// than in Zakopane.
-  double _widestZoom(BuildContext context, PositionFix? centre) => zoomForWidth(
-    metresAcross: kWidestViewM,
-    pixelWidth:
-        MediaQuery.sizeOf(context).width *
-        MediaQuery.devicePixelRatioOf(context),
-    latitude: centre?.latitude ?? 52,
-  );
+  ///
+  /// ⚠️ Logical pixels, not physical ones. A web-mercator zoom level is defined
+  /// against a 256-pixel tile in the units MapLibre lays out in, which are
+  /// device-independent. Multiplying by the pixel ratio here made the widest
+  /// allowed view about three times narrower than §3.6 asks for — a "kilometre"
+  /// that was really 330 metres on any modern phone.
+  double _widestZoom(BuildContext context, PositionFix? centre) =>
+      widestGameZoom(
+        logicalWidth: MediaQuery.sizeOf(context).width,
+        latitude: centre?.latitude ?? 52,
+      );
 
   @override
   void didUpdateWidget(MapLibreSurface oldWidget) {
@@ -158,6 +185,33 @@ class _MapLibreSurfaceState extends State<MapLibreSurface> {
 
     await _syncCamera(controller);
     await _syncMarkers(controller);
+  }
+
+  /// Puts the player back under the pin after a zoom.
+  ///
+  /// Only when the camera has actually drifted: MapLibre reports idle after
+  /// every camera move including our own, and moving again inside that callback
+  /// would be a loop. A tenth of a second of arc is about three metres, which
+  /// is inside GPS noise and well inside a marker.
+  Future<void> _recentre() async {
+    final controller = _controller;
+    final centre = widget.centre;
+    if (controller == null || centre == null) return;
+
+    final camera = controller.cameraPosition?.target;
+    if (camera == null) return;
+
+    const tolerance = 0.00003;
+    if ((camera.latitude - centre.latitude).abs() < tolerance &&
+        (camera.longitude - centre.longitude).abs() < tolerance) {
+      return;
+    }
+
+    // Never animated. The player did not ask to travel — the map slipped, and
+    // gliding it back would draw attention to the slip.
+    await controller.moveCamera(
+      CameraUpdate.newLatLng(LatLng(centre.latitude, centre.longitude)),
+    );
   }
 
   Future<void> _syncCamera(MapLibreMapController controller) async {
