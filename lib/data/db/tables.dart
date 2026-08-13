@@ -175,3 +175,41 @@ class SnapshotRecords extends Table {
   /// out until the migration it guards has been proven good.
   TextColumn get reason => text().withDefault(const Constant('periodic'))();
 }
+
+/// What a character is carrying (§4.1, §18.1a).
+///
+/// One row per inventory line rather than one per piece: a stack of forty
+/// rounds is one row with a count. Anything carrying its own state — a rifle
+/// with its own wear, a part-read book (§4.6.3) — is one row per piece, and
+/// [count] stays at one.
+///
+/// The item is stored by id and never by its parameters. Mass, volume and
+/// everything else come from the catalogue at read time, so a content pack
+/// that corrects a weight corrects it for items already in a player's pack.
+class InventoryLines extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get profileId => integer()();
+
+  /// Catalogue id (§4.1). Not a foreign key: the catalogue is data files, not
+  /// tables, and an item that a removed content pack defined must not take the
+  /// save down with it — it is dropped on read and reported.
+  TextColumn get itemId => text()();
+
+  IntColumn get count => integer().withDefault(const Constant(1))();
+
+  /// 'pack' | 'worn'. Worn kit costs mass but not volume (§18.1a), so where a
+  /// thing is decides which limit it counts against.
+  TextColumn get slot => text().withDefault(const Constant('pack'))();
+
+  /// 0–100 for anything that wears out, null for anything that does not.
+  RealColumn get condition => real().nullable()();
+
+  /// Rolled per copy at generation (§4.6.4). Null for anything but literature.
+  IntColumn get pagesTotal => integer().nullable()();
+  IntColumn get pagesRead => integer().withDefault(const Constant(0))();
+
+  @override
+  List<String> get customConstraints => [
+    'FOREIGN KEY (profile_id) REFERENCES profiles (id) ON DELETE CASCADE',
+  ];
+}

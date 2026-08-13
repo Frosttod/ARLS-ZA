@@ -3035,6 +3035,511 @@ class SnapshotRecordsCompanion extends UpdateCompanion<SnapshotRecord> {
   }
 }
 
+class $InventoryLinesTable extends InventoryLines
+    with TableInfo<$InventoryLinesTable, InventoryLine> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $InventoryLinesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _profileIdMeta = const VerificationMeta(
+    'profileId',
+  );
+  @override
+  late final GeneratedColumn<int> profileId = GeneratedColumn<int>(
+    'profile_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _itemIdMeta = const VerificationMeta('itemId');
+  @override
+  late final GeneratedColumn<String> itemId = GeneratedColumn<String>(
+    'item_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _countMeta = const VerificationMeta('count');
+  @override
+  late final GeneratedColumn<int> count = GeneratedColumn<int>(
+    'count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _slotMeta = const VerificationMeta('slot');
+  @override
+  late final GeneratedColumn<String> slot = GeneratedColumn<String>(
+    'slot',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('pack'),
+  );
+  static const VerificationMeta _conditionMeta = const VerificationMeta(
+    'condition',
+  );
+  @override
+  late final GeneratedColumn<double> condition = GeneratedColumn<double>(
+    'condition',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _pagesTotalMeta = const VerificationMeta(
+    'pagesTotal',
+  );
+  @override
+  late final GeneratedColumn<int> pagesTotal = GeneratedColumn<int>(
+    'pages_total',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _pagesReadMeta = const VerificationMeta(
+    'pagesRead',
+  );
+  @override
+  late final GeneratedColumn<int> pagesRead = GeneratedColumn<int>(
+    'pages_read',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    profileId,
+    itemId,
+    count,
+    slot,
+    condition,
+    pagesTotal,
+    pagesRead,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'inventory_lines';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<InventoryLine> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('profile_id')) {
+      context.handle(
+        _profileIdMeta,
+        profileId.isAcceptableOrUnknown(data['profile_id']!, _profileIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_profileIdMeta);
+    }
+    if (data.containsKey('item_id')) {
+      context.handle(
+        _itemIdMeta,
+        itemId.isAcceptableOrUnknown(data['item_id']!, _itemIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_itemIdMeta);
+    }
+    if (data.containsKey('count')) {
+      context.handle(
+        _countMeta,
+        count.isAcceptableOrUnknown(data['count']!, _countMeta),
+      );
+    }
+    if (data.containsKey('slot')) {
+      context.handle(
+        _slotMeta,
+        slot.isAcceptableOrUnknown(data['slot']!, _slotMeta),
+      );
+    }
+    if (data.containsKey('condition')) {
+      context.handle(
+        _conditionMeta,
+        condition.isAcceptableOrUnknown(data['condition']!, _conditionMeta),
+      );
+    }
+    if (data.containsKey('pages_total')) {
+      context.handle(
+        _pagesTotalMeta,
+        pagesTotal.isAcceptableOrUnknown(data['pages_total']!, _pagesTotalMeta),
+      );
+    }
+    if (data.containsKey('pages_read')) {
+      context.handle(
+        _pagesReadMeta,
+        pagesRead.isAcceptableOrUnknown(data['pages_read']!, _pagesReadMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  InventoryLine map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return InventoryLine(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      profileId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}profile_id'],
+      )!,
+      itemId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}item_id'],
+      )!,
+      count: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}count'],
+      )!,
+      slot: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}slot'],
+      )!,
+      condition: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}condition'],
+      ),
+      pagesTotal: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}pages_total'],
+      ),
+      pagesRead: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}pages_read'],
+      )!,
+    );
+  }
+
+  @override
+  $InventoryLinesTable createAlias(String alias) {
+    return $InventoryLinesTable(attachedDatabase, alias);
+  }
+}
+
+class InventoryLine extends DataClass implements Insertable<InventoryLine> {
+  final int id;
+  final int profileId;
+
+  /// Catalogue id (§4.1). Not a foreign key: the catalogue is data files, not
+  /// tables, and an item that a removed content pack defined must not take the
+  /// save down with it — it is dropped on read and reported.
+  final String itemId;
+  final int count;
+
+  /// 'pack' | 'worn'. Worn kit costs mass but not volume (§18.1a), so where a
+  /// thing is decides which limit it counts against.
+  final String slot;
+
+  /// 0–100 for anything that wears out, null for anything that does not.
+  final double? condition;
+
+  /// Rolled per copy at generation (§4.6.4). Null for anything but literature.
+  final int? pagesTotal;
+  final int pagesRead;
+  const InventoryLine({
+    required this.id,
+    required this.profileId,
+    required this.itemId,
+    required this.count,
+    required this.slot,
+    this.condition,
+    this.pagesTotal,
+    required this.pagesRead,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['profile_id'] = Variable<int>(profileId);
+    map['item_id'] = Variable<String>(itemId);
+    map['count'] = Variable<int>(count);
+    map['slot'] = Variable<String>(slot);
+    if (!nullToAbsent || condition != null) {
+      map['condition'] = Variable<double>(condition);
+    }
+    if (!nullToAbsent || pagesTotal != null) {
+      map['pages_total'] = Variable<int>(pagesTotal);
+    }
+    map['pages_read'] = Variable<int>(pagesRead);
+    return map;
+  }
+
+  InventoryLinesCompanion toCompanion(bool nullToAbsent) {
+    return InventoryLinesCompanion(
+      id: Value(id),
+      profileId: Value(profileId),
+      itemId: Value(itemId),
+      count: Value(count),
+      slot: Value(slot),
+      condition: condition == null && nullToAbsent
+          ? const Value.absent()
+          : Value(condition),
+      pagesTotal: pagesTotal == null && nullToAbsent
+          ? const Value.absent()
+          : Value(pagesTotal),
+      pagesRead: Value(pagesRead),
+    );
+  }
+
+  factory InventoryLine.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return InventoryLine(
+      id: serializer.fromJson<int>(json['id']),
+      profileId: serializer.fromJson<int>(json['profileId']),
+      itemId: serializer.fromJson<String>(json['itemId']),
+      count: serializer.fromJson<int>(json['count']),
+      slot: serializer.fromJson<String>(json['slot']),
+      condition: serializer.fromJson<double?>(json['condition']),
+      pagesTotal: serializer.fromJson<int?>(json['pagesTotal']),
+      pagesRead: serializer.fromJson<int>(json['pagesRead']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'profileId': serializer.toJson<int>(profileId),
+      'itemId': serializer.toJson<String>(itemId),
+      'count': serializer.toJson<int>(count),
+      'slot': serializer.toJson<String>(slot),
+      'condition': serializer.toJson<double?>(condition),
+      'pagesTotal': serializer.toJson<int?>(pagesTotal),
+      'pagesRead': serializer.toJson<int>(pagesRead),
+    };
+  }
+
+  InventoryLine copyWith({
+    int? id,
+    int? profileId,
+    String? itemId,
+    int? count,
+    String? slot,
+    Value<double?> condition = const Value.absent(),
+    Value<int?> pagesTotal = const Value.absent(),
+    int? pagesRead,
+  }) => InventoryLine(
+    id: id ?? this.id,
+    profileId: profileId ?? this.profileId,
+    itemId: itemId ?? this.itemId,
+    count: count ?? this.count,
+    slot: slot ?? this.slot,
+    condition: condition.present ? condition.value : this.condition,
+    pagesTotal: pagesTotal.present ? pagesTotal.value : this.pagesTotal,
+    pagesRead: pagesRead ?? this.pagesRead,
+  );
+  InventoryLine copyWithCompanion(InventoryLinesCompanion data) {
+    return InventoryLine(
+      id: data.id.present ? data.id.value : this.id,
+      profileId: data.profileId.present ? data.profileId.value : this.profileId,
+      itemId: data.itemId.present ? data.itemId.value : this.itemId,
+      count: data.count.present ? data.count.value : this.count,
+      slot: data.slot.present ? data.slot.value : this.slot,
+      condition: data.condition.present ? data.condition.value : this.condition,
+      pagesTotal: data.pagesTotal.present
+          ? data.pagesTotal.value
+          : this.pagesTotal,
+      pagesRead: data.pagesRead.present ? data.pagesRead.value : this.pagesRead,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('InventoryLine(')
+          ..write('id: $id, ')
+          ..write('profileId: $profileId, ')
+          ..write('itemId: $itemId, ')
+          ..write('count: $count, ')
+          ..write('slot: $slot, ')
+          ..write('condition: $condition, ')
+          ..write('pagesTotal: $pagesTotal, ')
+          ..write('pagesRead: $pagesRead')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    profileId,
+    itemId,
+    count,
+    slot,
+    condition,
+    pagesTotal,
+    pagesRead,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is InventoryLine &&
+          other.id == this.id &&
+          other.profileId == this.profileId &&
+          other.itemId == this.itemId &&
+          other.count == this.count &&
+          other.slot == this.slot &&
+          other.condition == this.condition &&
+          other.pagesTotal == this.pagesTotal &&
+          other.pagesRead == this.pagesRead);
+}
+
+class InventoryLinesCompanion extends UpdateCompanion<InventoryLine> {
+  final Value<int> id;
+  final Value<int> profileId;
+  final Value<String> itemId;
+  final Value<int> count;
+  final Value<String> slot;
+  final Value<double?> condition;
+  final Value<int?> pagesTotal;
+  final Value<int> pagesRead;
+  const InventoryLinesCompanion({
+    this.id = const Value.absent(),
+    this.profileId = const Value.absent(),
+    this.itemId = const Value.absent(),
+    this.count = const Value.absent(),
+    this.slot = const Value.absent(),
+    this.condition = const Value.absent(),
+    this.pagesTotal = const Value.absent(),
+    this.pagesRead = const Value.absent(),
+  });
+  InventoryLinesCompanion.insert({
+    this.id = const Value.absent(),
+    required int profileId,
+    required String itemId,
+    this.count = const Value.absent(),
+    this.slot = const Value.absent(),
+    this.condition = const Value.absent(),
+    this.pagesTotal = const Value.absent(),
+    this.pagesRead = const Value.absent(),
+  }) : profileId = Value(profileId),
+       itemId = Value(itemId);
+  static Insertable<InventoryLine> custom({
+    Expression<int>? id,
+    Expression<int>? profileId,
+    Expression<String>? itemId,
+    Expression<int>? count,
+    Expression<String>? slot,
+    Expression<double>? condition,
+    Expression<int>? pagesTotal,
+    Expression<int>? pagesRead,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (profileId != null) 'profile_id': profileId,
+      if (itemId != null) 'item_id': itemId,
+      if (count != null) 'count': count,
+      if (slot != null) 'slot': slot,
+      if (condition != null) 'condition': condition,
+      if (pagesTotal != null) 'pages_total': pagesTotal,
+      if (pagesRead != null) 'pages_read': pagesRead,
+    });
+  }
+
+  InventoryLinesCompanion copyWith({
+    Value<int>? id,
+    Value<int>? profileId,
+    Value<String>? itemId,
+    Value<int>? count,
+    Value<String>? slot,
+    Value<double?>? condition,
+    Value<int?>? pagesTotal,
+    Value<int>? pagesRead,
+  }) {
+    return InventoryLinesCompanion(
+      id: id ?? this.id,
+      profileId: profileId ?? this.profileId,
+      itemId: itemId ?? this.itemId,
+      count: count ?? this.count,
+      slot: slot ?? this.slot,
+      condition: condition ?? this.condition,
+      pagesTotal: pagesTotal ?? this.pagesTotal,
+      pagesRead: pagesRead ?? this.pagesRead,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (profileId.present) {
+      map['profile_id'] = Variable<int>(profileId.value);
+    }
+    if (itemId.present) {
+      map['item_id'] = Variable<String>(itemId.value);
+    }
+    if (count.present) {
+      map['count'] = Variable<int>(count.value);
+    }
+    if (slot.present) {
+      map['slot'] = Variable<String>(slot.value);
+    }
+    if (condition.present) {
+      map['condition'] = Variable<double>(condition.value);
+    }
+    if (pagesTotal.present) {
+      map['pages_total'] = Variable<int>(pagesTotal.value);
+    }
+    if (pagesRead.present) {
+      map['pages_read'] = Variable<int>(pagesRead.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('InventoryLinesCompanion(')
+          ..write('id: $id, ')
+          ..write('profileId: $profileId, ')
+          ..write('itemId: $itemId, ')
+          ..write('count: $count, ')
+          ..write('slot: $slot, ')
+          ..write('condition: $condition, ')
+          ..write('pagesTotal: $pagesTotal, ')
+          ..write('pagesRead: $pagesRead')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$SaveDatabase extends GeneratedDatabase {
   _$SaveDatabase(QueryExecutor e) : super(e);
   $SaveDatabaseManager get managers => $SaveDatabaseManager(this);
@@ -3048,6 +3553,7 @@ abstract class _$SaveDatabase extends GeneratedDatabase {
   late final $SnapshotRecordsTable snapshotRecords = $SnapshotRecordsTable(
     this,
   );
+  late final $InventoryLinesTable inventoryLines = $InventoryLinesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -3059,6 +3565,7 @@ abstract class _$SaveDatabase extends GeneratedDatabase {
     chronicleEntries,
     settings,
     snapshotRecords,
+    inventoryLines,
   ];
   @override
   DriftDatabaseOptions get options =>
@@ -4567,6 +5074,261 @@ typedef $$SnapshotRecordsTableProcessedTableManager =
       SnapshotRecord,
       PrefetchHooks Function()
     >;
+typedef $$InventoryLinesTableCreateCompanionBuilder =
+    InventoryLinesCompanion Function({
+      Value<int> id,
+      required int profileId,
+      required String itemId,
+      Value<int> count,
+      Value<String> slot,
+      Value<double?> condition,
+      Value<int?> pagesTotal,
+      Value<int> pagesRead,
+    });
+typedef $$InventoryLinesTableUpdateCompanionBuilder =
+    InventoryLinesCompanion Function({
+      Value<int> id,
+      Value<int> profileId,
+      Value<String> itemId,
+      Value<int> count,
+      Value<String> slot,
+      Value<double?> condition,
+      Value<int?> pagesTotal,
+      Value<int> pagesRead,
+    });
+
+class $$InventoryLinesTableFilterComposer
+    extends Composer<_$SaveDatabase, $InventoryLinesTable> {
+  $$InventoryLinesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get profileId => $composableBuilder(
+    column: $table.profileId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get itemId => $composableBuilder(
+    column: $table.itemId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get count => $composableBuilder(
+    column: $table.count,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get slot => $composableBuilder(
+    column: $table.slot,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get condition => $composableBuilder(
+    column: $table.condition,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get pagesTotal => $composableBuilder(
+    column: $table.pagesTotal,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get pagesRead => $composableBuilder(
+    column: $table.pagesRead,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$InventoryLinesTableOrderingComposer
+    extends Composer<_$SaveDatabase, $InventoryLinesTable> {
+  $$InventoryLinesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get profileId => $composableBuilder(
+    column: $table.profileId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get itemId => $composableBuilder(
+    column: $table.itemId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get count => $composableBuilder(
+    column: $table.count,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get slot => $composableBuilder(
+    column: $table.slot,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get condition => $composableBuilder(
+    column: $table.condition,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get pagesTotal => $composableBuilder(
+    column: $table.pagesTotal,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get pagesRead => $composableBuilder(
+    column: $table.pagesRead,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$InventoryLinesTableAnnotationComposer
+    extends Composer<_$SaveDatabase, $InventoryLinesTable> {
+  $$InventoryLinesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get profileId =>
+      $composableBuilder(column: $table.profileId, builder: (column) => column);
+
+  GeneratedColumn<String> get itemId =>
+      $composableBuilder(column: $table.itemId, builder: (column) => column);
+
+  GeneratedColumn<int> get count =>
+      $composableBuilder(column: $table.count, builder: (column) => column);
+
+  GeneratedColumn<String> get slot =>
+      $composableBuilder(column: $table.slot, builder: (column) => column);
+
+  GeneratedColumn<double> get condition =>
+      $composableBuilder(column: $table.condition, builder: (column) => column);
+
+  GeneratedColumn<int> get pagesTotal => $composableBuilder(
+    column: $table.pagesTotal,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get pagesRead =>
+      $composableBuilder(column: $table.pagesRead, builder: (column) => column);
+}
+
+class $$InventoryLinesTableTableManager
+    extends
+        RootTableManager<
+          _$SaveDatabase,
+          $InventoryLinesTable,
+          InventoryLine,
+          $$InventoryLinesTableFilterComposer,
+          $$InventoryLinesTableOrderingComposer,
+          $$InventoryLinesTableAnnotationComposer,
+          $$InventoryLinesTableCreateCompanionBuilder,
+          $$InventoryLinesTableUpdateCompanionBuilder,
+          (
+            InventoryLine,
+            BaseReferences<_$SaveDatabase, $InventoryLinesTable, InventoryLine>,
+          ),
+          InventoryLine,
+          PrefetchHooks Function()
+        > {
+  $$InventoryLinesTableTableManager(
+    _$SaveDatabase db,
+    $InventoryLinesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$InventoryLinesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$InventoryLinesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$InventoryLinesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> profileId = const Value.absent(),
+                Value<String> itemId = const Value.absent(),
+                Value<int> count = const Value.absent(),
+                Value<String> slot = const Value.absent(),
+                Value<double?> condition = const Value.absent(),
+                Value<int?> pagesTotal = const Value.absent(),
+                Value<int> pagesRead = const Value.absent(),
+              }) => InventoryLinesCompanion(
+                id: id,
+                profileId: profileId,
+                itemId: itemId,
+                count: count,
+                slot: slot,
+                condition: condition,
+                pagesTotal: pagesTotal,
+                pagesRead: pagesRead,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int profileId,
+                required String itemId,
+                Value<int> count = const Value.absent(),
+                Value<String> slot = const Value.absent(),
+                Value<double?> condition = const Value.absent(),
+                Value<int?> pagesTotal = const Value.absent(),
+                Value<int> pagesRead = const Value.absent(),
+              }) => InventoryLinesCompanion.insert(
+                id: id,
+                profileId: profileId,
+                itemId: itemId,
+                count: count,
+                slot: slot,
+                condition: condition,
+                pagesTotal: pagesTotal,
+                pagesRead: pagesRead,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$InventoryLinesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$SaveDatabase,
+      $InventoryLinesTable,
+      InventoryLine,
+      $$InventoryLinesTableFilterComposer,
+      $$InventoryLinesTableOrderingComposer,
+      $$InventoryLinesTableAnnotationComposer,
+      $$InventoryLinesTableCreateCompanionBuilder,
+      $$InventoryLinesTableUpdateCompanionBuilder,
+      (
+        InventoryLine,
+        BaseReferences<_$SaveDatabase, $InventoryLinesTable, InventoryLine>,
+      ),
+      InventoryLine,
+      PrefetchHooks Function()
+    >;
 
 class $SaveDatabaseManager {
   final _$SaveDatabase _db;
@@ -4583,4 +5345,6 @@ class $SaveDatabaseManager {
       $$SettingsTableTableManager(_db, _db.settings);
   $$SnapshotRecordsTableTableManager get snapshotRecords =>
       $$SnapshotRecordsTableTableManager(_db, _db.snapshotRecords);
+  $$InventoryLinesTableTableManager get inventoryLines =>
+      $$InventoryLinesTableTableManager(_db, _db.inventoryLines);
 }

@@ -468,6 +468,40 @@ class L10nEn extends L10n {
   String get themeSystem => 'Match the system';
 
   @override
+  String get inventoryTitle => 'Inventory';
+
+  @override
+  String get inventoryEmpty => 'Your pack is empty.';
+
+  @override
+  String get inventoryEmptyHint =>
+      'Search buildings and open places to find something worth carrying.';
+
+  @override
+  String get inventoryWorn => 'Worn';
+
+  @override
+  String get inventoryPack => 'In the pack';
+
+  @override
+  String get inventoryBackpack => 'Backpack';
+
+  @override
+  String get inventoryNoBackpack => 'Pockets only';
+
+  @override
+  String get inventoryDrop => 'Drop';
+
+  @override
+  String get inventoryOverComfort =>
+      'Over a comfortable load: every step costs more.';
+
+  @override
+  String inventoryLost(int count) {
+    return '$count items were lost with a removed content pack.';
+  }
+
+  @override
   String get settingsTitle => 'Settings';
 
   @override

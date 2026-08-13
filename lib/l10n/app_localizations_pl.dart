@@ -470,6 +470,40 @@ class L10nPl extends L10n {
   String get themeSystem => 'Jak w systemie';
 
   @override
+  String get inventoryTitle => 'Ekwipunek';
+
+  @override
+  String get inventoryEmpty => 'Plecak jest pusty.';
+
+  @override
+  String get inventoryEmptyHint =>
+      'Przeszukuj budynki i otwarte miejsca, żeby znaleźć coś wartego niesienia.';
+
+  @override
+  String get inventoryWorn => 'Na sobie';
+
+  @override
+  String get inventoryPack => 'W plecaku';
+
+  @override
+  String get inventoryBackpack => 'Plecak';
+
+  @override
+  String get inventoryNoBackpack => 'Tylko kieszenie';
+
+  @override
+  String get inventoryDrop => 'Wyrzuć';
+
+  @override
+  String get inventoryOverComfort =>
+      'Powyżej komfortowego obciążenia — każdy krok kosztuje więcej.';
+
+  @override
+  String inventoryLost(int count) {
+    return 'Przedmioty utracone wraz z usuniętą paczką treści: $count.';
+  }
+
+  @override
   String get settingsTitle => 'Ustawienia';
 
   @override

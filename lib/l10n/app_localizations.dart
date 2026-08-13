@@ -907,6 +907,66 @@ abstract class L10n {
   /// **'Match the system'**
   String get themeSystem;
 
+  /// No description provided for @inventoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Inventory'**
+  String get inventoryTitle;
+
+  /// No description provided for @inventoryEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Your pack is empty.'**
+  String get inventoryEmpty;
+
+  /// No description provided for @inventoryEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search buildings and open places to find something worth carrying.'**
+  String get inventoryEmptyHint;
+
+  /// No description provided for @inventoryWorn.
+  ///
+  /// In en, this message translates to:
+  /// **'Worn'**
+  String get inventoryWorn;
+
+  /// No description provided for @inventoryPack.
+  ///
+  /// In en, this message translates to:
+  /// **'In the pack'**
+  String get inventoryPack;
+
+  /// No description provided for @inventoryBackpack.
+  ///
+  /// In en, this message translates to:
+  /// **'Backpack'**
+  String get inventoryBackpack;
+
+  /// No description provided for @inventoryNoBackpack.
+  ///
+  /// In en, this message translates to:
+  /// **'Pockets only'**
+  String get inventoryNoBackpack;
+
+  /// No description provided for @inventoryDrop.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop'**
+  String get inventoryDrop;
+
+  /// No description provided for @inventoryOverComfort.
+  ///
+  /// In en, this message translates to:
+  /// **'Over a comfortable load: every step costs more.'**
+  String get inventoryOverComfort;
+
+  /// No description provided for @inventoryLost.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} items were lost with a removed content pack.'**
+  String inventoryLost(int count);
+
   /// No description provided for @settingsTitle.
   ///
   /// In en, this message translates to:

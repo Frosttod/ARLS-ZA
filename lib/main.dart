@@ -13,8 +13,10 @@ import 'devtools/dev_overlay.dart';
 import 'devtools/dev_session.dart';
 import 'game/game_loop.dart';
 import 'inventory/inventory.dart';
+import 'inventory/inventory_store.dart';
 import 'items/item_assets.dart';
 import 'items/item_catalogue.dart';
+import 'items/item_names.dart';
 import 'game/game_session.dart';
 import 'game/relocation.dart';
 import 'l10n/app_localizations.dart';
@@ -37,6 +39,7 @@ import 'ui/character_creator.dart';
 import 'ui/language_picker.dart';
 import 'ui/safety_briefing.dart';
 import 'ui/hud.dart';
+import 'ui/inventory_screen.dart';
 import 'ui/map_view.dart';
 import 'ui/maplibre_surface.dart';
 import 'ui/region_picker.dart';
@@ -224,8 +227,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// What the player is carrying. Empty until there is something to pick up —
   /// the two HUD bars still read off it, so they show the real limits from the
   /// first frame rather than appearing when the first item does.
-  // Reassigned as soon as there is something to pick up (§10, stage 4.5).
-  final Inventory _inventory = const Inventory();
+  Inventory _inventory = const Inventory();
+
+  /// Item names, read alongside the catalogue (§1.1, §4.1).
+  ItemNames? _names;
 
   /// Both HUD bars read these. Zero without a catalogue, which only happens if
   /// every bundled data file failed to parse — a broken build, not a state the
@@ -346,6 +351,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     // build should already have caught — so it is logged for the developer
     // overlay and the game runs on whatever parsed (§4.1).
     _catalogue = await loadItemCatalogue();
+    _names = await loadItemNames();
     if (!mounted) return;
 
     await _readPermissions();
@@ -472,6 +478,19 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         ? null
         : GeoPoint(previous.latitude, previous.longitude);
     if (!mounted) return;
+
+    // What the character was carrying when the app last closed. Rows naming an
+    // item nothing defines are dropped rather than guessed at (§4.1) — that
+    // happens when a content pack is uninstalled, and the pack going away is
+    // what took the item with it.
+    final catalogue = _catalogue;
+    if (catalogue != null) {
+      final loaded = await InventoryStore(
+        widget.session.db,
+      ).load(character.profile.id, catalogue);
+      if (!mounted) return;
+      _inventory = loaded.inventory;
+    }
 
     if (kDevTools && _useSimulator) {
       _dev = DevSession.attach(constants: character.constants);
@@ -680,6 +699,87 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     );
   }
 
+  Future<void> _openInventory() async {
+    final character = _character;
+    final catalogue = _catalogue;
+    if (character == null || catalogue == null) return;
+
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => InventoryScreen(
+          inventory: _inventory,
+          catalogue: catalogue,
+          names: _names ?? ItemNames.empty,
+          body: character.body,
+          onDrop: (line) => unawaited(_drop(line)),
+          onDevFill: kDevTools ? () => unawaited(_devFillPack()) : null,
+        ),
+      ),
+    );
+  }
+
+  /// Developer builds only. Puts a plausible kit in the pack so the screen can
+  /// be looked at on a phone before §10 gives the game a way to find anything.
+  Future<void> _devFillPack() async {
+    final character = _character;
+    final catalogue = _catalogue;
+    if (character == null || catalogue == null) return;
+
+    var next = _inventory.packId == null
+        ? _inventory.withPack('pack_daypack')
+        : _inventory;
+    for (final id in const [
+      'cloth_winter_jacket',
+      'cloth_boots',
+      'armor_vest_soft',
+    ]) {
+      next = next.wear(id);
+    }
+    for (final line in const [
+      ('food_canned_meat', 2),
+      ('drink_water_bottle_500', 2),
+      ('med_bandage', 3),
+      ('melee_knife', 1),
+      ('mat_wood', 4),
+      ('tool_flashlight', 1),
+    ]) {
+      next = next
+          .add(line.$1, catalogue, body: character.body, count: line.$2)
+          .inventory;
+    }
+    next = next
+        .add(
+          'lit_guide_survival',
+          catalogue,
+          body: character.body,
+          pagesTotal: 160,
+        )
+        .inventory;
+
+    setState(() => _inventory = next);
+    await _saveInventory();
+
+    if (mounted) Navigator.of(context).pop();
+  }
+
+  /// §4.8 will put a dropped item on the map for 24 hours. Until the loot layer
+  /// exists there is nowhere for it to land, so it simply leaves the pack.
+  Future<void> _drop(CarriedItem line) async {
+    final next = _inventory.remove(line.itemId, count: line.count);
+    if (next == null) return;
+
+    setState(() => _inventory = next);
+    await _saveInventory();
+  }
+
+  Future<void> _saveInventory() async {
+    final character = _character;
+    if (character == null) return;
+    await InventoryStore(
+      widget.session.db,
+    ).save(character.profile.id, _inventory);
+  }
+
   /// Sends the player wherever the current refusal can actually be changed.
   Future<void> _fixLocation() async {
     final access = _permissions?.location ?? LocationAccess.denied;
@@ -838,11 +938,16 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
                     capacityL: _capacityL(character.body),
                   ),
             onMenu: (entry) {
-              // Only the map is built; the rest of §3.6 arrives with the
-              // systems behind it. Settings is the one that already has
-              // something to do.
-              if (entry == MapMenuEntry.settings) {
-                unawaited(_openSettings());
+              // Profile and shelter arrive with the systems behind them
+              // (§7, §8). The two that have something to show are wired.
+              switch (entry) {
+                case MapMenuEntry.settings:
+                  unawaited(_openSettings());
+                case MapMenuEntry.inventory:
+                  unawaited(_openInventory());
+                case MapMenuEntry.profile:
+                case MapMenuEntry.shelter:
+                  break;
               }
             },
           ),

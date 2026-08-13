@@ -29,7 +29,7 @@ import 'tables.dart';
 part 'database.g.dart';
 
 /// Bumped only alongside a migration step in [_migration]. Never reused.
-const int kSchemaVersion = 2;
+const int kSchemaVersion = 3;
 
 /// Keys used in [MetaEntries].
 abstract final class MetaKeys {
@@ -54,6 +54,7 @@ abstract final class MetaKeys {
     ChronicleEntries,
     Settings,
     SnapshotRecords,
+    InventoryLines,
   ],
 )
 class SaveDatabase extends _$SaveDatabase {
@@ -66,7 +67,7 @@ class SaveDatabase extends _$SaveDatabase {
   /// follow a constant reference. `schema_test.dart` keeps it in step with
   /// [kSchemaVersion].
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -86,6 +87,14 @@ class SaveDatabase extends _$SaveDatabase {
         await m.addColumn(vitals, vitals.occupationJson);
         await m.addColumn(vitals, vitals.speedKmh);
         await m.addColumn(vitals, vitals.carriedKg);
+      }
+
+      if (from < 3) {
+        // Stage 4 gives the character something to carry. A new table rather
+        // than columns: an inventory is a list, and the old carriedKg figure
+        // stays where it is so a v2 save keeps its load surcharge until the
+        // first real pickup replaces it.
+        await m.createTable(inventoryLines);
       }
 
       await _writeSchemaVersion(to);
@@ -179,6 +188,28 @@ class SaveDatabase extends _$SaveDatabase {
   Future<void> writeVitals(VitalsCompanion value) => transaction(
     () => into(vitals).insert(value, mode: InsertMode.insertOrReplace),
   );
+
+  // --------------------------------------------------------- inventory ---
+
+  Future<List<InventoryLine>> inventoryFor(int profileId) => (select(
+    inventoryLines,
+  )..where((t) => t.profileId.equals(profileId))).get();
+
+  /// Replaces the whole inventory for a profile.
+  ///
+  /// Whole rather than line by line: the in-memory [Inventory] is a value, and
+  /// diffing it against rows would mean two descriptions of the same thing
+  /// disagreeing after a crash. An inventory is tens of rows, so the write is
+  /// cheap and always correct.
+  Future<void> writeInventory(
+    int profileId,
+    List<InventoryLinesCompanion> lines,
+  ) => transaction(() async {
+    await (delete(
+      inventoryLines,
+    )..where((t) => t.profileId.equals(profileId))).go();
+    await batch((b) => b.insertAll(inventoryLines, lines));
+  });
 
   // -------------------------------------------------------- maintenance ---
 
