@@ -247,5 +247,20 @@
         "type": "int"
       }
     }
-  }
+  },
+  "permTitle": "Permissions",
+  "permLocation": "Location",
+  "permLocationGranted": "Full — the game counts with the screen off too",
+  "permLocationForeground": "Only while the game is on screen",
+  "permLocationDenied": "None — there is no game without it",
+  "permLocationOff": "Location is switched off on this phone",
+  "permBattery": "Battery optimisation",
+  "permBatteryOn": "On — Android may suspend counting in the background",
+  "permBatteryOff": "Off for this game — as it should be",
+  "permBatteryUnknown": "Unknown",
+  "permFix": "Fix",
+  "permStartupTitle": "Before you go walking",
+  "permStartupBody": "To count a walk with the phone in your pocket, the game needs background location and battery optimisation switched off. Without them it only runs while it is on screen.",
+  "permStartupLater": "Later",
+  "permStartupFix": "Set it up"
 }

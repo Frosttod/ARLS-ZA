@@ -20,6 +20,7 @@ import 'location/device_power_source.dart';
 import 'location/location_access.dart';
 import 'location/movement_integrity.dart';
 import 'location/position_fix.dart';
+import 'location/system_permissions.dart';
 import 'map/map_bootstrap.dart';
 import 'map/map_source.dart';
 import 'map/geometry.dart';
@@ -244,6 +245,13 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// Told once per session, not once per fix.
   bool _relocationTold = false;
 
+  /// What the system allows (§3.3, §16.1). Re-read whenever the app comes back,
+  /// because the player may have just changed it.
+  SystemPermissions? _permissions;
+
+  /// The startup prompt is offered once a session and never nags.
+  bool _permissionsOffered = false;
+
   /// True only in a developer build where the simulator has been switched on
   /// (§11.2). Everything else walks on real ground.
   bool _useSimulator = false;
@@ -303,6 +311,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     );
     if (!mounted) return;
 
+    await _readPermissions();
+    if (!mounted) return;
+
     // The position is not a feature of this game, it is the input (§3). Asking
     // before a character exists means a player who will not grant it finds out
     // in one screen rather than after filling in a character sheet.
@@ -341,6 +352,54 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       _loading = true;
     });
     await _boot();
+  }
+
+  /// Asks the system what it currently allows.
+  ///
+  /// Cheap and worth repeating: the player can change any of the three from
+  /// outside the app, and the game has no way to be told.
+  Future<void> _readPermissions() async {
+    if (_useSimulator) return;
+
+    final permissions = SystemPermissions(
+      location: await requestLocationAccess(),
+      batteryOptimised: await const SystemSettings().isBatteryOptimised(),
+    );
+    if (!mounted) return;
+    setState(() => _permissions = permissions);
+  }
+
+  /// Offered once, after the map is up, and dismissible.
+  ///
+  /// Not a gate: §16.1 says foreground-only is a supported way to play, so this
+  /// explains what is missing and what it costs rather than demanding it. The
+  /// battery half is the part no system dialog ever mentions.
+  Future<void> _offerPermissions() async {
+    if (_permissionsOffered || _useSimulator) return;
+    final permissions = _permissions;
+    if (permissions == null || permissions.backgroundWorks) return;
+
+    _permissionsOffered = true;
+    final l10n = L10n.of(context);
+    final fix = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.permStartupTitle),
+        content: Text(l10n.permStartupBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.permStartupLater),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(l10n.permStartupFix),
+          ),
+        ],
+      ),
+    );
+
+    if (fix == true && mounted) await _openSettings();
   }
 
   Future<void> _acceptBriefing() async {
@@ -429,6 +488,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     });
 
     await _resolveMap();
+    if (mounted) await _offerPermissions();
   }
 
   /// Finds a map for where the player is standing (§16.6).
@@ -555,11 +615,28 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         builder: (_) => SettingsScreen(
           settings: widget.settings,
           onOpenMaps: () => unawaited(_openRegionPicker()),
+          permissions: _permissions,
+          onFixLocation: () => unawaited(_fixLocation()),
+          onFixBattery: () =>
+              unawaited(const SystemSettings().openBatterySettings()),
           simulatorEnabled: _useSimulator,
           onSimulatorChanged: (value) => unawaited(_setSimulator(value)),
         ),
       ),
     );
+  }
+
+  /// Sends the player wherever the current refusal can actually be changed.
+  Future<void> _fixLocation() async {
+    final access = _permissions?.location ?? LocationAccess.denied;
+    if (access.isAskable) {
+      await requestLocationAccess();
+    } else {
+      // Background location cannot be granted from a prompt on modern
+      // Android: it is a trip to the app's own settings page, every time.
+      await const SystemSettings().openAppSettings();
+    }
+    await _readPermissions();
   }
 
   /// Switching the source is a restart of the session, not a live swap: the
@@ -631,6 +708,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         unawaited(loop.onPaused(DateTime.now().toUtc()));
       case AppLifecycleState.resumed:
         unawaited(loop.onResumed());
+        unawaited(_readPermissions());
       case AppLifecycleState.inactive:
         break;
     }
@@ -725,6 +803,34 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       );
     }
 
+    if (character != null && blocked == null) {
+      // A character exists, so the game is running; the map is simply not
+      // resolved yet. Showing the title screen here would put a logo over a
+      // live simulation and read as something having gone wrong.
+      return Scaffold(
+        body: Stack(
+          children: [
+            const Center(child: CircularProgressIndicator()),
+            if (snapshot != null)
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: SafeArea(
+                  child: Hud(
+                    state: snapshot.state,
+                    status: snapshot.status,
+                    constants: character.constants,
+                    warnings: _warnings(l10n, snapshot),
+                    carryComfortKg: character.body.carryComfortKg,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      );
+    }
+
     return Scaffold(
       body: Stack(
         children: [
@@ -777,13 +883,6 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
                                   _LocationGate(
                                     access: blocked,
                                     onRetry: _retryAccess,
-                                  ),
-                                if (blocked == null &&
-                                    _device?.access ==
-                                        LocationAccess.foregroundOnly)
-                                  _Notice(
-                                    title: l10n.locationForegroundOnlyTitle,
-                                    body: l10n.locationForegroundOnlyBody,
                                   ),
                                 if (character == null)
                                   FilledButton(
@@ -879,7 +978,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   ///
   /// A suspended run comes first: while it holds, nothing else the HUD says is
   /// being applied anyway (§3.4).
-  static List<String> _warnings(L10n l10n, GameSnapshot snapshot) => [
+  List<String> _warnings(L10n l10n, GameSnapshot snapshot) => [
     ?switch (snapshot.integrityReason) {
       IntegrityReason.mockProvider => l10n.integritySuspendedMock,
       IntegrityReason.vehicleSpeed
@@ -893,6 +992,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       PositionSignal.good => null,
     },
     if (snapshot.economy) l10n.hudLowBattery,
+    if (_permissions?.location == LocationAccess.foregroundOnly)
+      l10n.permLocationForeground,
     if (snapshot.combatBlocked == CombatBlock.movingTooFast)
       l10n.safetyNoCombatMoving,
   ];

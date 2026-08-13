@@ -499,4 +499,52 @@ class L10nEn extends L10n {
 
   @override
   String get relocationDismiss => 'So be it';
+
+  @override
+  String get permTitle => 'Permissions';
+
+  @override
+  String get permLocation => 'Location';
+
+  @override
+  String get permLocationGranted =>
+      'Full — the game counts with the screen off too';
+
+  @override
+  String get permLocationForeground => 'Only while the game is on screen';
+
+  @override
+  String get permLocationDenied => 'None — there is no game without it';
+
+  @override
+  String get permLocationOff => 'Location is switched off on this phone';
+
+  @override
+  String get permBattery => 'Battery optimisation';
+
+  @override
+  String get permBatteryOn =>
+      'On — Android may suspend counting in the background';
+
+  @override
+  String get permBatteryOff => 'Off for this game — as it should be';
+
+  @override
+  String get permBatteryUnknown => 'Unknown';
+
+  @override
+  String get permFix => 'Fix';
+
+  @override
+  String get permStartupTitle => 'Before you go walking';
+
+  @override
+  String get permStartupBody =>
+      'To count a walk with the phone in your pocket, the game needs background location and battery optimisation switched off. Without them it only runs while it is on screen.';
+
+  @override
+  String get permStartupLater => 'Later';
+
+  @override
+  String get permStartupFix => 'Set it up';
 }

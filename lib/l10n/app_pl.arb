@@ -171,5 +171,20 @@
         "type": "int"
       }
     }
-  }
+  },
+  "permTitle": "Uprawnienia",
+  "permLocation": "Lokalizacja",
+  "permLocationGranted": "Pełna — gra liczy też przy wygaszonym ekranie",
+  "permLocationForeground": "Tylko gdy gra jest na wierzchu",
+  "permLocationDenied": "Brak — bez tego nie ma gry",
+  "permLocationOff": "Lokalizacja wyłączona w telefonie",
+  "permBattery": "Optymalizacja baterii",
+  "permBatteryOn": "Włączona — Android może wstrzymać liczenie w tle",
+  "permBatteryOff": "Wyłączona dla tej gry — tak ma być",
+  "permBatteryUnknown": "Nieznana",
+  "permFix": "Popraw",
+  "permStartupTitle": "Zanim wyjdziesz na spacer",
+  "permStartupBody": "Żeby gra liczyła marsz z telefonem w kieszeni, potrzebuje zgody na lokalizację w tle i wyłączonej optymalizacji baterii. Bez nich działa tylko z aplikacją na wierzchu.",
+  "permStartupLater": "Później",
+  "permStartupFix": "Ustaw teraz"
 }

@@ -960,6 +960,96 @@ abstract class L10n {
   /// In en, this message translates to:
   /// **'So be it'**
   String get relocationDismiss;
+
+  /// No description provided for @permTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Permissions'**
+  String get permTitle;
+
+  /// No description provided for @permLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Location'**
+  String get permLocation;
+
+  /// No description provided for @permLocationGranted.
+  ///
+  /// In en, this message translates to:
+  /// **'Full — the game counts with the screen off too'**
+  String get permLocationGranted;
+
+  /// No description provided for @permLocationForeground.
+  ///
+  /// In en, this message translates to:
+  /// **'Only while the game is on screen'**
+  String get permLocationForeground;
+
+  /// No description provided for @permLocationDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'None — there is no game without it'**
+  String get permLocationDenied;
+
+  /// No description provided for @permLocationOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Location is switched off on this phone'**
+  String get permLocationOff;
+
+  /// No description provided for @permBattery.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery optimisation'**
+  String get permBattery;
+
+  /// No description provided for @permBatteryOn.
+  ///
+  /// In en, this message translates to:
+  /// **'On — Android may suspend counting in the background'**
+  String get permBatteryOn;
+
+  /// No description provided for @permBatteryOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off for this game — as it should be'**
+  String get permBatteryOff;
+
+  /// No description provided for @permBatteryUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get permBatteryUnknown;
+
+  /// No description provided for @permFix.
+  ///
+  /// In en, this message translates to:
+  /// **'Fix'**
+  String get permFix;
+
+  /// No description provided for @permStartupTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Before you go walking'**
+  String get permStartupTitle;
+
+  /// No description provided for @permStartupBody.
+  ///
+  /// In en, this message translates to:
+  /// **'To count a walk with the phone in your pocket, the game needs background location and battery optimisation switched off. Without them it only runs while it is on screen.'**
+  String get permStartupBody;
+
+  /// No description provided for @permStartupLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get permStartupLater;
+
+  /// No description provided for @permStartupFix.
+  ///
+  /// In en, this message translates to:
+  /// **'Set it up'**
+  String get permStartupFix;
 }
 
 class _L10nDelegate extends LocalizationsDelegate<L10n> {

@@ -13,12 +13,17 @@ import 'package:flutter/material.dart';
 
 import '../devtools/dev_mode.dart';
 import '../l10n/app_localizations.dart';
+import '../location/location_access.dart';
+import '../location/system_permissions.dart';
 import 'app_settings.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({
     required this.settings,
     required this.onOpenMaps,
+    this.permissions,
+    this.onFixLocation,
+    this.onFixBattery,
     this.simulatorEnabled = false,
     this.onSimulatorChanged,
     super.key,
@@ -26,6 +31,13 @@ class SettingsScreen extends StatelessWidget {
 
   final AppSettings settings;
   final VoidCallback onOpenMaps;
+
+  /// What the system currently allows (§3.3, §16.1). Null while it is being
+  /// read — the section is then simply absent rather than showing a guess.
+  final SystemPermissions? permissions;
+
+  final VoidCallback? onFixLocation;
+  final VoidCallback? onFixBattery;
 
   /// Only meaningful in a developer build (§11.2).
   final bool simulatorEnabled;
@@ -84,6 +96,29 @@ class SettingsScreen extends StatelessWidget {
             ),
           ),
 
+          if (permissions != null) ...[
+            const Divider(),
+            _Heading(l10n.permTitle),
+            _PermissionTile(
+              title: l10n.permLocation,
+              status: _locationStatus(l10n, permissions!.location),
+              good: permissions!.location == LocationAccess.granted,
+              onFix: onFixLocation,
+            ),
+            _PermissionTile(
+              title: l10n.permBattery,
+              status: switch (permissions!.batteryOptimised) {
+                true => l10n.permBatteryOn,
+                false => l10n.permBatteryOff,
+                null => l10n.permBatteryUnknown,
+              },
+              good: permissions!.batteryOptimised == false,
+              onFix: permissions!.batteryOptimised == true
+                  ? onFixBattery
+                  : null,
+            ),
+          ],
+
           const Divider(),
           ListTile(
             title: Text(l10n.settingsMaps),
@@ -109,12 +144,57 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
+  static String _locationStatus(L10n l10n, LocationAccess access) =>
+      switch (access) {
+        LocationAccess.granted => l10n.permLocationGranted,
+        LocationAccess.foregroundOnly => l10n.permLocationForeground,
+        LocationAccess.serviceDisabled => l10n.permLocationOff,
+        LocationAccess.denied ||
+        LocationAccess.deniedForever => l10n.permLocationDenied,
+      };
+
   /// Each language names itself; translating a language list defeats it.
   static String _languageName(Locale locale) => switch (locale.languageCode) {
     'pl' => 'Polski',
     'en' => 'English',
     _ => locale.languageCode.toUpperCase(),
   };
+}
+
+/// One system switch, its state in words, and a way to change it.
+///
+/// The state is a sentence rather than a tick: "on" tells a player nothing
+/// about whether that is the state they want, and for battery optimisation the
+/// wanted state is off.
+class _PermissionTile extends StatelessWidget {
+  const _PermissionTile({
+    required this.title,
+    required this.status,
+    required this.good,
+    this.onFix,
+  });
+
+  final String title;
+  final String status;
+  final bool good;
+  final VoidCallback? onFix;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return ListTile(
+      leading: Icon(
+        good ? Icons.check_circle_outline : Icons.error_outline,
+        color: good ? theme.colorScheme.primary : theme.colorScheme.error,
+      ),
+      title: Text(title),
+      subtitle: Text(status, style: theme.textTheme.bodySmall),
+      trailing: onFix == null
+          ? null
+          : TextButton(onPressed: onFix, child: Text(L10n.of(context).permFix)),
+    );
+  }
 }
 
 class _Heading extends StatelessWidget {

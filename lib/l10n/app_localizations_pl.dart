@@ -501,4 +501,52 @@ class L10nPl extends L10n {
 
   @override
   String get relocationDismiss => 'Trudno';
+
+  @override
+  String get permTitle => 'Uprawnienia';
+
+  @override
+  String get permLocation => 'Lokalizacja';
+
+  @override
+  String get permLocationGranted =>
+      'Pełna — gra liczy też przy wygaszonym ekranie';
+
+  @override
+  String get permLocationForeground => 'Tylko gdy gra jest na wierzchu';
+
+  @override
+  String get permLocationDenied => 'Brak — bez tego nie ma gry';
+
+  @override
+  String get permLocationOff => 'Lokalizacja wyłączona w telefonie';
+
+  @override
+  String get permBattery => 'Optymalizacja baterii';
+
+  @override
+  String get permBatteryOn =>
+      'Włączona — Android może wstrzymać liczenie w tle';
+
+  @override
+  String get permBatteryOff => 'Wyłączona dla tej gry — tak ma być';
+
+  @override
+  String get permBatteryUnknown => 'Nieznana';
+
+  @override
+  String get permFix => 'Popraw';
+
+  @override
+  String get permStartupTitle => 'Zanim wyjdziesz na spacer';
+
+  @override
+  String get permStartupBody =>
+      'Żeby gra liczyła marsz z telefonem w kieszeni, potrzebuje zgody na lokalizację w tle i wyłączonej optymalizacji baterii. Bez nich działa tylko z aplikacją na wierzchu.';
+
+  @override
+  String get permStartupLater => 'Później';
+
+  @override
+  String get permStartupFix => 'Ustaw teraz';
 }
