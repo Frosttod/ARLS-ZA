@@ -110,7 +110,7 @@ void main() {
           ItemKind.literature,
           ItemKind.tool,
           ItemKind.crafting,
-          ItemKind.material,
+          ItemKind.ammo,
         ]),
       );
     });

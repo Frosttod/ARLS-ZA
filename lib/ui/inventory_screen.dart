@@ -107,6 +107,7 @@ class InventoryScreen extends StatelessWidget {
                 line: line,
                 definition: catalogue[line.itemId]!,
                 name: _nameOf(line.itemId, language),
+                kind: kindName(l10n, catalogue[line.itemId]!.kind),
                 onDrop: null,
               ),
           ],
@@ -124,6 +125,7 @@ class InventoryScreen extends StatelessWidget {
                 line: line,
                 definition: catalogue[line.itemId]!,
                 name: _nameOf(line.itemId, language),
+                kind: kindName(l10n, catalogue[line.itemId]!.kind),
                 onDrop: onDrop == null ? null : () => onDrop!(line),
                 dropLabel: l10n.inventoryDrop,
               ),
@@ -328,11 +330,31 @@ class _PackLine extends StatelessWidget {
   );
 }
 
+/// What a kind of item is called, in the player's language.
+///
+/// The enum name is not a label: a Polish player reading "armor" under a coat
+/// is reading the source code (§1.1).
+String kindName(L10n l10n, ItemKind kind) => switch (kind) {
+  ItemKind.firearm => l10n.kindFirearm,
+  ItemKind.melee => l10n.kindMelee,
+  ItemKind.armor => l10n.kindArmor,
+  ItemKind.backpack => l10n.kindBackpack,
+  ItemKind.food => l10n.kindFood,
+  ItemKind.medical => l10n.kindMedical,
+  ItemKind.literature => l10n.kindLiterature,
+  ItemKind.tool => l10n.kindTool,
+  ItemKind.crafting => l10n.kindCrafting,
+  ItemKind.ammo => l10n.kindAmmo,
+  ItemKind.material => l10n.kindMaterial,
+  ItemKind.misc => l10n.kindMisc,
+};
+
 class _ItemRow extends StatelessWidget {
   const _ItemRow({
     required this.line,
     required this.definition,
     required this.name,
+    required this.kind,
     required this.onDrop,
     this.dropLabel,
   });
@@ -340,6 +362,10 @@ class _ItemRow extends StatelessWidget {
   final CarriedItem line;
   final ItemDefinition definition;
   final String name;
+
+  /// Translated, and passed in rather than looked up here: a row should not
+  /// need a localisation context to know what it is showing.
+  final String kind;
   final VoidCallback? onDrop;
   final String? dropLabel;
 
@@ -395,7 +421,7 @@ class _ItemRow extends StatelessWidget {
   /// What the line is, plus whatever per-piece state it carries: how worn it
   /// is, or how far through a book the player has read (§4.6.3).
   String _subtitle() {
-    final parts = <String>[definition.kind.name];
+    final parts = <String>[kind];
 
     final condition = line.condition;
     if (condition != null) parts.add('${condition.round()}%');

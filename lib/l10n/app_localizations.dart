@@ -907,6 +907,78 @@ abstract class L10n {
   /// **'Match the system'**
   String get themeSystem;
 
+  /// No description provided for @kindFirearm.
+  ///
+  /// In en, this message translates to:
+  /// **'Firearm'**
+  String get kindFirearm;
+
+  /// No description provided for @kindMelee.
+  ///
+  /// In en, this message translates to:
+  /// **'Melee weapon'**
+  String get kindMelee;
+
+  /// No description provided for @kindArmor.
+  ///
+  /// In en, this message translates to:
+  /// **'Clothing'**
+  String get kindArmor;
+
+  /// No description provided for @kindBackpack.
+  ///
+  /// In en, this message translates to:
+  /// **'Backpack'**
+  String get kindBackpack;
+
+  /// No description provided for @kindFood.
+  ///
+  /// In en, this message translates to:
+  /// **'Food'**
+  String get kindFood;
+
+  /// No description provided for @kindMedical.
+  ///
+  /// In en, this message translates to:
+  /// **'Medicine'**
+  String get kindMedical;
+
+  /// No description provided for @kindLiterature.
+  ///
+  /// In en, this message translates to:
+  /// **'Book'**
+  String get kindLiterature;
+
+  /// No description provided for @kindTool.
+  ///
+  /// In en, this message translates to:
+  /// **'Tool'**
+  String get kindTool;
+
+  /// No description provided for @kindCrafting.
+  ///
+  /// In en, this message translates to:
+  /// **'Material'**
+  String get kindCrafting;
+
+  /// No description provided for @kindAmmo.
+  ///
+  /// In en, this message translates to:
+  /// **'Ammunition'**
+  String get kindAmmo;
+
+  /// No description provided for @kindMaterial.
+  ///
+  /// In en, this message translates to:
+  /// **'Material'**
+  String get kindMaterial;
+
+  /// No description provided for @kindMisc.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get kindMisc;
+
   /// No description provided for @inventoryTitle.
   ///
   /// In en, this message translates to:

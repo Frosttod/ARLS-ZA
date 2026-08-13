@@ -31,6 +31,12 @@ enum ItemKind {
   literature,
   tool,
   crafting,
+
+  /// Ammunition. Its own kind rather than a material because §10.3.3 builds an
+  /// entire economy on it, and because a player scanning a pack needs to see
+  /// rounds as rounds rather than as scrap.
+  ammo,
+
   material,
   misc;
 

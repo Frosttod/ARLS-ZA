@@ -758,7 +758,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       'cloth_boots',
       'armor_vest_soft',
     ]) {
-      next = next.wear(id);
+      next = next.wear(id, catalogue);
     }
     for (final line in const [
       ('food_canned_meat', 2),

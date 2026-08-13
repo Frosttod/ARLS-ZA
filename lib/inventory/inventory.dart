@@ -314,8 +314,44 @@ class Inventory {
   }
 
   /// Puts something on the body. Worn items cost mass but not volume.
-  Inventory wear(String itemId) =>
-      Inventory(carried: carried, worn: [...worn, CarriedItem(itemId: itemId)], packId: packId);
+  ///
+  /// One thing per slot (§4.4). A second coat does not go over the first: it
+  /// comes off and goes in the pack, which is what happens in life and what
+  /// stops a player from wearing four vests for four times the protection.
+  ///
+  /// [catalogue] is optional only so a test can dress a character without one;
+  /// without it nothing knows what a garment covers and the piece is simply
+  /// added.
+  Inventory wear(String itemId, [ItemCatalogue? catalogue]) {
+    final slot = catalogue?[itemId]?.props['slot'];
+
+    if (slot == null) {
+      return Inventory(
+        carried: carried,
+        worn: [...worn, CarriedItem(itemId: itemId)],
+        packId: packId,
+      );
+    }
+
+    final displaced = <CarriedItem>[];
+    final remaining = <CarriedItem>[];
+    for (final line in worn) {
+      if (catalogue?[line.itemId]?.props['slot'] == slot) {
+        displaced.add(line);
+      } else {
+        remaining.add(line);
+      }
+    }
+
+    // The displaced piece goes into the pack over its volume limit if it has
+    // to. Taking a coat off cannot be refused, and [overflowL] is what reports
+    // the state that leaves.
+    return Inventory(
+      carried: [...carried, ...displaced],
+      worn: [...remaining, CarriedItem(itemId: itemId)],
+      packId: packId,
+    );
+  }
 
   int countOf(String itemId) => carried
       .where((line) => line.itemId == itemId)

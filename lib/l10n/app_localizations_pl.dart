@@ -470,6 +470,42 @@ class L10nPl extends L10n {
   String get themeSystem => 'Jak w systemie';
 
   @override
+  String get kindFirearm => 'Broń palna';
+
+  @override
+  String get kindMelee => 'Broń biała';
+
+  @override
+  String get kindArmor => 'Odzież';
+
+  @override
+  String get kindBackpack => 'Plecak';
+
+  @override
+  String get kindFood => 'Żywność';
+
+  @override
+  String get kindMedical => 'Medykament';
+
+  @override
+  String get kindLiterature => 'Literatura';
+
+  @override
+  String get kindTool => 'Narzędzie';
+
+  @override
+  String get kindCrafting => 'Surowiec';
+
+  @override
+  String get kindAmmo => 'Amunicja';
+
+  @override
+  String get kindMaterial => 'Surowiec';
+
+  @override
+  String get kindMisc => 'Inne';
+
+  @override
   String get inventoryTitle => 'Ekwipunek';
 
   @override

@@ -231,11 +231,36 @@ void main() {
       expect(limits.capacityL - inventory.volumeL(catalogue), greaterThan(30));
     });
 
+    test('a second coat replaces the first rather than layering', () {
+      // §4.4 gives every garment a slot. Without it a player wears four vests
+      // for four times the protection, and the dev fill button showed exactly
+      // that: two winter jackets on one character.
+      final dressed = const Inventory()
+          .withPack('pack_daypack')
+          .wear('cloth_winter_jacket', catalogue)
+          .wear('cloth_winter_jacket', catalogue);
+
+      expect(dressed.worn, hasLength(1));
+      // The one taken off is in the pack, not gone: nothing the game removes
+      // from a player should vanish.
+      expect(dressed.countOf('cloth_winter_jacket'), 1);
+    });
+
+    test('different slots stack, because that is what clothing is', () {
+      final dressed = const Inventory()
+          .wear('cloth_thermal_underwear', catalogue)
+          .wear('cloth_fleece', catalogue)
+          .wear('cloth_winter_jacket', catalogue)
+          .wear('cloth_boots', catalogue);
+
+      expect(dressed.worn, hasLength(4));
+    });
+
     test('insulation adds up across garments, not per garment (§4.4)', () {
       final dressed = const Inventory()
-          .wear('cloth_thermal_underwear')
-          .wear('cloth_fleece')
-          .wear('cloth_winter_jacket');
+          .wear('cloth_thermal_underwear', catalogue)
+          .wear('cloth_fleece', catalogue)
+          .wear('cloth_winter_jacket', catalogue);
 
       expect(dressed.insulationClo(catalogue), closeTo(0.8 + 1.0 + 2.2, 0.001));
     });

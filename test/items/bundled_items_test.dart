@@ -182,7 +182,7 @@ void main() {
       };
       final found = {
         for (final item in catalogue.all)
-          if (item.kind == ItemKind.material && item.props['caliber'] != null)
+          if (item.kind == ItemKind.ammo && item.props['caliber'] != null)
             item.props['caliber'] as String,
       };
 

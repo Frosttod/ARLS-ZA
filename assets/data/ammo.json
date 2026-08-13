@@ -4,7 +4,7 @@
   "items": [
     {
       "id": "ammo_22lr",
-      "type": "material",
+      "type": "ammo",
       "name_key": "item.ammo_22lr.name",
       "weight_kg": 0.003,
       "volume_l": 0.002,
@@ -15,7 +15,7 @@
     },
     {
       "id": "ammo_38special",
-      "type": "material",
+      "type": "ammo",
       "name_key": "item.ammo_38special.name",
       "weight_kg": 0.012,
       "volume_l": 0.005,
@@ -26,7 +26,7 @@
     },
     {
       "id": "ammo_9x19",
-      "type": "material",
+      "type": "ammo",
       "name_key": "item.ammo_9x19.name",
       "weight_kg": 0.012,
       "volume_l": 0.005,
@@ -37,7 +37,7 @@
     },
     {
       "id": "ammo_545x39",
-      "type": "material",
+      "type": "ammo",
       "name_key": "item.ammo_545x39.name",
       "weight_kg": 0.0107,
       "volume_l": 0.006,
@@ -48,7 +48,7 @@
     },
     {
       "id": "ammo_762x39",
-      "type": "material",
+      "type": "ammo",
       "name_key": "item.ammo_762x39.name",
       "weight_kg": 0.0163,
       "volume_l": 0.008,
@@ -59,7 +59,7 @@
     },
     {
       "id": "ammo_762x54r",
-      "type": "material",
+      "type": "ammo",
       "name_key": "item.ammo_762x54r.name",
       "weight_kg": 0.022,
       "volume_l": 0.01,
@@ -70,7 +70,7 @@
     },
     {
       "id": "ammo_12ga_buck",
-      "type": "material",
+      "type": "ammo",
       "name_key": "item.ammo_12ga_buck.name",
       "weight_kg": 0.045,
       "volume_l": 0.02,
@@ -81,7 +81,7 @@
     },
     {
       "id": "ammo_12ga_slug",
-      "type": "material",
+      "type": "ammo",
       "name_key": "item.ammo_12ga_slug.name",
       "weight_kg": 0.048,
       "volume_l": 0.02,

@@ -468,6 +468,42 @@ class L10nEn extends L10n {
   String get themeSystem => 'Match the system';
 
   @override
+  String get kindFirearm => 'Firearm';
+
+  @override
+  String get kindMelee => 'Melee weapon';
+
+  @override
+  String get kindArmor => 'Clothing';
+
+  @override
+  String get kindBackpack => 'Backpack';
+
+  @override
+  String get kindFood => 'Food';
+
+  @override
+  String get kindMedical => 'Medicine';
+
+  @override
+  String get kindLiterature => 'Book';
+
+  @override
+  String get kindTool => 'Tool';
+
+  @override
+  String get kindCrafting => 'Material';
+
+  @override
+  String get kindAmmo => 'Ammunition';
+
+  @override
+  String get kindMaterial => 'Material';
+
+  @override
+  String get kindMisc => 'Other';
+
+  @override
   String get inventoryTitle => 'Inventory';
 
   @override
