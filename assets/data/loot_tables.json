@@ -1205,9 +1205,11 @@
         "building=detached",
         "building=residential"
       ],
-      "match": [],
+      "match": [
+        "generated.house"
+      ],
       "generated": true,
-      "generated_note": "building=house is not in the OpenMapTiles schema; generated inside residential land",
+      "generated_note": "no building types in the schema; generated inside landuse.class=residential",
       "entries": [
         {
           "item": "food_canned_vegetables",
@@ -1308,9 +1310,11 @@
         "building=barn",
         "building=farm_auxiliary"
       ],
-      "match": [],
+      "match": [
+        "generated.barn"
+      ],
       "generated": true,
-      "generated_note": "building=barn is not in the schema; generated in farmland",
+      "generated_note": "no building types in the schema; generated inside landcover.class=farmland",
       "entries": [
         {
           "item": "mat_wood",
@@ -1562,9 +1566,11 @@
       "osm": [
         "amenity=hunting_stand"
       ],
-      "match": [],
+      "match": [
+        "generated.hunting_stand"
+      ],
       "generated": true,
-      "generated_note": "amenity=hunting_stand is not in the schema; generated at woodland edges",
+      "generated_note": "not in the schema; generated inside landcover.class=wood",
       "entries": [
         {
           "item": "ammo_762x54r",
@@ -1672,9 +1678,11 @@
       "osm": [
         "highway=*"
       ],
-      "match": [],
+      "match": [
+        "generated.roadside"
+      ],
       "generated": true,
-      "generated_note": "spaced along roads by §10.1, never matched",
+      "generated_note": "§10.1's last layer, spaced along roads",
       "note": "The last layer of §10.1, spaced along roads where OSM knows nothing else. Deliberately thin: it exists so the game works, not so it pays.",
       "entries": [
         {

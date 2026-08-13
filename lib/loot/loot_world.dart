@@ -24,10 +24,15 @@ import '../map/poi_source.dart';
 import '../safety/spawn_exclusion.dart';
 import 'loot_spawner.dart';
 import 'loot_table.dart';
+import 'procedural_points.dart';
 
 /// §10.1: below this many places within the radius the map counts as thin, and
 /// the procedural layer takes over.
 const int kThinMapPoiCount = 8;
+
+/// §10.1: what the layer tops the count up to. Substitute points number
+/// `12 − density`, so a village with six real places gets six invented ones.
+const int kThinMapTarget = 12;
 
 /// How far the player must move before the spawner is worth running again.
 ///
@@ -100,21 +105,100 @@ class LootWorld {
         .where((poi) => poi.position.distanceTo(centre) <= kSpawnRadiusM)
         .toList();
 
+    final found = _countMatching(withinNormal);
     final spawner = LootSpawner(
       tables: tables,
-      backupMode: _countMatching(withinNormal) < kThinMapPoiCount,
+      backupMode: found < kThinMapPoiCount,
     );
 
     _plannedAt = centre;
 
+    final obstacles = await _obstaclesNear(archive, centre);
+    var candidates = spawner.backupMode ? places : withinNormal;
+
+    if (spawner.backupMode) {
+      // §10.1: twelve minus what the map already gives. A village with six
+      // real places gets six invented ones, not twelve — the layer fills a
+      // gap rather than replacing what is there.
+      candidates = [
+        ...candidates,
+        ...generateProceduralPoints(
+          centre: centre,
+          radiusM: spawner.radiusM,
+          wanted: kThinMapTarget - found,
+          seed: seed,
+          roads: obstacles.where(_isRoad).toList(),
+          areas: await _areasNear(archive, centre),
+        ),
+      ];
+    }
+
     return spawner.plan(
       centre: centre,
-      candidates: spawner.backupMode ? places : withinNormal,
+      candidates: candidates,
       existing: existing,
       now: now,
       seed: seed,
-      obstacles: await _obstaclesNear(archive, centre),
+      obstacles: obstacles,
     );
+  }
+
+  /// Roads only. The generator walks along them; rails and rivers are things
+  /// to stay away from, not things to put a house beside.
+  static bool _isRoad(MapFeature feature) =>
+      feature.tags.containsKey('highway');
+
+  /// The ground the generator reads to decide what a place would be: houses in
+  /// residential land, barns in farmland, hunting stands at the wood.
+  ///
+  /// Measured in rural Wielkopolska: 368 farmland areas, 200 of woodland and 23
+  /// of residential land across 25 tiles that hold 263 places in total. The
+  /// ground is described where the buildings are not.
+  Future<List<GeneratedArea>> _areasNear(
+    PmtilesArchive archive,
+    GeoPoint centre,
+  ) async {
+    final areas = <GeneratedArea>[];
+    final tile = tileOf(centre.latitude, centre.longitude, kPoiZoom);
+
+    for (var dx = -1; dx <= 1; dx++) {
+      for (var dy = -1; dy <= 1; dy++) {
+        final bytes = await archive.tile(kPoiZoom, tile.x + dx, tile.y + dy);
+        if (bytes == null) continue;
+
+        final decoded = decodeMvt(
+          bytes,
+          layers: const {'landuse', 'landcover'},
+        );
+        for (final feature in decoded.features) {
+          if (feature.geometry != MvtGeometry.polygon) continue;
+
+          final selector = selectorsFor(feature).firstWhere(
+            kGeneratedSelectors.containsKey,
+            orElse: () => '',
+          );
+          if (selector.isEmpty) continue;
+
+          areas.add(
+            GeneratedArea(
+              selector: selector,
+              ring: [
+                for (final point in feature.points)
+                  tileLocalToLatLon(
+                    tile.x + dx,
+                    tile.y + dy,
+                    kPoiZoom,
+                    (x: point.x.toDouble(), y: point.y.toDouble()),
+                    decoded.extent,
+                  ),
+              ],
+            ),
+          );
+        }
+      }
+    }
+
+    return areas;
   }
 
   /// How many places a real table wants. §10.1 counts lootable POI, not

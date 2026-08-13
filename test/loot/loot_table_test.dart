@@ -62,6 +62,13 @@ void main() {
 
       for (final table in tables.tables) {
         for (final selector in table.match) {
+          // A generated place has no tile behind it — §10.1 invents it — so it
+          // is named for what it is rather than for where it was found.
+          if (selector.startsWith('generated.')) {
+            expect(table.generated, isTrue, reason: selector);
+            continue;
+          }
+
           final parts = selector.split('=');
           expect(parts, hasLength(2), reason: selector);
           final head = parts.first.split('.');

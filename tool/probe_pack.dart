@@ -35,6 +35,8 @@ Future<void> main(List<String> args) async {
   final subclasses = <String, int>{};
   final classes = <String, int>{};
   final landuse = <String, int>{};
+  final landcover = <String, int>{};
+  final transportation = <String, int>{};
   final buildingProps = <String, int>{};
   var tiles = 0;
   var poi = 0;
@@ -48,7 +50,13 @@ Future<void> main(List<String> args) async {
       if (bytes == null) continue;
       tiles++;
 
-      final tile = decodeMvt(bytes, layers: {'poi', 'landuse', 'building'});
+      final tile = decodeMvt(bytes, layers: {
+        'poi',
+        'landuse',
+        'building',
+        'landcover',
+        'transportation',
+      });
       for (final feature in tile.layer('poi')) {
         poi++;
         final subclass = feature.properties['subclass'];
@@ -66,6 +74,18 @@ Future<void> main(List<String> args) async {
           landuse.update('$klass', (v) => v + 1, ifAbsent: () => 1);
         }
       }
+      for (final feature in tile.layer('landcover')) {
+        final klass = feature.properties['class'];
+        if (klass != null) {
+          landcover.update('$klass', (v) => v + 1, ifAbsent: () => 1);
+        }
+      }
+      for (final feature in tile.layer('transportation')) {
+        final klass = feature.properties['class'];
+        if (klass != null) {
+          transportation.update('$klass', (v) => v + 1, ifAbsent: () => 1);
+        }
+      }
       for (final feature in tile.layer('building')) {
         for (final key in feature.properties.keys) {
           buildingProps.update(key, (v) => v + 1, ifAbsent: () => 1);
@@ -78,6 +98,8 @@ Future<void> main(List<String> args) async {
   print('\npoi class:\n  ${_all(classes)}');
   print('\npoi subclass:\n  ${_all(subclasses)}');
   print('\nlanduse class:\n  ${_all(landuse)}');
+  print('\nlandcover class:\n  ${_all(landcover)}');
+  print('\ntransportation class:\n  ${_all(transportation)}');
   print('\nbuilding properties:\n  ${_all(buildingProps)}');
 
   // The tags §10's loot tables name, checked one by one against what is here.
