@@ -504,6 +504,58 @@ class L10nEn extends L10n {
   String get kindMisc => 'Other';
 
   @override
+  String get searchArea => 'Search the area';
+
+  @override
+  String get searchAreaRunning => 'Looking around…';
+
+  @override
+  String get searchHere => 'Search';
+
+  @override
+  String get searchShallow => 'Quick · 30 s';
+
+  @override
+  String get searchThorough => 'Thorough · 90 s';
+
+  @override
+  String get searchDeep => 'Exhaustive · 180 s';
+
+  @override
+  String get searchCancel => 'Stop';
+
+  @override
+  String get searchMoved => 'You moved — the search stopped.';
+
+  @override
+  String get searchLostSignal => 'The search stopped: no trusted position.';
+
+  @override
+  String get searchNoise => 'Searching is heard about 80 m away.';
+
+  @override
+  String searchFound(String items) {
+    return 'Found: $items';
+  }
+
+  @override
+  String get searchFoundNothing => 'Nothing worth carrying.';
+
+  @override
+  String get searchNoRoom => 'No room for everything — the rest stays.';
+
+  @override
+  String get searchEmpty => 'Already emptied.';
+
+  @override
+  String searchRevealed(int count) {
+    return 'Places revealed: $count';
+  }
+
+  @override
+  String get searchNothingNew => 'Nothing new here yet.';
+
+  @override
   String get inventoryTitle => 'Inventory';
 
   @override

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -21,6 +22,8 @@ import 'loot/loot_spawner.dart';
 import 'loot/loot_store.dart';
 import 'loot/loot_table.dart';
 import 'loot/loot_world.dart';
+import 'loot/search.dart';
+import 'ui/search_panel.dart';
 import 'game/game_session.dart';
 import 'game/relocation.dart';
 import 'l10n/app_localizations.dart';
@@ -245,6 +248,18 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// rebuilt constantly and re-reading the tiles for every frame would keep the
   /// phone busy for no gain.
   List<LootBox> _boxes = const [];
+
+  /// The search in progress (§10.2, §19.3), and when it was last advanced.
+  Search? _search;
+  DateTime? _searchTickedAt;
+
+  /// What the last reconnaissance revealed, for §10.2.1's ten minutes.
+  AreaKnowledge? _knowledge;
+
+  /// Procedural places the player has actually looked for (§10.2.3). A
+  /// pharmacy is a building and is visible from the street; a wrecked car in a
+  /// side road is not, until somebody stops and looks.
+  final Set<String> _revealed = {};
 
   /// Both HUD bars read these. Zero without a catalogue, which only happens if
   /// every bundled data file failed to parse — a broken build, not a state the
@@ -559,6 +574,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       });
       unawaited(_checkRelocation(snapshot));
       unawaited(_spawnLoot(snapshot));
+      unawaited(_advanceSearch(snapshot));
     });
 
     if (!mounted) {
@@ -849,12 +865,17 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
   /// §3.6: loot is yellow. An emptied box is not drawn at all — a marker that
   /// stays after there is nothing behind it is a walk taken for nothing.
+  ///
+  /// §10.2.3 decides what is on the map before anybody looks: a pharmacy is a
+  /// building and is visible from the street, so its marker is always there. A
+  /// wrecked car in a side road is not, and appears only once the player has
+  /// stopped and searched the area.
   List<MapMarker> _lootMarkers() {
     final now = _snapshot?.state.lastUpdate ?? DateTime.now().toUtc();
 
     return [
       for (final box in _boxes)
-        if (box.isActiveAt(now))
+        if (box.isActiveAt(now) && _isVisible(box))
           MapMarker(
             id: box.poiId,
             kind: MarkerKind.loot,
@@ -862,6 +883,243 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
             label: box.name,
           ),
     ];
+  }
+
+  bool _isVisible(LootBox box) {
+    final table = _world?.tables[box.tableId];
+    if (table == null || table.source == LootSource.osm) return true;
+    return _revealed.contains(box.poiId);
+  }
+
+  /// The box the player is standing at, if any (§19.3).
+  LootBox? _boxInReach() {
+    final fix = _snapshot?.fix;
+    if (fix == null) return null;
+
+    final at = GeoPoint(fix.latitude, fix.longitude);
+    final now = _snapshot?.state.lastUpdate ?? DateTime.now().toUtc();
+
+    LootBox? best;
+    var bestDistance = kSearchReachM;
+    for (final box in _boxes) {
+      if (!box.isActiveAt(now) || !_isVisible(box)) continue;
+      final distance = box.position.distanceTo(at);
+      if (distance > bestDistance) continue;
+      best = box;
+      bestDistance = distance;
+    }
+    return best;
+  }
+
+  /// Advances whatever search is running, one snapshot at a time.
+  ///
+  /// The loop's own clock rather than a timer of its own: a search has to tick
+  /// at the same rate as the body it belongs to, and stop for the same reasons.
+  Future<void> _advanceSearch(GameSnapshot snapshot) async {
+    final search = _search;
+    if (search == null || !search.isRunning) return;
+
+    final now = snapshot.state.lastUpdate;
+    final since = _searchTickedAt ?? search.startedAt;
+    final delta = now.difference(since);
+    if (delta <= Duration.zero) return;
+    _searchTickedAt = now;
+
+    final fix = snapshot.fix;
+    final next = search.advance(
+      delta,
+      at: fix == null ? null : GeoPoint(fix.latitude, fix.longitude),
+      // §2.1a and §10.2: a search counts only while the game is actually
+      // watching the player move. A degraded or lost signal is exactly the
+      // case where "did they stand still" cannot be answered.
+      present: snapshot.signal == PositionSignal.good,
+    );
+
+    if (next.isRunning) {
+      setState(() => _search = next);
+      return;
+    }
+
+    setState(() => _search = null);
+    _searchTickedAt = null;
+
+    if (next.state == SearchState.done) {
+      await (next.isArea ? _finishAreaSearch(next, now) : _finishObjectSearch(next, now));
+    } else if (mounted) {
+      _say(
+        next.state == SearchState.cancelledByMovement
+            ? L10n.of(context).searchMoved
+            : L10n.of(context).searchLostSignal,
+      );
+    }
+  }
+
+  void _startAreaSearch() {
+    final fix = _snapshot?.fix;
+    if (fix == null || _search != null) return;
+
+    setState(() {
+      _search = Search.area(
+        at: GeoPoint(fix.latitude, fix.longitude),
+        now: _snapshot!.state.lastUpdate,
+      );
+      _searchTickedAt = _snapshot!.state.lastUpdate;
+    });
+  }
+
+  void _startObjectSearch(SearchDepth depth) {
+    final fix = _snapshot?.fix;
+    final box = _boxInReach();
+    if (fix == null || box == null || _search != null) return;
+
+    setState(() {
+      _search = Search.object(
+        at: GeoPoint(fix.latitude, fix.longitude),
+        now: _snapshot!.state.lastUpdate,
+        poiId: box.poiId,
+        depth: depth,
+      );
+      _searchTickedAt = _snapshot!.state.lastUpdate;
+    });
+  }
+
+  void _cancelSearch() {
+    if (_search == null) return;
+    setState(() {
+      _search = null;
+      _searchTickedAt = null;
+    });
+  }
+
+  /// §10.2.3: reconnaissance reveals the places that cannot be seen from the
+  /// street, and the state of the ones that can.
+  Future<void> _finishAreaSearch(Search search, DateTime now) async {
+    final previous = _knowledge;
+    final radius = searchRadiusM(
+      // Reconnaissance is §7 and does not exist yet; binoculars do.
+      binoculars: _inventory.countOf('tool_binoculars') > 0 ||
+          _inventory.worn.any((line) => line.itemId == 'tool_binoculars'),
+    );
+
+    final found = <String>{
+      for (final box in _boxes)
+        if (box.position.distanceTo(search.anchor) <= radius) box.poiId,
+    };
+    final fresh = found.difference(_revealed);
+
+    setState(() {
+      _revealed.addAll(found);
+      _knowledge = AreaKnowledge(
+        at: search.anchor,
+        radiusM: radius,
+        completedAt: now,
+        revealedPoiIds: found,
+      );
+    });
+
+    if (!mounted) return;
+    final l10n = L10n.of(context);
+    // §10.2.1: looking again at ground already searched is allowed and adds
+    // nothing for ten minutes. Saying so plainly beats letting the player read
+    // an empty result as a failed search.
+    final knownAlready = previous?.covers(search.anchor, now) ?? false;
+    _say(
+      fresh.isNotEmpty && !knownAlready
+          ? l10n.searchRevealed(fresh.length)
+          : l10n.searchNothingNew,
+    );
+  }
+
+  /// §19.3: the table is rolled, what fits goes in the pack, and the box is
+  /// empty until it refills (§10).
+  Future<void> _finishObjectSearch(Search search, DateTime now) async {
+    final character = _character;
+    final catalogue = _catalogue;
+    final world = _world;
+    final poiId = search.targetPoiId;
+    final depth = search.depth;
+    if (character == null ||
+        catalogue == null ||
+        world == null ||
+        poiId == null ||
+        depth == null) {
+      return;
+    }
+
+    final box = _boxes.where((b) => b.poiId == poiId).firstOrNull;
+    final table = box == null ? null : world.tables[box.tableId];
+    if (box == null || table == null) return;
+
+    // Seeded from the place and the character, so the same search of the same
+    // shop gives the same result however many times the app is restarted
+    // mid-search (§11).
+    final random = Random(character.profile.rngSeed ^ poiId.hashCode);
+    final drop = table.roll(random, depth: depth, catalogue: catalogue);
+
+    var inventory = _inventory;
+    final taken = <String, int>{};
+    var refused = false;
+
+    for (final entry in drop.entries) {
+      final result = inventory.add(
+        entry.key,
+        catalogue,
+        body: character.body,
+        count: entry.value,
+      );
+      inventory = result.inventory;
+
+      final accepted = result.acceptedCount ?? entry.value;
+      if (accepted > 0) taken[entry.key] = accepted;
+      if (accepted < entry.value) refused = true;
+    }
+
+    // The box is emptied whether or not everything fitted. §19.3 spends the
+    // time on searching it, not on carrying the result — and a box that stayed
+    // full because a pack was full would be a way to farm one shop.
+    final emptied = box.lootedAtTime(now, random);
+
+    setState(() {
+      _inventory = inventory;
+      _boxes = [
+        for (final b in _boxes) if (b.poiId == poiId) emptied else b,
+      ];
+    });
+
+    await LootStore(widget.session.db).saveOne(character.profile.id, emptied);
+    await _saveInventory();
+    if (!mounted) return;
+
+    final l10n = L10n.of(context);
+    if (taken.isEmpty) {
+      _say(l10n.searchFoundNothing);
+      return;
+    }
+
+    final language = Localizations.localeOf(context).languageCode;
+    final names = _names ?? ItemNames.empty;
+    final listed = taken.entries
+        .map((entry) {
+          final item = catalogue[entry.key];
+          final name = item == null
+              ? entry.key
+              : item.name.resolve(
+                  language: language,
+                  lookup: names.forLanguage(language),
+                );
+          return entry.value > 1 ? '$name ×${entry.value}' : name;
+        })
+        .join(', ');
+
+    _say('${l10n.searchFound(listed)}${refused ? ' · ${l10n.searchNoRoom}' : ''}');
+  }
+
+  /// One line, at the bottom, gone in a few seconds. The player is walking.
+  void _say(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), duration: const Duration(seconds: 4)),
+    );
   }
 
   /// Sends the player wherever the current refusal can actually be changed.
@@ -1004,6 +1262,16 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
                 ),
             fix: snapshot?.displayFix,
             markers: _lootMarkers(),
+            searchPanel: snapshot == null
+                ? null
+                : SearchPanel(
+                    search: _search,
+                    targetName: _boxInReach()?.name,
+                    canSearchHere: _boxInReach() != null,
+                    onSearchArea: _startAreaSearch,
+                    onSearchHere: _startObjectSearch,
+                    onCancel: _cancelSearch,
+                  ),
             headingDeg: snapshot?.fix?.headingDeg,
             economy: snapshot?.economy ?? false,
             // There is always a map here — this branch only runs with a

@@ -48,6 +48,7 @@ class MapScreen extends StatefulWidget {
     this.hasPack = true,
     this.hud,
     this.onMenu,
+    this.searchPanel,
     super.key,
   });
 
@@ -73,6 +74,10 @@ class MapScreen extends StatefulWidget {
   final Widget? hud;
 
   final void Function(MapMenuEntry)? onMenu;
+
+  /// The searching controls of §10.2 and §19.3, above the menu. Null where
+  /// there is nothing to search — without a map pack there is no loot layer.
+  final Widget? searchPanel;
 
   @override
   State<MapScreen> createState() => _MapScreenState();
@@ -172,7 +177,13 @@ class _MapScreenState extends State<MapScreen> {
             left: 0,
             right: 0,
             bottom: 0,
-            child: _BottomMenu(onSelected: widget.onMenu),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (widget.searchPanel != null) widget.searchPanel!,
+                _BottomMenu(onSelected: widget.onMenu),
+              ],
+            ),
           ),
         ],
       ),

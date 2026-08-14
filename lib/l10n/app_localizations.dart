@@ -979,6 +979,102 @@ abstract class L10n {
   /// **'Other'**
   String get kindMisc;
 
+  /// No description provided for @searchArea.
+  ///
+  /// In en, this message translates to:
+  /// **'Search the area'**
+  String get searchArea;
+
+  /// No description provided for @searchAreaRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Looking around…'**
+  String get searchAreaRunning;
+
+  /// No description provided for @searchHere.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get searchHere;
+
+  /// No description provided for @searchShallow.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick · 30 s'**
+  String get searchShallow;
+
+  /// No description provided for @searchThorough.
+  ///
+  /// In en, this message translates to:
+  /// **'Thorough · 90 s'**
+  String get searchThorough;
+
+  /// No description provided for @searchDeep.
+  ///
+  /// In en, this message translates to:
+  /// **'Exhaustive · 180 s'**
+  String get searchDeep;
+
+  /// No description provided for @searchCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop'**
+  String get searchCancel;
+
+  /// No description provided for @searchMoved.
+  ///
+  /// In en, this message translates to:
+  /// **'You moved — the search stopped.'**
+  String get searchMoved;
+
+  /// No description provided for @searchLostSignal.
+  ///
+  /// In en, this message translates to:
+  /// **'The search stopped: no trusted position.'**
+  String get searchLostSignal;
+
+  /// No description provided for @searchNoise.
+  ///
+  /// In en, this message translates to:
+  /// **'Searching is heard about 80 m away.'**
+  String get searchNoise;
+
+  /// No description provided for @searchFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Found: {items}'**
+  String searchFound(String items);
+
+  /// No description provided for @searchFoundNothing.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing worth carrying.'**
+  String get searchFoundNothing;
+
+  /// No description provided for @searchNoRoom.
+  ///
+  /// In en, this message translates to:
+  /// **'No room for everything — the rest stays.'**
+  String get searchNoRoom;
+
+  /// No description provided for @searchEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Already emptied.'**
+  String get searchEmpty;
+
+  /// No description provided for @searchRevealed.
+  ///
+  /// In en, this message translates to:
+  /// **'Places revealed: {count}'**
+  String searchRevealed(int count);
+
+  /// No description provided for @searchNothingNew.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing new here yet.'**
+  String get searchNothingNew;
+
   /// No description provided for @inventoryTitle.
   ///
   /// In en, this message translates to:

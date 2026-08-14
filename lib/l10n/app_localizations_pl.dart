@@ -506,6 +506,58 @@ class L10nPl extends L10n {
   String get kindMisc => 'Inne';
 
   @override
+  String get searchArea => 'Przeszukaj teren';
+
+  @override
+  String get searchAreaRunning => 'Rozglądasz się…';
+
+  @override
+  String get searchHere => 'Przeszukaj';
+
+  @override
+  String get searchShallow => 'Pobieżnie · 30 s';
+
+  @override
+  String get searchThorough => 'Dokładnie · 90 s';
+
+  @override
+  String get searchDeep => 'Gruntownie · 180 s';
+
+  @override
+  String get searchCancel => 'Przerwij';
+
+  @override
+  String get searchMoved => 'Ruszyłeś się — przeszukanie przerwane.';
+
+  @override
+  String get searchLostSignal => 'Przeszukanie przerwane: brak pewnej pozycji.';
+
+  @override
+  String get searchNoise => 'Przeszukanie słychać z około 80 m.';
+
+  @override
+  String searchFound(String items) {
+    return 'Znaleziono: $items';
+  }
+
+  @override
+  String get searchFoundNothing => 'Nic wartego niesienia.';
+
+  @override
+  String get searchNoRoom => 'Nie wszystko się mieści — reszta zostaje.';
+
+  @override
+  String get searchEmpty => 'Już przeszukane.';
+
+  @override
+  String searchRevealed(int count) {
+    return 'Odsłonięte miejsca: $count';
+  }
+
+  @override
+  String get searchNothingNew => 'Nic nowego tutaj.';
+
+  @override
   String get inventoryTitle => 'Ekwipunek';
 
   @override

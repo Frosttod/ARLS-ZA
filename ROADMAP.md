@@ -12,14 +12,14 @@ Każdy zamknięty etap dostaje sekcję **Dziennik wykonania** z decyzjami podję
 | 1 | Tryb deweloperski i symulator GPS | ✅ zamknięty | 2026-08-10 | `df54653` |
 | 2 | Postać i fizjologia | ✅ zamknięty | 2026-08-11 | `f2b1056`, `5555db2`, `2b0a37e`, `d869661` |
 | 3 | Mapa, GPS, bezpieczeństwo gracza | 🟡 13/13 zadań, po pierwszym spacerze | — | `f035626` … `43510ef` (15 commitów) |
-| 4 | Przedmioty, loot, przeszukanie | 🟡 6/11 zadań (4.1–4.6) | — | `2b1cb31` … `fd49afd` |
+| 4 | Przedmioty, loot, przeszukanie | 🟡 8/11 zadań (4.1–4.8) | — | `2b1cb31` … |
 | 5 | Walka, przeciwnicy, hałas | ⬜ | — | — |
 | 6 | Ognisko z pełnym cyklem | ⬜ | — | — |
 | 7 | Audio pozycyjne i haptyka | ⬜ | — | — |
 | 8 | Schron, obóz, pętla dobowa | ⬜ | — | — |
 | 9 | Onboarding, dostępność, zgodność | ⬜ | — | — |
 
-**Metryki:** 681 testów · `flutter analyze` czysty · schemat bazy **v4** · release APK 89,5 MB bez devtools
+**Metryki:** 700 testów · `flutter analyze` czysty · schemat bazy **v4** · release APK 89,5 MB bez devtools
 
 ### Zablokowane na użytkowniku
 
@@ -352,8 +352,8 @@ Dwa wnioski na przyszłość:
 | 4.4 | ✅ Plecaki (udźwig + pojemność), odzież i pancerz (dwie osie ochrony) | §4.4, §4.5 |
 | 4.5 | ✅ Loot z POI (własny czytnik PMTiles + MVT), respawn 4–8 h, max 15 w promieniu 2 km, 5 gwarantowanych w 600 m | §10 |
 | 4.6 | ✅ Warstwa proceduralna przy gęstości POI < 8: domy, stodoły i ambony generowane na landcover, punkty przy drogach | §10.1 |
-| 4.7 | Przeszukanie terenu (rozpoznanie): 45 s bezruchu, promień, co odsłania | §10.2 |
-| 4.8 | Przeszukanie obiektu jako czynność czasowa: 30 / 90 / 180 s, hałas, przerwanie | §19.3, §10.3.5 |
+| 4.7 | ✅ Przeszukanie terenu: 45 s bezruchu, promień wg §10.2.2, punkty proceduralne widoczne dopiero po rozpoznaniu | §10.2 |
+| 4.8 | ✅ Przeszukanie obiektu: 30 / 90 / 180 s, przerwanie, loot trafia do ekwipunku, skrzynka pustoszeje | §19.3, §10.3.5 |
 | 4.9 | Przeszkody: wyważenie drzwi, kłódka, szyba — wymagania narzędziowe i hałas | §19.3 |
 | 4.10 | Porzucone przedmioty na mapie, 24 h, limit 50 znaczników | §4.8 |
 | 4.11 | `notes.json` — notatki fabularne, podstawianie `{street}`/`{district}`/`{city}` z OSM | §19.1 |
