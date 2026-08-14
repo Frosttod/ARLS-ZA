@@ -14,14 +14,13 @@
 library;
 
 import 'dart:io';
+import 'dart:isolate';
 
 import '../map/geometry.dart';
 import '../map/map_source.dart';
-import '../map/mvt.dart';
-import '../map/omt_schema.dart';
-import '../map/pmtiles_archive.dart';
 import '../map/poi_source.dart';
 import '../safety/spawn_exclusion.dart';
+import 'ground_reader.dart';
 import 'loot_spawner.dart';
 import 'loot_table.dart';
 import 'procedural_points.dart';
@@ -46,38 +45,41 @@ class LootWorld {
 
   final LootTableSet tables;
 
-  PmtilesArchive? _archive;
-  String? _openedPath;
+  /// The pack on disk. A path rather than an open archive, because the reading
+  /// happens in another isolate and a file handle does not travel.
+  String? _packPath;
 
   GeoPoint? _plannedAt;
 
-  /// Opens the pack, or does nothing where there is nothing to open.
+  /// True while a plan is being read.
+  ///
+  /// ⚠️ Without this the spawner piles up. Snapshots arrive every second, the
+  /// plan takes far longer than that on a phone, and [shouldReplan] keeps
+  /// saying yes until one finishes — so a single walk past the 300 m mark
+  /// started a new tile read every second, each decoding up to 25 gzipped
+  /// tiles. That is what starved the position stream and brought back the weak
+  /// signal warning: the GPS was fine, the isolate was busy.
+  bool _planning = false;
+
+  /// Points at the pack, or at nothing.
   Future<void> useSource(MapSource? source) async {
     final path = source is InstalledPack ? source.path : null;
-    if (path == _openedPath) return;
+    if (path == _packPath) return;
 
-    await _archive?.close();
-    _archive = null;
-    _openedPath = path;
+    _packPath = path != null && File(path).existsSync() ? path : null;
     _plannedAt = null;
-
-    if (path == null) return;
-    final file = File(path);
-    if (!file.existsSync()) return;
-
-    _archive = await PmtilesArchive.open(file);
   }
 
   Future<void> dispose() async {
-    await _archive?.close();
-    _archive = null;
+    _packPath = null;
   }
 
   /// True when there is a pack to read places out of.
-  bool get isReady => _archive != null;
+  bool get isReady => _packPath != null;
 
   /// Whether the spawner should run for a player standing here.
   bool shouldReplan(GeoPoint at) {
+    if (_planning) return false;
     final last = _plannedAt;
     return last == null || last.distanceTo(at) >= kReplanAfterM;
   }
@@ -92,15 +94,34 @@ class LootWorld {
     required DateTime now,
     required int seed,
   }) async {
-    final archive = _archive;
-    if (archive == null) return null;
+    final path = _packPath;
+    if (path == null || _planning) return null;
 
-    final source = PoiSource(archive);
+    // Claimed before the read, not after. The read is the slow part, and
+    // leaving the claim until it finished is what let the next second's
+    // snapshot start another one.
+    _planning = true;
+    _plannedAt = centre;
 
-    // Read once at the wider radius, then decide whether the map is thin.
-    // Doing it the other way round would mean reading the tiles twice.
-    final places = await source.near(centre, radiusM: kSpawnRadiusBackupM);
+    final Ground ground;
+    try {
+      // ⚠️ Off the UI isolate. Reading two kilometres of a city means
+      // decompressing and decoding up to 25 vector tiles; measured on a
+      // desktop that is ~900 ms, and a phone is slower. Done here it froze the
+      // frame *and* the platform channel carrying position updates.
+      ground = await Isolate.run(
+        () => readGround(
+          packPath: path,
+          latitude: centre.latitude,
+          longitude: centre.longitude,
+          radiusM: kSpawnRadiusBackupM,
+        ),
+      );
+    } finally {
+      _planning = false;
+    }
 
+    final places = ground.places;
     final withinNormal = places
         .where((poi) => poi.position.distanceTo(centre) <= kSpawnRadiusM)
         .toList();
@@ -111,9 +132,7 @@ class LootWorld {
       backupMode: found < kThinMapPoiCount,
     );
 
-    _plannedAt = centre;
-
-    final obstacles = await _obstaclesNear(archive, centre);
+    final obstacles = ground.obstacles;
     var candidates = spawner.backupMode ? places : withinNormal;
 
     if (spawner.backupMode) {
@@ -128,7 +147,7 @@ class LootWorld {
           wanted: kThinMapTarget - found,
           seed: seed,
           roads: obstacles.where(_isRoad).toList(),
-          areas: await _areasNear(archive, centre),
+          areas: ground.areas,
         ),
       ];
     }
@@ -148,59 +167,6 @@ class LootWorld {
   static bool _isRoad(MapFeature feature) =>
       feature.tags.containsKey('highway');
 
-  /// The ground the generator reads to decide what a place would be: houses in
-  /// residential land, barns in farmland, hunting stands at the wood.
-  ///
-  /// Measured in rural Wielkopolska: 368 farmland areas, 200 of woodland and 23
-  /// of residential land across 25 tiles that hold 263 places in total. The
-  /// ground is described where the buildings are not.
-  Future<List<GeneratedArea>> _areasNear(
-    PmtilesArchive archive,
-    GeoPoint centre,
-  ) async {
-    final areas = <GeneratedArea>[];
-    final tile = tileOf(centre.latitude, centre.longitude, kPoiZoom);
-
-    for (var dx = -1; dx <= 1; dx++) {
-      for (var dy = -1; dy <= 1; dy++) {
-        final bytes = await archive.tile(kPoiZoom, tile.x + dx, tile.y + dy);
-        if (bytes == null) continue;
-
-        final decoded = decodeMvt(
-          bytes,
-          layers: const {'landuse', 'landcover'},
-        );
-        for (final feature in decoded.features) {
-          if (feature.geometry != MvtGeometry.polygon) continue;
-
-          final selector = selectorsFor(feature).firstWhere(
-            kGeneratedSelectors.containsKey,
-            orElse: () => '',
-          );
-          if (selector.isEmpty) continue;
-
-          areas.add(
-            GeneratedArea(
-              selector: selector,
-              ring: [
-                for (final point in feature.points)
-                  tileLocalToLatLon(
-                    tile.x + dx,
-                    tile.y + dy,
-                    kPoiZoom,
-                    (x: point.x.toDouble(), y: point.y.toDouble()),
-                    decoded.extent,
-                  ),
-              ],
-            ),
-          );
-        }
-      }
-    }
-
-    return areas;
-  }
-
   /// How many places a real table wants. §10.1 counts lootable POI, not
   /// features: a district of car parks and bus shelters is a thin map.
   int _countMatching(List<Poi> places) => places
@@ -210,53 +176,4 @@ class LootWorld {
             .any((table) => table.source == LootSource.osm),
       )
       .length;
-
-  /// The roads, rails and water that §3.5 refuses to spawn on.
-  ///
-  /// Read from the same tiles as the places, at the same moment, so a road that
-  /// exists on the map cannot be missing from the check.
-  Future<List<MapFeature>> _obstaclesNear(
-    PmtilesArchive archive,
-    GeoPoint centre,
-  ) async {
-    final features = <MapFeature>[];
-
-    final tile = tileOf(centre.latitude, centre.longitude, kPoiZoom);
-    for (var dx = -1; dx <= 1; dx++) {
-      for (var dy = -1; dy <= 1; dy++) {
-        final bytes = await archive.tile(kPoiZoom, tile.x + dx, tile.y + dy);
-        if (bytes == null) continue;
-
-        final decoded = decodeMvt(
-          bytes,
-          layers: const {'transportation', 'water', 'waterway'},
-        );
-        for (final feature in decoded.features) {
-          final tags = osmTagsFor(feature);
-          if (tags.isEmpty || feature.points.isEmpty) continue;
-
-          features.add(
-            MapFeature(
-              tags: tags,
-              shape: feature.geometry == MvtGeometry.polygon
-                  ? FeatureShape.area
-                  : FeatureShape.line,
-              geometry: [
-                for (final point in feature.points)
-                  tileLocalToLatLon(
-                    tile.x + dx,
-                    tile.y + dy,
-                    kPoiZoom,
-                    (x: point.x.toDouble(), y: point.y.toDouble()),
-                    decoded.extent,
-                  ),
-              ],
-            ),
-          );
-        }
-      }
-    }
-
-    return features;
-  }
 }
