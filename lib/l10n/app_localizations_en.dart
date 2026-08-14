@@ -223,6 +223,9 @@ class L10nEn extends L10n {
   String get hudNoSignal => 'No signal';
 
   @override
+  String get hudAcquiring => 'Acquiring GPS';
+
+  @override
   String get hudWeakSignal => 'Weak signal';
 
   @override

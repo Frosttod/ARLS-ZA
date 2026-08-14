@@ -179,6 +179,11 @@ class DevicePositionSource extends BasePositionSource {
     if (_cadence == cadence) return;
     _cadence = cadence;
 
+    // The dropout and degrade thresholds are counted in fixes, not in seconds
+    // — asking once every ten seconds and then complaining after thirty would
+    // be complaining about three readings.
+    noteCadence(cadence);
+
     if (_sub == null) return;
     if (cadence.interval <= Duration.zero) {
       // Shelter occupations run with the GPS off entirely — the character is
@@ -200,15 +205,22 @@ class DevicePositionSource extends BasePositionSource {
   void _onPosition(Position position) => emitFix(_toFix(position));
 
   AndroidSettings _settings() => AndroidSettings(
-    accuracy: switch (_cadence) {
-      // Combat is decided by distance, so pay for the best fix available.
-      PositionCadence.combat => LocationAccuracy.best,
-      PositionCadence.moving => LocationAccuracy.high,
-      // Standing still does not need metres; it needs to know the player is
-      // still where they were.
-      PositionCadence.resting => LocationAccuracy.medium,
-      PositionCadence.off => LocationAccuracy.lowest,
-    },
+    // ⚠️ Never below `high`, whatever the cadence.
+    //
+    // Accuracy on Android is not a dial, it is a choice of technology.
+    // geolocator maps `medium` to PRIORITY_BALANCED_POWER_ACCURACY, which is
+    // WiFi and cell positioning — 20 to 100 m — and `lowest` to
+    // PRIORITY_PASSIVE, which returns whatever another app happened to ask
+    // for. Neither is GPS.
+    //
+    // Standing still used to drop to `medium`, and the result was measured on
+    // a walk: every fix came back wider than §3.2's 25 m gate, all of them
+    // were rejected, and thirty seconds later the player standing in an open
+    // street was told the signal was weak. Battery is saved by asking less
+    // often — the interval below — not by asking somewhere worse.
+    accuracy: _cadence == PositionCadence.combat
+        ? LocationAccuracy.best
+        : LocationAccuracy.high,
     intervalDuration: _cadence.interval,
 
     // Zero: the game decides for itself what counts as movement (§3.2). A

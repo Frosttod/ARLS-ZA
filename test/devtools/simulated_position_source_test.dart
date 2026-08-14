@@ -238,15 +238,24 @@ void main() {
         ..setQuality(SimSignalQuality.canyon);
       addTearDown(source.dispose);
 
-      var degraded = 0;
+      // What this test is named after: the gate, not the warning.
+      //
+      // It used to count how often the signal read "weak", which stopped
+      // working once that warning was made slow on purpose — and rightly so.
+      // A canyon is 20-35 m, so about half its fixes land inside the 25 m gate
+      // and the other half do not. Fixes being thrown away is the thing worth
+      // asserting; a player getting a good fix every other second does not
+      // have a weak signal, whatever the wide ones look like.
+      var wide = 0;
       for (var i = 0; i < 60; i++) {
         source.step();
-        if (source.currentSignal == PositionSignal.degraded) degraded++;
+        final fix = source.lastFix;
+        if (fix != null && fix.accuracyM > 25) wide++;
         base.advance(const Duration(seconds: 1));
       }
 
       expect(
-        degraded,
+        wide,
         greaterThan(0),
         reason: 'a street canyon has to be able to defeat the accuracy gate',
       );

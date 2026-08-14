@@ -138,6 +138,7 @@
   "hudSpeed": "Speed",
   "hudBulk": "Bulk",
   "hudNoSignal": "No signal",
+  "hudAcquiring": "Acquiring GPS",
   "hudWeakSignal": "Weak signal",
   "statusBleeding": "Bleeding",
   "statusDehydrated": "Dehydrated",

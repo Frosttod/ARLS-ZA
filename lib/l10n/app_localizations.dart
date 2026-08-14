@@ -469,6 +469,12 @@ abstract class L10n {
   /// **'No signal'**
   String get hudNoSignal;
 
+  /// No description provided for @hudAcquiring.
+  ///
+  /// In en, this message translates to:
+  /// **'Acquiring GPS'**
+  String get hudAcquiring;
+
   /// No description provided for @hudWeakSignal.
   ///
   /// In en, this message translates to:

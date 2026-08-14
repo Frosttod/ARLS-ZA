@@ -24,8 +24,14 @@ enum PositionCadence {
   /// Walking. 0.2 Hz is plenty to track a person on foot.
   moving(Duration(seconds: 5), 'moving'),
 
-  /// Standing still, or in the shelter. 0.05 Hz.
-  resting(Duration(seconds: 20), 'resting'),
+  /// Standing still, or in the shelter. 0.1 Hz.
+  ///
+  /// §3.3 asks for 0.05 Hz here, and twenty seconds is what that means. It was
+  /// too slow in both directions: one dropped reading put the player past the
+  /// dropout threshold, and since walking is recognised *from* fixes, leaving
+  /// stillness took up to twenty seconds to notice. Ten costs little — the
+  /// receiver is already warm — and removes both.
+  resting(Duration(seconds: 10), 'resting'),
 
   /// Shelter occupations run with GPS off entirely — the character is not
   /// moving, so the position is not needed (§2.1a.4).
@@ -84,7 +90,8 @@ abstract class PositionSource {
 abstract class BasePositionSource implements PositionSource {
   BasePositionSource({
     this.signalTimeout = const Duration(seconds: 60),
-    this.degradeAfter = const Duration(seconds: 30),
+    this.degradeAfter = const Duration(seconds: 45),
+    this.acquireGrace = const Duration(seconds: 40),
   });
 
   /// How long without a fix before the position stops being trusted (§3.2).
@@ -92,7 +99,34 @@ abstract class BasePositionSource implements PositionSource {
 
   /// How long wide fixes have to keep arriving before the player is told the
   /// signal is weak. A cold start is wide for a few seconds and then is not.
+  ///
+  /// Forty-five rather than thirty, and never shorter than three sampling
+  /// intervals (see [degradeWindow]): at one fix every ten seconds, thirty
+  /// seconds is three readings, and losing three readings in a city is a
+  /// Tuesday, not a fault worth a warning.
   final Duration degradeAfter;
+
+  /// How long after starting the game says "acquiring" rather than "weak".
+  ///
+  /// Nothing has gone wrong in the first half-minute outdoors — the receiver
+  /// is doing what a receiver does.
+  final Duration acquireGrace;
+
+  /// Set by the source when the cadence changes, so the degrade threshold
+  /// tracks how often fixes were even asked for.
+  Duration _interval = const Duration(seconds: 5);
+
+  /// The window that has to pass without an accurate fix before the player is
+  /// warned.
+  Duration get degradeWindow {
+    final threeSamples = _interval * 3;
+    return threeSamples > degradeAfter ? threeSamples : degradeAfter;
+  }
+
+  /// Called by subclasses whenever the sampling rate changes.
+  void noteCadence(PositionCadence cadence) {
+    if (cadence.interval > Duration.zero) _interval = cadence.interval;
+  }
 
   final _fixes = StreamController<PositionFix>.broadcast();
   final _signal = StreamController<PositionSignal>.broadcast();
@@ -104,6 +138,11 @@ abstract class BasePositionSource implements PositionSource {
 
   PositionSignal _currentSignal = PositionSignal.unavailable;
   Timer? _watchdog;
+
+  /// When this source started producing. The grace period is measured from
+  /// here rather than from the first fix, because before the first fix there
+  /// is nothing to measure from.
+  DateTime? _startedAt;
 
   @override
   Stream<PositionFix> get fixes => _fixes.stream;
@@ -134,13 +173,27 @@ abstract class BasePositionSource implements PositionSource {
     _fixes.add(fix);
 
     final now = fix.timestamp;
+    _startedAt ??= now;
+
     if (fix.accuracyM <= accuracyGateM) {
       _lastAccurate = now;
       _setSignal(PositionSignal.good);
-    } else {
-      final since = _lastAccurate;
-      final waited = since == null ? degradeAfter : now.difference(since);
-      if (waited >= degradeAfter) _setSignal(PositionSignal.degraded);
+      _armWatchdog();
+      return;
+    }
+
+    final since = _lastAccurate;
+    if (since == null) {
+      // Nothing accurate has ever arrived. Until the grace period is up this
+      // is a receiver warming up, not a signal worth complaining about.
+      final waited = now.difference(_startedAt!);
+      _setSignal(
+        waited >= acquireGrace
+            ? PositionSignal.degraded
+            : PositionSignal.acquiring,
+      );
+    } else if (now.difference(since) >= degradeWindow) {
+      _setSignal(PositionSignal.degraded);
     }
     _armWatchdog();
   }

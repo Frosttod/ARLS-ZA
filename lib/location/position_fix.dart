@@ -159,6 +159,14 @@ enum PositionSignal {
   /// Fixes are arriving and pass the accuracy gate.
   good,
 
+  /// Nothing accurate has arrived *yet*, and the game has not been running
+  /// long enough for that to mean anything is wrong.
+  ///
+  /// A cold GPS start is five to thirty seconds and the first fixes are wide.
+  /// Calling that a weak signal taught players that the HUD lies; it is a
+  /// different state and it deserves a different word (§3.2).
+  acquiring,
+
   /// Fixes are arriving but are too imprecise to act on (§3.2).
   degraded,
 

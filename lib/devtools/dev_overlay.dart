@@ -139,6 +139,7 @@ class DevOverlay extends StatelessWidget {
 
   static String _signalLabel(PositionSignal signal) => switch (signal) {
     PositionSignal.good => 'ok',
+    PositionSignal.acquiring => 'szukam',
     PositionSignal.degraded => 'słaby',
     PositionSignal.lost => 'BRAK',
     PositionSignal.unavailable => 'wył.',

@@ -225,6 +225,9 @@ class L10nPl extends L10n {
   String get hudNoSignal => 'Brak sygnału';
 
   @override
+  String get hudAcquiring => 'Szukam GPS';
+
+  @override
   String get hudWeakSignal => 'Słaby sygnał';
 
   @override

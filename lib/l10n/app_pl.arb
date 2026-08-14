@@ -62,6 +62,7 @@
   "hudSpeed": "Prędkość",
   "hudBulk": "Objętość",
   "hudNoSignal": "Brak sygnału",
+  "hudAcquiring": "Szukam GPS",
   "hudWeakSignal": "Słaby sygnał",
   "statusBleeding": "Krwawienie",
   "statusDehydrated": "Odwodnienie",

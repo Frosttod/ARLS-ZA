@@ -1611,6 +1611,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     ?switch (snapshot.signal) {
       PositionSignal.lost || PositionSignal.unavailable => l10n.hudNoSignal,
       PositionSignal.degraded => l10n.hudWeakSignal,
+      // Not a warning. The receiver is doing what a receiver does, and saying
+      // so is what stops the player reading a cold start as a fault.
+      PositionSignal.acquiring => l10n.hudAcquiring,
       PositionSignal.good => null,
     },
     if (snapshot.economy) l10n.hudLowBattery,
