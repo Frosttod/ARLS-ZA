@@ -133,6 +133,7 @@ class LootWorld {
     );
 
     final obstacles = ground.obstacles;
+    final roads = obstacles.where(_isRoad).toList();
     var candidates = spawner.backupMode ? places : withinNormal;
 
     if (spawner.backupMode) {
@@ -146,10 +147,33 @@ class LootWorld {
           radiusM: spawner.radiusM,
           wanted: kThinMapTarget - found,
           seed: seed,
-          roads: obstacles.where(_isRoad).toList(),
+          roads: roads,
           areas: ground.areas,
         ),
       ];
+    } else {
+      // ⚠️ §10.1's density test is answered over two kilometres, and a city
+      // passes it comfortably — but the player is standing in one spot, not
+      // in an average. Measured on the southern edge of Poznań: fifteen boxes
+      // placed, the nearest 653 m away and nothing at all inside the ring, in
+      // a district the test calls dense.
+      //
+      // So the ring gets topped up locally, from the same generator §10.1
+      // already uses, and only by as much as it is short.
+      final nearReal = _countNear(candidates, centre);
+      if (nearReal < kNearRing) {
+        candidates = [
+          ...candidates,
+          ...generateProceduralPoints(
+            centre: centre,
+            radiusM: kNearRingM,
+            wanted: kNearRing - nearReal,
+            seed: seed,
+            roads: roads,
+            areas: ground.areas,
+          ),
+        ];
+      }
     }
 
     return spawner.plan(
@@ -166,6 +190,15 @@ class LootWorld {
   /// to stay away from, not things to put a house beside.
   static bool _isRoad(MapFeature feature) =>
       feature.tags.containsKey('highway');
+
+  /// How many candidates inside the near ring any table would take.
+  int _countNear(List<Poi> places, GeoPoint centre) => places
+      .where(
+        (poi) =>
+            poi.position.distanceTo(centre) <= kNearRingM &&
+            tables.forTags(poi.selectors).isNotEmpty,
+      )
+      .length;
 
   /// How many places a real table wants. §10.1 counts lootable POI, not
   /// features: a district of car parks and bus shelters is a thin map.

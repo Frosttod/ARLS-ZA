@@ -195,6 +195,20 @@ class LootSpawner {
     // A place is only a candidate if a table wants it, nothing already sits on
     // it, and §3.5 will let a person stand there.
     final available = <({Poi poi, LootTable table, double distance})>[];
+
+    // ⚠️ Car parks, recycling points, bus shelters and lock-ups, near enough to
+    // be worth walking to.
+    //
+    // §10.1 keeps these out of a city, on the reasoning that a city has real
+    // shops — and measured over 2 km of Poznań it does: 4165 car parks against
+    // 427 grocers, which is why the rule exists. But a player standing on a
+    // residential estate has none of those 427 within six hundred metres, and
+    // got a game with nothing in it. Found on a walk, not in a test.
+    //
+    // These are real places, not invented ones, and §10.1 already prices them
+    // at 55%. They fill the near ring only when nothing better can.
+    final nearFallback = <({Poi poi, LootTable table, double distance})>[];
+
     for (final poi in candidates) {
       if (taken.contains(poi.id)) continue;
 
@@ -204,15 +218,28 @@ class LootSpawner {
       final distance = poi.position.distanceTo(centre);
       if (distance > radiusM) continue;
 
+      // ⚠️ Which table wants it first, §3.5 second, and in that order.
+      //
+      // Refusing by geometry means walking every road and river near the
+      // player for each candidate. Doing that before the table lookup ran it
+      // over all 31 195 features around central Poznań instead of the 5834 a
+      // table actually wants, and one plan went from 0.9 s to 16 s.
       final table = _tableFor(poi);
-      if (table == null) continue;
+      final fallback = table == null && !backupMode && distance <= kNearRingM
+          ? _fallbackTableFor(poi)
+          : null;
+      if (table == null && fallback == null) continue;
 
       final refusal = filter.refuse(poi.position);
       if (refusal != null) continue;
 
-      available.add((poi: poi, table: table, distance: distance));
+      if (table != null) {
+        available.add((poi: poi, table: table, distance: distance));
+      } else {
+        nearFallback.add((poi: poi, table: fallback!, distance: distance));
+      }
     }
-    if (available.isEmpty) {
+    if (available.isEmpty && nearFallback.isEmpty) {
       return SpawnPlan(boxes: kept, added: const [], forgotten: forgotten);
     }
 
@@ -233,12 +260,16 @@ class LootSpawner {
       ..sort((a, b) => a.distance.compareTo(b.distance));
 
     for (var i = 0; i < kNearRing - nearActive && room > 0; i++) {
-      if (near.isEmpty) break;
+      // Real shops first, always. The fallback is what an estate has, not what
+      // a high street has, and it should never displace the high street.
+      final pool = near.isNotEmpty ? near : nearFallback;
+      if (pool.isEmpty) break;
+
       // Not simply the closest five: that would put every box on the same
       // street corner. One of the nearest handful, chosen by weight.
-      final pick = _weightedPick(near, random);
+      final pick = _weightedPick(pool, random);
       if (pick == null) break;
-      near.remove(pick);
+      pool.remove(pick);
       available.remove(pick);
       added.add(_boxAt(pick, now));
       room--;
@@ -277,6 +308,21 @@ class LootSpawner {
     for (final table in tables.forTags(poi.selectors)) {
       if (table.source == LootSource.procedural && !backupMode) continue;
       return table;
+    }
+    return null;
+  }
+
+  /// The procedural table for a place, used only to keep the near ring from
+  /// being empty in a city (see [plan]).
+  ///
+  /// Generated places count here as well as tagged ones. A district can be
+  /// dense enough for §10.1's test and still have nothing at all within six
+  /// hundred metres of where somebody happens to be standing; refusing the
+  /// invented points there left the ring empty for the sake of a rule about
+  /// two-kilometre averages.
+  LootTable? _fallbackTableFor(Poi poi) {
+    for (final table in tables.forTags(poi.selectors)) {
+      if (table.source == LootSource.procedural) return table;
     }
     return null;
   }

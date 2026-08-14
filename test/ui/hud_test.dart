@@ -22,6 +22,7 @@ void main() {
     WidgetTester tester,
     SimState state, {
     List<String> warnings = const [],
+    double speedKmh = 0,
     double carriedKg = 0,
     double carriedVolumeL = 0,
     double capacityL = 65,
@@ -44,6 +45,7 @@ void main() {
             status: statusOf(state: state, constants: constants),
             constants: constants,
             warnings: warnings,
+            speedKmh: speedKmh,
             carryComfortKg: profile.carryComfortKg,
             carryMaxKg: profile.carryMaxKg,
             carriedKg: carriedKg,
@@ -148,6 +150,31 @@ void main() {
       findsOneWidget,
       reason: 'the body statuses are not crowded out by the system ones',
     );
+  });
+
+  group('ground speed', () {
+    testWidgets('a walk reads to a tenth, a run to the kilometre', (
+      tester,
+    ) async {
+      // The difference between 12.3 and 12 km/h is not something a person
+      // reads while moving; the difference between 4.7 and 5 is.
+      await pumpHud(tester, healthy(), speedKmh: 4.7);
+      expect(find.text('4.7'), findsOneWidget);
+
+      await pumpHud(tester, healthy(), speedKmh: 12.3);
+      expect(find.text('12'), findsOneWidget);
+    });
+
+    testWidgets('standing still reads zero rather than nothing', (
+      tester,
+    ) async {
+      // A blank would be indistinguishable from a stalled GPS, which is one of
+      // the things this readout exists to tell apart.
+      await pumpHud(tester, healthy());
+
+      expect(find.text('0.0'), findsOneWidget);
+      expect(find.text('km/h'), findsOneWidget);
+    });
   });
 
   group('both carry limits (§18.1a)', () {

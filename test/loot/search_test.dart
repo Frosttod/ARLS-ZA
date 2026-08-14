@@ -46,7 +46,7 @@ void main() {
       final search = run(
         Search.area(at: here, now: now),
         seconds: 20,
-        at: metresNorth(20),
+        at: metresNorth(40),
       );
 
       expect(search.state, SearchState.cancelledByMovement);
@@ -54,15 +54,46 @@ void main() {
     });
 
     test('GPS scatter does not cancel it', () {
-      // The dead zone is the filter's own (§3.2), so standing still in the game
-      // means what standing still means to the receiver.
+      // Measured on a real walk: between buildings, shifting weight from one
+      // foot to the other moved the fix far enough to cancel a search at the
+      // doc's eight metres.
       final search = run(
         Search.area(at: here, now: now),
         seconds: 45,
-        at: metresNorth(7),
+        at: metresNorth(13),
       );
 
       expect(search.state, SearchState.done);
+    });
+
+    test('a single stray fix does not cancel it either', () {
+      // One outlier is an outlier. Throwing away forty-five seconds of
+      // somebody's time on one reading is the kind of unfairness nobody
+      // reports — they just stop using the feature.
+      var search = run(Search.area(at: here, now: now), seconds: 20);
+      search = search.advance(
+        const Duration(seconds: 1),
+        at: metresNorth(60),
+      );
+
+      expect(search.state, SearchState.running);
+      expect(search.strikes, 1);
+
+      // Back inside the circle, and the count of strays starts again.
+      search = search.advance(const Duration(seconds: 1), at: here);
+      expect(search.strikes, 0);
+    });
+
+    test('two readings outside in a row is a player who walked off', () {
+      var search = run(Search.area(at: here, now: now), seconds: 10);
+      for (var i = 0; i < 2; i++) {
+        search = search.advance(
+          const Duration(seconds: 1),
+          at: metresNorth(60),
+        );
+      }
+
+      expect(search.state, SearchState.cancelledByMovement);
     });
 
     test('the app going away ends it (§2.1a)', () {
@@ -170,7 +201,7 @@ void main() {
           depth: SearchDepth.thorough,
         ),
         seconds: 30,
-        at: metresNorth(15),
+        at: metresNorth(40),
       );
 
       expect(search.state, SearchState.cancelledByMovement);

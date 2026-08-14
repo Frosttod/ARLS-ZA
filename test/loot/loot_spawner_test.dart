@@ -287,16 +287,16 @@ void main() {
       expect(second.boxes, hasLength(1));
     });
 
-    test('a procedural point, unless §10.1 says the map is thin', () {
+    test('a procedural point far from the player, in a city', () {
       // 4165 car parks against 427 grocery shops within 2 km of the middle of
       // Poznań: without this rule a city spawns nothing else.
-      final carPark = poiAt(200, selector: 'poi.subclass=parking');
+      final farCarPark = poiAt(1500, selector: 'poi.subclass=parking');
 
       expect(
         spawner
             .plan(
               centre: centre,
-              candidates: [carPark],
+              candidates: [farCarPark],
               existing: const [],
               now: now,
               seed: 1,
@@ -304,18 +304,68 @@ void main() {
             .boxes,
         isEmpty,
       );
+    });
+
+    test('but a near one fills the ring when a shop cannot', () {
+      // Found on a walk: standing on a residential estate, every one of those
+      // 427 shops was more than 600 m away, so the near ring stayed empty and
+      // the game had nothing in it. A car park is a real place, and §10.1
+      // already prices it at 55%.
+      final nearCarPark = poiAt(200, selector: 'poi.subclass=parking');
+
+      final plan = spawner.plan(
+        centre: centre,
+        candidates: [nearCarPark],
+        existing: const [],
+        now: now,
+        seed: 1,
+      );
+
+      expect(plan.boxes, hasLength(1));
+      expect(plan.boxes.single.tableId, 'proc_abandoned_car');
+    });
+
+    test('an invented place fills the ring where a city has nothing near', () {
+      // Measured on the southern edge of Poznań: fifteen boxes placed, the
+      // nearest 653 m away and nothing inside the ring, in a district §10.1's
+      // two-kilometre density test calls dense. The averages were right and
+      // the player was standing in a gap.
+      final invented = poiAt(150, selector: 'generated.roadside');
+
+      final plan = spawner.plan(
+        centre: centre,
+        candidates: [invented, poiAt(1400)],
+        existing: const [],
+        now: now,
+        seed: 6,
+      );
 
       expect(
-        LootSpawner(tables: tables, backupMode: true)
-            .plan(
-              centre: centre,
-              candidates: [carPark],
-              existing: const [],
-              now: now,
-              seed: 1,
-            )
-            .boxes,
-        hasLength(1),
+        plan.boxes.map((box) => box.tableId),
+        contains('proc_roadside'),
+      );
+    });
+
+    test('and a real shop always wins the ring over a car park', () {
+      final plan = spawner.plan(
+        centre: centre,
+        candidates: [
+          poiAt(200, selector: 'poi.subclass=parking'),
+          poiAt(300),
+          poiAt(400),
+          poiAt(500),
+          poiAt(550),
+          poiAt(580),
+        ],
+        existing: const [],
+        now: now,
+        seed: 4,
+      );
+
+      expect(
+        plan.boxes.where((box) => box.tableId == 'proc_abandoned_car'),
+        isEmpty,
+        reason: 'five real places were within the ring',
       );
     });
   });

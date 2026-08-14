@@ -24,10 +24,22 @@ import 'loot_table.dart';
 
 /// §10.2.1: moving further than this cancels reconnaissance.
 ///
-/// Eight metres is the same dead zone the position filter uses (§3.2), so
-/// standing still in the game means exactly what standing still means to the
-/// GPS, and a player is never cancelled by scatter.
-const double kStillnessM = 8;
+/// The doc's eight metres is the position filter's dead zone (§3.2), and on
+/// paper matching it means the game agrees with the receiver about what
+/// standing still is. On a street it does not: measured on a real walk in
+/// Poznań, shifting weight between two feet between buildings was enough to
+/// cancel a search. Fifteen metres is still far short of a step taken with
+/// intent — a walking pace covers it in eleven seconds — and it is what stops
+/// the mechanic from feeling broken.
+const double kStillnessM = 15;
+
+/// How many readings in a row must fall outside [kStillnessM] before a search
+/// is abandoned.
+///
+/// One stray fix is a stray fix. Cancelling forty-five seconds of a player's
+/// time on a single outlier is the kind of unfairness nobody reports as a bug —
+/// they just stop using the feature.
+const int kStillnessStrikes = 2;
 
 /// §10.2.1.
 const Duration kAreaSearchTime = Duration(seconds: 45);
@@ -99,6 +111,7 @@ class Search {
     this.state = SearchState.running,
     this.targetPoiId,
     this.depth,
+    this.strikes = 0,
   });
 
   /// Reconnaissance: forty-five seconds where the player is standing.
@@ -133,6 +146,10 @@ class Search {
   /// How deep, for an object search. Null for reconnaissance.
   final SearchDepth? depth;
 
+  /// Consecutive readings that fell outside the circle. Reset by any reading
+  /// inside it, so a wander out and back does not accumulate.
+  final int strikes;
+
   bool get isArea => targetPoiId == null;
   bool get isRunning => state == SearchState.running;
 
@@ -157,21 +174,26 @@ class Search {
       return _endedAs(SearchState.lostPresence);
     }
     if (at.distanceTo(anchor) > kStillnessM) {
-      return _endedAs(SearchState.cancelledByMovement);
+      final missed = strikes + 1;
+      return missed >= kStillnessStrikes
+          ? _endedAs(SearchState.cancelledByMovement)
+          // The clock keeps running through a single stray fix. A player who
+          // really walked off will produce another one a second later.
+          : _copy(elapsed: elapsed + delta, strikes: missed);
     }
 
     final next = elapsed + delta;
     if (next >= requiredTime) {
-      return _copy(elapsed: requiredTime, state: SearchState.done);
+      return _copy(elapsed: requiredTime, state: SearchState.done, strikes: 0);
     }
-    return _copy(elapsed: next);
+    return _copy(elapsed: next, strikes: 0);
   }
 
   Search cancel() => isRunning ? _endedAs(SearchState.cancelled) : this;
 
   Search _endedAs(SearchState state) => _copy(state: state);
 
-  Search _copy({Duration? elapsed, SearchState? state}) => Search(
+  Search _copy({Duration? elapsed, SearchState? state, int? strikes}) => Search(
     anchor: anchor,
     startedAt: startedAt,
     requiredTime: requiredTime,
@@ -179,6 +201,7 @@ class Search {
     state: state ?? this.state,
     targetPoiId: targetPoiId,
     depth: depth,
+    strikes: strikes ?? this.strikes,
   );
 }
 

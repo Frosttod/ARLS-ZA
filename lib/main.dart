@@ -250,8 +250,16 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   List<LootBox> _boxes = const [];
 
   /// The search in progress (§10.2, §19.3), and when it was last advanced.
+  ///
+  /// ⚠️ Advanced on the wall clock and its own timer, not on the simulation's.
+  /// The sim clock refuses to move when the device clock steps backwards
+  /// (§2.1.1's rollback guard), and an NTP correction mid-walk therefore froze
+  /// the countdown while the player stood there watching it. A search measures
+  /// forty-five real seconds of a person standing in a street; that is what it
+  /// should count.
   Search? _search;
   DateTime? _searchTickedAt;
+  Timer? _searchTimer;
 
   /// What the last reconnaissance revealed, for §10.2.1's ten minutes.
   AreaKnowledge? _knowledge;
@@ -574,7 +582,6 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       });
       unawaited(_checkRelocation(snapshot));
       unawaited(_spawnLoot(snapshot));
-      unawaited(_advanceSearch(snapshot));
     });
 
     if (!mounted) {
@@ -893,7 +900,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
   /// The box the player is standing at, if any (§19.3).
   LootBox? _boxInReach() {
-    final fix = _snapshot?.fix;
+    // The smoothed position, as the search itself uses: whether a place is
+    // within reach should not flicker with the scatter between two buildings.
+    final fix = _snapshot?.displayFix;
     if (fix == null) return null;
 
     final at = GeoPoint(fix.latitude, fix.longitude);
@@ -911,28 +920,33 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     return best;
   }
 
-  /// Advances whatever search is running, one snapshot at a time.
+  /// Advances whatever search is running, once a second.
   ///
-  /// The loop's own clock rather than a timer of its own: a search has to tick
-  /// at the same rate as the body it belongs to, and stop for the same reasons.
-  Future<void> _advanceSearch(GameSnapshot snapshot) async {
+  /// Its own timer rather than the snapshot stream: snapshots stop arriving
+  /// with anything new to say when the player is standing still, which is
+  /// precisely the whole duration of a search.
+  Future<void> _advanceSearch() async {
     final search = _search;
     if (search == null || !search.isRunning) return;
 
-    final now = snapshot.state.lastUpdate;
-    final since = _searchTickedAt ?? search.startedAt;
+    final now = DateTime.now().toUtc();
+    final since = _searchTickedAt ?? now;
     final delta = now.difference(since);
     if (delta <= Duration.zero) return;
     _searchTickedAt = now;
 
-    final fix = snapshot.fix;
+    final snapshot = _snapshot;
+    // The smoothed position, not the raw one: the raw fix jumps around by
+    // metres between buildings and the player has not moved (§3.2).
+    final fix = snapshot?.displayFix;
+
     final next = search.advance(
       delta,
       at: fix == null ? null : GeoPoint(fix.latitude, fix.longitude),
-      // §2.1a and §10.2: a search counts only while the game is actually
-      // watching the player move. A degraded or lost signal is exactly the
-      // case where "did they stand still" cannot be answered.
-      present: snapshot.signal == PositionSignal.good,
+      // §2.1a: a search counts only while the game can still see where the
+      // player is. A position it has stopped trusting cannot answer the one
+      // question a search asks — did they stand still?
+      present: snapshot != null && snapshot.signal != PositionSignal.unavailable,
     );
 
     if (next.isRunning) {
@@ -940,11 +954,13 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       return;
     }
 
+    _stopSearchTimer();
     setState(() => _search = null);
-    _searchTickedAt = null;
 
     if (next.state == SearchState.done) {
-      await (next.isArea ? _finishAreaSearch(next, now) : _finishObjectSearch(next, now));
+      await (next.isArea
+          ? _finishAreaSearch(next, snapshot?.state.lastUpdate ?? now)
+          : _finishObjectSearch(next, snapshot?.state.lastUpdate ?? now));
     } else if (mounted) {
       _say(
         next.state == SearchState.cancelledByMovement
@@ -954,41 +970,54 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     }
   }
 
+  void _startSearchTimer() {
+    _searchTickedAt = DateTime.now().toUtc();
+    _searchTimer?.cancel();
+    _searchTimer = Timer.periodic(
+      const Duration(seconds: 1),
+      (_) => unawaited(_advanceSearch()),
+    );
+  }
+
+  void _stopSearchTimer() {
+    _searchTimer?.cancel();
+    _searchTimer = null;
+    _searchTickedAt = null;
+  }
+
   void _startAreaSearch() {
-    final fix = _snapshot?.fix;
+    final fix = _snapshot?.displayFix;
     if (fix == null || _search != null) return;
 
     setState(() {
       _search = Search.area(
         at: GeoPoint(fix.latitude, fix.longitude),
-        now: _snapshot!.state.lastUpdate,
+        now: DateTime.now().toUtc(),
       );
-      _searchTickedAt = _snapshot!.state.lastUpdate;
     });
+    _startSearchTimer();
   }
 
   void _startObjectSearch(SearchDepth depth) {
-    final fix = _snapshot?.fix;
+    final fix = _snapshot?.displayFix;
     final box = _boxInReach();
     if (fix == null || box == null || _search != null) return;
 
     setState(() {
       _search = Search.object(
         at: GeoPoint(fix.latitude, fix.longitude),
-        now: _snapshot!.state.lastUpdate,
+        now: DateTime.now().toUtc(),
         poiId: box.poiId,
         depth: depth,
       );
-      _searchTickedAt = _snapshot!.state.lastUpdate;
     });
+    _startSearchTimer();
   }
 
   void _cancelSearch() {
     if (_search == null) return;
-    setState(() {
-      _search = null;
-      _searchTickedAt = null;
-    });
+    _stopSearchTimer();
+    setState(() => _search = null);
   }
 
   /// §10.2.3: reconnaissance reveals the places that cannot be seen from the
@@ -1217,6 +1246,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     unawaited(_loop?.dispose());
     unawaited(_dev?.dispose());
     unawaited(_world?.dispose());
+    _searchTimer?.cancel();
     super.dispose();
   }
 
@@ -1285,6 +1315,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
                     status: snapshot.status,
                     constants: character.constants,
                     warnings: _warnings(l10n, snapshot),
+                    speedKmh: snapshot.speedKmh,
                     carryComfortKg: character.body.carryComfortKg,
                     carryMaxKg: character.body.carryMaxKg,
                     carriedKg: _carriedKg,
@@ -1340,6 +1371,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
                     status: snapshot.status,
                     constants: character.constants,
                     warnings: _warnings(l10n, snapshot),
+                    speedKmh: snapshot.speedKmh,
                     carryComfortKg: character.body.carryComfortKg,
                     carryMaxKg: character.body.carryMaxKg,
                     carriedKg: _carriedKg,
@@ -1364,6 +1396,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
                   status: snapshot.status,
                   constants: character.constants,
                   warnings: _warnings(l10n, snapshot),
+                  speedKmh: snapshot.speedKmh,
                   carryComfortKg: character.body.carryComfortKg,
                   carryMaxKg: character.body.carryMaxKg,
                   carriedKg: _carriedKg,
