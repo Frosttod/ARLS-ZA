@@ -1,5 +1,5 @@
 {
-  "_comment": "Loot tables (§10.3): eleven tied to places on the map and nine for the procedural points of §10.1. match holds OpenMapTiles selectors, which is what the tiles actually carry; osm holds the tags the design document names, kept for provenance. The mapping was measured with tool/probe_pack.dart against a built pack, not remembered - see lib/map/omt_schema.dart. Four tables carry generated: true because the schema has no building types at all, so a house, a barn and a hunting stand cannot be found and have to be produced by §10.1's own layer. Procedural tables pay 0.55 on rares and may hold no firearm and no advanced book.",
+  "_comment": "Loot tables (§10.3): eleven tied to places on the map and nine for the procedural points of §10.1. match holds OpenMapTiles selectors, which is what the tiles actually carry; osm holds the tags the design document names, kept for provenance. The mapping was measured with tool/probe_pack.dart against a built pack, not remembered - see lib/map/omt_schema.dart. Four tables carry generated: true because the schema has no building types at all, so a house, a barn and a hunting stand cannot be found and have to be produced by §10.1's own layer. Procedural tables pay 0.55 on rares and may hold no firearm and no advanced book. barrier is §19.3's obstacle on the way in: door, padlock or window. Every one has a loud way through and most have a quiet one, which is what gives a crowbar and a set of picks a use outside crafting.",
   "schema": 1,
   "tables": [
     {
@@ -86,7 +86,8 @@
           "min": 1,
           "max": 2
         }
-      ]
+      ],
+      "barrier": "door"
     },
     {
       "id": "poi_hardware",
@@ -205,7 +206,8 @@
           "min": 1,
           "max": 1
         }
-      ]
+      ],
+      "barrier": "door"
     },
     {
       "id": "poi_grocery",
@@ -315,7 +317,8 @@
           "min": 1,
           "max": 4
         }
-      ]
+      ],
+      "barrier": "door"
     },
     {
       "id": "poi_sports",
@@ -426,7 +429,8 @@
           "min": 1,
           "max": 1
         }
-      ]
+      ],
+      "barrier": "door"
     },
     {
       "id": "poi_weapons",
@@ -549,7 +553,8 @@
           "min": 1,
           "max": 1
         }
-      ]
+      ],
+      "barrier": "door"
     },
     {
       "id": "poi_library",
@@ -659,7 +664,8 @@
           "min": 1,
           "max": 1
         }
-      ]
+      ],
+      "barrier": "door"
     },
     {
       "id": "poi_industrial",
@@ -746,7 +752,8 @@
           "min": 1,
           "max": 1
         }
-      ]
+      ],
+      "barrier": "padlock"
     },
     {
       "id": "poi_hospital",
@@ -833,7 +840,8 @@
           "min": 1,
           "max": 1
         }
-      ]
+      ],
+      "barrier": "door"
     },
     {
       "id": "poi_military",
@@ -943,7 +951,8 @@
           "min": 1,
           "max": 1
         }
-      ]
+      ],
+      "barrier": "padlock"
     },
     {
       "id": "poi_school",
@@ -1032,7 +1041,8 @@
           "min": 1,
           "max": 1
         }
-      ]
+      ],
+      "barrier": "door"
     },
     {
       "id": "poi_warehouse",
@@ -1127,7 +1137,8 @@
           "min": 2,
           "max": 6
         }
-      ]
+      ],
+      "barrier": "padlock"
     },
     {
       "id": "proc_abandoned_car",
@@ -1301,7 +1312,8 @@
           "min": 1,
           "max": 1
         }
-      ]
+      ],
+      "barrier": "window"
     },
     {
       "id": "proc_barn",
@@ -1370,7 +1382,8 @@
           "min": 1,
           "max": 1
         }
-      ]
+      ],
+      "barrier": "window"
     },
     {
       "id": "proc_garage",
@@ -1445,7 +1458,8 @@
           "min": 1,
           "max": 1
         }
-      ]
+      ],
+      "barrier": "padlock"
     },
     {
       "id": "proc_waste",

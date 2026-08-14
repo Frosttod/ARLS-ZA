@@ -561,6 +561,36 @@ class L10nPl extends L10n {
   String get searchNothingNew => 'Nic nowego tutaj.';
 
   @override
+  String get barrierDoor => 'Zamknięte drzwi';
+
+  @override
+  String get barrierPadlock => 'Kłódka';
+
+  @override
+  String get barrierWindow => 'Zabita szyba';
+
+  @override
+  String get breachForce => 'Wyważ';
+
+  @override
+  String get breachPry => 'Podważ';
+
+  @override
+  String get breachPick => 'Otwórz wytrychem';
+
+  @override
+  String get breachNoTool =>
+      'Brak narzędzia — kłódki nie otworzysz gołymi rękami.';
+
+  @override
+  String get breachDone => 'Jesteś w środku.';
+
+  @override
+  String breachNoise(int metres) {
+    return 'hałas $metres m';
+  }
+
+  @override
   String get inventoryTitle => 'Ekwipunek';
 
   @override

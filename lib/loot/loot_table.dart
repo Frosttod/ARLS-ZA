@@ -20,6 +20,7 @@ import 'dart:math';
 
 import '../items/item.dart';
 import '../items/item_catalogue.dart';
+import 'obstacle.dart';
 
 /// §10.3.5. Time is the cost, and the only one.
 enum SearchDepth {
@@ -97,6 +98,7 @@ class LootTable {
     required this.match,
     required this.entries,
     this.generated = false,
+    this.barrier,
   });
 
   final String id;
@@ -112,6 +114,10 @@ class LootTable {
   /// generate it. The OpenMapTiles building layer carries no type, so a house,
   /// a barn and a hunting stand are unfindable however the selector is written.
   final bool generated;
+
+  /// What shuts this kind of place (§19.3). Null where nothing does — a car
+  /// park has no door to force.
+  final Barrier? barrier;
 
   final List<LootEntry> entries;
 
@@ -283,6 +289,7 @@ class LootTableSet {
               if (tag is String) tag,
           ],
           generated: entry['generated'] == true,
+          barrier: Barrier.fromWire(entry['barrier'] as String?),
           entries: entries,
         ),
       );

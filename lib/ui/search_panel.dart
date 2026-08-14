@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
 import '../loot/loot_table.dart';
+import '../loot/obstacle.dart';
 import '../loot/search.dart';
 import 'hud.dart' show HudColors;
 
@@ -24,6 +25,9 @@ class SearchPanel extends StatelessWidget {
     required this.onSearchArea,
     required this.onSearchHere,
     required this.onCancel,
+    this.barrier,
+    this.carried = const {},
+    this.onBreach,
     super.key,
   });
 
@@ -40,6 +44,15 @@ class SearchPanel extends StatelessWidget {
   final void Function(SearchDepth depth) onSearchHere;
   final VoidCallback onCancel;
 
+  /// §19.3: what shuts the place in reach, or null when it is open or there is
+  /// nothing there.
+  final Barrier? barrier;
+
+  /// Item ids the player has, which is what decides the ways in.
+  final Set<String> carried;
+
+  final void Function(BarrierBreach breach)? onBreach;
+
   @override
   Widget build(BuildContext context) {
     final l10n = L10n.of(context);
@@ -54,6 +67,16 @@ class SearchPanel extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(12, 10, 12, 6),
           child: running != null && running.isRunning
               ? _Running(search: running, onCancel: onCancel, colours: colours)
+              : barrier != null && canSearchHere
+              ? _Barrier(
+                  barrier: barrier!,
+                  targetName: targetName,
+                  carried: carried,
+                  onBreach: onBreach,
+                  onSearchArea: onSearchArea,
+                  colours: colours,
+                  l10n: l10n,
+                )
               : _Choices(
                   targetName: targetName,
                   canSearchHere: canSearchHere,
@@ -124,6 +147,87 @@ class _Running extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+/// What shuts a place, and the ways through it (§19.3).
+///
+/// The quiet way is listed first where there is one. The loud way is always
+/// available and always obvious; a player deciding in the dark should meet the
+/// careful option before the impatient one.
+class _Barrier extends StatelessWidget {
+  const _Barrier({
+    required this.barrier,
+    required this.targetName,
+    required this.carried,
+    required this.onBreach,
+    required this.onSearchArea,
+    required this.colours,
+    required this.l10n,
+  });
+
+  final Barrier barrier;
+  final String? targetName;
+  final Set<String> carried;
+  final void Function(BarrierBreach)? onBreach;
+  final VoidCallback onSearchArea;
+  final HudColors colours;
+  final L10n l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    final ways = barrier.breachesWith(carried);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          targetName == null
+              ? _name(barrier)
+              : '${targetName!} · ${_name(barrier)}',
+          style: TextStyle(fontSize: 12, color: colours.text),
+        ),
+        const SizedBox(height: 2),
+        if (ways.isEmpty)
+          // Only ever a padlock. §19.3 names it as the barrier that needs a
+          // tool, and softening that would make every tool optional.
+          Text(
+            l10n.breachNoTool,
+            style: TextStyle(fontSize: 11, color: const Color(0xFFE8B33A)),
+          ),
+        Row(
+          children: [
+            TextButton(onPressed: onSearchArea, child: Text(l10n.searchArea)),
+            const Spacer(),
+            for (final way in ways)
+              Padding(
+                padding: const EdgeInsets.only(left: 4),
+                child: TextButton(
+                  onPressed: onBreach == null ? null : () => onBreach!(way),
+                  child: Text(
+                    '${_verb(way)}  ${way.seconds} s · '
+                    '${l10n.breachNoise(way.noiseM.round())}',
+                    style: const TextStyle(fontSize: 11),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  String _name(Barrier barrier) => switch (barrier) {
+    Barrier.door => l10n.barrierDoor,
+    Barrier.padlock => l10n.barrierPadlock,
+    Barrier.window => l10n.barrierWindow,
+  };
+
+  String _verb(BarrierBreach way) {
+    if (identical(way, barrier.quiet)) return l10n.breachPick;
+    if (identical(way, barrier.pry)) return l10n.breachPry;
+    return l10n.breachForce;
   }
 }
 

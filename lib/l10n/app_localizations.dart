@@ -1081,6 +1081,60 @@ abstract class L10n {
   /// **'Nothing new here yet.'**
   String get searchNothingNew;
 
+  /// No description provided for @barrierDoor.
+  ///
+  /// In en, this message translates to:
+  /// **'Locked door'**
+  String get barrierDoor;
+
+  /// No description provided for @barrierPadlock.
+  ///
+  /// In en, this message translates to:
+  /// **'Padlock'**
+  String get barrierPadlock;
+
+  /// No description provided for @barrierWindow.
+  ///
+  /// In en, this message translates to:
+  /// **'Boarded window'**
+  String get barrierWindow;
+
+  /// No description provided for @breachForce.
+  ///
+  /// In en, this message translates to:
+  /// **'Force it'**
+  String get breachForce;
+
+  /// No description provided for @breachPry.
+  ///
+  /// In en, this message translates to:
+  /// **'Lever it'**
+  String get breachPry;
+
+  /// No description provided for @breachPick.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick it'**
+  String get breachPick;
+
+  /// No description provided for @breachNoTool.
+  ///
+  /// In en, this message translates to:
+  /// **'No tool for this — a padlock needs one.'**
+  String get breachNoTool;
+
+  /// No description provided for @breachDone.
+  ///
+  /// In en, this message translates to:
+  /// **'You are in.'**
+  String get breachDone;
+
+  /// No description provided for @breachNoise.
+  ///
+  /// In en, this message translates to:
+  /// **'{metres} m of noise'**
+  String breachNoise(int metres);
+
   /// No description provided for @inventoryTitle.
   ///
   /// In en, this message translates to:

@@ -22,6 +22,7 @@ import 'loot/loot_spawner.dart';
 import 'loot/loot_store.dart';
 import 'loot/loot_table.dart';
 import 'loot/loot_world.dart';
+import 'loot/obstacle.dart';
 import 'loot/search.dart';
 import 'ui/search_panel.dart';
 import 'game/game_session.dart';
@@ -958,9 +959,12 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     setState(() => _search = null);
 
     if (next.state == SearchState.done) {
-      await (next.isArea
-          ? _finishAreaSearch(next, snapshot?.state.lastUpdate ?? now)
-          : _finishObjectSearch(next, snapshot?.state.lastUpdate ?? now));
+      final at = snapshot?.state.lastUpdate ?? now;
+      await switch (next) {
+        final s when s.isBreach => _finishBreach(s, at),
+        final s when s.isArea => _finishAreaSearch(s, at),
+        final s => _finishObjectSearch(s, at),
+      };
     } else if (mounted) {
       _say(
         next.state == SearchState.cancelledByMovement
@@ -1012,6 +1016,57 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       );
     });
     _startSearchTimer();
+  }
+
+  /// §19.3: what still shuts the place in reach, if anything.
+  ///
+  /// A box that has been opened once stays open — a forced door does not
+  /// repair itself while the player walks home.
+  Barrier? _barrierOn(LootBox? box) {
+    if (box == null || box.isOpen) return null;
+    return _world?.tables[box.tableId]?.barrier;
+  }
+
+  /// Item ids the player is carrying or wearing. What decides the ways in.
+  Set<String> _carriedIds() => {
+    for (final line in _inventory.carried) line.itemId,
+    for (final line in _inventory.worn) line.itemId,
+  };
+
+  void _startBreach(BarrierBreach breach) {
+    final fix = _snapshot?.displayFix;
+    final box = _boxInReach();
+    if (fix == null || box == null || _search != null) return;
+
+    setState(() {
+      _search = Search.breach(
+        at: GeoPoint(fix.latitude, fix.longitude),
+        now: DateTime.now().toUtc(),
+        poiId: box.poiId,
+        breach: breach,
+      );
+    });
+    _startSearchTimer();
+  }
+
+  /// §19.3: the way in is made, and it stays made.
+  Future<void> _finishBreach(Search search, DateTime now) async {
+    final character = _character;
+    final poiId = search.targetPoiId;
+    if (character == null || poiId == null) return;
+
+    final box = _boxes.where((b) => b.poiId == poiId).firstOrNull;
+    if (box == null) return;
+
+    final opened = box.openedAtTime(now);
+    setState(() {
+      _boxes = [
+        for (final b in _boxes) if (b.poiId == poiId) opened else b,
+      ];
+    });
+
+    await LootStore(widget.session.db).saveOne(character.profile.id, opened);
+    if (mounted) _say(L10n.of(context).breachDone);
   }
 
   void _cancelSearch() {
@@ -1294,13 +1349,21 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
             markers: _lootMarkers(),
             searchPanel: snapshot == null
                 ? null
-                : SearchPanel(
-                    search: _search,
-                    targetName: _boxInReach()?.name,
-                    canSearchHere: _boxInReach() != null,
-                    onSearchArea: _startAreaSearch,
-                    onSearchHere: _startObjectSearch,
-                    onCancel: _cancelSearch,
+                : Builder(
+                    builder: (_) {
+                      final box = _boxInReach();
+                      return SearchPanel(
+                        search: _search,
+                        targetName: box?.name,
+                        canSearchHere: box != null,
+                        barrier: _barrierOn(box),
+                        carried: _carriedIds(),
+                        onSearchArea: _startAreaSearch,
+                        onSearchHere: _startObjectSearch,
+                        onBreach: _startBreach,
+                        onCancel: _cancelSearch,
+                      );
+                    },
                   ),
             headingDeg: snapshot?.fix?.headingDeg,
             economy: snapshot?.economy ?? false,

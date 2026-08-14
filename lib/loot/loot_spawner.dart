@@ -67,6 +67,7 @@ class LootBox {
     this.name,
     this.lootedAt,
     this.respawnAt,
+    this.openedAt,
   });
 
   /// The place it sits on, from [Poi.id]. What makes "one box per place" hold
@@ -85,6 +86,23 @@ class LootBox {
   /// When it refills. Rolled at the moment it is emptied, so a player cannot
   /// learn one interval and time the whole city by it.
   final DateTime? respawnAt;
+
+  /// When §19.3's barrier was got through. Null while the place is still shut.
+  final DateTime? openedAt;
+
+  bool get isOpen => openedAt != null;
+
+  /// The same box, with the way in made.
+  LootBox openedAtTime(DateTime now) => LootBox(
+    poiId: poiId,
+    position: position,
+    tableId: tableId,
+    name: name,
+    spawnedAt: spawnedAt,
+    lootedAt: lootedAt,
+    respawnAt: respawnAt,
+    openedAt: now,
+  );
 
   bool isActiveAt(DateTime now) {
     if (lootedAt == null) return true;
@@ -105,16 +123,19 @@ class LootBox {
       spawnedAt: spawnedAt,
       lootedAt: now,
       respawnAt: now.add(Duration(minutes: min.inMinutes + random.nextInt(spread))),
+      openedAt: openedAt,
     );
   }
 
-  /// After a respawn the box is simply full again — same place, same table.
+  /// After a respawn the box is simply full again — same place, same table,
+  /// and the door somebody already forced is still open.
   LootBox refilledAt(DateTime now) => LootBox(
     poiId: poiId,
     position: position,
     tableId: tableId,
     name: name,
     spawnedAt: now,
+    openedAt: openedAt,
   );
 }
 

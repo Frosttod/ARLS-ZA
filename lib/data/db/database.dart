@@ -29,7 +29,7 @@ import 'tables.dart';
 part 'database.g.dart';
 
 /// Bumped only alongside a migration step in [_migration]. Never reused.
-const int kSchemaVersion = 4;
+const int kSchemaVersion = 5;
 
 /// Keys used in [MetaEntries].
 abstract final class MetaKeys {
@@ -68,7 +68,7 @@ class SaveDatabase extends _$SaveDatabase {
   /// follow a constant reference. `schema_test.dart` keeps it in step with
   /// [kSchemaVersion].
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -103,6 +103,20 @@ class SaveDatabase extends _$SaveDatabase {
         // any single session and has to be the same box when the player comes
         // back to it.
         await m.createTable(lootBoxes);
+      }
+
+      // ⚠️ `from >= 4`, not just `from < 5`.
+      //
+      // `createTable` above builds the table from *today's* definition, which
+      // already has this column — so a device jumping from v3 gets it there and
+      // adding it again is a duplicate-column error. Only a save that has a
+      // v4-shaped table needs the column added. Every future column on a table
+      // introduced mid-life has the same shape.
+      if (from >= 4 && from < 5) {
+        // §19.3 puts a door in front of some places. A box from v4 has none,
+        // and the default of null reads as "still shut" — which is right: the
+        // barrier was always there, the game just did not model it.
+        await m.addColumn(lootBoxes, lootBoxes.openedAt);
       }
 
       await _writeSchemaVersion(to);

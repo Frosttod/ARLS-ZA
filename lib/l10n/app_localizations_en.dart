@@ -559,6 +559,35 @@ class L10nEn extends L10n {
   String get searchNothingNew => 'Nothing new here yet.';
 
   @override
+  String get barrierDoor => 'Locked door';
+
+  @override
+  String get barrierPadlock => 'Padlock';
+
+  @override
+  String get barrierWindow => 'Boarded window';
+
+  @override
+  String get breachForce => 'Force it';
+
+  @override
+  String get breachPry => 'Lever it';
+
+  @override
+  String get breachPick => 'Pick it';
+
+  @override
+  String get breachNoTool => 'No tool for this — a padlock needs one.';
+
+  @override
+  String get breachDone => 'You are in.';
+
+  @override
+  String breachNoise(int metres) {
+    return '$metres m of noise';
+  }
+
+  @override
   String get inventoryTitle => 'Inventory';
 
   @override

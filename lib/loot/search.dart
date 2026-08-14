@@ -21,6 +21,7 @@ library;
 
 import '../map/geometry.dart';
 import 'loot_table.dart';
+import 'obstacle.dart';
 
 /// §10.2.1: moving further than this cancels reconnaissance.
 ///
@@ -111,12 +112,30 @@ class Search {
     this.state = SearchState.running,
     this.targetPoiId,
     this.depth,
+    this.breach,
     this.strikes = 0,
   });
 
   /// Reconnaissance: forty-five seconds where the player is standing.
   factory Search.area({required GeoPoint at, required DateTime now}) =>
       Search(anchor: at, startedAt: now, requiredTime: kAreaSearchTime);
+
+  /// §19.3: getting through what shuts a place.
+  ///
+  /// A search like any other, because it costs the same thing — time standing
+  /// where somebody can hear you.
+  factory Search.breach({
+    required GeoPoint at,
+    required DateTime now,
+    required String poiId,
+    required BarrierBreach breach,
+  }) => Search(
+    anchor: at,
+    startedAt: now,
+    requiredTime: Duration(seconds: breach.seconds),
+    targetPoiId: poiId,
+    breach: breach,
+  );
 
   /// §19.3: a place, and how thoroughly.
   factory Search.object({
@@ -146,11 +165,21 @@ class Search {
   /// How deep, for an object search. Null for reconnaissance.
   final SearchDepth? depth;
 
+  /// The way in being made, for a breach. Null for anything else.
+  final BarrierBreach? breach;
+
+  bool get isBreach => breach != null;
+
+  /// How far this is heard (§5.6.1). Forcing a door carries 150 m; a search
+  /// carries 80; standing still and looking around carries nothing at all.
+  double get noiseM =>
+      breach?.noiseM ?? (isArea ? 0 : kSearchNoiseM);
+
   /// Consecutive readings that fell outside the circle. Reset by any reading
   /// inside it, so a wander out and back does not accumulate.
   final int strikes;
 
-  bool get isArea => targetPoiId == null;
+  bool get isArea => targetPoiId == null && breach == null;
   bool get isRunning => state == SearchState.running;
 
   Duration get remaining {
@@ -201,6 +230,7 @@ class Search {
     state: state ?? this.state,
     targetPoiId: targetPoiId,
     depth: depth,
+    breach: breach,
     strikes: strikes ?? this.strikes,
   );
 }

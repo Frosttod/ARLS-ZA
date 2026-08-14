@@ -246,6 +246,12 @@ class LootBoxes extends Table {
   /// let a player time a whole city off one box (§10).
   DateTimeColumn get respawnAt => dateTime().nullable()();
 
+  /// When the barrier of §19.3 was got through, or null while it still shuts.
+  ///
+  /// Persisted because a forced door stays forced. Making the player break in
+  /// again after a restart would turn one decision into a chore.
+  DateTimeColumn get openedAt => dateTime().nullable()();
+
   @override
   List<String> get customConstraints => [
     'FOREIGN KEY (profile_id) REFERENCES profiles (id) ON DELETE CASCADE',
