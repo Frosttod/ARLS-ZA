@@ -13,13 +13,13 @@ Każdy zamknięty etap dostaje sekcję **Dziennik wykonania** z decyzjami podję
 | 2 | Postać i fizjologia | ✅ zamknięty | 2026-08-11 | `f2b1056`, `5555db2`, `2b0a37e`, `d869661` |
 | 3 | Mapa, GPS, bezpieczeństwo gracza | 🟡 13/13 zadań, po pierwszym spacerze | — | `f035626` … `43510ef` (15 commitów) |
 | 4 | Przedmioty, loot, przeszukanie | 🟡 11/11 zadań, przed testem w terenie | — | `2b1cb31` … |
-| 5 | Walka, przeciwnicy, hałas | 🟡 5/14 zadań | — | — |
+| 5 | Walka, przeciwnicy, hałas | 🟡 6/14 zadań | — | — |
 | 6 | Ognisko z pełnym cyklem | ⬜ | — | — |
 | 7 | Audio pozycyjne i haptyka | ⬜ | — | — |
 | 8 | Schron, obóz, pętla dobowa | ⬜ | — | — |
 | 9 | Onboarding, dostępność, zgodność | ⬜ | — | — |
 
-**Metryki:** 1014 testów · `flutter analyze` czysty · schemat bazy **v11** · release APK 89,5 MB bez devtools
+**Metryki:** 1046 testów · `flutter analyze` czysty · schemat bazy **v11** · release APK 89,5 MB bez devtools
 
 ### Zablokowane na użytkowniku
 
@@ -380,7 +380,7 @@ Dwa wnioski na przyszłość:
 | 5.8 | HUD walki grupowej ze wskaźnikiem budżetu sprintu każdego przeciwnika | §5.5.2 |
 | 5.9 | Przerwanie przeładowania przy zbliżeniu <5 m | §5.5.4 |
 | 5.10 | Limit 8 aktywnych przeciwników w promieniu 300 m | §5.5.6 |
-| 5.11 | **System hałasu:** promienie, modyfikatory otoczenia, reakcja przeciwników, limit 6 reagujących, kumulacja 30 s | §5.6 |
+| 5.11 | ✅ **System hałasu:** promienie, modyfikatory otoczenia, reakcja przeciwników, limit 6 reagujących, kumulacja 30 s | §5.6 |
 | 5.12 | Wizualizacja fali hałasu na mapie | §5.6.5 |
 | 5.13 | Dystanse zaangażowania: wykrycie od 150 m, walka 50–250 m, poniżej 20 m tryb wręcz | §5.2 |
 | 5.14 | Zasady spawnu: nigdy bliżej niż 150 m, nigdy w strefach wykluczonych, nigdy w 200 m od schronu | §6.4 |

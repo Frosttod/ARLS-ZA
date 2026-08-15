@@ -146,6 +146,9 @@ const double kContactM = 150;
 /// §6.1a: exhaustion is not a stop. It is a slower approach.
 const double kSpentSpeedFraction = 0.4;
 
+/// §5.6.2: how long an enemy turns over the place a sound came from.
+const Duration kInvestigateFor = Duration(seconds: 60);
+
 /// One of them, at one moment.
 class Enemy {
   const Enemy({
@@ -160,6 +163,8 @@ class Enemy {
     this.bloodLostMl = 0,
     this.sprintLeft,
     this.sinceContact = Duration.zero,
+    this.heardAt,
+    this.investigateLeft = Duration.zero,
   });
 
   /// Rolls the ranges of §6.2 once, at spawn. Two Walkers are not the same
@@ -207,6 +212,14 @@ class Enemy {
   /// §6.1a: how long since the player was last within [kContactM].
   final Duration sinceContact;
 
+  /// §5.6.2: where a sound came from, which is where it walks to — never
+  /// straight to the player. That one rule is what leaves room for tactics:
+  /// shoot, move, watch.
+  final GeoPoint? heardAt;
+
+  /// §5.6.2: how much turning the place over is left before it gives up.
+  final Duration investigateLeft;
+
   Duration get budget => sprintLeft ?? kind.sprintBudget;
 
   bool get isDead => bloodLostMl >= bloodMl * kind.deathAtLoss;
@@ -224,6 +237,9 @@ class Enemy {
     double? bloodLostMl,
     Duration? sprintLeft,
     Duration? sinceContact,
+    GeoPoint? heardAt,
+    bool forgetNoise = false,
+    Duration? investigateLeft,
   }) => Enemy(
     id: id,
     kind: kind,
@@ -236,11 +252,28 @@ class Enemy {
     bloodLostMl: bloodLostMl ?? this.bloodLostMl,
     sprintLeft: sprintLeft ?? this.sprintLeft,
     sinceContact: sinceContact ?? this.sinceContact,
+    heardAt: forgetNoise ? null : heardAt ?? this.heardAt,
+    investigateLeft: forgetNoise
+        ? Duration.zero
+        : investigateLeft ?? this.investigateLeft,
   );
 
   /// The wound of §5.1.5, taken.
   Enemy hit(double bloodLoss) =>
       copyWith(bloodLostMl: bloodLostMl + bloodLoss);
+
+  /// §5.6.2: something was heard over there.
+  ///
+  /// [chasing] for a sound made close enough to place the shooter directly —
+  /// inside a third of the radius, where there is nothing left to work out.
+  Enemy hears(GeoPoint at, {bool chasing = false}) => copyWith(
+    heardAt: at,
+    investigateLeft: kInvestigateFor,
+    state: chasing && budget > Duration.zero
+        ? EnemyState.chase
+        : EnemyState.alert,
+    sinceContact: Duration.zero,
+  );
 }
 
 /// One step of §6.1a, for one enemy.
@@ -291,9 +324,35 @@ Enemy advanceEnemy(
     if (budget > enemy.kind.sprintBudget) budget = enemy.kind.sprintBudget;
   }
 
-  final target = state == EnemyState.returning || state == EnemyState.idle
-      ? enemy.home
-      : playerAt;
+  // §5.6.2: a sound is a place, and the place is what it walks to. Only while
+  // the player is not the nearer answer — something in front of you beats
+  // something you heard.
+  final noise = enemy.heardAt;
+  final seen = distance <= enemy.kind.detectionM;
+  final investigating =
+      noise != null && !seen && state != EnemyState.returning;
+
+  var left = enemy.investigateLeft;
+  var forget = false;
+  if (investigating) {
+    // Only once it has arrived: the search is of the place, not of the walk.
+    if (enemy.position.distanceTo(noise) <= 5) {
+      left -= elapsed;
+      if (left <= Duration.zero) {
+        left = Duration.zero;
+        forget = true;
+        state = EnemyState.returning;
+      }
+    }
+  } else if (seen) {
+    forget = true;
+  }
+
+  final target = switch (state) {
+    EnemyState.returning => enemy.home,
+    EnemyState.idle => investigating ? noise : enemy.home,
+    _ => investigating ? noise : playerAt,
+  };
 
   final moved = _towards(
     enemy.position,
@@ -302,10 +361,14 @@ Enemy advanceEnemy(
   );
 
   return enemy.copyWith(
-    position: state == EnemyState.idle ? enemy.position : moved,
+    position: state == EnemyState.idle && !investigating
+        ? enemy.position
+        : moved,
     state: state,
     sprintLeft: budget,
     sinceContact: sinceContact,
+    forgetNoise: forget,
+    investigateLeft: left,
   );
 }
 
@@ -317,9 +380,16 @@ EnemyState _nextState(
   required bool beyondLeash,
   required bool lostContact,
 }) {
+  // ⚠️ §6.1a's contact rule and §5.6.2's search would otherwise contradict
+  // each other: an enemy sent to a noise is *supposed* to be somewhere the
+  // player is not, and giving up after forty-five seconds would cut every
+  // sixty-second search short. The leash still holds — that one is about
+  // distance from home, which a sound does not excuse.
+  final searching = enemy.heardAt != null && enemy.investigateLeft > Duration.zero;
+
   // Home first: the two rules that stop a player towing a train of enemies
   // across half a city.
-  if (beyondLeash || lostContact) {
+  if (beyondLeash || (lostContact && !searching)) {
     return enemy.position.distanceTo(enemy.home) < 5
         ? EnemyState.idle
         : EnemyState.returning;
@@ -327,6 +397,14 @@ EnemyState _nextState(
 
   final noticed = heardShot || distance <= enemy.kind.detectionM;
   if (!noticed) {
+    // §5.6.2: a sound already heard is still worth walking to, so it stays
+    // alert rather than forgetting the moment the player is out of sight.
+    if (enemy.heardAt != null && enemy.state != EnemyState.returning) {
+      return enemy.state == EnemyState.chase
+          ? EnemyState.chase
+          : EnemyState.alert;
+    }
+
     return enemy.state == EnemyState.returning
         ? EnemyState.returning
         : EnemyState.idle;
