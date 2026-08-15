@@ -406,13 +406,17 @@ TickOutcome advance({
       basalWater + environmentalWater + math.max(0, activityWater);
 
   // ---- heart rate (§2.4) -------------------------------------------------
+  // Asleep the heart goes below waking resting, so that is the target it
+  // relaxes towards. Awake, §2.4's formula stands.
   final heartRate = relaxHeartRate(
     current: state.heartRateBpm,
-    target: targetHeartRate(
-      met: met,
-      restingHr: constants.restingHeartRate,
-      maxHr: constants.maxHeartRate,
-    ),
+    target: input.sleeping && met <= kMetResting
+        ? sleepingHeartRate(constants.restingHeartRate)
+        : targetHeartRate(
+            met: met,
+            restingHr: constants.restingHeartRate,
+            maxHr: constants.maxHeartRate,
+          ),
     elapsed: step,
   );
 

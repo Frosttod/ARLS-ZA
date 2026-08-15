@@ -37,6 +37,7 @@ const Key kCreatorNameFieldKey = Key('creator.name');
 const Key kCreatorAgeKey = Key('creator.age');
 const Key kCreatorHeightKey = Key('creator.height');
 const Key kCreatorWeightKey = Key('creator.weight');
+const Key kCreatorRestingHrKey = Key('creator.restingHr');
 
 class CharacterCreatorScreen extends StatefulWidget {
   const CharacterCreatorScreen({required this.onCreate, super.key});
@@ -55,6 +56,10 @@ class _CharacterCreatorScreenState extends State<CharacterCreatorScreen> {
   int _height = 180;
   double _weight = 80;
 
+  /// §2.4. Off by default: most people do not know theirs, and a guess typed
+  /// in is worse than the formula.
+  int? _restingHr;
+
   /// Nothing is preselected: §15.4 asks for a deliberate choice with its own
   /// confirmation, because the decision cannot be undone (§9).
   DeathMode? _deathMode;
@@ -65,8 +70,13 @@ class _CharacterCreatorScreenState extends State<CharacterCreatorScreen> {
     super.dispose();
   }
 
-  BodySpec get _spec =>
-      BodySpec(sex: _sex, ageYears: _age, heightCm: _height, weightKg: _weight);
+  BodySpec get _spec => BodySpec(
+    sex: _sex,
+    ageYears: _age,
+    heightCm: _height,
+    weightKg: _weight,
+    measuredRestingHr: _restingHr,
+  );
 
   BodyValidation get _specValidation => BodyValidation.ofSpec(_spec);
 
@@ -159,6 +169,30 @@ class _CharacterCreatorScreenState extends State<CharacterCreatorScreen> {
                   : null,
               onChanged: (value) => setState(() => _weight = value),
             ),
+
+            // §2.4: everything the heart rate does is measured from this
+            // floor, so somebody who knows theirs should be able to say it.
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              value: _restingHr != null,
+              title: Text(l10n.fieldRestingHrKnown),
+              subtitle: Text(
+                l10n.fieldRestingHrHint,
+                style: const TextStyle(fontSize: 11),
+              ),
+              onChanged: (on) => setState(() => _restingHr = on ? 60 : null),
+            ),
+            if (_restingHr != null)
+              _NumberField(
+                key: kCreatorRestingHrKey,
+                label: l10n.fieldRestingHr,
+                value: _restingHr!.toDouble(),
+                min: kRestingHrMin.toDouble(),
+                max: kRestingHrMax.toDouble(),
+                suffix: 'bpm',
+                onChanged: (value) =>
+                    setState(() => _restingHr = value.round()),
+              ),
 
             if (_specValidation.has(BodyValidationIssue.bmiTooLow) ||
                 _specValidation.has(BodyValidationIssue.bmiTooHigh))

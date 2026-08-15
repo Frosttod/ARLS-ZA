@@ -45,18 +45,43 @@ enum DeathMode {
 }
 
 /// What the player entered. Validated by [BodyValidation] before it gets here.
+/// What a self-reported resting heart rate may be.
+///
+/// Wide on purpose: an endurance athlete at rest can sit in the high thirties
+/// and somebody unwell can sit near a hundred. The range exists to catch a
+/// typo, not to tell anybody what their heart should be doing.
+const int kRestingHrMin = 35;
+const int kRestingHrMax = 110;
+
 class BodySpec {
   const BodySpec({
     required this.sex,
     required this.ageYears,
     required this.heightCm,
     required this.weightKg,
+    this.measuredRestingHr,
   });
 
   final Sex sex;
   final int ageYears;
   final int heightCm;
   final double weightKg;
+
+  /// The player's own resting heart rate, in beats per minute, or null to let
+  /// §1.3's estimate stand.
+  ///
+  /// §1.3 estimates it precisely because the game has no data and will not
+  /// read a sensor: that would be collecting health data (§2.5), and it does
+  /// not. But a player who *knows* their own is not a sensor — a figure typed
+  /// in once is the same kind of self-reported number as height and weight,
+  /// and it stays on the device with them.
+  ///
+  /// It matters more than it looks. Everything the heart rate does — the
+  /// recovery curve of §2.4, the accuracy penalties, the bleeding rate of
+  /// §2.6 — is measured from this floor. A bradycardic player at 58 given an
+  /// estimated 72 is told their heart never settles, because in the model it
+  /// never does.
+  final int? measuredRestingHr;
 
   double get heightM => heightCm / 100.0;
 
@@ -69,11 +94,16 @@ class BodySpec {
     int? ageYears,
     int? heightCm,
     double? weightKg,
+    int? measuredRestingHr,
+    bool clearMeasuredRestingHr = false,
   }) => BodySpec(
     sex: sex ?? this.sex,
     ageYears: ageYears ?? this.ageYears,
     heightCm: heightCm ?? this.heightCm,
     weightKg: weightKg ?? this.weightKg,
+    measuredRestingHr: clearMeasuredRestingHr
+        ? null
+        : measuredRestingHr ?? this.measuredRestingHr,
   );
 
   /// A character sheet is a value: two sheets with the same four figures are
@@ -85,10 +115,12 @@ class BodySpec {
       other.sex == sex &&
       other.ageYears == ageYears &&
       other.heightCm == heightCm &&
-      other.weightKg == weightKg;
+      other.weightKg == weightKg &&
+      other.measuredRestingHr == measuredRestingHr;
 
   @override
-  int get hashCode => Object.hash(sex, ageYears, heightCm, weightKg);
+  int get hashCode =>
+      Object.hash(sex, ageYears, heightCm, weightKg, measuredRestingHr);
 }
 
 /// Everything derived from a [BodySpec].
@@ -159,12 +191,12 @@ class BodyProfile {
       Sex.female => 10 * w + 6.25 * spec.heightCm - 5 * a - 161,
     };
 
-    // Resting heart rate is estimated rather than measured: reading it from a
-    // sensor would mean collecting health data, and §2.5 rules that out.
-    final restingHr = (70 + 0.15 * (spec.bmi - 22) + 0.1 * (a - 30)).clamp(
-      50.0,
-      95.0,
-    );
+    // Estimated only when the player has not told us better. Reading it from a
+    // sensor would be collecting health data and §2.5 rules that out; a number
+    // somebody types in themselves is a different thing entirely.
+    final restingHr =
+        spec.measuredRestingHr?.toDouble() ??
+        (70 + 0.15 * (spec.bmi - 22) + 0.1 * (a - 30)).clamp(50.0, 95.0);
 
     return BodyProfile(
       spec: spec,

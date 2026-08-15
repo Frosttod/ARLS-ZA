@@ -38,6 +38,13 @@ class Profiles extends Table {
   IntColumn get heightCm => integer()();
   RealColumn get weightKg => real()();
 
+  /// The player's own resting heart rate, or null to use §1.3's estimate.
+  ///
+  /// Self-reported, like height and weight, and it never leaves the device
+  /// (§1.3). Nullable because most people do not know theirs, and a guessed
+  /// number would be worse than the formula.
+  IntColumn get measuredRestingHr => integer().nullable()();
+
   /// 'hardcore' | 'softcore'. Chosen once, never changed (§9).
   TextColumn get deathMode => text().withLength(min: 1, max: 16)();
 

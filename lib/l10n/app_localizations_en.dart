@@ -591,6 +591,19 @@ class L10nEn extends L10n {
   }
 
   @override
+  String get fieldRestingHrKnown => 'I know my resting heart rate';
+
+  @override
+  String get fieldRestingHr => 'Resting heart rate';
+
+  @override
+  String get fieldRestingHrHint =>
+      'Measured sitting still. Left off, the game estimates it from your age and build — and gets it wrong for anyone whose heart is slower or faster than average. Stays on this device.';
+
+  @override
+  String get errRestingHrRange => 'Between 35 and 110 bpm';
+
+  @override
   String get inventoryTitle => 'Inventory';
 
   @override

@@ -1141,6 +1141,30 @@ abstract class L10n {
   /// **'{metres} m of noise'**
   String breachNoise(int metres);
 
+  /// No description provided for @fieldRestingHrKnown.
+  ///
+  /// In en, this message translates to:
+  /// **'I know my resting heart rate'**
+  String get fieldRestingHrKnown;
+
+  /// No description provided for @fieldRestingHr.
+  ///
+  /// In en, this message translates to:
+  /// **'Resting heart rate'**
+  String get fieldRestingHr;
+
+  /// No description provided for @fieldRestingHrHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Measured sitting still. Left off, the game estimates it from your age and build — and gets it wrong for anyone whose heart is slower or faster than average. Stays on this device.'**
+  String get fieldRestingHrHint;
+
+  /// No description provided for @errRestingHrRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Between 35 and 110 bpm'**
+  String get errRestingHrRange;
+
   /// No description provided for @inventoryTitle.
   ///
   /// In en, this message translates to:

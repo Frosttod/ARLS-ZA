@@ -288,6 +288,17 @@ class $ProfilesTable extends Profiles with TableInfo<$ProfilesTable, Profile> {
     type: DriftSqlType.double,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _measuredRestingHrMeta = const VerificationMeta(
+    'measuredRestingHr',
+  );
+  @override
+  late final GeneratedColumn<int> measuredRestingHr = GeneratedColumn<int>(
+    'measured_resting_hr',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _deathModeMeta = const VerificationMeta(
     'deathMode',
   );
@@ -368,6 +379,7 @@ class $ProfilesTable extends Profiles with TableInfo<$ProfilesTable, Profile> {
     ageYears,
     heightCm,
     weightKg,
+    measuredRestingHr,
     deathMode,
     rngSeed,
     createdAt,
@@ -429,6 +441,15 @@ class $ProfilesTable extends Profiles with TableInfo<$ProfilesTable, Profile> {
       );
     } else if (isInserting) {
       context.missing(_weightKgMeta);
+    }
+    if (data.containsKey('measured_resting_hr')) {
+      context.handle(
+        _measuredRestingHrMeta,
+        measuredRestingHr.isAcceptableOrUnknown(
+          data['measured_resting_hr']!,
+          _measuredRestingHrMeta,
+        ),
+      );
     }
     if (data.containsKey('death_mode')) {
       context.handle(
@@ -505,6 +526,10 @@ class $ProfilesTable extends Profiles with TableInfo<$ProfilesTable, Profile> {
         DriftSqlType.double,
         data['${effectivePrefix}weight_kg'],
       )!,
+      measuredRestingHr: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}measured_resting_hr'],
+      ),
       deathMode: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}death_mode'],
@@ -549,6 +574,13 @@ class Profile extends DataClass implements Insertable<Profile> {
   final int heightCm;
   final double weightKg;
 
+  /// The player's own resting heart rate, or null to use §1.3's estimate.
+  ///
+  /// Self-reported, like height and weight, and it never leaves the device
+  /// (§1.3). Nullable because most people do not know theirs, and a guessed
+  /// number would be worse than the formula.
+  final int? measuredRestingHr;
+
   /// 'hardcore' | 'softcore'. Chosen once, never changed (§9).
   final String deathMode;
 
@@ -569,6 +601,7 @@ class Profile extends DataClass implements Insertable<Profile> {
     required this.ageYears,
     required this.heightCm,
     required this.weightKg,
+    this.measuredRestingHr,
     required this.deathMode,
     required this.rngSeed,
     required this.createdAt,
@@ -585,6 +618,9 @@ class Profile extends DataClass implements Insertable<Profile> {
     map['age_years'] = Variable<int>(ageYears);
     map['height_cm'] = Variable<int>(heightCm);
     map['weight_kg'] = Variable<double>(weightKg);
+    if (!nullToAbsent || measuredRestingHr != null) {
+      map['measured_resting_hr'] = Variable<int>(measuredRestingHr);
+    }
     map['death_mode'] = Variable<String>(deathMode);
     map['rng_seed'] = Variable<int>(rngSeed);
     map['created_at'] = Variable<DateTime>(createdAt);
@@ -606,6 +642,9 @@ class Profile extends DataClass implements Insertable<Profile> {
       ageYears: Value(ageYears),
       heightCm: Value(heightCm),
       weightKg: Value(weightKg),
+      measuredRestingHr: measuredRestingHr == null && nullToAbsent
+          ? const Value.absent()
+          : Value(measuredRestingHr),
       deathMode: Value(deathMode),
       rngSeed: Value(rngSeed),
       createdAt: Value(createdAt),
@@ -631,6 +670,7 @@ class Profile extends DataClass implements Insertable<Profile> {
       ageYears: serializer.fromJson<int>(json['ageYears']),
       heightCm: serializer.fromJson<int>(json['heightCm']),
       weightKg: serializer.fromJson<double>(json['weightKg']),
+      measuredRestingHr: serializer.fromJson<int?>(json['measuredRestingHr']),
       deathMode: serializer.fromJson<String>(json['deathMode']),
       rngSeed: serializer.fromJson<int>(json['rngSeed']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
@@ -649,6 +689,7 @@ class Profile extends DataClass implements Insertable<Profile> {
       'ageYears': serializer.toJson<int>(ageYears),
       'heightCm': serializer.toJson<int>(heightCm),
       'weightKg': serializer.toJson<double>(weightKg),
+      'measuredRestingHr': serializer.toJson<int?>(measuredRestingHr),
       'deathMode': serializer.toJson<String>(deathMode),
       'rngSeed': serializer.toJson<int>(rngSeed),
       'createdAt': serializer.toJson<DateTime>(createdAt),
@@ -665,6 +706,7 @@ class Profile extends DataClass implements Insertable<Profile> {
     int? ageYears,
     int? heightCm,
     double? weightKg,
+    Value<int?> measuredRestingHr = const Value.absent(),
     String? deathMode,
     int? rngSeed,
     DateTime? createdAt,
@@ -678,6 +720,9 @@ class Profile extends DataClass implements Insertable<Profile> {
     ageYears: ageYears ?? this.ageYears,
     heightCm: heightCm ?? this.heightCm,
     weightKg: weightKg ?? this.weightKg,
+    measuredRestingHr: measuredRestingHr.present
+        ? measuredRestingHr.value
+        : this.measuredRestingHr,
     deathMode: deathMode ?? this.deathMode,
     rngSeed: rngSeed ?? this.rngSeed,
     createdAt: createdAt ?? this.createdAt,
@@ -693,6 +738,9 @@ class Profile extends DataClass implements Insertable<Profile> {
       ageYears: data.ageYears.present ? data.ageYears.value : this.ageYears,
       heightCm: data.heightCm.present ? data.heightCm.value : this.heightCm,
       weightKg: data.weightKg.present ? data.weightKg.value : this.weightKg,
+      measuredRestingHr: data.measuredRestingHr.present
+          ? data.measuredRestingHr.value
+          : this.measuredRestingHr,
       deathMode: data.deathMode.present ? data.deathMode.value : this.deathMode,
       rngSeed: data.rngSeed.present ? data.rngSeed.value : this.rngSeed,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
@@ -713,6 +761,7 @@ class Profile extends DataClass implements Insertable<Profile> {
           ..write('ageYears: $ageYears, ')
           ..write('heightCm: $heightCm, ')
           ..write('weightKg: $weightKg, ')
+          ..write('measuredRestingHr: $measuredRestingHr, ')
           ..write('deathMode: $deathMode, ')
           ..write('rngSeed: $rngSeed, ')
           ..write('createdAt: $createdAt, ')
@@ -731,6 +780,7 @@ class Profile extends DataClass implements Insertable<Profile> {
     ageYears,
     heightCm,
     weightKg,
+    measuredRestingHr,
     deathMode,
     rngSeed,
     createdAt,
@@ -748,6 +798,7 @@ class Profile extends DataClass implements Insertable<Profile> {
           other.ageYears == this.ageYears &&
           other.heightCm == this.heightCm &&
           other.weightKg == this.weightKg &&
+          other.measuredRestingHr == this.measuredRestingHr &&
           other.deathMode == this.deathMode &&
           other.rngSeed == this.rngSeed &&
           other.createdAt == this.createdAt &&
@@ -763,6 +814,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
   final Value<int> ageYears;
   final Value<int> heightCm;
   final Value<double> weightKg;
+  final Value<int?> measuredRestingHr;
   final Value<String> deathMode;
   final Value<int> rngSeed;
   final Value<DateTime> createdAt;
@@ -776,6 +828,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
     this.ageYears = const Value.absent(),
     this.heightCm = const Value.absent(),
     this.weightKg = const Value.absent(),
+    this.measuredRestingHr = const Value.absent(),
     this.deathMode = const Value.absent(),
     this.rngSeed = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -790,6 +843,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
     required int ageYears,
     required int heightCm,
     required double weightKg,
+    this.measuredRestingHr = const Value.absent(),
     required String deathMode,
     required int rngSeed,
     required DateTime createdAt,
@@ -811,6 +865,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
     Expression<int>? ageYears,
     Expression<int>? heightCm,
     Expression<double>? weightKg,
+    Expression<int>? measuredRestingHr,
     Expression<String>? deathMode,
     Expression<int>? rngSeed,
     Expression<DateTime>? createdAt,
@@ -825,6 +880,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
       if (ageYears != null) 'age_years': ageYears,
       if (heightCm != null) 'height_cm': heightCm,
       if (weightKg != null) 'weight_kg': weightKg,
+      if (measuredRestingHr != null) 'measured_resting_hr': measuredRestingHr,
       if (deathMode != null) 'death_mode': deathMode,
       if (rngSeed != null) 'rng_seed': rngSeed,
       if (createdAt != null) 'created_at': createdAt,
@@ -841,6 +897,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
     Value<int>? ageYears,
     Value<int>? heightCm,
     Value<double>? weightKg,
+    Value<int?>? measuredRestingHr,
     Value<String>? deathMode,
     Value<int>? rngSeed,
     Value<DateTime>? createdAt,
@@ -855,6 +912,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
       ageYears: ageYears ?? this.ageYears,
       heightCm: heightCm ?? this.heightCm,
       weightKg: weightKg ?? this.weightKg,
+      measuredRestingHr: measuredRestingHr ?? this.measuredRestingHr,
       deathMode: deathMode ?? this.deathMode,
       rngSeed: rngSeed ?? this.rngSeed,
       createdAt: createdAt ?? this.createdAt,
@@ -884,6 +942,9 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
     }
     if (weightKg.present) {
       map['weight_kg'] = Variable<double>(weightKg.value);
+    }
+    if (measuredRestingHr.present) {
+      map['measured_resting_hr'] = Variable<int>(measuredRestingHr.value);
     }
     if (deathMode.present) {
       map['death_mode'] = Variable<String>(deathMode.value);
@@ -915,6 +976,7 @@ class ProfilesCompanion extends UpdateCompanion<Profile> {
           ..write('ageYears: $ageYears, ')
           ..write('heightCm: $heightCm, ')
           ..write('weightKg: $weightKg, ')
+          ..write('measuredRestingHr: $measuredRestingHr, ')
           ..write('deathMode: $deathMode, ')
           ..write('rngSeed: $rngSeed, ')
           ..write('createdAt: $createdAt, ')
@@ -4378,6 +4440,7 @@ typedef $$ProfilesTableCreateCompanionBuilder =
       required int ageYears,
       required int heightCm,
       required double weightKg,
+      Value<int?> measuredRestingHr,
       required String deathMode,
       required int rngSeed,
       required DateTime createdAt,
@@ -4393,6 +4456,7 @@ typedef $$ProfilesTableUpdateCompanionBuilder =
       Value<int> ageYears,
       Value<int> heightCm,
       Value<double> weightKg,
+      Value<int?> measuredRestingHr,
       Value<String> deathMode,
       Value<int> rngSeed,
       Value<DateTime> createdAt,
@@ -4437,6 +4501,11 @@ class $$ProfilesTableFilterComposer
 
   ColumnFilters<double> get weightKg => $composableBuilder(
     column: $table.weightKg,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get measuredRestingHr => $composableBuilder(
+    column: $table.measuredRestingHr,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4510,6 +4579,11 @@ class $$ProfilesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get measuredRestingHr => $composableBuilder(
+    column: $table.measuredRestingHr,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get deathMode => $composableBuilder(
     column: $table.deathMode,
     builder: (column) => ColumnOrderings(column),
@@ -4568,6 +4642,11 @@ class $$ProfilesTableAnnotationComposer
   GeneratedColumn<double> get weightKg =>
       $composableBuilder(column: $table.weightKg, builder: (column) => column);
 
+  GeneratedColumn<int> get measuredRestingHr => $composableBuilder(
+    column: $table.measuredRestingHr,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get deathMode =>
       $composableBuilder(column: $table.deathMode, builder: (column) => column);
 
@@ -4623,6 +4702,7 @@ class $$ProfilesTableTableManager
                 Value<int> ageYears = const Value.absent(),
                 Value<int> heightCm = const Value.absent(),
                 Value<double> weightKg = const Value.absent(),
+                Value<int?> measuredRestingHr = const Value.absent(),
                 Value<String> deathMode = const Value.absent(),
                 Value<int> rngSeed = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
@@ -4636,6 +4716,7 @@ class $$ProfilesTableTableManager
                 ageYears: ageYears,
                 heightCm: heightCm,
                 weightKg: weightKg,
+                measuredRestingHr: measuredRestingHr,
                 deathMode: deathMode,
                 rngSeed: rngSeed,
                 createdAt: createdAt,
@@ -4651,6 +4732,7 @@ class $$ProfilesTableTableManager
                 required int ageYears,
                 required int heightCm,
                 required double weightKg,
+                Value<int?> measuredRestingHr = const Value.absent(),
                 required String deathMode,
                 required int rngSeed,
                 required DateTime createdAt,
@@ -4664,6 +4746,7 @@ class $$ProfilesTableTableManager
                 ageYears: ageYears,
                 heightCm: heightCm,
                 weightKg: weightKg,
+                measuredRestingHr: measuredRestingHr,
                 deathMode: deathMode,
                 rngSeed: rngSeed,
                 createdAt: createdAt,

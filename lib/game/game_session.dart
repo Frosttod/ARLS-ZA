@@ -58,6 +58,7 @@ class GameSessionFactory {
         ageYears: profile.ageYears,
         heightCm: profile.heightCm,
         weightKg: profile.weightKg,
+        measuredRestingHr: profile.measuredRestingHr,
       ),
     );
 
@@ -99,6 +100,7 @@ class GameSessionFactory {
         ageYears: spec.ageYears,
         heightCm: spec.heightCm,
         weightKg: spec.weightKg,
+        measuredRestingHr: Value(spec.measuredRestingHr),
         deathMode: deathMode.wire,
         rngSeed: DeterministicRng.newSeed(),
         createdAt: now.toUtc(),

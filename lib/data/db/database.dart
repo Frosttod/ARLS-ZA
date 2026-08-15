@@ -29,7 +29,7 @@ import 'tables.dart';
 part 'database.g.dart';
 
 /// Bumped only alongside a migration step in [_migration]. Never reused.
-const int kSchemaVersion = 5;
+const int kSchemaVersion = 6;
 
 /// Keys used in [MetaEntries].
 abstract final class MetaKeys {
@@ -68,7 +68,7 @@ class SaveDatabase extends _$SaveDatabase {
   /// follow a constant reference. `schema_test.dart` keeps it in step with
   /// [kSchemaVersion].
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -117,6 +117,12 @@ class SaveDatabase extends _$SaveDatabase {
         // and the default of null reads as "still shut" — which is right: the
         // barrier was always there, the game just did not model it.
         await m.addColumn(lootBoxes, lootBoxes.openedAt);
+      }
+
+      if (from < 6) {
+        // §2.4: a player who knows their own resting heart rate can say so.
+        // Null keeps the estimate, so every existing character is unchanged.
+        await m.addColumn(profiles, profiles.measuredRestingHr);
       }
 
       await _writeSchemaVersion(to);

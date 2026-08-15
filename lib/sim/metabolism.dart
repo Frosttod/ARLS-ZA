@@ -99,6 +99,25 @@ double targetHeartRate({
   required double maxHr,
 }) => restingHr + intensityFraction(met) * (maxHr - restingHr);
 
+/// How far below the resting rate a sleeping heart settles.
+///
+/// Sleep is not rest with the eyes shut: the heart slows past waking resting
+/// by roughly ten to twenty beats, and in a healthy adult can reach the
+/// mid-thirties in deep sleep. Without this the game claims a sleeping
+/// character's heart never drops below the figure it uses for somebody
+/// standing in a kitchen.
+const double kSleepHeartRateDrop = 14;
+
+/// The floor, whatever the arithmetic says. Below this is not sleep, it is a
+/// cardiology appointment.
+const double kSleepHeartRateFloorBpm = 35;
+
+/// Where the heart settles while asleep (§2.4, §2.5).
+double sleepingHeartRate(double restingHr) {
+  final target = restingHr - kSleepHeartRateDrop;
+  return target < kSleepHeartRateFloorBpm ? kSleepHeartRateFloorBpm : target;
+}
+
 /// Time constant for heart-rate recovery, ~90 s for an average person (§2.4).
 ///
 /// This one number is why "wait for your heart to slow down" is not a tactic:

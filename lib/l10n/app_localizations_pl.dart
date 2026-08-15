@@ -594,6 +594,19 @@ class L10nPl extends L10n {
   }
 
   @override
+  String get fieldRestingHrKnown => 'Znam swoje tętno spoczynkowe';
+
+  @override
+  String get fieldRestingHr => 'Tętno spoczynkowe';
+
+  @override
+  String get fieldRestingHrHint =>
+      'Zmierzone w spoczynku, na siedząco. Bez tego gra oszacuje je z wieku i budowy — i pomyli się u każdego, czyje serce bije wolniej lub szybciej niż przeciętnie. Zostaje na tym urządzeniu.';
+
+  @override
+  String get errRestingHrRange => 'Od 35 do 110 uderzeń na minutę';
+
+  @override
   String get inventoryTitle => 'Ekwipunek';
 
   @override
