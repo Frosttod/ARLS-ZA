@@ -29,7 +29,7 @@ import 'tables.dart';
 part 'database.g.dart';
 
 /// Bumped only alongside a migration step in [_migration]. Never reused.
-const int kSchemaVersion = 8;
+const int kSchemaVersion = 9;
 
 /// Keys used in [MetaEntries].
 abstract final class MetaKeys {
@@ -69,7 +69,7 @@ class SaveDatabase extends _$SaveDatabase {
   /// follow a constant reference. `schema_test.dart` keeps it in step with
   /// [kSchemaVersion].
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -136,6 +136,13 @@ class SaveDatabase extends _$SaveDatabase {
       if (from >= 3 && from < 8) {
         // §19.1: a note in the pack remembers which note it is.
         await m.addColumn(inventoryLines, inventoryLines.noteId);
+      }
+
+      if (from < 9) {
+        // §2.2, §2.3: what has been eaten but not yet absorbed. Both default
+        // to zero, so an existing character simply has nothing in the stomach.
+        await m.addColumn(vitals, vitals.pendingKcal);
+        await m.addColumn(vitals, vitals.pendingWaterMl);
       }
 
       await _writeSchemaVersion(to);

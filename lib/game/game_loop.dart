@@ -379,6 +379,8 @@ class GameLoop {
     bloodMl: Value(_state.bloodMl),
     waterMl: Value(_state.waterMl),
     caloriesKcal: Value(_state.caloriesKcal),
+    pendingKcal: Value(_state.pendingKcal),
+    pendingWaterMl: Value(_state.pendingWaterMl),
     heartRateBpm: Value(_state.heartRateBpm),
     sleepDebtSeconds: Value(_state.sleepDebtSeconds),
     zone: Value(_state.zone.wire),
@@ -456,12 +458,12 @@ class GameLoop {
   /// did nothing would be worse than not offering it. The caller refuses to
   /// spend a bandage on an uninjured character instead.
   void applyUse({double kcal = 0, double waterMl = 0}) {
+    // Into the stomach, not into the bloodstream. The tick moves it across at
+    // the rates of §2.2 and §2.3, which is what makes a meal something taken
+    // before it is needed.
     _state = _state.copyWith(
-      caloriesKcal: (_state.caloriesKcal + kcal).clamp(
-        0.0,
-        constants.caloriesDailyKcal,
-      ),
-      waterMl: (_state.waterMl + waterMl).clamp(0.0, constants.waterDailyMl),
+      pendingKcal: _state.pendingKcal + kcal,
+      pendingWaterMl: _state.pendingWaterMl + waterMl,
     );
     writer.stageHot(_toCompanion());
     _publish();

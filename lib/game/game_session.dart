@@ -70,6 +70,8 @@ class GameSessionFactory {
         bloodMl: vitals.bloodMl,
         waterMl: vitals.waterMl,
         caloriesKcal: vitals.caloriesKcal,
+        pendingKcal: vitals.pendingKcal,
+        pendingWaterMl: vitals.pendingWaterMl,
         heartRateBpm: vitals.heartRateBpm,
         sleepDebtSeconds: vitals.sleepDebtSeconds,
         zone: MetabolicZone.fromWire(vitals.zone),

@@ -150,6 +150,25 @@ void main() {
     );
   });
 
+  testWidgets('a meal shows as a tick ahead of the bar, not as more bar', (
+    tester,
+  ) async {
+    // §2.2, §2.3: the difference between what a player has and what is coming
+    // is the whole reason absorption takes time. A fuller bar would hide it.
+    final eaten = healthy().copyWith(
+      caloriesKcal: constants.caloriesDailyKcal * 0.4,
+      pendingKcal: 520,
+    );
+
+    await pumpHud(tester, eaten);
+
+    expect(
+      find.text('40%'),
+      findsOneWidget,
+      reason: 'the reading is what the body has, not what the stomach holds',
+    );
+  });
+
   group('both carry limits (§18.1a)', () {
     testWidgets('mass reads against the hard limit, not the comfortable one', (
       tester,

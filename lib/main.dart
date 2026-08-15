@@ -277,7 +277,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// the countdown while the player stood there watching it. A search measures
   /// forty-five real seconds of a person standing in a street; that is what it
   /// should count.
-  Search? _search;
+  /// A notifier for the same reason the inventory is one: the inventory screen
+  /// is a pushed route, and an action started from it has to be visible on it.
+  final ValueNotifier<Search?> _search = ValueNotifier(null);
   DateTime? _searchTickedAt;
   Timer? _searchTimer;
 
@@ -375,6 +377,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     // The HUD bars and the search panel read the inventory too, so this tree
     // follows the same notifier the screen does.
     _inventory.addListener(_onInventoryChanged);
+    // The map's own panel reads the action from this tree, so it follows the
+    // same notifier the inventory screen does.
+    _search.addListener(_onInventoryChanged);
     unawaited(_boot());
   }
 
@@ -797,6 +802,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
           onTakeOff: (line) => unawaited(_takeOff(line)),
           onUse: (line) => unawaited(_use(line)),
           onRead: _readNote,
+          action: _search,
+          onCancelAction: _cancelSearch,
           onDevFill: kDevTools ? () => unawaited(_devFillPack()) : null,
         ),
       ),
@@ -924,7 +931,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final character = _character;
     final loop = _loop;
     if (catalogue == null || character == null || loop == null) return;
-    if (_search != null) return;
+    if (_search.value != null) return;
 
     final definition = catalogue[line.itemId];
     final use = definition == null ? null : useOf(definition);
@@ -940,7 +947,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
     final fix = _snapshot?.displayFix;
     setState(() {
-      _search = Search.using(
+      _search.value = Search.using(
         at: fix == null
             ? const GeoPoint(0, 0)
             : GeoPoint(fix.latitude, fix.longitude),
@@ -1197,7 +1204,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// with anything new to say when the player is standing still, which is
   /// precisely the whole duration of a search.
   Future<void> _advanceSearch() async {
-    final search = _search;
+    final search = _search.value;
     if (search == null || !search.isRunning) return;
 
     final now = DateTime.now().toUtc();
@@ -1221,12 +1228,12 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     );
 
     if (next.isRunning) {
-      setState(() => _search = next);
+      _search.value = next;
       return;
     }
 
     _stopSearchTimer();
-    setState(() => _search = null);
+    _search.value = null;
 
     if (next.state == SearchState.done) {
       final at = snapshot?.state.lastUpdate ?? now;
@@ -1262,10 +1269,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
   void _startAreaSearch() {
     final fix = _snapshot?.displayFix;
-    if (fix == null || _search != null) return;
+    if (fix == null || _search.value != null) return;
 
     setState(() {
-      _search = Search.area(
+      _search.value = Search.area(
         at: GeoPoint(fix.latitude, fix.longitude),
         now: DateTime.now().toUtc(),
       );
@@ -1276,10 +1283,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   void _startObjectSearch(SearchDepth depth) {
     final fix = _snapshot?.displayFix;
     final box = _boxInReach();
-    if (fix == null || box == null || _search != null) return;
+    if (fix == null || box == null || _search.value != null) return;
 
     setState(() {
-      _search = Search.object(
+      _search.value = Search.object(
         at: GeoPoint(fix.latitude, fix.longitude),
         now: DateTime.now().toUtc(),
         poiId: box.poiId,
@@ -1307,10 +1314,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   void _startBreach(BarrierBreach breach) {
     final fix = _snapshot?.displayFix;
     final box = _boxInReach();
-    if (fix == null || box == null || _search != null) return;
+    if (fix == null || box == null || _search.value != null) return;
 
     setState(() {
-      _search = Search.breach(
+      _search.value = Search.breach(
         at: GeoPoint(fix.latitude, fix.longitude),
         now: DateTime.now().toUtc(),
         poiId: box.poiId,
@@ -1341,9 +1348,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   }
 
   void _cancelSearch() {
-    if (_search == null) return;
+    if (_search.value == null) return;
     _stopSearchTimer();
-    setState(() => _search = null);
+    _search.value = null;
   }
 
   /// §10.2.3: reconnaissance reveals the places that cannot be seen from the
@@ -1588,6 +1595,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     unawaited(_world?.dispose());
     _searchTimer?.cancel();
     _inventory.dispose();
+    _search.dispose();
     super.dispose();
   }
 
@@ -1639,7 +1647,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
                     builder: (_) {
                       final box = _boxInReach();
                       return SearchPanel(
-                        search: _search,
+                        search: _search.value,
                         targetName: box?.name,
                         canSearchHere: box != null,
                         barrier: _barrierOn(box),

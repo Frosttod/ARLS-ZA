@@ -141,6 +141,9 @@ class Hud extends StatelessWidget {
                         _ThinBar(
                           label: l10n.hudWater,
                           fraction: status.thirst.fraction,
+                          // §2.3: what has been drunk and is still on its way.
+                          incoming:
+                              state.pendingWaterMl / constants.waterDailyMl,
                           warning: status.thirst.accuracyPenalty < 1,
                           critical: status.thirst.critical,
                         ),
@@ -148,6 +151,8 @@ class Hud extends StatelessWidget {
                         _ThinBar(
                           label: l10n.hudCalories,
                           fraction: status.hunger.fraction,
+                          incoming:
+                              state.pendingKcal / constants.caloriesDailyKcal,
                           warning: status.hunger.precisionPenalty < 1,
                           critical: status.hunger.actionTimeMultiplier > 1,
                         ),
@@ -248,10 +253,20 @@ class _ThinBar extends StatelessWidget {
     required this.fraction,
     required this.warning,
     required this.critical,
+    this.incoming = 0,
   });
 
   final String label;
   final double fraction;
+
+  /// Eaten or drunk and still being absorbed (§2.2, §2.3), as a share of the
+  /// daily requirement.
+  ///
+  /// Drawn as a tick ahead of the bar rather than as more bar: the difference
+  /// between what a player *has* and what is *coming* is the whole reason
+  /// absorption takes time, and a fuller bar would hide it.
+  final double incoming;
+
   final bool warning;
   final bool critical;
 
@@ -264,6 +279,8 @@ class _ThinBar extends StatelessWidget {
         : warning
         ? const Color(0xFFE8B33A)
         : colours.data;
+
+    final arriving = (clamped + incoming).clamp(0.0, 1.0);
 
     return Semantics(
       label: '$label ${(clamped * 100).round()}%',
@@ -282,11 +299,30 @@ class _ThinBar extends StatelessWidget {
           ),
           Expanded(
             child: ClipRect(
-              child: LinearProgressIndicator(
-                value: clamped,
-                minHeight: 5,
-                backgroundColor: colours.muted.withValues(alpha: 0.35),
-                valueColor: AlwaysStoppedAnimation(colour),
+              child: LayoutBuilder(
+                builder: (context, constraints) => Stack(
+                  alignment: Alignment.centerLeft,
+                  children: [
+                    LinearProgressIndicator(
+                      value: clamped,
+                      minHeight: 5,
+                      backgroundColor: colours.muted.withValues(alpha: 0.35),
+                      valueColor: AlwaysStoppedAnimation(colour),
+                    ),
+                    if (incoming > 0.001)
+                      Positioned(
+                        left: (constraints.maxWidth * arriving - 1).clamp(
+                          0.0,
+                          constraints.maxWidth - 2,
+                        ),
+                        child: Container(
+                          height: 5,
+                          width: 2,
+                          color: colours.text,
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
           ),

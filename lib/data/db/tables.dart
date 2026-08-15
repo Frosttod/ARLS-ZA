@@ -120,6 +120,14 @@ class Vitals extends Table {
   /// §2.2 until the real inventory arrives in stage 4.
   RealColumn get carriedKg => real().withDefault(const Constant(0))();
 
+  /// Eaten and drunk, not yet absorbed (§2.2, §2.3).
+  ///
+  /// Persisted because it is real: a player who eats and closes the app has
+  /// food in them, and losing it on a restart would teach them to stand and
+  /// watch the bar instead.
+  RealColumn get pendingKcal => real().withDefault(const Constant(0))();
+  RealColumn get pendingWaterMl => real().withDefault(const Constant(0))();
+
   @override
   Set<Column> get primaryKey => {profileId};
 

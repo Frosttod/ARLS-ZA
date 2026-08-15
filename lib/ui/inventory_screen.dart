@@ -28,6 +28,7 @@ import '../items/item.dart';
 import '../items/item_catalogue.dart';
 import '../items/item_names.dart';
 import '../l10n/app_localizations.dart';
+import '../loot/search.dart';
 import '../sim/body.dart';
 import 'hud.dart' show HudColors;
 
@@ -43,6 +44,8 @@ class InventoryScreen extends StatelessWidget {
     this.onUse,
     this.onRead,
     this.onDevFill,
+    this.action,
+    this.onCancelAction,
     super.key,
   });
 
@@ -77,6 +80,13 @@ class InventoryScreen extends StatelessWidget {
   /// Fills the pack with a sample kit. Developer builds only.
   final VoidCallback? onDevFill;
 
+  /// What is being used right now (§4.7), so the screen the player started it
+  /// from is the screen that shows it. Without this, using a tin from here
+  /// looked like nothing had happened until they walked back to the map.
+  final ValueListenable<Search?>? action;
+
+  final VoidCallback? onCancelAction;
+
   @override
   Widget build(BuildContext context) => ValueListenableBuilder<Inventory>(
     valueListenable: inventory,
@@ -108,6 +118,19 @@ class InventoryScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
         children: [
+          if (action != null)
+            ValueListenableBuilder<Search?>(
+              valueListenable: action!,
+              builder: (context, running, _) =>
+                  running == null || !running.isRunning
+                  ? const SizedBox.shrink()
+                  : _Running(
+                      search: running,
+                      onCancel: onCancelAction,
+                      colours: colours,
+                      cancelLabel: l10n.searchCancel,
+                    ),
+            ),
           _Limits(
             massKg: mass,
             comfortKg: limits.comfortKg,
@@ -215,6 +238,58 @@ class InventoryScreen extends StatelessWidget {
     });
     return sorted;
   }
+}
+
+/// The action in progress, at the top of the screen it was started from.
+class _Running extends StatelessWidget {
+  const _Running({
+    required this.search,
+    required this.onCancel,
+    required this.colours,
+    required this.cancelLabel,
+  });
+
+  final Search search;
+  final VoidCallback? onCancel;
+  final HudColors colours;
+  final String cancelLabel;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: 12),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                search.usingLabel ?? '',
+                style: TextStyle(fontSize: 13, color: colours.text),
+              ),
+            ),
+            Text(
+              '${search.remaining.inSeconds} s',
+              style: TextStyle(
+                fontSize: 13,
+                color: colours.data,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+            if (onCancel != null)
+              TextButton(onPressed: onCancel, child: Text(cancelLabel)),
+          ],
+        ),
+        const SizedBox(height: 2),
+        LinearProgressIndicator(
+          value: search.progress,
+          minHeight: 4,
+          backgroundColor: colours.muted.withValues(alpha: 0.25),
+          color: colours.data,
+        ),
+      ],
+    ),
+  );
 }
 
 /// One place on the body, filled or not.

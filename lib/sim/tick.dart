@@ -137,6 +137,18 @@ class TickInput {
   static const resting = TickInput();
 }
 
+/// How fast what has been eaten becomes usable (§2.2).
+///
+/// A 520 kcal tin over roughly an hour. Not a digestion model — it is one
+/// number standing in for one — but it is the number that makes the difference
+/// a player feels: food is something you take before you need it, not a button
+/// you press when the bar turns red.
+const double kCalorieAbsorptionKcalPerMin = 8;
+
+/// And how fast water does (§2.3). Half a litre in twenty minutes, which is
+/// roughly what a stomach passes on.
+const double kWaterAbsorptionMlPerMin = 25;
+
 /// The mutable simulation state. Immutable value object; [advance] returns a
 /// new one rather than mutating, which is what makes replay comparisons cheap.
 class SimState {
@@ -149,6 +161,8 @@ class SimState {
     required this.sleepDebtSeconds,
     required this.zone,
     required this.rngCursor,
+    this.pendingKcal = 0,
+    this.pendingWaterMl = 0,
   });
 
   /// The instant the simulation has been advanced to. Everything is derived
@@ -166,6 +180,16 @@ class SimState {
   /// continues the sequence instead of restarting it (§11).
   final int rngCursor;
 
+  /// Eaten and drunk, not yet absorbed.
+  ///
+  /// A tin of beans is not blood sugar the moment it is swallowed, and half a
+  /// litre of water is not hydration until the stomach has passed it on. The
+  /// reserves fill from here at [kCalorieAbsorptionKcalPerMin] and
+  /// [kWaterAbsorptionMlPerMin], which is what makes eating something a player
+  /// does *before* they need it rather than at the moment the bar turns red.
+  final double pendingKcal;
+  final double pendingWaterMl;
+
   Duration get sleepDebt => Duration(seconds: sleepDebtSeconds);
 
   SimState copyWith({
@@ -177,6 +201,8 @@ class SimState {
     int? sleepDebtSeconds,
     MetabolicZone? zone,
     int? rngCursor,
+    double? pendingKcal,
+    double? pendingWaterMl,
   }) => SimState(
     lastUpdate: lastUpdate ?? this.lastUpdate,
     bloodMl: bloodMl ?? this.bloodMl,
@@ -186,6 +212,8 @@ class SimState {
     sleepDebtSeconds: sleepDebtSeconds ?? this.sleepDebtSeconds,
     zone: zone ?? this.zone,
     rngCursor: rngCursor ?? this.rngCursor,
+    pendingKcal: pendingKcal ?? this.pendingKcal,
+    pendingWaterMl: pendingWaterMl ?? this.pendingWaterMl,
   );
 
   Map<String, Object?> toJson() => {
@@ -197,6 +225,8 @@ class SimState {
     'sleepDebtSeconds': sleepDebtSeconds,
     'zone': zone.wire,
     'rngCursor': rngCursor,
+    'pendingKcal': pendingKcal,
+    'pendingWaterMl': pendingWaterMl,
   };
 
   factory SimState.fromJson(Map<String, Object?> json) => SimState(
@@ -208,6 +238,8 @@ class SimState {
     sleepDebtSeconds: (json['sleepDebtSeconds'] as num).toInt(),
     zone: MetabolicZone.fromWire(json['zone']! as String),
     rngCursor: (json['rngCursor'] as num?)?.toInt() ?? 0,
+    pendingKcal: (json['pendingKcal'] as num?)?.toDouble() ?? 0,
+    pendingWaterMl: (json['pendingWaterMl'] as num?)?.toDouble() ?? 0,
   );
 
   /// Starting state for a freshly created character.
@@ -231,6 +263,8 @@ class SimState {
       _close(bloodMl, other.bloodMl) &&
       _close(waterMl, other.waterMl) &&
       _close(caloriesKcal, other.caloriesKcal) &&
+      _close(pendingKcal, other.pendingKcal) &&
+      _close(pendingWaterMl, other.pendingWaterMl) &&
       _close(heartRateBpm, other.heartRateBpm) &&
       sleepDebtSeconds == other.sleepDebtSeconds &&
       zone == other.zone &&
@@ -441,8 +475,27 @@ TickOutcome advance({
       : (kDailySleepNeed.inSeconds * seconds / Duration.secondsPerDay).round();
   final sleepDebt = math.max(0, state.sleepDebtSeconds + debtChange);
 
-  var calories = state.caloriesKcal - calorieBurn;
-  var water = state.waterMl - waterLoss;
+  // ---- absorption (§2.2, §2.3) -------------------------------------------
+  //
+  // What was eaten arrives over the following minutes rather than at the
+  // moment of swallowing. Half a litre of water is through the stomach in
+  // about twenty minutes and a tin of beans takes over an hour, which is why
+  // eating is something a player does before they need it.
+  //
+  // Linear, and capped by what is left waiting, so the whole thing composes
+  // for catch-up exactly as the losses do.
+  final minutes = seconds / Duration.secondsPerMinute;
+  final kcalAbsorbed = math.min(
+    state.pendingKcal,
+    kCalorieAbsorptionKcalPerMin * minutes,
+  );
+  final waterAbsorbed = math.min(
+    state.pendingWaterMl,
+    kWaterAbsorptionMlPerMin * minutes,
+  );
+
+  var calories = state.caloriesKcal - calorieBurn + kcalAbsorbed;
+  var water = state.waterMl - waterLoss + waterAbsorbed;
   var blood = state.bloodMl - bloodLoss;
 
   var floored = false;
@@ -488,6 +541,8 @@ TickOutcome advance({
       bloodMl: blood,
       heartRateBpm: heartRate,
       sleepDebtSeconds: sleepDebt,
+      pendingKcal: state.pendingKcal - kcalAbsorbed,
+      pendingWaterMl: state.pendingWaterMl - waterAbsorbed,
     ),
     secondsApplied: seconds,
     floored: floored,
