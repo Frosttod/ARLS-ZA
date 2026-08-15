@@ -28,6 +28,8 @@ class SearchPanel extends StatelessWidget {
     this.barrier,
     this.carried = const {},
     this.onBreach,
+    this.droppedLabel,
+    this.onTakeDropped,
     super.key,
   });
 
@@ -52,6 +54,12 @@ class SearchPanel extends StatelessWidget {
   final Set<String> carried;
 
   final void Function(BarrierBreach breach)? onBreach;
+
+  /// §4.8: a pile the player left within arm's reach, named for the button.
+  /// Null when there is nothing at their feet.
+  final String? droppedLabel;
+
+  final VoidCallback? onTakeDropped;
 
   @override
   Widget build(BuildContext context) {
@@ -82,6 +90,8 @@ class SearchPanel extends StatelessWidget {
                   canSearchHere: canSearchHere,
                   onSearchArea: onSearchArea,
                   onSearchHere: onSearchHere,
+                  droppedLabel: droppedLabel,
+                  onTakeDropped: onTakeDropped,
                   colours: colours,
                   l10n: l10n,
                 ),
@@ -237,6 +247,8 @@ class _Choices extends StatelessWidget {
     required this.canSearchHere,
     required this.onSearchArea,
     required this.onSearchHere,
+    required this.droppedLabel,
+    required this.onTakeDropped,
     required this.colours,
     required this.l10n,
   });
@@ -245,6 +257,8 @@ class _Choices extends StatelessWidget {
   final bool canSearchHere;
   final VoidCallback onSearchArea;
   final void Function(SearchDepth) onSearchHere;
+  final String? droppedLabel;
+  final VoidCallback? onTakeDropped;
   final HudColors colours;
   final L10n l10n;
 
@@ -259,6 +273,26 @@ class _Choices extends StatelessWidget {
           child: Text(
             targetName!,
             style: TextStyle(fontSize: 12, color: colours.text),
+          ),
+        ),
+      if (droppedLabel != null)
+        // §4.8: what the player left here. Picking it up is instant — the time
+        // was already spent deciding to put it down.
+        Padding(
+          padding: const EdgeInsets.only(bottom: 2),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '${l10n.droppedHere}: $droppedLabel',
+                  style: TextStyle(fontSize: 12, color: colours.muted),
+                ),
+              ),
+              TextButton(
+                onPressed: onTakeDropped,
+                child: Text(l10n.droppedTake),
+              ),
+            ],
           ),
         ),
       Row(

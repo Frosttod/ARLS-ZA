@@ -29,7 +29,7 @@ import 'tables.dart';
 part 'database.g.dart';
 
 /// Bumped only alongside a migration step in [_migration]. Never reused.
-const int kSchemaVersion = 6;
+const int kSchemaVersion = 7;
 
 /// Keys used in [MetaEntries].
 abstract final class MetaKeys {
@@ -56,6 +56,7 @@ abstract final class MetaKeys {
     SnapshotRecords,
     InventoryLines,
     LootBoxes,
+    GroundItems,
   ],
 )
 class SaveDatabase extends _$SaveDatabase {
@@ -68,7 +69,7 @@ class SaveDatabase extends _$SaveDatabase {
   /// follow a constant reference. `schema_test.dart` keeps it in step with
   /// [kSchemaVersion].
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -123,6 +124,11 @@ class SaveDatabase extends _$SaveDatabase {
         // §2.4: a player who knows their own resting heart rate can say so.
         // Null keeps the estimate, so every existing character is unchanged.
         await m.addColumn(profiles, profiles.measuredRestingHr);
+      }
+
+      if (from < 7) {
+        // §4.8: what a player put down, so they can come back for it.
+        await m.createTable(groundItems);
       }
 
       await _writeSchemaVersion(to);
@@ -265,6 +271,21 @@ class SaveDatabase extends _$SaveDatabase {
         ))
         .go();
   });
+
+  // ------------------------------------------------------------ dropped ---
+
+  Future<List<GroundItem>> groundItemsFor(int profileId) => (select(
+    groundItems,
+  )..where((t) => t.profileId.equals(profileId))).get();
+
+  Future<int> addGroundItem(GroundItemsCompanion item) =>
+      into(groundItems).insert(item);
+
+  /// Deletes by row id. Used by §4.8's sweep and by picking something back up.
+  Future<void> removeGroundItems(List<int> ids) async {
+    if (ids.isEmpty) return;
+    await (delete(groundItems)..where((t) => t.id.isIn(ids))).go();
+  }
 
   // -------------------------------------------------------- maintenance ---
 

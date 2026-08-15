@@ -21,6 +21,8 @@ import 'items/item_names.dart';
 import 'loot/loot_spawner.dart';
 import 'loot/loot_store.dart';
 import 'loot/loot_table.dart';
+import 'loot/dropped_items.dart';
+import 'loot/dropped_store.dart';
 import 'loot/loot_world.dart';
 import 'loot/obstacle.dart';
 import 'loot/search.dart';
@@ -264,6 +266,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
   /// What the last reconnaissance revealed, for §10.2.1's ten minutes.
   AreaKnowledge? _knowledge;
+
+  /// What the player has put down and could come back for (§4.8).
+  List<DroppedItem> _dropped = const [];
 
   /// Procedural places the player has actually looked for (§10.2.3). A
   /// pharmacy is a building and is visible from the street; a wrecked car in a
@@ -811,14 +816,115 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     if (mounted) Navigator.of(context).pop();
   }
 
-  /// §4.8 will put a dropped item on the map for 24 hours. Until the loot layer
-  /// exists there is nowhere for it to land, so it simply leaves the pack.
+  /// §4.8: what leaves the pack lands on the ground and stays for a day.
+  ///
+  /// Which is the whole reason the two carry limits are a decision. If leaving
+  /// something behind destroyed it, "this is too heavy" would always be
+  /// answered by throwing it away, and nobody deliberates over that.
   Future<void> _drop(CarriedItem line) async {
+    final character = _character;
+    final fix = _snapshot?.displayFix;
     final next = _inventory.remove(line.itemId, count: line.count);
-    if (next == null) return;
+    if (character == null || next == null) return;
 
     setState(() => _inventory = next);
     await _saveInventory();
+
+    // No position, nowhere to put it. Better than inventing a place: a marker
+    // where the player never stood is a walk taken for nothing.
+    if (fix == null) return;
+
+    final store = DroppedStore(widget.session.db);
+    await store.drop(
+      character.profile.id,
+      DroppedItem(
+        id: 0,
+        itemId: line.itemId,
+        count: line.count,
+        condition: line.condition,
+        pagesTotal: line.pagesTotal,
+        pagesRead: line.pagesRead,
+        position: GeoPoint(fix.latitude, fix.longitude),
+        droppedAt: DateTime.now().toUtc(),
+      ),
+    );
+    await _reloadDropped();
+  }
+
+  Future<void> _reloadDropped() async {
+    final character = _character;
+    if (character == null) return;
+
+    final items = await DroppedStore(
+      widget.session.db,
+    ).load(character.profile.id, DateTime.now().toUtc());
+    if (!mounted) return;
+
+    setState(() => _dropped = items);
+  }
+
+  /// The pile at the player's feet (§4.8).
+  ///
+  /// Tighter than a place is searched from: a lootbox sits at a building's
+  /// recorded centre, but a dropped bag is where somebody was standing.
+  DroppedItem? _droppedInReach() {
+    final fix = _snapshot?.displayFix;
+    if (fix == null) return null;
+
+    final at = GeoPoint(fix.latitude, fix.longitude);
+    DroppedItem? best;
+    var bestDistance = kStillnessM;
+
+    for (final item in _dropped) {
+      final distance = item.position.distanceTo(at);
+      if (distance > bestDistance) continue;
+      best = item;
+      bestDistance = distance;
+    }
+    return best;
+  }
+
+  String? _labelFor(DroppedItem? item) {
+    final catalogue = _catalogue;
+    if (item == null || catalogue == null || !mounted) return null;
+
+    final definition = catalogue[item.itemId];
+    if (definition == null) return item.itemId;
+
+    final language = Localizations.localeOf(context).languageCode;
+    final name = definition.name.resolve(
+      language: language,
+      lookup: (_names ?? ItemNames.empty).forLanguage(language),
+    );
+    return item.count > 1 ? '$name ×${item.count}' : name;
+  }
+
+  /// Picks a pile back up, if it fits (§18.1a).
+  Future<void> _takeDropped(DroppedItem item) async {
+    final character = _character;
+    final catalogue = _catalogue;
+    if (character == null || catalogue == null) return;
+
+    final result = _inventory.add(
+      item.itemId,
+      catalogue,
+      body: character.body,
+      count: item.count,
+      condition: item.condition,
+      pagesTotal: item.pagesTotal,
+    );
+    if (!result.isAccepted && (result.acceptedCount ?? 0) == 0) {
+      if (mounted) _say(L10n.of(context).droppedNoRoom);
+      return;
+    }
+
+    setState(() => _inventory = result.inventory);
+    await _saveInventory();
+
+    // Removed only once it is in the pack. Deleting first and finding it did
+    // not fit would be the game destroying something on the player's behalf.
+    await DroppedStore(widget.session.db).take(item.id);
+    await _reloadDropped();
   }
 
   Future<void> _saveInventory() async {
@@ -841,6 +947,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     if (!mounted) return;
 
     setState(() => _boxes = boxes);
+    await _reloadDropped();
   }
 
   /// Puts loot on the map around wherever the player now is (§10).
@@ -890,6 +997,14 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
             at: box.position,
             label: box.name,
           ),
+
+      // §4.8: grey, and gone after a day.
+      for (final item in _dropped)
+        MapMarker(
+          id: 'dropped.${item.id}',
+          kind: MarkerKind.dropped,
+          at: item.position,
+        ),
     ];
   }
 
@@ -1361,6 +1476,11 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
                         onSearchArea: _startAreaSearch,
                         onSearchHere: _startObjectSearch,
                         onBreach: _startBreach,
+                        droppedLabel: _labelFor(_droppedInReach()),
+                        onTakeDropped: () {
+                          final item = _droppedInReach();
+                          if (item != null) unawaited(_takeDropped(item));
+                        },
                         onCancel: _cancelSearch,
                       );
                     },

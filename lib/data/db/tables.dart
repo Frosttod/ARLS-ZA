@@ -265,3 +265,37 @@ class LootBoxes extends Table {
     'UNIQUE (profile_id, poi_id)',
   ];
 }
+
+/// Items a player put down and may come back for (§4.8).
+///
+/// Kept apart from [InventoryLines] because they belong to a place rather than
+/// to a character's back, and apart from [LootBoxes] because a lootbox is
+/// somewhere the world put something and this is somewhere a person did.
+///
+/// Named for the ground rather than for the act, so drift's generated row
+/// class is `GroundItem` and does not collide with the game's own
+/// `DroppedItem`. Two types with one name in two libraries is a prefix in
+/// every file that touches either.
+class GroundItems extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get profileId => integer()();
+
+  TextColumn get itemId => text()();
+  IntColumn get count => integer().withDefault(const Constant(1))();
+
+  /// Per-piece state, exactly as the inventory keeps it: a dropped rifle is
+  /// still as worn as it was, and a part-read book keeps its place (§4.6.3).
+  RealColumn get condition => real().nullable()();
+  IntColumn get pagesTotal => integer().nullable()();
+  IntColumn get pagesRead => integer().withDefault(const Constant(0))();
+
+  RealColumn get latitude => real()();
+  RealColumn get longitude => real()();
+
+  DateTimeColumn get droppedAt => dateTime()();
+
+  @override
+  List<String> get customConstraints => [
+    'FOREIGN KEY (profile_id) REFERENCES profiles (id) ON DELETE CASCADE',
+  ];
+}

@@ -12,14 +12,14 @@ Każdy zamknięty etap dostaje sekcję **Dziennik wykonania** z decyzjami podję
 | 1 | Tryb deweloperski i symulator GPS | ✅ zamknięty | 2026-08-10 | `df54653` |
 | 2 | Postać i fizjologia | ✅ zamknięty | 2026-08-11 | `f2b1056`, `5555db2`, `2b0a37e`, `d869661` |
 | 3 | Mapa, GPS, bezpieczeństwo gracza | 🟡 13/13 zadań, po pierwszym spacerze | — | `f035626` … `43510ef` (15 commitów) |
-| 4 | Przedmioty, loot, przeszukanie | 🟡 9/11 zadań (4.1–4.9) | — | `2b1cb31` … |
+| 4 | Przedmioty, loot, przeszukanie | 🟡 10/11 zadań (4.1–4.10) | — | `2b1cb31` … |
 | 5 | Walka, przeciwnicy, hałas | ⬜ | — | — |
 | 6 | Ognisko z pełnym cyklem | ⬜ | — | — |
 | 7 | Audio pozycyjne i haptyka | ⬜ | — | — |
 | 8 | Schron, obóz, pętla dobowa | ⬜ | — | — |
 | 9 | Onboarding, dostępność, zgodność | ⬜ | — | — |
 
-**Metryki:** 719 testów · `flutter analyze` czysty · schemat bazy **v5** · release APK 89,5 MB bez devtools
+**Metryki:** 745 testów · `flutter analyze` czysty · schemat bazy **v7** · release APK 89,5 MB bez devtools
 
 ### Zablokowane na użytkowniku
 
@@ -355,7 +355,7 @@ Dwa wnioski na przyszłość:
 | 4.7 | ✅ Przeszukanie terenu: 45 s bezruchu, promień wg §10.2.2, punkty proceduralne widoczne dopiero po rozpoznaniu | §10.2 |
 | 4.8 | ✅ Przeszukanie obiektu: 30 / 90 / 180 s, przerwanie, loot trafia do ekwipunku, skrzynka pustoszeje | §19.3, §10.3.5 |
 | 4.9 | ✅ Przeszkody: drzwi, kłódka, szyba — trzy drogi (cicha, narzędziowa, siłowa), hałas wg §5.6.1, wyważone zostaje wyważone | §19.3 |
-| 4.10 | Porzucone przedmioty na mapie, 24 h, limit 50 znaczników | §4.8 |
+| 4.10 | ✅ Porzucone przedmioty na mapie: 24 h, limit 50 (najstarsze odpadają), stan i postęp lektury przetrwają, podniesienie z 15 m | §4.8 |
 | 4.11 | `notes.json` — notatki fabularne, podstawianie `{street}`/`{district}`/`{city}` z OSM | §19.1 |
 
 ⚠️ **Pułapka fleksyjna (polski):** zdania z placeholderem muszą być konstruowane tak, by nazwa stała w mianowniku („ulica {street}", nigdy „z {street}") — §19.1.1.

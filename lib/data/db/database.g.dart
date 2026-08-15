@@ -4262,6 +4262,603 @@ class LootBoxesCompanion extends UpdateCompanion<LootBoxe> {
   }
 }
 
+class $GroundItemsTable extends GroundItems
+    with TableInfo<$GroundItemsTable, GroundItem> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $GroundItemsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _profileIdMeta = const VerificationMeta(
+    'profileId',
+  );
+  @override
+  late final GeneratedColumn<int> profileId = GeneratedColumn<int>(
+    'profile_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _itemIdMeta = const VerificationMeta('itemId');
+  @override
+  late final GeneratedColumn<String> itemId = GeneratedColumn<String>(
+    'item_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _countMeta = const VerificationMeta('count');
+  @override
+  late final GeneratedColumn<int> count = GeneratedColumn<int>(
+    'count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _conditionMeta = const VerificationMeta(
+    'condition',
+  );
+  @override
+  late final GeneratedColumn<double> condition = GeneratedColumn<double>(
+    'condition',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _pagesTotalMeta = const VerificationMeta(
+    'pagesTotal',
+  );
+  @override
+  late final GeneratedColumn<int> pagesTotal = GeneratedColumn<int>(
+    'pages_total',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _pagesReadMeta = const VerificationMeta(
+    'pagesRead',
+  );
+  @override
+  late final GeneratedColumn<int> pagesRead = GeneratedColumn<int>(
+    'pages_read',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _latitudeMeta = const VerificationMeta(
+    'latitude',
+  );
+  @override
+  late final GeneratedColumn<double> latitude = GeneratedColumn<double>(
+    'latitude',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _longitudeMeta = const VerificationMeta(
+    'longitude',
+  );
+  @override
+  late final GeneratedColumn<double> longitude = GeneratedColumn<double>(
+    'longitude',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _droppedAtMeta = const VerificationMeta(
+    'droppedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> droppedAt = GeneratedColumn<DateTime>(
+    'dropped_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    profileId,
+    itemId,
+    count,
+    condition,
+    pagesTotal,
+    pagesRead,
+    latitude,
+    longitude,
+    droppedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'ground_items';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<GroundItem> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('profile_id')) {
+      context.handle(
+        _profileIdMeta,
+        profileId.isAcceptableOrUnknown(data['profile_id']!, _profileIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_profileIdMeta);
+    }
+    if (data.containsKey('item_id')) {
+      context.handle(
+        _itemIdMeta,
+        itemId.isAcceptableOrUnknown(data['item_id']!, _itemIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_itemIdMeta);
+    }
+    if (data.containsKey('count')) {
+      context.handle(
+        _countMeta,
+        count.isAcceptableOrUnknown(data['count']!, _countMeta),
+      );
+    }
+    if (data.containsKey('condition')) {
+      context.handle(
+        _conditionMeta,
+        condition.isAcceptableOrUnknown(data['condition']!, _conditionMeta),
+      );
+    }
+    if (data.containsKey('pages_total')) {
+      context.handle(
+        _pagesTotalMeta,
+        pagesTotal.isAcceptableOrUnknown(data['pages_total']!, _pagesTotalMeta),
+      );
+    }
+    if (data.containsKey('pages_read')) {
+      context.handle(
+        _pagesReadMeta,
+        pagesRead.isAcceptableOrUnknown(data['pages_read']!, _pagesReadMeta),
+      );
+    }
+    if (data.containsKey('latitude')) {
+      context.handle(
+        _latitudeMeta,
+        latitude.isAcceptableOrUnknown(data['latitude']!, _latitudeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_latitudeMeta);
+    }
+    if (data.containsKey('longitude')) {
+      context.handle(
+        _longitudeMeta,
+        longitude.isAcceptableOrUnknown(data['longitude']!, _longitudeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_longitudeMeta);
+    }
+    if (data.containsKey('dropped_at')) {
+      context.handle(
+        _droppedAtMeta,
+        droppedAt.isAcceptableOrUnknown(data['dropped_at']!, _droppedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_droppedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  GroundItem map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return GroundItem(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      profileId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}profile_id'],
+      )!,
+      itemId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}item_id'],
+      )!,
+      count: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}count'],
+      )!,
+      condition: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}condition'],
+      ),
+      pagesTotal: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}pages_total'],
+      ),
+      pagesRead: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}pages_read'],
+      )!,
+      latitude: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}latitude'],
+      )!,
+      longitude: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}longitude'],
+      )!,
+      droppedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}dropped_at'],
+      )!,
+    );
+  }
+
+  @override
+  $GroundItemsTable createAlias(String alias) {
+    return $GroundItemsTable(attachedDatabase, alias);
+  }
+}
+
+class GroundItem extends DataClass implements Insertable<GroundItem> {
+  final int id;
+  final int profileId;
+  final String itemId;
+  final int count;
+
+  /// Per-piece state, exactly as the inventory keeps it: a dropped rifle is
+  /// still as worn as it was, and a part-read book keeps its place (§4.6.3).
+  final double? condition;
+  final int? pagesTotal;
+  final int pagesRead;
+  final double latitude;
+  final double longitude;
+  final DateTime droppedAt;
+  const GroundItem({
+    required this.id,
+    required this.profileId,
+    required this.itemId,
+    required this.count,
+    this.condition,
+    this.pagesTotal,
+    required this.pagesRead,
+    required this.latitude,
+    required this.longitude,
+    required this.droppedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['profile_id'] = Variable<int>(profileId);
+    map['item_id'] = Variable<String>(itemId);
+    map['count'] = Variable<int>(count);
+    if (!nullToAbsent || condition != null) {
+      map['condition'] = Variable<double>(condition);
+    }
+    if (!nullToAbsent || pagesTotal != null) {
+      map['pages_total'] = Variable<int>(pagesTotal);
+    }
+    map['pages_read'] = Variable<int>(pagesRead);
+    map['latitude'] = Variable<double>(latitude);
+    map['longitude'] = Variable<double>(longitude);
+    map['dropped_at'] = Variable<DateTime>(droppedAt);
+    return map;
+  }
+
+  GroundItemsCompanion toCompanion(bool nullToAbsent) {
+    return GroundItemsCompanion(
+      id: Value(id),
+      profileId: Value(profileId),
+      itemId: Value(itemId),
+      count: Value(count),
+      condition: condition == null && nullToAbsent
+          ? const Value.absent()
+          : Value(condition),
+      pagesTotal: pagesTotal == null && nullToAbsent
+          ? const Value.absent()
+          : Value(pagesTotal),
+      pagesRead: Value(pagesRead),
+      latitude: Value(latitude),
+      longitude: Value(longitude),
+      droppedAt: Value(droppedAt),
+    );
+  }
+
+  factory GroundItem.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return GroundItem(
+      id: serializer.fromJson<int>(json['id']),
+      profileId: serializer.fromJson<int>(json['profileId']),
+      itemId: serializer.fromJson<String>(json['itemId']),
+      count: serializer.fromJson<int>(json['count']),
+      condition: serializer.fromJson<double?>(json['condition']),
+      pagesTotal: serializer.fromJson<int?>(json['pagesTotal']),
+      pagesRead: serializer.fromJson<int>(json['pagesRead']),
+      latitude: serializer.fromJson<double>(json['latitude']),
+      longitude: serializer.fromJson<double>(json['longitude']),
+      droppedAt: serializer.fromJson<DateTime>(json['droppedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'profileId': serializer.toJson<int>(profileId),
+      'itemId': serializer.toJson<String>(itemId),
+      'count': serializer.toJson<int>(count),
+      'condition': serializer.toJson<double?>(condition),
+      'pagesTotal': serializer.toJson<int?>(pagesTotal),
+      'pagesRead': serializer.toJson<int>(pagesRead),
+      'latitude': serializer.toJson<double>(latitude),
+      'longitude': serializer.toJson<double>(longitude),
+      'droppedAt': serializer.toJson<DateTime>(droppedAt),
+    };
+  }
+
+  GroundItem copyWith({
+    int? id,
+    int? profileId,
+    String? itemId,
+    int? count,
+    Value<double?> condition = const Value.absent(),
+    Value<int?> pagesTotal = const Value.absent(),
+    int? pagesRead,
+    double? latitude,
+    double? longitude,
+    DateTime? droppedAt,
+  }) => GroundItem(
+    id: id ?? this.id,
+    profileId: profileId ?? this.profileId,
+    itemId: itemId ?? this.itemId,
+    count: count ?? this.count,
+    condition: condition.present ? condition.value : this.condition,
+    pagesTotal: pagesTotal.present ? pagesTotal.value : this.pagesTotal,
+    pagesRead: pagesRead ?? this.pagesRead,
+    latitude: latitude ?? this.latitude,
+    longitude: longitude ?? this.longitude,
+    droppedAt: droppedAt ?? this.droppedAt,
+  );
+  GroundItem copyWithCompanion(GroundItemsCompanion data) {
+    return GroundItem(
+      id: data.id.present ? data.id.value : this.id,
+      profileId: data.profileId.present ? data.profileId.value : this.profileId,
+      itemId: data.itemId.present ? data.itemId.value : this.itemId,
+      count: data.count.present ? data.count.value : this.count,
+      condition: data.condition.present ? data.condition.value : this.condition,
+      pagesTotal: data.pagesTotal.present
+          ? data.pagesTotal.value
+          : this.pagesTotal,
+      pagesRead: data.pagesRead.present ? data.pagesRead.value : this.pagesRead,
+      latitude: data.latitude.present ? data.latitude.value : this.latitude,
+      longitude: data.longitude.present ? data.longitude.value : this.longitude,
+      droppedAt: data.droppedAt.present ? data.droppedAt.value : this.droppedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('GroundItem(')
+          ..write('id: $id, ')
+          ..write('profileId: $profileId, ')
+          ..write('itemId: $itemId, ')
+          ..write('count: $count, ')
+          ..write('condition: $condition, ')
+          ..write('pagesTotal: $pagesTotal, ')
+          ..write('pagesRead: $pagesRead, ')
+          ..write('latitude: $latitude, ')
+          ..write('longitude: $longitude, ')
+          ..write('droppedAt: $droppedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    profileId,
+    itemId,
+    count,
+    condition,
+    pagesTotal,
+    pagesRead,
+    latitude,
+    longitude,
+    droppedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is GroundItem &&
+          other.id == this.id &&
+          other.profileId == this.profileId &&
+          other.itemId == this.itemId &&
+          other.count == this.count &&
+          other.condition == this.condition &&
+          other.pagesTotal == this.pagesTotal &&
+          other.pagesRead == this.pagesRead &&
+          other.latitude == this.latitude &&
+          other.longitude == this.longitude &&
+          other.droppedAt == this.droppedAt);
+}
+
+class GroundItemsCompanion extends UpdateCompanion<GroundItem> {
+  final Value<int> id;
+  final Value<int> profileId;
+  final Value<String> itemId;
+  final Value<int> count;
+  final Value<double?> condition;
+  final Value<int?> pagesTotal;
+  final Value<int> pagesRead;
+  final Value<double> latitude;
+  final Value<double> longitude;
+  final Value<DateTime> droppedAt;
+  const GroundItemsCompanion({
+    this.id = const Value.absent(),
+    this.profileId = const Value.absent(),
+    this.itemId = const Value.absent(),
+    this.count = const Value.absent(),
+    this.condition = const Value.absent(),
+    this.pagesTotal = const Value.absent(),
+    this.pagesRead = const Value.absent(),
+    this.latitude = const Value.absent(),
+    this.longitude = const Value.absent(),
+    this.droppedAt = const Value.absent(),
+  });
+  GroundItemsCompanion.insert({
+    this.id = const Value.absent(),
+    required int profileId,
+    required String itemId,
+    this.count = const Value.absent(),
+    this.condition = const Value.absent(),
+    this.pagesTotal = const Value.absent(),
+    this.pagesRead = const Value.absent(),
+    required double latitude,
+    required double longitude,
+    required DateTime droppedAt,
+  }) : profileId = Value(profileId),
+       itemId = Value(itemId),
+       latitude = Value(latitude),
+       longitude = Value(longitude),
+       droppedAt = Value(droppedAt);
+  static Insertable<GroundItem> custom({
+    Expression<int>? id,
+    Expression<int>? profileId,
+    Expression<String>? itemId,
+    Expression<int>? count,
+    Expression<double>? condition,
+    Expression<int>? pagesTotal,
+    Expression<int>? pagesRead,
+    Expression<double>? latitude,
+    Expression<double>? longitude,
+    Expression<DateTime>? droppedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (profileId != null) 'profile_id': profileId,
+      if (itemId != null) 'item_id': itemId,
+      if (count != null) 'count': count,
+      if (condition != null) 'condition': condition,
+      if (pagesTotal != null) 'pages_total': pagesTotal,
+      if (pagesRead != null) 'pages_read': pagesRead,
+      if (latitude != null) 'latitude': latitude,
+      if (longitude != null) 'longitude': longitude,
+      if (droppedAt != null) 'dropped_at': droppedAt,
+    });
+  }
+
+  GroundItemsCompanion copyWith({
+    Value<int>? id,
+    Value<int>? profileId,
+    Value<String>? itemId,
+    Value<int>? count,
+    Value<double?>? condition,
+    Value<int?>? pagesTotal,
+    Value<int>? pagesRead,
+    Value<double>? latitude,
+    Value<double>? longitude,
+    Value<DateTime>? droppedAt,
+  }) {
+    return GroundItemsCompanion(
+      id: id ?? this.id,
+      profileId: profileId ?? this.profileId,
+      itemId: itemId ?? this.itemId,
+      count: count ?? this.count,
+      condition: condition ?? this.condition,
+      pagesTotal: pagesTotal ?? this.pagesTotal,
+      pagesRead: pagesRead ?? this.pagesRead,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+      droppedAt: droppedAt ?? this.droppedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (profileId.present) {
+      map['profile_id'] = Variable<int>(profileId.value);
+    }
+    if (itemId.present) {
+      map['item_id'] = Variable<String>(itemId.value);
+    }
+    if (count.present) {
+      map['count'] = Variable<int>(count.value);
+    }
+    if (condition.present) {
+      map['condition'] = Variable<double>(condition.value);
+    }
+    if (pagesTotal.present) {
+      map['pages_total'] = Variable<int>(pagesTotal.value);
+    }
+    if (pagesRead.present) {
+      map['pages_read'] = Variable<int>(pagesRead.value);
+    }
+    if (latitude.present) {
+      map['latitude'] = Variable<double>(latitude.value);
+    }
+    if (longitude.present) {
+      map['longitude'] = Variable<double>(longitude.value);
+    }
+    if (droppedAt.present) {
+      map['dropped_at'] = Variable<DateTime>(droppedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('GroundItemsCompanion(')
+          ..write('id: $id, ')
+          ..write('profileId: $profileId, ')
+          ..write('itemId: $itemId, ')
+          ..write('count: $count, ')
+          ..write('condition: $condition, ')
+          ..write('pagesTotal: $pagesTotal, ')
+          ..write('pagesRead: $pagesRead, ')
+          ..write('latitude: $latitude, ')
+          ..write('longitude: $longitude, ')
+          ..write('droppedAt: $droppedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$SaveDatabase extends GeneratedDatabase {
   _$SaveDatabase(QueryExecutor e) : super(e);
   $SaveDatabaseManager get managers => $SaveDatabaseManager(this);
@@ -4277,6 +4874,7 @@ abstract class _$SaveDatabase extends GeneratedDatabase {
   );
   late final $InventoryLinesTable inventoryLines = $InventoryLinesTable(this);
   late final $LootBoxesTable lootBoxes = $LootBoxesTable(this);
+  late final $GroundItemsTable groundItems = $GroundItemsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -4290,6 +4888,7 @@ abstract class _$SaveDatabase extends GeneratedDatabase {
     snapshotRecords,
     inventoryLines,
     lootBoxes,
+    groundItems,
   ];
   @override
   DriftDatabaseOptions get options =>
@@ -6376,6 +6975,297 @@ typedef $$LootBoxesTableProcessedTableManager =
       LootBoxe,
       PrefetchHooks Function()
     >;
+typedef $$GroundItemsTableCreateCompanionBuilder =
+    GroundItemsCompanion Function({
+      Value<int> id,
+      required int profileId,
+      required String itemId,
+      Value<int> count,
+      Value<double?> condition,
+      Value<int?> pagesTotal,
+      Value<int> pagesRead,
+      required double latitude,
+      required double longitude,
+      required DateTime droppedAt,
+    });
+typedef $$GroundItemsTableUpdateCompanionBuilder =
+    GroundItemsCompanion Function({
+      Value<int> id,
+      Value<int> profileId,
+      Value<String> itemId,
+      Value<int> count,
+      Value<double?> condition,
+      Value<int?> pagesTotal,
+      Value<int> pagesRead,
+      Value<double> latitude,
+      Value<double> longitude,
+      Value<DateTime> droppedAt,
+    });
+
+class $$GroundItemsTableFilterComposer
+    extends Composer<_$SaveDatabase, $GroundItemsTable> {
+  $$GroundItemsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get profileId => $composableBuilder(
+    column: $table.profileId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get itemId => $composableBuilder(
+    column: $table.itemId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get count => $composableBuilder(
+    column: $table.count,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get condition => $composableBuilder(
+    column: $table.condition,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get pagesTotal => $composableBuilder(
+    column: $table.pagesTotal,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get pagesRead => $composableBuilder(
+    column: $table.pagesRead,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get latitude => $composableBuilder(
+    column: $table.latitude,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get longitude => $composableBuilder(
+    column: $table.longitude,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get droppedAt => $composableBuilder(
+    column: $table.droppedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$GroundItemsTableOrderingComposer
+    extends Composer<_$SaveDatabase, $GroundItemsTable> {
+  $$GroundItemsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get profileId => $composableBuilder(
+    column: $table.profileId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get itemId => $composableBuilder(
+    column: $table.itemId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get count => $composableBuilder(
+    column: $table.count,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get condition => $composableBuilder(
+    column: $table.condition,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get pagesTotal => $composableBuilder(
+    column: $table.pagesTotal,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get pagesRead => $composableBuilder(
+    column: $table.pagesRead,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get latitude => $composableBuilder(
+    column: $table.latitude,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get longitude => $composableBuilder(
+    column: $table.longitude,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get droppedAt => $composableBuilder(
+    column: $table.droppedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$GroundItemsTableAnnotationComposer
+    extends Composer<_$SaveDatabase, $GroundItemsTable> {
+  $$GroundItemsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get profileId =>
+      $composableBuilder(column: $table.profileId, builder: (column) => column);
+
+  GeneratedColumn<String> get itemId =>
+      $composableBuilder(column: $table.itemId, builder: (column) => column);
+
+  GeneratedColumn<int> get count =>
+      $composableBuilder(column: $table.count, builder: (column) => column);
+
+  GeneratedColumn<double> get condition =>
+      $composableBuilder(column: $table.condition, builder: (column) => column);
+
+  GeneratedColumn<int> get pagesTotal => $composableBuilder(
+    column: $table.pagesTotal,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get pagesRead =>
+      $composableBuilder(column: $table.pagesRead, builder: (column) => column);
+
+  GeneratedColumn<double> get latitude =>
+      $composableBuilder(column: $table.latitude, builder: (column) => column);
+
+  GeneratedColumn<double> get longitude =>
+      $composableBuilder(column: $table.longitude, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get droppedAt =>
+      $composableBuilder(column: $table.droppedAt, builder: (column) => column);
+}
+
+class $$GroundItemsTableTableManager
+    extends
+        RootTableManager<
+          _$SaveDatabase,
+          $GroundItemsTable,
+          GroundItem,
+          $$GroundItemsTableFilterComposer,
+          $$GroundItemsTableOrderingComposer,
+          $$GroundItemsTableAnnotationComposer,
+          $$GroundItemsTableCreateCompanionBuilder,
+          $$GroundItemsTableUpdateCompanionBuilder,
+          (
+            GroundItem,
+            BaseReferences<_$SaveDatabase, $GroundItemsTable, GroundItem>,
+          ),
+          GroundItem,
+          PrefetchHooks Function()
+        > {
+  $$GroundItemsTableTableManager(_$SaveDatabase db, $GroundItemsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$GroundItemsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$GroundItemsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$GroundItemsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> profileId = const Value.absent(),
+                Value<String> itemId = const Value.absent(),
+                Value<int> count = const Value.absent(),
+                Value<double?> condition = const Value.absent(),
+                Value<int?> pagesTotal = const Value.absent(),
+                Value<int> pagesRead = const Value.absent(),
+                Value<double> latitude = const Value.absent(),
+                Value<double> longitude = const Value.absent(),
+                Value<DateTime> droppedAt = const Value.absent(),
+              }) => GroundItemsCompanion(
+                id: id,
+                profileId: profileId,
+                itemId: itemId,
+                count: count,
+                condition: condition,
+                pagesTotal: pagesTotal,
+                pagesRead: pagesRead,
+                latitude: latitude,
+                longitude: longitude,
+                droppedAt: droppedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int profileId,
+                required String itemId,
+                Value<int> count = const Value.absent(),
+                Value<double?> condition = const Value.absent(),
+                Value<int?> pagesTotal = const Value.absent(),
+                Value<int> pagesRead = const Value.absent(),
+                required double latitude,
+                required double longitude,
+                required DateTime droppedAt,
+              }) => GroundItemsCompanion.insert(
+                id: id,
+                profileId: profileId,
+                itemId: itemId,
+                count: count,
+                condition: condition,
+                pagesTotal: pagesTotal,
+                pagesRead: pagesRead,
+                latitude: latitude,
+                longitude: longitude,
+                droppedAt: droppedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$GroundItemsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$SaveDatabase,
+      $GroundItemsTable,
+      GroundItem,
+      $$GroundItemsTableFilterComposer,
+      $$GroundItemsTableOrderingComposer,
+      $$GroundItemsTableAnnotationComposer,
+      $$GroundItemsTableCreateCompanionBuilder,
+      $$GroundItemsTableUpdateCompanionBuilder,
+      (
+        GroundItem,
+        BaseReferences<_$SaveDatabase, $GroundItemsTable, GroundItem>,
+      ),
+      GroundItem,
+      PrefetchHooks Function()
+    >;
 
 class $SaveDatabaseManager {
   final _$SaveDatabase _db;
@@ -6396,4 +7286,6 @@ class $SaveDatabaseManager {
       $$InventoryLinesTableTableManager(_db, _db.inventoryLines);
   $$LootBoxesTableTableManager get lootBoxes =>
       $$LootBoxesTableTableManager(_db, _db.lootBoxes);
+  $$GroundItemsTableTableManager get groundItems =>
+      $$GroundItemsTableTableManager(_db, _db.groundItems);
 }

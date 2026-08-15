@@ -1159,6 +1159,30 @@ abstract class L10n {
   /// **'Between 35 and 110 bpm'**
   String get errRestingHrRange;
 
+  /// No description provided for @droppedHere.
+  ///
+  /// In en, this message translates to:
+  /// **'On the ground'**
+  String get droppedHere;
+
+  /// No description provided for @droppedTake.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick up'**
+  String get droppedTake;
+
+  /// No description provided for @droppedExpires.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours} h left'**
+  String droppedExpires(int hours);
+
+  /// No description provided for @droppedNoRoom.
+  ///
+  /// In en, this message translates to:
+  /// **'No room in the pack.'**
+  String get droppedNoRoom;
+
   /// No description provided for @inventoryTitle.
   ///
   /// In en, this message translates to:

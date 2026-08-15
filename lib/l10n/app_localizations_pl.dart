@@ -604,6 +604,20 @@ class L10nPl extends L10n {
   String get errRestingHrRange => 'Od 35 do 110 uderzeń na minutę';
 
   @override
+  String get droppedHere => 'Na ziemi';
+
+  @override
+  String get droppedTake => 'Podnieś';
+
+  @override
+  String droppedExpires(int hours) {
+    return 'zostało $hours h';
+  }
+
+  @override
+  String get droppedNoRoom => 'Nie mieści się w plecaku.';
+
+  @override
   String get inventoryTitle => 'Ekwipunek';
 
   @override

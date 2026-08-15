@@ -601,6 +601,20 @@ class L10nEn extends L10n {
   String get errRestingHrRange => 'Between 35 and 110 bpm';
 
   @override
+  String get droppedHere => 'On the ground';
+
+  @override
+  String get droppedTake => 'Pick up';
+
+  @override
+  String droppedExpires(int hours) {
+    return '$hours h left';
+  }
+
+  @override
+  String get droppedNoRoom => 'No room in the pack.';
+
+  @override
   String get inventoryTitle => 'Inventory';
 
   @override
