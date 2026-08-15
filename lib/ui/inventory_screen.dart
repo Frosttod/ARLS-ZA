@@ -164,9 +164,12 @@ class InventoryScreen extends StatelessWidget {
               colours: colours,
             )
           else
-            for (final line in _sorted(inventory.carried))
+            // Keyed by position, not by item id: two knives at different
+            // conditions are two rows with one id, and a list cannot hold two
+            // children under one key.
+            for (final (index, line) in _sorted(inventory.carried).indexed)
               _ItemRow(
-                key: ValueKey('${line.itemId}.${line.noteId ?? ''}'),
+                key: ValueKey('$index.${line.itemId}'),
                 line: line,
                 definition: catalogue[line.itemId]!,
                 name: _nameOf(line.itemId, language),

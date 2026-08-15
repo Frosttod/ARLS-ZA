@@ -419,4 +419,109 @@ void main() {
     // by mass alone and would need 624 l.
     expect(const StoreLimits(125).capacityL, 375);
   });
+
+  group('two of a kind are two different things to own', () {
+    // A knife at 30% and a knife at 80% share an item id and nothing else that
+    // matters. Everything that acts on "the knife" has to act on the one that
+    // was pointed at.
+    Inventory pair() {
+      const sharp = CarriedItem(itemId: 'melee_knife', condition: 80);
+      const blunt = CarriedItem(itemId: 'melee_knife', condition: 30);
+      return const Inventory(carried: [sharp, blunt]);
+    }
+
+    test('the copy that was dropped is the copy that leaves', () {
+      final inventory = pair();
+      final blunt = inventory.carried[1];
+
+      final after = inventory.removeLine(blunt)!;
+
+      expect(after.carried.single.condition, 80);
+    });
+
+    test('and the other one, when it is the other one', () {
+      final inventory = pair();
+      final sharp = inventory.carried[0];
+
+      final after = inventory.removeLine(sharp)!;
+
+      expect(after.carried.single.condition, 30);
+    });
+
+    test('a copy that is no longer there still drops something', () {
+      // A stale tap from a screen built before the last change. Better one
+      // knife gone than a button that silently does nothing.
+      const gone = CarriedItem(itemId: 'melee_knife', condition: 55);
+
+      expect(pair().removeLine(gone)!.carried, hasLength(1));
+    });
+
+    test('dropping more of a copy than there is drops nothing', () {
+      final inventory = const Inventory()
+          .withPack('pack_trekking')
+          .add('mat_wood', catalogue, body: body, count: 2)
+          .inventory;
+
+      expect(inventory.removeLine(inventory.carried.first, count: 5), isNull);
+    });
+
+    test('part of a stack leaves the rest of that stack', () {
+      final inventory = const Inventory()
+          .withPack('pack_trekking')
+          .add('mat_wood', catalogue, body: body, count: 4)
+          .inventory;
+
+      final after = inventory.removeLine(inventory.carried.first, count: 3)!;
+
+      expect(after.carried.single.count, 1);
+    });
+  });
+
+  group('what is put on is the piece that was put on', () {
+    test('a worn-out vest does not become a new one by being worn', () {
+      // Found on a phone: wearing the 40% vest produced a vest with no
+      // condition at all, which is the game quietly repairing kit.
+      const battered = CarriedItem(itemId: 'armor_vest_soft', condition: 40);
+
+      final after = const Inventory(
+        carried: [battered],
+      ).removeLine(battered)!.wearLine(battered, catalogue);
+
+      expect(after.worn.single.condition, 40);
+    });
+
+    test('a book keeps its own pages when it goes on the body', () {
+      const copy = CarriedItem(
+        itemId: 'armor_vest_soft',
+        condition: 62,
+        count: 1,
+      );
+
+      expect(const Inventory().wearLine(copy, catalogue).worn.single.condition,
+          62);
+    });
+
+    test('only one piece of a stack is put on', () {
+      const two = CarriedItem(itemId: 'armor_vest_soft', count: 2);
+
+      expect(const Inventory().wearLine(two, catalogue).worn.single.count, 1);
+    });
+
+    test('wearing by id still works, for anything that has no copy in hand', () {
+      expect(
+        const Inventory().wear('armor_vest_soft', catalogue).worn.single.itemId,
+        'armor_vest_soft',
+      );
+    });
+
+    test('the displaced piece keeps its own condition too', () {
+      const old = CarriedItem(itemId: 'armor_vest_soft', condition: 25);
+      const found = CarriedItem(itemId: 'armor_vest_soft', condition: 95);
+
+      final after = const Inventory(worn: [old]).wearLine(found, catalogue);
+
+      expect(after.worn.single.condition, 95);
+      expect(after.carried.single.condition, 25);
+    });
+  });
 }

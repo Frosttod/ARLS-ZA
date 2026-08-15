@@ -1483,6 +1483,12 @@ abstract class L10n {
   /// **'Bulk'**
   String get statBulk;
 
+  /// How worn one copy of an item is, in percent.
+  ///
+  /// In en, this message translates to:
+  /// **'Condition'**
+  String get statCondition;
+
   /// No description provided for @itemDetails.
   ///
   /// In en, this message translates to:

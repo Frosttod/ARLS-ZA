@@ -769,6 +769,9 @@ class L10nEn extends L10n {
   String get statBulk => 'Bulk';
 
   @override
+  String get statCondition => 'Condition';
+
+  @override
   String get itemDetails => 'Details';
 
   @override

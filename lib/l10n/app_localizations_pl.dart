@@ -772,6 +772,9 @@ class L10nPl extends L10n {
   String get statBulk => 'Objętość';
 
   @override
+  String get statCondition => 'Stan';
+
+  @override
   String get itemDetails => 'Szczegóły';
 
   @override

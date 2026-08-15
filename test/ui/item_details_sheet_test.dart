@@ -24,11 +24,13 @@ void main() {
 
   Future<void> open(
     WidgetTester tester, {
-    required String itemId,
+    String? itemId,
+    CarriedItem? line,
     required Inventory inventory,
     VoidCallback? onWear,
     String? wearLabel,
   }) async {
+    final entry = line ?? CarriedItem(itemId: itemId!);
     await tester.pumpWidget(
       MaterialApp(
         locale: const Locale('pl'),
@@ -43,7 +45,7 @@ void main() {
           builder: (context) => TextButton(
             onPressed: () => showItemDetails(
               context,
-              item: catalogue[itemId]!,
+              line: entry,
               inventory: inventory,
               catalogue: catalogue,
               names: names,
@@ -211,5 +213,70 @@ void main() {
     );
 
     expect(find.text('Załóż'), findsNothing);
+  });
+
+  group('two copies of one vest, which is the case a player hits', () {
+    // Found on a phone: "found a new vest, I have an old one" is usually the
+    // same model twice, and comparing an item with itself was refused, so the
+    // screen said nothing at all.
+    const battered = CarriedItem(itemId: 'armor_vest_soft', condition: 40);
+    const found = CarriedItem(itemId: 'armor_vest_soft', condition: 90);
+
+    testWidgets('the worn copy is what the found one is measured against', (
+      tester,
+    ) async {
+      await open(
+        tester,
+        line: found,
+        inventory: const Inventory(worn: [battered], carried: [found]),
+      );
+
+      expect(find.textContaining('Porównanie z'), findsOneWidget);
+      expect(find.textContaining('na sobie'), findsOneWidget);
+    });
+
+    testWidgets('and the difference between them is how worn each is', (
+      tester,
+    ) async {
+      await open(
+        tester,
+        line: found,
+        inventory: const Inventory(worn: [battered], carried: [found]),
+      );
+
+      expect(find.text('Stan'), findsOneWidget);
+      expect(markOn(tester, 'Stan'), Icons.add);
+    });
+
+    testWidgets('the battered one, held against the good one, reads as a loss',
+        (tester) async {
+      await open(
+        tester,
+        line: battered,
+        inventory: const Inventory(worn: [found], carried: [battered]),
+      );
+
+      expect(markOn(tester, 'Stan'), Icons.remove);
+    });
+
+    testWidgets('a copy is never compared with itself', (tester) async {
+      await open(
+        tester,
+        line: found,
+        inventory: const Inventory(carried: [found]),
+      );
+
+      expect(find.textContaining('Porównanie z'), findsNothing);
+    });
+
+    testWidgets('two in the pack compare with each other', (tester) async {
+      await open(
+        tester,
+        line: found,
+        inventory: const Inventory(carried: [found, battered]),
+      );
+
+      expect(find.textContaining('w plecaku'), findsOneWidget);
+    });
   });
 }

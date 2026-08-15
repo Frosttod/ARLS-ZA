@@ -43,7 +43,7 @@ class ItemStat {
 /// Mass and bulk come last on purpose. They are the same two numbers for every
 /// item and they are already on the row the player tapped; what they came here
 /// for is what makes this vest different from that one.
-List<ItemStat> statsOf(ItemDefinition item) {
+List<ItemStat> statsOf(ItemDefinition item, {double? condition}) {
   double? prop(String name) => (item.props[name] as num?)?.toDouble();
 
   ItemStat? stat(
@@ -124,6 +124,15 @@ List<ItemStat> statsOf(ItemDefinition item) {
   };
 
   return [
+    // How worn this copy is comes first: with two of a kind in the pack it is
+    // often the only reading that differs, and it is the whole decision.
+    if (condition != null)
+      ItemStat(
+        key: 'condition',
+        value: condition,
+        unit: '%',
+        higherIsBetter: true,
+      ),
     for (final reading in specific) ?reading,
     ItemStat(
       key: 'mass',
@@ -147,8 +156,11 @@ List<ItemStat> statsOf(ItemDefinition item) {
 /// The same slot for anything worn — a vest against a vest, not a vest against
 /// a coat — and the same kind for everything else, which is what a player
 /// means by "should I swap this".
+///
+/// Two copies of one item *do* compare: found kit is worn kit, and 90% against
+/// 40% is a real difference. Telling one copy from another is the caller's
+/// job, since two entries of the same id are two different things to own.
 bool comparable(ItemDefinition a, ItemDefinition b) {
-  if (a.id == b.id) return false;
   if (a.kind != b.kind) return false;
 
   final slotA = a.props['slot'];

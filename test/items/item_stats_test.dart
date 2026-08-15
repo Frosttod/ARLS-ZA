@@ -150,8 +150,11 @@ void main() {
       expect(comparable(item('melee_knife'), item('food_canned_meat')), isFalse);
     });
 
-    test('nothing is compared with itself', () {
-      expect(comparable(item('melee_knife'), item('melee_knife')), isFalse);
+    test('two copies of one item compare — 90% against 40% is the whole '
+        'decision', () {
+      // Which copy is which is the caller's job; two entries of one id are two
+      // different things to own.
+      expect(comparable(item('melee_knife'), item('melee_knife')), isTrue);
     });
 
     test('two of a kind with no slot at all still compare', () {
@@ -161,6 +164,27 @@ void main() {
 
       expect(knives.length, greaterThan(1));
       expect(comparable(knives[0], knives[1]), isTrue);
+    });
+  });
+
+  group('how worn one copy is', () {
+    test('a condition is a reading like any other, and higher is better', () {
+      final stats = statsOf(item('armor_vest_soft'), condition: 40);
+      final worn = stats.firstWhere((stat) => stat.key == 'condition');
+
+      expect(worn.value, 40);
+      expect(worn.higherIsBetter, isTrue);
+    });
+
+    test('it comes first, being what usually differs between two copies', () {
+      expect(statsOf(item('melee_knife'), condition: 80).first.key,
+          'condition');
+    });
+
+    test('an item with no condition of its own shows none', () {
+      final keys = statsOf(item('mat_wood')).map((stat) => stat.key);
+
+      expect(keys, isNot(contains('condition')));
     });
   });
 

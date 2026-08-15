@@ -289,6 +289,28 @@ class Inventory {
     return Inventory(carried: lines, worn: worn, packId: packId);
   }
 
+  /// Removes pieces of one particular entry.
+  ///
+  /// Which entry matters as soon as a player carries two of a kind: a knife at
+  /// 30% and a knife at 80% are one item id and two different things to own,
+  /// and dropping "the knife" has to drop the one that was pointed at. Falls
+  /// back to [remove] for a line that is no longer in the pack, so a stale tap
+  /// still does something sensible rather than nothing.
+  Inventory? removeLine(CarriedItem line, {int count = 1}) {
+    final index = carried.indexWhere((entry) => identical(entry, line));
+    if (index < 0) return remove(line.itemId, count: count);
+    if (carried[index].count < count) return null;
+
+    final lines = [...carried];
+    if (lines[index].count == count) {
+      lines.removeAt(index);
+    } else {
+      lines[index] = lines[index].copyWith(count: lines[index].count - count);
+    }
+
+    return Inventory(carried: lines, worn: worn, packId: packId);
+  }
+
   /// Removes pieces of an item. Returns the inventory unchanged if there were
   /// not that many — dropping what you do not have is a bug, not a partial.
   Inventory? remove(String itemId, {int count = 1}) {
@@ -333,13 +355,23 @@ class Inventory {
   /// [catalogue] is optional only so a test can dress a character without one;
   /// without it nothing knows what a garment covers and the piece is simply
   /// added.
-  Inventory wear(String itemId, [ItemCatalogue? catalogue]) {
+  Inventory wear(String itemId, [ItemCatalogue? catalogue]) =>
+      wearLine(CarriedItem(itemId: itemId), catalogue);
+
+  /// Puts on one particular piece, keeping what that piece is.
+  ///
+  /// A vest worn out to 40% does not become a new vest by being put on, and
+  /// with two of a kind in the pack the difference between the copies is the
+  /// entire decision (§4.4).
+  Inventory wearLine(CarriedItem line, [ItemCatalogue? catalogue]) {
+    final itemId = line.itemId;
+    final piece = line.copyWith(count: 1);
     final slot = catalogue?[itemId]?.props['slot'];
 
     if (slot == null) {
       return Inventory(
         carried: carried,
-        worn: [...worn, CarriedItem(itemId: itemId)],
+        worn: [...worn, piece],
         packId: packId,
       );
     }
@@ -359,7 +391,7 @@ class Inventory {
     // the state that leaves.
     return Inventory(
       carried: [...carried, ...displaced],
-      worn: [...remaining, CarriedItem(itemId: itemId)],
+      worn: [...remaining, piece],
       packId: packId,
     );
   }

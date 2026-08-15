@@ -826,11 +826,13 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final wearable =
         BodySlot.fromWire(item.props['slot'] as String?) != null ||
         item.kind == ItemKind.backpack;
-    final worn = _inventory.value.worn.any((line) => line.itemId == item.id);
+    // This copy, not any copy with that id: the one already on the body is not
+    // put on again, but its twin in the pack still can be.
+    final worn = _inventory.value.worn.any((other) => identical(other, line));
 
     await showItemDetails(
       context,
-      item: item,
+      line: line,
       inventory: _inventory.value,
       catalogue: catalogue,
       names: _names ?? ItemNames.empty,
@@ -889,7 +891,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   Future<void> _drop(CarriedItem line, int count) async {
     final character = _character;
     final fix = _snapshot?.displayFix;
-    final next = _inventory.value.remove(line.itemId, count: count);
+    // The copy that was pointed at, not any copy with that id: two knives at
+    // different conditions are two different things to own.
+    final next = _inventory.value.removeLine(line, count: count);
     if (character == null || next == null) return;
 
     _inventory.value = next;
@@ -928,7 +932,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final definition = catalogue[line.itemId];
     if (definition == null) return;
 
-    var next = _inventory.value.remove(line.itemId, count: 1);
+    var next = _inventory.value.removeLine(line);
     if (next == null) return;
 
     if (definition.kind == ItemKind.backpack) {
@@ -942,7 +946,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
             .inventory;
       }
     } else {
-      next = next.wear(line.itemId, catalogue);
+      next = next.wearLine(line, catalogue);
     }
 
     _inventory.value = next;

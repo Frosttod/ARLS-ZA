@@ -10,6 +10,10 @@
 /// The comparison is against what is *worn* in that slot, since that is the
 /// thing the new one would displace. Where nothing is worn there is nothing to
 /// compare and the sheet is simply the item.
+///
+/// It works per copy rather than per item id: two soft vests, one at 90% and
+/// one at 40%, are two different things to own and the second one is the case
+/// a player actually hits.
 library;
 
 import 'package:flutter/material.dart';
@@ -24,7 +28,7 @@ import 'hud.dart' show HudColors;
 
 Future<void> showItemDetails(
   BuildContext context, {
-  required ItemDefinition item,
+  required CarriedItem line,
   required Inventory inventory,
   required ItemCatalogue catalogue,
   required ItemNames names,
@@ -32,6 +36,8 @@ Future<void> showItemDetails(
   String? wearLabel,
 }) {
   final language = Localizations.localeOf(context).languageCode;
+  final item = catalogue[line.itemId];
+  if (item == null) return Future<void>.value();
 
   String nameOf(ItemDefinition definition) => definition.name.resolve(
     language: language,
@@ -39,12 +45,8 @@ Future<void> showItemDetails(
   );
 
   // What this would replace: whatever occupies the same slot on the body.
-  final worn = inventory.worn
-      .map((line) => catalogue[line.itemId])
-      .nonNulls
-      .where((other) => comparable(item, other))
-      .firstOrNull;
-  final against = worn ?? _packRival(item, inventory, catalogue);
+  final worn = _rival(line, item, inventory.worn, catalogue);
+  final against = worn ?? _rival(line, item, inventory.carried, catalogue);
 
   return showModalBottomSheet<void>(
     context: context,
@@ -53,10 +55,13 @@ Future<void> showItemDetails(
       final colours = HudColors.of(context);
       final l10n = L10n.of(context);
 
-      final mine = statsOf(item);
+      final mine = statsOf(item, condition: line.condition);
       final theirs = against == null
           ? const <ItemStat>[]
-          : statsOf(against);
+          : statsOf(
+              catalogue[against.itemId]!,
+              condition: against.condition,
+            );
 
       return SafeArea(
         child: Padding(
@@ -76,7 +81,8 @@ Future<void> showItemDetails(
               if (against != null) ...[
                 const SizedBox(height: 2),
                 Text(
-                  '${l10n.itemCompare}: ${nameOf(against)} '
+                  '${l10n.itemCompare}: '
+                  '${nameOf(catalogue[against.itemId]!)} '
                   '(${worn != null ? l10n.itemWorn : l10n.itemCarried})',
                   style: TextStyle(fontSize: 11, color: colours.muted),
                 ),
@@ -125,20 +131,25 @@ Future<void> showItemDetails(
   );
 }
 
-/// The other one in the pack, when nothing of the sort is being worn.
+/// The copy this one would be swapped for, out of [among].
 ///
-/// Two spare vests in a bag is still a choice worth laying out, and it is the
-/// case a player hits first: they find the new one before they take the old
-/// one off.
-ItemDefinition? _packRival(
+/// Never the copy being looked at, which is what makes this per entry rather
+/// than per item id: two spare vests in a bag are a choice worth laying out,
+/// and that is the case a player hits first — they find the new one before
+/// they take the old one off.
+CarriedItem? _rival(
+  CarriedItem line,
   ItemDefinition item,
-  Inventory inventory,
+  List<CarriedItem> among,
   ItemCatalogue catalogue,
-) => inventory.carried
-    .map((line) => catalogue[line.itemId])
-    .nonNulls
-    .where((other) => comparable(item, other))
-    .firstOrNull;
+) {
+  for (final other in among) {
+    if (identical(other, line)) continue;
+    final definition = catalogue[other.itemId];
+    if (definition != null && comparable(item, definition)) return other;
+  }
+  return null;
+}
 
 class _StatRow extends StatelessWidget {
   const _StatRow({
@@ -219,6 +230,7 @@ class _StatRow extends StatelessWidget {
 }
 
 String _statLabel(L10n l10n, String key) => switch (key) {
+  'condition' => l10n.statCondition,
   'energy' => l10n.statEnergy,
   'moa' => l10n.statMoa,
   'magazine' => l10n.statMagazine,

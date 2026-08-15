@@ -327,6 +327,8 @@
   "statSearchBonus": "Search radius",
   "statMass": "Mass",
   "statBulk": "Bulk",
+  "statCondition": "Condition",
+  "@statCondition": {"description": "How worn one copy of an item is, in percent."},
   "itemDetails": "Details",
   "itemCompare": "Compared with",
   "itemCarried": "carried",

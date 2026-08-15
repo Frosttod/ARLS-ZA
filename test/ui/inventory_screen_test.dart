@@ -493,4 +493,99 @@ void main() {
       expect(asked, 'armor_vest_soft');
     });
   });
+
+  group('two of a kind in one pack (§4.4)', () {
+    // Found on a phone, twice over: a second vest crashed the screen outright
+    // with 'child == null || indexOf(child) > index', because both rows were
+    // keyed by item id and a list cannot hold two children under one key.
+    final duplicates = const Inventory(
+      packId: 'pack_daypack',
+      carried: [
+        CarriedItem(itemId: 'armor_vest_soft', condition: 90),
+        CarriedItem(itemId: 'armor_vest_soft', condition: 40),
+        CarriedItem(itemId: 'melee_knife', condition: 80),
+        CarriedItem(itemId: 'melee_knife', condition: 30),
+      ],
+    );
+
+    testWidgets('both copies are on the screen at once', (tester) async {
+      await pump(tester, duplicates);
+
+      await reveal(tester, find.text('Kamizelka kuloodporna'));
+      expect(find.text('Kamizelka kuloodporna'), findsNWidgets(2));
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('and each says how worn it is', (tester) async {
+      await pump(tester, duplicates);
+
+      await reveal(tester, find.textContaining('90%'));
+      expect(find.textContaining('90%'), findsOneWidget);
+      expect(find.textContaining('40%'), findsOneWidget);
+    });
+
+    testWidgets('dropping one leaves the other standing', (tester) async {
+      final inventory = ValueNotifier(duplicates);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: const Locale('pl'),
+          localizationsDelegates: const [
+            L10n.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: L10n.supportedLocales,
+          home: InventoryScreen(
+            inventory: inventory,
+            catalogue: catalogue,
+            names: names,
+            body: body,
+            onDrop: (line, count) =>
+                inventory.value = inventory.value.removeLine(
+                  line,
+                  count: count,
+                )!,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tapInPack(tester, find.text('Wyrzuć').first);
+
+      expect(tester.takeException(), isNull);
+      expect(inventory.value.carried, hasLength(3));
+    });
+
+    testWidgets('the copy that was tapped is the copy that goes', (
+      tester,
+    ) async {
+      // Dropping "the vest" when there are two is how a player loses the good
+      // one by pointing at the ruined one.
+      CarriedItem? dropped;
+      await pump(tester, duplicates, onDrop: (line, _) => dropped = line);
+
+      await reveal(tester, find.textContaining('40%'));
+      final subtitle = tester.getBottomLeft(find.textContaining('40%')).dy;
+
+      // The drop button belonging to that row: the first one under its
+      // subtitle.
+      final buttons = find.text('Wyrzuć').evaluate().toList()
+        ..sort((a, b) {
+          final byA = tester.getTopLeft(find.byWidget(a.widget)).dy;
+          final byB = tester.getTopLeft(find.byWidget(b.widget)).dy;
+          return byA.compareTo(byB);
+        });
+      final mine = buttons.firstWhere(
+        (element) => tester.getTopLeft(find.byWidget(element.widget)).dy >
+            subtitle - 20,
+      );
+
+      await tester.tap(find.byWidget(mine.widget));
+      await tester.pumpAndSettle();
+
+      expect(dropped?.condition, 40);
+    });
+  });
 }
