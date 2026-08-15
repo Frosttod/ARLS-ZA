@@ -451,12 +451,6 @@ abstract class L10n {
   /// **'Carry'**
   String get hudCarry;
 
-  /// No description provided for @hudSpeed.
-  ///
-  /// In en, this message translates to:
-  /// **'Speed'**
-  String get hudSpeed;
-
   /// No description provided for @hudBulk.
   ///
   /// In en, this message translates to:

@@ -23,18 +23,26 @@ void main() {
     return metresPerPixel * logicalWidth;
   }
 
-  test('a kilometre across really is a kilometre (§3.6)', () {
+  test('the widest view is the distance it claims to be', () {
     // The regression this exists for: the width was multiplied by the device
     // pixel ratio, which is not the unit a zoom level is defined in. On a phone
-    // at three times density the widest view was 330 m, and pulling back
-    // further simply stopped there.
+    // at three times density the widest view was a third of what it said, and
+    // pulling back further simply stopped there.
     for (final width in const [320.0, 393.0, 411.0, 800.0]) {
       expect(
         metresAcrossAt(width),
-        closeTo(1000, 1),
+        closeTo(kWidestViewM, 1),
         reason: '${width.round()} logical px wide',
       );
     }
+  });
+
+  test('and it reaches past where the game puts loot', () {
+    // Reconnaissance reveals places the spawner put up to two kilometres away
+    // (§10), and §3.6's kilometre meant the map would not show the player
+    // where any of them were. A marker the game placed and refuses to display
+    // is worse than a wide view.
+    expect(kWidestViewM / 2, greaterThan(1000));
   });
 
   test('the limit is the same distance on every screen', () {
@@ -65,12 +73,12 @@ void main() {
     // It cannot catch being fed physical pixels — it just answers a different
     // question, one zoom level per doubling.
     final logical = zoomForWidth(
-      metresAcross: 1000,
+      metresAcross: kWidestViewM,
       pixelWidth: 393,
       latitude: 52.4,
     );
     final physical = zoomForWidth(
-      metresAcross: 1000,
+      metresAcross: kWidestViewM,
       pixelWidth: 393 * 3,
       latitude: 52.4,
     );

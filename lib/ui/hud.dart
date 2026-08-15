@@ -78,7 +78,6 @@ class Hud extends StatelessWidget {
     required this.status,
     required this.constants,
     this.warnings = const [],
-    this.speedKmh = 0,
     this.carryComfortKg,
     this.carryMaxKg,
     this.carriedKg = 0,
@@ -97,12 +96,14 @@ class Hud extends StatelessWidget {
   /// the game is not behaving as they expect.
   final List<String> warnings;
 
-  /// Ground speed from the last accepted fix (§3.2).
-  ///
-  /// Worth a corner of its own because it is the one number on this screen the
-  /// player controls directly, and the one every metabolic cost is scaled by
-  /// (§2.2). It is also how somebody tells a stalled GPS from a slow walk.
-  final double speedKmh;
+  // ⚠️ No speedometer here, and there was one for a day.
+  //
+  // It read well and it was wrong for this game: a survivor with a phone and
+  // no equipment does not know their own pace to a tenth of a kilometre an
+  // hour. §0 says the body is the controller, and a body does not come with an
+  // instrument panel. What speed does to the character is already visible —
+  // through the heart rate, which is exactly how a person actually judges how
+  // hard they are working.
 
   /// §1.3's two thresholds. The comfortable one costs calories to exceed, the
   /// hard one cannot be exceeded at all.
@@ -153,8 +154,6 @@ class Hud extends StatelessWidget {
                       ],
                     ),
                   ),
-                  const SizedBox(width: 16),
-                  _Speed(kmh: speedKmh, label: l10n.hudSpeed),
                   const SizedBox(width: 16),
                   _HeartRate(
                     bpm: state.heartRateBpm,
@@ -303,55 +302,6 @@ class _ThinBar extends StatelessWidget {
                 fontFeatures: [FontFeature.tabularFigures()],
               ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Ground speed, in the units road signs use.
-///
-/// One decimal below ten and none above: a walk is 4.7 km/h and a run is 12,
-/// and the difference between 12.3 and 12 is not something a person reads while
-/// moving.
-class _Speed extends StatelessWidget {
-  const _Speed({required this.kmh, required this.label});
-
-  final double kmh;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final colours = HudColors.of(context);
-    final shown = kmh < 10 ? kmh.toStringAsFixed(1) : kmh.round().toString();
-
-    return Semantics(
-      label: '$label $shown km/h',
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label.toUpperCase(),
-            style: TextStyle(
-              fontSize: 9,
-              letterSpacing: 1.5,
-              color: colours.muted,
-            ),
-          ),
-          Text(
-            shown,
-            style: TextStyle(
-              fontSize: 20,
-              height: 1.1,
-              fontWeight: FontWeight.bold,
-              color: colours.text,
-              fontFeatures: const [FontFeature.tabularFigures()],
-            ),
-          ),
-          Text(
-            'km/h',
-            style: TextStyle(fontSize: 10, color: colours.muted),
           ),
         ],
       ),

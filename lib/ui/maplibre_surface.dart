@@ -31,11 +31,17 @@ const double kStreetZoom = 17.5;
 
 /// The widest view the game allows, in metres across the screen (§3.6).
 ///
-/// A kilometre. The character knows the street they are on and the junction
-/// ahead; they do not have a satellite. Pulling back to see a whole district
-/// would answer questions the survivor has no way to answer, and the map is the
-/// player's knowledge, not the game's.
-const double kWidestViewM = 1000;
+/// Three kilometres. §3.6 argues for a kilometre — the character knows their
+/// street and the next junction, not the district — and that was the limit
+/// until a walk showed the contradiction it created: reconnaissance reveals
+/// places, the spawner puts them up to two kilometres out (§10), and the map
+/// then refused to show the player where any of them were. A marker the game
+/// placed and will not display is worse than a wide view.
+///
+/// Three kilometres covers the spawn radius with a margin, and nothing else
+/// changes: the map still cannot be dragged, so a player can only ever pull
+/// back around themselves.
+const double kWidestViewM = 3000;
 
 /// The closest the map goes. Past this the tiles have nothing more to say —
 /// the packs are built to zoom 15 and everything beyond is the renderer
