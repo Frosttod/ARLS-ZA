@@ -28,6 +28,7 @@ Future<void> showGroundItems(
   required ItemCatalogue catalogue,
   required ItemNames names,
   required void Function(GroundPile pile) onTake,
+  void Function(GroundPile pile)? onDetails,
 }) => showModalBottomSheet<void>(
   context: context,
   isScrollControlled: true,
@@ -104,6 +105,9 @@ Future<void> showGroundItems(
                             colours: colours,
                             takeLabel: l10n.droppedTake,
                             onTake: () => onTake(pile),
+                            onDetails: onDetails == null
+                                ? null
+                                : () => onDetails(pile),
                           ),
                       ],
                     ),
@@ -133,6 +137,7 @@ class _PileRow extends StatelessWidget {
     required this.colours,
     required this.takeLabel,
     required this.onTake,
+    required this.onDetails,
   });
 
   final GroundPile pile;
@@ -141,6 +146,9 @@ class _PileRow extends StatelessWidget {
   final HudColors colours;
   final String takeLabel;
   final VoidCallback onTake;
+
+  /// What it is, for somebody deciding whether it is worth the kilogram.
+  final VoidCallback? onDetails;
 
   @override
   Widget build(BuildContext context) {
@@ -152,19 +160,23 @@ class _PileRow extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  pile.count > 1 ? '$name  ×${pile.count}' : name,
-                  style: TextStyle(fontSize: 14, color: colours.text),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  _subtitle(),
-                  style: TextStyle(fontSize: 11, color: colours.muted),
-                ),
-              ],
+            child: GestureDetector(
+              onTap: onDetails,
+              behavior: HitTestBehavior.opaque,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    pile.count > 1 ? '$name  ×${pile.count}' : name,
+                    style: TextStyle(fontSize: 14, color: colours.text),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    _subtitle(),
+                    style: TextStyle(fontSize: 11, color: colours.muted),
+                  ),
+                ],
+              ),
             ),
           ),
           Text(

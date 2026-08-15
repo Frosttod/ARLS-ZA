@@ -315,8 +315,15 @@ class _Choices extends StatelessWidget {
         spacing: 4,
         children: [
           // Reconnaissance is always available: §10.2.1 gives it no cooldown,
-          // only a cost.
-          TextButton(onPressed: onSearchArea, child: Text(l10n.searchArea)),
+          // only a cost. A glass rather than a word: it is the one control on
+          // this panel that means the same thing everywhere, and the row has
+          // three depths to spell out already.
+          IconButton(
+            onPressed: onSearchArea,
+            icon: const Icon(Icons.search),
+            tooltip: l10n.searchArea,
+            color: colours.text,
+          ),
           if (canSearchHere)
             // The three depths of §10.3.5, all three on screen at once. Hiding
             // the slow ones behind a menu would hide the decision.

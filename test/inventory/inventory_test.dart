@@ -660,4 +660,95 @@ void main() {
       expect(after.carried.single.itemId, 'cloth_boots');
     });
   });
+
+  group('a bottle put down half way through (§4.7)', () {
+    // Losing the whole bottle for stopping would teach a player never to start
+    // one near a corner they might have to run round; getting it all back
+    // would make the time it takes meaningless. Half drunk is half gone.
+    Inventory withWater({int count = 1}) => const Inventory()
+        .withPack('pack_daypack')
+        .add('drink_water_bottle_500', catalogue, body: body, count: count)
+        .inventory;
+
+    test('half of it drunk leaves half of it', () {
+      final inventory = withWater();
+      final after = inventory.consumePortion(inventory.carried.single, 0.5);
+
+      expect(after.carried.single.portion, closeTo(0.5, 0.001));
+    });
+
+    test('and the half left is half as heavy', () {
+      final inventory = withWater();
+      final whole = inventory.massKg(catalogue);
+      final after = inventory.consumePortion(inventory.carried.single, 0.5);
+      final pack = catalogue['pack_daypack']!.weightKg;
+
+      expect(
+        after.massKg(catalogue) - pack,
+        closeTo((whole - pack) / 2, 0.01),
+      );
+    });
+
+    test('but takes the same room, the bottle being the same bottle', () {
+      final inventory = withWater();
+      final before = inventory.volumeL(catalogue);
+      final after = inventory.consumePortion(inventory.carried.single, 0.5);
+
+      expect(after.volumeL(catalogue), closeTo(before, 0.001));
+    });
+
+    test('a second sitting drinks half of what is left, not half a bottle', () {
+      var inventory = withWater();
+      inventory = inventory.consumePortion(inventory.carried.single, 0.5);
+      inventory = inventory.consumePortion(inventory.carried.single, 0.5);
+
+      expect(inventory.carried.single.portion, closeTo(0.25, 0.001));
+    });
+
+    test('the last mouthful finishes it rather than leaving a crumb', () {
+      final inventory = withWater();
+      final after = inventory.consumePortion(inventory.carried.single, 0.97);
+
+      expect(after.carried, isEmpty);
+    });
+
+    test('drinking one of three splits it off, leaving two whole ones', () {
+      final inventory = withWater(count: 3);
+      final after = inventory.consumePortion(inventory.carried.single, 0.5);
+
+      final whole = after.carried.where((line) => line.portion >= 1).single;
+      final part = after.carried.where((line) => line.portion < 1).single;
+
+      expect(whole.count, 2);
+      expect(part.count, 1);
+      expect(part.portion, closeTo(0.5, 0.001));
+    });
+
+    test('a part-used piece does not stack with a full one found later', () {
+      var inventory = withWater(count: 2);
+      inventory = inventory.consumePortion(inventory.carried.single, 0.5);
+      inventory = inventory
+          .add('drink_water_bottle_500', catalogue, body: body)
+          .inventory;
+
+      // The full ones go together; the half bottle stays its own line.
+      expect(inventory.carried.where((line) => line.portion >= 1).single.count,
+          2);
+      expect(inventory.carried.where((line) => line.portion < 1), hasLength(1));
+    });
+
+    test('a piece that is no longer carried changes nothing', () {
+      const gone = CarriedItem(itemId: 'drink_water_bottle_500');
+      final inventory = withWater();
+
+      expect(inventory.consumePortion(gone, 0.5).carried, hasLength(1));
+    });
+
+    test('putting it down at once keeps all of it', () {
+      final inventory = withWater();
+      final after = inventory.consumePortion(inventory.carried.single, 0);
+
+      expect(after.carried.single.portion, 1);
+    });
+  });
 }

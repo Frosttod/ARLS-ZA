@@ -70,6 +70,7 @@ class MapLibreSurface extends StatefulWidget {
     required this.source,
     required this.centre,
     required this.markers,
+    this.onMarkerTap,
     required this.economy,
     this.fallbackCentre,
     super.key,
@@ -91,6 +92,10 @@ class MapLibreSurface extends StatefulWidget {
   final GeoPoint? fallbackCentre;
 
   final List<MapMarker> markers;
+
+  /// What to do when the player taps one. Null where the map is decoration —
+  /// the region picker's preview, for instance.
+  final void Function(MapMarker marker)? onMarkerTap;
 
   /// §3.3: no animation, so the camera jumps rather than glides.
   final bool economy;
@@ -187,10 +192,11 @@ class _MapLibreSurfaceState extends State<MapLibreSurface> {
     );
 
     return GestureDetector(
-      // Opaque, so the gestures reach here rather than the platform view. There
-      // is nothing on the map to tap: the player is an overlay and the menu is
-      // above this again.
+      // Opaque, so the gestures reach here rather than the platform view. The
+      // markers are circles the platform view draws, so their taps are ours to
+      // find: the gesture arena is won here and the plugin never sees a finger.
       behavior: HitTestBehavior.opaque,
+      onTapUp: _handleTap,
       onDoubleTap: () => unawaited(_zoomBy(1)),
       onScaleStart: (_) => _zoomAtGestureStart = _zoom,
       onScaleUpdate: (details) {
@@ -202,6 +208,30 @@ class _MapLibreSurfaceState extends State<MapLibreSurface> {
       onScaleEnd: (_) => _zoomAtGestureStart = null,
       child: map,
     );
+  }
+
+  /// A tap on the map: whatever marker is under the finger, if any.
+  ///
+  /// Worked out here rather than asked of the platform. The player is always
+  /// at the centre of this widget (that is what the whole camera arrangement
+  /// exists for), so the offset from the middle is all the geometry needed —
+  /// and it stays in logical pixels, which is the unit MapLibre's zoom is
+  /// defined in.
+  void _handleTap(TapUpDetails details) {
+    final handler = widget.onMarkerTap;
+    final centre = widget.centre;
+    if (handler == null || centre == null) return;
+
+    final size = context.size;
+    if (size == null) return;
+
+    final marker = markerAtOffset(
+      widget.markers,
+      details.localPosition - Offset(size.width / 2, size.height / 2),
+      centre: GeoPoint(centre.latitude, centre.longitude),
+      zoom: _zoom,
+    );
+    if (marker != null) handler(marker);
   }
 
   /// Applies a zoom, always about the player.

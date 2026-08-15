@@ -9,6 +9,9 @@
 /// the tests that check a marker is not being drawn somewhere §3.5 forbids.
 library;
 
+import 'dart:math' as math;
+import 'dart:ui' show Offset;
+
 import '../map/geometry.dart';
 
 /// The kinds of thing §3.6 puts on the map.
@@ -82,3 +85,45 @@ const Map<MarkerKind, double> kMarkerRadius = {
   MarkerKind.dropped: 5,
   MarkerKind.shelter: 9,
 };
+
+/// How many metres one logical pixel covers at this zoom and latitude.
+///
+/// ⚠️ Logical pixels, not device ones. MapLibre's zoom is defined against CSS
+/// pixels, which is the same trap that once made "one kilometre across the
+/// screen" mean 330 m on a phone with a device pixel ratio of three.
+double metresPerPixel(double zoom, double latitude) =>
+    156543.03392 * math.cos(latitude * math.pi / 180) / math.pow(2, zoom);
+
+/// Which marker the player meant, tapping [offset] logical pixels from the
+/// centre of a map centred on [centre].
+///
+/// A finger is not a pixel: [slopPx] is what makes a marker tappable at all,
+/// and the nearest one inside it wins so that two markers on one street corner
+/// do not become one unreachable marker.
+MapMarker? markerAtOffset(
+  List<MapMarker> markers,
+  Offset offset, {
+  required GeoPoint centre,
+  required double zoom,
+  double slopPx = 26,
+}) {
+  final scale = metresPerPixel(zoom, centre.latitude);
+  final slopM = slopPx * scale;
+
+  // Screen y grows downwards, latitude grows upwards.
+  final at = GeoPoint(
+    centre.latitude - offset.dy * scale / metresPerDegreeLat,
+    centre.longitude +
+        offset.dx * scale / metresPerDegreeLon(centre.latitude),
+  );
+
+  MapMarker? best;
+  var bestDistance = slopM;
+  for (final marker in markers) {
+    final distance = marker.at.distanceTo(at);
+    if (distance > bestDistance) continue;
+    best = marker;
+    bestDistance = distance;
+  }
+  return best;
+}

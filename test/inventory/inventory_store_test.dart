@@ -124,6 +124,33 @@ void main() {
 
     expect(await db.inventoryFor(profileId), isEmpty);
   });
+
+  test('a half-drunk bottle is still half drunk after a restart', () async {
+    // §4.7: otherwise closing the app would refill everything anybody had
+    // started, and the time a bottle takes would mean nothing.
+    var inventory = const Inventory()
+        .withPack('pack_daypack')
+        .add('drink_water_bottle_500', catalogue, body: _body)
+        .inventory;
+    inventory = inventory.consumePortion(inventory.carried.single, 0.6);
+
+    await store.save(profileId, inventory);
+    final loaded = await store.load(profileId, catalogue);
+
+    expect(loaded.inventory.carried.single.portion, closeTo(0.4, 0.001));
+  });
+
+  test('everything whole reads back whole', () async {
+    final inventory = const Inventory()
+        .withPack('pack_daypack')
+        .add('med_bandage', catalogue, body: _body, count: 2)
+        .inventory;
+
+    await store.save(profileId, inventory);
+    final loaded = await store.load(profileId, catalogue);
+
+    expect(loaded.inventory.carried.single.portion, 1);
+  });
 }
 
 /// §15.4's worked character: 80 kg, so 24 kg comfortable and 36 kg hard.

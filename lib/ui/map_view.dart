@@ -36,6 +36,7 @@ typedef TileSurfaceBuilder =
       required PositionFix? centre,
       required List<MapMarker> markers,
       required bool economy,
+      void Function(MapMarker marker)? onMarkerTap,
     });
 
 class MapScreen extends StatefulWidget {
@@ -44,6 +45,7 @@ class MapScreen extends StatefulWidget {
     required this.fix,
     this.headingDeg,
     this.markers = const [],
+    this.onMarkerTap,
     this.economy = false,
     this.hasPack = true,
     this.hud,
@@ -63,6 +65,10 @@ class MapScreen extends StatefulWidget {
   final double? headingDeg;
 
   final List<MapMarker> markers;
+
+  /// What the player wants to know about, tapped on the map: what is in a
+  /// place, or what is lying in the street.
+  final void Function(MapMarker marker)? onMarkerTap;
 
   /// §3.3 economy mode: no animations. The camera jumps instead of gliding.
   final bool economy;
@@ -145,6 +151,7 @@ class _MapScreenState extends State<MapScreen> {
               centre: widget.fix,
               markers: widget.markers,
               economy: widget.economy,
+              onMarkerTap: widget.onMarkerTap,
             ),
           ),
 

@@ -31,6 +31,7 @@ import 'loot/obstacle.dart';
 import 'loot/search.dart';
 import 'notes/note.dart';
 import 'ui/ground_sheet.dart';
+import 'ui/place_sheet.dart';
 import 'ui/item_details_sheet.dart';
 import 'ui/note_sheet.dart';
 import 'ui/search_panel.dart';
@@ -285,6 +286,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   final ValueNotifier<Search?> _search = ValueNotifier(null);
   DateTime? _searchTickedAt;
   Timer? _searchTimer;
+
+  /// The very piece being eaten or drunk (§4.7), so a mouthful comes out of
+  /// the bottle in hand rather than out of whichever one the list finds first.
+  CarriedItem? _usingLine;
 
   /// What the last reconnaissance revealed, for §10.2.1's ten minutes.
   AreaKnowledge? _knowledge;
@@ -982,6 +987,11 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     }
 
     final fix = _snapshot?.displayFix;
+    // Half a bottle takes half as long to finish, which is what makes putting
+    // it down and coming back to it a real option rather than a punishment.
+    final seconds = (use.duration.inSeconds * line.portion).round();
+
+    _usingLine = line;
     setState(() {
       _search.value = Search.using(
         at: fix == null
@@ -989,7 +999,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
             : GeoPoint(fix.latitude, fix.longitude),
         now: DateTime.now().toUtc(),
         itemId: line.itemId,
-        duration: use.duration,
+        duration: Duration(seconds: seconds < 1 ? 1 : seconds),
         label: use.action.label,
       );
     });
@@ -1007,15 +1017,24 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final use = definition == null ? null : useOf(definition);
     if (definition == null || use == null) return;
 
+    // What was left of the piece, which is all that is left to swallow.
+    final line = _usingLine;
+    final portion = line?.portion ?? 1;
+    _usingLine = null;
+
     if (use.consumesItem) {
-      final next = _inventory.value.remove(itemId, count: 1);
+      // The very piece that was in hand: a half bottle beside a full one is
+      // two different things to own.
+      final next = line == null
+          ? _inventory.value.remove(itemId, count: 1)
+          : _inventory.value.removeLine(line);
       if (next != null) {
         _inventory.value = next;
         await _saveInventory();
       }
     }
 
-    loop.applyUse(kcal: use.kcal, waterMl: use.waterMl);
+    loop.applyUse(kcal: use.kcal * portion, waterMl: use.waterMl * portion);
     if (!mounted) return;
 
     final language = Localizations.localeOf(context).languageCode;
@@ -1083,6 +1102,56 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     return pile.count > 1 ? '$name ×${pile.count}' : name;
   }
 
+  /// A tap on the map (§3.6): what the player wants to know about that dot.
+  ///
+  /// A yellow dot that says only "something is here" makes every dot worth the
+  /// same walk, which makes none of them a decision.
+  void _showMarker(MapMarker marker) {
+    final catalogue = _catalogue;
+    final fix = _snapshot?.displayFix;
+    if (catalogue == null || fix == null) return;
+    final at = GeoPoint(fix.latitude, fix.longitude);
+
+    if (marker.kind == MarkerKind.loot) {
+      final box = _boxes.where((b) => b.poiId == marker.id).firstOrNull;
+      if (box == null) return;
+
+      unawaited(
+        showPlaceDetails(
+          context,
+          box: box,
+          table: _world?.tables[box.tableId],
+          distanceM: box.position.distanceTo(at),
+          catalogue: catalogue,
+          now: _snapshot?.state.lastUpdate ?? DateTime.now().toUtc(),
+        ),
+      );
+      return;
+    }
+
+    if (marker.kind == MarkerKind.dropped) {
+      final id = int.tryParse(marker.id.split('.').last);
+      final item = _dropped.value.where((i) => i.id == id).firstOrNull;
+      if (item == null) return;
+
+      unawaited(
+        showItemDetails(
+          context,
+          line: CarriedItem(
+            itemId: item.itemId,
+            count: item.count,
+            condition: item.condition,
+            pagesTotal: item.pagesTotal,
+            pagesRead: item.pagesRead,
+          ),
+          inventory: _inventory.value,
+          catalogue: catalogue,
+          names: _names ?? ItemNames.empty,
+        ),
+      );
+    }
+  }
+
   /// Everything at the player's feet, gathered into piles (§4.8).
   List<GroundPile> _pilesInReach() {
     final at = _standingAt.value;
@@ -1113,6 +1182,21 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         catalogue: _catalogue!,
         names: _names ?? ItemNames.empty,
         onTake: (pile) => unawaited(_takePile(pile)),
+        onDetails: (pile) => unawaited(
+          showItemDetails(
+            context,
+            line: CarriedItem(
+              itemId: pile.itemId,
+              count: pile.count,
+              condition: pile.condition,
+              pagesTotal: pile.pagesTotal,
+              pagesRead: pile.pagesRead,
+            ),
+            inventory: _inventory.value,
+            catalogue: _catalogue!,
+            names: _names ?? ItemNames.empty,
+          ),
+        ),
       ),
     );
   }
@@ -1321,12 +1405,15 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         final s when s.isArea => _finishAreaSearch(s, at),
         final s => _finishObjectSearch(s, at),
       };
-    } else if (mounted) {
-      _say(
-        next.state == SearchState.cancelledByMovement
-            ? L10n.of(context).searchMoved
-            : L10n.of(context).searchLostSignal,
-      );
+    } else {
+      await _interruptUse(next);
+      if (mounted) {
+        _say(
+          next.state == SearchState.cancelledByMovement
+              ? L10n.of(context).searchMoved
+              : L10n.of(context).searchLostSignal,
+        );
+      }
     }
   }
 
@@ -1426,9 +1513,46 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   }
 
   void _cancelSearch() {
-    if (_search.value == null) return;
+    final running = _search.value;
+    if (running == null) return;
+
     _stopSearchTimer();
     _search.value = null;
+    unawaited(_interruptUse(running));
+  }
+
+  /// §4.7: half a bottle drunk is half a bottle gone, and half a bottle left.
+  ///
+  /// Anything else makes the choice a trap. Losing the whole bottle for
+  /// stopping would teach a player never to start one near a corner they
+  /// might have to run round; getting it all back for free would make the
+  /// time it takes meaningless.
+  Future<void> _interruptUse(Search action) async {
+    final line = _usingLine;
+    final loop = _loop;
+    final catalogue = _catalogue;
+    _usingLine = null;
+
+    if (line == null || loop == null || catalogue == null || !action.isUse) {
+      return;
+    }
+
+    final definition = catalogue[line.itemId];
+    final use = definition == null ? null : useOf(definition);
+    // Only what is swallowed comes in mouthfuls. A tourniquet half tied is not
+    // half a tourniquet — it is a tourniquet still in the pack.
+    if (use == null || !use.consumesItem) return;
+    if (use.kcal == 0 && use.waterMl == 0) return;
+
+    final swallowed = action.progress.clamp(0.0, 1.0) * line.portion;
+    if (swallowed <= 0) return;
+
+    loop.applyUse(kcal: use.kcal * swallowed, waterMl: use.waterMl * swallowed);
+    _inventory.value = _inventory.value.consumePortion(
+      line,
+      action.progress.clamp(0.0, 1.0),
+    );
+    await _saveInventory();
   }
 
   /// §10.2.3: reconnaissance reveals the places that cannot be seen from the
@@ -1718,15 +1842,18 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
                   required centre,
                   required markers,
                   required economy,
+                  onMarkerTap,
                 }) => MapLibreSurface(
                   source: source,
                   centre: centre,
                   markers: markers,
                   economy: economy,
+                  onMarkerTap: onMarkerTap,
                   fallbackCentre: _packCentre,
                 ),
             fix: snapshot?.displayFix,
             markers: _lootMarkers(),
+            onMarkerTap: _showMarker,
             searchPanel: snapshot == null
                 ? null
                 : Builder(

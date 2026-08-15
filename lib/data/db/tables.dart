@@ -229,6 +229,11 @@ class InventoryLines extends Table {
   /// player's pack.
   TextColumn get noteId => text().nullable()();
 
+  /// How much of the piece is left, 0–1 (§4.7). One for everything whole, and
+  /// for every line written before a half-drunk bottle was a thing the game
+  /// could hold.
+  RealColumn get portion => real().withDefault(const Constant(1))();
+
   @override
   List<String> get customConstraints => [
     'FOREIGN KEY (profile_id) REFERENCES profiles (id) ON DELETE CASCADE',

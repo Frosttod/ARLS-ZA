@@ -32,6 +32,12 @@ const double kStoreLitresPerKg = 3;
 /// A stackable item is one entry with a count. Anything carrying its own state
 /// — a worn rifle, a part-read book (§4.6.3) — is one entry per piece, because
 /// two of them are not interchangeable.
+/// Less of a piece than this is nothing (§4.7).
+///
+/// A last two per cent of a bottle is a line in the pack that costs a tap to
+/// be rid of and gives back a mouthful. Below this it is simply finished.
+const double kPortionCrumb = 0.05;
+
 class CarriedItem {
   const CarriedItem({
     required this.itemId,
@@ -40,6 +46,7 @@ class CarriedItem {
     this.pagesTotal,
     this.pagesRead = 0,
     this.noteId,
+    this.portion = 1,
   });
 
   final String itemId;
@@ -56,15 +63,28 @@ class CarriedItem {
   /// Which note this copy is (§19.1). Null for everything that is not one.
   final String? noteId;
 
-  CarriedItem copyWith({int? count, double? condition, int? pagesRead}) =>
-      CarriedItem(
-        itemId: itemId,
-        count: count ?? this.count,
-        condition: condition ?? this.condition,
-        pagesTotal: pagesTotal,
-        pagesRead: pagesRead ?? this.pagesRead,
-        noteId: noteId,
-      );
+  /// How much of this piece is left, 0–1 (§4.7).
+  ///
+  /// A bottle put down half way through is half a bottle, not a wasted one and
+  /// not a full one. Only ever below 1 on a line of exactly one piece: what is
+  /// part-used is split off from the stack it came from, because a stack of
+  /// three where one of them is half drunk is not a stack of three.
+  final double portion;
+
+  CarriedItem copyWith({
+    int? count,
+    double? condition,
+    int? pagesRead,
+    double? portion,
+  }) => CarriedItem(
+    itemId: itemId,
+    count: count ?? this.count,
+    condition: condition ?? this.condition,
+    pagesTotal: pagesTotal,
+    pagesRead: pagesRead ?? this.pagesRead,
+    noteId: noteId,
+    portion: portion ?? this.portion,
+  );
 
   /// Mass of this line, using the rolled page count where there is one.
   double massKg(ItemDefinition definition) {
@@ -74,7 +94,10 @@ class CarriedItem {
       final cover = (definition.props['cover_g'] as num?)?.toDouble() ?? 0;
       return (pages * perPage + cover) / 1000 * count;
     }
-    return definition.weightKg * count;
+    // Half a bottle weighs half. The bulk does not follow, because the bottle
+    // is the same bottle either way — which is the honest asymmetry between
+    // §18.1a's two limits.
+    return definition.weightKg * count * portion;
   }
 
   double volumeL(ItemDefinition definition) {
@@ -270,7 +293,11 @@ class Inventory {
     if (definition.stackable &&
         !definition.hasInstanceState &&
         line.noteId == null) {
-      final index = lines.indexWhere((entry) => entry.itemId == line.itemId);
+      // Never into a part-used piece: half a bottle and a full one are not
+      // two of the same thing.
+      final index = lines.indexWhere(
+        (entry) => entry.itemId == line.itemId && entry.portion >= 1,
+      );
       if (index >= 0) {
         lines[index] = lines[index].copyWith(
           count: lines[index].count + line.count,
@@ -286,6 +313,33 @@ class Inventory {
     }
 
     lines.add(line);
+    return Inventory(carried: lines, worn: worn, packId: packId);
+  }
+
+  /// Takes [fraction] out of one piece of [line] (§4.7).
+  ///
+  /// A bottle put down half way through is half a bottle. The piece being used
+  /// is split off from whatever stack it sat in first, because a stack of
+  /// three where one is half drunk is not a stack of three — and what is left
+  /// below a mouthful is gone rather than kept as a rounding error.
+  Inventory consumePortion(CarriedItem line, double fraction) {
+    final index = carried.indexWhere((entry) => identical(entry, line));
+    if (index < 0) return this;
+
+    final left = line.portion * (1 - fraction.clamp(0.0, 1.0));
+    final lines = [...carried];
+
+    if (line.count > 1) {
+      lines[index] = line.copyWith(count: line.count - 1, portion: 1);
+      if (left >= kPortionCrumb) {
+        lines.insert(index + 1, line.copyWith(count: 1, portion: left));
+      }
+    } else if (left >= kPortionCrumb) {
+      lines[index] = line.copyWith(portion: left);
+    } else {
+      lines.removeAt(index);
+    }
+
     return Inventory(carried: lines, worn: worn, packId: packId);
   }
 

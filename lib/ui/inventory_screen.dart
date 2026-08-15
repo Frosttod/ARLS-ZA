@@ -705,6 +705,12 @@ class _ItemRowState extends State<_ItemRow> {
     final pages = widget.line.pagesTotal;
     if (pages != null) parts.add('${widget.line.pagesRead} / $pages');
 
+    // §4.7: what is left of a bottle somebody put down half way through.
+    final portion = widget.line.portion;
+    if (portion < 1) {
+      parts.add(widget.l10n.inventoryPortion((portion * 100).round()));
+    }
+
     return parts.join(' · ');
   }
 }

@@ -1081,6 +1081,54 @@ abstract class L10n {
   /// **'Nothing new here yet.'**
   String get searchNothingNew;
 
+  /// No description provided for @placeDistance.
+  ///
+  /// In en, this message translates to:
+  /// **'Distance'**
+  String get placeDistance;
+
+  /// No description provided for @placeWayIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Way in'**
+  String get placeWayIn;
+
+  /// No description provided for @placeOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get placeOpen;
+
+  /// No description provided for @placeSearched.
+  ///
+  /// In en, this message translates to:
+  /// **'Searched'**
+  String get placeSearched;
+
+  /// No description provided for @placeUntouched.
+  ///
+  /// In en, this message translates to:
+  /// **'Not yet'**
+  String get placeUntouched;
+
+  /// No description provided for @placePartly.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% of it left'**
+  String placePartly(int percent);
+
+  /// No description provided for @placeStripped.
+  ///
+  /// In en, this message translates to:
+  /// **'Stripped — something back in about {hours} h'**
+  String placeStripped(int hours);
+
+  /// No description provided for @placeHolds.
+  ///
+  /// In en, this message translates to:
+  /// **'Holds'**
+  String get placeHolds;
+
   /// No description provided for @barrierDoor.
   ///
   /// In en, this message translates to:
@@ -1218,6 +1266,12 @@ abstract class L10n {
   /// In en, this message translates to:
   /// **'Use'**
   String get inventoryUse;
+
+  /// How much of a part-used item is left.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% left'**
+  String inventoryPortion(int percent);
 
   /// No description provided for @inventoryWear.
   ///

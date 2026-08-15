@@ -561,6 +561,34 @@ class L10nPl extends L10n {
   String get searchNothingNew => 'Nic nowego tutaj.';
 
   @override
+  String get placeDistance => 'Odległość';
+
+  @override
+  String get placeWayIn => 'Wejście';
+
+  @override
+  String get placeOpen => 'Otwarte';
+
+  @override
+  String get placeSearched => 'Przeszukane';
+
+  @override
+  String get placeUntouched => 'Jeszcze nie';
+
+  @override
+  String placePartly(int percent) {
+    return 'zostało $percent%';
+  }
+
+  @override
+  String placeStripped(int hours) {
+    return 'Puste — coś wróci za jakieś $hours h';
+  }
+
+  @override
+  String get placeHolds => 'Można znaleźć';
+
+  @override
   String get barrierDoor => 'Zamknięte drzwi';
 
   @override
@@ -634,6 +662,11 @@ class L10nPl extends L10n {
 
   @override
   String get inventoryUse => 'Użyj';
+
+  @override
+  String inventoryPortion(int percent) {
+    return 'zostało $percent%';
+  }
 
   @override
   String get inventoryWear => 'Załóż';

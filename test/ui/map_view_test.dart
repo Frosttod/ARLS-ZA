@@ -33,6 +33,7 @@ void main() {
     required PositionFix? centre,
     required List<MapMarker> markers,
     required bool economy,
+    void Function(MapMarker marker)? onMarkerTap,
   }) {
     asked.add((markers: markers, economy: economy));
     return const ColoredBox(color: Color(0xFF0B0D0E));
