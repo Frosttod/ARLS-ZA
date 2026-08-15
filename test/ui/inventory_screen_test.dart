@@ -40,7 +40,7 @@ void main() {
         ],
         supportedLocales: L10n.supportedLocales,
         home: InventoryScreen(
-          inventory: inventory,
+          inventory: ValueNotifier(inventory),
           catalogue: catalogue,
           names: names,
           body: body,
@@ -165,6 +165,59 @@ void main() {
 
     expect(dropped?.itemId, 'mat_wood');
     expect(dropped?.count, 3);
+  });
+
+  testWidgets('the list follows the inventory, not the moment it opened', (
+    tester,
+  ) async {
+    // ⚠️ The bug this exists for: the screen is a pushed route, its builder
+    // runs once, and handed a plain value it kept showing what it opened with.
+    // Dropping something looked like nothing had happened, so the same item
+    // could be dropped over and over against a list already out of date.
+    final inventory = ValueNotifier(
+      const Inventory()
+          .withPack('pack_daypack')
+          .add('mat_wood', catalogue, body: body, count: 3)
+          .inventory,
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('pl'),
+        localizationsDelegates: const [
+          L10n.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: L10n.supportedLocales,
+        home: InventoryScreen(
+          inventory: inventory,
+          catalogue: catalogue,
+          names: names,
+          body: body,
+          onDrop: (line) =>
+              inventory.value = inventory.value.remove(
+                line.itemId,
+                count: line.count,
+              )!,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Drewno  ×3'), findsOneWidget);
+
+    await tester.tap(find.text('Wyrzuć'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Drewno  ×3'), findsNothing);
+    expect(
+      find.text('Wyrzuć'),
+      findsNothing,
+      reason: 'nothing left to drop, so no button to press again',
+    );
+    expect(find.text('Plecak jest pusty.'), findsOneWidget);
   });
 
   testWidgets('worn kit cannot be dropped from here', (tester) async {

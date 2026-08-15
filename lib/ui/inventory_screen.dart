@@ -10,6 +10,7 @@
 /// coat on your back counts against mass and not against the pack (§18.1a).
 library;
 
+import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 
 import '../devtools/dev_mode.dart';
@@ -32,7 +33,14 @@ class InventoryScreen extends StatelessWidget {
     super.key,
   });
 
-  final Inventory inventory;
+  /// Listened to rather than passed by value.
+  ///
+  /// ⚠️ This screen is a pushed route: its builder runs once. Handed a plain
+  /// [Inventory] it kept showing the one it opened with, so dropping something
+  /// changed nothing on screen and the same item could be dropped again and
+  /// again against a list that was already out of date.
+  final ValueListenable<Inventory> inventory;
+
   final ItemCatalogue catalogue;
   final ItemNames names;
   final BodyProfile body;
@@ -47,7 +55,12 @@ class InventoryScreen extends StatelessWidget {
   final VoidCallback? onDevFill;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => ValueListenableBuilder<Inventory>(
+    valueListenable: inventory,
+    builder: (context, inventory, _) => _build(context, inventory),
+  );
+
+  Widget _build(BuildContext context, Inventory inventory) {
     final l10n = L10n.of(context);
     final colours = HudColors.of(context);
     final limits = inventory.limits(body, catalogue);

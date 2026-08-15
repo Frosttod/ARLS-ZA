@@ -235,10 +235,18 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// bundled files and any content pack the player has.
   ItemCatalogue? _catalogue;
 
-  /// What the player is carrying. Empty until there is something to pick up —
-  /// the two HUD bars still read off it, so they show the real limits from the
-  /// first frame rather than appearing when the first item does.
-  Inventory _inventory = const Inventory();
+  /// What the player is carrying.
+  ///
+  /// ⚠️ A notifier rather than a plain field, and there is a bug behind that.
+  ///
+  /// The inventory screen is a pushed route: its builder runs once, so a
+  /// `setState` here rebuilt the map underneath and left the screen holding
+  /// the inventory as it was when it opened. Dropping something therefore
+  /// looked like nothing had happened, and the same item could be dropped
+  /// again — and again — because the button was reading a stale list.
+  ///
+  /// One source of truth, and both the screen and this tree listen to it.
+  final ValueNotifier<Inventory> _inventory = ValueNotifier(const Inventory());
 
   /// Item names, read alongside the catalogue (§1.1, §4.1).
   ItemNames? _names;
@@ -279,14 +287,14 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// every bundled data file failed to parse — a broken build, not a state the
   /// player can reach.
   double get _carriedKg =>
-      _catalogue == null ? 0 : _inventory.massKg(_catalogue!);
+      _catalogue == null ? 0 : _inventory.value.massKg(_catalogue!);
 
   double get _carriedVolumeL =>
-      _catalogue == null ? 0 : _inventory.volumeL(_catalogue!);
+      _catalogue == null ? 0 : _inventory.value.volumeL(_catalogue!);
 
   double _capacityL(BodyProfile body) => _catalogue == null
       ? kPocketCapacityL
-      : _inventory.limits(body, _catalogue!).capacityL;
+      : _inventory.value.limits(body, _catalogue!).capacityL;
 
   /// The real GPS, when that is what is driving the game. Held so the location
   /// gate can send the player to the right settings page and ask again.
@@ -355,7 +363,14 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    // The HUD bars and the search panel read the inventory too, so this tree
+    // follows the same notifier the screen does.
+    _inventory.addListener(_onInventoryChanged);
     unawaited(_boot());
+  }
+
+  void _onInventoryChanged() {
+    if (mounted) setState(() {});
   }
 
   Future<void> _boot() async {
@@ -536,7 +551,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         widget.session.db,
       ).load(character.profile.id, catalogue);
       if (!mounted) return;
-      _inventory = loaded.inventory;
+      _inventory.value = loaded.inventory;
     }
 
     if (kDevTools && _useSimulator) {
@@ -779,9 +794,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final catalogue = _catalogue;
     if (character == null || catalogue == null) return;
 
-    var next = _inventory.packId == null
-        ? _inventory.withPack('pack_daypack')
-        : _inventory;
+    var next = _inventory.value.packId == null
+        ? _inventory.value.withPack('pack_daypack')
+        : _inventory.value;
     for (final id in const [
       'cloth_winter_jacket',
       'cloth_boots',
@@ -810,10 +825,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         )
         .inventory;
 
-    setState(() => _inventory = next);
+    _inventory.value = next;
     await _saveInventory();
-
-    if (mounted) Navigator.of(context).pop();
   }
 
   /// §4.8: what leaves the pack lands on the ground and stays for a day.
@@ -824,10 +837,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   Future<void> _drop(CarriedItem line) async {
     final character = _character;
     final fix = _snapshot?.displayFix;
-    final next = _inventory.remove(line.itemId, count: line.count);
+    final next = _inventory.value.remove(line.itemId, count: line.count);
     if (character == null || next == null) return;
 
-    setState(() => _inventory = next);
+    _inventory.value = next;
     await _saveInventory();
 
     // No position, nowhere to put it. Better than inventing a place: a marker
@@ -905,7 +918,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final catalogue = _catalogue;
     if (character == null || catalogue == null) return;
 
-    final result = _inventory.add(
+    final result = _inventory.value.add(
       item.itemId,
       catalogue,
       body: character.body,
@@ -918,7 +931,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       return;
     }
 
-    setState(() => _inventory = result.inventory);
+    _inventory.value = result.inventory;
     await _saveInventory();
 
     // Removed only once it is in the pack. Deleting first and finding it did
@@ -932,7 +945,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     if (character == null) return;
     await InventoryStore(
       widget.session.db,
-    ).save(character.profile.id, _inventory);
+    ).save(character.profile.id, _inventory.value);
   }
 
   /// What was on the map when the app last closed.
@@ -1144,8 +1157,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
   /// Item ids the player is carrying or wearing. What decides the ways in.
   Set<String> _carriedIds() => {
-    for (final line in _inventory.carried) line.itemId,
-    for (final line in _inventory.worn) line.itemId,
+    for (final line in _inventory.value.carried) line.itemId,
+    for (final line in _inventory.value.worn) line.itemId,
   };
 
   void _startBreach(BarrierBreach breach) {
@@ -1196,8 +1209,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final previous = _knowledge;
     final radius = searchRadiusM(
       // Reconnaissance is §7 and does not exist yet; binoculars do.
-      binoculars: _inventory.countOf('tool_binoculars') > 0 ||
-          _inventory.worn.any((line) => line.itemId == 'tool_binoculars'),
+      binoculars: _inventory.value.countOf('tool_binoculars') > 0 ||
+          _inventory.value.worn.any(
+            (line) => line.itemId == 'tool_binoculars',
+          ),
     );
 
     final found = <String>{
@@ -1255,7 +1270,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final random = Random(character.profile.rngSeed ^ poiId.hashCode);
     final drop = table.roll(random, depth: depth, catalogue: catalogue);
 
-    var inventory = _inventory;
+    var inventory = _inventory.value;
     final taken = <String, int>{};
     var refused = false;
 
@@ -1279,7 +1294,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final emptied = box.lootedAtTime(now, random);
 
     setState(() {
-      _inventory = inventory;
+      _inventory.value = inventory;
       _boxes = [
         for (final b in _boxes) if (b.poiId == poiId) emptied else b,
       ];
@@ -1417,6 +1432,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     unawaited(_dev?.dispose());
     unawaited(_world?.dispose());
     _searchTimer?.cancel();
+    _inventory.dispose();
     super.dispose();
   }
 
