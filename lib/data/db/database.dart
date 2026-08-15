@@ -29,7 +29,7 @@ import 'tables.dart';
 part 'database.g.dart';
 
 /// Bumped only alongside a migration step in [_migration]. Never reused.
-const int kSchemaVersion = 7;
+const int kSchemaVersion = 8;
 
 /// Keys used in [MetaEntries].
 abstract final class MetaKeys {
@@ -69,7 +69,7 @@ class SaveDatabase extends _$SaveDatabase {
   /// follow a constant reference. `schema_test.dart` keeps it in step with
   /// [kSchemaVersion].
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -129,6 +129,13 @@ class SaveDatabase extends _$SaveDatabase {
       if (from < 7) {
         // §4.8: what a player put down, so they can come back for it.
         await m.createTable(groundItems);
+      }
+
+      // Same shape as v5's: inventory_lines was created in v3, so only a save
+      // that already has a v3-or-later table needs the column added.
+      if (from >= 3 && from < 8) {
+        // §19.1: a note in the pack remembers which note it is.
+        await m.addColumn(inventoryLines, inventoryLines.noteId);
       }
 
       await _writeSchemaVersion(to);

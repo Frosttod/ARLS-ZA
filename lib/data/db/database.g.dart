@@ -3190,6 +3190,15 @@ class $InventoryLinesTable extends InventoryLines
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _noteIdMeta = const VerificationMeta('noteId');
+  @override
+  late final GeneratedColumn<String> noteId = GeneratedColumn<String>(
+    'note_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -3200,6 +3209,7 @@ class $InventoryLinesTable extends InventoryLines
     condition,
     pagesTotal,
     pagesRead,
+    noteId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -3262,6 +3272,12 @@ class $InventoryLinesTable extends InventoryLines
         pagesRead.isAcceptableOrUnknown(data['pages_read']!, _pagesReadMeta),
       );
     }
+    if (data.containsKey('note_id')) {
+      context.handle(
+        _noteIdMeta,
+        noteId.isAcceptableOrUnknown(data['note_id']!, _noteIdMeta),
+      );
+    }
     return context;
   }
 
@@ -3303,6 +3319,10 @@ class $InventoryLinesTable extends InventoryLines
         DriftSqlType.int,
         data['${effectivePrefix}pages_read'],
       )!,
+      noteId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}note_id'],
+      ),
     );
   }
 
@@ -3332,6 +3352,12 @@ class InventoryLine extends DataClass implements Insertable<InventoryLine> {
   /// Rolled per copy at generation (§4.6.4). Null for anything but literature.
   final int? pagesTotal;
   final int pagesRead;
+
+  /// Which note this is, for a picked-up `lit_note` (§19.1). Null for anything
+  /// else. The text is not stored: it lives in `notes.json` and is resolved
+  /// again on reading, so a corrected translation reaches notes already in a
+  /// player's pack.
+  final String? noteId;
   const InventoryLine({
     required this.id,
     required this.profileId,
@@ -3341,6 +3367,7 @@ class InventoryLine extends DataClass implements Insertable<InventoryLine> {
     this.condition,
     this.pagesTotal,
     required this.pagesRead,
+    this.noteId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -3357,6 +3384,9 @@ class InventoryLine extends DataClass implements Insertable<InventoryLine> {
       map['pages_total'] = Variable<int>(pagesTotal);
     }
     map['pages_read'] = Variable<int>(pagesRead);
+    if (!nullToAbsent || noteId != null) {
+      map['note_id'] = Variable<String>(noteId);
+    }
     return map;
   }
 
@@ -3374,6 +3404,9 @@ class InventoryLine extends DataClass implements Insertable<InventoryLine> {
           ? const Value.absent()
           : Value(pagesTotal),
       pagesRead: Value(pagesRead),
+      noteId: noteId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(noteId),
     );
   }
 
@@ -3391,6 +3424,7 @@ class InventoryLine extends DataClass implements Insertable<InventoryLine> {
       condition: serializer.fromJson<double?>(json['condition']),
       pagesTotal: serializer.fromJson<int?>(json['pagesTotal']),
       pagesRead: serializer.fromJson<int>(json['pagesRead']),
+      noteId: serializer.fromJson<String?>(json['noteId']),
     );
   }
   @override
@@ -3405,6 +3439,7 @@ class InventoryLine extends DataClass implements Insertable<InventoryLine> {
       'condition': serializer.toJson<double?>(condition),
       'pagesTotal': serializer.toJson<int?>(pagesTotal),
       'pagesRead': serializer.toJson<int>(pagesRead),
+      'noteId': serializer.toJson<String?>(noteId),
     };
   }
 
@@ -3417,6 +3452,7 @@ class InventoryLine extends DataClass implements Insertable<InventoryLine> {
     Value<double?> condition = const Value.absent(),
     Value<int?> pagesTotal = const Value.absent(),
     int? pagesRead,
+    Value<String?> noteId = const Value.absent(),
   }) => InventoryLine(
     id: id ?? this.id,
     profileId: profileId ?? this.profileId,
@@ -3426,6 +3462,7 @@ class InventoryLine extends DataClass implements Insertable<InventoryLine> {
     condition: condition.present ? condition.value : this.condition,
     pagesTotal: pagesTotal.present ? pagesTotal.value : this.pagesTotal,
     pagesRead: pagesRead ?? this.pagesRead,
+    noteId: noteId.present ? noteId.value : this.noteId,
   );
   InventoryLine copyWithCompanion(InventoryLinesCompanion data) {
     return InventoryLine(
@@ -3439,6 +3476,7 @@ class InventoryLine extends DataClass implements Insertable<InventoryLine> {
           ? data.pagesTotal.value
           : this.pagesTotal,
       pagesRead: data.pagesRead.present ? data.pagesRead.value : this.pagesRead,
+      noteId: data.noteId.present ? data.noteId.value : this.noteId,
     );
   }
 
@@ -3452,7 +3490,8 @@ class InventoryLine extends DataClass implements Insertable<InventoryLine> {
           ..write('slot: $slot, ')
           ..write('condition: $condition, ')
           ..write('pagesTotal: $pagesTotal, ')
-          ..write('pagesRead: $pagesRead')
+          ..write('pagesRead: $pagesRead, ')
+          ..write('noteId: $noteId')
           ..write(')'))
         .toString();
   }
@@ -3467,6 +3506,7 @@ class InventoryLine extends DataClass implements Insertable<InventoryLine> {
     condition,
     pagesTotal,
     pagesRead,
+    noteId,
   );
   @override
   bool operator ==(Object other) =>
@@ -3479,7 +3519,8 @@ class InventoryLine extends DataClass implements Insertable<InventoryLine> {
           other.slot == this.slot &&
           other.condition == this.condition &&
           other.pagesTotal == this.pagesTotal &&
-          other.pagesRead == this.pagesRead);
+          other.pagesRead == this.pagesRead &&
+          other.noteId == this.noteId);
 }
 
 class InventoryLinesCompanion extends UpdateCompanion<InventoryLine> {
@@ -3491,6 +3532,7 @@ class InventoryLinesCompanion extends UpdateCompanion<InventoryLine> {
   final Value<double?> condition;
   final Value<int?> pagesTotal;
   final Value<int> pagesRead;
+  final Value<String?> noteId;
   const InventoryLinesCompanion({
     this.id = const Value.absent(),
     this.profileId = const Value.absent(),
@@ -3500,6 +3542,7 @@ class InventoryLinesCompanion extends UpdateCompanion<InventoryLine> {
     this.condition = const Value.absent(),
     this.pagesTotal = const Value.absent(),
     this.pagesRead = const Value.absent(),
+    this.noteId = const Value.absent(),
   });
   InventoryLinesCompanion.insert({
     this.id = const Value.absent(),
@@ -3510,6 +3553,7 @@ class InventoryLinesCompanion extends UpdateCompanion<InventoryLine> {
     this.condition = const Value.absent(),
     this.pagesTotal = const Value.absent(),
     this.pagesRead = const Value.absent(),
+    this.noteId = const Value.absent(),
   }) : profileId = Value(profileId),
        itemId = Value(itemId);
   static Insertable<InventoryLine> custom({
@@ -3521,6 +3565,7 @@ class InventoryLinesCompanion extends UpdateCompanion<InventoryLine> {
     Expression<double>? condition,
     Expression<int>? pagesTotal,
     Expression<int>? pagesRead,
+    Expression<String>? noteId,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -3531,6 +3576,7 @@ class InventoryLinesCompanion extends UpdateCompanion<InventoryLine> {
       if (condition != null) 'condition': condition,
       if (pagesTotal != null) 'pages_total': pagesTotal,
       if (pagesRead != null) 'pages_read': pagesRead,
+      if (noteId != null) 'note_id': noteId,
     });
   }
 
@@ -3543,6 +3589,7 @@ class InventoryLinesCompanion extends UpdateCompanion<InventoryLine> {
     Value<double?>? condition,
     Value<int?>? pagesTotal,
     Value<int>? pagesRead,
+    Value<String?>? noteId,
   }) {
     return InventoryLinesCompanion(
       id: id ?? this.id,
@@ -3553,6 +3600,7 @@ class InventoryLinesCompanion extends UpdateCompanion<InventoryLine> {
       condition: condition ?? this.condition,
       pagesTotal: pagesTotal ?? this.pagesTotal,
       pagesRead: pagesRead ?? this.pagesRead,
+      noteId: noteId ?? this.noteId,
     );
   }
 
@@ -3583,6 +3631,9 @@ class InventoryLinesCompanion extends UpdateCompanion<InventoryLine> {
     if (pagesRead.present) {
       map['pages_read'] = Variable<int>(pagesRead.value);
     }
+    if (noteId.present) {
+      map['note_id'] = Variable<String>(noteId.value);
+    }
     return map;
   }
 
@@ -3596,7 +3647,8 @@ class InventoryLinesCompanion extends UpdateCompanion<InventoryLine> {
           ..write('slot: $slot, ')
           ..write('condition: $condition, ')
           ..write('pagesTotal: $pagesTotal, ')
-          ..write('pagesRead: $pagesRead')
+          ..write('pagesRead: $pagesRead, ')
+          ..write('noteId: $noteId')
           ..write(')'))
         .toString();
   }
@@ -6428,6 +6480,7 @@ typedef $$InventoryLinesTableCreateCompanionBuilder =
       Value<double?> condition,
       Value<int?> pagesTotal,
       Value<int> pagesRead,
+      Value<String?> noteId,
     });
 typedef $$InventoryLinesTableUpdateCompanionBuilder =
     InventoryLinesCompanion Function({
@@ -6439,6 +6492,7 @@ typedef $$InventoryLinesTableUpdateCompanionBuilder =
       Value<double?> condition,
       Value<int?> pagesTotal,
       Value<int> pagesRead,
+      Value<String?> noteId,
     });
 
 class $$InventoryLinesTableFilterComposer
@@ -6487,6 +6541,11 @@ class $$InventoryLinesTableFilterComposer
 
   ColumnFilters<int> get pagesRead => $composableBuilder(
     column: $table.pagesRead,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get noteId => $composableBuilder(
+    column: $table.noteId,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -6539,6 +6598,11 @@ class $$InventoryLinesTableOrderingComposer
     column: $table.pagesRead,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get noteId => $composableBuilder(
+    column: $table.noteId,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$InventoryLinesTableAnnotationComposer
@@ -6575,6 +6639,9 @@ class $$InventoryLinesTableAnnotationComposer
 
   GeneratedColumn<int> get pagesRead =>
       $composableBuilder(column: $table.pagesRead, builder: (column) => column);
+
+  GeneratedColumn<String> get noteId =>
+      $composableBuilder(column: $table.noteId, builder: (column) => column);
 }
 
 class $$InventoryLinesTableTableManager
@@ -6618,6 +6685,7 @@ class $$InventoryLinesTableTableManager
                 Value<double?> condition = const Value.absent(),
                 Value<int?> pagesTotal = const Value.absent(),
                 Value<int> pagesRead = const Value.absent(),
+                Value<String?> noteId = const Value.absent(),
               }) => InventoryLinesCompanion(
                 id: id,
                 profileId: profileId,
@@ -6627,6 +6695,7 @@ class $$InventoryLinesTableTableManager
                 condition: condition,
                 pagesTotal: pagesTotal,
                 pagesRead: pagesRead,
+                noteId: noteId,
               ),
           createCompanionCallback:
               ({
@@ -6638,6 +6707,7 @@ class $$InventoryLinesTableTableManager
                 Value<double?> condition = const Value.absent(),
                 Value<int?> pagesTotal = const Value.absent(),
                 Value<int> pagesRead = const Value.absent(),
+                Value<String?> noteId = const Value.absent(),
               }) => InventoryLinesCompanion.insert(
                 id: id,
                 profileId: profileId,
@@ -6647,6 +6717,7 @@ class $$InventoryLinesTableTableManager
                 condition: condition,
                 pagesTotal: pagesTotal,
                 pagesRead: pagesRead,
+                noteId: noteId,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

@@ -20,6 +20,7 @@ import '../map/mvt.dart';
 import '../map/omt_schema.dart';
 import '../map/pmtiles_archive.dart';
 import '../map/poi_source.dart';
+import '../notes/note.dart';
 import '../safety/spawn_exclusion.dart';
 import 'procedural_points.dart';
 
@@ -29,6 +30,7 @@ class Ground {
     required this.places,
     required this.obstacles,
     required this.areas,
+    this.names = PlaceNames.none,
   });
 
   /// Places a loot table might want (§10.3).
@@ -40,6 +42,10 @@ class Ground {
 
   /// Ground the generator reads to decide what an invented place would be.
   final List<GeneratedArea> areas;
+
+  /// What the map calls this place (§19.1.1). Any of them may be missing, and
+  /// a note that needs a missing one is simply never told.
+  final PlaceNames names;
 }
 
 /// Reads it all. Call inside `Isolate.run`.
@@ -57,6 +63,7 @@ Future<Ground> readGround({
       places: await PoiSource(archive).near(centre, radiusM: radiusM),
       obstacles: await _obstaclesNear(archive, centre),
       areas: await _areasNear(archive, centre),
+      names: await _namesNear(archive, centre),
     );
   } finally {
     await archive.close();
@@ -101,6 +108,80 @@ Future<List<MapFeature>> _obstaclesNear(
   }
 
   return features;
+}
+
+/// What the map calls where the player is standing (§19.1.1).
+///
+/// The street is the nearest named road, and nearest means nearest: a note
+/// that names the road on the far side of the park is a note about somewhere
+/// else. The city and the district come from the `place` layer, which carries
+/// them as points rather than as areas, so the nearest is again the answer.
+Future<PlaceNames> _namesNear(PmtilesArchive archive, GeoPoint centre) async {
+  final tile = tileOf(centre.latitude, centre.longitude, kPoiZoom);
+
+  String? street;
+  var streetDistance = 150.0;
+  String? city;
+  var cityDistance = double.infinity;
+  String? district;
+  var districtDistance = double.infinity;
+
+  for (var dx = -1; dx <= 1; dx++) {
+    for (var dy = -1; dy <= 1; dy++) {
+      final bytes = await archive.tile(kPoiZoom, tile.x + dx, tile.y + dy);
+      if (bytes == null) continue;
+
+      final decoded = decodeMvt(
+        bytes,
+        layers: const {'transportation_name', 'transportation', 'place'},
+      );
+
+      for (final feature in decoded.features) {
+        final name = feature.properties['name'];
+        if (name is! String || name.isEmpty || feature.points.isEmpty) continue;
+
+        final ground = _toGround(
+          feature.points,
+          tile.x + dx,
+          tile.y + dy,
+          decoded.extent,
+        );
+        final distance = feature.geometry == MvtGeometry.line
+            ? distanceToPolyline(centre, ground)
+            : centre.distanceTo(ground.first);
+
+        if (feature.layer == 'place') {
+          final klass = '${feature.properties['class'] ?? ''}';
+          if (const {'city', 'town', 'village'}.contains(klass)) {
+            if (distance < cityDistance) {
+              city = name;
+              cityDistance = distance;
+            }
+          } else if (const {
+            'suburb',
+            'quarter',
+            'neighbourhood',
+            'borough',
+          }.contains(klass)) {
+            if (distance < districtDistance) {
+              district = name;
+              districtDistance = distance;
+            }
+          }
+          continue;
+        }
+
+        // A road. Only roads worth walking on: a footpath through a car park
+        // has a name in OSM about as often as it has a street sign.
+        if (distance < streetDistance) {
+          street = name;
+          streetDistance = distance;
+        }
+      }
+    }
+  }
+
+  return PlaceNames(street: street, district: district, city: city);
 }
 
 /// Houses in residential land, barns in farmland, hunting stands at the wood.

@@ -62,6 +62,7 @@ class InventoryStore {
         condition: row.condition,
         pagesTotal: row.pagesTotal,
         pagesRead: row.pagesRead,
+        noteId: row.noteId,
       );
       (row.slot == _slotWorn ? worn : carried).add(line);
     }
@@ -99,5 +100,6 @@ class InventoryStore {
     condition: Value(line.condition),
     pagesTotal: Value(line.pagesTotal),
     pagesRead: Value(line.pagesRead),
+    noteId: Value(line.noteId),
   );
 }

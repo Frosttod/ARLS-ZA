@@ -1,0 +1,246 @@
+{
+  "_comment": "Story notes (§19.1). The one exception to §1.1's rule that text lives in the ARB files: a note is a piece of writing, not an interface label, and an ARB key per paragraph of prose is unmaintainable. ⚠️ Polish sentences keep {street}, {district} and {city} in the nominative — OSM returns 'Naramowicka' and Polish would want 'z Naramowickiej', but automatic inflection of proper names is unreliable, so the sentence is built around the constraint: 'ulica {street}', never 'z {street}'. English has no such problem. A note whose placeholder cannot be filled is simply never drawn (§19.1.1). Editorial rules from §19.1.2: three to eight sentences, concrete over grand, nobody explains the epidemic, nothing drastic, and no farewell letters from people taking their own lives — somebody is reading this alone, in the evening, in a real street.",
+  "schema": 1,
+  "notes": [
+    {
+      "id": "note_pharmacy_shortages",
+      "category": "notatka_sluzbowa",
+      "match": ["poi.subclass=pharmacy", "poi.subclass=chemist"],
+      "rarity": "common",
+      "has_lead": false,
+      "title": {
+        "pl": "Zeszyt braków",
+        "en": "Shortages book"
+      },
+      "text": {
+        "pl": "Poniedziałek: brak amoksycyliny, brak ibuprofenu 400. Wtorek: dostawa nie przyjechała, dzwoniłam cztery razy. Środa: przyszło czterdzieści osób, wydałam wszystko co było na paracetamol. Czwartek: nie otwieram. Zostawiam ten zeszyt, bo ktoś kiedyś będzie liczył, czego zabrakło.",
+        "en": "Monday: no amoxicillin, no ibuprofen 400. Tuesday: the delivery never came, I rang four times. Wednesday: forty people through the door, I gave out everything we had for paracetamol. Thursday: not opening. I am leaving this book because somebody will want to count what ran out."
+      }
+    },
+    {
+      "id": "note_pharmacy_door",
+      "category": "kartka_na_drzwiach",
+      "match": ["poi.subclass=pharmacy"],
+      "rarity": "common",
+      "has_lead": false,
+      "title": {
+        "pl": "Kartka na drzwiach",
+        "en": "Note on the door"
+      },
+      "text": {
+        "pl": "Apteka nieczynna. Nie mamy już nic z listy, którą wieszają na przystankach. Punkt wydawania przeniesiony, ulica {street}, pytać w bramie. Nie dobijajcie się, w środku nie ma nikogo.",
+        "en": "Pharmacy closed. We have nothing left from the list they are posting at bus stops. The dispensing point has moved to {street} — ask at the gate. Do not hammer on the door, there is nobody inside."
+      }
+    },
+    {
+      "id": "note_police_radio",
+      "category": "zapis_radiowy",
+      "match": ["poi.class=police"],
+      "rarity": "uncommon",
+      "has_lead": true,
+      "title": {
+        "pl": "Ostatni zapis z dyżurki",
+        "en": "Last log from the duty desk"
+      },
+      "text": {
+        "pl": "23:40 — zgłoszenie, ulica {street}, wysłane dwa patrole. 00:15 — patrol drugi nie odpowiada. 01:02 — zgłoszenia z całej dzielnicy, przestaję je numerować. 03:20 — zostało nas czterech. Zabieramy, co się da, i wychodzimy tyłem.",
+        "en": "23:40 — call from {street}, two patrols sent. 00:15 — second patrol not responding. 01:02 — calls from across the district, I have stopped numbering them. 03:20 — four of us left. We are taking what we can and going out the back."
+      }
+    },
+    {
+      "id": "note_police_board",
+      "category": "notatka_sluzbowa",
+      "match": ["poi.class=police"],
+      "rarity": "common",
+      "has_lead": false,
+      "title": {
+        "pl": "Grafik na tablicy",
+        "en": "Roster on the board"
+      },
+      "text": {
+        "pl": "Grafik na przyszły tydzień, przekreślony w poprzek. Pod spodem, innym długopisem: kto może, zostaje. Jeszcze niżej trzy nazwiska i przy każdym data. Ostatnia jest sprzed czterech dni.",
+        "en": "Next week's roster, struck through corner to corner. Underneath, in a different pen: whoever can, stays. Lower still, three names, each with a date beside it. The last one is four days old."
+      }
+    },
+    {
+      "id": "note_grocery_list",
+      "category": "dziennik",
+      "match": ["poi.subclass=supermarket", "poi.subclass=convenience"],
+      "rarity": "common",
+      "has_lead": false,
+      "title": {
+        "pl": "Lista zakupów",
+        "en": "Shopping list"
+      },
+      "text": {
+        "pl": "Chleb, mleko, baterie AA, woda — sześć zgrzewek. Coś dla psa. Karta odrzucona, płaciłam gotówką, było tyle ludzi, że stałam czterdzieści minut. Na odwrocie tej samej kartki, później: wody nie ma, baterii nie ma, wracamy jutro wcześniej.",
+        "en": "Bread, milk, AA batteries, water — six packs. Something for the dog. Card declined, paid cash, so many people I queued forty minutes. On the back of the same slip, later: no water, no batteries, coming back earlier tomorrow."
+      }
+    },
+    {
+      "id": "note_grocery_manager",
+      "category": "notatka_sluzbowa",
+      "match": ["poi.subclass=supermarket"],
+      "rarity": "common",
+      "has_lead": false,
+      "title": {
+        "pl": "Protokół zmiany",
+        "en": "Shift handover"
+      },
+      "text": {
+        "pl": "Kasa druga nie działa od rana. Dostawy nie było trzeci dzień. Ludzie biorą po dwadzieścia zgrzewek, przestałem zwracać uwagę. Zamykam wcześniej, klucze zostawiam w skrzynce, bo jutro mnie nie będzie.",
+        "en": "Till two has been down since morning. No delivery for the third day. People are taking twenty packs at a time and I have stopped saying anything. Closing early, leaving the keys in the box, because I will not be here tomorrow."
+      }
+    },
+    {
+      "id": "note_school_blackboard",
+      "category": "kartka_na_drzwiach",
+      "match": ["poi.subclass=school"],
+      "rarity": "common",
+      "has_lead": false,
+      "title": {
+        "pl": "Napis na tablicy",
+        "en": "On the blackboard"
+      },
+      "text": {
+        "pl": "Klasy zawieszone do odwołania. Rodzice odbierają dzieci wejściem od boiska. Kredą, niżej, dziecięcym pismem: mama przyjdzie po mnie o trzeciej. Data sprzed tygodnia, nikt nie starł.",
+        "en": "Classes suspended until further notice. Parents collect from the entrance by the playing field. Lower down, in chalk, in a child's hand: mum is coming for me at three. The date is a week old and nobody wiped it off."
+      }
+    },
+    {
+      "id": "note_school_staffroom",
+      "category": "dziennik",
+      "match": ["poi.subclass=school", "poi.subclass=college"],
+      "rarity": "uncommon",
+      "has_lead": false,
+      "title": {
+        "pl": "Zeszyt z pokoju nauczycielskiego",
+        "en": "Notebook from the staff room"
+      },
+      "text": {
+        "pl": "Dzień pierwszy: przyszła połowa. Dzień drugi: przyszła jedna trzecia, dzwoniłam do wszystkich rodziców. Dzień trzeci: przyszło czworo i zostali do wieczora, bo nikt po nich nie przyjechał. Odprowadziłam ich sama. Dzień czwarty: nie otwieramy.",
+        "en": "Day one: half of them came. Day two: a third, and I rang every parent. Day three: four came and stayed until evening because nobody collected them. I walked them home myself. Day four: we are not opening."
+      }
+    },
+    {
+      "id": "note_hospital_triage",
+      "category": "notatka_sluzbowa",
+      "match": ["poi.class=hospital"],
+      "rarity": "uncommon",
+      "has_lead": false,
+      "title": {
+        "pl": "Kartka z segregacji",
+        "en": "Triage sheet"
+      },
+      "text": {
+        "pl": "Korytarz A pełny od czwartku. Karetki przestały przyjeżdżać w nocy z soboty. Zostawiam listę tego, co jeszcze mamy w magazynie, żeby ktoś nie szukał po omacku. Sól fizjologiczna, opatrunki, nic mocniejszego.",
+        "en": "Corridor A full since Thursday. The ambulances stopped coming on Saturday night. I am leaving a list of what is still in the store so nobody has to search blind. Saline, dressings, nothing stronger."
+      }
+    },
+    {
+      "id": "note_house_fridge",
+      "category": "kartka_na_drzwiach",
+      "match": ["generated.house", "poi.subclass=residential"],
+      "rarity": "common",
+      "has_lead": false,
+      "title": {
+        "pl": "Kartka na lodówce",
+        "en": "Note on the fridge"
+      },
+      "text": {
+        "pl": "Wyjeżdżamy do siostry. Klucz pod doniczką, jak zawsze. Kot został u sąsiadów spod trójki, ale jakby wrócił, to karma jest w szafce nad zlewem. Zostawiam ci zupę w garnku.",
+        "en": "We are going to my sister's. Key under the plant pot, as always. The cat is with the neighbours at number three, but if he comes back the food is in the cupboard over the sink. There is soup in the pan for you."
+      }
+    },
+    {
+      "id": "note_house_daughter",
+      "category": "notatka_pozegnalna",
+      "match": ["generated.house"],
+      "rarity": "uncommon",
+      "has_lead": false,
+      "title": {
+        "pl": "List do córki",
+        "en": "Letter to my daughter"
+      },
+      "text": {
+        "pl": "Kasiu, gdybyś tu wróciła, a mnie nie będzie — poszedłem do ciebie. Wiem, że mówiłaś, żeby nie wychodzić, ale nie umiem tu siedzieć i czekać. Zabrałem zdjęcia i twój szalik. Zostawiam drzwi otwarte, gdybyś mnie minęła po drodze.",
+        "en": "Kasia, if you come back and I am not here — I have gone to you. I know you said not to go out, but I cannot sit here and wait. I took the photographs and your scarf. I am leaving the door unlocked in case we pass each other on the way."
+      }
+    },
+    {
+      "id": "note_house_diary",
+      "category": "dziennik",
+      "match": ["generated.house", "generated.roadside"],
+      "rarity": "common",
+      "has_lead": false,
+      "title": {
+        "pl": "Kilka wpisów",
+        "en": "A few entries"
+      },
+      "text": {
+        "pl": "Pierwszy dzień: zamknęli szkoły, więc dzieci w domu, hałas straszny. Trzeci: nie ma prądu od rana, sąsiedzi wynoszą rzeczy do auta. Piąty: cisza, jakiej tu nigdy nie było. Słychać ptaki i nic więcej. Siódmy: piszę przy świeczce i nie wiem, po co.",
+        "en": "First day: schools shut, so the children are home and the noise is unbearable. Third: no power since morning, the neighbours are carrying things to the car. Fifth: a silence this street has never had. Birds, and nothing else. Seventh: writing by candle and not sure why."
+      }
+    },
+    {
+      "id": "note_shelter_stop",
+      "category": "kartka_na_drzwiach",
+      "match": ["poi.subclass=shelter", "generated.roadside"],
+      "rarity": "common",
+      "has_lead": true,
+      "title": {
+        "pl": "Kartka na przystanku",
+        "en": "Note at the bus stop"
+      },
+      "text": {
+        "pl": "Autobusy nie jeżdżą od wtorku. Zbiórka rano, ulica {street}, biorą tylu, ile się zmieści. Nie czekajcie tutaj po ciemku. Ktoś dopisał niżej, ołówkiem: byliśmy, nikogo nie ma.",
+        "en": "No buses since Tuesday. Muster in the morning on {street}, they take as many as fit. Do not wait here after dark. Somebody has added underneath, in pencil: we came, there is nobody."
+      }
+    },
+    {
+      "id": "note_garage_inventory",
+      "category": "dziennik",
+      "match": ["poi.subclass=car_repair", "landuse.class=garages"],
+      "rarity": "common",
+      "has_lead": false,
+      "title": {
+        "pl": "Spis na kartonie",
+        "en": "List on a piece of card"
+      },
+      "text": {
+        "pl": "Dwa kanistry, oba pełne. Akumulator z niebieskiego passata, jeszcze trzyma. Klucze na haku, gdyby ktoś potrzebował. Biorę tylko tyle, żeby dojechać, reszta zostaje dla następnego.",
+        "en": "Two jerrycans, both full. Battery out of the blue estate, still holds a charge. Keys on the hook if anyone needs them. I am taking only enough to get there, the rest stays for whoever is next."
+      }
+    },
+    {
+      "id": "note_barn_farmer",
+      "category": "dziennik",
+      "match": ["generated.barn"],
+      "rarity": "common",
+      "has_lead": false,
+      "title": {
+        "pl": "Notatka w stodole",
+        "en": "Note in the barn"
+      },
+      "text": {
+        "pl": "Wypuściłem wszystko, co miałem, bo nie mam czym karmić. Krowy poszły w stronę lasu, same wrócą albo i nie. Beczka z wodą pełna, przykryta blachą. Jak ktoś tu trafi: bierzcie, tylko zamknijcie za sobą wrota.",
+        "en": "I let out everything I had because there is nothing to feed them with. The cows went towards the wood; they will come back or they will not. The water butt is full, covered with a sheet of tin. If anyone finds this: take what you need, but shut the doors behind you."
+      }
+    },
+    {
+      "id": "note_city_leaflet",
+      "category": "kartka_na_drzwiach",
+      "match": ["generated.roadside", "poi.subclass=parking"],
+      "rarity": "common",
+      "has_lead": true,
+      "title": {
+        "pl": "Ulotka spod wycieraczki",
+        "en": "Leaflet from under a wiper"
+      },
+      "text": {
+        "pl": "{city} — punkt informacyjny czynny całą dobę, ulica {street}. Prosimy nie gromadzić się przed wejściem. Wodę wydajemy od ósmej. Papier zmókł i dolna połowa jest nie do odczytania.",
+        "en": "{city} — information point open around the clock on {street}. Please do not gather at the entrance. Water is issued from eight. The paper has been rained on and the bottom half is unreadable."
+      }
+    }
+  ]
+}

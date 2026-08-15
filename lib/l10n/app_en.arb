@@ -275,6 +275,8 @@
   "droppedExpires": "{hours} h left",
   "@droppedExpires": {"placeholders": {"hours": {"type": "int"}}},
   "droppedNoRoom": "No room in the pack.",
+  "noteRead": "Read",
+  "noteClose": "Put it back",
   "inventoryTitle": "Inventory",
   "inventoryEmpty": "Your pack is empty.",
   "inventoryEmptyHint": "Search buildings and open places to find something worth carrying.",

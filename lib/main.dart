@@ -26,6 +26,8 @@ import 'loot/dropped_store.dart';
 import 'loot/loot_world.dart';
 import 'loot/obstacle.dart';
 import 'loot/search.dart';
+import 'notes/note.dart';
+import 'ui/note_sheet.dart';
 import 'ui/search_panel.dart';
 import 'game/game_session.dart';
 import 'game/relocation.dart';
@@ -251,6 +253,11 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// Item names, read alongside the catalogue (§1.1, §4.1).
   ItemNames? _names;
 
+  /// What people left behind (§19.1), and what the map calls where the player
+  /// is standing — the second is what fills the first in.
+  NoteSet? _notes;
+  PlaceNames _placeNames = PlaceNames.none;
+
   /// The loot layer (§10). Null until the tables have been read; it does
   /// nothing at all until there is an installed pack to read places out of.
   LootWorld? _world;
@@ -410,6 +417,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     // overlay and the game runs on whatever parsed (§4.1).
     _catalogue = await loadItemCatalogue();
     _names = await loadItemNames();
+    _notes = NoteSet.parse(
+      await rootBundle.loadString('assets/data/notes.json'),
+    );
     final tables = LootTableSet.parse(
       await rootBundle.loadString('assets/data/loot_tables.json'),
     );
@@ -781,6 +791,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
           names: _names ?? ItemNames.empty,
           body: character.body,
           onDrop: (line) => unawaited(_drop(line)),
+          onRead: _readNote,
           onDevFill: kDevTools ? () => unawaited(_devFillPack()) : null,
         ),
       ),
@@ -874,6 +885,14 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     if (!mounted) return;
 
     setState(() => _dropped = items);
+  }
+
+  /// Opens a note the player is carrying (§19.1).
+  void _readNote(CarriedItem line) {
+    final note = line.noteId == null ? null : _notes?[line.noteId!];
+    if (note == null) return;
+
+    unawaited(showNote(context, note: note, names: _placeNames));
   }
 
   /// The pile at the player's feet (§4.8).
@@ -988,7 +1007,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     await LootStore(widget.session.db).save(character.profile.id, plan);
     if (!mounted) return;
 
-    setState(() => _boxes = plan.boxes);
+    setState(() {
+      _boxes = plan.boxes;
+      _placeNames = plan.names;
+    });
   }
 
   /// §3.6: loot is yellow. An emptied box is not drawn at all — a marker that
@@ -1275,11 +1297,23 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     var refused = false;
 
     for (final entry in drop.entries) {
+      // §19.1: a note is not a generic item. Which one it is depends on where
+      // it was found, and it is the same one every time — a message that
+      // changed between readings would stop being somebody's message.
+      final note = entry.key == 'lit_note'
+          ? _notes?.forPlace(
+              selectors: [table.match.isEmpty ? table.id : table.match.first],
+              names: _placeNames,
+              seed: character.profile.rngSeed ^ poiId.hashCode,
+            )
+          : null;
+
       final result = inventory.add(
         entry.key,
         catalogue,
         body: character.body,
         count: entry.value,
+        noteId: note?.id,
       );
       inventory = result.inventory;
 

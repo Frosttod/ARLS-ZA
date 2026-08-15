@@ -26,6 +26,7 @@ import 'dart:math';
 
 import '../map/geometry.dart';
 import '../map/poi_source.dart';
+import '../notes/note.dart';
 import '../safety/spawn_exclusion.dart';
 import 'loot_table.dart';
 
@@ -145,6 +146,7 @@ class SpawnPlan {
     required this.boxes,
     required this.added,
     required this.forgotten,
+    this.names = PlaceNames.none,
   });
 
   /// Everything that should exist after this pass.
@@ -154,6 +156,11 @@ class SpawnPlan {
 
   /// Boxes dropped for being too far away to matter.
   final List<LootBox> forgotten;
+
+  /// What the map calls this place (§19.1.1). Carried on the plan because it
+  /// comes from the same pass over the tiles the candidates did, and reading
+  /// them twice would be reading a city twice.
+  final PlaceNames names;
 }
 
 class LootSpawner {
@@ -178,6 +185,7 @@ class LootSpawner {
     required List<LootBox> existing,
     required DateTime now,
     required int seed,
+    PlaceNames names = PlaceNames.none,
 
     /// §3.5. A place on the map is not automatically a place a person can
     /// stand: the middle of a carriageway, a level crossing and a private yard
@@ -210,7 +218,12 @@ class LootSpawner {
 
     var room = kMaxActiveBoxes - activeNearby;
     if (room <= 0) {
-      return SpawnPlan(boxes: kept, added: const [], forgotten: forgotten);
+      return SpawnPlan(
+        boxes: kept,
+        added: const [],
+        forgotten: forgotten,
+        names: names,
+      );
     }
 
     // A place is only a candidate if a table wants it, nothing already sits on
@@ -261,7 +274,12 @@ class LootSpawner {
       }
     }
     if (available.isEmpty && nearFallback.isEmpty) {
-      return SpawnPlan(boxes: kept, added: const [], forgotten: forgotten);
+      return SpawnPlan(
+        boxes: kept,
+        added: const [],
+        forgotten: forgotten,
+        names: names,
+      );
     }
 
     final random = Random(seed ^ _hourStamp(now));
@@ -308,6 +326,7 @@ class LootSpawner {
       boxes: [...kept, ...added],
       added: added,
       forgotten: forgotten,
+      names: names,
     );
   }
 

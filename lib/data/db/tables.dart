@@ -215,6 +215,12 @@ class InventoryLines extends Table {
   IntColumn get pagesTotal => integer().nullable()();
   IntColumn get pagesRead => integer().withDefault(const Constant(0))();
 
+  /// Which note this is, for a picked-up `lit_note` (§19.1). Null for anything
+  /// else. The text is not stored: it lives in `notes.json` and is resolved
+  /// again on reading, so a corrected translation reaches notes already in a
+  /// player's pack.
+  TextColumn get noteId => text().nullable()();
+
   @override
   List<String> get customConstraints => [
     'FOREIGN KEY (profile_id) REFERENCES profiles (id) ON DELETE CASCADE',

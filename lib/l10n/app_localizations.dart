@@ -1183,6 +1183,18 @@ abstract class L10n {
   /// **'No room in the pack.'**
   String get droppedNoRoom;
 
+  /// No description provided for @noteRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Read'**
+  String get noteRead;
+
+  /// No description provided for @noteClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Put it back'**
+  String get noteClose;
+
   /// No description provided for @inventoryTitle.
   ///
   /// In en, this message translates to:

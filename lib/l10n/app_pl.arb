@@ -195,6 +195,8 @@
   "droppedTake": "Podnieś",
   "droppedExpires": "zostało {hours} h",
   "droppedNoRoom": "Nie mieści się w plecaku.",
+  "noteRead": "Przeczytaj",
+  "noteClose": "Odłóż",
   "inventoryTitle": "Ekwipunek",
   "inventoryEmpty": "Plecak jest pusty.",
   "inventoryEmptyHint": "Przeszukuj budynki i otwarte miejsca, żeby znaleźć coś wartego niesienia.",

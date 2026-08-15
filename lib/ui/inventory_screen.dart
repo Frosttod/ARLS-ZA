@@ -29,6 +29,7 @@ class InventoryScreen extends StatelessWidget {
     required this.names,
     required this.body,
     this.onDrop,
+    this.onRead,
     this.onDevFill,
     super.key,
   });
@@ -48,6 +49,9 @@ class InventoryScreen extends StatelessWidget {
   /// Null while there is nowhere for a dropped item to go. §4.8 puts it on the
   /// map for 24 hours, and that arrives with the loot layer.
   final void Function(CarriedItem line)? onDrop;
+
+  /// §19.1: opens a note somebody left. Null for anything that is not one.
+  final void Function(CarriedItem line)? onRead;
 
   /// Fills the pack with a sample kit. Developer builds only, and only until
   /// the loot layer of §10 gives the game a real way to hand out items — until
@@ -141,6 +145,10 @@ class InventoryScreen extends StatelessWidget {
                 kind: kindName(l10n, catalogue[line.itemId]!.kind),
                 onDrop: onDrop == null ? null : () => onDrop!(line),
                 dropLabel: l10n.inventoryDrop,
+                onRead: line.noteId == null || onRead == null
+                    ? null
+                    : () => onRead!(line),
+                readLabel: l10n.noteRead,
               ),
         ],
       ),
@@ -370,6 +378,8 @@ class _ItemRow extends StatelessWidget {
     required this.kind,
     required this.onDrop,
     this.dropLabel,
+    this.onRead,
+    this.readLabel,
   });
 
   final CarriedItem line;
@@ -381,6 +391,10 @@ class _ItemRow extends StatelessWidget {
   final String kind;
   final VoidCallback? onDrop;
   final String? dropLabel;
+
+  /// Set only for a note (§19.1).
+  final VoidCallback? onRead;
+  final String? readLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -418,6 +432,14 @@ class _ItemRow extends StatelessWidget {
               color: colours.data,
             ),
           ),
+          if (onRead != null)
+            Padding(
+              padding: const EdgeInsets.only(left: 8),
+              child: TextButton(
+                onPressed: onRead,
+                child: Text(readLabel ?? ''),
+              ),
+            ),
           if (onDrop != null)
             Padding(
               padding: const EdgeInsets.only(left: 8),

@@ -39,6 +39,7 @@ class CarriedItem {
     this.condition,
     this.pagesTotal,
     this.pagesRead = 0,
+    this.noteId,
   });
 
   final String itemId;
@@ -52,6 +53,9 @@ class CarriedItem {
   final int? pagesTotal;
   final int pagesRead;
 
+  /// Which note this copy is (§19.1). Null for everything that is not one.
+  final String? noteId;
+
   CarriedItem copyWith({int? count, double? condition, int? pagesRead}) =>
       CarriedItem(
         itemId: itemId,
@@ -59,6 +63,7 @@ class CarriedItem {
         condition: condition ?? this.condition,
         pagesTotal: pagesTotal,
         pagesRead: pagesRead ?? this.pagesRead,
+        noteId: noteId,
       );
 
   /// Mass of this line, using the rolled page count where there is one.
@@ -203,6 +208,7 @@ class Inventory {
     int count = 1,
     double? condition,
     int? pagesTotal,
+    String? noteId,
   }) {
     final definition = catalogue[itemId];
     if (definition == null) {
@@ -214,6 +220,7 @@ class Inventory {
       itemId: itemId,
       condition: condition,
       pagesTotal: pagesTotal,
+      noteId: noteId,
     );
     final massEach = one.massKg(definition);
     final volumeEach = one.volumeL(definition);
@@ -247,6 +254,7 @@ class Inventory {
         count: fits,
         condition: condition,
         pagesTotal: pagesTotal,
+        noteId: noteId,
       ),
     );
 
@@ -258,7 +266,10 @@ class Inventory {
   Inventory _withAdded(ItemDefinition definition, CarriedItem line) {
     final lines = [...carried];
 
-    if (definition.stackable && !definition.hasInstanceState) {
+    // A note never stacks: two notes are two different people's messages.
+    if (definition.stackable &&
+        !definition.hasInstanceState &&
+        line.noteId == null) {
       final index = lines.indexWhere((entry) => entry.itemId == line.itemId);
       if (index >= 0) {
         lines[index] = lines[index].copyWith(

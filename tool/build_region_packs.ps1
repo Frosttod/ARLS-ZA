@@ -10,9 +10,16 @@
 # reach a city block. The catalogue's bounds are the source of truth, so adding
 # a region there is all it takes to have one built.
 #
-# The defaults for -MaxZoom and -OnlyLayers halve the output with nothing lost
-# to the game; both are explained where they are declared. Opole: 208 MB at the
-# obvious settings, 101 MB at these, with an identical POI count.
+# The defaults for -MaxZoom and -OnlyLayers halve the output; both are
+# explained where they are declared. Opole: 208 MB at the obvious settings,
+# 101 MB at these, with an identical POI count.
+#
+# WARNING: the layer list originally said "nothing lost to the game", and that
+# was wrong by one layer. transportation_name carries street names, and 19.1
+# builds notes around them - a message that says which street it is about is
+# the whole point of a game played on a real map. It is in the list now. Packs
+# built before this carry no street names at all, and notes needing one are
+# simply never drawn (19.1.1), so rebuilding is optional rather than urgent.
 #
 # Usage:
 #   .\tool\build_region_packs.ps1 -OsmPath $env:USERPROFILE\Downloads\MAPS\poland-260812.osm.pbf
@@ -41,7 +48,7 @@ param(
     # for §10's loot and landuse for §3.5's exclusions. Dropping the rest --
     # house numbers, street and water names, peaks, airfields -- costs nothing
     # because nothing ever opens them, and the map carries no labels at all.
-    [string]$OnlyLayers = 'landcover,park,water,waterway,building,transportation,boundary,poi,landuse,place',
+    [string]$OnlyLayers = 'landcover,park,water,waterway,building,transportation,transportation_name,boundary,poi,landuse,place',
     [string]$Heap = "6g"
 )
 

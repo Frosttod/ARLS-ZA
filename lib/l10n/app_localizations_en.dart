@@ -615,6 +615,12 @@ class L10nEn extends L10n {
   String get droppedNoRoom => 'No room in the pack.';
 
   @override
+  String get noteRead => 'Read';
+
+  @override
+  String get noteClose => 'Put it back';
+
+  @override
   String get inventoryTitle => 'Inventory';
 
   @override

@@ -182,6 +182,7 @@ class LootWorld {
       existing: existing,
       now: now,
       seed: seed,
+      names: ground.names,
       obstacles: obstacles,
     );
   }
