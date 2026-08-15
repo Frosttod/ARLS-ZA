@@ -1207,6 +1207,102 @@ abstract class L10n {
   /// **'All'**
   String get inventoryDropAll;
 
+  /// No description provided for @inventoryUse.
+  ///
+  /// In en, this message translates to:
+  /// **'Use'**
+  String get inventoryUse;
+
+  /// No description provided for @inventoryWear.
+  ///
+  /// In en, this message translates to:
+  /// **'Put on'**
+  String get inventoryWear;
+
+  /// No description provided for @inventoryEmptySlot.
+  ///
+  /// In en, this message translates to:
+  /// **'empty'**
+  String get inventoryEmptySlot;
+
+  /// No description provided for @inventoryUsing.
+  ///
+  /// In en, this message translates to:
+  /// **'{action}…'**
+  String inventoryUsing(String action);
+
+  /// No description provided for @inventoryUsed.
+  ///
+  /// In en, this message translates to:
+  /// **'{item} — used'**
+  String inventoryUsed(String item);
+
+  /// No description provided for @inventoryNoWound.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing to dress.'**
+  String get inventoryNoWound;
+
+  /// No description provided for @slotHead.
+  ///
+  /// In en, this message translates to:
+  /// **'Head'**
+  String get slotHead;
+
+  /// No description provided for @slotTorsoBase.
+  ///
+  /// In en, this message translates to:
+  /// **'Base layer'**
+  String get slotTorsoBase;
+
+  /// No description provided for @slotTorsoMid.
+  ///
+  /// In en, this message translates to:
+  /// **'Mid layer'**
+  String get slotTorsoMid;
+
+  /// No description provided for @slotTorsoOuter.
+  ///
+  /// In en, this message translates to:
+  /// **'Outer layer'**
+  String get slotTorsoOuter;
+
+  /// No description provided for @slotTorsoArmor.
+  ///
+  /// In en, this message translates to:
+  /// **'Body armour'**
+  String get slotTorsoArmor;
+
+  /// No description provided for @slotArms.
+  ///
+  /// In en, this message translates to:
+  /// **'Arms'**
+  String get slotArms;
+
+  /// No description provided for @slotHands.
+  ///
+  /// In en, this message translates to:
+  /// **'Hands'**
+  String get slotHands;
+
+  /// No description provided for @slotLegs.
+  ///
+  /// In en, this message translates to:
+  /// **'Legs'**
+  String get slotLegs;
+
+  /// No description provided for @slotFeet.
+  ///
+  /// In en, this message translates to:
+  /// **'Feet'**
+  String get slotFeet;
+
+  /// No description provided for @slotBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get slotBack;
+
   /// No description provided for @inventoryTitle.
   ///
   /// In en, this message translates to:

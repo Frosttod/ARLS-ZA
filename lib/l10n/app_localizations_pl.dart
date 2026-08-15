@@ -630,6 +630,58 @@ class L10nPl extends L10n {
   String get inventoryDropAll => 'Wszystko';
 
   @override
+  String get inventoryUse => 'Użyj';
+
+  @override
+  String get inventoryWear => 'Załóż';
+
+  @override
+  String get inventoryEmptySlot => 'puste';
+
+  @override
+  String inventoryUsing(String action) {
+    return '$action…';
+  }
+
+  @override
+  String inventoryUsed(String item) {
+    return '$item — zużyte';
+  }
+
+  @override
+  String get inventoryNoWound => 'Nie ma czego opatrywać.';
+
+  @override
+  String get slotHead => 'Głowa';
+
+  @override
+  String get slotTorsoBase => 'Bielizna';
+
+  @override
+  String get slotTorsoMid => 'Warstwa środkowa';
+
+  @override
+  String get slotTorsoOuter => 'Warstwa wierzchnia';
+
+  @override
+  String get slotTorsoArmor => 'Pancerz';
+
+  @override
+  String get slotArms => 'Ramiona';
+
+  @override
+  String get slotHands => 'Dłonie';
+
+  @override
+  String get slotLegs => 'Nogi';
+
+  @override
+  String get slotFeet => 'Stopy';
+
+  @override
+  String get slotBack => 'Plecy';
+
+  @override
   String get inventoryTitle => 'Ekwipunek';
 
   @override

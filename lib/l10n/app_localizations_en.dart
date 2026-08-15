@@ -627,6 +627,58 @@ class L10nEn extends L10n {
   String get inventoryDropAll => 'All';
 
   @override
+  String get inventoryUse => 'Use';
+
+  @override
+  String get inventoryWear => 'Put on';
+
+  @override
+  String get inventoryEmptySlot => 'empty';
+
+  @override
+  String inventoryUsing(String action) {
+    return '$action…';
+  }
+
+  @override
+  String inventoryUsed(String item) {
+    return '$item — used';
+  }
+
+  @override
+  String get inventoryNoWound => 'Nothing to dress.';
+
+  @override
+  String get slotHead => 'Head';
+
+  @override
+  String get slotTorsoBase => 'Base layer';
+
+  @override
+  String get slotTorsoMid => 'Mid layer';
+
+  @override
+  String get slotTorsoOuter => 'Outer layer';
+
+  @override
+  String get slotTorsoArmor => 'Body armour';
+
+  @override
+  String get slotArms => 'Arms';
+
+  @override
+  String get slotHands => 'Hands';
+
+  @override
+  String get slotLegs => 'Legs';
+
+  @override
+  String get slotFeet => 'Feet';
+
+  @override
+  String get slotBack => 'Back';
+
+  @override
   String get inventoryTitle => 'Inventory';
 
   @override

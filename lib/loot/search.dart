@@ -113,6 +113,8 @@ class Search {
     this.targetPoiId,
     this.depth,
     this.breach,
+    this.usingItemId,
+    this.usingLabel,
     this.strikes = 0,
   });
 
@@ -135,6 +137,28 @@ class Search {
     requiredTime: Duration(seconds: breach.seconds),
     targetPoiId: poiId,
     breach: breach,
+  );
+
+  /// §4.7: using something, which costs the time the item's own data says.
+  ///
+  /// Here rather than in a class of its own because it is the same thing from
+  /// the player's side — a bar, a countdown, and one way out — and two timers
+  /// with two ways of being cancelled is how they end up disagreeing.
+  ///
+  /// Stillness is not required: somebody can eat while walking, and §10.2's
+  /// eight-metre rule exists for reconnaissance rather than for a sandwich.
+  factory Search.using({
+    required GeoPoint at,
+    required DateTime now,
+    required String itemId,
+    required Duration duration,
+    required String label,
+  }) => Search(
+    anchor: at,
+    startedAt: now,
+    requiredTime: duration,
+    usingItemId: itemId,
+    usingLabel: label,
   );
 
   /// §19.3: a place, and how thoroughly.
@@ -170,6 +194,12 @@ class Search {
 
   bool get isBreach => breach != null;
 
+  /// What is being used (§4.7), and what to call it while it happens.
+  final String? usingItemId;
+  final String? usingLabel;
+
+  bool get isUse => usingItemId != null;
+
   /// How far this is heard (§5.6.1). Forcing a door carries 150 m; a search
   /// carries 80; standing still and looking around carries nothing at all.
   double get noiseM =>
@@ -179,7 +209,8 @@ class Search {
   /// inside it, so a wander out and back does not accumulate.
   final int strikes;
 
-  bool get isArea => targetPoiId == null && breach == null;
+  bool get isArea =>
+      targetPoiId == null && breach == null && usingItemId == null;
   bool get isRunning => state == SearchState.running;
 
   Duration get remaining {
@@ -202,7 +233,8 @@ class Search {
     if (!present || at == null) {
       return _endedAs(SearchState.lostPresence);
     }
-    if (at.distanceTo(anchor) > kStillnessM) {
+    // Using something is not searching: a person can drink while walking.
+    if (!isUse && at.distanceTo(anchor) > kStillnessM) {
       final missed = strikes + 1;
       return missed >= kStillnessStrikes
           ? _endedAs(SearchState.cancelledByMovement)
@@ -231,6 +263,8 @@ class Search {
     targetPoiId: targetPoiId,
     depth: depth,
     breach: breach,
+    usingItemId: usingItemId,
+    usingLabel: usingLabel,
     strikes: strikes ?? this.strikes,
   );
 }

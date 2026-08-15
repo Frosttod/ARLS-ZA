@@ -15,7 +15,9 @@ import 'devtools/dev_session.dart';
 import 'game/game_loop.dart';
 import 'inventory/inventory.dart';
 import 'inventory/inventory_store.dart';
+import 'inventory/item_use.dart';
 import 'items/item_assets.dart';
+import 'items/item.dart';
 import 'items/item_catalogue.dart';
 import 'items/item_names.dart';
 import 'loot/loot_spawner.dart';
@@ -791,7 +793,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
           names: _names ?? ItemNames.empty,
           body: character.body,
           onDrop: (line, count) => unawaited(_drop(line, count)),
+          onWear: (line) => unawaited(_wear(line)),
           onTakeOff: (line) => unawaited(_takeOff(line)),
+          onUse: (line) => unawaited(_use(line)),
           onRead: _readNote,
           onDevFill: kDevTools ? () => unawaited(_devFillPack()) : null,
         ),
@@ -874,6 +878,112 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       ),
     );
     await _reloadDropped();
+  }
+
+  /// §4.4: puts something on, and what was in that slot comes off.
+  ///
+  /// A backpack is worn too (§4.5), and swapping one for another is the same
+  /// gesture — so it goes through here rather than through a separate control
+  /// nobody would look for.
+  Future<void> _wear(CarriedItem line) async {
+    final catalogue = _catalogue;
+    if (catalogue == null) return;
+
+    final definition = catalogue[line.itemId];
+    if (definition == null) return;
+
+    var next = _inventory.value.remove(line.itemId, count: 1);
+    if (next == null) return;
+
+    if (definition.kind == ItemKind.backpack) {
+      // The old pack goes into the new one, which is what actually happens
+      // when somebody changes bags in a street.
+      final previous = next.packId;
+      next = next.withPack(line.itemId);
+      if (previous != null) {
+        next = next
+            .add(previous, catalogue, body: _character!.body)
+            .inventory;
+      }
+    } else {
+      next = next.wear(line.itemId, catalogue);
+    }
+
+    _inventory.value = next;
+    await _saveInventory();
+  }
+
+  /// §4.7: eats, drinks or dresses a wound, for as long as the data says.
+  ///
+  /// The time is the point. §2.1a calls these actions rather than occupations
+  /// because they are short, but a player who wants to drink half a litre
+  /// stands still for twenty-five seconds to do it, and that is a decision
+  /// when something is walking towards them.
+  Future<void> _use(CarriedItem line) async {
+    final catalogue = _catalogue;
+    final character = _character;
+    final loop = _loop;
+    if (catalogue == null || character == null || loop == null) return;
+    if (_search != null) return;
+
+    final definition = catalogue[line.itemId];
+    final use = definition == null ? null : useOf(definition);
+    if (definition == null || use == null) return;
+
+    // Nothing in the loop carries a wound yet — combat is stage 5 — so a
+    // dressing has nothing to treat. Spending one for no effect would be worse
+    // than saying so.
+    if (use.stopsBleedingTo != null && use.kcal == 0 && use.waterMl == 0) {
+      _say(L10n.of(context).inventoryNoWound);
+      return;
+    }
+
+    final fix = _snapshot?.displayFix;
+    setState(() {
+      _search = Search.using(
+        at: fix == null
+            ? const GeoPoint(0, 0)
+            : GeoPoint(fix.latitude, fix.longitude),
+        now: DateTime.now().toUtc(),
+        itemId: line.itemId,
+        duration: use.duration,
+        label: use.action.label,
+      );
+    });
+    _startSearchTimer();
+  }
+
+  /// The action finished: the item is gone and the body has it.
+  Future<void> _finishUse(Search action) async {
+    final catalogue = _catalogue;
+    final loop = _loop;
+    final itemId = action.usingItemId;
+    if (catalogue == null || loop == null || itemId == null) return;
+
+    final definition = catalogue[itemId];
+    final use = definition == null ? null : useOf(definition);
+    if (definition == null || use == null) return;
+
+    if (use.consumesItem) {
+      final next = _inventory.value.remove(itemId, count: 1);
+      if (next != null) {
+        _inventory.value = next;
+        await _saveInventory();
+      }
+    }
+
+    loop.applyUse(kcal: use.kcal, waterMl: use.waterMl);
+    if (!mounted) return;
+
+    final language = Localizations.localeOf(context).languageCode;
+    _say(
+      L10n.of(context).inventoryUsed(
+        definition.name.resolve(
+          language: language,
+          lookup: (_names ?? ItemNames.empty).forLanguage(language),
+        ),
+      ),
+    );
   }
 
   /// §4.4: a worn piece comes off into the pack, never onto the ground.
@@ -1121,6 +1231,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     if (next.state == SearchState.done) {
       final at = snapshot?.state.lastUpdate ?? now;
       await switch (next) {
+        final s when s.isUse => _finishUse(s),
         final s when s.isBreach => _finishBreach(s, at),
         final s when s.isArea => _finishAreaSearch(s, at),
         final s => _finishObjectSearch(s, at),

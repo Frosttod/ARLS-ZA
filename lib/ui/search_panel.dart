@@ -125,7 +125,8 @@ class _Running extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                search.isArea ? l10n.searchAreaRunning : l10n.searchHere,
+                search.usingLabel ??
+                    (search.isArea ? l10n.searchAreaRunning : l10n.searchHere),
                 style: TextStyle(fontSize: 13, color: colours.text),
               ),
             ),
@@ -152,7 +153,8 @@ class _Running extends StatelessWidget {
         Text(
           // §19.3, §5.6: an object search is heard from eighty metres. Said
           // plainly, because it is the reason to choose the shorter one.
-          search.isArea ? '' : l10n.searchNoise,
+          // Eating makes no noise worth mentioning, so it says nothing.
+          search.isArea || search.isUse ? '' : l10n.searchNoise,
           style: TextStyle(fontSize: 11, color: colours.muted),
         ),
       ],

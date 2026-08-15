@@ -6,15 +6,24 @@
 /// behind needs both figures per item; a total alone says something must go
 /// without saying what.
 ///
-/// Worn kit is listed apart from packed kit, because they cost differently: a
-/// coat on your back counts against mass and not against the pack (§18.1a).
+/// **Worn kit is a figure, not a list.** The slots come from §4.4 and are laid
+/// out head to foot, so a glance reads as a person rather than as an inventory:
+/// what is on, what is missing, and where the armour is. An empty slot is still
+/// a row, because the gap is the information — a list of only what exists
+/// cannot tell somebody they have no gloves.
+///
+/// No sprite sheet — §3.1 ships none deliberately — so the figure is drawn in
+/// type and rules. That also keeps every line readable aloud, which a grid of
+/// unlabelled tiles would not be (§12).
 library;
 
 import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 
 import '../devtools/dev_mode.dart';
+import '../inventory/body_slots.dart';
 import '../inventory/inventory.dart';
+import '../inventory/item_use.dart';
 import '../items/item.dart';
 import '../items/item_catalogue.dart';
 import '../items/item_names.dart';
@@ -29,7 +38,9 @@ class InventoryScreen extends StatelessWidget {
     required this.names,
     required this.body,
     this.onDrop,
+    this.onWear,
     this.onTakeOff,
+    this.onUse,
     this.onRead,
     this.onDevFill,
     super.key,
@@ -47,19 +58,23 @@ class InventoryScreen extends StatelessWidget {
   final ItemNames names;
   final BodyProfile body;
 
-  /// Puts something on the ground (§4.8). The count is how many of the line,
-  /// so a stack of three can be thinned one at a time.
+  /// Puts something on the ground (§4.8), as many of the line as asked for.
   final void Function(CarriedItem line, int count)? onDrop;
 
-  /// Takes a worn piece off and puts it in the pack (§4.4).
+  /// Puts something on (§4.4). Whatever was in that slot comes off into the
+  /// pack.
+  final void Function(CarriedItem line)? onWear;
+
+  /// Takes a worn piece off into the pack (§4.4).
   final void Function(CarriedItem line)? onTakeOff;
+
+  /// Eats, drinks or dresses a wound (§4.7), for as long as the data says.
+  final void Function(CarriedItem line)? onUse;
 
   /// §19.1: opens a note somebody left. Null for anything that is not one.
   final void Function(CarriedItem line)? onRead;
 
-  /// Fills the pack with a sample kit. Developer builds only, and only until
-  /// the loot layer of §10 gives the game a real way to hand out items — until
-  /// then this screen has nothing to show and no way to be tried on a phone.
+  /// Fills the pack with a sample kit. Developer builds only.
   final VoidCallback? onDevFill;
 
   @override
@@ -106,35 +121,25 @@ class InventoryScreen extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               l10n.inventoryOverComfort,
-              style: TextStyle(
-                fontSize: 12,
-                color: const Color(0xFFE8B33A),
-              ),
+              style: const TextStyle(fontSize: 12, color: Color(0xFFE8B33A)),
             ),
           ],
-          const SizedBox(height: 12),
-          _PackLine(
-            label: l10n.inventoryBackpack,
-            value: inventory.packId == null
-                ? l10n.inventoryNoBackpack
-                : _nameOf(inventory.packId!, language),
-            colours: colours,
-          ),
-          if (inventory.worn.isNotEmpty) ...[
-            const SizedBox(height: 20),
-            _SectionHeader(label: l10n.inventoryWorn, colours: colours),
-            for (final line in inventory.worn)
-              _ItemRow(
-                line: line,
-                definition: catalogue[line.itemId]!,
-                name: _nameOf(line.itemId, language),
-                kind: kindName(l10n, catalogue[line.itemId]!.kind),
-                // Worn kit comes off into the pack; throwing it away from the
-                // body in one tap is the mistake this avoids.
-                onTakeOff: onTakeOff == null ? null : () => onTakeOff!(line),
-                takeOffLabel: l10n.inventoryTakeOff,
-              ),
-          ],
+
+          const SizedBox(height: 20),
+          _SectionHeader(label: l10n.inventoryWorn, colours: colours),
+          for (final slot in BodySlot.values)
+            _SlotRow(
+              label: _slotName(l10n, slot),
+              line: _wornIn(inventory, slot),
+              isPack: slot == BodySlot.back,
+              catalogue: catalogue,
+              nameOf: (id) => _nameOf(id, language),
+              emptyLabel: l10n.inventoryEmptySlot,
+              takeOffLabel: l10n.inventoryTakeOff,
+              onTakeOff: onTakeOff,
+              colours: colours,
+            ),
+
           const SizedBox(height: 20),
           _SectionHeader(label: l10n.inventoryPack, colours: colours),
           if (inventory.carried.isEmpty)
@@ -146,25 +151,48 @@ class InventoryScreen extends StatelessWidget {
           else
             for (final line in _sorted(inventory.carried))
               _ItemRow(
+                key: ValueKey('${line.itemId}.${line.noteId ?? ''}'),
                 line: line,
                 definition: catalogue[line.itemId]!,
                 name: _nameOf(line.itemId, language),
                 kind: kindName(l10n, catalogue[line.itemId]!.kind),
-                onDrop: onDrop == null ? null : () => onDrop!(line, 1),
-                onDropAll: onDrop == null || line.count <= 1
-                    ? null
-                    : () => onDrop!(line, line.count),
-                dropLabel: l10n.inventoryDrop,
-                dropAllLabel: l10n.inventoryDropAll,
-                onRead: line.noteId == null || onRead == null
-                    ? null
-                    : () => onRead!(line),
-                readLabel: l10n.noteRead,
+                l10n: l10n,
+                onDrop: onDrop,
+                onWear: onWear,
+                onUse: onUse,
+                onRead: onRead,
               ),
         ],
       ),
     );
   }
+
+  CarriedItem? _wornIn(Inventory inventory, BodySlot slot) {
+    if (slot == BodySlot.back) {
+      final packId = inventory.packId;
+      return packId == null ? null : CarriedItem(itemId: packId);
+    }
+    for (final line in inventory.worn) {
+      final where = BodySlot.fromWire(
+        catalogue[line.itemId]?.props['slot'] as String?,
+      );
+      if (where == slot) return line;
+    }
+    return null;
+  }
+
+  String _slotName(L10n l10n, BodySlot slot) => switch (slot) {
+    BodySlot.head => l10n.slotHead,
+    BodySlot.torsoBase => l10n.slotTorsoBase,
+    BodySlot.torsoMid => l10n.slotTorsoMid,
+    BodySlot.torsoOuter => l10n.slotTorsoOuter,
+    BodySlot.torsoArmor => l10n.slotTorsoArmor,
+    BodySlot.arms => l10n.slotArms,
+    BodySlot.hands => l10n.slotHands,
+    BodySlot.legs => l10n.slotLegs,
+    BodySlot.feet => l10n.slotFeet,
+    BodySlot.back => l10n.slotBack,
+  };
 
   String _nameOf(String itemId, String language) {
     final definition = catalogue[itemId];
@@ -186,6 +214,92 @@ class InventoryScreen extends StatelessWidget {
       return byMass != 0 ? byMass : a.itemId.compareTo(b.itemId);
     });
     return sorted;
+  }
+}
+
+/// One place on the body, filled or not.
+class _SlotRow extends StatelessWidget {
+  const _SlotRow({
+    required this.label,
+    required this.line,
+    required this.isPack,
+    required this.catalogue,
+    required this.nameOf,
+    required this.emptyLabel,
+    required this.takeOffLabel,
+    required this.onTakeOff,
+    required this.colours,
+  });
+
+  final String label;
+  final CarriedItem? line;
+
+  /// The back is worn but is not taken off here: a pack is swapped by putting
+  /// another one on, and a pack inside its own pack is a knot nobody needs.
+  final bool isPack;
+
+  final ItemCatalogue catalogue;
+  final String Function(String itemId) nameOf;
+  final String emptyLabel;
+  final String takeOffLabel;
+  final void Function(CarriedItem)? onTakeOff;
+  final HudColors colours;
+
+  @override
+  Widget build(BuildContext context) {
+    final worn = line;
+    final definition = worn == null ? null : catalogue[worn.itemId];
+
+    return Semantics(
+      label: '$label: ${worn == null ? emptyLabel : nameOf(worn.itemId)}',
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 4),
+        padding: const EdgeInsets.fromLTRB(10, 6, 4, 6),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: colours.muted.withValues(alpha: worn == null ? 0.2 : 0.5),
+          ),
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 96,
+              child: Text(
+                label.toUpperCase(),
+                style: TextStyle(
+                  fontSize: 9,
+                  letterSpacing: 1.1,
+                  color: colours.muted,
+                ),
+              ),
+            ),
+            Expanded(
+              child: Text(
+                worn == null ? emptyLabel : nameOf(worn.itemId),
+                style: TextStyle(
+                  fontSize: 13,
+                  color: worn == null ? colours.muted : colours.text,
+                  fontStyle: worn == null
+                      ? FontStyle.italic
+                      : FontStyle.normal,
+                ),
+              ),
+            ),
+            if (definition != null)
+              Text(
+                '${worn!.massKg(definition).toStringAsFixed(1)} kg',
+                style: TextStyle(fontSize: 11, color: colours.data),
+              ),
+            if (worn != null && !isPack && onTakeOff != null)
+              TextButton(
+                onPressed: () => onTakeOff!(worn),
+                child: Text(takeOffLabel),
+              ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -326,38 +440,201 @@ class _SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: 4),
+    padding: const EdgeInsets.only(bottom: 6),
     child: Text(
       label.toUpperCase(),
-      style: TextStyle(
-        fontSize: 10,
-        letterSpacing: 1.4,
-        color: colours.muted,
-      ),
+      style: TextStyle(fontSize: 10, letterSpacing: 1.4, color: colours.muted),
     ),
   );
 }
 
-class _PackLine extends StatelessWidget {
-  const _PackLine({
-    required this.label,
+/// One line in the pack, with everything that can be done to it.
+///
+/// Stateful for one reason: how many to put down. §18.1a makes a full pack a
+/// decision, and "all or nothing" is not the decision — a player shedding a
+/// kilogram of wood should not lose six.
+class _ItemRow extends StatefulWidget {
+  const _ItemRow({
+    required this.line,
+    required this.definition,
+    required this.name,
+    required this.kind,
+    required this.l10n,
+    super.key,
+    this.onDrop,
+    this.onWear,
+    this.onUse,
+    this.onRead,
+  });
+
+  final CarriedItem line;
+  final ItemDefinition definition;
+  final String name;
+  final String kind;
+  final L10n l10n;
+
+  final void Function(CarriedItem, int)? onDrop;
+  final void Function(CarriedItem)? onWear;
+  final void Function(CarriedItem)? onUse;
+  final void Function(CarriedItem)? onRead;
+
+  @override
+  State<_ItemRow> createState() => _ItemRowState();
+}
+
+class _ItemRowState extends State<_ItemRow> {
+  int _toDrop = 1;
+
+  @override
+  Widget build(BuildContext context) {
+    final colours = HudColors.of(context);
+    final line = widget.line;
+    final l10n = widget.l10n;
+
+    final mass = line.massKg(widget.definition);
+    final volume = line.volumeL(widget.definition);
+    final wearable =
+        BodySlot.fromWire(widget.definition.props['slot'] as String?) != null ||
+        widget.definition.kind == ItemKind.backpack;
+    final usable = useOf(widget.definition) != null;
+
+    final count = line.count < 1 ? 1 : line.count;
+    final toDrop = _toDrop > count ? count : _toDrop;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      count > 1 ? '${widget.name}  ×$count' : widget.name,
+                      style: TextStyle(fontSize: 14, color: colours.text),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      _subtitle(),
+                      style: TextStyle(fontSize: 11, color: colours.muted),
+                    ),
+                  ],
+                ),
+              ),
+              Text(
+                '${mass.toStringAsFixed(mass < 1 ? 2 : 1)} kg\n'
+                '${volume.toStringAsFixed(volume < 1 ? 2 : 1)} l',
+                textAlign: TextAlign.right,
+                style: TextStyle(
+                  fontSize: 11,
+                  height: 1.4,
+                  color: colours.data,
+                ),
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              if (usable && widget.onUse != null)
+                TextButton(
+                  onPressed: () => widget.onUse!(line),
+                  child: Text(l10n.inventoryUse),
+                ),
+              if (wearable && widget.onWear != null)
+                TextButton(
+                  onPressed: () => widget.onWear!(line),
+                  child: Text(l10n.inventoryWear),
+                ),
+              if (line.noteId != null && widget.onRead != null)
+                TextButton(
+                  onPressed: () => widget.onRead!(line),
+                  child: Text(l10n.noteRead),
+                ),
+              const Spacer(),
+              if (widget.onDrop != null) ...[
+                // Only where there is a choice to make. A stepper beside a
+                // single bandage is a control with one setting.
+                if (count > 1)
+                  _Stepper(
+                    value: toDrop,
+                    max: count,
+                    onChanged: (value) => setState(() => _toDrop = value),
+                    colours: colours,
+                  ),
+                TextButton(
+                  onPressed: () => widget.onDrop!(line, toDrop),
+                  child: Text(l10n.inventoryDrop),
+                ),
+              ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// What the line is, plus whatever per-piece state it carries: how worn it
+  /// is, or how far through a book the player has read (§4.6.3).
+  String _subtitle() {
+    final parts = <String>[widget.kind];
+
+    final condition = widget.line.condition;
+    if (condition != null) parts.add('${condition.round()}%');
+
+    final pages = widget.line.pagesTotal;
+    if (pages != null) parts.add('${widget.line.pagesRead} / $pages');
+
+    return parts.join(' · ');
+  }
+}
+
+/// How many of a stack to put down.
+class _Stepper extends StatelessWidget {
+  const _Stepper({
     required this.value,
+    required this.max,
+    required this.onChanged,
     required this.colours,
   });
 
-  final String label;
-  final String value;
+  final int value;
+  final int max;
+  final ValueChanged<int> onChanged;
   final HudColors colours;
 
   @override
   Widget build(BuildContext context) => Row(
-    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    mainAxisSize: MainAxisSize.min,
     children: [
-      Text(
-        label.toUpperCase(),
-        style: TextStyle(fontSize: 10, letterSpacing: 1.2, color: colours.muted),
+      IconButton(
+        onPressed: value > 1 ? () => onChanged(value - 1) : null,
+        icon: const Icon(Icons.remove, size: 18),
+        visualDensity: VisualDensity.compact,
+        constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+        padding: EdgeInsets.zero,
       ),
-      Text(value, style: TextStyle(fontSize: 13, color: colours.text)),
+      SizedBox(
+        width: 24,
+        child: Text(
+          '$value',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 13,
+            color: colours.text,
+            fontFeatures: const [FontFeature.tabularFigures()],
+          ),
+        ),
+      ),
+      IconButton(
+        onPressed: value < max ? () => onChanged(value + 1) : null,
+        icon: const Icon(Icons.add, size: 18),
+        visualDensity: VisualDensity.compact,
+        constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+        padding: EdgeInsets.zero,
+      ),
     ],
   );
 }
@@ -380,130 +657,6 @@ String kindName(L10n l10n, ItemKind kind) => switch (kind) {
   ItemKind.material => l10n.kindMaterial,
   ItemKind.misc => l10n.kindMisc,
 };
-
-class _ItemRow extends StatelessWidget {
-  const _ItemRow({
-    required this.line,
-    required this.definition,
-    required this.name,
-    required this.kind,
-    this.onDrop,
-    this.onDropAll,
-    this.dropLabel,
-    this.dropAllLabel,
-    this.onTakeOff,
-    this.takeOffLabel,
-    this.onRead,
-    this.readLabel,
-  });
-
-  final CarriedItem line;
-  final ItemDefinition definition;
-  final String name;
-
-  /// Translated, and passed in rather than looked up here: a row should not
-  /// need a localisation context to know what it is showing.
-  final String kind;
-  final VoidCallback? onDrop;
-
-  /// Set only where there is more than one, so a stack can go all at once
-  /// without making a single item ask which.
-  final VoidCallback? onDropAll;
-
-  final String? dropLabel;
-  final String? dropAllLabel;
-
-  final VoidCallback? onTakeOff;
-  final String? takeOffLabel;
-
-  /// Set only for a note (§19.1).
-  final VoidCallback? onRead;
-  final String? readLabel;
-
-  @override
-  Widget build(BuildContext context) {
-    final colours = HudColors.of(context);
-    final mass = line.massKg(definition);
-    final volume = line.volumeL(definition);
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  line.count > 1 ? '$name  ×${line.count}' : name,
-                  style: TextStyle(fontSize: 14, color: colours.text),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  _subtitle(),
-                  style: TextStyle(fontSize: 11, color: colours.muted),
-                ),
-              ],
-            ),
-          ),
-          Text(
-            '${mass.toStringAsFixed(mass < 1 ? 2 : 1)} kg\n'
-            '${volume.toStringAsFixed(volume < 1 ? 2 : 1)} l',
-            textAlign: TextAlign.right,
-            style: TextStyle(
-              fontSize: 11,
-              height: 1.4,
-              color: colours.data,
-            ),
-          ),
-          if (onRead != null)
-            Padding(
-              padding: const EdgeInsets.only(left: 8),
-              child: TextButton(
-                onPressed: onRead,
-                child: Text(readLabel ?? ''),
-              ),
-            ),
-          if (onTakeOff != null)
-            Padding(
-              padding: const EdgeInsets.only(left: 8),
-              child: TextButton(
-                onPressed: onTakeOff,
-                child: Text(takeOffLabel ?? ''),
-              ),
-            ),
-          if (onDrop != null)
-            Padding(
-              padding: const EdgeInsets.only(left: 8),
-              child: TextButton(
-                onPressed: onDrop,
-                child: Text(dropLabel ?? ''),
-              ),
-            ),
-          if (onDropAll != null)
-            TextButton(
-              onPressed: onDropAll,
-              child: Text(dropAllLabel ?? ''),
-            ),
-        ],
-      ),
-    );
-  }
-
-  /// What the line is, plus whatever per-piece state it carries: how worn it
-  /// is, or how far through a book the player has read (§4.6.3).
-  String _subtitle() {
-    final parts = <String>[kind];
-
-    final condition = line.condition;
-    if (condition != null) parts.add('${condition.round()}%');
-
-    final pages = line.pagesTotal;
-    if (pages != null) parts.add('${line.pagesRead} / $pages');
-
-    return parts.join(' · ');
-  }
-}
 
 class _Empty extends StatelessWidget {
   const _Empty({

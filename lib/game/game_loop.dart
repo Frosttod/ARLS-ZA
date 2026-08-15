@@ -444,6 +444,29 @@ class GameLoop {
     _publish();
   }
 
+  /// Applies what using something did (§4.7).
+  ///
+  /// A game action rather than a developer override, so it has its own door:
+  /// eating tops the reserve up towards the day's requirement and never past
+  /// it (§2.2 — a full stomach is full), and first aid takes the bleeding down
+  /// a grade rather than clearing it by fiat.
+  /// ⚠️ No bleeding argument, on purpose. Nothing in the loop carries a wound
+  /// yet — line 305 pins the tier at none until combat lands in stage 5 — so a
+  /// dressing has nothing to treat, and accepting a parameter that silently
+  /// did nothing would be worse than not offering it. The caller refuses to
+  /// spend a bandage on an uninjured character instead.
+  void applyUse({double kcal = 0, double waterMl = 0}) {
+    _state = _state.copyWith(
+      caloriesKcal: (_state.caloriesKcal + kcal).clamp(
+        0.0,
+        constants.caloriesDailyKcal,
+      ),
+      waterMl: (_state.waterMl + waterMl).clamp(0.0, constants.waterDailyMl),
+    );
+    writer.stageHot(_toCompanion());
+    _publish();
+  }
+
   /// Applies a developer-mode override (§11.2).
   void applyOverride(SimState forced) {
     _state = forced.copyWith(lastUpdate: _state.lastUpdate);
