@@ -13,13 +13,13 @@ Każdy zamknięty etap dostaje sekcję **Dziennik wykonania** z decyzjami podję
 | 2 | Postać i fizjologia | ✅ zamknięty | 2026-08-11 | `f2b1056`, `5555db2`, `2b0a37e`, `d869661` |
 | 3 | Mapa, GPS, bezpieczeństwo gracza | 🟡 13/13 zadań, po pierwszym spacerze | — | `f035626` … `43510ef` (15 commitów) |
 | 4 | Przedmioty, loot, przeszukanie | 🟡 11/11 zadań, przed testem w terenie | — | `2b1cb31` … |
-| 5 | Walka, przeciwnicy, hałas | 🟡 3/14 zadań | — | — |
+| 5 | Walka, przeciwnicy, hałas | 🟡 5/14 zadań | — | — |
 | 6 | Ognisko z pełnym cyklem | ⬜ | — | — |
 | 7 | Audio pozycyjne i haptyka | ⬜ | — | — |
 | 8 | Schron, obóz, pętla dobowa | ⬜ | — | — |
 | 9 | Onboarding, dostępność, zgodność | ⬜ | — | — |
 
-**Metryki:** 972 testy · `flutter analyze` czysty · schemat bazy **v11** · release APK 89,5 MB bez devtools
+**Metryki:** 1014 testów · `flutter analyze` czysty · schemat bazy **v11** · release APK 89,5 MB bez devtools
 
 ### Zablokowane na użytkowniku
 
@@ -374,8 +374,8 @@ Dwa wnioski na przyszłość:
 | 5.2 | ✅ Rekalibracja składników: tętno kwadratowo, ruch gracza `8 × v^1.2` | §5.1.1 |
 | 5.3 | Jawna szansa trafienia w HUD wraz z największym składnikiem błędu | §5.1.4 |
 | 5.4 | ✅ Model obrażeń: `5,1 × J^0,6 × wound_factor × mnożnik_lokalizacji × (1 − ochrona)` | §5.1.5 |
-| 5.5 | Szwędacz: parametry, maszyna stanów, budżet sprintu, smycz 400 m, utrata kontaktu 45 s | §6.1, §6.1a, §6.2 |
-| 5.6 | Ruch przeciwników po linii prostej (routing OSM poza MVP) | §6.3 |
+| 5.5 | ✅ Szwędacz: parametry, maszyna stanów, budżet sprintu, smycz 400 m, utrata kontaktu 45 s | §6.1, §6.1a, §6.2 |
+| 5.6 | ✅ Ruch przeciwników po linii prostej (routing OSM poza MVP) | §6.3 |
 | 5.7 | Namierzanie jednego celu, koszt przełączenia 1,2 s, brak automatyki po śmierci celu | §5.5.1 |
 | 5.8 | HUD walki grupowej ze wskaźnikiem budżetu sprintu każdego przeciwnika | §5.5.2 |
 | 5.9 | Przerwanie przeładowania przy zbliżeniu <5 m | §5.5.4 |
