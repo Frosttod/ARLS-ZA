@@ -195,6 +195,7 @@
   "droppedTake": "Podnieś",
   "droppedExpires": "zostało {hours} h",
   "droppedNoRoom": "Nie mieści się w plecaku.",
+  "groundEmpty": "Już nic tu nie ma.",
   "noteRead": "Przeczytaj",
   "noteClose": "Odłóż",
   "inventoryTakeOff": "Zdejmij",

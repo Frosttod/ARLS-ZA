@@ -100,3 +100,79 @@ DropSweep sweepDropped(List<DroppedItem> items, DateTime now) {
     removed: [...removed, ...alive.skip(kMaxDroppedItems)],
   );
 }
+
+/// One kind of thing lying within reach, however many rows of it there are.
+///
+/// §4.8 stores a row per drop, so three bandages put down on three walks are
+/// three rows in one spot. To the player standing over them that is one pile
+/// of three bandages, and picking them up one at a time is a chore rather than
+/// a decision. Two rows only merge where nothing distinguishes the pieces:
+/// a rifle at 40% and the same rifle at 90% stay apart, because which one is
+/// picked up is exactly the choice worth having (§4.2).
+class GroundPile {
+  const GroundPile({
+    required this.itemId,
+    required this.count,
+    required this.parts,
+    required this.distanceM,
+    this.condition,
+    this.pagesTotal,
+    this.pagesRead = 0,
+  });
+
+  final String itemId;
+
+  /// Everything in this pile, added up.
+  final int count;
+
+  /// The rows behind it, nearest first. Picking the pile up takes them in that
+  /// order, so a pack that fills part-way through leaves the far ones.
+  final List<DroppedItem> parts;
+
+  /// How far the nearest row of it is.
+  final double distanceM;
+
+  final double? condition;
+  final int? pagesTotal;
+  final int pagesRead;
+}
+
+/// Everything within [reachM] of [at], gathered into piles, nearest first.
+List<GroundPile> pilesWithin(
+  List<DroppedItem> items,
+  GeoPoint at, {
+  required double reachM,
+}) {
+  final near =
+      items
+          .map((item) => (item: item, distance: item.position.distanceTo(at)))
+          .where((entry) => entry.distance <= reachM)
+          .toList()
+        ..sort((a, b) => a.distance.compareTo(b.distance));
+
+  final piles = <String, List<({DroppedItem item, double distance})>>{};
+  for (final entry in near) {
+    // Anything that tells one piece from another keeps them apart: condition,
+    // and how far through a book somebody is.
+    final key = [
+      entry.item.itemId,
+      entry.item.condition ?? '',
+      entry.item.pagesTotal ?? '',
+      entry.item.pagesRead,
+    ].join('|');
+    piles.putIfAbsent(key, () => []).add(entry);
+  }
+
+  return [
+    for (final group in piles.values)
+      GroundPile(
+        itemId: group.first.item.itemId,
+        count: group.fold(0, (sum, entry) => sum + entry.item.count),
+        parts: [for (final entry in group) entry.item],
+        distanceM: group.first.distance,
+        condition: group.first.item.condition,
+        pagesTotal: group.first.item.pagesTotal,
+        pagesRead: group.first.item.pagesRead,
+      ),
+  ]..sort((a, b) => a.distanceM.compareTo(b.distanceM));
+}

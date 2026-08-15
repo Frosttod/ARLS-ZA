@@ -153,5 +153,140 @@ void main() {
 
       expect(await store.load(profileId, now), isEmpty);
     });
+
+    test('a pack with room for two of five leaves three on the ground', () async {
+      // §4.8, §18.1a: what a full pack could not take stays where it was put.
+      // Deleting the row for a partial pick-up would destroy the rest of it.
+      final store = DroppedStore(db);
+      final now = DateTime.utc(2026, 8, 15, 12);
+      await store.drop(
+        profileId,
+        DroppedItem(
+          id: 0,
+          itemId: 'mat_wood',
+          count: 5,
+          position: const GeoPoint(52.4084, 16.9342),
+          droppedAt: now,
+        ),
+      );
+
+      final row = (await store.load(profileId, now)).single;
+      await store.takeSome(row.id, left: 3);
+
+      expect((await store.load(profileId, now)).single.count, 3);
+    });
+
+    test('and taking the last of it clears the row', () async {
+      final store = DroppedStore(db);
+      final now = DateTime.utc(2026, 8, 15, 12);
+      await store.drop(
+        profileId,
+        DroppedItem(
+          id: 0,
+          itemId: 'mat_wood',
+          count: 2,
+          position: const GeoPoint(52.4084, 16.9342),
+          droppedAt: now,
+        ),
+      );
+
+      final row = (await store.load(profileId, now)).single;
+      await store.takeSome(row.id, left: 0);
+
+      expect(await store.load(profileId, now), isEmpty);
+    });
+  });
+
+  group('what is underfoot, as one list (§4.8)', () {
+    // A player standing where they emptied their pack has a heap, and the
+    // panel could only ever offer them the nearest thing in it. Getting the
+    // rifle out meant picking up six bandages first.
+    const here = GeoPoint(52.4084, 16.9342);
+
+    DroppedItem lying(
+      String itemId, {
+      required int id,
+      double metres = 0,
+      int count = 1,
+      double? condition,
+    }) => DroppedItem(
+      id: id,
+      itemId: itemId,
+      count: count,
+      condition: condition,
+      position: GeoPoint(here.latitude + metres / metresPerDegreeLat,
+          here.longitude),
+      droppedAt: DateTime.utc(2026, 8, 15, 12),
+    );
+
+    test('three drops of one thing read as one pile of three', () {
+      final piles = pilesWithin([
+        lying('med_bandage', id: 1),
+        lying('med_bandage', id: 2, metres: 2),
+        lying('med_bandage', id: 3, metres: 4),
+      ], here, reachM: 15);
+
+      expect(piles, hasLength(1));
+      expect(piles.single.count, 3);
+      expect(piles.single.parts, hasLength(3));
+    });
+
+    test('a stack counts as what is in it, not as one row', () {
+      final piles = pilesWithin(
+        [lying('mat_wood', id: 1, count: 4)],
+        here,
+        reachM: 15,
+      );
+
+      expect(piles.single.count, 4);
+    });
+
+    test('two rifles of different condition stay two piles', () {
+      // Which of them goes in the pack is exactly the choice worth having.
+      final piles = pilesWithin([
+        lying('weapon_rifle_22lr', id: 1, condition: 40),
+        lying('weapon_rifle_22lr', id: 2, condition: 90, metres: 1),
+      ], here, reachM: 15);
+
+      expect(piles, hasLength(2));
+      expect(
+        piles.map((pile) => pile.condition),
+        containsAll(<double>[40, 90]),
+      );
+    });
+
+    test('the nearest pile comes first', () {
+      final piles = pilesWithin([
+        lying('mat_wood', id: 1, metres: 9),
+        lying('med_bandage', id: 2, metres: 1),
+      ], here, reachM: 15);
+
+      expect(piles.first.itemId, 'med_bandage');
+      expect(piles.first.distanceM, lessThan(2));
+    });
+
+    test('and a pile is as far away as its nearest piece', () {
+      final piles = pilesWithin([
+        lying('med_bandage', id: 1, metres: 10),
+        lying('med_bandage', id: 2, metres: 3),
+      ], here, reachM: 15);
+
+      expect(piles.single.distanceM, closeTo(3, 0.5));
+      expect(piles.single.parts.first.id, 2, reason: 'nearest is taken first');
+    });
+
+    test('what is out of reach is not on the list', () {
+      final piles = pilesWithin([
+        lying('med_bandage', id: 1, metres: 2),
+        lying('mat_wood', id: 2, metres: 40),
+      ], here, reachM: 15);
+
+      expect(piles, hasLength(1));
+      expect(piles.single.itemId, 'med_bandage');
+    });
+
+    test('an empty street is an empty list', () {
+      expect(pilesWithin(const [], here, reachM: 15), isEmpty);
+    });
   });
 }

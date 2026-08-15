@@ -1183,6 +1183,12 @@ abstract class L10n {
   /// **'No room in the pack.'**
   String get droppedNoRoom;
 
+  /// Shown in the ground list once everything within reach has been picked up.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing here now.'**
+  String get groundEmpty;
+
   /// No description provided for @noteRead.
   ///
   /// In en, this message translates to:

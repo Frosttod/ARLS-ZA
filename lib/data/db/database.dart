@@ -304,6 +304,16 @@ class SaveDatabase extends _$SaveDatabase {
   Future<int> addGroundItem(GroundItemsCompanion item) =>
       into(groundItems).insert(item);
 
+  /// Leaves fewer of a pile on the ground than there were.
+  ///
+  /// What a full pack could not take stays where it was put, rather than
+  /// disappearing with the rest of the row (§4.8).
+  Future<void> setGroundItemCount(int id, int count) async {
+    await (update(groundItems)..where((t) => t.id.equals(id))).write(
+      GroundItemsCompanion(count: Value(count)),
+    );
+  }
+
   /// Deletes by row id. Used by §4.8's sweep and by picking something back up.
   Future<void> removeGroundItems(List<int> ids) async {
     if (ids.isEmpty) return;

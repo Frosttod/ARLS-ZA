@@ -30,6 +30,7 @@ import 'loot/loot_world.dart';
 import 'loot/obstacle.dart';
 import 'loot/search.dart';
 import 'notes/note.dart';
+import 'ui/ground_sheet.dart';
 import 'ui/item_details_sheet.dart';
 import 'ui/note_sheet.dart';
 import 'ui/search_panel.dart';
@@ -289,7 +290,14 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   AreaKnowledge? _knowledge;
 
   /// What the player has put down and could come back for (§4.8).
-  List<DroppedItem> _dropped = const [];
+  ///
+  /// A notifier because the ground list is a pushed route: handed a copy, it
+  /// would keep offering things already in the pack.
+  final ValueNotifier<List<DroppedItem>> _dropped = ValueNotifier(const []);
+
+  /// Where the player is, for the ground list to measure reach from as they
+  /// move about the pile.
+  final ValueNotifier<GeoPoint?> _standingAt = ValueNotifier(null);
 
   /// Procedural places the player has actually looked for (§10.2.3). A
   /// pharmacy is a building and is visible from the street; a wrecked car in a
@@ -620,6 +628,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         _sessionStart ??= snapshot.state.lastUpdate;
         _snapshot = snapshot;
       });
+      final fix = snapshot.displayFix;
+      _standingAt.value = fix == null
+          ? null
+          : GeoPoint(fix.latitude, fix.longitude);
       unawaited(_checkRelocation(snapshot));
       unawaited(_spawnLoot(snapshot));
     });
@@ -1035,7 +1047,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     ).load(character.profile.id, DateTime.now().toUtc());
     if (!mounted) return;
 
-    setState(() => _dropped = items);
+    setState(() => _dropped.value = items);
   }
 
   /// Opens a note the player is carrying (§19.1).
@@ -1046,40 +1058,76 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     unawaited(showNote(context, note: note, names: _placeNames));
   }
 
-  /// The pile at the player's feet (§4.8).
-  ///
-  /// Tighter than a place is searched from: a lootbox sits at a building's
-  /// recorded centre, but a dropped bag is where somebody was standing.
-  DroppedItem? _droppedInReach() {
-    final fix = _snapshot?.displayFix;
-    if (fix == null) return null;
+  /// What the panel says is underfoot: the nearest pile, and how much else
+  /// there is behind it.
+  String? _groundLabel() {
+    final piles = _pilesInReach();
+    if (piles.isEmpty) return null;
 
-    final at = GeoPoint(fix.latitude, fix.longitude);
-    DroppedItem? best;
-    var bestDistance = kStillnessM;
-
-    for (final item in _dropped) {
-      final distance = item.position.distanceTo(at);
-      if (distance > bestDistance) continue;
-      best = item;
-      bestDistance = distance;
-    }
-    return best;
+    final nearest = _labelFor(piles.first);
+    return piles.length == 1 ? nearest : '$nearest  +${piles.length - 1}';
   }
 
-  String? _labelFor(DroppedItem? item) {
+  String? _labelFor(GroundPile pile) {
     final catalogue = _catalogue;
-    if (item == null || catalogue == null || !mounted) return null;
+    if (catalogue == null || !mounted) return null;
 
-    final definition = catalogue[item.itemId];
-    if (definition == null) return item.itemId;
+    final definition = catalogue[pile.itemId];
+    if (definition == null) return pile.itemId;
 
     final language = Localizations.localeOf(context).languageCode;
     final name = definition.name.resolve(
       language: language,
       lookup: (_names ?? ItemNames.empty).forLanguage(language),
     );
-    return item.count > 1 ? '$name ×${item.count}' : name;
+    return pile.count > 1 ? '$name ×${pile.count}' : name;
+  }
+
+  /// Everything at the player's feet, gathered into piles (§4.8).
+  List<GroundPile> _pilesInReach() {
+    final at = _standingAt.value;
+    if (at == null) return const [];
+    return pilesWithin(_dropped.value, at, reachM: kStillnessM);
+  }
+
+  /// Opens the heap, or takes the one thing in it.
+  ///
+  /// One pile is one tap: a list of a single row is a screen that exists to be
+  /// dismissed. Several is a choice, and a choice needs the list — otherwise
+  /// getting the rifle out means picking up six bandages first.
+  void _openGround() {
+    final piles = _pilesInReach();
+    if (piles.isEmpty) return;
+
+    if (piles.length == 1) {
+      unawaited(_takePile(piles.single));
+      return;
+    }
+
+    unawaited(
+      showGroundItems(
+        context,
+        dropped: _dropped,
+        at: _standingAt,
+        reachM: kStillnessM,
+        catalogue: _catalogue!,
+        names: _names ?? ItemNames.empty,
+        onTake: (pile) => unawaited(_takePile(pile)),
+      ),
+    );
+  }
+
+  /// Picks up a whole pile, nearest row first.
+  ///
+  /// It stops at the first row that will not fit rather than skipping past it
+  /// to something smaller: a player who is out of room should be told, not
+  /// quietly given the lighter half of what they asked for.
+  Future<void> _takePile(GroundPile pile) async {
+    for (final part in pile.parts) {
+      final before = _inventory.value;
+      await _takeDropped(part);
+      if (identical(_inventory.value, before)) return;
+    }
   }
 
   /// Picks a pile back up, if it fits (§18.1a).
@@ -1104,9 +1152,15 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     _inventory.value = result.inventory;
     await _saveInventory();
 
-    // Removed only once it is in the pack. Deleting first and finding it did
-    // not fit would be the game destroying something on the player's behalf.
-    await DroppedStore(widget.session.db).take(item.id);
+    // Removed only once it is in the pack, and only as much of it as went in.
+    // Deleting first and finding it did not fit — or deleting the whole pile
+    // when two of five pieces fitted — would be the game destroying something
+    // on the player's behalf.
+    final taken = result.acceptedCount ?? item.count;
+    await DroppedStore(
+      widget.session.db,
+    ).takeSome(item.id, left: item.count - taken);
+    if (taken < item.count && mounted) _say(L10n.of(context).droppedNoRoom);
     await _reloadDropped();
   }
 
@@ -1185,7 +1239,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
           ),
 
       // §4.8: grey, and gone after a day.
-      for (final item in _dropped)
+      for (final item in _dropped.value)
         MapMarker(
           id: 'dropped.${item.id}',
           kind: MarkerKind.dropped,
@@ -1626,6 +1680,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     _searchTimer?.cancel();
     _inventory.dispose();
     _search.dispose();
+    _dropped.dispose();
+    _standingAt.dispose();
     super.dispose();
   }
 
@@ -1689,11 +1745,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
                         onSearchArea: _startAreaSearch,
                         onSearchHere: _startObjectSearch,
                         onBreach: _startBreach,
-                        droppedLabel: _labelFor(_droppedInReach()),
-                        onTakeDropped: () {
-                          final item = _droppedInReach();
-                          if (item != null) unawaited(_takeDropped(item));
-                        },
+                        droppedLabel: _groundLabel(),
+                        onTakeDropped: _catalogue == null ? null : _openGround,
                         onCancel: _cancelSearch,
                       );
                     },

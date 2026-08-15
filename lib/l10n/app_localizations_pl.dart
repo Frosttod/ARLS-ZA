@@ -618,6 +618,9 @@ class L10nPl extends L10n {
   String get droppedNoRoom => 'Nie mieści się w plecaku.';
 
   @override
+  String get groundEmpty => 'Już nic tu nie ma.';
+
+  @override
   String get noteRead => 'Przeczytaj';
 
   @override

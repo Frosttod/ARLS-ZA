@@ -61,4 +61,12 @@ class DroppedStore {
   /// an item deleted here and refused by the inventory would be an item the
   /// game destroyed on the player's behalf.
   Future<void> take(int id) => _db.removeGroundItems([id]);
+
+  /// Takes part of a pile, leaving the rest where it lies.
+  ///
+  /// A pack with room for two of the five pieces of wood at somebody's feet
+  /// takes two. Deleting the row for a partial pick-up would be the game
+  /// destroying three of them on the player's behalf.
+  Future<void> takeSome(int id, {required int left}) =>
+      left <= 0 ? take(id) : _db.setGroundItemCount(id, left);
 }

@@ -275,6 +275,8 @@
   "droppedExpires": "{hours} h left",
   "@droppedExpires": {"placeholders": {"hours": {"type": "int"}}},
   "droppedNoRoom": "No room in the pack.",
+  "groundEmpty": "Nothing here now.",
+  "@groundEmpty": {"description": "Shown in the ground list once everything within reach has been picked up."},
   "noteRead": "Read",
   "noteClose": "Put it back",
   "inventoryTakeOff": "Take off",
