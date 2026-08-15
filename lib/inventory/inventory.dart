@@ -339,6 +339,28 @@ class Inventory {
   Inventory withPack(String? newPackId) =>
       Inventory(carried: carried, worn: worn, packId: newPackId);
 
+  /// Puts a pack on, with the old one inside it.
+  ///
+  /// Found on a phone: a 45 l daypack swapped for a 30 l shopping bag simply
+  /// vanished, because the old pack was offered to the new one through [add]
+  /// and a bag with no room for it refused. Nothing a player owns is destroyed
+  /// by an action they took to keep it — the swap is never refused, and the
+  /// state it leaves is over the limit rather than short of a pack, which is
+  /// exactly what [overflowL] is for.
+  Inventory wearPack(CarriedItem line) {
+    final previous = packId;
+    final lines = [...carried]..removeWhere((entry) => identical(entry, line));
+
+    return Inventory(
+      carried: [
+        ...lines,
+        if (previous != null) CarriedItem(itemId: previous),
+      ],
+      worn: worn,
+      packId: line.itemId,
+    );
+  }
+
   /// How many litres past the limit the pack is. Zero unless a pack was
   /// swapped for a smaller one.
   double overflowL(BodyProfile body, ItemCatalogue catalogue) {
@@ -364,6 +386,12 @@ class Inventory {
   /// with two of a kind in the pack the difference between the copies is the
   /// entire decision (§4.4).
   Inventory wearLine(CarriedItem line, [ItemCatalogue? catalogue]) {
+    // A pack is worn on the back but is not a garment: it is the thing that
+    // holds everything else, and it lives in [packId] rather than in [worn].
+    if (catalogue?[line.itemId]?.kind == ItemKind.backpack) {
+      return wearPack(line);
+    }
+
     final itemId = line.itemId;
     final piece = line.copyWith(count: 1);
     final slot = catalogue?[itemId]?.props['slot'];

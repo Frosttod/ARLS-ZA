@@ -932,22 +932,13 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final definition = catalogue[line.itemId];
     if (definition == null) return;
 
-    var next = _inventory.value.removeLine(line);
+    // The old pack goes into the new one, which is what actually happens when
+    // somebody changes bags in a street — and it goes in whether or not it
+    // fits, since the alternative is losing it.
+    final next = definition.kind == ItemKind.backpack
+        ? _inventory.value.wearPack(line)
+        : _inventory.value.removeLine(line)?.wearLine(line, catalogue);
     if (next == null) return;
-
-    if (definition.kind == ItemKind.backpack) {
-      // The old pack goes into the new one, which is what actually happens
-      // when somebody changes bags in a street.
-      final previous = next.packId;
-      next = next.withPack(line.itemId);
-      if (previous != null) {
-        next = next
-            .add(previous, catalogue, body: _character!.body)
-            .inventory;
-      }
-    } else {
-      next = next.wearLine(line, catalogue);
-    }
 
     _inventory.value = next;
     await _saveInventory();

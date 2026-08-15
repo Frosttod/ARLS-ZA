@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:arls_za/inventory/body_slots.dart';
+import 'package:arls_za/inventory/item_use.dart';
 import 'package:arls_za/items/item.dart';
 import 'package:arls_za/items/item_catalogue.dart';
 import 'package:arls_za/items/item_names.dart';
@@ -247,6 +249,71 @@ void main() {
           reason: '${piece.id} has one half of §4.4 and not the other',
         );
         expect(piece.props['insulation_clo'], isA<num>(), reason: piece.id);
+      }
+    });
+
+    test('every garment names a place on the body the game knows', () {
+      // §4.4's slots are the data's own values, and the figure on the
+      // inventory screen is built from them. A slot spelled any other way is
+      // a garment that cannot be put on at all.
+      for (final piece in catalogue.ofKind(ItemKind.armor)) {
+        expect(
+          BodySlot.fromWire(piece.props['slot'] as String?),
+          isNotNull,
+          reason: '${piece.id} says slot=${piece.props['slot']}',
+        );
+      }
+    });
+
+    test('and nothing else names one', () {
+      // A slot on a crowbar would put it on the figure and take it out of the
+      // pack. Everything that is not a garment is worn by kind or not at all.
+      final strays = catalogue.all
+          .where((item) => item.kind != ItemKind.armor)
+          .where((item) => item.props['slot'] != null);
+
+      expect(strays.map((item) => item.id), isEmpty);
+    });
+
+    test('every place on the body has something to put in it', () {
+      // An empty slot on the figure that no item in the game can ever fill is
+      // a promise the catalogue does not keep.
+      for (final slot in BodySlot.values) {
+        if (slot == BodySlot.back) continue;
+
+        expect(
+          catalogue.ofKind(ItemKind.armor).where(
+            (piece) => piece.props['slot'] == slot.wire,
+          ),
+          isNotEmpty,
+          reason: 'nothing goes on ${slot.wire}',
+        );
+      }
+    });
+
+    test('the back is filled by packs, which name no slot of their own', () {
+      // §4.5: a pack is worn but is not a garment — it lives in packId, which
+      // is why it is the one slot read from the kind rather than from a prop.
+      final packs = catalogue.ofKind(ItemKind.backpack);
+
+      expect(packs, isNotEmpty);
+      for (final pack in packs) {
+        expect(pack.props['slot'], isNull, reason: pack.id);
+        expect(pack.props['capacity_l'], isA<num>(), reason: pack.id);
+        expect(pack.props['comfort_carry_bonus_kg'], isA<num>(),
+            reason: pack.id);
+      }
+    });
+
+    test('everything edible or medical can actually be used (§4.7)', () {
+      // The inventory offers "use" from useOf, so a tin with no consume time
+      // is a tin nobody can open.
+      for (final item in catalogue.all) {
+        final usable = useOf(item) != null;
+        final shouldBe =
+            item.kind == ItemKind.food || item.kind == ItemKind.medical;
+
+        expect(usable, shouldBe, reason: '${item.id} (${item.kind.name})');
       }
     });
 

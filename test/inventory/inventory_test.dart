@@ -524,4 +524,79 @@ void main() {
       expect(after.carried.single.condition, 25);
     });
   });
+
+  group('changing bags in a street', () {
+    // Found on a phone: a 45 l daypack swapped for a 30 l shopping bag was
+    // destroyed, because the old pack was offered to the new one and a bag
+    // with no room refused it. Nothing a player owns is destroyed by an action
+    // they took to keep it.
+    Inventory loadedDaypack() => const Inventory()
+        .withPack('pack_daypack')
+        .add('mat_wood', catalogue, body: body, count: 10)
+        .inventory;
+
+    test('the old pack ends up in the new one', () {
+      final full = loadedDaypack();
+      const bag = CarriedItem(itemId: 'pack_shopping_bag');
+
+      final after = full.wearPack(bag);
+
+      expect(after.packId, 'pack_shopping_bag');
+      expect(
+        after.carried.map((line) => line.itemId),
+        contains('pack_daypack'),
+      );
+    });
+
+    test('even when the new one is far too small for it', () {
+      // 40 l of wood into a 30 l bag: over the limit, and every piece of it
+      // still owned.
+      final full = loadedDaypack();
+      final woodBefore = full.countOf('mat_wood');
+
+      final after = full.wearPack(
+        const CarriedItem(itemId: 'pack_shopping_bag'),
+      );
+
+      expect(after.countOf('mat_wood'), woodBefore);
+      expect(after.overflowL(body, catalogue), greaterThan(0));
+    });
+
+    test('the new pack leaves the contents, being worn now', () {
+      final full = loadedDaypack()
+          .add('pack_shopping_bag', catalogue, body: body)
+          .inventory;
+      final bag = full.carried.firstWhere(
+        (line) => line.itemId == 'pack_shopping_bag',
+      );
+
+      final after = full.wearPack(bag);
+
+      expect(
+        after.carried.where((line) => line.itemId == 'pack_shopping_bag'),
+        isEmpty,
+      );
+    });
+
+    test('the first pack of the game comes from nowhere and leaves nothing', () {
+      final after = const Inventory().wearPack(
+        const CarriedItem(itemId: 'pack_school'),
+      );
+
+      expect(after.packId, 'pack_school');
+      expect(after.carried, isEmpty);
+    });
+
+    test('a pack put on through wearLine is worn as a pack, not as a coat', () {
+      // §4.4: the back slot is read from packId, so a pack that landed in
+      // [worn] would be a pack nobody is carrying anything in.
+      final after = const Inventory().wearLine(
+        const CarriedItem(itemId: 'pack_military'),
+        catalogue,
+      );
+
+      expect(after.packId, 'pack_military');
+      expect(after.worn, isEmpty);
+    });
+  });
 }
