@@ -289,7 +289,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
   /// The very piece being eaten or drunk (§4.7), so a mouthful comes out of
   /// the bottle in hand rather than out of whichever one the list finds first.
-  CarriedItem? _usingLine;
+  final ValueNotifier<CarriedItem?> _usingLine = ValueNotifier(null);
 
   /// What the last reconnaissance revealed, for §10.2.1's ten minutes.
   AreaKnowledge? _knowledge;
@@ -823,6 +823,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
           onRead: _readNote,
           onDetails: (line) => unawaited(_showItemDetails(line)),
           action: _search,
+          // Which piece, not which item: a half-eaten tin beside three whole
+          // ones is one row being used and three that are not.
+          usingLine: _usingLine,
           onCancelAction: _cancelSearch,
           onDevFill: kDevTools ? () => unawaited(_devFillPack()) : null,
         ),
@@ -991,7 +994,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     // it down and coming back to it a real option rather than a punishment.
     final seconds = (use.duration.inSeconds * line.portion).round();
 
-    _usingLine = line;
+    _usingLine.value = line;
     setState(() {
       _search.value = Search.using(
         at: fix == null
@@ -1018,9 +1021,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     if (definition == null || use == null) return;
 
     // What was left of the piece, which is all that is left to swallow.
-    final line = _usingLine;
+    final line = _usingLine.value;
     final portion = line?.portion ?? 1;
-    _usingLine = null;
+    _usingLine.value = null;
 
     if (use.consumesItem) {
       // The very piece that was in hand: a half bottle beside a full one is
@@ -1523,10 +1526,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// might have to run round; getting it all back for free would make the
   /// time it takes meaningless.
   Future<void> _interruptUse(Search action) async {
-    final line = _usingLine;
+    final line = _usingLine.value;
     final loop = _loop;
     final catalogue = _catalogue;
-    _usingLine = null;
+    _usingLine.value = null;
 
     if (line == null || loop == null || catalogue == null || !action.isUse) {
       return;
@@ -1801,6 +1804,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     _search.dispose();
     _dropped.dispose();
     _standingAt.dispose();
+    _usingLine.dispose();
     super.dispose();
   }
 

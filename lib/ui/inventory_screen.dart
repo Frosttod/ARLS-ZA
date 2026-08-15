@@ -44,6 +44,7 @@ class InventoryScreen extends StatelessWidget {
     this.onUse,
     this.onRead,
     this.onDetails,
+    this.usingLine,
     this.onDevFill,
     this.action,
     this.onCancelAction,
@@ -80,6 +81,10 @@ class InventoryScreen extends StatelessWidget {
 
   /// Opens the numbers, and whatever this would replace beside them.
   final void Function(CarriedItem line)? onDetails;
+
+  /// §4.7: the very piece being eaten or drunk, so the bar is drawn under it
+  /// and not under every other tin of the same kind in the pack.
+  final ValueListenable<CarriedItem?>? usingLine;
 
   /// Fills the pack with a sample kit. Developer builds only.
   final VoidCallback? onDevFill;
@@ -183,6 +188,7 @@ class InventoryScreen extends StatelessWidget {
                 // at the top of the screen: a player who taps "use" looks at
                 // what they tapped.
                 action: action,
+                usingLine: usingLine,
                 onCancelAction: onCancelAction,
               ),
         ],
@@ -545,6 +551,7 @@ class _ItemRow extends StatefulWidget {
     this.onRead,
     this.onDetails,
     this.action,
+    this.usingLine,
     this.onCancelAction,
   });
 
@@ -561,6 +568,7 @@ class _ItemRow extends StatefulWidget {
   final void Function(CarriedItem)? onDetails;
 
   final ValueListenable<Search?>? action;
+  final ValueListenable<CarriedItem?>? usingLine;
   final VoidCallback? onCancelAction;
 
   @override
@@ -673,25 +681,47 @@ class _ItemRowState extends State<_ItemRow> {
             ],
           ),
 
-          // Under this item, and only while it is this item being used.
+          // Under this piece, and only while it is this piece being used.
+          //
+          // ⚠️ The piece, not the item id. Found on a phone: a tin opened out
+          // of a stack of four leaves a part-eaten one beside three whole
+          // ones, and matching by id drew the same bar under both rows.
           if (widget.action != null)
-            ValueListenableBuilder<Search?>(
-              valueListenable: widget.action!,
-              builder: (context, running, _) =>
-                  running == null ||
-                      !running.isRunning ||
-                      running.usingItemId != line.itemId
-                  ? const SizedBox.shrink()
-                  : _Running(
-                      search: running,
-                      onCancel: widget.onCancelAction,
-                      colours: colours,
-                      cancelLabel: l10n.searchCancel,
-                    ),
+            ValueListenableBuilder<CarriedItem?>(
+              // Listened to as well as read: which piece is in hand changes
+              // when a use ends, and a bar left behind by a finished action is
+              // a bar that never goes away.
+              valueListenable:
+                  widget.usingLine ?? const _NoLine(),
+              builder: (context, using, _) => ValueListenableBuilder<Search?>(
+                valueListenable: widget.action!,
+                builder: (context, running, _) =>
+                    running == null ||
+                        !running.isRunning ||
+                        !_isMine(running, using)
+                    ? const SizedBox.shrink()
+                    : _Running(
+                        search: running,
+                        onCancel: widget.onCancelAction,
+                        colours: colours,
+                        cancelLabel: l10n.searchCancel,
+                      ),
+              ),
             ),
         ],
       ),
     );
+  }
+
+  /// Whether the running action belongs to this row.
+  ///
+  /// By identity where the screen was told which piece is in hand, and by item
+  /// id only as a fallback — which is right for a caller that has no way to
+  /// say, and wrong the moment two rows share an id.
+  bool _isMine(Search running, CarriedItem? using) {
+    if (using != null) return identical(using, widget.line);
+    if (widget.usingLine != null) return false;
+    return running.usingItemId == widget.line.itemId;
   }
 
   /// What the line is, plus whatever per-piece state it carries: how worn it
@@ -713,6 +743,22 @@ class _ItemRowState extends State<_ItemRow> {
 
     return parts.join(' · ');
   }
+}
+
+/// A listenable that is always null, for a screen told nothing about which
+/// piece is in hand — every test that predates part-used items, and the dev
+/// tools. Const, so it costs nothing to hand out.
+class _NoLine implements ValueListenable<CarriedItem?> {
+  const _NoLine();
+
+  @override
+  CarriedItem? get value => null;
+
+  @override
+  void addListener(VoidCallback listener) {}
+
+  @override
+  void removeListener(VoidCallback listener) {}
 }
 
 /// How many of a stack to put down.

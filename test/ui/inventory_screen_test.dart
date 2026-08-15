@@ -37,6 +37,7 @@ void main() {
     void Function(CarriedItem)? onUse,
     void Function(CarriedItem)? onDetails,
     ValueListenable<Search?>? action,
+    ValueListenable<CarriedItem?>? usingLine,
   }) async {
     await tester.pumpWidget(
       MaterialApp(
@@ -59,6 +60,7 @@ void main() {
           onUse: onUse,
           onDetails: onDetails,
           action: action,
+          usingLine: usingLine,
         ),
       ),
     );
@@ -604,5 +606,94 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(removed?.itemId, 'pack_daypack');
+  });
+
+  group('one tin out of four (§4.7)', () {
+    // Found on a phone: opening one tin from a stack of four leaves a
+    // part-eaten tin beside three whole ones — two rows, one item id — and the
+    // bar was drawn under both of them.
+    const partly = CarriedItem(
+      itemId: 'food_canned_meat',
+      portion: 0.67,
+    );
+    const whole = CarriedItem(itemId: 'food_canned_meat', count: 3);
+
+    final pack = const Inventory(
+      packId: 'pack_daypack',
+      carried: [whole, partly],
+    );
+
+    Search eating() => Search.using(
+      at: const GeoPoint(52.4, 16.9),
+      now: DateTime.utc(2026, 8, 15, 12),
+      itemId: 'food_canned_meat',
+      duration: const Duration(seconds: 60),
+      label: 'jedzenie',
+    );
+
+    testWidgets('one bar, under the piece actually being eaten', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        pack,
+        action: ValueNotifier<Search?>(eating()),
+        usingLine: ValueNotifier<CarriedItem?>(pack.carried[1]),
+      );
+
+      await reveal(tester, find.text('jedzenie'));
+      expect(find.text('jedzenie'), findsOneWidget);
+
+      final bar = tester.getTopLeft(find.text('jedzenie')).dy;
+      final part = tester.getTopLeft(find.textContaining('zostało 67%')).dy;
+      expect(bar, greaterThan(part));
+    });
+
+    testWidgets('and the whole ones carry no bar at all', (tester) async {
+      await pump(
+        tester,
+        pack,
+        action: ValueNotifier<Search?>(eating()),
+        usingLine: ValueNotifier<CarriedItem?>(pack.carried[1]),
+      );
+
+      await reveal(tester, find.text('jedzenie'));
+      final stack = tester.getTopLeft(find.text('Konserwa mięsna  ×3')).dy;
+      final bar = tester.getTopLeft(find.text('jedzenie')).dy;
+
+      // The stack is above the part-eaten tin, so its own bar would be above
+      // this one — there is only one, and it is below both rows' titles.
+      expect(bar, greaterThan(stack));
+      expect(find.text('jedzenie'), findsOneWidget);
+    });
+
+    testWidgets('eating from the stack puts the bar on the stack', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        pack,
+        action: ValueNotifier<Search?>(eating()),
+        usingLine: ValueNotifier<CarriedItem?>(pack.carried[0]),
+      );
+
+      await reveal(tester, find.text('jedzenie'));
+      final bar = tester.getTopLeft(find.text('jedzenie')).dy;
+      final part = tester.getTopLeft(find.textContaining('zostało 67%')).dy;
+
+      expect(find.text('jedzenie'), findsOneWidget);
+      expect(bar, lessThan(part));
+    });
+
+    testWidgets('nothing in hand, nothing drawn', (tester) async {
+      await pump(
+        tester,
+        pack,
+        action: ValueNotifier<Search?>(eating()),
+        usingLine: ValueNotifier<CarriedItem?>(null),
+      );
+
+      expect(find.text('jedzenie'), findsNothing);
+    });
   });
 }
