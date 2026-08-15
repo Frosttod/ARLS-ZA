@@ -214,21 +214,26 @@ class _Barrier extends StatelessWidget {
             l10n.breachNoTool,
             style: TextStyle(fontSize: 11, color: const Color(0xFFE8B33A)),
           ),
-        Row(
+        Wrap(
+          alignment: WrapAlignment.end,
+          spacing: 4,
           children: [
-            TextButton(onPressed: onSearchArea, child: Text(l10n.searchArea)),
-            const Spacer(),
+            IconButton(
+              onPressed: onSearchArea,
+              icon: const Icon(Icons.travel_explore),
+              tooltip: l10n.searchArea,
+              color: colours.text,
+            ),
             for (final way in ways)
-              Padding(
-                padding: const EdgeInsets.only(left: 4),
-                child: TextButton(
-                  onPressed: onBreach == null ? null : () => onBreach!(way),
-                  child: Text(
-                    '${_verb(way)}  ${way.seconds} s · '
-                    '${l10n.breachNoise(way.noiseM.round())}',
-                    style: const TextStyle(fontSize: 11),
-                  ),
-                ),
+              _ActionIcon(
+                icon: _wayIcon(way),
+                // Seconds and metres of noise: §19.3's whole choice, and not
+                // one an icon can carry on its own.
+                caption:
+                    '${way.seconds} s · ${l10n.breachNoise(way.noiseM.round())}',
+                tooltip: _verb(way),
+                colours: colours,
+                onPressed: onBreach == null ? null : () => onBreach!(way),
               ),
           ],
         ),
@@ -241,6 +246,13 @@ class _Barrier extends StatelessWidget {
     Barrier.padlock => l10n.barrierPadlock,
     Barrier.window => l10n.barrierWindow,
   };
+
+  /// Picks, a lever, or shoulders — which is exactly what the three ways are.
+  IconData _wayIcon(BarrierBreach way) {
+    if (identical(way, barrier.quiet)) return Icons.vpn_key_outlined;
+    if (identical(way, barrier.pry)) return Icons.construction_outlined;
+    return Icons.front_hand_outlined;
+  }
 
   String _verb(BarrierBreach way) {
     if (identical(way, barrier.quiet)) return l10n.breachPick;
@@ -301,9 +313,15 @@ class _Choices extends StatelessWidget {
                   style: TextStyle(fontSize: 12, color: colours.muted),
                 ),
               ),
-              TextButton(
+              // Into the pack, which is what the act is. The name of what is
+              // lying here stays in words beside it: a glyph can say "take",
+              // never "take what".
+              IconButton(
                 onPressed: onTakeDropped,
-                child: Text(l10n.droppedTake),
+                icon: const Icon(Icons.backpack_outlined),
+                tooltip: l10n.droppedTake,
+                color: colours.text,
+                visualDensity: VisualDensity.compact,
               ),
             ],
           ),
@@ -315,12 +333,13 @@ class _Choices extends StatelessWidget {
         spacing: 4,
         children: [
           // Reconnaissance is always available: §10.2.1 gives it no cooldown,
-          // only a cost. A glass rather than a word: it is the one control on
-          // this panel that means the same thing everywhere, and the row has
-          // three depths to spell out already.
+          // only a cost. Its own glyph, and never the plain glass: looking
+          // around a district and turning over one shop are different acts,
+          // and two controls that look alike would be pressed by mistake in
+          // the dark.
           IconButton(
             onPressed: onSearchArea,
-            icon: const Icon(Icons.search),
+            icon: const Icon(Icons.travel_explore),
             tooltip: l10n.searchArea,
             color: colours.text,
           ),
@@ -331,24 +350,16 @@ class _Choices extends StatelessWidget {
             // not hidden: a player who searched thoroughly twice should see
             // why the third pass is gone.
             ...[
-              _DepthButton(
-                label: l10n.searchShallow,
-                onPressed: SearchDepth.shallow.cost <= searchUnitsLeft
-                    ? () => onSearchHere(SearchDepth.shallow)
-                    : null,
-              ),
-              _DepthButton(
-                label: l10n.searchThorough,
-                onPressed: SearchDepth.thorough.cost <= searchUnitsLeft
-                    ? () => onSearchHere(SearchDepth.thorough)
-                    : null,
-              ),
-              _DepthButton(
-                label: l10n.searchDeep,
-                onPressed: SearchDepth.deep.cost <= searchUnitsLeft
-                    ? () => onSearchHere(SearchDepth.deep)
-                    : null,
-              ),
+              for (final depth in SearchDepth.values)
+                _ActionIcon(
+                  icon: _depthIcon(depth),
+                  caption: '${depth.seconds} s',
+                  tooltip: _depthName(l10n, depth),
+                  colours: colours,
+                  onPressed: depth.cost <= searchUnitsLeft
+                      ? () => onSearchHere(depth)
+                      : null,
+                ),
             ],
         ],
       ),
@@ -356,20 +367,90 @@ class _Choices extends StatelessWidget {
   );
 }
 
-class _DepthButton extends StatelessWidget {
-  const _DepthButton({required this.label, required this.onPressed});
+/// One thing the player can do here: a glyph, and under it what it costs.
+///
+/// A glyph alone would hide the decision. §10.3.5 and §19.3 are both choices
+/// between time and attention — thirty seconds or a hundred and eighty, twenty
+/// metres of noise or a hundred and fifty — so the seconds stay on the button
+/// and the icon only says which kind of thing it is.
+class _ActionIcon extends StatelessWidget {
+  const _ActionIcon({
+    required this.icon,
+    required this.caption,
+    required this.tooltip,
+    required this.onPressed,
+    required this.colours,
+  });
 
-  final String label;
+  final IconData icon;
 
-  /// Null where the place has nothing left for a pass this deep.
+  /// The cost, in the player's units: seconds, and metres of noise.
+  final String caption;
+
+  /// What it is, for a long press and for the screen reader (§12).
+  final String tooltip;
+
+  /// Null where the place has nothing left for a pass this deep, or no way
+  /// through this barrier with what is being carried.
   final VoidCallback? onPressed;
 
+  final HudColors colours;
+
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(left: 4),
-    child: TextButton(
-      onPressed: onPressed,
-      child: Text(label, style: const TextStyle(fontSize: 12)),
-    ),
-  );
+  Widget build(BuildContext context) {
+    final off = onPressed == null;
+
+    return Semantics(
+      button: true,
+      enabled: !off,
+      label: '$tooltip, $caption',
+      child: Tooltip(
+        message: tooltip,
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(6),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  icon,
+                  size: 22,
+                  color: off
+                      ? colours.muted.withValues(alpha: 0.4)
+                      : colours.text,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  caption,
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: off
+                        ? colours.muted.withValues(alpha: 0.4)
+                        : colours.muted,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
+
+/// One glass, then a glass over shelves, then a glass over a whole page:
+/// the same act, done to more of the place each time (§10.3.5).
+IconData _depthIcon(SearchDepth depth) => switch (depth) {
+  SearchDepth.shallow => Icons.search,
+  SearchDepth.thorough => Icons.manage_search,
+  SearchDepth.deep => Icons.pageview_outlined,
+};
+
+String _depthName(L10n l10n, SearchDepth depth) => switch (depth) {
+  SearchDepth.shallow => l10n.searchShallow,
+  SearchDepth.thorough => l10n.searchThorough,
+  SearchDepth.deep => l10n.searchDeep,
+};
