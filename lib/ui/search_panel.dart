@@ -80,24 +80,17 @@ class SearchPanel extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(12, 10, 12, 6),
           child: running != null && running.isRunning
               ? _Running(search: running, onCancel: onCancel, colours: colours)
-              : barrier != null && canSearchHere
-              ? _Barrier(
-                  barrier: barrier!,
-                  targetName: targetName,
-                  carried: carried,
-                  onBreach: onBreach,
-                  onSearchArea: onSearchArea,
-                  colours: colours,
-                  l10n: l10n,
-                )
-              : _Choices(
+              : _Actions(
                   targetName: targetName,
                   canSearchHere: canSearchHere,
                   searchUnitsLeft: searchUnitsLeft,
+                  barrier: canSearchHere ? barrier : null,
+                  carried: carried,
+                  onBreach: onBreach,
                   onSearchArea: onSearchArea,
                   onSearchHere: onSearchHere,
-                  droppedLabel: droppedLabel,
                   onTakeDropped: onTakeDropped,
+                  droppedLabel: droppedLabel,
                   colours: colours,
                   l10n: l10n,
                 ),
@@ -168,108 +161,30 @@ class _Running extends StatelessWidget {
   }
 }
 
-/// What shuts a place, and the ways through it (§19.3).
+/// Everything the player can do standing exactly here (§10.2, §19.3, §4.8).
 ///
-/// The quiet way is listed first where there is one. The loud way is always
-/// available and always obvious; a player deciding in the dark should meet the
-/// careful option before the impatient one.
-class _Barrier extends StatelessWidget {
-  const _Barrier({
-    required this.barrier,
-    required this.targetName,
-    required this.carried,
-    required this.onBreach,
-    required this.onSearchArea,
-    required this.colours,
-    required this.l10n,
-  });
-
-  final Barrier barrier;
-  final String? targetName;
-  final Set<String> carried;
-  final void Function(BarrierBreach)? onBreach;
-  final VoidCallback onSearchArea;
-  final HudColors colours;
-  final L10n l10n;
-
-  @override
-  Widget build(BuildContext context) {
-    final ways = barrier.breachesWith(carried);
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          targetName == null
-              ? _name(barrier)
-              : '${targetName!} · ${_name(barrier)}',
-          style: TextStyle(fontSize: 12, color: colours.text),
-        ),
-        const SizedBox(height: 2),
-        if (ways.isEmpty)
-          // Only ever a padlock. §19.3 names it as the barrier that needs a
-          // tool, and softening that would make every tool optional.
-          Text(
-            l10n.breachNoTool,
-            style: TextStyle(fontSize: 11, color: const Color(0xFFE8B33A)),
-          ),
-        Wrap(
-          alignment: WrapAlignment.end,
-          spacing: 4,
-          children: [
-            IconButton(
-              onPressed: onSearchArea,
-              icon: const Icon(Icons.travel_explore),
-              tooltip: l10n.searchArea,
-              color: colours.text,
-            ),
-            for (final way in ways)
-              _ActionIcon(
-                icon: _wayIcon(way),
-                // Seconds and metres of noise: §19.3's whole choice, and not
-                // one an icon can carry on its own.
-                caption:
-                    '${way.seconds} s · ${l10n.breachNoise(way.noiseM.round())}',
-                tooltip: _verb(way),
-                colours: colours,
-                onPressed: onBreach == null ? null : () => onBreach!(way),
-              ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  String _name(Barrier barrier) => switch (barrier) {
-    Barrier.door => l10n.barrierDoor,
-    Barrier.padlock => l10n.barrierPadlock,
-    Barrier.window => l10n.barrierWindow,
-  };
-
-  /// Picks, a lever, or shoulders — which is exactly what the three ways are.
-  IconData _wayIcon(BarrierBreach way) {
-    if (identical(way, barrier.quiet)) return Icons.vpn_key_outlined;
-    if (identical(way, barrier.pry)) return Icons.construction_outlined;
-    return Icons.front_hand_outlined;
-  }
-
-  String _verb(BarrierBreach way) {
-    if (identical(way, barrier.quiet)) return l10n.breachPick;
-    if (identical(way, barrier.pry)) return l10n.breachPry;
-    return l10n.breachForce;
-  }
-}
-
-class _Choices extends StatelessWidget {
-  const _Choices({
+/// One row, on the right where a thumb is. Nothing in it is a control that
+/// cannot be used: an icon appears when the thing it acts on is within reach
+/// and is simply absent otherwise, which makes the panel a list of what is
+/// possible rather than a menu to read. Reconnaissance is the exception and is
+/// always there, because §10.2.1 gives it no cooldown and no target - it is
+/// what a player does when nothing else is offered.
+///
+/// The quiet way through a barrier comes before the loud one. The loud one is
+/// always available and always obvious; somebody deciding in the dark should
+/// meet the careful option first.
+class _Actions extends StatelessWidget {
+  const _Actions({
     required this.targetName,
     required this.canSearchHere,
     required this.searchUnitsLeft,
+    required this.barrier,
+    required this.carried,
+    required this.onBreach,
     required this.onSearchArea,
     required this.onSearchHere,
-    required this.droppedLabel,
     required this.onTakeDropped,
+    required this.droppedLabel,
     required this.colours,
     required this.l10n,
   });
@@ -280,76 +195,88 @@ class _Choices extends StatelessWidget {
   /// §10.3.5: what is left of this place, out of [kSearchBudget].
   final int searchUnitsLeft;
 
+  final Barrier? barrier;
+  final Set<String> carried;
+  final void Function(BarrierBreach)? onBreach;
   final VoidCallback onSearchArea;
   final void Function(SearchDepth) onSearchHere;
-  final String? droppedLabel;
+
+  /// §4.8: opens the heap at the player's feet. Null when there is none.
   final VoidCallback? onTakeDropped;
+
+  /// What is nearest in that heap. Never drawn - the list says it, and saying
+  /// it twice cost a line of the map. It names the button for a long press and
+  /// for the screen reader (§12).
+  final String? droppedLabel;
+
   final HudColors colours;
   final L10n l10n;
 
   @override
-  Widget build(BuildContext context) => Column(
-    mainAxisSize: MainAxisSize.min,
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      if (targetName != null)
-        Padding(
-          padding: const EdgeInsets.only(bottom: 4),
-          child: Text(
-            targetName!,
-            style: TextStyle(fontSize: 12, color: colours.text),
+  Widget build(BuildContext context) {
+    final shut = barrier;
+    final ways = shut == null
+        ? const <BarrierBreach>[]
+        : shut.breachesWith(carried);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (targetName != null || shut != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 2),
+            child: Text(
+              [
+                ?targetName,
+                if (shut != null) _barrierName(l10n, shut),
+              ].join(' \u00b7 '),
+              style: TextStyle(fontSize: 12, color: colours.text),
+            ),
           ),
-        ),
-      if (droppedLabel != null)
-        // §4.8: what the player left here. Picking it up is instant — the time
-        // was already spent deciding to put it down.
-        Padding(
-          padding: const EdgeInsets.only(bottom: 2),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  '${l10n.droppedHere}: $droppedLabel',
-                  style: TextStyle(fontSize: 12, color: colours.muted),
-                ),
+
+        if (shut != null && ways.isEmpty)
+          // Only ever a padlock. §19.3 names it as the barrier that needs a
+          // tool, and softening that would make every tool optional. Said in
+          // words, because a missing icon explains nothing.
+          Text(
+            l10n.breachNoTool,
+            style: const TextStyle(fontSize: 11, color: Color(0xFFE8B33A)),
+          ),
+
+        // Wrapped, not a row: four glyphs with their times under them do not
+        // fit across a phone, and a clipped control is one nobody can press.
+        Wrap(
+          alignment: WrapAlignment.end,
+          spacing: 4,
+          children: [
+            IconButton(
+              onPressed: onSearchArea,
+              icon: const Icon(Icons.travel_explore),
+              tooltip: l10n.searchArea,
+              color: colours.text,
+            ),
+
+            // §19.3: a way in comes before anything to do inside.
+            for (final way in ways)
+              _ActionIcon(
+                icon: _wayIcon(shut!, way),
+                // Seconds and metres of noise: §19.3's whole choice, and not
+                // one an icon can carry on its own.
+                caption:
+                    '${way.seconds} s \u00b7 '
+                    '${l10n.breachNoise(way.noiseM.round())}',
+                tooltip: _verb(l10n, shut, way),
+                colours: colours,
+                onPressed: onBreach == null ? null : () => onBreach!(way),
               ),
-              // Into the pack, which is what the act is. The name of what is
-              // lying here stays in words beside it: a glyph can say "take",
-              // never "take what".
-              IconButton(
-                onPressed: onTakeDropped,
-                icon: const Icon(Icons.backpack_outlined),
-                tooltip: l10n.droppedTake,
-                color: colours.text,
-                visualDensity: VisualDensity.compact,
-              ),
-            ],
-          ),
-        ),
-      // Wrapped, not a row: four buttons with their times on them do not fit
-      // across a phone, and a clipped control is a control nobody can press.
-      Wrap(
-        alignment: WrapAlignment.end,
-        spacing: 4,
-        children: [
-          // Reconnaissance is always available: §10.2.1 gives it no cooldown,
-          // only a cost. Its own glyph, and never the plain glass: looking
-          // around a district and turning over one shop are different acts,
-          // and two controls that look alike would be pressed by mistake in
-          // the dark.
-          IconButton(
-            onPressed: onSearchArea,
-            icon: const Icon(Icons.travel_explore),
-            tooltip: l10n.searchArea,
-            color: colours.text,
-          ),
-          if (canSearchHere)
-            // The three depths of §10.3.5, all three on screen at once. Hiding
-            // the slow ones behind a menu would hide the decision.
-            // A depth with no room left in the place is shown and refused,
-            // not hidden: a player who searched thoroughly twice should see
-            // why the third pass is gone.
-            ...[
+
+            // The three depths of §10.3.5, all three at once. Hiding the slow
+            // ones behind a menu would hide the decision - and one with no
+            // room left in the place is greyed rather than removed, so a
+            // player who searched thoroughly twice can see why the third pass
+            // is gone.
+            if (shut == null && canSearchHere)
               for (final depth in SearchDepth.values)
                 _ActionIcon(
                   icon: _depthIcon(depth),
@@ -360,11 +287,42 @@ class _Choices extends StatelessWidget {
                       ? () => onSearchHere(depth)
                       : null,
                 ),
-            ],
-        ],
-      ),
-    ],
-  );
+
+            if (onTakeDropped != null)
+              // Into the pack, which is what the act is. What is down there is
+              // the list's business, and the list is what this opens.
+              IconButton(
+                onPressed: onTakeDropped,
+                icon: const Icon(Icons.backpack_outlined),
+                tooltip: droppedLabel == null
+                    ? l10n.droppedTake
+                    : '${l10n.droppedTake} \u00b7 $droppedLabel',
+                color: colours.text,
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+String _barrierName(L10n l10n, Barrier barrier) => switch (barrier) {
+  Barrier.door => l10n.barrierDoor,
+  Barrier.padlock => l10n.barrierPadlock,
+  Barrier.window => l10n.barrierWindow,
+};
+
+/// Picks, a lever, or shoulders - which is exactly what the three ways are.
+IconData _wayIcon(Barrier barrier, BarrierBreach way) {
+  if (identical(way, barrier.quiet)) return Icons.vpn_key_outlined;
+  if (identical(way, barrier.pry)) return Icons.construction_outlined;
+  return Icons.front_hand_outlined;
+}
+
+String _verb(L10n l10n, Barrier barrier, BarrierBreach way) {
+  if (identical(way, barrier.quiet)) return l10n.breachPick;
+  if (identical(way, barrier.pry)) return l10n.breachPry;
+  return l10n.breachForce;
 }
 
 /// One thing the player can do here: a glyph, and under it what it costs.

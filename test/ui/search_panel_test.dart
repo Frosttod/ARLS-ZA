@@ -21,6 +21,7 @@ void main() {
   Future<void> pump(
     WidgetTester tester, {
     int left = kSearchBudget,
+    bool canSearchHere = true,
     Barrier? barrier,
     Set<String> carried = const {},
     String? droppedLabel,
@@ -40,7 +41,7 @@ void main() {
           body: SearchPanel(
             search: null,
             targetName: 'Apteka',
-            canSearchHere: true,
+            canSearchHere: canSearchHere,
             searchUnitsLeft: left,
             barrier: barrier,
             carried: carried,
@@ -185,15 +186,71 @@ void main() {
     });
   });
 
-  group('what is lying here (§4.8)', () {
-    testWidgets('picking it up is a glyph, what it is stays in words', (
+  group('only what is within reach (§10.2, §19.3)', () {
+    testWidgets('an empty street offers reconnaissance and nothing else', (
       tester,
     ) async {
-      // A glyph can say "take". It cannot say "take what".
+      // A panel of controls that cannot be used is a menu to read rather than
+      // a list of what is possible.
+      await pump(tester, canSearchHere: false);
+
+      expect(find.byIcon(Icons.travel_explore), findsOneWidget);
+      expect(find.byIcon(Icons.search), findsNothing);
+      expect(find.byIcon(Icons.manage_search), findsNothing);
+      expect(find.byIcon(Icons.backpack_outlined), findsNothing);
+    });
+
+    testWidgets('a place in reach brings its depths with it', (tester) async {
+      await pump(tester);
+
+      expect(find.byIcon(Icons.search), findsOneWidget);
+    });
+
+    testWidgets('a shut place offers ways in instead of depths', (
+      tester,
+    ) async {
+      // There is nothing to search until there is a way in.
+      await pump(tester, barrier: Barrier.door);
+
+      expect(find.byIcon(Icons.front_hand_outlined), findsOneWidget);
+      expect(find.byIcon(Icons.search), findsNothing);
+    });
+
+    testWidgets('and a barrier out of reach concerns nobody', (
+      tester,
+    ) async {
+      await pump(tester, canSearchHere: false, barrier: Barrier.padlock);
+
+      expect(find.byIcon(Icons.vpn_key_outlined), findsNothing);
+      expect(find.text('Brak narzędzia — kłódki nie otworzysz gołymi rękami.'),
+          findsNothing);
+    });
+  });
+
+  group('what is lying here (§4.8)', () {
+    testWidgets('picking it up is a glyph and nothing else', (tester) async {
+      // What is down there belongs to the list this opens. Spelling it out on
+      // the panel as well cost a line of the map for something the player is
+      // about to be shown properly.
       await pump(tester, droppedLabel: 'Nóż  +2', onTakeDropped: () {});
 
       expect(find.byIcon(Icons.backpack_outlined), findsOneWidget);
-      expect(find.textContaining('Nóż  +2'), findsOneWidget);
+      expect(find.textContaining('Nóż'), findsNothing);
+    });
+
+    testWidgets('but a long press and a screen reader still name it', (
+      tester,
+    ) async {
+      await pump(tester, droppedLabel: 'Nóż  +2', onTakeDropped: () {});
+
+      final tooltip = tester.widget<IconButton>(
+        find.ancestor(
+          of: find.byIcon(Icons.backpack_outlined),
+          matching: find.byType(IconButton),
+        ),
+      );
+
+      expect(tooltip.tooltip, contains('Nóż'));
     });
 
     testWidgets('and it does what it says', (tester) async {

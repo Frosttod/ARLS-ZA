@@ -1159,19 +1159,14 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     return pilesWithin(_dropped.value, at, reachM: kStillnessM);
   }
 
-  /// Opens the heap, or takes the one thing in it.
+  /// Opens the heap at the player's feet.
   ///
-  /// One pile is one tap: a list of a single row is a screen that exists to be
-  /// dismissed. Several is a choice, and a choice needs the list — otherwise
-  /// getting the rifle out means picking up six bandages first.
+  /// Always the list, even for one pile. The panel no longer names what is
+  /// down there — a glyph and the map are worth more than a line of text — so
+  /// taking it on the strength of the icon alone would be picking something up
+  /// without being told what it is.
   void _openGround() {
-    final piles = _pilesInReach();
-    if (piles.isEmpty) return;
-
-    if (piles.length == 1) {
-      unawaited(_takePile(piles.single));
-      return;
-    }
+    if (_pilesInReach().isEmpty) return;
 
     unawaited(
       showGroundItems(
