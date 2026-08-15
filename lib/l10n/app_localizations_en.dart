@@ -621,6 +621,12 @@ class L10nEn extends L10n {
   String get noteClose => 'Put it back';
 
   @override
+  String get inventoryTakeOff => 'Take off';
+
+  @override
+  String get inventoryDropAll => 'All';
+
+  @override
   String get inventoryTitle => 'Inventory';
 
   @override

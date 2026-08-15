@@ -624,6 +624,12 @@ class L10nPl extends L10n {
   String get noteClose => 'Odłóż';
 
   @override
+  String get inventoryTakeOff => 'Zdejmij';
+
+  @override
+  String get inventoryDropAll => 'Wszystko';
+
+  @override
   String get inventoryTitle => 'Ekwipunek';
 
   @override

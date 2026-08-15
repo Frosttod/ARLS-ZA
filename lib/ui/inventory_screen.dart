@@ -29,6 +29,7 @@ class InventoryScreen extends StatelessWidget {
     required this.names,
     required this.body,
     this.onDrop,
+    this.onTakeOff,
     this.onRead,
     this.onDevFill,
     super.key,
@@ -46,9 +47,12 @@ class InventoryScreen extends StatelessWidget {
   final ItemNames names;
   final BodyProfile body;
 
-  /// Null while there is nowhere for a dropped item to go. §4.8 puts it on the
-  /// map for 24 hours, and that arrives with the loot layer.
-  final void Function(CarriedItem line)? onDrop;
+  /// Puts something on the ground (§4.8). The count is how many of the line,
+  /// so a stack of three can be thinned one at a time.
+  final void Function(CarriedItem line, int count)? onDrop;
+
+  /// Takes a worn piece off and puts it in the pack (§4.4).
+  final void Function(CarriedItem line)? onTakeOff;
 
   /// §19.1: opens a note somebody left. Null for anything that is not one.
   final void Function(CarriedItem line)? onRead;
@@ -125,7 +129,10 @@ class InventoryScreen extends StatelessWidget {
                 definition: catalogue[line.itemId]!,
                 name: _nameOf(line.itemId, language),
                 kind: kindName(l10n, catalogue[line.itemId]!.kind),
-                onDrop: null,
+                // Worn kit comes off into the pack; throwing it away from the
+                // body in one tap is the mistake this avoids.
+                onTakeOff: onTakeOff == null ? null : () => onTakeOff!(line),
+                takeOffLabel: l10n.inventoryTakeOff,
               ),
           ],
           const SizedBox(height: 20),
@@ -143,8 +150,12 @@ class InventoryScreen extends StatelessWidget {
                 definition: catalogue[line.itemId]!,
                 name: _nameOf(line.itemId, language),
                 kind: kindName(l10n, catalogue[line.itemId]!.kind),
-                onDrop: onDrop == null ? null : () => onDrop!(line),
+                onDrop: onDrop == null ? null : () => onDrop!(line, 1),
+                onDropAll: onDrop == null || line.count <= 1
+                    ? null
+                    : () => onDrop!(line, line.count),
                 dropLabel: l10n.inventoryDrop,
+                dropAllLabel: l10n.inventoryDropAll,
                 onRead: line.noteId == null || onRead == null
                     ? null
                     : () => onRead!(line),
@@ -376,8 +387,12 @@ class _ItemRow extends StatelessWidget {
     required this.definition,
     required this.name,
     required this.kind,
-    required this.onDrop,
+    this.onDrop,
+    this.onDropAll,
     this.dropLabel,
+    this.dropAllLabel,
+    this.onTakeOff,
+    this.takeOffLabel,
     this.onRead,
     this.readLabel,
   });
@@ -390,7 +405,16 @@ class _ItemRow extends StatelessWidget {
   /// need a localisation context to know what it is showing.
   final String kind;
   final VoidCallback? onDrop;
+
+  /// Set only where there is more than one, so a stack can go all at once
+  /// without making a single item ask which.
+  final VoidCallback? onDropAll;
+
   final String? dropLabel;
+  final String? dropAllLabel;
+
+  final VoidCallback? onTakeOff;
+  final String? takeOffLabel;
 
   /// Set only for a note (§19.1).
   final VoidCallback? onRead;
@@ -440,6 +464,14 @@ class _ItemRow extends StatelessWidget {
                 child: Text(readLabel ?? ''),
               ),
             ),
+          if (onTakeOff != null)
+            Padding(
+              padding: const EdgeInsets.only(left: 8),
+              child: TextButton(
+                onPressed: onTakeOff,
+                child: Text(takeOffLabel ?? ''),
+              ),
+            ),
           if (onDrop != null)
             Padding(
               padding: const EdgeInsets.only(left: 8),
@@ -447,6 +479,11 @@ class _ItemRow extends StatelessWidget {
                 onPressed: onDrop,
                 child: Text(dropLabel ?? ''),
               ),
+            ),
+          if (onDropAll != null)
+            TextButton(
+              onPressed: onDropAll,
+              child: Text(dropAllLabel ?? ''),
             ),
         ],
       ),

@@ -27,7 +27,8 @@ void main() {
   Future<void> pump(
     WidgetTester tester,
     Inventory inventory, {
-    void Function(CarriedItem)? onDrop,
+    void Function(CarriedItem, int)? onDrop,
+    void Function(CarriedItem)? onTakeOff,
   }) async {
     await tester.pumpWidget(
       MaterialApp(
@@ -45,6 +46,7 @@ void main() {
           names: names,
           body: body,
           onDrop: onDrop,
+          onTakeOff: onTakeOff,
         ),
       ),
     );
@@ -152,19 +154,82 @@ void main() {
     expect(find.textContaining('0 / 160'), findsOneWidget);
   });
 
-  testWidgets('dropping something reports the whole line', (tester) async {
-    CarriedItem? dropped;
-    final inventory = const Inventory()
+  group('a stack is thinned, not emptied (§18.1a)', () {
+    // Found on a phone: the only button dropped the whole pile, so a player
+    // who wanted to shed one kilogram of wood lost six.
+    final threeLogs = const Inventory()
         .withPack('pack_daypack')
         .add('mat_wood', catalogue, body: body, count: 3)
         .inventory;
 
-    await pump(tester, inventory, onDrop: (line) => dropped = line);
-    await tester.tap(find.text('Wyrzuć'));
-    await tester.pump();
+    testWidgets('the plain button drops one', (tester) async {
+      var count = 0;
+      String? itemId;
 
-    expect(dropped?.itemId, 'mat_wood');
-    expect(dropped?.count, 3);
+      await pump(
+        tester,
+        threeLogs,
+        onDrop: (line, dropped) {
+          itemId = line.itemId;
+          count = dropped;
+        },
+      );
+      await tester.tap(find.text('Wyrzuć'));
+      await tester.pump();
+
+      expect(itemId, 'mat_wood');
+      expect(count, 1);
+    });
+
+    testWidgets('and there is a way to drop the lot', (tester) async {
+      var count = 0;
+
+      await pump(tester, threeLogs, onDrop: (_, dropped) => count = dropped);
+      await tester.tap(find.text('Wszystko'));
+      await tester.pump();
+
+      expect(count, 3);
+    });
+
+    testWidgets('a single item is not asked which', (tester) async {
+      final one = const Inventory()
+          .withPack('pack_daypack')
+          .add('mat_wood', catalogue, body: body)
+          .inventory;
+
+      await pump(tester, one, onDrop: (_, _) {});
+
+      expect(find.text('Wyrzuć'), findsOneWidget);
+      expect(find.text('Wszystko'), findsNothing);
+    });
+  });
+
+  group('worn kit comes off', () {
+    final dressed = const Inventory()
+        .withPack('pack_daypack')
+        .wear('armor_vest_soft');
+
+    testWidgets('there is a way to take it off at all (§4.4)', (tester) async {
+      CarriedItem? taken;
+
+      await pump(tester, dressed, onTakeOff: (line) => taken = line);
+      await tester.tap(find.text('Zdejmij'));
+      await tester.pump();
+
+      expect(taken?.itemId, 'armor_vest_soft');
+    });
+
+    testWidgets('and it is the only thing offered for worn kit', (
+      tester,
+    ) async {
+      // Taking a vest off and throwing it on the ground are different
+      // decisions, and only one belongs a tap away on a screen read in the
+      // dark.
+      await pump(tester, dressed, onDrop: (_, _) {}, onTakeOff: (_) {});
+
+      expect(find.text('Zdejmij'), findsOneWidget);
+      expect(find.text('Wyrzuć'), findsNothing);
+    });
   });
 
   testWidgets('the list follows the inventory, not the moment it opened', (
@@ -196,10 +261,10 @@ void main() {
           catalogue: catalogue,
           names: names,
           body: body,
-          onDrop: (line) =>
+          onDrop: (line, count) =>
               inventory.value = inventory.value.remove(
                 line.itemId,
-                count: line.count,
+                count: count,
               )!,
         ),
       ),
@@ -208,7 +273,7 @@ void main() {
 
     expect(find.text('Drewno  ×3'), findsOneWidget);
 
-    await tester.tap(find.text('Wyrzuć'));
+    await tester.tap(find.text('Wszystko'));
     await tester.pumpAndSettle();
 
     expect(find.text('Drewno  ×3'), findsNothing);
@@ -220,13 +285,5 @@ void main() {
     expect(find.text('Plecak jest pusty.'), findsOneWidget);
   });
 
-  testWidgets('worn kit cannot be dropped from here', (tester) async {
-    // Taking a coat off is a different action from throwing it away, and only
-    // one of them is safe to do with one tap in the dark.
-    final inventory = const Inventory().wear('cloth_winter_jacket');
 
-    await pump(tester, inventory, onDrop: (_) {});
-
-    expect(find.text('Wyrzuć'), findsNothing);
-  });
 }

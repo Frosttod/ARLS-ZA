@@ -256,6 +256,38 @@ void main() {
       expect(dressed.worn, hasLength(4));
     });
 
+    test('taking something off puts it in the pack, not on the floor', () {
+      final dressed = const Inventory()
+          .withPack('pack_daypack')
+          .wear('armor_vest_soft', catalogue);
+
+      final undressed = dressed.takeOff('armor_vest_soft');
+
+      expect(undressed.worn, isEmpty);
+      expect(undressed.countOf('armor_vest_soft'), 1);
+    });
+
+    test('and is never refused for want of room', () {
+      // A vest comes off whether or not the pack can take it. Refusing would
+      // mean the game makes somebody keep wearing armour because their bag is
+      // full; the overflow is reported instead (§18.1a).
+      var inventory = const Inventory().wear('armor_vest_plate', catalogue);
+      inventory = inventory
+          .add('mat_plastic', catalogue, body: body, count: 6)
+          .inventory;
+
+      final undressed = inventory.takeOff('armor_vest_plate');
+
+      expect(undressed.worn, isEmpty);
+      expect(undressed.overflowL(body, catalogue), greaterThan(0));
+    });
+
+    test('taking off something not worn changes nothing', () {
+      final dressed = const Inventory().wear('cloth_boots', catalogue);
+
+      expect(dressed.takeOff('armor_vest_soft').worn, hasLength(1));
+    });
+
     test('insulation adds up across garments, not per garment (§4.4)', () {
       final dressed = const Inventory()
           .wear('cloth_thermal_underwear', catalogue)

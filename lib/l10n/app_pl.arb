@@ -197,6 +197,8 @@
   "droppedNoRoom": "Nie mieści się w plecaku.",
   "noteRead": "Przeczytaj",
   "noteClose": "Odłóż",
+  "inventoryTakeOff": "Zdejmij",
+  "inventoryDropAll": "Wszystko",
   "inventoryTitle": "Ekwipunek",
   "inventoryEmpty": "Plecak jest pusty.",
   "inventoryEmptyHint": "Przeszukuj budynki i otwarte miejsca, żeby znaleźć coś wartego niesienia.",

@@ -790,7 +790,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
           catalogue: catalogue,
           names: _names ?? ItemNames.empty,
           body: character.body,
-          onDrop: (line) => unawaited(_drop(line)),
+          onDrop: (line, count) => unawaited(_drop(line, count)),
+          onTakeOff: (line) => unawaited(_takeOff(line)),
           onRead: _readNote,
           onDevFill: kDevTools ? () => unawaited(_devFillPack()) : null,
         ),
@@ -845,10 +846,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// Which is the whole reason the two carry limits are a decision. If leaving
   /// something behind destroyed it, "this is too heavy" would always be
   /// answered by throwing it away, and nobody deliberates over that.
-  Future<void> _drop(CarriedItem line) async {
+  Future<void> _drop(CarriedItem line, int count) async {
     final character = _character;
     final fix = _snapshot?.displayFix;
-    final next = _inventory.value.remove(line.itemId, count: line.count);
+    final next = _inventory.value.remove(line.itemId, count: count);
     if (character == null || next == null) return;
 
     _inventory.value = next;
@@ -864,7 +865,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       DroppedItem(
         id: 0,
         itemId: line.itemId,
-        count: line.count,
+        count: count,
         condition: line.condition,
         pagesTotal: line.pagesTotal,
         pagesRead: line.pagesRead,
@@ -873,6 +874,15 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       ),
     );
     await _reloadDropped();
+  }
+
+  /// §4.4: a worn piece comes off into the pack, never onto the ground.
+  ///
+  /// Taking a coat off and throwing it away are different decisions, and only
+  /// one of them should be one tap away from a screen read in the dark.
+  Future<void> _takeOff(CarriedItem line) async {
+    _inventory.value = _inventory.value.takeOff(line.itemId);
+    await _saveInventory();
   }
 
   Future<void> _reloadDropped() async {

@@ -1195,6 +1195,18 @@ abstract class L10n {
   /// **'Put it back'**
   String get noteClose;
 
+  /// No description provided for @inventoryTakeOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Take off'**
+  String get inventoryTakeOff;
+
+  /// No description provided for @inventoryDropAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get inventoryDropAll;
+
   /// No description provided for @inventoryTitle.
   ///
   /// In en, this message translates to:

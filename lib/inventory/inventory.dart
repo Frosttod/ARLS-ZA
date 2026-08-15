@@ -364,6 +364,24 @@ class Inventory {
     );
   }
 
+  /// Takes a worn piece off and puts it in the pack.
+  ///
+  /// Never refused. A coat comes off whether or not there is room for it —
+  /// the same reasoning as [wear] displacing what was in the slot — and the
+  /// overflow it may leave is reported by [overflowL] rather than being a
+  /// reason to make somebody keep wearing something.
+  Inventory takeOff(String itemId) {
+    final index = worn.indexWhere((line) => line.itemId == itemId);
+    if (index < 0) return this;
+
+    final remaining = [...worn]..removeAt(index);
+    return Inventory(
+      carried: [...carried, worn[index]],
+      worn: remaining,
+      packId: packId,
+    );
+  }
+
   int countOf(String itemId) => carried
       .where((line) => line.itemId == itemId)
       .fold(0, (sum, line) => sum + line.count);
