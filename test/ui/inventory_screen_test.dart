@@ -330,7 +330,9 @@ void main() {
       CarriedItem? taken;
 
       await pump(tester, dressed, onTakeOff: (line) => taken = line);
-      await tester.tap(find.text('Zdejmij'));
+      // The vest's own button: the figure is dressed from the head down, so
+      // the torso comes before the pack on the back.
+      await tester.tap(find.text('Zdejmij').first);
       await tester.pump();
 
       expect(taken?.itemId, 'armor_vest_soft');
@@ -344,7 +346,6 @@ void main() {
       // dark.
       await pump(tester, dressed, onDrop: (_, _) {}, onTakeOff: (_) {});
 
-      expect(find.text('Zdejmij'), findsOneWidget);
       expect(find.text('Wyrzuć'), findsNothing);
     });
   });
@@ -587,5 +588,21 @@ void main() {
 
       expect(dropped?.condition, 40);
     });
+  });
+
+  testWidgets('the pack comes off like anything else worn', (tester) async {
+    // Found on a phone: every slot on the figure had a way out except the one
+    // holding everything.
+    CarriedItem? removed;
+
+    await pump(
+      tester,
+      const Inventory().withPack('pack_daypack'),
+      onTakeOff: (line) => removed = line,
+    );
+    await tester.tap(find.text('Zdejmij'));
+    await tester.pumpAndSettle();
+
+    expect(removed?.itemId, 'pack_daypack');
   });
 }

@@ -599,4 +599,65 @@ void main() {
       expect(after.worn, isEmpty);
     });
   });
+
+  group('taking the pack off', () {
+    // Found on a phone: the back slot was the one thing that could not be
+    // taken off, on the reasoning that a pack is swapped rather than removed.
+    // A player who wants to put their bag down disagrees.
+    test('the pack ends up in hand', () {
+      final after = const Inventory().withPack('pack_daypack').takeOffPack();
+
+      expect(after.packId, isNull);
+      expect(after.carried.single.itemId, 'pack_daypack');
+    });
+
+    test('what was inside stays owned', () {
+      final loaded = const Inventory()
+          .withPack('pack_daypack')
+          .add('mat_wood', catalogue, body: body, count: 6)
+          .inventory;
+
+      final after = loaded.takeOffPack();
+
+      expect(after.countOf('mat_wood'), 6);
+    });
+
+    test('and twelve litres of pockets say what it costs (§18.1a)', () {
+      // The honest outcome, not a refusal: without a pack there are pockets,
+      // and the overflow is the player's problem to solve.
+      final loaded = const Inventory()
+          .withPack('pack_daypack')
+          .add('mat_wood', catalogue, body: body, count: 6)
+          .inventory;
+
+      final after = loaded.takeOffPack();
+
+      expect(after.limits(body, catalogue).capacityL, 12);
+      expect(after.overflowL(body, catalogue), greaterThan(0));
+    });
+
+    test('taking off nothing is not an error', () {
+      expect(const Inventory().takeOffPack().packId, isNull);
+    });
+
+    test('takeOff by id finds the pack too, the screen having one button', () {
+      final after = const Inventory()
+          .withPack('pack_trekking')
+          .takeOff('pack_trekking');
+
+      expect(after.packId, isNull);
+      expect(after.carried.single.itemId, 'pack_trekking');
+    });
+
+    test('a garment is still taken off the way it always was', () {
+      final after = const Inventory()
+          .withPack('pack_trekking')
+          .wear('cloth_boots', catalogue)
+          .takeOff('cloth_boots');
+
+      expect(after.worn, isEmpty);
+      expect(after.packId, 'pack_trekking');
+      expect(after.carried.single.itemId, 'cloth_boots');
+    });
+  });
 }

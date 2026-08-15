@@ -145,7 +145,6 @@ class InventoryScreen extends StatelessWidget {
             _SlotRow(
               label: _slotName(l10n, slot),
               line: _wornIn(inventory, slot),
-              isPack: slot == BodySlot.back,
               catalogue: catalogue,
               nameOf: (id) => _nameOf(id, language),
               emptyLabel: l10n.inventoryEmptySlot,
@@ -298,7 +297,6 @@ class _SlotRow extends StatelessWidget {
   const _SlotRow({
     required this.label,
     required this.line,
-    required this.isPack,
     required this.catalogue,
     required this.nameOf,
     required this.emptyLabel,
@@ -310,10 +308,6 @@ class _SlotRow extends StatelessWidget {
 
   final String label;
   final CarriedItem? line;
-
-  /// The back is worn but is not taken off here: a pack is swapped by putting
-  /// another one on, and a pack inside its own pack is a knot nobody needs.
-  final bool isPack;
 
   final ItemCatalogue catalogue;
   final String Function(String itemId) nameOf;
@@ -375,7 +369,7 @@ class _SlotRow extends StatelessWidget {
                 '${worn!.massKg(definition).toStringAsFixed(1)} kg',
                 style: TextStyle(fontSize: 11, color: colours.data),
               ),
-            if (worn != null && !isPack && onTakeOff != null)
+            if (worn != null && onTakeOff != null)
               TextButton(
                 onPressed: () => onTakeOff!(worn),
                 child: Text(takeOffLabel),

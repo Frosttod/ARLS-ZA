@@ -431,6 +431,10 @@ class Inventory {
   /// overflow it may leave is reported by [overflowL] rather than being a
   /// reason to make somebody keep wearing something.
   Inventory takeOff(String itemId) {
+    // The pack is worn on the back but does not live in [worn], so taking it
+    // off is its own move.
+    if (itemId == packId) return takeOffPack();
+
     final index = worn.indexWhere((line) => line.itemId == itemId);
     if (index < 0) return this;
 
@@ -439,6 +443,23 @@ class Inventory {
       carried: [...carried, worn[index]],
       worn: remaining,
       packId: packId,
+    );
+  }
+
+  /// Takes the pack off. What was in it stays in hand.
+  ///
+  /// Without a pack §18.1a leaves twelve litres of pockets, so this usually
+  /// ends over the volume limit — which is the honest outcome, reported by
+  /// [overflowL], and the same rule as swapping a big pack for a small one:
+  /// the game never decides on its own what a player throws away.
+  Inventory takeOffPack() {
+    final pack = packId;
+    if (pack == null) return this;
+
+    return Inventory(
+      carried: [...carried, CarriedItem(itemId: pack)],
+      worn: worn,
+      packId: null,
     );
   }
 
