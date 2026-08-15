@@ -69,6 +69,7 @@ class LootBox {
     this.lootedAt,
     this.respawnAt,
     this.openedAt,
+    this.searchUnits = 0,
   });
 
   /// The place it sits on, from [Poi.id]. What makes "one box per place" hold
@@ -91,7 +92,44 @@ class LootBox {
   /// When §19.3's barrier was got through. Null while the place is still shut.
   final DateTime? openedAt;
 
+  /// How much of [kSearchBudget] has been spent turning this place over.
+  ///
+  /// Three quick passes, two thorough ones or one deep one, in any mix that
+  /// fits. A place is not a vending machine that gives one handful and shuts:
+  /// a player who looked quickly and walked on can come back and look properly
+  /// — until there is genuinely nothing left, which is what empties it.
+  final int searchUnits;
+
   bool get isOpen => openedAt != null;
+
+  int get searchUnitsLeft => kSearchBudget - searchUnits;
+
+  /// Whether there is enough left of the place for one pass at this depth.
+  bool canSearchAt(SearchDepth depth) => depth.cost <= searchUnitsLeft;
+
+  /// The place after one pass at [depth].
+  ///
+  /// It empties when what is left cannot pay for the cheapest look there is —
+  /// the shelves are bare rather than the timer being up.
+  LootBox searchedAt(SearchDepth depth, DateTime now, Random random,
+      {bool backup = false}) {
+    final spent = searchUnits + depth.cost;
+    final exhausted = kSearchBudget - spent < SearchDepth.shallow.cost;
+
+    final next = LootBox(
+      poiId: poiId,
+      position: position,
+      tableId: tableId,
+      name: name,
+      spawnedAt: spawnedAt,
+      lootedAt: lootedAt,
+      respawnAt: respawnAt,
+      openedAt: openedAt,
+      searchUnits: spent,
+    );
+
+    return exhausted ? next.lootedAtTime(now, random, backup: backup) : next;
+  }
 
   /// The same box, with the way in made.
   LootBox openedAtTime(DateTime now) => LootBox(
@@ -103,6 +141,7 @@ class LootBox {
     lootedAt: lootedAt,
     respawnAt: respawnAt,
     openedAt: now,
+    searchUnits: searchUnits,
   );
 
   bool isActiveAt(DateTime now) {
@@ -125,6 +164,7 @@ class LootBox {
       lootedAt: now,
       respawnAt: now.add(Duration(minutes: min.inMinutes + random.nextInt(spread))),
       openedAt: openedAt,
+      searchUnits: searchUnits,
     );
   }
 
@@ -310,7 +350,7 @@ class LootSpawner {
       if (pick == null) break;
       pool.remove(pick);
       available.remove(pick);
-      added.add(_boxAt(pick, now));
+      added.add(_boxAt(pick, now, seed));
       room--;
     }
 
@@ -318,7 +358,7 @@ class LootSpawner {
       final pick = _weightedPick(available, random);
       if (pick == null) break;
       available.remove(pick);
-      added.add(_boxAt(pick, now));
+      added.add(_boxAt(pick, now, seed));
       room--;
     }
 
@@ -330,14 +370,31 @@ class LootSpawner {
     );
   }
 
-  LootBox _boxAt(({Poi poi, LootTable table, double distance}) pick, DateTime now) =>
-      LootBox(
-        poiId: pick.poi.id,
-        position: pick.poi.position,
-        tableId: pick.table.id,
-        name: pick.poi.name,
-        spawnedAt: now,
-      );
+  LootBox _boxAt(
+    ({Poi poi, LootTable table, double distance}) pick,
+    DateTime now,
+    int seed,
+  ) {
+    // §19.3: somebody got here first, sometimes.
+    //
+    // Seeded from the place and the character rather than from the clock, so
+    // a shop that stood open yesterday stands open today. A world where every
+    // door is shut is a world nobody else lived in.
+    final barrier = pick.table.barrier;
+    final open =
+        barrier == null ||
+        Random(seed ^ pick.poi.id.hashCode).nextDouble() <
+            barrier.alreadyOpenShare;
+
+    return LootBox(
+      poiId: pick.poi.id,
+      position: pick.poi.position,
+      tableId: pick.table.id,
+      name: pick.poi.name,
+      spawnedAt: now,
+      openedAt: barrier != null && open ? now : null,
+    );
+  }
 
   /// Which table this place belongs to, or null where none wants it.
   ///

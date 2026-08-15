@@ -3887,6 +3887,18 @@ class $LootBoxesTable extends LootBoxes
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _searchUnitsMeta = const VerificationMeta(
+    'searchUnits',
+  );
+  @override
+  late final GeneratedColumn<int> searchUnits = GeneratedColumn<int>(
+    'search_units',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -3900,6 +3912,7 @@ class $LootBoxesTable extends LootBoxes
     lootedAt,
     respawnAt,
     openedAt,
+    searchUnits,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -3988,6 +4001,15 @@ class $LootBoxesTable extends LootBoxes
         openedAt.isAcceptableOrUnknown(data['opened_at']!, _openedAtMeta),
       );
     }
+    if (data.containsKey('search_units')) {
+      context.handle(
+        _searchUnitsMeta,
+        searchUnits.isAcceptableOrUnknown(
+          data['search_units']!,
+          _searchUnitsMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -4041,6 +4063,10 @@ class $LootBoxesTable extends LootBoxes
         DriftSqlType.dateTime,
         data['${effectivePrefix}opened_at'],
       ),
+      searchUnits: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}search_units'],
+      )!,
     );
   }
 
@@ -4078,6 +4104,14 @@ class LootBoxe extends DataClass implements Insertable<LootBoxe> {
   /// Persisted because a forced door stays forced. Making the player break in
   /// again after a restart would turn one decision into a chore.
   final DateTime? openedAt;
+
+  /// How much of §10.3.5's budget has been spent searching this place.
+  ///
+  /// Persisted for the same reason the barrier is: a shelf somebody already
+  /// turned over is still turned over after a restart. Zero on every save
+  /// written before this existed, which reads as untouched — right for a box
+  /// that had only ever been searched once and emptied by it.
+  final int searchUnits;
   const LootBoxe({
     required this.id,
     required this.profileId,
@@ -4090,6 +4124,7 @@ class LootBoxe extends DataClass implements Insertable<LootBoxe> {
     this.lootedAt,
     this.respawnAt,
     this.openedAt,
+    required this.searchUnits,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -4113,6 +4148,7 @@ class LootBoxe extends DataClass implements Insertable<LootBoxe> {
     if (!nullToAbsent || openedAt != null) {
       map['opened_at'] = Variable<DateTime>(openedAt);
     }
+    map['search_units'] = Variable<int>(searchUnits);
     return map;
   }
 
@@ -4135,6 +4171,7 @@ class LootBoxe extends DataClass implements Insertable<LootBoxe> {
       openedAt: openedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(openedAt),
+      searchUnits: Value(searchUnits),
     );
   }
 
@@ -4155,6 +4192,7 @@ class LootBoxe extends DataClass implements Insertable<LootBoxe> {
       lootedAt: serializer.fromJson<DateTime?>(json['lootedAt']),
       respawnAt: serializer.fromJson<DateTime?>(json['respawnAt']),
       openedAt: serializer.fromJson<DateTime?>(json['openedAt']),
+      searchUnits: serializer.fromJson<int>(json['searchUnits']),
     );
   }
   @override
@@ -4172,6 +4210,7 @@ class LootBoxe extends DataClass implements Insertable<LootBoxe> {
       'lootedAt': serializer.toJson<DateTime?>(lootedAt),
       'respawnAt': serializer.toJson<DateTime?>(respawnAt),
       'openedAt': serializer.toJson<DateTime?>(openedAt),
+      'searchUnits': serializer.toJson<int>(searchUnits),
     };
   }
 
@@ -4187,6 +4226,7 @@ class LootBoxe extends DataClass implements Insertable<LootBoxe> {
     Value<DateTime?> lootedAt = const Value.absent(),
     Value<DateTime?> respawnAt = const Value.absent(),
     Value<DateTime?> openedAt = const Value.absent(),
+    int? searchUnits,
   }) => LootBoxe(
     id: id ?? this.id,
     profileId: profileId ?? this.profileId,
@@ -4199,6 +4239,7 @@ class LootBoxe extends DataClass implements Insertable<LootBoxe> {
     lootedAt: lootedAt.present ? lootedAt.value : this.lootedAt,
     respawnAt: respawnAt.present ? respawnAt.value : this.respawnAt,
     openedAt: openedAt.present ? openedAt.value : this.openedAt,
+    searchUnits: searchUnits ?? this.searchUnits,
   );
   LootBoxe copyWithCompanion(LootBoxesCompanion data) {
     return LootBoxe(
@@ -4213,6 +4254,9 @@ class LootBoxe extends DataClass implements Insertable<LootBoxe> {
       lootedAt: data.lootedAt.present ? data.lootedAt.value : this.lootedAt,
       respawnAt: data.respawnAt.present ? data.respawnAt.value : this.respawnAt,
       openedAt: data.openedAt.present ? data.openedAt.value : this.openedAt,
+      searchUnits: data.searchUnits.present
+          ? data.searchUnits.value
+          : this.searchUnits,
     );
   }
 
@@ -4229,7 +4273,8 @@ class LootBoxe extends DataClass implements Insertable<LootBoxe> {
           ..write('spawnedAt: $spawnedAt, ')
           ..write('lootedAt: $lootedAt, ')
           ..write('respawnAt: $respawnAt, ')
-          ..write('openedAt: $openedAt')
+          ..write('openedAt: $openedAt, ')
+          ..write('searchUnits: $searchUnits')
           ..write(')'))
         .toString();
   }
@@ -4247,6 +4292,7 @@ class LootBoxe extends DataClass implements Insertable<LootBoxe> {
     lootedAt,
     respawnAt,
     openedAt,
+    searchUnits,
   );
   @override
   bool operator ==(Object other) =>
@@ -4262,7 +4308,8 @@ class LootBoxe extends DataClass implements Insertable<LootBoxe> {
           other.spawnedAt == this.spawnedAt &&
           other.lootedAt == this.lootedAt &&
           other.respawnAt == this.respawnAt &&
-          other.openedAt == this.openedAt);
+          other.openedAt == this.openedAt &&
+          other.searchUnits == this.searchUnits);
 }
 
 class LootBoxesCompanion extends UpdateCompanion<LootBoxe> {
@@ -4277,6 +4324,7 @@ class LootBoxesCompanion extends UpdateCompanion<LootBoxe> {
   final Value<DateTime?> lootedAt;
   final Value<DateTime?> respawnAt;
   final Value<DateTime?> openedAt;
+  final Value<int> searchUnits;
   const LootBoxesCompanion({
     this.id = const Value.absent(),
     this.profileId = const Value.absent(),
@@ -4289,6 +4337,7 @@ class LootBoxesCompanion extends UpdateCompanion<LootBoxe> {
     this.lootedAt = const Value.absent(),
     this.respawnAt = const Value.absent(),
     this.openedAt = const Value.absent(),
+    this.searchUnits = const Value.absent(),
   });
   LootBoxesCompanion.insert({
     this.id = const Value.absent(),
@@ -4302,6 +4351,7 @@ class LootBoxesCompanion extends UpdateCompanion<LootBoxe> {
     this.lootedAt = const Value.absent(),
     this.respawnAt = const Value.absent(),
     this.openedAt = const Value.absent(),
+    this.searchUnits = const Value.absent(),
   }) : profileId = Value(profileId),
        poiId = Value(poiId),
        latitude = Value(latitude),
@@ -4320,6 +4370,7 @@ class LootBoxesCompanion extends UpdateCompanion<LootBoxe> {
     Expression<DateTime>? lootedAt,
     Expression<DateTime>? respawnAt,
     Expression<DateTime>? openedAt,
+    Expression<int>? searchUnits,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -4333,6 +4384,7 @@ class LootBoxesCompanion extends UpdateCompanion<LootBoxe> {
       if (lootedAt != null) 'looted_at': lootedAt,
       if (respawnAt != null) 'respawn_at': respawnAt,
       if (openedAt != null) 'opened_at': openedAt,
+      if (searchUnits != null) 'search_units': searchUnits,
     });
   }
 
@@ -4348,6 +4400,7 @@ class LootBoxesCompanion extends UpdateCompanion<LootBoxe> {
     Value<DateTime?>? lootedAt,
     Value<DateTime?>? respawnAt,
     Value<DateTime?>? openedAt,
+    Value<int>? searchUnits,
   }) {
     return LootBoxesCompanion(
       id: id ?? this.id,
@@ -4361,6 +4414,7 @@ class LootBoxesCompanion extends UpdateCompanion<LootBoxe> {
       lootedAt: lootedAt ?? this.lootedAt,
       respawnAt: respawnAt ?? this.respawnAt,
       openedAt: openedAt ?? this.openedAt,
+      searchUnits: searchUnits ?? this.searchUnits,
     );
   }
 
@@ -4400,6 +4454,9 @@ class LootBoxesCompanion extends UpdateCompanion<LootBoxe> {
     if (openedAt.present) {
       map['opened_at'] = Variable<DateTime>(openedAt.value);
     }
+    if (searchUnits.present) {
+      map['search_units'] = Variable<int>(searchUnits.value);
+    }
     return map;
   }
 
@@ -4416,7 +4473,8 @@ class LootBoxesCompanion extends UpdateCompanion<LootBoxe> {
           ..write('spawnedAt: $spawnedAt, ')
           ..write('lootedAt: $lootedAt, ')
           ..write('respawnAt: $respawnAt, ')
-          ..write('openedAt: $openedAt')
+          ..write('openedAt: $openedAt, ')
+          ..write('searchUnits: $searchUnits')
           ..write(')'))
         .toString();
   }
@@ -6907,6 +6965,7 @@ typedef $$LootBoxesTableCreateCompanionBuilder =
       Value<DateTime?> lootedAt,
       Value<DateTime?> respawnAt,
       Value<DateTime?> openedAt,
+      Value<int> searchUnits,
     });
 typedef $$LootBoxesTableUpdateCompanionBuilder =
     LootBoxesCompanion Function({
@@ -6921,6 +6980,7 @@ typedef $$LootBoxesTableUpdateCompanionBuilder =
       Value<DateTime?> lootedAt,
       Value<DateTime?> respawnAt,
       Value<DateTime?> openedAt,
+      Value<int> searchUnits,
     });
 
 class $$LootBoxesTableFilterComposer
@@ -6984,6 +7044,11 @@ class $$LootBoxesTableFilterComposer
 
   ColumnFilters<DateTime> get openedAt => $composableBuilder(
     column: $table.openedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get searchUnits => $composableBuilder(
+    column: $table.searchUnits,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -7051,6 +7116,11 @@ class $$LootBoxesTableOrderingComposer
     column: $table.openedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<int> get searchUnits => $composableBuilder(
+    column: $table.searchUnits,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$LootBoxesTableAnnotationComposer
@@ -7094,6 +7164,11 @@ class $$LootBoxesTableAnnotationComposer
 
   GeneratedColumn<DateTime> get openedAt =>
       $composableBuilder(column: $table.openedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get searchUnits => $composableBuilder(
+    column: $table.searchUnits,
+    builder: (column) => column,
+  );
 }
 
 class $$LootBoxesTableTableManager
@@ -7135,6 +7210,7 @@ class $$LootBoxesTableTableManager
                 Value<DateTime?> lootedAt = const Value.absent(),
                 Value<DateTime?> respawnAt = const Value.absent(),
                 Value<DateTime?> openedAt = const Value.absent(),
+                Value<int> searchUnits = const Value.absent(),
               }) => LootBoxesCompanion(
                 id: id,
                 profileId: profileId,
@@ -7147,6 +7223,7 @@ class $$LootBoxesTableTableManager
                 lootedAt: lootedAt,
                 respawnAt: respawnAt,
                 openedAt: openedAt,
+                searchUnits: searchUnits,
               ),
           createCompanionCallback:
               ({
@@ -7161,6 +7238,7 @@ class $$LootBoxesTableTableManager
                 Value<DateTime?> lootedAt = const Value.absent(),
                 Value<DateTime?> respawnAt = const Value.absent(),
                 Value<DateTime?> openedAt = const Value.absent(),
+                Value<int> searchUnits = const Value.absent(),
               }) => LootBoxesCompanion.insert(
                 id: id,
                 profileId: profileId,
@@ -7173,6 +7251,7 @@ class $$LootBoxesTableTableManager
                 lootedAt: lootedAt,
                 respawnAt: respawnAt,
                 openedAt: openedAt,
+                searchUnits: searchUnits,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

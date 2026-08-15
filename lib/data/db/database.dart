@@ -29,7 +29,7 @@ import 'tables.dart';
 part 'database.g.dart';
 
 /// Bumped only alongside a migration step in [_migration]. Never reused.
-const int kSchemaVersion = 9;
+const int kSchemaVersion = 10;
 
 /// Keys used in [MetaEntries].
 abstract final class MetaKeys {
@@ -69,7 +69,7 @@ class SaveDatabase extends _$SaveDatabase {
   /// follow a constant reference. `schema_test.dart` keeps it in step with
   /// [kSchemaVersion].
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 10;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -143,6 +143,15 @@ class SaveDatabase extends _$SaveDatabase {
         // to zero, so an existing character simply has nothing in the stomach.
         await m.addColumn(vitals, vitals.pendingKcal);
         await m.addColumn(vitals, vitals.pendingWaterMl);
+      }
+
+      // Same shape as v5's: loot_boxes was created in v4, so only a save that
+      // already has a v4-or-later table needs the column added.
+      if (from >= 4 && from < 10) {
+        // §10.3.5: how much of a place is left to search. Zero reads as
+        // untouched, which is right — every box written before this was
+        // emptied outright by its one search.
+        await m.addColumn(lootBoxes, lootBoxes.searchUnits);
       }
 
       await _writeSchemaVersion(to);

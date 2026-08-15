@@ -22,6 +22,7 @@ class SearchPanel extends StatelessWidget {
     required this.search,
     required this.targetName,
     required this.canSearchHere,
+    required this.searchUnitsLeft,
     required this.onSearchArea,
     required this.onSearchHere,
     required this.onCancel,
@@ -41,6 +42,10 @@ class SearchPanel extends StatelessWidget {
 
   /// False when the nearest place is too far, or already emptied.
   final bool canSearchHere;
+
+  /// §10.3.5: how much of the place in reach is left to turn over, out of
+  /// [kSearchBudget]. Decides which depths are still worth offering.
+  final int searchUnitsLeft;
 
   final VoidCallback onSearchArea;
   final void Function(SearchDepth depth) onSearchHere;
@@ -88,6 +93,7 @@ class SearchPanel extends StatelessWidget {
               : _Choices(
                   targetName: targetName,
                   canSearchHere: canSearchHere,
+                  searchUnitsLeft: searchUnitsLeft,
                   onSearchArea: onSearchArea,
                   onSearchHere: onSearchHere,
                   droppedLabel: droppedLabel,
@@ -247,6 +253,7 @@ class _Choices extends StatelessWidget {
   const _Choices({
     required this.targetName,
     required this.canSearchHere,
+    required this.searchUnitsLeft,
     required this.onSearchArea,
     required this.onSearchHere,
     required this.droppedLabel,
@@ -257,6 +264,10 @@ class _Choices extends StatelessWidget {
 
   final String? targetName;
   final bool canSearchHere;
+
+  /// §10.3.5: what is left of this place, out of [kSearchBudget].
+  final int searchUnitsLeft;
+
   final VoidCallback onSearchArea;
   final void Function(SearchDepth) onSearchHere;
   final String? droppedLabel;
@@ -297,27 +308,39 @@ class _Choices extends StatelessWidget {
             ],
           ),
         ),
-      Row(
+      // Wrapped, not a row: four buttons with their times on them do not fit
+      // across a phone, and a clipped control is a control nobody can press.
+      Wrap(
+        alignment: WrapAlignment.end,
+        spacing: 4,
         children: [
           // Reconnaissance is always available: §10.2.1 gives it no cooldown,
           // only a cost.
           TextButton(onPressed: onSearchArea, child: Text(l10n.searchArea)),
-          const Spacer(),
           if (canSearchHere)
             // The three depths of §10.3.5, all three on screen at once. Hiding
             // the slow ones behind a menu would hide the decision.
+            // A depth with no room left in the place is shown and refused,
+            // not hidden: a player who searched thoroughly twice should see
+            // why the third pass is gone.
             ...[
               _DepthButton(
                 label: l10n.searchShallow,
-                onPressed: () => onSearchHere(SearchDepth.shallow),
+                onPressed: SearchDepth.shallow.cost <= searchUnitsLeft
+                    ? () => onSearchHere(SearchDepth.shallow)
+                    : null,
               ),
               _DepthButton(
                 label: l10n.searchThorough,
-                onPressed: () => onSearchHere(SearchDepth.thorough),
+                onPressed: SearchDepth.thorough.cost <= searchUnitsLeft
+                    ? () => onSearchHere(SearchDepth.thorough)
+                    : null,
               ),
               _DepthButton(
                 label: l10n.searchDeep,
-                onPressed: () => onSearchHere(SearchDepth.deep),
+                onPressed: SearchDepth.deep.cost <= searchUnitsLeft
+                    ? () => onSearchHere(SearchDepth.deep)
+                    : null,
               ),
             ],
         ],
@@ -330,7 +353,9 @@ class _DepthButton extends StatelessWidget {
   const _DepthButton({required this.label, required this.onPressed});
 
   final String label;
-  final VoidCallback onPressed;
+
+  /// Null where the place has nothing left for a pass this deep.
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) => Padding(

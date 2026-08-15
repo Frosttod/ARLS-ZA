@@ -22,10 +22,22 @@ import '../items/item.dart';
 import '../items/item_catalogue.dart';
 import 'obstacle.dart';
 
+/// How much searching one place can absorb before there is nothing left to
+/// find (§10.3.5).
+///
+/// Six is three quick passes, two thorough ones, or one deep one — the numbers
+/// a player would guess from the times. It is one budget rather than three
+/// counters so that mixing depths stays honest: a quick look followed by a
+/// thorough one leaves a litre of shelf nobody has turned over, and a deep
+/// search costs the lot, which is why it can only be the first thing done to a
+/// place.
+const int kSearchBudget = 6;
+
 /// §10.3.5. Time is the cost, and the only one.
 enum SearchDepth {
   shallow(
     seconds: 30,
+    cost: 2,
     minDraws: 1,
     maxDraws: 2,
     tiers: {Rarity.common},
@@ -33,6 +45,7 @@ enum SearchDepth {
   ),
   thorough(
     seconds: 90,
+    cost: 3,
     minDraws: 2,
     maxDraws: 4,
     tiers: {Rarity.common, Rarity.uncommon},
@@ -40,6 +53,7 @@ enum SearchDepth {
   ),
   deep(
     seconds: 180,
+    cost: 6,
     minDraws: 3,
     maxDraws: 5,
     tiers: {Rarity.common, Rarity.uncommon, Rarity.rare, Rarity.veryRare},
@@ -48,6 +62,7 @@ enum SearchDepth {
 
   const SearchDepth({
     required this.seconds,
+    required this.cost,
     required this.minDraws,
     required this.maxDraws,
     required this.tiers,
@@ -55,6 +70,10 @@ enum SearchDepth {
   });
 
   final int seconds;
+
+  /// What one pass at this depth takes out of [kSearchBudget].
+  final int cost;
+
   final int minDraws;
   final int maxDraws;
 

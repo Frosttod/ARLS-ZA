@@ -33,6 +33,7 @@ class LootStore {
         lootedAt: row.lootedAt,
         respawnAt: row.respawnAt,
         openedAt: row.openedAt,
+        searchUnits: row.searchUnits,
       ),
   ];
 
@@ -61,5 +62,6 @@ class LootStore {
         lootedAt: Value(box.lootedAt),
         respawnAt: Value(box.respawnAt),
         openedAt: Value(box.openedAt),
+        searchUnits: Value(box.searchUnits),
       );
 }

@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:arls_za/data/db/database.dart';
 import 'package:arls_za/loot/loot_spawner.dart';
 import 'package:arls_za/loot/loot_store.dart';
+import 'package:arls_za/loot/loot_table.dart';
 import 'package:arls_za/map/geometry.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -108,5 +109,49 @@ void main() {
     await (db.delete(db.profiles)..where((t) => t.id.equals(profileId))).go();
 
     expect(await store.load(profileId), isEmpty);
+  });
+
+  test('a half-searched place is still half-searched after a restart', () async {
+    // §10.3.5: a shelf somebody already turned over is still turned over.
+    // Without this, closing the app would be three fresh looks at every shop.
+    final searched = boxAt('apteka').searchedAt(
+      SearchDepth.shallow,
+      now,
+      Random(3),
+    );
+    await store.saveOne(profileId, searched);
+
+    final loaded = (await store.load(profileId)).single;
+
+    expect(loaded.searchUnits, SearchDepth.shallow.cost);
+    expect(loaded.canSearchAt(SearchDepth.deep), isFalse);
+    expect(loaded.canSearchAt(SearchDepth.thorough), isTrue);
+  });
+
+  test('an untouched place reads as untouched', () async {
+    await store.save(
+      profileId,
+      SpawnPlan(boxes: [boxAt('apteka')], added: const [], forgotten: const []),
+    );
+
+    final loaded = (await store.load(profileId)).single;
+
+    expect(loaded.searchUnits, 0);
+    expect(loaded.canSearchAt(SearchDepth.deep), isTrue);
+  });
+
+  test('a door that was already open when it was placed stays open', () async {
+    // §19.3: somebody got there first, and that is a fact about the world
+    // rather than about this session.
+    await store.save(
+      profileId,
+      SpawnPlan(
+        boxes: [boxAt('apteka').openedAtTime(now)],
+        added: const [],
+        forgotten: const [],
+      ),
+    );
+
+    expect((await store.load(profileId)).single.isOpen, isTrue);
   });
 }

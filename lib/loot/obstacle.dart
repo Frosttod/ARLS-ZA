@@ -48,6 +48,7 @@ enum Barrier {
   /// §19.3: forcing it is 150 m of noise (§5.6.1). Picks open it quietly, and
   /// a crowbar makes the same noise faster than shoulders do.
   door(
+    alreadyOpenShare: 0.35,
     force: BarrierBreach(seconds: 20, noiseM: 150),
     quiet: BarrierBreach(
       seconds: 60,
@@ -67,6 +68,7 @@ enum Barrier {
   /// not open a padlock, and pretending otherwise would make every tool in the
   /// catalogue optional.
   padlock(
+    alreadyOpenShare: 0.10,
     force: null,
     quiet: BarrierBreach(
       seconds: 45,
@@ -84,12 +86,27 @@ enum Barrier {
 
   /// The way in that always exists, and always costs the same 150 m.
   window(
+    alreadyOpenShare: 0.45,
     force: BarrierBreach(seconds: 5, noiseM: 150),
     quiet: null,
     pry: null,
   );
 
-  const Barrier({required this.force, required this.quiet, required this.pry});
+  const Barrier({
+    required this.alreadyOpenShare,
+    required this.force,
+    required this.quiet,
+    required this.pry,
+  });
+
+  /// How often somebody already got here first.
+  ///
+  /// A world where every door is shut is a world nobody else lived in, and it
+  /// makes the first hour of the game a lockpicking exercise. Glass goes first
+  /// and stays gone, a shop door is often already off its hinges, and a
+  /// padlock is the one that usually held — which is what makes a padlock
+  /// worth walking to.
+  final double alreadyOpenShare;
 
   /// Shoulders, boots, or a rock. Null where that is not a thing a person can
   /// do to this barrier.

@@ -436,4 +436,160 @@ void main() {
       expect(plan.boxes, isEmpty);
     });
   });
+
+  group('somebody got here first (§19.3)', () {
+    // A world where every single door is shut is a world nobody else lived in,
+    // and it makes the first hour of the game a lockpicking exercise with no
+    // lockpicks. Some places are simply open.
+    List<LootBox> spawnMany(int seed) => spawner
+        .plan(
+          centre: centre,
+          candidates: spread(15, stepM: 120),
+          existing: const [],
+          now: now,
+          seed: seed,
+        )
+        .added;
+
+    test('not every locked place is locked', () {
+      var open = 0;
+      var shut = 0;
+      for (var seed = 0; seed < 40; seed++) {
+        for (final box in spawnMany(seed)) {
+          box.isOpen ? open++ : shut++;
+        }
+      }
+
+      expect(open, greaterThan(0), reason: 'a city nobody has been through');
+      expect(shut, greaterThan(0), reason: 'and nothing left to break into');
+    });
+
+    test('a door stands open about a third of the time', () {
+      // Rough, because it is a share rather than a rule: what matters is that
+      // it is neither rare nor the usual case.
+      var open = 0;
+      var total = 0;
+      for (var seed = 0; seed < 60; seed++) {
+        for (final box in spawnMany(seed)) {
+          total++;
+          if (box.isOpen) open++;
+        }
+      }
+
+      expect(open / total, closeTo(0.35, 0.12));
+    });
+
+    test('the same shop is open every time it is planned', () {
+      // Seeded from the place, not the clock: a door that stood open yesterday
+      // stands open today, or the world stops being a place.
+      final first = spawnMany(7).map((box) => (box.poiId, box.isOpen)).toSet();
+      final again = spawnMany(7).map((box) => (box.poiId, box.isOpen)).toSet();
+
+      expect(again, first);
+    });
+
+    test('a place with no barrier is open, having nothing to shut it', () {
+      final plan = LootSpawner(tables: tables, backupMode: true).plan(
+        centre: centre,
+        candidates: [poiAt(200, selector: 'landuse.class=residential')],
+        existing: const [],
+        now: now,
+        seed: 3,
+      );
+
+      for (final box in plan.added) {
+        final barrier = tables[box.tableId]?.barrier;
+        if (barrier == null) expect(box.openedAt, isNull, reason: box.tableId);
+      }
+    });
+  });
+
+  group('how much of a place there is to search (§10.3.5)', () {
+    LootBox box() => LootBox(
+      poiId: 'p1',
+      position: centre,
+      tableId: 'poi_pharmacy',
+      spawnedAt: now,
+    );
+
+    final random = Random(1);
+
+    test('three quick looks and it is bare', () {
+      var place = box();
+      for (var i = 0; i < 3; i++) {
+        expect(place.canSearchAt(SearchDepth.shallow), isTrue, reason: 'pass $i');
+        place = place.searchedAt(SearchDepth.shallow, now, random);
+      }
+
+      expect(place.canSearchAt(SearchDepth.shallow), isFalse);
+      expect(place.lootedAt, isNotNull);
+    });
+
+    test('two thorough ones', () {
+      var place = box().searchedAt(SearchDepth.thorough, now, random);
+
+      expect(place.canSearchAt(SearchDepth.thorough), isTrue);
+      place = place.searchedAt(SearchDepth.thorough, now, random);
+
+      expect(place.canSearchAt(SearchDepth.shallow), isFalse);
+      expect(place.lootedAt, isNotNull);
+    });
+
+    test('one deep one, and there is nothing left to look at', () {
+      // What the player asked for in as many words: having taken the place
+      // apart, there is no quicker pass left to make.
+      final place = box().searchedAt(SearchDepth.deep, now, random);
+
+      expect(place.canSearchAt(SearchDepth.shallow), isFalse);
+      expect(place.canSearchAt(SearchDepth.thorough), isFalse);
+      expect(place.lootedAt, isNotNull);
+    });
+
+    test('and a deep search is only ever the first thing done to a place', () {
+      final touched = box().searchedAt(SearchDepth.shallow, now, random);
+
+      expect(touched.canSearchAt(SearchDepth.deep), isFalse);
+    });
+
+    test('a quick look leaves room for a thorough one', () {
+      final place = box().searchedAt(SearchDepth.shallow, now, random);
+
+      expect(place.canSearchAt(SearchDepth.thorough), isTrue);
+      expect(place.canSearchAt(SearchDepth.shallow), isTrue);
+    });
+
+    test('but the two together leave nothing behind them', () {
+      final place = box()
+          .searchedAt(SearchDepth.shallow, now, random)
+          .searchedAt(SearchDepth.thorough, now, random);
+
+      expect(place.canSearchAt(SearchDepth.shallow), isFalse);
+      expect(place.lootedAt, isNotNull);
+    });
+
+    test('a place is not emptied while there is still something to find', () {
+      final place = box().searchedAt(SearchDepth.shallow, now, random);
+
+      expect(place.lootedAt, isNull, reason: 'two thirds of it is untouched');
+      expect(place.isActiveAt(now), isTrue);
+    });
+
+    test('a refill is a full place again', () {
+      // §10: the shelves are restocked, and so is what it takes to strip them.
+      final emptied = box().searchedAt(SearchDepth.deep, now, random);
+      final refilled = emptied.refilledAt(now.add(const Duration(hours: 6)));
+
+      expect(refilled.searchUnits, 0);
+      expect(refilled.canSearchAt(SearchDepth.deep), isTrue);
+    });
+
+    test('the door somebody forced is still forced after a refill', () {
+      final opened = box().openedAtTime(now);
+      final refilled = opened
+          .searchedAt(SearchDepth.deep, now, random)
+          .refilledAt(now.add(const Duration(hours: 6)));
+
+      expect(refilled.isOpen, isTrue);
+    });
+  });
 }

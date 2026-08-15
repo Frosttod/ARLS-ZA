@@ -273,6 +273,14 @@ class LootBoxes extends Table {
   /// again after a restart would turn one decision into a chore.
   DateTimeColumn get openedAt => dateTime().nullable()();
 
+  /// How much of §10.3.5's budget has been spent searching this place.
+  ///
+  /// Persisted for the same reason the barrier is: a shelf somebody already
+  /// turned over is still turned over after a restart. Zero on every save
+  /// written before this existed, which reads as untouched — right for a box
+  /// that had only ever been searched once and emptied by it.
+  IntColumn get searchUnits => integer().withDefault(const Constant(0))();
+
   @override
   List<String> get customConstraints => [
     'FOREIGN KEY (profile_id) REFERENCES profiles (id) ON DELETE CASCADE',

@@ -1437,11 +1437,16 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final box = _boxes.where((b) => b.poiId == poiId).firstOrNull;
     final table = box == null ? null : world.tables[box.tableId];
     if (box == null || table == null) return;
+    if (!box.canSearchAt(depth)) return;
 
-    // Seeded from the place and the character, so the same search of the same
-    // shop gives the same result however many times the app is restarted
-    // mid-search (§11).
-    final random = Random(character.profile.rngSeed ^ poiId.hashCode);
+    // Seeded from the place, the character and how far into this place the
+    // player already is, so the same search of the same shop gives the same
+    // result however many times the app is restarted mid-search (§11) — and a
+    // second pass over the same shelves is a different draw rather than the
+    // first one again.
+    final random = Random(
+      character.profile.rngSeed ^ poiId.hashCode ^ (box.searchUnits * 2654435761),
+    );
     final drop = table.roll(random, depth: depth, catalogue: catalogue);
 
     var inventory = _inventory.value;
@@ -1474,19 +1479,20 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       if (accepted < entry.value) refused = true;
     }
 
-    // The box is emptied whether or not everything fitted. §19.3 spends the
-    // time on searching it, not on carrying the result — and a box that stayed
-    // full because a pack was full would be a way to farm one shop.
-    final emptied = box.lootedAtTime(now, random);
+    // What the pass took out of the place, whether or not everything fitted.
+    // §19.3 spends the time on searching it, not on carrying the result — and
+    // shelves that stayed full because a pack was full would be a way to farm
+    // one shop.
+    final searched = box.searchedAt(depth, now, random);
 
     setState(() {
       _inventory.value = inventory;
       _boxes = [
-        for (final b in _boxes) if (b.poiId == poiId) emptied else b,
+        for (final b in _boxes) if (b.poiId == poiId) searched else b,
       ];
     });
 
-    await LootStore(widget.session.db).saveOne(character.profile.id, emptied);
+    await LootStore(widget.session.db).saveOne(character.profile.id, searched);
     await _saveInventory();
     if (!mounted) return;
 
@@ -1674,6 +1680,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
                         search: _search.value,
                         targetName: box?.name,
                         canSearchHere: box != null,
+                        // §10.3.5: how much of this place is left to turn
+                        // over, so the panel can grey out a pass there is no
+                        // longer room for.
+                        searchUnitsLeft: box?.searchUnitsLeft ?? 0,
                         barrier: _barrierOn(box),
                         carried: _carriedIds(),
                         onSearchArea: _startAreaSearch,
