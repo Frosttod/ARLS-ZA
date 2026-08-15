@@ -283,7 +283,10 @@ class _ThinBar extends StatelessWidget {
     final arriving = (clamped + incoming).clamp(0.0, 1.0);
 
     return Semantics(
-      label: '$label ${(clamped * 100).round()}%',
+      label: incoming.abs() > 0.001
+          ? '$label ${(clamped * 100).round()}%, '
+                '${incoming > 0 ? "+" : "-"}${(incoming.abs() * 100).round()}%'
+          : '$label ${(clamped * 100).round()}%',
       child: Row(
         children: [
           SizedBox(
@@ -309,7 +312,7 @@ class _ThinBar extends StatelessWidget {
                       backgroundColor: colours.muted.withValues(alpha: 0.35),
                       valueColor: AlwaysStoppedAnimation(colour),
                     ),
-                    if (incoming > 0.001)
+                    if (incoming.abs() > 0.001)
                       Positioned(
                         left: (constraints.maxWidth * arriving - 1).clamp(
                           0.0,
@@ -326,7 +329,19 @@ class _ThinBar extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: 4),
+          // Which way the tick is going, in one character. §12: the mark alone
+          // says there is something coming, the sign says what kind.
+          SizedBox(
+            width: 12,
+            child: incoming.abs() > 0.001
+                ? Icon(
+                    incoming > 0 ? Icons.add : Icons.remove,
+                    size: 11,
+                    color: incoming > 0 ? colours.data : colours.alert,
+                  )
+                : const SizedBox.shrink(),
+          ),
           SizedBox(
             width: 34,
             child: Text(

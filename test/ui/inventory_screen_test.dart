@@ -7,6 +7,9 @@ import 'package:arls_za/items/item_names.dart';
 import 'package:arls_za/l10n/app_localizations.dart';
 import 'package:arls_za/sim/body.dart';
 import 'package:arls_za/ui/inventory_screen.dart';
+import 'package:arls_za/loot/search.dart';
+import 'package:arls_za/map/geometry.dart';
+import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -32,6 +35,8 @@ void main() {
     void Function(CarriedItem)? onTakeOff,
     void Function(CarriedItem)? onWear,
     void Function(CarriedItem)? onUse,
+    void Function(CarriedItem)? onDetails,
+    ValueListenable<Search?>? action,
   }) async {
     await tester.pumpWidget(
       MaterialApp(
@@ -52,6 +57,8 @@ void main() {
           onTakeOff: onTakeOff,
           onWear: onWear,
           onUse: onUse,
+          onDetails: onDetails,
+          action: action,
         ),
       ),
     );
@@ -403,4 +410,87 @@ void main() {
   });
 
 
+
+  group('a running use is drawn under the thing being used', () {
+    // Found on a phone: the bar sat at the top of the screen, so drinking from
+    // one of three bottles said something was happening without saying what.
+    final pack = const Inventory()
+        .withPack('pack_daypack')
+        .add('drink_water_bottle_500', catalogue, body: body)
+        .inventory
+        .add('food_canned_meat', catalogue, body: body)
+        .inventory;
+
+    Search drinking() => Search.using(
+      at: const GeoPoint(52.4, 16.9),
+      now: DateTime.utc(2026, 8, 15, 12),
+      itemId: 'drink_water_bottle_500',
+      duration: const Duration(seconds: 20),
+      label: 'Picie',
+    );
+
+    testWidgets('the bar is below the item it belongs to', (tester) async {
+      await pump(
+        tester,
+        pack,
+        action: ValueNotifier<Search?>(drinking()),
+      );
+
+      await reveal(tester, find.text('Picie'));
+
+      final bottle = tester.getBottomLeft(find.text('Woda 0,5 l'));
+      final bar = tester.getTopLeft(find.text('Picie'));
+      expect(bar.dy, greaterThan(bottle.dy));
+    });
+
+    testWidgets('and not under anything else in the pack', (tester) async {
+      await pump(tester, pack, action: ValueNotifier<Search?>(drinking()));
+
+      await reveal(tester, find.text('Picie'));
+      final tin = tester.getTopLeft(find.text('Konserwa mięsna'));
+      final bar = tester.getTopLeft(find.text('Picie'));
+
+      // One bar, and it is not the tin's.
+      expect(find.text('Picie'), findsOneWidget);
+      expect(bar.dy, isNot(closeTo(tin.dy, 40)));
+    });
+
+    testWidgets('nothing running, nothing drawn', (tester) async {
+      await pump(tester, pack, action: ValueNotifier<Search?>(null));
+
+      expect(find.text('Picie'), findsNothing);
+    });
+  });
+
+  group('the numbers behind an item', () {
+    testWidgets('a line can be asked what it actually is', (tester) async {
+      String? asked;
+      final pack = const Inventory()
+          .withPack('pack_daypack')
+          .add('armor_vest_soft', catalogue, body: body)
+          .inventory;
+
+      await pump(tester, pack, onDetails: (line) => asked = line.itemId);
+
+      await tapInPack(tester, find.byIcon(Icons.info_outline));
+
+      expect(asked, 'armor_vest_soft');
+    });
+
+    testWidgets('so can something being worn, which is the one to beat', (
+      tester,
+    ) async {
+      String? asked;
+
+      await pump(
+        tester,
+        const Inventory().wear('armor_vest_soft'),
+        onDetails: (line) => asked = line.itemId,
+      );
+      await tester.tap(find.text('Kamizelka kuloodporna'));
+      await tester.pumpAndSettle();
+
+      expect(asked, 'armor_vest_soft');
+    });
+  });
 }

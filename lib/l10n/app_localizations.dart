@@ -1303,6 +1303,210 @@ abstract class L10n {
   /// **'Back'**
   String get slotBack;
 
+  /// No description provided for @statEnergy.
+  ///
+  /// In en, this message translates to:
+  /// **'Muzzle energy'**
+  String get statEnergy;
+
+  /// No description provided for @statMoa.
+  ///
+  /// In en, this message translates to:
+  /// **'Dispersion'**
+  String get statMoa;
+
+  /// No description provided for @statMagazine.
+  ///
+  /// In en, this message translates to:
+  /// **'Magazine'**
+  String get statMagazine;
+
+  /// No description provided for @statReload.
+  ///
+  /// In en, this message translates to:
+  /// **'Reload'**
+  String get statReload;
+
+  /// No description provided for @statRange.
+  ///
+  /// In en, this message translates to:
+  /// **'Effective range'**
+  String get statRange;
+
+  /// No description provided for @statNoise.
+  ///
+  /// In en, this message translates to:
+  /// **'Heard from'**
+  String get statNoise;
+
+  /// No description provided for @statBleed.
+  ///
+  /// In en, this message translates to:
+  /// **'Blood loss per hit'**
+  String get statBleed;
+
+  /// No description provided for @statSwing.
+  ///
+  /// In en, this message translates to:
+  /// **'Swing'**
+  String get statSwing;
+
+  /// No description provided for @statReach.
+  ///
+  /// In en, this message translates to:
+  /// **'Reach'**
+  String get statReach;
+
+  /// No description provided for @statStrength.
+  ///
+  /// In en, this message translates to:
+  /// **'Strength needed'**
+  String get statStrength;
+
+  /// No description provided for @statInsulation.
+  ///
+  /// In en, this message translates to:
+  /// **'Insulation'**
+  String get statInsulation;
+
+  /// No description provided for @statProtection.
+  ///
+  /// In en, this message translates to:
+  /// **'Protection'**
+  String get statProtection;
+
+  /// No description provided for @statCoverage.
+  ///
+  /// In en, this message translates to:
+  /// **'Coverage'**
+  String get statCoverage;
+
+  /// No description provided for @statCapacity.
+  ///
+  /// In en, this message translates to:
+  /// **'Capacity'**
+  String get statCapacity;
+
+  /// No description provided for @statCarry.
+  ///
+  /// In en, this message translates to:
+  /// **'Carry bonus'**
+  String get statCarry;
+
+  /// No description provided for @statKcal.
+  ///
+  /// In en, this message translates to:
+  /// **'Calories'**
+  String get statKcal;
+
+  /// No description provided for @statWater.
+  ///
+  /// In en, this message translates to:
+  /// **'Water'**
+  String get statWater;
+
+  /// No description provided for @statEatTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Time to eat'**
+  String get statEatTime;
+
+  /// No description provided for @statUseTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Time to use'**
+  String get statUseTime;
+
+  /// No description provided for @statUses.
+  ///
+  /// In en, this message translates to:
+  /// **'Uses'**
+  String get statUses;
+
+  /// No description provided for @statBlood.
+  ///
+  /// In en, this message translates to:
+  /// **'Restores blood'**
+  String get statBlood;
+
+  /// No description provided for @statPagesMin.
+  ///
+  /// In en, this message translates to:
+  /// **'Pages, fewest'**
+  String get statPagesMin;
+
+  /// No description provided for @statPagesMax.
+  ///
+  /// In en, this message translates to:
+  /// **'Pages, most'**
+  String get statPagesMax;
+
+  /// No description provided for @statXpPerPage.
+  ///
+  /// In en, this message translates to:
+  /// **'XP a page'**
+  String get statXpPerPage;
+
+  /// No description provided for @statLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get statLight;
+
+  /// No description provided for @statBattery.
+  ///
+  /// In en, this message translates to:
+  /// **'Battery'**
+  String get statBattery;
+
+  /// No description provided for @statCraftTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Crafting time'**
+  String get statCraftTime;
+
+  /// No description provided for @statSearchBonus.
+  ///
+  /// In en, this message translates to:
+  /// **'Search radius'**
+  String get statSearchBonus;
+
+  /// No description provided for @statMass.
+  ///
+  /// In en, this message translates to:
+  /// **'Mass'**
+  String get statMass;
+
+  /// No description provided for @statBulk.
+  ///
+  /// In en, this message translates to:
+  /// **'Bulk'**
+  String get statBulk;
+
+  /// No description provided for @itemDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get itemDetails;
+
+  /// No description provided for @itemCompare.
+  ///
+  /// In en, this message translates to:
+  /// **'Compared with'**
+  String get itemCompare;
+
+  /// No description provided for @itemCarried.
+  ///
+  /// In en, this message translates to:
+  /// **'carried'**
+  String get itemCarried;
+
+  /// No description provided for @itemWorn.
+  ///
+  /// In en, this message translates to:
+  /// **'worn'**
+  String get itemWorn;
+
   /// No description provided for @inventoryTitle.
   ///
   /// In en, this message translates to:

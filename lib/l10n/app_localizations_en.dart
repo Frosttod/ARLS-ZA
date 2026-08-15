@@ -679,6 +679,108 @@ class L10nEn extends L10n {
   String get slotBack => 'Back';
 
   @override
+  String get statEnergy => 'Muzzle energy';
+
+  @override
+  String get statMoa => 'Dispersion';
+
+  @override
+  String get statMagazine => 'Magazine';
+
+  @override
+  String get statReload => 'Reload';
+
+  @override
+  String get statRange => 'Effective range';
+
+  @override
+  String get statNoise => 'Heard from';
+
+  @override
+  String get statBleed => 'Blood loss per hit';
+
+  @override
+  String get statSwing => 'Swing';
+
+  @override
+  String get statReach => 'Reach';
+
+  @override
+  String get statStrength => 'Strength needed';
+
+  @override
+  String get statInsulation => 'Insulation';
+
+  @override
+  String get statProtection => 'Protection';
+
+  @override
+  String get statCoverage => 'Coverage';
+
+  @override
+  String get statCapacity => 'Capacity';
+
+  @override
+  String get statCarry => 'Carry bonus';
+
+  @override
+  String get statKcal => 'Calories';
+
+  @override
+  String get statWater => 'Water';
+
+  @override
+  String get statEatTime => 'Time to eat';
+
+  @override
+  String get statUseTime => 'Time to use';
+
+  @override
+  String get statUses => 'Uses';
+
+  @override
+  String get statBlood => 'Restores blood';
+
+  @override
+  String get statPagesMin => 'Pages, fewest';
+
+  @override
+  String get statPagesMax => 'Pages, most';
+
+  @override
+  String get statXpPerPage => 'XP a page';
+
+  @override
+  String get statLight => 'Light';
+
+  @override
+  String get statBattery => 'Battery';
+
+  @override
+  String get statCraftTime => 'Crafting time';
+
+  @override
+  String get statSearchBonus => 'Search radius';
+
+  @override
+  String get statMass => 'Mass';
+
+  @override
+  String get statBulk => 'Bulk';
+
+  @override
+  String get itemDetails => 'Details';
+
+  @override
+  String get itemCompare => 'Compared with';
+
+  @override
+  String get itemCarried => 'carried';
+
+  @override
+  String get itemWorn => 'worn';
+
+  @override
   String get inventoryTitle => 'Inventory';
 
   @override

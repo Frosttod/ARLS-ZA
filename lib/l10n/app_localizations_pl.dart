@@ -682,6 +682,108 @@ class L10nPl extends L10n {
   String get slotBack => 'Plecy';
 
   @override
+  String get statEnergy => 'Energia wylotowa';
+
+  @override
+  String get statMoa => 'Rozrzut';
+
+  @override
+  String get statMagazine => 'Magazynek';
+
+  @override
+  String get statReload => 'Przeładowanie';
+
+  @override
+  String get statRange => 'Zasięg skuteczny';
+
+  @override
+  String get statNoise => 'Słychać z';
+
+  @override
+  String get statBleed => 'Utrata krwi na cios';
+
+  @override
+  String get statSwing => 'Zamach';
+
+  @override
+  String get statReach => 'Zasięg';
+
+  @override
+  String get statStrength => 'Wymagana siła';
+
+  @override
+  String get statInsulation => 'Izolacja';
+
+  @override
+  String get statProtection => 'Ochrona';
+
+  @override
+  String get statCoverage => 'Pokrycie';
+
+  @override
+  String get statCapacity => 'Pojemność';
+
+  @override
+  String get statCarry => 'Dodatkowy udźwig';
+
+  @override
+  String get statKcal => 'Kalorie';
+
+  @override
+  String get statWater => 'Woda';
+
+  @override
+  String get statEatTime => 'Czas jedzenia';
+
+  @override
+  String get statUseTime => 'Czas użycia';
+
+  @override
+  String get statUses => 'Użycia';
+
+  @override
+  String get statBlood => 'Przywraca krwi';
+
+  @override
+  String get statPagesMin => 'Stron, najmniej';
+
+  @override
+  String get statPagesMax => 'Stron, najwięcej';
+
+  @override
+  String get statXpPerPage => 'XP za stronę';
+
+  @override
+  String get statLight => 'Światło';
+
+  @override
+  String get statBattery => 'Bateria';
+
+  @override
+  String get statCraftTime => 'Czas wytwarzania';
+
+  @override
+  String get statSearchBonus => 'Promień przeszukania';
+
+  @override
+  String get statMass => 'Masa';
+
+  @override
+  String get statBulk => 'Objętość';
+
+  @override
+  String get itemDetails => 'Szczegóły';
+
+  @override
+  String get itemCompare => 'Porównanie z';
+
+  @override
+  String get itemCarried => 'w plecaku';
+
+  @override
+  String get itemWorn => 'na sobie';
+
+  @override
   String get inventoryTitle => 'Ekwipunek';
 
   @override

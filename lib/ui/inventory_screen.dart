@@ -43,6 +43,7 @@ class InventoryScreen extends StatelessWidget {
     this.onTakeOff,
     this.onUse,
     this.onRead,
+    this.onDetails,
     this.onDevFill,
     this.action,
     this.onCancelAction,
@@ -76,6 +77,9 @@ class InventoryScreen extends StatelessWidget {
 
   /// §19.1: opens a note somebody left. Null for anything that is not one.
   final void Function(CarriedItem line)? onRead;
+
+  /// Opens the numbers, and whatever this would replace beside them.
+  final void Function(CarriedItem line)? onDetails;
 
   /// Fills the pack with a sample kit. Developer builds only.
   final VoidCallback? onDevFill;
@@ -118,19 +122,6 @@ class InventoryScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
         children: [
-          if (action != null)
-            ValueListenableBuilder<Search?>(
-              valueListenable: action!,
-              builder: (context, running, _) =>
-                  running == null || !running.isRunning
-                  ? const SizedBox.shrink()
-                  : _Running(
-                      search: running,
-                      onCancel: onCancelAction,
-                      colours: colours,
-                      cancelLabel: l10n.searchCancel,
-                    ),
-            ),
           _Limits(
             massKg: mass,
             comfortKg: limits.comfortKg,
@@ -160,6 +151,7 @@ class InventoryScreen extends StatelessWidget {
               emptyLabel: l10n.inventoryEmptySlot,
               takeOffLabel: l10n.inventoryTakeOff,
               onTakeOff: onTakeOff,
+              onDetails: onDetails,
               colours: colours,
             ),
 
@@ -184,6 +176,12 @@ class InventoryScreen extends StatelessWidget {
                 onWear: onWear,
                 onUse: onUse,
                 onRead: onRead,
+                onDetails: onDetails,
+                // The progress bar belongs under the thing it belongs to, not
+                // at the top of the screen: a player who taps "use" looks at
+                // what they tapped.
+                action: action,
+                onCancelAction: onCancelAction,
               ),
         ],
       ),
@@ -303,6 +301,7 @@ class _SlotRow extends StatelessWidget {
     required this.emptyLabel,
     required this.takeOffLabel,
     required this.onTakeOff,
+    required this.onDetails,
     required this.colours,
   });
 
@@ -318,6 +317,7 @@ class _SlotRow extends StatelessWidget {
   final String emptyLabel;
   final String takeOffLabel;
   final void Function(CarriedItem)? onTakeOff;
+  final void Function(CarriedItem)? onDetails;
   final HudColors colours;
 
   @override
@@ -350,14 +350,20 @@ class _SlotRow extends StatelessWidget {
               ),
             ),
             Expanded(
-              child: Text(
-                worn == null ? emptyLabel : nameOf(worn.itemId),
-                style: TextStyle(
-                  fontSize: 13,
-                  color: worn == null ? colours.muted : colours.text,
-                  fontStyle: worn == null
-                      ? FontStyle.italic
-                      : FontStyle.normal,
+              child: GestureDetector(
+                onTap: worn == null || onDetails == null
+                    ? null
+                    : () => onDetails!(worn),
+                behavior: HitTestBehavior.opaque,
+                child: Text(
+                  worn == null ? emptyLabel : nameOf(worn.itemId),
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: worn == null ? colours.muted : colours.text,
+                    fontStyle: worn == null
+                        ? FontStyle.italic
+                        : FontStyle.normal,
+                  ),
                 ),
               ),
             ),
@@ -540,6 +546,9 @@ class _ItemRow extends StatefulWidget {
     this.onWear,
     this.onUse,
     this.onRead,
+    this.onDetails,
+    this.action,
+    this.onCancelAction,
   });
 
   final CarriedItem line;
@@ -552,6 +561,10 @@ class _ItemRow extends StatefulWidget {
   final void Function(CarriedItem)? onWear;
   final void Function(CarriedItem)? onUse;
   final void Function(CarriedItem)? onRead;
+  final void Function(CarriedItem)? onDetails;
+
+  final ValueListenable<Search?>? action;
+  final VoidCallback? onCancelAction;
 
   @override
   State<_ItemRow> createState() => _ItemRowState();
@@ -584,19 +597,25 @@ class _ItemRowState extends State<_ItemRow> {
           Row(
             children: [
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      count > 1 ? '${widget.name}  ×$count' : widget.name,
-                      style: TextStyle(fontSize: 14, color: colours.text),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      _subtitle(),
-                      style: TextStyle(fontSize: 11, color: colours.muted),
-                    ),
-                  ],
+                child: GestureDetector(
+                  onTap: widget.onDetails == null
+                      ? null
+                      : () => widget.onDetails!(line),
+                  behavior: HitTestBehavior.opaque,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        count > 1 ? '${widget.name}  ×$count' : widget.name,
+                        style: TextStyle(fontSize: 14, color: colours.text),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        _subtitle(),
+                        style: TextStyle(fontSize: 11, color: colours.muted),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               Text(
@@ -628,6 +647,16 @@ class _ItemRowState extends State<_ItemRow> {
                   onPressed: () => widget.onRead!(line),
                   child: Text(l10n.noteRead),
                 ),
+              // §4.2: the numbers, and whatever this would replace beside
+              // them. Tapping the name does the same, for anybody who tries.
+              if (widget.onDetails != null)
+                IconButton(
+                  onPressed: () => widget.onDetails!(line),
+                  icon: const Icon(Icons.info_outline, size: 18),
+                  color: colours.muted,
+                  tooltip: l10n.itemDetails,
+                  visualDensity: VisualDensity.compact,
+                ),
               const Spacer(),
               if (widget.onDrop != null) ...[
                 // Only where there is a choice to make. A stepper beside a
@@ -646,6 +675,23 @@ class _ItemRowState extends State<_ItemRow> {
               ],
             ],
           ),
+
+          // Under this item, and only while it is this item being used.
+          if (widget.action != null)
+            ValueListenableBuilder<Search?>(
+              valueListenable: widget.action!,
+              builder: (context, running, _) =>
+                  running == null ||
+                      !running.isRunning ||
+                      running.usingItemId != line.itemId
+                  ? const SizedBox.shrink()
+                  : _Running(
+                      search: running,
+                      onCancel: widget.onCancelAction,
+                      colours: colours,
+                      cancelLabel: l10n.searchCancel,
+                    ),
+            ),
         ],
       ),
     );

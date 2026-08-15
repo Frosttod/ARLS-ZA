@@ -13,6 +13,7 @@ import 'devtools/dev_mode.dart';
 import 'devtools/dev_overlay.dart';
 import 'devtools/dev_session.dart';
 import 'game/game_loop.dart';
+import 'inventory/body_slots.dart';
 import 'inventory/inventory.dart';
 import 'inventory/inventory_store.dart';
 import 'inventory/item_use.dart';
@@ -29,6 +30,7 @@ import 'loot/loot_world.dart';
 import 'loot/obstacle.dart';
 import 'loot/search.dart';
 import 'notes/note.dart';
+import 'ui/item_details_sheet.dart';
 import 'ui/note_sheet.dart';
 import 'ui/search_panel.dart';
 import 'game/game_session.dart';
@@ -802,11 +804,38 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
           onTakeOff: (line) => unawaited(_takeOff(line)),
           onUse: (line) => unawaited(_use(line)),
           onRead: _readNote,
+          onDetails: (line) => unawaited(_showItemDetails(line)),
           action: _search,
           onCancelAction: _cancelSearch,
           onDevFill: kDevTools ? () => unawaited(_devFillPack()) : null,
         ),
       ),
+    );
+  }
+
+  /// §4.2: one item's readings, and the one it would replace beside them.
+  ///
+  /// The choice a player actually faces is not "is this vest good" but "is it
+  /// better than mine", and that question is unanswerable while the two numbers
+  /// live on separate screens.
+  Future<void> _showItemDetails(CarriedItem line) async {
+    final catalogue = _catalogue;
+    final item = catalogue?[line.itemId];
+    if (catalogue == null || item == null) return;
+
+    final wearable =
+        BodySlot.fromWire(item.props['slot'] as String?) != null ||
+        item.kind == ItemKind.backpack;
+    final worn = _inventory.value.worn.any((line) => line.itemId == item.id);
+
+    await showItemDetails(
+      context,
+      item: item,
+      inventory: _inventory.value,
+      catalogue: catalogue,
+      names: _names ?? ItemNames.empty,
+      onWear: wearable && !worn ? () => unawaited(_wear(line)) : null,
+      wearLabel: L10n.of(context).inventoryWear,
     );
   }
 

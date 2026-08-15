@@ -169,6 +169,44 @@ void main() {
     );
   });
 
+  testWidgets('what is coming is marked with a sign, not only a mark', (
+    tester,
+  ) async {
+    // §12: a tick on the bar says something is on its way without saying
+    // which way. The sign says it in one character.
+    await pumpHud(
+      tester,
+      healthy().copyWith(
+        caloriesKcal: constants.caloriesDailyKcal * 0.4,
+        pendingKcal: 520,
+      ),
+    );
+
+    expect(find.byIcon(Icons.add), findsOneWidget);
+    expect(find.byIcon(Icons.remove), findsNothing);
+  });
+
+  testWidgets('an empty stomach puts no sign on any bar', (tester) async {
+    await pumpHud(tester, healthy());
+
+    expect(find.byIcon(Icons.add), findsNothing);
+    expect(find.byIcon(Icons.remove), findsNothing);
+  });
+
+  testWidgets('a screen reader hears the same thing the eye does', (
+    tester,
+  ) async {
+    await pumpHud(
+      tester,
+      healthy().copyWith(
+        waterMl: constants.waterDailyMl * 0.5,
+        pendingWaterMl: constants.waterDailyMl * 0.25,
+      ),
+    );
+
+    expect(find.bySemanticsLabel(RegExp(r'50%, \+25%')), findsOneWidget);
+  });
+
   group('both carry limits (§18.1a)', () {
     testWidgets('mass reads against the hard limit, not the comfortable one', (
       tester,
