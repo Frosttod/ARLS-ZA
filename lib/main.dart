@@ -21,6 +21,8 @@ import 'items/item_assets.dart';
 import 'items/item.dart';
 import 'items/item_catalogue.dart';
 import 'items/item_names.dart';
+import 'combat/combat_session.dart';
+import 'combat/enemy.dart';
 import 'loot/loot_spawner.dart';
 import 'loot/loot_store.dart';
 import 'loot/loot_table.dart';
@@ -294,6 +296,17 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
   /// §12: what the game has just said. Under the HUD, never over the menu.
   final ValueNotifier<List<Notice>> _notices = ValueNotifier(const []);
+
+  /// §5.5, §6.1a: everything hostile that is out there, and what it is doing.
+  ///
+  /// Not persisted. A Walker is not a place — §6.4 makes them afresh whenever
+  /// the game runs, so writing them down would only mean loading yesterday's
+  /// fight onto a street the player has already left.
+  CombatSession _combat = const CombatSession(seed: 0);
+
+  /// When the enemies were last stepped, so a gap in the tick is a gap in
+  /// their walk rather than a jump.
+  DateTime? _combatAt;
 
   /// What the last reconnaissance revealed, for §10.2.1's ten minutes.
   AreaKnowledge? _knowledge;
@@ -643,6 +656,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
           : GeoPoint(fix.latitude, fix.longitude);
       unawaited(_checkRelocation(snapshot));
       unawaited(_spawnLoot(snapshot));
+      _advanceCombat(snapshot);
     });
 
     if (!mounted) {
@@ -1304,6 +1318,76 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     });
   }
 
+  /// §6.1a: one step of the fight, driven by the same tick as everything else.
+  ///
+  /// §11 already decides how much time has passed and hands it over; a fight
+  /// with a timer of its own would keep running with the app closed, which is
+  /// exactly what §2.1a says an occupation must not do.
+  void _advanceCombat(GameSnapshot snapshot) {
+    final character = _character;
+    final fix = snapshot.displayFix;
+    if (character == null || fix == null) return;
+
+    final now = snapshot.state.lastUpdate;
+    final since = _combatAt;
+    _combatAt = now;
+
+    // A first tick, or one after the app was away: nothing to walk through.
+    // §11.1.2 replays the gap for the body, not for a street the player has
+    // since left.
+    final elapsed = since == null ? Duration.zero : now.difference(since);
+    if (elapsed <= Duration.zero || elapsed > const Duration(minutes: 5)) {
+      _combat = CombatSession(
+        seed: character.profile.rngSeed,
+        enemies: _combat.enemies,
+        open: _combat.open,
+      );
+      return;
+    }
+
+    setState(() {
+      _combat = _combat.advance(
+        playerAt: GeoPoint(fix.latitude, fix.longitude),
+        elapsed: elapsed,
+        now: now,
+        obstacles: _world?.obstacles ?? const [],
+      );
+    });
+  }
+
+  /// §5.5.2: what the HUD says about a fight, or null when there is none.
+  ///
+  /// Engaged rather than nearby: something wandering its own patch two hundred
+  /// metres off is not a fight, and a warning that never goes out is a warning
+  /// nobody reads.
+  ThreatReading? _threat(GameSnapshot snapshot) {
+    final fix = snapshot.displayFix;
+    if (fix == null) return null;
+
+    final at = GeoPoint(fix.latitude, fix.longitude);
+    final engaged = [
+      for (final enemy in _combat.near(at))
+        if (enemy.state != EnemyState.idle &&
+            enemy.state != EnemyState.returning)
+          enemy,
+    ];
+    if (engaged.isEmpty) return null;
+
+    var nearest = double.infinity;
+    var sprinting = false;
+    for (final enemy in engaged) {
+      final distance = enemy.position.distanceTo(at);
+      if (distance < nearest) nearest = distance;
+      if (enemy.budget > Duration.zero) sprinting = true;
+    }
+
+    return ThreatReading(
+      count: engaged.length,
+      nearestM: nearest,
+      anySprinting: sprinting,
+    );
+  }
+
   /// §3.6: loot is yellow. An emptied box is not drawn at all — a marker that
   /// stays after there is nothing behind it is a walk taken for nothing.
   ///
@@ -1326,6 +1410,21 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
             // twenty-five metres by eye on a map that zooms is guesswork.
             reachM: kSearchReachM,
           ),
+
+      // §3.6: red, and only what is near enough to be part of the fight
+      // (§5.5.6). Seeing every Walker in the district would answer the one
+      // question §7's Reconnaissance is there to ask.
+      for (final enemy in _combat.near(
+        GeoPoint(
+          _snapshot?.displayFix?.latitude ?? 0,
+          _snapshot?.displayFix?.longitude ?? 0,
+        ),
+      ))
+        MapMarker(
+          id: enemy.id,
+          kind: MarkerKind.enemy,
+          at: enemy.position,
+        ),
 
       // §4.8: grey, and gone after a day.
       for (final item in _dropped.value)
@@ -1923,6 +2022,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
                     carriedKg: _carriedKg,
                     carriedVolumeL: _carriedVolumeL,
                     capacityL: _capacityL(character.body),
+                    threat: _threat(snapshot),
                   ),
             notices: NoticeStack(notices: _notices),
             onMenu: (entry) {

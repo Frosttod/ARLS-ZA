@@ -211,6 +211,14 @@ class L10nEn extends L10n {
   String get hudHeartRate => 'Heart rate';
 
   @override
+  String hudThreat(int count, int metres) {
+    return '$count in the fight · nearest $metres m';
+  }
+
+  @override
+  String get hudThreatSprint => 'can still sprint';
+
+  @override
   String get hudCarry => 'Carry';
 
   @override

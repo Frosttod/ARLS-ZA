@@ -445,6 +445,18 @@ abstract class L10n {
   /// **'Heart rate'**
   String get hudHeartRate;
 
+  /// No description provided for @hudThreat.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} in the fight · nearest {metres} m'**
+  String hudThreat(int count, int metres);
+
+  /// No description provided for @hudThreatSprint.
+  ///
+  /// In en, this message translates to:
+  /// **'can still sprint'**
+  String get hudThreatSprint;
+
   /// No description provided for @hudCarry.
   ///
   /// In en, this message translates to:

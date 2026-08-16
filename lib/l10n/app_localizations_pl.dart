@@ -213,6 +213,14 @@ class L10nPl extends L10n {
   String get hudHeartRate => 'Tętno';
 
   @override
+  String hudThreat(int count, int metres) {
+    return '$count w walce · najbliżej $metres m';
+  }
+
+  @override
+  String get hudThreatSprint => 'ma jeszcze sprint';
+
+  @override
   String get hudCarry => 'Udźwig';
 
   @override

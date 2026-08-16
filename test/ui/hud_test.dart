@@ -26,7 +26,8 @@ void main() {
     double carriedVolumeL = 0,
     double capacityL = 65,
     Brightness brightness = Brightness.dark,
-  }) async {
+      ThreatReading? threat,
+}) async {
     await tester.pumpWidget(
       MaterialApp(
         theme: ThemeData(brightness: brightness),
@@ -44,6 +45,7 @@ void main() {
             status: statusOf(state: state, constants: constants),
             constants: constants,
             warnings: warnings,
+          threat: threat,
             carryComfortKg: profile.carryComfortKg,
             carryMaxKg: profile.carryMaxKg,
             carriedKg: carriedKg,
@@ -311,5 +313,62 @@ void main() {
     expect(find.bySemanticsLabel(RegExp('Udźwig')), findsOneWidget);
 
     handle.dispose();
+  });
+
+  group('a fight, from the HUD (§5.5.2)', () {
+    testWidgets('how many, and how far the nearest one is', (tester) async {
+      await pumpHud(
+        tester,
+        healthy(),
+        threat: const ThreatReading(
+          count: 3,
+          nearestM: 84,
+          anySprinting: false,
+        ),
+      );
+
+      expect(find.textContaining('3'), findsWidgets);
+      expect(find.textContaining('84 m'), findsOneWidget);
+    });
+
+    testWidgets('whether any of them can still sprint', (tester) async {
+      // §5.5.2 calls this the key tactical fact: one that has burned its
+      // budget can be walked away from, one that has not cannot.
+      await pumpHud(
+        tester,
+        healthy(),
+        threat: const ThreatReading(
+          count: 1,
+          nearestM: 40,
+          anySprinting: true,
+        ),
+      );
+
+      expect(find.textContaining('ma jeszcze sprint'), findsOneWidget);
+    });
+
+    testWidgets('and it says so in words, not only in colour (§12)', (
+      tester,
+    ) async {
+      await pumpHud(
+        tester,
+        healthy(),
+        threat: const ThreatReading(
+          count: 2,
+          nearestM: 12,
+          anySprinting: false,
+        ),
+      );
+
+      // Twelve metres is the red band, and the twelve is on screen.
+      expect(find.textContaining('12 m'), findsOneWidget);
+    });
+
+    testWidgets('an empty street says nothing at all', (tester) async {
+      // A warning that never goes out is a warning nobody reads.
+      await pumpHud(tester, healthy());
+
+      expect(find.byIcon(Icons.warning_amber_outlined), findsNothing);
+    });
   });
 }

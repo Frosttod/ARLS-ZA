@@ -61,6 +61,12 @@ class LootWorld {
   /// signal warning: the GPS was fine, the isolate was busy.
   bool _planning = false;
 
+  /// The §3.5 features from the last read, for anything else that needs them.
+  List<MapFeature> _obstacles = const [];
+
+  /// What the last pass over the tiles found in the way (§3.5).
+  List<MapFeature> get obstacles => _obstacles;
+
   /// Points at the pack, or at nothing.
   Future<void> useSource(MapSource? source) async {
     final path = source is InstalledPack ? source.path : null;
@@ -133,6 +139,11 @@ class LootWorld {
     );
 
     final obstacles = ground.obstacles;
+    // Kept for whoever else has to obey §3.5. Reading two kilometres of city
+    // costs the better part of a second, and the answer to "may a person be
+    // sent here" is the same one whether the thing being placed is a lootbox
+    // or a Walker.
+    _obstacles = obstacles;
     final roads = obstacles.where(_isRoad).toList();
     var candidates = spawner.backupMode ? places : withinNormal;
 

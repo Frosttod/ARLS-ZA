@@ -78,6 +78,7 @@ class Hud extends StatelessWidget {
     required this.status,
     required this.constants,
     this.warnings = const [],
+    this.threat,
     this.carryComfortKg,
     this.carryMaxKg,
     this.carriedKg = 0,
@@ -95,6 +96,10 @@ class Hud extends StatelessWidget {
   /// because from the player's side they are the same kind of thing — a reason
   /// the game is not behaving as they expect.
   final List<String> warnings;
+
+  /// §5.5.2: how many are in the fight and how close the nearest is. Null when
+  /// nothing has noticed the player, which is most of the time.
+  final ThreatReading? threat;
 
   // ⚠️ No speedometer here, and there was one for a day.
   //
@@ -168,6 +173,10 @@ class Hud extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               _StatusRow(status: status, warnings: warnings),
+              if (threat != null) ...[
+                const SizedBox(height: 6),
+                _Threat(reading: threat!, colours: colours),
+              ],
               if (carryComfortKg != null) ...[
                 const SizedBox(height: 6),
                 _CarryReadout(
@@ -611,6 +620,64 @@ class _LimitBar extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// §5.5.2: what the player has to know about a fight before looking at a map.
+class ThreatReading {
+  const ThreatReading({
+    required this.count,
+    required this.nearestM,
+    required this.anySprinting,
+  });
+
+  /// How many are actually engaged — not how many exist in the district.
+  final int count;
+
+  final double nearestM;
+
+  /// §5.5.2 calls this the key tactical fact: whether any of them still has
+  /// sprint left. One that has burned its budget can be walked away from; one
+  /// that has not cannot.
+  final bool anySprinting;
+}
+
+class _Threat extends StatelessWidget {
+  const _Threat({required this.reading, required this.colours});
+
+  final ThreatReading reading;
+  final HudColors colours;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = L10n.of(context);
+    final metres = reading.nearestM.round();
+
+    // §5.5.2's colour code — and never colour alone (§12): the number of
+    // metres is right there beside it.
+    final colour = metres > 100
+        ? colours.data
+        : metres > 30
+        ? const Color(0xFFE8B33A)
+        : colours.alert;
+
+    return Row(
+      children: [
+        Icon(Icons.warning_amber_outlined, size: 14, color: colour),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            l10n.hudThreat(reading.count, metres) +
+                (reading.anySprinting ? ' · ${l10n.hudThreatSprint}' : ''),
+            style: TextStyle(
+              fontSize: 11,
+              color: colour,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
