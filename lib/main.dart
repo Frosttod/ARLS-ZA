@@ -1376,12 +1376,33 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final since = _combatAt;
     _combatAt = now;
 
-    // A first tick, or one after the app was away. §11.1.2 replays a gap for
-    // the body, because a body keeps burning calories in a pocket; a street
-    // does not. What a Walker did during eight hours of sleep is not knowable,
-    // so the street is emptied and made again rather than guessed at.
     final elapsed = since == null ? Duration.zero : now.difference(since);
-    if (elapsed <= Duration.zero || elapsed > kCombatGapForgotten) {
+
+    // ⚠️ No time passed is not the same as a gap. Found on a phone: the
+    // enemies kept vanishing, because a snapshot can be published without the
+    // simulation clock having moved — a position update does it — and the two
+    // cases were treated alike. Emptying the street on those wiped everything
+    // out from under the player every few seconds.
+    if (elapsed <= Duration.zero) {
+      if (since != null) return;
+
+      // A first tick: nothing to walk through, but the street is whatever it
+      // already was rather than nothing.
+      setState(() {
+        _combat = CombatSession(
+          seed: character.profile.rngSeed,
+          enemies: _combat.enemies,
+          open: _combat.open,
+        );
+      });
+      return;
+    }
+
+    // One after the app was away. §11.1.2 replays a gap for the body, because
+    // a body keeps burning calories in a pocket; a street does not. What a
+    // Walker did during eight hours of sleep is not knowable, so the street is
+    // emptied and made again rather than guessed at.
+    if (elapsed > kCombatGapForgotten) {
       setState(() {
         _combat = CombatSession(seed: character.profile.rngSeed);
         _aim = const Aim();
@@ -1835,11 +1856,11 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       // §3.6: red, and only what is near enough to be part of the fight
       // (§5.5.6). Seeing every Walker in the district would answer the one
       // question §7's Reconnaissance is there to ask.
+      // ⚠️ The last place the player was, never a default of nought — an
+      // island off Africa is further than the forget radius from everything,
+      // so a single fix without a position wiped every enemy off the map.
       for (final enemy in _combat.near(
-        GeoPoint(
-          _snapshot?.displayFix?.latitude ?? 0,
-          _snapshot?.displayFix?.longitude ?? 0,
-        ),
+        _standingAt.value ?? GeoPoint(0, 0),
       ))
         MapMarker(
           id: enemy.id,

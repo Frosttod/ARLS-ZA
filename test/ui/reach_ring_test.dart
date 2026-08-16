@@ -99,6 +99,23 @@ void main() {
       expect(clustered.every((marker) => marker.count == 1), isTrue);
     });
 
+    test('two enemies are never one dot', () {
+      // ⚠️ A pile of kit is one thing to pick up; two Walkers are two things
+      // to shoot, and folding them together takes away the only way to aim at
+      // either of them.
+      final clustered = clusterMarkers([
+        MapMarker(id: 'e1', kind: MarkerKind.enemy, at: at),
+        MapMarker(
+          id: 'e2',
+          kind: MarkerKind.enemy,
+          at: GeoPoint(at.latitude + 3 / metresPerDegreeLat, at.longitude),
+        ),
+      ]);
+
+      expect(clustered, hasLength(2));
+      expect(clustered.every((marker) => marker.count == 1), isTrue);
+    });
+
     test('a pile and a shop are never one dot', () {
       // Two different answers to "what is that", and merging them says
       // neither.

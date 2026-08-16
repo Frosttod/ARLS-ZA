@@ -218,6 +218,14 @@ List<MapMarker> clusterMarkers(
     if (taken[i]) continue;
     final first = markers[i];
 
+    // ⚠️ Never enemies. A pile of kit is one thing to pick up; two Walkers
+    // are two things to shoot, and folding them into one dot with a "2" on it
+    // takes away the only way to aim at either.
+    if (first.kind == MarkerKind.enemy) {
+      clustered.add(first);
+      continue;
+    }
+
     var count = first.count;
     for (var j = i + 1; j < markers.length; j++) {
       if (taken[j] || markers[j].kind != first.kind) continue;
