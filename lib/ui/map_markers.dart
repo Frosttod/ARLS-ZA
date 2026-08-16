@@ -170,13 +170,14 @@ Offset offsetOf(
 ///
 /// A finger is not a pixel: [slopPx] is what makes a marker tappable at all,
 /// and the nearest one inside it wins so that two markers on one street corner
-/// do not become one unreachable marker.
+/// do not become one unreachable marker. Thirty-two logical pixels is about a
+/// fingertip on a phone, and a dot is drawn at seven.
 MapMarker? markerAtOffset(
   List<MapMarker> markers,
   Offset offset, {
   required GeoPoint centre,
   required double zoom,
-  double slopPx = 26,
+  double slopPx = 32,
 }) {
   final scale = metresPerPixel(zoom, centre.latitude);
   final slopM = slopPx * scale;

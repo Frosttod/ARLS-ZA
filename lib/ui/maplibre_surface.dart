@@ -136,6 +136,14 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
   /// One camera move at a time, for the same reason.
   bool _zooming = false;
 
+  /// Where and when the finger went down, for telling a tap from a drag
+  /// without going through the gesture arena.
+  Offset? _pressedAt;
+  Duration? _pressedWhen;
+
+  /// A tap waiting to see whether it is the first half of a double tap.
+  Timer? _pendingTap;
+
   /// §6.1a: drives the pulse on anything hunting the player. Runs only while
   /// something is — a heartbeat under an empty street is a frame a second
   /// spent on nothing.
@@ -230,22 +238,60 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
       wanted: alerted.any((marker) => marker.alert == MarkerAlert.hunting),
     );
 
-    final gestures = GestureDetector(
-      // Opaque, so the gestures reach here rather than the platform view. The
-      // markers are circles the platform view draws, so their taps are ours to
-      // find: the gesture arena is won here and the plugin never sees a finger.
-      behavior: HitTestBehavior.opaque,
-      onTapUp: _handleTap,
-      onDoubleTap: () => unawaited(_zoomBy(1)),
-      onScaleStart: (_) => _zoomAtGestureStart = _zoom,
-      onScaleUpdate: (details) {
-        final start = _zoomAtGestureStart;
-        // A scale of 1 is a drag, not a pinch, and dragging does nothing here.
-        if (start == null || details.scale == 1.0) return;
-        unawaited(_zoomTo(start + math.log(details.scale) / math.ln2));
+    final gestures = Listener(
+      // ⚠️ Taps come from raw pointer events rather than from the detector
+      // below. Found on a phone: a tap on a marker did nothing at all, because
+      // the scale recognizer — which exists for the pinch — claims a single
+      // pointer as a one-finger pan the moment it moves a pixel, and wins the
+      // arena from the tap. Every real tap moves a pixel. A Listener does not
+      // enter the arena at all, so this sees the press whatever the
+      // recognizers decide between themselves.
+      onPointerDown: (event) {
+        // A second finger down inside the double-tap window means the first
+        // press was half of a zoom, not a tap on anything.
+        _pendingTap?.cancel();
+        _pendingTap = null;
+
+        _pressedAt = event.localPosition;
+        _pressedWhen = event.timeStamp;
       },
-      onScaleEnd: (_) => _zoomAtGestureStart = null,
-      child: map,
+      onPointerUp: (event) {
+        final from = _pressedAt;
+        final when = _pressedWhen;
+        _pressedAt = null;
+        _pressedWhen = null;
+        if (from == null || when == null) return;
+
+        // A press that travelled or lingered was a drag or a hold, and this
+        // map answers neither.
+        if ((event.localPosition - from).distance > 16) return;
+        if (event.timeStamp - when > const Duration(milliseconds: 400)) return;
+
+        // Held back just long enough to see whether a second tap follows.
+        // Opening a sheet under a double-tap zoom is worse than a moment's
+        // wait.
+        final at = event.localPosition;
+        _pendingTap = Timer(const Duration(milliseconds: 260), () {
+          _pendingTap = null;
+          _tapAt(at);
+        });
+      },
+      child: GestureDetector(
+        // Opaque, so the gestures reach here rather than the platform view.
+        // The markers are circles the platform view draws, so finding which
+        // one was touched is ours to do.
+        behavior: HitTestBehavior.opaque,
+        onDoubleTap: () => unawaited(_zoomBy(1)),
+        onScaleStart: (_) => _zoomAtGestureStart = _zoom,
+        onScaleUpdate: (details) {
+          final start = _zoomAtGestureStart;
+          // A scale of 1 is a drag, not a pinch, and dragging does nothing here.
+          if (start == null || details.scale == 1.0) return;
+          unawaited(_zoomTo(start + math.log(details.scale) / math.ln2));
+        },
+        onScaleEnd: (_) => _zoomAtGestureStart = null,
+        child: map,
+      ),
     );
 
     final rings = reachRingsOf(widget.markers);
@@ -397,7 +443,7 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
   /// exists for), so the offset from the middle is all the geometry needed —
   /// and it stays in logical pixels, which is the unit MapLibre's zoom is
   /// defined in.
-  void _handleTap(TapUpDetails details) {
+  void _tapAt(Offset position) {
     final handler = widget.onMarkerTap;
     final centre = widget.centre;
     if (handler == null || centre == null) return;
@@ -407,7 +453,7 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
 
     final marker = markerAtOffset(
       widget.markers,
-      details.localPosition - Offset(size.width / 2, size.height / 2),
+      position - Offset(size.width / 2, size.height / 2),
       centre: GeoPoint(centre.latitude, centre.longitude),
       zoom: _zoom,
     );
@@ -437,11 +483,11 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
     }
   }
 
-  Future<void> _applyZoom(
-    MapLibreMapController controller,
-    double zoom,
-  ) async {
-    final clamped = zoom.clamp(_widestZoom(context, widget.centre), kClosestZoom);
+  Future<void> _applyZoom(MapLibreMapController controller, double zoom) async {
+    final clamped = zoom.clamp(
+      _widestZoom(context, widget.centre),
+      kClosestZoom,
+    );
     if ((clamped - _zoom).abs() < 0.001) return;
     _zoom = clamped;
 
@@ -480,6 +526,7 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
 
   @override
   void dispose() {
+    _pendingTap?.cancel();
     _pulse?.dispose();
     super.dispose();
   }
@@ -745,8 +792,9 @@ class _AlertPainter extends CustomPainter {
         Paint()
           ..style = PaintingStyle.stroke
           ..strokeWidth = hunting ? 2.5 : 1.8
-          ..color = Color(kAlertColours[marker.alert]!)
-              .withValues(alpha: hunting ? 0.9 - 0.3 * pulse : 0.75),
+          ..color = Color(
+            kAlertColours[marker.alert]!,
+          ).withValues(alpha: hunting ? 0.9 - 0.3 * pulse : 0.75),
       );
     }
   }

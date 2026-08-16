@@ -119,4 +119,34 @@ void main() {
       isNull,
     );
   });
+
+  test('a fingertip, not a pixel', () {
+    // Found on a phone: tapping a marker did nothing, and the dots are drawn
+    // at seven pixels. The slop is what makes them touchable at all.
+    final metres = metresPerPixel(16, centre.latitude);
+
+    expect(
+      markerAtOffset(
+        [markerAt('near', north: 30 * metres)],
+        Offset.zero,
+        centre: centre,
+        zoom: 16,
+      )?.id,
+      'near',
+    );
+  });
+
+  test('but not the whole screen', () {
+    final metres = metresPerPixel(16, centre.latitude);
+
+    expect(
+      markerAtOffset(
+        [markerAt('far', north: 200 * metres)],
+        Offset.zero,
+        centre: centre,
+        zoom: 16,
+      ),
+      isNull,
+    );
+  });
 }
