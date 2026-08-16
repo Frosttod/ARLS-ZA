@@ -25,6 +25,7 @@ import 'combat/aim.dart';
 import 'combat/ballistics.dart';
 import 'combat/combat_session.dart';
 import 'combat/engagement.dart';
+import 'combat/magazine.dart';
 import 'combat/enemy.dart';
 import 'combat/noise.dart';
 import 'combat/shot.dart';
@@ -325,6 +326,12 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// §5.4: when the player last swung. A blade has a swing time and swinging
   /// faster than the blade allows is not a thing a person can do.
   DateTime? _lastSwing;
+
+  /// §5.3: what is in the weapon, as opposed to in the pack.
+  int _loaded = 0;
+
+  /// §5.5.4: a magazine change in progress, and the thing that can end it.
+  Reload? _reload;
 
   /// What the last reconnaissance revealed, for §10.2.1's ten minutes.
   AreaKnowledge? _knowledge;
@@ -1382,6 +1389,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     }
 
     _takeBlows(GeoPoint(fix.latitude, fix.longitude), now);
+    _advanceReload(GeoPoint(fix.latitude, fix.longitude));
 
     setState(() {
       _combat = _combat.advance(
@@ -1434,6 +1442,20 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     return null;
   }
 
+  /// Which round is in the weapon, for §5.1.5's wound channel.
+  ///
+  /// Whatever of that calibre is nearest to hand. A player carrying buckshot
+  /// and slugs is carrying one kind of shotgun ammunition as far as this is
+  /// concerned, which is a simplification worth revisiting when there is a
+  /// reason to choose.
+  ItemDefinition? _loadedRound(ItemDefinition weapon) {
+    final catalogue = _catalogue;
+    final line = _roundFor(weapon);
+    if (catalogue == null || line == null) return null;
+
+    return catalogue[line.itemId];
+  }
+
   /// §5.1.4: the odds, worked out exactly once and shown before they are used.
   ShotError? _aimError(Enemy target) {
     final character = _character;
@@ -1470,14 +1492,13 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       return;
     }
 
-    final round = _roundFor(weapon);
     final error = _aimError(target);
-    if (round == null || error == null) return;
+    if (_loaded <= 0 || error == null) return;
 
     final at = GeoPoint(fix.latitude, fix.longitude);
     final outcome = fireAt(
       weapon: weapon,
-      ammo: catalogue[round.itemId],
+      ammo: _loadedRound(weapon),
       target: target,
       distanceM: target.position.distanceTo(at),
       error: error,
@@ -1489,11 +1510,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     );
 
     // The round is gone whatever happened to the shot.
-    final next = _inventory.value.removeLine(round);
-    if (next != null) {
-      _inventory.value = next;
-      await _saveInventory();
-    }
+    setState(() => _loaded -= 1);
     if (!mounted) return;
 
     final l10n = L10n.of(context);
@@ -1571,6 +1588,85 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
     loop.applyWound(taken);
     _say(L10n.of(context).combatHurt(taken.round()));
+  }
+
+  /// §5.5.4: the magazine goes in, unless something gets to the player first.
+  void _advanceReload(GeoPoint at) {
+    final reload = _reload;
+    final weapon = _weapon;
+    final catalogue = _catalogue;
+    if (reload == null || weapon == null || catalogue == null) return;
+
+    // ⚠️ Whatever it is doing. Hands stop when a body is that close, and the
+    // game is not going to argue about intent.
+    final tooClose = reloadBrokenBy([
+      for (final enemy in _combat.enemies)
+        if (!enemy.isDead) enemy.position.distanceTo(at),
+    ]);
+
+    if (tooClose) {
+      setState(() => _reload = null);
+      _say(L10n.of(context).combatReloadBroken);
+      return;
+    }
+
+    if (!reload.isDoneAt(DateTime.now())) return;
+
+    final rounds = roundsToLoad(
+      weapon: weapon,
+      loaded: _loaded,
+      carried: _roundsCarried(weapon),
+    );
+    if (rounds <= 0) {
+      setState(() => _reload = null);
+      return;
+    }
+
+    // The rounds leave the pack as they go into the weapon, so a magazine is
+    // never both in the rifle and in the bag.
+    var inventory = _inventory.value;
+    for (var i = 0; i < rounds; i++) {
+      final line = _roundFor(weapon);
+      if (line == null) break;
+      inventory = inventory.removeLine(line) ?? inventory;
+    }
+
+    setState(() {
+      _inventory.value = inventory;
+      _loaded += rounds;
+      _reload = null;
+    });
+    unawaited(_saveInventory());
+  }
+
+  /// Starts a magazine change (§5.3).
+  void _startReload() {
+    final weapon = _weapon;
+    if (weapon == null || _reload != null) return;
+    if (_roundsCarried(weapon) <= 0) return;
+
+    setState(() {
+      _reload = Reload(
+        weaponId: weapon.id,
+        readyAt: DateTime.now().add(reloadTime(weapon)),
+      );
+    });
+  }
+
+  /// How many rounds of the right calibre are in the pack (§10.3.3).
+  int _roundsCarried(ItemDefinition weapon) {
+    final catalogue = _catalogue;
+    final calibre = weapon.props['caliber'];
+    if (catalogue == null || calibre == null) return 0;
+
+    var rounds = 0;
+    for (final line in _inventory.value.carried) {
+      final item = catalogue[line.itemId];
+      if (item?.kind == ItemKind.ammo && item?.props['caliber'] == calibre) {
+        rounds += line.count;
+      }
+    }
+    return rounds;
   }
 
   /// §5.4: hands, or whatever is in them.
@@ -2319,12 +2415,21 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
                           dominant: error.dominant,
                           condition: target.condition,
                           sprintLeft: target.sprintLeftFraction,
+                          loaded: _loaded,
+                          magazine: weapon == null
+                              ? 0
+                              : magazineSize(weapon),
+                          reloading: _reload != null,
                           refusal: weapon == null
                               ? L10n.of(context).combatNoWeapon
-                              : round == null
+                              : _loaded <= 0 && round == null
                               ? L10n.of(context).combatNoAmmo
                               : null,
-                          onFire: weapon == null || round == null
+                          onReload:
+                              weapon == null || round == null || _reload != null
+                              ? null
+                              : _startReload,
+                          onFire: weapon == null || _loaded <= 0 || _reload != null
                               ? null
                               : () => unawaited(_fire()),
                           // §5.2: below twenty metres the receiver has nothing

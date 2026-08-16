@@ -615,6 +615,20 @@ class L10nEn extends L10n {
   String get enemySprint => 'Sprint';
 
   @override
+  String get combatReload => 'Reload';
+
+  @override
+  String get combatReloading => 'Reloading…';
+
+  @override
+  String get combatReloadBroken => 'Too close — the magazine stays out.';
+
+  @override
+  String combatRounds(int loaded, int magazine) {
+    return '$loaded / $magazine';
+  }
+
+  @override
   String get combatFire => 'Fire';
 
   @override

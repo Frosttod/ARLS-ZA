@@ -1177,6 +1177,30 @@ abstract class L10n {
   /// **'Sprint'**
   String get enemySprint;
 
+  /// No description provided for @combatReload.
+  ///
+  /// In en, this message translates to:
+  /// **'Reload'**
+  String get combatReload;
+
+  /// No description provided for @combatReloading.
+  ///
+  /// In en, this message translates to:
+  /// **'Reloading…'**
+  String get combatReloading;
+
+  /// No description provided for @combatReloadBroken.
+  ///
+  /// In en, this message translates to:
+  /// **'Too close — the magazine stays out.'**
+  String get combatReloadBroken;
+
+  /// No description provided for @combatRounds.
+  ///
+  /// In en, this message translates to:
+  /// **'{loaded} / {magazine}'**
+  String combatRounds(int loaded, int magazine);
+
   /// No description provided for @combatFire.
   ///
   /// In en, this message translates to:

@@ -22,6 +22,10 @@ void main() {
     VoidCallback? onFire,
     bool canFire = true,
     VoidCallback? onStrike,
+    VoidCallback? onReload,
+    int loaded = 0,
+    int magazine = 0,
+    bool reloading = false,
     String? refusal,
   }) async {
     await tester.pumpWidget(
@@ -45,6 +49,10 @@ void main() {
             refusal: refusal,
             onFire: canFire ? onFire ?? () {} : null,
             onStrike: onStrike,
+            onReload: onReload,
+            loaded: loaded,
+            magazine: magazine,
+            reloading: reloading,
           ),
         ),
       ),
@@ -187,6 +195,52 @@ void main() {
             .value,
         0,
       );
+    });
+  });
+
+  group('what is in the weapon (§5.3, §5.5.4)', () {
+    testWidgets('the rounds loaded, against what it holds', (tester) async {
+      // A round in the pack is not a round in the rifle.
+      await pump(tester, loaded: 4, magazine: 30);
+
+      expect(find.textContaining('4 / 30'), findsOneWidget);
+    });
+
+    testWidgets('an empty weapon offers a reload instead of a shot', (
+      tester,
+    ) async {
+      await pump(tester, canFire: false, loaded: 0, magazine: 30,
+          onReload: () {});
+
+      expect(find.text('Przeładuj'), findsOneWidget);
+      expect(
+        tester.widget<FilledButton>(find.byType(FilledButton)).onPressed,
+        isNull,
+      );
+    });
+
+    testWidgets('and says so while the magazine is going in', (tester) async {
+      await pump(
+        tester,
+        canFire: false,
+        loaded: 0,
+        magazine: 30,
+        onReload: () {},
+        reloading: true,
+      );
+
+      expect(find.text('Przeładowanie…'), findsOneWidget);
+      expect(find.text('Przeładuj'), findsNothing);
+    });
+
+    testWidgets('reloading takes one press', (tester) async {
+      var reloads = 0;
+      await pump(tester, magazine: 30, onReload: () => reloads++);
+
+      await tester.tap(find.text('Przeładuj'));
+      await tester.pumpAndSettle();
+
+      expect(reloads, 1);
     });
   });
 }

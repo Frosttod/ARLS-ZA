@@ -1,0 +1,80 @@
+/// What is actually in the weapon (§5.3, §5.5.4).
+///
+/// A round in the pack is not a round in the rifle, and the difference is the
+/// whole of §5.5.4: reloading takes seconds a fight does not always have, and
+/// **anything closing inside five metres stops it**. A magazine change with a
+/// Walker at arm's length is not a thing that finishes, and letting it finish
+/// would make the clinch a formality rather than the emergency it is.
+///
+/// The count is deliberately not persisted yet. A rifle that reloads itself
+/// while the app is shut is a small lie; a save format that carries per-weapon
+/// state is a schema change, and it belongs with the shelter's storage in
+/// stage 8 rather than bolted on here.
+library;
+
+import '../items/item.dart';
+
+/// §5.5.4: closer than this and a reload does not finish.
+const double kReloadBreakM = 5;
+
+/// How long a magazine change takes, from the weapon's own data (§4.2).
+Duration reloadTime(ItemDefinition weapon) => Duration(
+  milliseconds:
+      (((weapon.props['reload_seconds'] as num?)?.toDouble() ?? 3) * 1000)
+          .round(),
+);
+
+/// How many rounds the weapon holds.
+int magazineSize(ItemDefinition weapon) =>
+    (weapon.props['magazine'] as num?)?.toInt() ?? 1;
+
+/// A reload in progress, or the absence of one.
+class Reload {
+  const Reload({required this.weaponId, required this.readyAt});
+
+  final String weaponId;
+
+  /// When the magazine is in. §5.5.4 is about this moment never arriving.
+  final DateTime readyAt;
+
+  bool isDoneAt(DateTime now) => !now.isBefore(readyAt);
+
+  /// How far through it is, 0–1, for a bar that means something.
+  double progressAt(DateTime now, {required Duration total}) {
+    if (total <= Duration.zero) return 1;
+
+    final left = readyAt.difference(now).inMilliseconds;
+    if (left <= 0) return 1;
+
+    return (1 - left / total.inMilliseconds).clamp(0.0, 1.0);
+  }
+}
+
+/// §5.5.4: whether anything is close enough to stop a magazine change.
+///
+/// Distance to the nearest of them, whatever it is doing. Something walking
+/// past at four metres ruins a reload as surely as something charging: hands
+/// stop when a body is that close, and the game is not going to argue about
+/// intent.
+bool reloadBrokenBy(Iterable<double> enemyDistancesM) {
+  for (final distance in enemyDistancesM) {
+    if (distance <= kReloadBreakM) return true;
+  }
+  return false;
+}
+
+/// What one reload takes out of the pack, given what is loaded and carried.
+///
+/// Whole magazine changes are not modelled: this is a survivor with loose
+/// rounds and a pocket, so it tops up to whatever it can. Fewer rounds than
+/// the magazine holds is a normal state to fight in.
+int roundsToLoad({
+  required ItemDefinition weapon,
+  required int loaded,
+  required int carried,
+}) {
+  final room = magazineSize(weapon) - loaded;
+  if (room <= 0 || carried <= 0) return 0;
+
+  return room < carried ? room : carried;
+}

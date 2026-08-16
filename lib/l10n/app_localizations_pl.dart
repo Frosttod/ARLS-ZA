@@ -617,6 +617,20 @@ class L10nPl extends L10n {
   String get enemySprint => 'Sprint';
 
   @override
+  String get combatReload => 'Przeładuj';
+
+  @override
+  String get combatReloading => 'Przeładowanie…';
+
+  @override
+  String get combatReloadBroken => 'Za blisko — magazynek zostaje.';
+
+  @override
+  String combatRounds(int loaded, int magazine) {
+    return '$loaded / $magazine';
+  }
+
+  @override
   String get combatFire => 'Ognia';
 
   @override

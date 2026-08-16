@@ -28,6 +28,10 @@ class CombatPanel extends StatelessWidget {
     required this.sprintLeft,
     required this.onFire,
     this.onStrike,
+    this.onReload,
+    this.loaded = 0,
+    this.magazine = 0,
+    this.reloading = false,
     this.refusal,
     super.key,
   });
@@ -58,6 +62,18 @@ class CombatPanel extends StatelessWidget {
   /// §5.2, §5.4: hands, once something is inside twenty metres. Null while it
   /// is further off than a person can reach.
   final VoidCallback? onStrike;
+
+  /// §5.5.4: puts a magazine in, and can be interrupted by anything closing
+  /// inside five metres. Null while there is nothing to load or no room.
+  final VoidCallback? onReload;
+
+  /// §5.3: what is in the weapon against what it holds.
+  final int loaded;
+  final int magazine;
+
+  /// True while a magazine is going in — the trigger is not available and the
+  /// panel says why.
+  final bool reloading;
 
   final String? refusal;
 
@@ -90,7 +106,8 @@ class CombatPanel extends StatelessWidget {
                   children: [
                     Text(
                       '$targetName · ${l10n.combatDistance(distanceM.round())}'
-                      ' · ${conditionName(l10n, condition)}',
+                      ' · ${conditionName(l10n, condition)}'
+                      '${magazine > 0 ? ' · ${l10n.combatRounds(loaded, magazine)}' : ''}',
                       style: TextStyle(fontSize: 12, color: colours.text),
                     ),
                     const SizedBox(height: 3),
@@ -163,6 +180,21 @@ class CombatPanel extends StatelessWidget {
                   ],
                 ),
               ),
+              if (reloading)
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: Text(
+                    l10n.combatReloading,
+                    style: TextStyle(fontSize: 11, color: colours.muted),
+                  ),
+                )
+              else if (onReload != null) ...[
+                OutlinedButton(
+                  onPressed: onReload,
+                  child: Text(l10n.combatReload),
+                ),
+                const SizedBox(width: 8),
+              ],
               if (onStrike != null) ...[
                 OutlinedButton(
                   onPressed: onStrike,
