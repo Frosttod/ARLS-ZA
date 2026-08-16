@@ -715,6 +715,9 @@ class L10nEn extends L10n {
   String get slotBack => 'Back';
 
   @override
+  String get slotHand => 'In hand';
+
+  @override
   String get statEnergy => 'Muzzle energy';
 
   @override

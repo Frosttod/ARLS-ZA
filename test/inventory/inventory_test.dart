@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:arls_za/inventory/body_slots.dart';
 import 'package:arls_za/inventory/inventory.dart';
 import 'package:arls_za/items/item_catalogue.dart';
 import 'package:arls_za/sim/body.dart';
@@ -749,6 +750,57 @@ void main() {
       final after = inventory.consumePortion(inventory.carried.single, 0);
 
       expect(after.carried.single.portion, 1);
+    });
+  });
+
+  group('what is in the hand (§5.5.1)', () {
+    // Found on a phone: a knife in the pack could not be equipped at all,
+    // because §4.4 only gives garments a slot and a blade is not a garment.
+    // The game still has to know which weapon is out — it is the one that
+    // fires, and the one a clinch is fought with.
+    test('a knife can be taken in hand', () {
+      final after = const Inventory().wearLine(
+        const CarriedItem(itemId: 'melee_knife'),
+        catalogue,
+      );
+
+      expect(after.worn.single.itemId, 'melee_knife');
+    });
+
+    test('and a rifle displaces it, rather than being held as well', () {
+      // Two blades are not held at once for two blades' worth of reach.
+      final armed = const Inventory()
+          .wearLine(const CarriedItem(itemId: 'melee_knife'), catalogue)
+          .wearLine(const CarriedItem(itemId: 'weapon_rifle_22lr'), catalogue);
+
+      expect(armed.worn.single.itemId, 'weapon_rifle_22lr');
+      expect(armed.carried.single.itemId, 'melee_knife');
+    });
+
+    test('a coat is untouched by any of it', () {
+      final dressed = const Inventory()
+          .wearLine(const CarriedItem(itemId: 'cloth_winter_jacket'), catalogue)
+          .wearLine(const CarriedItem(itemId: 'melee_knife'), catalogue);
+
+      expect(dressed.worn, hasLength(2));
+    });
+
+    test('a weapon in hand costs mass and no volume, like anything worn', () {
+      // §18.1a: what is on the body is carried, not packed.
+      final armed = const Inventory()
+          .withPack('pack_daypack')
+          .wearLine(const CarriedItem(itemId: 'melee_machete'), catalogue);
+
+      expect(armed.volumeL(catalogue), closeTo(0, 0.001));
+      expect(armed.massKg(catalogue), greaterThan(0));
+    });
+
+    test('the hand is where the figure looks for it', () {
+      expect(
+        wearSlotOf(catalogue['melee_knife']!),
+        BodySlot.hand.wire,
+      );
+      expect(wearSlotOf(catalogue['cloth_boots']!), BodySlot.feet.wire);
     });
   });
 }

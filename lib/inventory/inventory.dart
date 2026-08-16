@@ -18,6 +18,7 @@ library;
 
 import '../items/item.dart';
 import '../items/item_catalogue.dart';
+import 'body_slots.dart';
 import '../sim/body.dart';
 
 /// Pockets. §18.1a's floor for a player with no bag at all.
@@ -32,6 +33,24 @@ const double kStoreLitresPerKg = 3;
 /// A stackable item is one entry with a count. Anything carrying its own state
 /// — a worn rifle, a part-read book (§4.6.3) — is one entry per piece, because
 /// two of them are not interchangeable.
+/// Where a piece of kit goes on a person, by what it is (§4.4, §5.5.1).
+///
+/// Garments carry their own `slot`; nothing else does. A weapon is not a
+/// garment and §4.4 never gave it a place, but the game has to know which one
+/// is in the hand — it is the one that fires, and the one a clinch is fought
+/// with — so a firearm or a blade goes to the hand and displaces whatever was
+/// there. Two knives are not held at once for two knives' worth of reach.
+String? wearSlotOf(ItemDefinition definition) {
+  final named = definition.props['slot'];
+  if (named is String) return named;
+
+  return switch (definition.kind) {
+    ItemKind.firearm || ItemKind.melee => BodySlot.hand.wire,
+    ItemKind.backpack => 'backpack',
+    _ => null,
+  };
+}
+
 /// Less of a piece than this is nothing (§4.7).
 ///
 /// A last two per cent of a bottle is a line in the pack that costs a tap to
@@ -448,7 +467,8 @@ class Inventory {
 
     final itemId = line.itemId;
     final piece = line.copyWith(count: 1);
-    final slot = catalogue?[itemId]?.props['slot'];
+    final definition = catalogue?[itemId];
+    final slot = definition == null ? null : wearSlotOf(definition);
 
     if (slot == null) {
       return Inventory(
@@ -461,7 +481,8 @@ class Inventory {
     final displaced = <CarriedItem>[];
     final remaining = <CarriedItem>[];
     for (final line in worn) {
-      if (catalogue?[line.itemId]?.props['slot'] == slot) {
+      final other = catalogue?[line.itemId];
+      if (other != null && wearSlotOf(other) == slot) {
         displaced.add(line);
       } else {
         remaining.add(line);

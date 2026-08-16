@@ -844,7 +844,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     if (catalogue == null || item == null) return;
 
     final wearable =
-        BodySlot.fromWire(item.props['slot'] as String?) != null ||
+        BodySlot.fromWire(wearSlotOf(item)) != null ||
         item.kind == ItemKind.backpack;
     // This copy, not any copy with that id: the one already on the body is not
     // put on again, but its twin in the pack still can be.
@@ -1318,6 +1318,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
             kind: MarkerKind.loot,
             at: box.position,
             label: box.name,
+            // §10.2: how close is close enough to search it. Judging
+            // twenty-five metres by eye on a map that zooms is guesswork.
+            reachM: kSearchReachM,
           ),
 
       // §4.8: grey, and gone after a day.
@@ -1326,6 +1329,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
           id: 'dropped.${item.id}',
           kind: MarkerKind.dropped,
           at: item.position,
+          // §4.8: a pile is picked up from arm's reach, which is a much
+          // tighter ring than a building's.
+          reachM: kStillnessM,
         ),
     ];
   }

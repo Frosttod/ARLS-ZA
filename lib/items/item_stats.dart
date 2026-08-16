@@ -80,7 +80,10 @@ List<ItemStat> statsOf(ItemDefinition item, {double? condition}) {
       stat('bleed', 'blood_ml_per_hit', 'ml'),
       stat('swing', 'swing_seconds', 's', higherIsBetter: false, decimals: 1),
       stat('reach', 'reach_m', 'm', decimals: 1),
-      stat('strength', 'strength_required', '', higherIsBetter: false),
+      // `strength_required` is in the data and stays there for §7's skills,
+      // but it is not shown: a blade in the pack is a blade the character is
+      // already carrying, so a number saying they might not manage to swing
+      // it answers a question nobody asked.
       stat('noise', 'noise_range_m', 'm', higherIsBetter: false),
     ],
     ItemKind.armor => [
@@ -151,6 +154,20 @@ List<ItemStat> statsOf(ItemDefinition item, {double? condition}) {
   ];
 }
 
+/// The kinds where "which of these two" is a real question.
+///
+/// A tin of beans against another tin of beans is not a decision — both are
+/// eaten, and the calories are on the row already. What is worth laying out
+/// side by side is what gets *kept*: the vest that displaces a vest, the pack
+/// that changes both carry limits, the rifle that will be the one fired.
+const Set<ItemKind> _worthComparing = {
+  ItemKind.firearm,
+  ItemKind.melee,
+  ItemKind.armor,
+  ItemKind.backpack,
+  ItemKind.tool,
+};
+
 /// Whether two items are worth putting side by side.
 ///
 /// The same slot for anything worn — a vest against a vest, not a vest against
@@ -162,6 +179,7 @@ List<ItemStat> statsOf(ItemDefinition item, {double? condition}) {
 /// job, since two entries of the same id are two different things to own.
 bool comparable(ItemDefinition a, ItemDefinition b) {
   if (a.kind != b.kind) return false;
+  if (!_worthComparing.contains(a.kind)) return false;
 
   final slotA = a.props['slot'];
   final slotB = b.props['slot'];

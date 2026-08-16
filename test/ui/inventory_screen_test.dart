@@ -39,6 +39,13 @@ void main() {
     ValueListenable<Search?>? action,
     ValueListenable<CarriedItem?>? usingLine,
   }) async {
+    // A phone, rather than the 800×600 the test binding defaults to: the worn
+    // figure is eleven rows and the pack starts below anything shorter, which
+    // makes every test about the pack a test about scrolling.
+    tester.view.physicalSize = const Size(1080, 3600);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
+
     await tester.pumpWidget(
       MaterialApp(
         locale: const Locale('pl'),
@@ -76,12 +83,14 @@ void main() {
   Future<void> reveal(WidgetTester tester, Finder target) async {
     if (target.evaluate().isEmpty) {
       await tester.scrollUntilVisible(
-        target,
+        target.first,
         120,
         scrollable: find.byType(Scrollable).first,
       );
     }
-    await tester.ensureVisible(target);
+    // The first of them: several rows carry the same glyph, and aligning one
+    // of them is all this is for.
+    await tester.ensureVisible(target.first);
     await tester.pumpAndSettle();
   }
 
@@ -124,7 +133,7 @@ void main() {
     await pump(tester, inventory);
 
     expect(find.text('Konserwa mięsna  ×2'), findsOneWidget);
-    expect(find.text('0.80 kg\n0.80 l'), findsOneWidget);
+    expect(find.text('0.80 kg  ·  0.80 l'), findsOneWidget);
   });
 
   testWidgets('worn kit is listed apart from packed kit (§18.1a)', (
@@ -215,7 +224,7 @@ void main() {
           count = dropped;
         },
       );
-      await tapInPack(tester, find.text('Wyrzuć'));
+      await tapInPack(tester, find.byIcon(Icons.delete_outline));
 
       expect(itemId, 'mat_wood');
       expect(count, 1);
@@ -228,7 +237,7 @@ void main() {
 
       await pump(tester, threeLogs, onDrop: (_, dropped) => count = dropped);
       await tapInPack(tester, find.byIcon(Icons.add));
-      await tapInPack(tester, find.text('Wyrzuć'));
+      await tapInPack(tester, find.byIcon(Icons.delete_outline));
 
       expect(count, 2);
     });
@@ -240,7 +249,7 @@ void main() {
       for (var i = 0; i < 6; i++) {
         await tapInPack(tester, find.byIcon(Icons.add));
       }
-      await tapInPack(tester, find.text('Wyrzuć'));
+      await tapInPack(tester, find.byIcon(Icons.delete_outline));
 
       expect(count, 3);
     });
@@ -254,7 +263,7 @@ void main() {
 
       await pump(tester, one, onDrop: (_, _) {});
 
-      expect(find.text('Wyrzuć'), findsOneWidget);
+      expect(find.byIcon(Icons.delete_outline), findsOneWidget);
       expect(find.byIcon(Icons.add), findsNothing);
     });
   });
@@ -268,7 +277,7 @@ void main() {
       expect(find.text('GŁOWA'), findsOneWidget);
       expect(find.text('PANCERZ'), findsOneWidget);
       expect(find.text('STOPY'), findsOneWidget);
-      expect(find.text('puste'), findsNWidgets(10));
+      expect(find.text('puste'), findsNWidgets(11));
     });
 
     test('every slot in the data has a place on the figure', () {
@@ -288,7 +297,7 @@ void main() {
       );
 
       expect(find.text('Kamizelka kuloodporna'), findsOneWidget);
-      expect(find.text('puste'), findsNWidgets(9));
+      expect(find.text('puste'), findsNWidgets(10));
     });
   });
 
@@ -303,7 +312,7 @@ void main() {
           .inventory;
 
       await pump(tester, packed, onWear: (line) => worn = line);
-      await tapInPack(tester, find.text('Załóż'));
+      await tapInPack(tester, find.byIcon(Icons.checkroom));
 
       expect(worn?.itemId, 'armor_vest_soft');
     });
@@ -319,7 +328,7 @@ void main() {
       await pump(tester, mixed, onUse: (_) {});
       await reveal(tester, find.text('Drewno'));
 
-      expect(find.text('Użyj'), findsOneWidget);
+      expect(find.byIcon(Icons.restaurant), findsOneWidget);
     });
   });
 
@@ -348,7 +357,7 @@ void main() {
       // dark.
       await pump(tester, dressed, onDrop: (_, _) {}, onTakeOff: (_) {});
 
-      expect(find.text('Wyrzuć'), findsNothing);
+      expect(find.byIcon(Icons.delete_outline), findsNothing);
     });
   });
 
@@ -365,6 +374,10 @@ void main() {
           .add('mat_wood', catalogue, body: body, count: 3)
           .inventory,
     );
+
+    tester.view.physicalSize = const Size(1080, 3600);
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.reset);
 
     await tester.pumpWidget(
       MaterialApp(
@@ -400,12 +413,12 @@ void main() {
       await tester.tap(find.byIcon(Icons.add));
       await tester.pump();
     }
-    await tester.tap(find.text('Wyrzuć'));
+    await tester.tap(find.byIcon(Icons.delete_outline));
     await tester.pumpAndSettle();
 
     expect(find.text('Drewno  ×3'), findsNothing);
     expect(
-      find.text('Wyrzuć'),
+      find.byIcon(Icons.delete_outline),
       findsNothing,
       reason: 'nothing left to drop, so no button to press again',
     );
@@ -530,6 +543,10 @@ void main() {
     testWidgets('dropping one leaves the other standing', (tester) async {
       final inventory = ValueNotifier(duplicates);
 
+      tester.view.physicalSize = const Size(1080, 3600);
+      tester.view.devicePixelRatio = 3;
+      addTearDown(tester.view.reset);
+
       await tester.pumpWidget(
         MaterialApp(
           locale: const Locale('pl'),
@@ -555,7 +572,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tapInPack(tester, find.text('Wyrzuć').first);
+      await tapInPack(tester, find.byIcon(Icons.delete_outline).first);
 
       expect(tester.takeException(), isNull);
       expect(inventory.value.carried, hasLength(3));
@@ -570,22 +587,19 @@ void main() {
       await pump(tester, duplicates, onDrop: (line, _) => dropped = line);
 
       await reveal(tester, find.textContaining('40%'));
-      final subtitle = tester.getBottomLeft(find.textContaining('40%')).dy;
 
-      // The drop button belonging to that row: the first one under its
-      // subtitle.
-      final buttons = find.text('Wyrzuć').evaluate().toList()
-        ..sort((a, b) {
-          final byA = tester.getTopLeft(find.byWidget(a.widget)).dy;
-          final byB = tester.getTopLeft(find.byWidget(b.widget)).dy;
-          return byA.compareTo(byB);
-        });
-      final mine = buttons.firstWhere(
-        (element) => tester.getTopLeft(find.byWidget(element.widget)).dy >
-            subtitle - 20,
+      // The drop glyph inside that row's own frame, which is what a finger
+      // aiming at the battered vest actually hits.
+      final row = find
+          .ancestor(
+            of: find.textContaining('40%'),
+            matching: find.byType(Container),
+          )
+          .first;
+
+      await tester.tap(
+        find.descendant(of: row, matching: find.byIcon(Icons.delete_outline)),
       );
-
-      await tester.tap(find.byWidget(mine.widget));
       await tester.pumpAndSettle();
 
       expect(dropped?.condition, 40);

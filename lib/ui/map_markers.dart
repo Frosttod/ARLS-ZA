@@ -38,6 +38,7 @@ class MapMarker {
     required this.kind,
     required this.at,
     this.label,
+    this.reachM,
   });
 
   /// Stable across frames, so the renderer can move a marker instead of
@@ -52,12 +53,22 @@ class MapMarker {
   /// nothing on this map is knowable by colour alone.
   final String? label;
 
-  MapMarker copyWith({GeoPoint? at, String? label}) => MapMarker(
-    id: id,
-    kind: kind,
-    at: at ?? this.at,
-    label: label ?? this.label,
-  );
+  /// How close a player has to be for this to be worth anything (§10.2,
+  /// §4.8), drawn as a ring around it.
+  ///
+  /// Twenty-five metres for a place and fifteen for a pile at somebody's feet
+  /// are numbers nobody can judge by eye on a map that zooms. A ring turns
+  /// "am I close enough yet" from a guess into something to walk into.
+  final double? reachM;
+
+  MapMarker copyWith({GeoPoint? at, String? label, double? reachM}) =>
+      MapMarker(
+        id: id,
+        kind: kind,
+        at: at ?? this.at,
+        label: label ?? this.label,
+        reachM: reachM ?? this.reachM,
+      );
 }
 
 /// The colour code of §3.6, as ARGB values.

@@ -21,6 +21,12 @@ enum BodySlot {
   legs('legs'),
   feet('feet'),
 
+  /// What is in the hand right now (§5.5.1). Not a garment and not in the
+  /// data: a knife has no `slot` prop because §4.4 only dresses a body. The
+  /// game still has to know which weapon is out, because that is the one that
+  /// fires and the one a clinch is fought with.
+  hand('weapon'),
+
   /// The pack. Not a garment, but it is worn, it is the thing that changes
   /// both carry limits (§18.1a), and a player looking for it looks here.
   back('backpack');

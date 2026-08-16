@@ -202,15 +202,17 @@ class InventoryScreen extends StatelessWidget {
       return packId == null ? null : CarriedItem(itemId: packId);
     }
     for (final line in inventory.worn) {
-      final where = BodySlot.fromWire(
-        catalogue[line.itemId]?.props['slot'] as String?,
-      );
+      final definition = catalogue[line.itemId];
+      final where = definition == null
+          ? null
+          : BodySlot.fromWire(wearSlotOf(definition));
       if (where == slot) return line;
     }
     return null;
   }
 
   String _slotName(L10n l10n, BodySlot slot) => switch (slot) {
+    BodySlot.hand => l10n.slotHand,
     BodySlot.head => l10n.slotHead,
     BodySlot.torsoBase => l10n.slotTorsoBase,
     BodySlot.torsoMid => l10n.slotTorsoMid,
@@ -587,112 +589,149 @@ class _ItemRowState extends State<_ItemRow> {
     final mass = line.massKg(widget.definition);
     final volume = line.volumeL(widget.definition);
     final wearable =
-        BodySlot.fromWire(widget.definition.props['slot'] as String?) != null ||
+        BodySlot.fromWire(wearSlotOf(widget.definition)) != null ||
         widget.definition.kind == ItemKind.backpack;
     final usable = useOf(widget.definition) != null;
 
     final count = line.count < 1 ? 1 : line.count;
     final toDrop = _toDrop > count ? count : _toDrop;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+    return Container(
+      // A frame each. A flat list of rows with two lines of buttons under
+      // every one reads as a wall; a boxed row reads as a thing you own.
+      margin: const EdgeInsets.only(bottom: 6),
+      padding: const EdgeInsets.fromLTRB(10, 6, 4, 6),
+      decoration: BoxDecoration(
+        border: Border.all(color: colours.muted.withValues(alpha: 0.35)),
+        borderRadius: BorderRadius.circular(4),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Left: what it is. Tapping it opens the numbers, and so does
+              // the glyph beside it for anybody who looks for a button.
               Expanded(
                 child: GestureDetector(
                   onTap: widget.onDetails == null
                       ? null
                       : () => widget.onDetails!(line),
                   behavior: HitTestBehavior.opaque,
-                  child: Column(
+                  child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        count > 1 ? '${widget.name}  ×$count' : widget.name,
-                        style: TextStyle(fontSize: 14, color: colours.text),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              count > 1
+                                  ? '${widget.name}  \u00d7$count'
+                                  : widget.name,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: colours.text,
+                              ),
+                            ),
+                            const SizedBox(height: 1),
+                            Text(
+                              _subtitle(),
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: colours.muted,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        _subtitle(),
-                        style: TextStyle(fontSize: 11, color: colours.muted),
-                      ),
+                      if (widget.onDetails != null)
+                        IconButton(
+                          onPressed: () => widget.onDetails!(line),
+                          icon: const Icon(Icons.info_outline, size: 18),
+                          color: colours.muted,
+                          tooltip: l10n.itemDetails,
+                          visualDensity: VisualDensity.compact,
+                          constraints: const BoxConstraints(),
+                          padding: const EdgeInsets.symmetric(horizontal: 6),
+                        ),
                     ],
                   ),
                 ),
               ),
-              Text(
-                '${mass.toStringAsFixed(mass < 1 ? 2 : 1)} kg\n'
-                '${volume.toStringAsFixed(volume < 1 ? 2 : 1)} l',
-                textAlign: TextAlign.right,
-                style: TextStyle(
-                  fontSize: 11,
-                  height: 1.4,
-                  color: colours.data,
-                ),
-              ),
-            ],
-          ),
-          Row(
-            children: [
-              if (usable && widget.onUse != null)
-                TextButton(
-                  onPressed: () => widget.onUse!(line),
-                  child: Text(l10n.inventoryUse),
-                ),
-              if (wearable && widget.onWear != null)
-                TextButton(
-                  onPressed: () => widget.onWear!(line),
-                  child: Text(l10n.inventoryWear),
-                ),
-              if (line.noteId != null && widget.onRead != null)
-                TextButton(
-                  onPressed: () => widget.onRead!(line),
-                  child: Text(l10n.noteRead),
-                ),
-              // §4.2: the numbers, and whatever this would replace beside
-              // them. Tapping the name does the same, for anybody who tries.
-              if (widget.onDetails != null)
-                IconButton(
-                  onPressed: () => widget.onDetails!(line),
-                  icon: const Icon(Icons.info_outline, size: 18),
-                  color: colours.muted,
-                  tooltip: l10n.itemDetails,
-                  visualDensity: VisualDensity.compact,
-                ),
-              const Spacer(),
-              if (widget.onDrop != null) ...[
-                // Only where there is a choice to make. A stepper beside a
-                // single bandage is a control with one setting.
-                if (count > 1)
-                  _Stepper(
-                    value: toDrop,
-                    max: count,
-                    onChanged: (value) => setState(() => _toDrop = value),
-                    colours: colours,
+
+              // Right: what it costs, and what can be done about it.
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '${mass.toStringAsFixed(mass < 1 ? 2 : 1)} kg  \u00b7  '
+                    '${volume.toStringAsFixed(volume < 1 ? 2 : 1)} l',
+                    style: TextStyle(fontSize: 11, color: colours.data),
                   ),
-                TextButton(
-                  onPressed: () => widget.onDrop!(line, toDrop),
-                  child: Text(l10n.inventoryDrop),
-                ),
-              ],
+                  const SizedBox(height: 2),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (usable && widget.onUse != null)
+                        _RowAction(
+                          icon: Icons.restaurant,
+                          tooltip: l10n.inventoryUse,
+                          onPressed: () => widget.onUse!(line),
+                          colours: colours,
+                        ),
+                      if (wearable && widget.onWear != null)
+                        _RowAction(
+                          icon: Icons.checkroom,
+                          tooltip: l10n.inventoryWear,
+                          onPressed: () => widget.onWear!(line),
+                          colours: colours,
+                        ),
+                      if (line.noteId != null && widget.onRead != null)
+                        _RowAction(
+                          icon: Icons.description_outlined,
+                          tooltip: l10n.noteRead,
+                          onPressed: () => widget.onRead!(line),
+                          colours: colours,
+                        ),
+                      if (widget.onDrop != null) ...[
+                        // Only where there is a choice to make. A stepper
+                        // beside a single bandage is a control with one
+                        // setting.
+                        if (count > 1)
+                          _Stepper(
+                            value: toDrop,
+                            max: count,
+                            onChanged: (value) =>
+                                setState(() => _toDrop = value),
+                            colours: colours,
+                          ),
+                        _RowAction(
+                          icon: Icons.delete_outline,
+                          tooltip: l10n.inventoryDrop,
+                          onPressed: () => widget.onDrop!(line, toDrop),
+                          colours: colours,
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
             ],
           ),
 
           // Under this piece, and only while it is this piece being used.
           //
-          // ⚠️ The piece, not the item id. Found on a phone: a tin opened out
-          // of a stack of four leaves a part-eaten one beside three whole
+          // \u26a0\ufe0f The piece, not the item id. Found on a phone: a tin opened
+          // out of a stack of four leaves a part-eaten one beside three whole
           // ones, and matching by id drew the same bar under both rows.
           if (widget.action != null)
             ValueListenableBuilder<CarriedItem?>(
               // Listened to as well as read: which piece is in hand changes
               // when a use ends, and a bar left behind by a finished action is
               // a bar that never goes away.
-              valueListenable:
-                  widget.usingLine ?? const _NoLine(),
+              valueListenable: widget.usingLine ?? const _NoLine(),
               builder: (context, using, _) => ValueListenableBuilder<Search?>(
                 valueListenable: widget.action!,
                 builder: (context, running, _) =>
@@ -759,6 +798,36 @@ class _NoLine implements ValueListenable<CarriedItem?> {
 
   @override
   void removeListener(VoidCallback listener) {}
+}
+
+/// One thing that can be done to a row: a glyph, named for a long press.
+///
+/// Words here cost a line each and there are four of them; a row that spends
+/// two lines on its own buttons stops being a row. What the glyph means is in
+/// its tooltip and in the screen-reader label, which is where \u00a712 asks for it.
+class _RowAction extends StatelessWidget {
+  const _RowAction({
+    required this.icon,
+    required this.tooltip,
+    required this.onPressed,
+    required this.colours,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onPressed;
+  final HudColors colours;
+
+  @override
+  Widget build(BuildContext context) => IconButton(
+    onPressed: onPressed,
+    icon: Icon(icon, size: 20),
+    tooltip: tooltip,
+    color: colours.text,
+    visualDensity: VisualDensity.compact,
+    constraints: const BoxConstraints(),
+    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+  );
 }
 
 /// How many of a stack to put down.

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:arls_za/inventory/body_slots.dart';
+import 'package:arls_za/inventory/inventory.dart';
 import 'package:arls_za/inventory/item_use.dart';
 import 'package:arls_za/items/item.dart';
 import 'package:arls_za/items/item_catalogue.dart';
@@ -265,6 +266,21 @@ void main() {
       }
     });
 
+    test('a weapon has a place to go, without the data naming one', () {
+      // §5.5.1: the game has to know which weapon is out — it is the one that
+      // fires and the one a clinch is fought with — and §4.4 never gave a
+      // blade a slot, because §4.4 only dresses a body.
+      for (final kind in [ItemKind.firearm, ItemKind.melee]) {
+        for (final weapon in catalogue.ofKind(kind)) {
+          expect(
+            BodySlot.fromWire(wearSlotOf(weapon)),
+            BodySlot.hand,
+            reason: weapon.id,
+          );
+        }
+      }
+    });
+
     test('and nothing else names one', () {
       // A slot on a crowbar would put it on the figure and take it out of the
       // pack. Everything that is not a garment is worn by kind or not at all.
@@ -279,7 +295,9 @@ void main() {
       // An empty slot on the figure that no item in the game can ever fill is
       // a promise the catalogue does not keep.
       for (final slot in BodySlot.values) {
-        if (slot == BodySlot.back) continue;
+        // The back holds packs and the hand holds weapons; neither is a
+        // garment slot, and neither is named by a `slot` prop (§4.4, §5.5.1).
+        if (slot == BodySlot.back || slot == BodySlot.hand) continue;
 
         expect(
           catalogue.ofKind(ItemKind.armor).where(

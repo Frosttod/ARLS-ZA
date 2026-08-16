@@ -254,6 +254,11 @@ class _MapLibreSurfaceState extends State<MapLibreSurface> {
     if (target == null) return;
 
     await controller.moveCamera(CameraUpdate.newLatLngZoom(target, clamped));
+
+    // The reach rings are metres drawn in pixels, so a zoom changes all of
+    // them. Redrawn here rather than on the idle callback: a ring that lags
+    // the map by a frame reads as the reach itself moving.
+    await _syncMarkers(controller);
   }
 
   Future<void> _zoomBy(double steps) => _zoomTo(_zoom + steps);
@@ -337,8 +342,39 @@ class _MapLibreSurfaceState extends State<MapLibreSurface> {
     final wanted = {for (final marker in widget.markers) marker.id: marker};
 
     for (final id in _circles.keys.toList()) {
-      if (wanted.containsKey(id)) continue;
+      if (wanted.containsKey(id.replaceAll('.reach', ''))) continue;
       await controller.removeCircle(_circles.remove(id)!);
+    }
+
+    // The reach rings first, so a marker is never hidden under its own ring.
+    for (final marker in wanted.values) {
+      final reach = marker.reachM;
+      final id = '${marker.id}.reach';
+
+      if (reach == null) {
+        final stale = _circles.remove(id);
+        if (stale != null) await controller.removeCircle(stale);
+        continue;
+      }
+
+      // Metres, drawn in pixels: a ring that stayed the same size on screen
+      // would say nothing about how far away anything is.
+      final options = CircleOptions(
+        geometry: LatLng(marker.at.latitude, marker.at.longitude),
+        circleRadius: reach / metresPerPixel(_zoom, marker.at.latitude),
+        circleColor: _hex(kMarkerColours[marker.kind]!),
+        circleOpacity: 0.10,
+        circleStrokeColor: _hex(kMarkerColours[marker.kind]!),
+        circleStrokeWidth: 1,
+        circleStrokeOpacity: 0.5,
+      );
+
+      final existing = _circles[id];
+      if (existing == null) {
+        _circles[id] = await controller.addCircle(options);
+      } else {
+        await controller.updateCircle(existing, options);
+      }
     }
 
     for (final marker in wanted.values) {

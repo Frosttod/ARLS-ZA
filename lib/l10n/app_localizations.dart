@@ -1363,6 +1363,12 @@ abstract class L10n {
   /// **'Back'**
   String get slotBack;
 
+  /// No description provided for @slotHand.
+  ///
+  /// In en, this message translates to:
+  /// **'In hand'**
+  String get slotHand;
+
   /// No description provided for @statEnergy.
   ///
   /// In en, this message translates to:

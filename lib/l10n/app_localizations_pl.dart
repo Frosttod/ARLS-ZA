@@ -718,6 +718,9 @@ class L10nPl extends L10n {
   String get slotBack => 'Plecy';
 
   @override
+  String get slotHand => 'W ręku';
+
+  @override
   String get statEnergy => 'Energia wylotowa';
 
   @override
