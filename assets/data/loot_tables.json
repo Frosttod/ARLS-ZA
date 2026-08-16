@@ -530,6 +530,36 @@
           "max": 1
         },
         {
+          "item": "att_red_dot",
+          "weight": 3,
+          "min": 1,
+          "max": 1
+        },
+        {
+          "item": "att_laser",
+          "weight": 2,
+          "min": 1,
+          "max": 1
+        },
+        {
+          "item": "att_extended_mag",
+          "weight": 2,
+          "min": 1,
+          "max": 1
+        },
+        {
+          "item": "att_foregrip",
+          "weight": 3,
+          "min": 1,
+          "max": 1
+        },
+        {
+          "item": "att_weapon_light",
+          "weight": 4,
+          "min": 1,
+          "max": 1
+        },
+        {
           "item": "med_tourniquet",
           "weight": 8,
           "min": 1,
@@ -942,6 +972,36 @@
         {
           "item": "tool_suppressor",
           "weight": 2,
+          "min": 1,
+          "max": 1
+        },
+        {
+          "item": "att_red_dot",
+          "weight": 3,
+          "min": 1,
+          "max": 1
+        },
+        {
+          "item": "att_laser",
+          "weight": 2,
+          "min": 1,
+          "max": 1
+        },
+        {
+          "item": "att_extended_mag",
+          "weight": 3,
+          "min": 1,
+          "max": 1
+        },
+        {
+          "item": "att_foregrip",
+          "weight": 4,
+          "min": 1,
+          "max": 1
+        },
+        {
+          "item": "att_weapon_light",
+          "weight": 4,
           "min": 1,
           "max": 1
         },

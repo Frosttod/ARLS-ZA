@@ -105,6 +105,7 @@ ItemUse? useOf(ItemDefinition item) {
     case ItemKind.armor:
     case ItemKind.backpack:
     case ItemKind.literature:
+    case ItemKind.attachment:
     case ItemKind.tool:
     case ItemKind.crafting:
     case ItemKind.ammo:

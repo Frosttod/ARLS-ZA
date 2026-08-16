@@ -88,22 +88,6 @@
       }
     },
     {
-      "id": "tool_suppressor",
-      "type": "tool",
-      "name_key": "item.tool_suppressor.name",
-      "weight_kg": 0.4,
-      "volume_l": 0.5,
-      "stackable": false,
-      "condition": 100,
-      "condition_decay_per_use": 0.3,
-      "rarity": "very_rare",
-      "loot_tags": ["police", "military"],
-      "props": {
-        "attaches_to": ["9x19", "5.45x39", "7.62x39", "22lr"],
-        "noise_range_multiplier": 0.29
-      }
-    },
-    {
       "id": "tool_lighter",
       "type": "tool",
       "name_key": "item.tool_lighter.name",

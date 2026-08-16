@@ -13,20 +13,22 @@
 library;
 
 import '../items/item.dart';
+import 'attachment.dart';
 
 /// §5.5.4: closer than this and a reload does not finish.
 const double kReloadBreakM = 5;
 
-/// How long a magazine change takes, from the weapon's own data (§4.2).
-Duration reloadTime(ItemDefinition weapon) => Duration(
-  milliseconds:
-      (((weapon.props['reload_seconds'] as num?)?.toDouble() ?? 3) * 1000)
-          .round(),
-);
+/// How long a magazine change takes, with whatever is on the weapon (§4.2).
+Duration reloadTime(
+  ItemDefinition weapon, {
+  List<ItemDefinition> attachments = const [],
+}) => FittedWeapon(weapon: weapon, attachments: attachments).reloadTime;
 
-/// How many rounds the weapon holds.
-int magazineSize(ItemDefinition weapon) =>
-    (weapon.props['magazine'] as num?)?.toInt() ?? 1;
+/// How many rounds the weapon holds, extended magazine and all.
+int magazineSize(
+  ItemDefinition weapon, {
+  List<ItemDefinition> attachments = const [],
+}) => FittedWeapon(weapon: weapon, attachments: attachments).magazine;
 
 /// A reload in progress, or the absence of one.
 class Reload {
@@ -72,8 +74,9 @@ int roundsToLoad({
   required ItemDefinition weapon,
   required int loaded,
   required int carried,
+  List<ItemDefinition> attachments = const [],
 }) {
-  final room = magazineSize(weapon) - loaded;
+  final room = magazineSize(weapon, attachments: attachments) - loaded;
   if (room <= 0 || carried <= 0) return 0;
 
   return room < carried ? room : carried;

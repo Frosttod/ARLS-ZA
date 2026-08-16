@@ -30,6 +30,14 @@ enum ItemKind {
   medical,
   literature,
   tool,
+
+  /// §5.1, §5.6.3. Bolted to a weapon rather than used: each one moves a
+  /// number the combat model already reads — minutes of angle off the group,
+  /// seconds off §5.3's settling, rounds onto the magazine, or a multiplier
+  /// onto what is heard. Its own kind because a scope is not a tool: it does
+  /// nothing at all on its own.
+  attachment,
+
   crafting,
 
   /// Ammunition. Its own kind rather than a material because §10.3.3 builds an

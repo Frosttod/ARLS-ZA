@@ -505,6 +505,9 @@ class L10nPl extends L10n {
   String get kindTool => 'Narzędzie';
 
   @override
+  String get kindAttachment => 'Dodatek';
+
+  @override
   String get kindCrafting => 'Surowiec';
 
   @override
@@ -910,6 +913,12 @@ class L10nPl extends L10n {
 
   @override
   String get statBulk => 'Objętość';
+
+  @override
+  String get statSettle => 'Stabilizacja';
+
+  @override
+  String get statCraftSkill => 'Wymagana wprawa';
 
   @override
   String get statCondition => 'Stan';

@@ -891,6 +891,7 @@ String kindName(L10n l10n, ItemKind kind) => switch (kind) {
   ItemKind.medical => l10n.kindMedical,
   ItemKind.literature => l10n.kindLiterature,
   ItemKind.tool => l10n.kindTool,
+  ItemKind.attachment => l10n.kindAttachment,
   ItemKind.crafting => l10n.kindCrafting,
   ItemKind.ammo => l10n.kindAmmo,
   ItemKind.material => l10n.kindMaterial,

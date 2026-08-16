@@ -15,6 +15,7 @@ library;
 import 'dart:math';
 
 import '../items/item.dart';
+import 'attachment.dart';
 import 'ballistics.dart';
 import 'enemy.dart';
 import 'noise.dart';
@@ -50,6 +51,7 @@ class ShotOutcome {
 /// cannot disagree about what the odds are.
 ShotError aimError({
   required ItemDefinition weapon,
+  List<ItemDefinition> attachments = const [],
   required double skill,
   required double heartRate,
   required double restingHr,
@@ -59,7 +61,12 @@ ShotError aimError({
   double conditionMoa = 0,
   double spreadMultiplier = 1,
 }) {
-  final mechanical = (weapon.props['moa'] as num?)?.toDouble() ?? 4;
+  // §5.1, §5.6.3: an optic or a grip changes the mechanical figure before
+  // anything the body does to it.
+  final mechanical = FittedWeapon(
+    weapon: weapon,
+    attachments: attachments,
+  ).moa;
 
   // §5.5.1: an unsettled sight picture opens every source at once rather than
   // adding one of its own — the shooter is not making a new mistake, they are
@@ -82,6 +89,7 @@ ShotOutcome fireAt({
   required ItemDefinition weapon,
   required Enemy target,
   ItemDefinition? ammo,
+  List<ItemDefinition> attachments = const [],
   required double distanceM,
   required ShotError error,
   required Random random,
@@ -108,9 +116,8 @@ ShotOutcome fireAt({
   // §5.6.1: the item carries what it is heard from; a suppressor is the one
   // item in the game that changes how it is played rather than adding a
   // percentage (§5.6.3).
-  final base =
-      (weapon.props['noise_range_m'] as num?)?.toDouble() ??
-      NoiseKind.rifle.baseM;
+  final fitted = FittedWeapon(weapon: weapon, attachments: attachments);
+  final base = fitted.noiseRangeM;
 
   return ShotOutcome(
     chance: chance,
@@ -126,7 +133,9 @@ ShotOutcome fireAt({
     // A miss is heard exactly as well as a hit. That is the whole cost of
     // firing at a poor chance.
     noiseM: noiseRadiusM(
-      suppressed ? base / 3.5 : base,
+      // The multiplier comes off the attachment itself where there is one;
+      // the flag is what a caller without the catalogue can still say.
+      suppressed && fitted.attachments.isEmpty ? base / 3.5 : base,
       night: night,
       denseUrban: denseUrban,
       openGround: openGround,

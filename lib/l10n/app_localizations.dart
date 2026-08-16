@@ -973,6 +973,12 @@ abstract class L10n {
   /// **'Tool'**
   String get kindTool;
 
+  /// No description provided for @kindAttachment.
+  ///
+  /// In en, this message translates to:
+  /// **'Attachment'**
+  String get kindAttachment;
+
   /// No description provided for @kindCrafting.
   ///
   /// In en, this message translates to:
@@ -1722,6 +1728,18 @@ abstract class L10n {
   /// In en, this message translates to:
   /// **'Bulk'**
   String get statBulk;
+
+  /// No description provided for @statSettle.
+  ///
+  /// In en, this message translates to:
+  /// **'Settling'**
+  String get statSettle;
+
+  /// No description provided for @statCraftSkill.
+  ///
+  /// In en, this message translates to:
+  /// **'Craft skill'**
+  String get statCraftSkill;
 
   /// How worn one copy of an item is, in percent.
   ///

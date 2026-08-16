@@ -36,6 +36,7 @@ const List<String> kBundledItemAssets = [
   'assets/data/medical.json',
   'assets/data/literature.json',
   'assets/data/tools.json',
+  'assets/data/attachments.json',
   'assets/data/crafting.json',
 ];
 

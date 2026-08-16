@@ -31,6 +31,7 @@ const List<String> kFiles = [
   'medical',
   'literature',
   'tools',
+  'attachments',
   'crafting',
 ];
 
@@ -484,6 +485,34 @@ final List<_Kind> _kinds = [
               : '—'),
       _Column('Search', 'Przeszukanie',
           (i, p, pl) => _num(p['search_radius_bonus_m'], unit: 'm')),
+    ],
+  ),
+  _Kind(
+    type: 'attachment',
+    titleEn: 'Attachments',
+    titlePl: 'Dodatki do broni',
+    headingEn: 'The rarest things in the game',
+    headingPl: 'Najrzadsze rzeczy w grze',
+    ledeEn:
+        'Each one moves a number the combat model already reads. A suppressor '
+        'is not a percentage - it is a change in how the game is played, and '
+        'the same is true of the rest.',
+    ledePl:
+        'Każdy przesuwa liczbę, którą model walki i tak już czyta. Tłumik nie '
+        'jest procentem - jest zmianą sposobu grania, i tak samo reszta.',
+    columns: [
+      _Column('Fits', 'Pasuje do',
+          (i, p, pl) => (p['attaches_to'] as List<dynamic>? ?? const []).join(', ')),
+      _Column('MOA', 'MOA',
+          (i, p, pl) => _num(p['moa_delta'], decimals: 1)),
+      _Column('Settling', 'Stabilizacja',
+          (i, p, pl) => _num(p['settle_multiplier'], decimals: 2)),
+      _Column('Magazine', 'Magazynek',
+          (i, p, pl) => _num(p['magazine_bonus'])),
+      _Column('Noise', 'Hałas',
+          (i, p, pl) => _num(p['noise_range_multiplier'], decimals: 2)),
+      _Column('Craft skill', 'Wprawa',
+          (i, p, pl) => _num(p['craft_skill'], unit: '%')),
     ],
   ),
   _Kind(

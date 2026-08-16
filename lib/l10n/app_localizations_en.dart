@@ -503,6 +503,9 @@ class L10nEn extends L10n {
   String get kindTool => 'Tool';
 
   @override
+  String get kindAttachment => 'Attachment';
+
+  @override
   String get kindCrafting => 'Material';
 
   @override
@@ -907,6 +910,12 @@ class L10nEn extends L10n {
 
   @override
   String get statBulk => 'Bulk';
+
+  @override
+  String get statSettle => 'Settling';
+
+  @override
+  String get statCraftSkill => 'Craft skill';
 
   @override
   String get statCondition => 'Condition';

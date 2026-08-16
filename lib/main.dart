@@ -23,6 +23,7 @@ import 'items/item_catalogue.dart';
 import 'items/item_names.dart';
 import 'combat/aim.dart';
 import 'combat/ballistics.dart';
+import 'combat/attachment.dart';
 import 'combat/combat_session.dart';
 import 'combat/engagement.dart';
 import 'combat/magazine.dart';
@@ -1426,6 +1427,24 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     return null;
   }
 
+  /// §5.6.3: what is carried that fits the weapon in hand.
+  ///
+  /// ⚠️ Fitted because it fits. Which attachment is actually on which weapon
+  /// is per-weapon state, and that is the schema change the magazine is
+  /// already waiting for in stage 8.
+  List<ItemDefinition> _attachmentsFor(ItemDefinition weapon) {
+    final catalogue = _catalogue;
+    if (catalogue == null) return const [];
+
+    return FittedWeapon.from(
+      weapon: weapon,
+      carried: [
+        for (final line in _inventory.value.carried)
+          if (catalogue[line.itemId] != null) catalogue[line.itemId]!,
+      ],
+    ).attachments;
+  }
+
   /// A round that fits it, out of the pack (§10.3.3: the calibre string is the
   /// whole reason ammunition is a resource rather than a number).
   CarriedItem? _roundFor(ItemDefinition weapon) {
@@ -1465,6 +1484,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
     return aimError(
       weapon: weapon,
+      attachments: _attachmentsFor(weapon),
       // §7's Marksmanship does not exist yet, so everybody is a novice — which
       // is §5.1.2's first row and the one the balance is built on.
       skill: 0,
@@ -1499,11 +1519,11 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final outcome = fireAt(
       weapon: weapon,
       ammo: _loadedRound(weapon),
+      attachments: _attachmentsFor(weapon),
       target: target,
       distanceM: target.position.distanceTo(at),
       error: error,
       random: Random(),
-      suppressed: _inventory.value.countOf('tool_suppressor') > 0,
       // §5.6.1: a built-up street in daylight takes a third off what is heard.
       denseUrban: _world?.denseUrban ?? false,
       night: false,
@@ -1614,6 +1634,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
     final rounds = roundsToLoad(
       weapon: weapon,
+      attachments: _attachmentsFor(weapon),
       loaded: _loaded,
       carried: _roundsCarried(weapon),
     );
@@ -1648,7 +1669,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     setState(() {
       _reload = Reload(
         weaponId: weapon.id,
-        readyAt: DateTime.now().add(reloadTime(weapon)),
+        readyAt: DateTime.now().add(
+          reloadTime(weapon, attachments: _attachmentsFor(weapon)),
+        ),
       );
     });
   }
@@ -2429,7 +2452,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
                           loaded: _loaded,
                           magazine: weapon == null
                               ? 0
-                              : magazineSize(weapon),
+                              : magazineSize(
+                                  weapon,
+                                  attachments: _attachmentsFor(weapon),
+                                ),
                           reloading: _reload != null,
                           refusal: weapon == null
                               ? L10n.of(context).combatNoWeapon

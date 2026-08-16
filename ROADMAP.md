@@ -19,7 +19,7 @@ Każdy zamknięty etap dostaje sekcję **Dziennik wykonania** z decyzjami podję
 | 8 | Schron, obóz, pętla dobowa | ⬜ | — | — |
 | 9 | Onboarding, dostępność, zgodność | ⬜ | — | — |
 
-**Metryki:** 1209 testów · `flutter analyze` czysty · schemat bazy **v11** · release APK 89,5 MB bez devtools
+**Metryki:** 1228 testów · `flutter analyze` czysty · schemat bazy **v11** · release APK 89,5 MB bez devtools
 
 ### Zablokowane na użytkowniku
 
@@ -347,7 +347,7 @@ Dwa wnioski na przyszłość:
 | # | Zadanie | Odniesienie |
 | :---- | :---- | :---- |
 | 4.1 | ✅ Wspólny schemat przedmiotu + walidacja JSON przy buildzie, paczki treści bez nowego builda | §4.1 |
-| 4.2 | ✅ 110 przedmiotów w dziesięciu plikach, `loot_tables.json` — 20 tabel (11 OSM + 9 proceduralnych) | §10.3, Załącznik |
+| 4.2 | ✅ 119 przedmiotów w jedenastu plikach (w tym dodatki do broni: kolimator, laser, latarka, przedłużony magazynek, chwyt, tłumik), `loot_tables.json` — 20 tabel (11 OSM + 9 proceduralnych) | §10.3, Załącznik |
 | 4.3 | ✅ Ekwipunek z dwoma limitami: masa i objętość, oba paski w HUD | §18.1a |
 | 4.4 | ✅ Plecaki (udźwig + pojemność), odzież i pancerz (dwie osie ochrony) | §4.4, §4.5 |
 | 4.5 | ✅ Loot z POI (własny czytnik PMTiles + MVT), respawn 4–8 h, max 15 w promieniu 2 km, 5 gwarantowanych w 600 m | §10 |

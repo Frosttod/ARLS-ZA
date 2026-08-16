@@ -110,6 +110,21 @@ List<ItemStat> statsOf(ItemDefinition item, {double? condition}) {
       stat('pagesMax', 'pages_max', ''),
       stat('xpPerPage', 'xp_per_page', ''),
     ],
+    // §5.1, §5.6.3: what it does to the weapon it is on, and every one of
+    // these reads as a plus even when the number goes down — a tighter group
+    // is fewer minutes of angle.
+    ItemKind.attachment => [
+      stat('moa', 'moa_delta', 'MOA', higherIsBetter: false, decimals: 1),
+      stat('settle', 'settle_multiplier', '×',
+          higherIsBetter: false, decimals: 2),
+      stat('magazine', 'magazine_bonus', ''),
+      stat('noise', 'noise_range_multiplier', '×',
+          higherIsBetter: false, decimals: 2),
+      stat('light', 'light_radius_m', 'm'),
+      stat('battery', 'battery_hours', 'h'),
+      stat('craftSkill', 'craft_skill', '%', higherIsBetter: false),
+    ],
+
     ItemKind.tool => [
       stat('light', 'light_radius_m', 'm'),
       stat('battery', 'battery_hours', 'h'),
@@ -166,6 +181,7 @@ const Set<ItemKind> _worthComparing = {
   ItemKind.armor,
   ItemKind.backpack,
   ItemKind.tool,
+  ItemKind.attachment,
 };
 
 /// Whether two items are worth putting side by side.

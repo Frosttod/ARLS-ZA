@@ -1,0 +1,84 @@
+{
+  "_comment": "Weapon attachments (§4.2, §5.1, §5.6.3). Each one changes a number the combat model already reads: MOA off the group, seconds off §5.3's settling, rounds onto the magazine, or a multiplier onto §5.6.1's noise. attaches_to lists calibres, so a fit is decided by the same string that decides whether ammunition fits — a typo makes an attachment useless rather than universal. These are the rarest things in the game on purpose: §5.6.3 calls the suppressor a change in how the game is played rather than a percentage, and the same is true of the rest. Crafting them needs a high Engineering skill (§7), which is why craft_skill is here rather than in a recipe file — the item states its own price.",
+  "schema": 1,
+  "items": [
+    {
+      "id": "tool_suppressor",
+      "type": "attachment",
+      "name_key": "item.tool_suppressor.name",
+      "weight_kg": 0.4,
+      "volume_l": 0.5,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 0.05,
+      "rarity": "very_rare",
+      "loot_tags": ["military", "police"],
+      "props": {"attaches_to": ["9x19", "5.45x39", "7.62x39", "22lr"], "noise_range_multiplier": 0.29, "moa_delta": 0.3, "craft_skill": 85}
+    },
+    {
+      "id": "att_red_dot",
+      "type": "attachment",
+      "name_key": "item.att_red_dot.name",
+      "weight_kg": 0.15,
+      "volume_l": 0.2,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 0.02,
+      "rarity": "very_rare",
+      "loot_tags": ["military", "police", "hunting"],
+      "props": {"attaches_to": ["any"], "moa_delta": -1.2, "settle_multiplier": 0.85, "craft_skill": 70}
+    },
+    {
+      "id": "att_laser",
+      "type": "attachment",
+      "name_key": "item.att_laser.name",
+      "weight_kg": 0.1,
+      "volume_l": 0.15,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 0.03,
+      "rarity": "very_rare",
+      "loot_tags": ["military", "police"],
+      "props": {"attaches_to": ["any"], "settle_multiplier": 0.6, "battery_hours": 20, "visible_to_enemies": true, "craft_skill": 75}
+    },
+    {
+      "id": "att_weapon_light",
+      "type": "attachment",
+      "name_key": "item.att_weapon_light.name",
+      "weight_kg": 0.2,
+      "volume_l": 0.25,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 0.03,
+      "rarity": "rare",
+      "loot_tags": ["military", "police", "sport"],
+      "props": {"attaches_to": ["any"], "light_radius_m": 20, "battery_hours": 5, "visible_to_enemies": true, "craft_skill": 45}
+    },
+    {
+      "id": "att_extended_mag",
+      "type": "attachment",
+      "name_key": "item.att_extended_mag.name",
+      "weight_kg": 0.25,
+      "volume_l": 0.3,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 0.04,
+      "rarity": "very_rare",
+      "loot_tags": ["military", "police"],
+      "props": {"attaches_to": ["9x19", "5.45x39", "7.62x39"], "magazine_bonus": 10, "reload_seconds_delta": 0.5, "craft_skill": 60}
+    },
+    {
+      "id": "att_foregrip",
+      "type": "attachment",
+      "name_key": "item.att_foregrip.name",
+      "weight_kg": 0.18,
+      "volume_l": 0.25,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 0.02,
+      "rarity": "rare",
+      "loot_tags": ["military", "sport"],
+      "props": {"attaches_to": ["9x19", "5.45x39", "7.62x39", "12ga"], "moa_delta": -0.5, "settle_multiplier": 0.8, "craft_skill": 40}
+    }
+  ]
+}
