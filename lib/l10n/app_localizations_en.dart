@@ -595,6 +595,59 @@ class L10nEn extends L10n {
   String get placeHolds => 'Holds';
 
   @override
+  String get combatFire => 'Fire';
+
+  @override
+  String combatChance(int percent) {
+    return '$percent% hit';
+  }
+
+  @override
+  String combatDistance(int metres) {
+    return '$metres m';
+  }
+
+  @override
+  String get combatNoWeapon => 'Nothing in hand.';
+
+  @override
+  String get combatNoAmmo => 'No rounds for this.';
+
+  @override
+  String combatHit(int millilitres) {
+    return 'Hit — $millilitres ml';
+  }
+
+  @override
+  String get combatMiss => 'Missed.';
+
+  @override
+  String get combatDown => 'It went down.';
+
+  @override
+  String combatHeard(int metres) {
+    return 'Heard $metres m away.';
+  }
+
+  @override
+  String get errorWeapon => 'WEAPON';
+
+  @override
+  String get errorSkill => 'PRACTICE';
+
+  @override
+  String get errorHeart => 'PULSE';
+
+  @override
+  String get errorMovement => 'MOVEMENT';
+
+  @override
+  String get errorTarget => 'TARGET';
+
+  @override
+  String get errorCondition => 'CONDITION';
+
+  @override
   String get barrierDoor => 'Locked door';
 
   @override

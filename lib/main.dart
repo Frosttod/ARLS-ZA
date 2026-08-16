@@ -21,8 +21,12 @@ import 'items/item_assets.dart';
 import 'items/item.dart';
 import 'items/item_catalogue.dart';
 import 'items/item_names.dart';
+import 'combat/aim.dart';
+import 'combat/ballistics.dart';
 import 'combat/combat_session.dart';
 import 'combat/enemy.dart';
+import 'combat/noise.dart';
+import 'combat/shot.dart';
 import 'loot/loot_spawner.dart';
 import 'loot/loot_store.dart';
 import 'loot/loot_table.dart';
@@ -32,6 +36,7 @@ import 'loot/loot_world.dart';
 import 'loot/obstacle.dart';
 import 'loot/search.dart';
 import 'notes/note.dart';
+import 'ui/combat_panel.dart';
 import 'ui/ground_sheet.dart';
 import 'ui/place_sheet.dart';
 import 'ui/item_details_sheet.dart';
@@ -307,6 +312,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// When the enemies were last stepped, so a gap in the tick is a gap in
   /// their walk rather than a jump.
   DateTime? _combatAt;
+
+  /// §5.5.1: the one being aimed at. One target for a firearm, and nothing
+  /// takes its place when it dies.
+  Aim _aim = const Aim();
 
   /// What the last reconnaissance revealed, for §10.2.1's ten minutes.
   AreaKnowledge? _knowledge;
@@ -1150,6 +1159,24 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       return;
     }
 
+    if (marker.kind == MarkerKind.enemy) {
+      // §5.5.1: one tap, one target, and it costs the sight picture. The rest
+      // of them carry on running — aiming is where attention goes, not a
+      // pause button.
+      setState(() {
+        _aim = _aim.at(
+          marker.id,
+          now: DateTime.now(),
+          settle: settleTime(
+            heartRate: _snapshot?.state.heartRateBpm ?? 70,
+            rest: _character?.constants.restingHeartRate ?? 70,
+            max: _character?.constants.maxHeartRate ?? 190,
+          ),
+        );
+      });
+      return;
+    }
+
     if (marker.kind == MarkerKind.dropped) {
       final id = int.tryParse(marker.id.split('.').last);
       final item = _dropped.value.where((i) => i.id == id).firstOrNull;
@@ -1353,6 +1380,133 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         obstacles: _world?.obstacles ?? const [],
       );
     });
+  }
+
+  /// §5.5.1: the thing currently aimed at, if it is still out there.
+  Enemy? get _target {
+    final id = _aim.targetId;
+    if (id == null) return null;
+
+    for (final enemy in _combat.enemies) {
+      if (enemy.id == id && !enemy.isDead) return enemy;
+    }
+    return null;
+  }
+
+  /// What is in the hand, if it is something that fires (§5.5.1).
+  ItemDefinition? get _weapon {
+    final catalogue = _catalogue;
+    if (catalogue == null) return null;
+
+    for (final line in _inventory.value.worn) {
+      final item = catalogue[line.itemId];
+      if (item != null && item.kind == ItemKind.firearm) return item;
+    }
+    return null;
+  }
+
+  /// A round that fits it, out of the pack (§10.3.3: the calibre string is the
+  /// whole reason ammunition is a resource rather than a number).
+  CarriedItem? _roundFor(ItemDefinition weapon) {
+    final catalogue = _catalogue;
+    final calibre = weapon.props['caliber'];
+    if (catalogue == null || calibre == null) return null;
+
+    for (final line in _inventory.value.carried) {
+      final item = catalogue[line.itemId];
+      if (item?.kind == ItemKind.ammo && item?.props['caliber'] == calibre) {
+        return line;
+      }
+    }
+    return null;
+  }
+
+  /// §5.1.4: the odds, worked out exactly once and shown before they are used.
+  ShotError? _aimError(Enemy target) {
+    final character = _character;
+    final weapon = _weapon;
+    final snapshot = _snapshot;
+    if (character == null || weapon == null || snapshot == null) return null;
+
+    return aimError(
+      weapon: weapon,
+      // §7's Marksmanship does not exist yet, so everybody is a novice — which
+      // is §5.1.2's first row and the one the balance is built on.
+      skill: 0,
+      heartRate: snapshot.state.heartRateBpm,
+      restingHr: character.constants.restingHeartRate,
+      maxHr: character.constants.maxHeartRate,
+      playerSpeedKmh: (snapshot.fix?.speedMps ?? 0) * 3.6,
+      targetSpeedKmh: target.speedKmh,
+      spreadMultiplier: _aim.spreadMultiplierAt(DateTime.now()),
+    );
+  }
+
+  /// One round, one roll, and everything it costs (§5.1, §5.1.5, §5.6).
+  Future<void> _fire() async {
+    final character = _character;
+    final catalogue = _catalogue;
+    final target = _target;
+    final weapon = _weapon;
+    final fix = _snapshot?.displayFix;
+    if (character == null ||
+        catalogue == null ||
+        target == null ||
+        weapon == null ||
+        fix == null) {
+      return;
+    }
+
+    final round = _roundFor(weapon);
+    final error = _aimError(target);
+    if (round == null || error == null) return;
+
+    final at = GeoPoint(fix.latitude, fix.longitude);
+    final outcome = fireAt(
+      weapon: weapon,
+      ammo: catalogue[round.itemId],
+      target: target,
+      distanceM: target.position.distanceTo(at),
+      error: error,
+      random: Random(),
+      suppressed: _inventory.value.countOf('tool_suppressor') > 0,
+      night: false,
+    );
+
+    // The round is gone whatever happened to the shot.
+    final next = _inventory.value.removeLine(round);
+    if (next != null) {
+      _inventory.value = next;
+      await _saveInventory();
+    }
+    if (!mounted) return;
+
+    final l10n = L10n.of(context);
+    setState(() {
+      var session = _combat;
+      if (outcome.hit) session = session.wound(target.id, outcome.bloodLossMl);
+
+      // §5.6: heard whether or not it hit, from where it was fired.
+      session = session.heard(
+        NoiseEvent(
+          at: at,
+          radiusM: outcome.noiseM,
+          startedAt: DateTime.now().toUtc(),
+        ),
+        playerAt: at,
+      );
+      _combat = session;
+
+      // §5.5.1: nothing takes the place of a target that has gone down.
+      final still = session.enemies.where((e) => e.id == target.id).firstOrNull;
+      if (still == null || still.isDead) _aim = _aim.released;
+    });
+
+    _say(
+      outcome.hit
+          ? l10n.combatHit(outcome.bloodLossMl.round())
+          : l10n.combatMiss,
+    );
   }
 
   /// §5.5.2: what the HUD says about a fight, or null when there is none.
@@ -1976,7 +2130,47 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
             searchPanel: snapshot == null
                 ? null
                 : Builder(
-                    builder: (_) {
+                    builder: (context) {
+                      // §5.1.4: while something is being aimed at, the panel
+                      // is the odds and the trigger. Searching a shop with a
+                      // Walker in the sights is not a thing to offer.
+                      final target = _target;
+                      final error = target == null ? null : _aimError(target);
+                      if (target != null && error != null) {
+                        final weapon = _weapon;
+                        final round = weapon == null
+                            ? null
+                            : _roundFor(weapon);
+
+                        return CombatPanel(
+                          targetName: L10n.of(context).mapMarkerEnemy,
+                          distanceM: target.position.distanceTo(
+                            GeoPoint(
+                              snapshot.displayFix?.latitude ?? 0,
+                              snapshot.displayFix?.longitude ?? 0,
+                            ),
+                          ),
+                          chance: hitChance(
+                            moa: error.total,
+                            distanceM: target.position.distanceTo(
+                              GeoPoint(
+                                snapshot.displayFix?.latitude ?? 0,
+                                snapshot.displayFix?.longitude ?? 0,
+                              ),
+                            ),
+                          ),
+                          dominant: error.dominant,
+                          refusal: weapon == null
+                              ? L10n.of(context).combatNoWeapon
+                              : round == null
+                              ? L10n.of(context).combatNoAmmo
+                              : null,
+                          onFire: weapon == null || round == null
+                              ? null
+                              : () => unawaited(_fire()),
+                        );
+                      }
+
                       final box = _boxInReach();
                       return SearchPanel(
                         search: _search.value,

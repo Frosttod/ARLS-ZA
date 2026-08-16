@@ -597,6 +597,59 @@ class L10nPl extends L10n {
   String get placeHolds => 'Można znaleźć';
 
   @override
+  String get combatFire => 'Ognia';
+
+  @override
+  String combatChance(int percent) {
+    return '$percent% trafienia';
+  }
+
+  @override
+  String combatDistance(int metres) {
+    return '$metres m';
+  }
+
+  @override
+  String get combatNoWeapon => 'Nic w ręku.';
+
+  @override
+  String get combatNoAmmo => 'Brak amunicji do tego.';
+
+  @override
+  String combatHit(int millilitres) {
+    return 'Trafienie — $millilitres ml';
+  }
+
+  @override
+  String get combatMiss => 'Pudło.';
+
+  @override
+  String get combatDown => 'Padł.';
+
+  @override
+  String combatHeard(int metres) {
+    return 'Słychać na $metres m.';
+  }
+
+  @override
+  String get errorWeapon => 'BROŃ';
+
+  @override
+  String get errorSkill => 'WPRAWA';
+
+  @override
+  String get errorHeart => 'TĘTNO';
+
+  @override
+  String get errorMovement => 'RUCH';
+
+  @override
+  String get errorTarget => 'CEL';
+
+  @override
+  String get errorCondition => 'STAN';
+
+  @override
   String get barrierDoor => 'Zamknięte drzwi';
 
   @override

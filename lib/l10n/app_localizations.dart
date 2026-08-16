@@ -1141,6 +1141,96 @@ abstract class L10n {
   /// **'Holds'**
   String get placeHolds;
 
+  /// No description provided for @combatFire.
+  ///
+  /// In en, this message translates to:
+  /// **'Fire'**
+  String get combatFire;
+
+  /// No description provided for @combatChance.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}% hit'**
+  String combatChance(int percent);
+
+  /// No description provided for @combatDistance.
+  ///
+  /// In en, this message translates to:
+  /// **'{metres} m'**
+  String combatDistance(int metres);
+
+  /// No description provided for @combatNoWeapon.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing in hand.'**
+  String get combatNoWeapon;
+
+  /// No description provided for @combatNoAmmo.
+  ///
+  /// In en, this message translates to:
+  /// **'No rounds for this.'**
+  String get combatNoAmmo;
+
+  /// No description provided for @combatHit.
+  ///
+  /// In en, this message translates to:
+  /// **'Hit — {millilitres} ml'**
+  String combatHit(int millilitres);
+
+  /// No description provided for @combatMiss.
+  ///
+  /// In en, this message translates to:
+  /// **'Missed.'**
+  String get combatMiss;
+
+  /// No description provided for @combatDown.
+  ///
+  /// In en, this message translates to:
+  /// **'It went down.'**
+  String get combatDown;
+
+  /// No description provided for @combatHeard.
+  ///
+  /// In en, this message translates to:
+  /// **'Heard {metres} m away.'**
+  String combatHeard(int metres);
+
+  /// No description provided for @errorWeapon.
+  ///
+  /// In en, this message translates to:
+  /// **'WEAPON'**
+  String get errorWeapon;
+
+  /// No description provided for @errorSkill.
+  ///
+  /// In en, this message translates to:
+  /// **'PRACTICE'**
+  String get errorSkill;
+
+  /// No description provided for @errorHeart.
+  ///
+  /// In en, this message translates to:
+  /// **'PULSE'**
+  String get errorHeart;
+
+  /// No description provided for @errorMovement.
+  ///
+  /// In en, this message translates to:
+  /// **'MOVEMENT'**
+  String get errorMovement;
+
+  /// No description provided for @errorTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'TARGET'**
+  String get errorTarget;
+
+  /// No description provided for @errorCondition.
+  ///
+  /// In en, this message translates to:
+  /// **'CONDITION'**
+  String get errorCondition;
+
   /// No description provided for @barrierDoor.
   ///
   /// In en, this message translates to:

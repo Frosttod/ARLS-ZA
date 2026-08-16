@@ -1,5 +1,5 @@
 {
-  "_comment": "Ammunition (§4.2, §10.3.3). caliber must match a firearm's exactly — that string is the whole reason ammunition is a resource rather than a number, and a typo makes a calibre unusable rather than universal. Weights are per round, so 60 rounds of 5.45 come to 0.64 kg, the figure §10.3.4's combat kit is built from. Rifle ammunition appears only in military sites, hunting shops and hunting stands (§10.3.3); police stations give almost nothing but 9 mm.",
+  "_comment": "Ammunition (§4.2, §10.3.3). caliber must match a firearm's exactly — that string is the whole reason ammunition is a resource rather than a number, and a typo makes a calibre unusable rather than universal. Weights are per round, so 60 rounds of 5.45 come to 0.64 kg, the figure §10.3.4's combat kit is built from. Rifle ammunition appears only in military sites, hunting shops and hunting stands (§10.3.3); police stations give almost nothing but 9 mm. wound_factor is §5.1.5's table: the wound channel a round makes whatever its energy — rifle rounds fragment and cavitate, shot makes several channels, pistol rounds punch through.",
   "schema": 1,
   "items": [
     {
@@ -11,7 +11,7 @@
       "stackable": true,
       "rarity": "common",
       "loot_tags": ["hunting", "rural", "residential"],
-      "props": {"caliber": "22lr"}
+      "props": {"caliber": "22lr", "wound_factor": 0.7}
     },
     {
       "id": "ammo_38special",
@@ -22,7 +22,7 @@
       "stackable": true,
       "rarity": "uncommon",
       "loot_tags": ["police", "residential"],
-      "props": {"caliber": "38special"}
+      "props": {"caliber": "38special", "wound_factor": 1.0}
     },
     {
       "id": "ammo_9x19",
@@ -33,7 +33,7 @@
       "stackable": true,
       "rarity": "common",
       "loot_tags": ["police", "military"],
-      "props": {"caliber": "9x19"}
+      "props": {"caliber": "9x19", "wound_factor": 1.0}
     },
     {
       "id": "ammo_545x39",
@@ -44,7 +44,7 @@
       "stackable": true,
       "rarity": "uncommon",
       "loot_tags": ["military"],
-      "props": {"caliber": "5.45x39"}
+      "props": {"caliber": "5.45x39", "wound_factor": 1.25}
     },
     {
       "id": "ammo_762x39",
@@ -55,7 +55,7 @@
       "stackable": true,
       "rarity": "uncommon",
       "loot_tags": ["military", "hunting"],
-      "props": {"caliber": "7.62x39"}
+      "props": {"caliber": "7.62x39", "wound_factor": 1.2}
     },
     {
       "id": "ammo_762x54r",
@@ -66,7 +66,7 @@
       "stackable": true,
       "rarity": "uncommon",
       "loot_tags": ["hunting", "military", "rural"],
-      "props": {"caliber": "7.62x54r"}
+      "props": {"caliber": "7.62x54r", "wound_factor": 1.35}
     },
     {
       "id": "ammo_12ga_buck",
@@ -77,7 +77,7 @@
       "stackable": true,
       "rarity": "common",
       "loot_tags": ["hunting", "police", "rural"],
-      "props": {"caliber": "12ga", "load": "buckshot"}
+      "props": {"caliber": "12ga", "load": "buckshot", "wound_factor": 1.25}
     },
     {
       "id": "ammo_12ga_slug",
@@ -88,7 +88,7 @@
       "stackable": true,
       "rarity": "uncommon",
       "loot_tags": ["hunting", "rural"],
-      "props": {"caliber": "12ga", "load": "slug"}
+      "props": {"caliber": "12ga", "load": "slug", "wound_factor": 1.5}
     }
   ]
 }
