@@ -72,6 +72,15 @@ Future<void> showPlaceDetails(
               value: _searchedState(l10n, box, now),
               colours: colours,
             ),
+            // §10.3.5: which passes the place still has room for. "67% left"
+            // is a number; "a quick look or a thorough one, not a deep one" is
+            // the decision itself.
+            _Line(
+              label: l10n.placeCanStill,
+              value: _stillFits(l10n, box, now),
+              colours: colours,
+            ),
+
             if (kinds.isNotEmpty)
               _Line(
                 label: l10n.placeHolds,
@@ -121,6 +130,25 @@ String _searchedState(L10n l10n, LootBox box, DateTime now) {
   if (box.searchUnits <= 0) return l10n.placeUntouched;
   return l10n.placePartly((box.searchUnitsLeft / kSearchBudget * 100).round());
 }
+
+/// What passes are left in this place, in the player's own units (§10.3.5).
+String _stillFits(L10n l10n, LootBox box, DateTime now) {
+  if (!box.isActiveAt(now)) return l10n.placeNothingLeft;
+
+  final left = [
+    for (final depth in SearchDepth.values)
+      // The label already carries its own seconds (§10.3.5).
+      if (box.canSearchAt(depth)) _depthName(l10n, depth),
+  ];
+
+  return left.isEmpty ? l10n.placeNothingLeft : left.join(', ');
+}
+
+String _depthName(L10n l10n, SearchDepth depth) => switch (depth) {
+  SearchDepth.shallow => l10n.searchShallow,
+  SearchDepth.thorough => l10n.searchThorough,
+  SearchDepth.deep => l10n.searchDeep,
+};
 
 String _barrierName(L10n l10n, Barrier barrier) => switch (barrier) {
   Barrier.door => l10n.barrierDoor,

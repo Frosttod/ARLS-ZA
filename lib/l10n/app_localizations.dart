@@ -1135,6 +1135,18 @@ abstract class L10n {
   /// **'Stripped — something back in about {hours} h'**
   String placeStripped(int hours);
 
+  /// No description provided for @placeCanStill.
+  ///
+  /// In en, this message translates to:
+  /// **'Still possible'**
+  String get placeCanStill;
+
+  /// No description provided for @placeNothingLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing left to turn over'**
+  String get placeNothingLeft;
+
   /// No description provided for @placeHolds.
   ///
   /// In en, this message translates to:

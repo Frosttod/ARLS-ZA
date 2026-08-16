@@ -154,4 +154,37 @@ void main() {
       expect(find.textContaining(name), findsNothing, reason: itemId);
     }
   });
+
+  group('what the place still has room for (§10.3.5)', () {
+    testWidgets('an untouched place offers all three passes', (tester) async {
+      await open(tester, box: boxAt());
+
+      expect(find.textContaining('Pobieżnie'), findsOneWidget);
+      expect(find.textContaining('Gruntownie'), findsOneWidget);
+    });
+
+    testWidgets('one quick look later, the deep pass is gone from the list', (
+      tester,
+    ) async {
+      // "67% left" is a number; "a quick look or a thorough one, not a deep
+      // one" is the decision itself.
+      await open(tester, box: boxAt(searchUnits: SearchDepth.shallow.cost));
+
+      expect(find.textContaining('Pobieżnie'), findsOneWidget);
+      expect(find.textContaining('Gruntownie'), findsNothing);
+    });
+
+    testWidgets('a stripped place says there is nothing left', (tester) async {
+      await open(
+        tester,
+        box: boxAt(
+          searchUnits: kSearchBudget,
+          looted: now,
+          respawn: now.add(const Duration(hours: 4)),
+        ),
+      );
+
+      expect(find.text('Nie ma już czego przewracać'), findsOneWidget);
+    });
+  });
 }

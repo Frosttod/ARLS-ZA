@@ -594,6 +594,12 @@ class L10nPl extends L10n {
   }
 
   @override
+  String get placeCanStill => 'Jeszcze możliwe';
+
+  @override
+  String get placeNothingLeft => 'Nie ma już czego przewracać';
+
+  @override
   String get placeHolds => 'Można znaleźć';
 
   @override

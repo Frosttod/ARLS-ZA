@@ -190,6 +190,8 @@
   "@placePartly": {"placeholders": {"percent": {"type": "int"}}},
   "placeStripped": "Puste — coś wróci za jakieś {hours} h",
   "@placeStripped": {"placeholders": {"hours": {"type": "int"}}},
+  "placeCanStill": "Jeszcze możliwe",
+  "placeNothingLeft": "Nie ma już czego przewracać",
   "placeHolds": "Można znaleźć",
   "combatHurt": "Trafiony — {millilitres} ml",
   "@combatHurt": {"placeholders": {"millilitres": {"type": "int"}}},

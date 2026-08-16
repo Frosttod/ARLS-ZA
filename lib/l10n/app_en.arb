@@ -268,6 +268,8 @@
   "@placePartly": {"placeholders": {"percent": {"type": "int"}}},
   "placeStripped": "Stripped — something back in about {hours} h",
   "@placeStripped": {"placeholders": {"hours": {"type": "int"}}},
+  "placeCanStill": "Still possible",
+  "placeNothingLeft": "Nothing left to turn over",
   "placeHolds": "Holds",
   "combatHurt": "Hit — {millilitres} ml lost",
   "@combatHurt": {"placeholders": {"millilitres": {"type": "int"}}},
