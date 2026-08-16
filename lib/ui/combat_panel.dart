@@ -14,6 +14,7 @@ library;
 import 'package:flutter/material.dart';
 
 import '../combat/ballistics.dart';
+import '../combat/enemy.dart';
 import '../l10n/app_localizations.dart';
 import 'hud.dart' show HudColors;
 
@@ -23,6 +24,8 @@ class CombatPanel extends StatelessWidget {
     required this.distanceM,
     required this.chance,
     required this.dominant,
+    required this.condition,
+    required this.sprintLeft,
     required this.onFire,
     this.onStrike,
     this.refusal,
@@ -39,6 +42,14 @@ class CombatPanel extends StatelessWidget {
 
   /// §5.1.4: the largest component of the error.
   final ErrorSource dominant;
+
+  /// §5.5.1: how badly hurt it looks. Three words, because that is all anybody
+  /// could honestly tell at two hundred metres.
+  final EnemyCondition condition;
+
+  /// §5.5.2: how much sprint it has left, 0–1. The tactical fact of a group
+  /// fight — one that has burned its budget can be walked away from.
+  final double sprintLeft;
 
   /// Null while there is nothing to fire — no weapon in hand, or no round for
   /// it. The reason is said in [refusal] rather than left to a dead button.
@@ -78,8 +89,41 @@ class CombatPanel extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      '$targetName · ${l10n.combatDistance(distanceM.round())}',
+                      '$targetName · ${l10n.combatDistance(distanceM.round())}'
+                      ' · ${conditionName(l10n, condition)}',
                       style: TextStyle(fontSize: 12, color: colours.text),
+                    ),
+                    const SizedBox(height: 3),
+
+                    // §5.5.2: what it has left in its legs, as a bar rather
+                    // than a number — the question is "can it still catch me",
+                    // not "how many seconds".
+                    Row(
+                      children: [
+                        Text(
+                          l10n.enemySprint,
+                          style: TextStyle(
+                            fontSize: 9,
+                            letterSpacing: 1.1,
+                            color: colours.muted,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: SizedBox(
+                            height: 4,
+                            child: LinearProgressIndicator(
+                              value: sprintLeft.clamp(0.0, 1.0),
+                              backgroundColor: colours.muted.withValues(
+                                alpha: 0.25,
+                              ),
+                              color: sprintLeft > 0.1
+                                  ? colours.alert
+                                  : colours.data,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 2),
                     Row(
@@ -137,6 +181,13 @@ class CombatPanel extends StatelessWidget {
     );
   }
 }
+
+/// §5.5.1's estimate, in words.
+String conditionName(L10n l10n, EnemyCondition condition) => switch (condition) {
+  EnemyCondition.healthy => l10n.enemyHealthy,
+  EnemyCondition.wounded => l10n.enemyWounded,
+  EnemyCondition.critical => l10n.enemyCritical,
+};
 
 /// §5.1.4's word beside the percentage.
 String errorName(L10n l10n, ErrorSource source) => switch (source) {

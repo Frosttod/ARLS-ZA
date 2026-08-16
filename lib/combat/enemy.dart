@@ -23,6 +23,14 @@ import 'dart:math' as math;
 import '../map/geometry.dart';
 import '../safety/spawn_exclusion.dart';
 
+/// §5.5.1: how badly hurt something looks, as far as anybody can tell.
+///
+/// An estimate on purpose. §5.5.1 makes the accuracy of it a Reconnaissance
+/// skill, which is §7 and does not exist yet — so it is three words rather
+/// than a number, and three words is all a person could honestly give at two
+/// hundred metres.
+enum EnemyCondition { healthy, wounded, critical }
+
 /// §6.1a: what an enemy is doing.
 enum EnemyState {
   /// Wandering its hotspot at walking pace.
@@ -251,6 +259,26 @@ class Enemy {
   double get chaseM => sightM * 0.6;
 
   bool get isDead => bloodLostMl >= bloodMl * kind.deathAtLoss;
+
+  /// §5.5.1: healthy, wounded or critical, against what it takes to kill it.
+  ///
+  /// Measured against the threshold rather than against its whole volume: a
+  /// Walker dies at 45% and a Brute at 50%, so half a Brute's blood is not
+  /// half a Brute.
+  EnemyCondition get condition {
+    final spent = bloodLostMl / (bloodMl * kind.deathAtLoss);
+
+    if (spent >= 0.66) return EnemyCondition.critical;
+    if (spent >= 0.25) return EnemyCondition.wounded;
+    return EnemyCondition.healthy;
+  }
+
+  /// §5.5.2: how much sprint it has left, 0–1.
+  ///
+  /// The tactical fact of a group fight: one that has burned its budget can be
+  /// walked away from, and one that has not cannot.
+  double get sprintLeftFraction =>
+      (budget.inMilliseconds / kind.sprintBudget.inMilliseconds).clamp(0.0, 1.0);
 
   /// How fast it is moving right now, in km/h.
   double get speedKmh => switch (state) {

@@ -532,4 +532,48 @@ void main() {
       );
     });
   });
+
+  group('what can be told about one (§5.5.1, §5.5.2)', () {
+    test('untouched reads as healthy', () {
+      expect(spawn(EnemyKind.walker).condition, EnemyCondition.healthy);
+    });
+
+    test('a third of the way to dead reads as wounded', () {
+      final walker = spawn(EnemyKind.walker);
+      final hurt = walker.hit(walker.bloodMl * walker.kind.deathAtLoss * 0.4);
+
+      expect(hurt.condition, EnemyCondition.wounded);
+    });
+
+    test('and most of the way reads as critical', () {
+      final walker = spawn(EnemyKind.walker);
+      final nearly = walker.hit(walker.bloodMl * walker.kind.deathAtLoss * 0.8);
+
+      expect(nearly.condition, EnemyCondition.critical);
+    });
+
+    test('it is measured against what kills it, not against all its blood', () {
+      // A Walker dies at 45% and a Brute at 50%, so half a Brute's blood is
+      // not half a Brute.
+      final brute = spawn(EnemyKind.brute);
+      final walker = spawn(EnemyKind.walker);
+
+      final bruteWound = brute.hit(brute.bloodMl * 0.2);
+      final walkerWound = walker.hit(walker.bloodMl * 0.2);
+
+      expect(bruteWound.condition, walkerWound.condition);
+    });
+
+    test('a full stopwatch reads as a full bar (§5.5.2)', () {
+      expect(spawn(EnemyKind.walker).sprintLeftFraction, 1);
+    });
+
+    test('and a burned one as empty', () {
+      final spent = spawn(
+        EnemyKind.walker,
+      ).copyWith(sprintLeft: Duration.zero);
+
+      expect(spent.sprintLeftFraction, 0);
+    });
+  });
 }

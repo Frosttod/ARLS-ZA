@@ -605,6 +605,18 @@ class L10nPl extends L10n {
   String get combatStrike => 'Cios';
 
   @override
+  String get enemyHealthy => 'Zdrowy';
+
+  @override
+  String get enemyWounded => 'Ranny';
+
+  @override
+  String get enemyCritical => 'Krytyczny';
+
+  @override
+  String get enemySprint => 'Sprint';
+
+  @override
   String get combatFire => 'Ognia';
 
   @override

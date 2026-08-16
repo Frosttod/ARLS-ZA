@@ -1,4 +1,5 @@
 import 'package:arls_za/combat/ballistics.dart';
+import 'package:arls_za/combat/enemy.dart';
 import 'package:arls_za/l10n/app_localizations.dart';
 import 'package:arls_za/ui/combat_panel.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +17,8 @@ void main() {
     WidgetTester tester, {
     double chance = 0.26,
     ErrorSource dominant = ErrorSource.movement,
+    EnemyCondition condition = EnemyCondition.healthy,
+    double sprintLeft = 1,
     VoidCallback? onFire,
     bool canFire = true,
     VoidCallback? onStrike,
@@ -37,6 +40,8 @@ void main() {
             distanceM: 84,
             chance: chance,
             dominant: dominant,
+            condition: condition,
+            sprintLeft: sprintLeft,
             refusal: refusal,
             onFire: canFire ? onFire ?? () {} : null,
             onStrike: onStrike,
@@ -140,6 +145,48 @@ void main() {
 
       expect(find.text('Ognia'), findsOneWidget);
       expect(find.text('Cios'), findsOneWidget);
+    });
+  });
+
+  group('what can be told about the thing itself (§5.5.1, §5.5.2)', () {
+    testWidgets('how badly hurt it looks, in words', (tester) async {
+      // An estimate on purpose: §5.5.1 makes the accuracy a Reconnaissance
+      // skill, and three words is all anybody could give at two hundred
+      // metres anyway.
+      await pump(tester, condition: EnemyCondition.wounded);
+
+      expect(find.textContaining('Ranny'), findsOneWidget);
+    });
+
+    testWidgets('and critical when it is nearly done', (tester) async {
+      await pump(tester, condition: EnemyCondition.critical);
+
+      expect(find.textContaining('Krytyczny'), findsOneWidget);
+    });
+
+    testWidgets('what it has left in its legs, as a bar', (tester) async {
+      // §5.5.2: the question is "can it still catch me", not "how many
+      // seconds".
+      await pump(tester, sprintLeft: 0.4);
+
+      final bar = tester.widget<LinearProgressIndicator>(
+        find.byType(LinearProgressIndicator),
+      );
+
+      expect(bar.value, closeTo(0.4, 0.001));
+    });
+
+    testWidgets('a spent one reads as empty', (tester) async {
+      await pump(tester, sprintLeft: 0);
+
+      expect(
+        tester
+            .widget<LinearProgressIndicator>(
+              find.byType(LinearProgressIndicator),
+            )
+            .value,
+        0,
+      );
     });
   });
 }

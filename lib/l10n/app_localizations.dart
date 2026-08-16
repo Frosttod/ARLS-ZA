@@ -1153,6 +1153,30 @@ abstract class L10n {
   /// **'Strike'**
   String get combatStrike;
 
+  /// No description provided for @enemyHealthy.
+  ///
+  /// In en, this message translates to:
+  /// **'Healthy'**
+  String get enemyHealthy;
+
+  /// No description provided for @enemyWounded.
+  ///
+  /// In en, this message translates to:
+  /// **'Wounded'**
+  String get enemyWounded;
+
+  /// No description provided for @enemyCritical.
+  ///
+  /// In en, this message translates to:
+  /// **'Critical'**
+  String get enemyCritical;
+
+  /// No description provided for @enemySprint.
+  ///
+  /// In en, this message translates to:
+  /// **'Sprint'**
+  String get enemySprint;
+
   /// No description provided for @combatFire.
   ///
   /// In en, this message translates to:

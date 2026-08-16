@@ -2317,6 +2317,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
                             ),
                           ),
                           dominant: error.dominant,
+                          condition: target.condition,
+                          sprintLeft: target.sprintLeftFraction,
                           refusal: weapon == null
                               ? L10n.of(context).combatNoWeapon
                               : round == null
