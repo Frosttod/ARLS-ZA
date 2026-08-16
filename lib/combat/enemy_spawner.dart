@@ -144,7 +144,12 @@ EnemySpawn spawnEnemies({
         id: '${origin.id}.${seed.toUnsigned(16)}.${serial++}',
         kind: kind,
         at: at,
-        home: origin.centre,
+        // ⚠️ Where it was made, not the middle of the disc it was made in.
+        // The ambient trickle of §6.4 is centred on the player, so taking the
+        // centre as home sent every one of them walking towards whoever they
+        // had just lost — which read, correctly, as "they always come at you".
+        // A hotspot passes its own centre and gets §6.5's behaviour back.
+        home: origin.id == 'ambient' ? at : origin.centre,
         random: random,
         sightFactor: sightFactor,
       );

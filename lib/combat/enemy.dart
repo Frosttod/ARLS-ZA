@@ -158,6 +158,16 @@ const double kSpentSpeedFraction = 0.4;
 /// §5.6.2: how long an enemy turns over the place a sound came from.
 const Duration kInvestigateFor = Duration(seconds: 60);
 
+/// §6.1a: how far an idle one drifts from where it belongs before turning
+/// back. Small — this is milling about, not patrolling.
+const double kWanderRadiusM = 40;
+
+/// How sharply a wandering thing may change its mind, in degrees a second.
+///
+/// Slowly. Something that jinks about the screen reads as a bug rather than as
+/// a body, and a marker that changes direction every second is unreadable.
+const double kWanderTurnPerSecond = 12;
+
 /// One of them, at one moment.
 class Enemy {
   const Enemy({
@@ -397,7 +407,9 @@ Enemy advanceEnemy(
   var forget = false;
   if (investigating) {
     // Only once it has arrived: the search is of the place, not of the walk.
-    if (enemy.position.distanceTo(noise) <= 5) {
+    // Ten metres, because what it is searching is a street corner rather than
+    // a point, and because §6.1a has it milling about while it looks.
+    if (enemy.position.distanceTo(noise) <= 10) {
       left -= elapsed;
       if (left <= Duration.zero) {
         left = Duration.zero;
@@ -409,26 +421,63 @@ Enemy advanceEnemy(
     forget = true;
   }
 
-  final target = switch (state) {
-    EnemyState.returning => enemy.home,
-    EnemyState.idle => investigating ? noise : enemy.home,
-    _ => investigating ? noise : playerAt,
+  // §6.1a: idle is random movement about its own patch, not standing to
+  // attention. It keeps its heading and turns a little at a time, and only
+  // hard about when it has drifted too far from where it belongs.
+  // Turning is always gradual, whether it is drifting or heading back: a
+  // marker that spins on the spot reads as a bug rather than as a body.
+  final drift = enemy.headingDeg ?? _seedHeading(enemy);
+  final wanted = enemy.position.distanceTo(enemy.home) > kWanderRadiusM
+      ? enemy.position.bearingTo(enemy.home)
+      : drift +
+            kWanderTurnPerSecond *
+                seconds *
+                (_wobble(enemy, now: enemy.sinceContact) - 0.5) *
+                2;
+
+  final wanderBearing = _steer(
+    from: drift,
+    towards: wanted,
+    maxTurn: kWanderTurnPerSecond * seconds,
+  );
+
+  // Where it wants to be heading, before anything is said about how fast it
+  // may turn.
+  final wantedBearing = switch (state) {
+    EnemyState.returning => enemy.position.bearingTo(enemy.home),
+    EnemyState.idle =>
+      investigating ? enemy.position.bearingTo(noise) : wanderBearing,
+    _ => enemy.position.bearingTo(investigating ? noise : playerAt),
   };
+
+  // ⚠️ Nothing turns on the spot. A chase may swing quickly because it is
+  // following something that moves; a thing milling about turns slowly, and
+  // one walking home turns no faster than it wanders. Found on a walk: an
+  // enemy that lost contact spun a hundred and eighteen degrees in one second
+  // to face home, which reads as a bug rather than as a body.
+  final steered = _steer(
+    from: enemy.headingDeg ?? wantedBearing,
+    towards: wantedBearing,
+    maxTurn:
+        (state == EnemyState.chase || state == EnemyState.spent ? 60 : 12) *
+        seconds,
+  );
+
+  final step = enemy.speedKmh * seconds / 3.6;
+  final target = _step(enemy.position, bearing: steered, metres: step);
 
   final moved = _towards(
     enemy.position,
     target,
-    metres: enemy.speedKmh * seconds / 3.6,
+    metres: step,
     ground: ground,
   );
 
-  final standingStill = state == EnemyState.idle && !investigating;
-
   return enemy.copyWith(
-    position: standingStill ? enemy.position : moved,
+    position: moved,
     // Facing where it is walking. Something that has stopped keeps the way it
     // last faced rather than snapping north.
-    headingDeg: standingStill || moved.distanceTo(enemy.position) < 0.05
+    headingDeg: moved.distanceTo(enemy.position) < 0.05
         ? enemy.headingDeg
         : enemy.position.bearingTo(moved),
     state: state,
@@ -457,7 +506,9 @@ EnemyState _nextState(
   // Home first: the two rules that stop a player towing a train of enemies
   // across half a city.
   if (beyondLeash || (lostContact && !searching)) {
-    return enemy.position.distanceTo(enemy.home) < 5
+    // Its patch, not a point on it: §6.1a's idle state is milling about, so
+    // "home" is anywhere it would be milling.
+    return enemy.position.distanceTo(enemy.home) < kWanderRadiusM
         ? EnemyState.idle
         : EnemyState.returning;
   }
@@ -538,4 +589,39 @@ GeoPoint _step(
     from.longitude +
         metres * math.sin(radians) / metresPerDegreeLon(from.latitude),
   );
+}
+
+/// A starting direction for something that has never moved.
+///
+/// From its own id, so the same Walker always sets off the same way and a
+/// restart does not shuffle the street.
+double _seedHeading(Enemy enemy) => (enemy.id.hashCode % 360).abs().toDouble();
+
+/// A number between nought and one that changes slowly for one enemy.
+///
+/// Not a fresh random each tick: that averages out to walking in a straight
+/// line with a tremor. This wanders.
+double _wobble(Enemy enemy, {required Duration now}) {
+  final seed = enemy.id.hashCode ^ (now.inSeconds ~/ 7);
+  return (seed % 1000).abs() / 1000;
+}
+
+/// Turns [from] towards [towards] by at most [maxTurn] degrees.
+///
+/// The short way round, so something facing north-west turning to north-east
+/// goes over the top rather than the long way about.
+double _steer({
+  required double from,
+  required double towards,
+  required double maxTurn,
+}) {
+  var difference = (towards - from) % 360;
+  if (difference > 180) difference -= 360;
+
+  final turn = difference.abs() <= maxTurn
+      ? difference
+      : (difference.isNegative ? -maxTurn : maxTurn);
+
+  final heading = (from + turn) % 360;
+  return heading < 0 ? heading + 360 : heading;
 }

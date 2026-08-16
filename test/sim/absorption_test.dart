@@ -126,4 +126,39 @@ void main() {
       expect(SimState.fromJson(old).pendingKcal, 0);
     });
   });
+
+  group('a stomach is not a warehouse (§2.2, §2.3)', () {
+    test('eating past full banks nothing', () {
+      // Found on a phone: calories sat at a hundred per cent for hours while a
+      // hidden surplus drained, which reads as calories that have stopped
+      // working.
+      final full = SimState.fresh(at: t0, constants: constants)
+          .copyWith(pendingKcal: 3000);
+
+      final after = run(full, const Duration(hours: 2));
+
+      expect(after.caloriesKcal, lessThanOrEqualTo(constants.caloriesDailyKcal));
+    });
+
+    test('nor does drinking past full', () {
+      final full = SimState.fresh(at: t0, constants: constants)
+          .copyWith(pendingWaterMl: 5000);
+
+      final after = run(full, const Duration(hours: 1));
+
+      expect(after.waterMl, lessThanOrEqualTo(constants.waterDailyMl));
+    });
+
+    test('and what fits still arrives', () {
+      // The cap is a ceiling, not a refusal: a hungry player still eats.
+      final hungry = SimState.fresh(at: t0, constants: constants).copyWith(
+        caloriesKcal: constants.caloriesDailyKcal * 0.4,
+        pendingKcal: 500,
+      );
+
+      final after = run(hungry, const Duration(hours: 2));
+
+      expect(after.caloriesKcal, greaterThan(constants.caloriesDailyKcal * 0.4));
+    });
+  });
 }

@@ -171,15 +171,50 @@ void main() {
   });
 
   group('the states (§6.1a)', () {
-    test('nothing happens while the player is out of sight', () {
-      final quiet = advanceEnemy(
-        spawn(EnemyKind.walker),
-        playerAt: north(400),
-        elapsed: const Duration(seconds: 10),
-      );
+    test('it mills about its own patch while nobody is in sight (§6.1a)', () {
+      // Idle is random movement, not standing to attention — and it stays
+      // near where it belongs rather than wandering off across the city.
+      var quiet = spawn(EnemyKind.walker);
+      for (var i = 0; i < 120; i++) {
+        quiet = advanceEnemy(
+          quiet,
+          playerAt: north(400),
+          elapsed: const Duration(seconds: 1),
+        );
+      }
 
       expect(quiet.state, EnemyState.idle);
-      expect(quiet.position.latitude, home.latitude);
+      expect(quiet.position.distanceTo(home), lessThan(kWanderRadiusM * 2));
+      expect(
+        quiet.position.distanceTo(home),
+        greaterThan(1),
+        reason: 'it moved at all',
+      );
+    });
+
+    test('and it does not jink about (§6.1a)', () {
+      // A marker that changes direction every second is unreadable, and reads
+      // as a bug rather than as a body.
+      var quiet = spawn(EnemyKind.walker);
+      var previous = 0.0;
+      var worst = 0.0;
+
+      for (var i = 0; i < 60; i++) {
+        quiet = advanceEnemy(
+          quiet,
+          playerAt: north(900),
+          elapsed: const Duration(seconds: 1),
+        );
+        final heading = quiet.headingDeg ?? previous;
+        if (i > 1) {
+          var turn = (heading - previous).abs();
+          if (turn > 180) turn = 360 - turn;
+          if (turn > worst) worst = turn;
+        }
+        previous = heading;
+      }
+
+      expect(worst, lessThan(90));
     });
 
     test('inside its detection it walks, and pays nothing for it', () {
@@ -352,14 +387,14 @@ void main() {
       home.longitude + metres / metresPerDegreeLon(home.latitude),
     );
 
-    test('something that has not moved faces nowhere', () {
+    test('something wandering faces where it is wandering', () {
       final quiet = advanceEnemy(
         spawn(EnemyKind.walker),
         playerAt: north(900),
         elapsed: const Duration(seconds: 5),
       );
 
-      expect(quiet.headingDeg, isNull);
+      expect(quiet.headingDeg, isNotNull);
     });
 
     test('walking north reads as north', () {
@@ -395,8 +430,9 @@ void main() {
       expect(going.headingDeg, closeTo(180, 2));
     });
 
-    test('one that stops keeps the way it last faced', () {
-      // Snapping north on the frame it stops would read as it turning round.
+    test('one that loses the player turns away gradually, not on the spot', () {
+      // §6.1a: it goes back to milling about, and a marker that spins where it
+      // stands reads as a bug rather than as a body.
       final chasing = run(
         spawn(EnemyKind.walker),
         playerAt: north(40),
@@ -408,7 +444,10 @@ void main() {
         elapsed: const Duration(seconds: 1),
       );
 
-      expect(stopped.headingDeg, chasing.headingDeg);
+      var turn = ((stopped.headingDeg ?? 0) - (chasing.headingDeg ?? 0)).abs();
+      if (turn > 180) turn = 360 - turn;
+
+      expect(turn, lessThanOrEqualTo(kWanderTurnPerSecond + 0.01));
     });
   });
 
@@ -528,7 +567,7 @@ void main() {
 
       expect(
         (after.position.longitude - home.longitude).abs(),
-        lessThan(1e-9),
+        lessThan(1e-6),
       );
     });
   });

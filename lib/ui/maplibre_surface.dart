@@ -102,9 +102,11 @@ class MapLibreSurface extends StatefulWidget {
   /// §5.6.5: a sound spreading, or null when the street is quiet.
   final NoiseWave? noise;
 
-  /// What to do when the player taps one. Null where the map is decoration —
-  /// the region picker's preview, for instance.
-  final void Function(MapMarker marker)? onMarkerTap;
+  /// What to do when the player taps one, or taps nothing — the empty tap
+  /// arrives as null, because letting go of a target is a thing a player does
+  /// by pointing somewhere else. Null where the map is decoration, as in the
+  /// region picker's preview.
+  final void Function(MapMarker? marker)? onMarkerTap;
 
   /// §3.3: no animation, so the camera jumps rather than glides.
   final bool economy;
@@ -501,7 +503,8 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
       centre: GeoPoint(centre.latitude, centre.longitude),
       zoom: _zoom,
     );
-    if (marker != null) handler(marker);
+    // A tap on nothing is still an answer: it lets go of whatever was held.
+    handler(marker);
   }
 
   /// Applies a zoom, always about the player.

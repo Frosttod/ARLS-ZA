@@ -923,6 +923,11 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       next = next.wear(id, catalogue);
     }
     for (final line in const [
+      // Something to fire and something to fire from it: §5 cannot be tried
+      // on a phone without both.
+      ('weapon_rifle_545', 1),
+      ('ammo_545x39', 60),
+      ('att_red_dot', 1),
       ('food_canned_meat', 2),
       ('drink_water_bottle_500', 2),
       ('med_bandage', 3),
@@ -1153,11 +1158,19 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   ///
   /// A yellow dot that says only "something is here" makes every dot worth the
   /// same walk, which makes none of them a decision.
-  void _showMarker(MapMarker marker) {
+  void _showMarker(MapMarker? marker) {
     final catalogue = _catalogue;
     final fix = _snapshot?.displayFix;
     if (catalogue == null || fix == null) return;
     final at = GeoPoint(fix.latitude, fix.longitude);
+
+    // §5.5.1: a tap on empty street lets the target go. Aiming is where the
+    // player's attention is, and pointing somewhere else is how a person says
+    // they have stopped looking at something.
+    if (marker == null) {
+      if (_aim.hasTarget) setState(() => _aim = _aim.released);
+      return;
+    }
 
     if (marker.kind == MarkerKind.loot) {
       final box = _boxes.where((b) => b.poiId == marker.id).firstOrNull;

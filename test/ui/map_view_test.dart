@@ -33,7 +33,7 @@ void main() {
     required PositionFix? centre,
     required List<MapMarker> markers,
     required bool economy,
-    void Function(MapMarker marker)? onMarkerTap,
+    void Function(MapMarker? marker)? onMarkerTap,
     NoiseWave? noise,
   }) {
     asked.add((markers: markers, economy: economy));

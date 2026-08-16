@@ -36,7 +36,7 @@ typedef TileSurfaceBuilder =
       required PositionFix? centre,
       required List<MapMarker> markers,
       required bool economy,
-      void Function(MapMarker marker)? onMarkerTap,
+      void Function(MapMarker? marker)? onMarkerTap,
       NoiseWave? noise,
     });
 
@@ -71,7 +71,7 @@ class MapScreen extends StatefulWidget {
 
   /// What the player wants to know about, tapped on the map: what is in a
   /// place, or what is lying in the street.
-  final void Function(MapMarker marker)? onMarkerTap;
+  final void Function(MapMarker? marker)? onMarkerTap;
 
   /// §5.6.5: the last thing the player did that was heard.
   final NoiseWave? noise;

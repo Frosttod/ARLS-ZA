@@ -142,10 +142,8 @@ void main() {
 
       final still = after.enemies.firstWhere((enemy) => enemy.id == 'w1');
       expect(still.state, EnemyState.idle);
-      expect(
-        still.position.latitude,
-        closeTo(walker.position.latitude, 1e-12),
-      );
+      // §6.1a: it mills about its own patch rather than closing on anybody.
+      expect(still.position.distanceTo(walker.position), lessThan(30));
     });
   });
 

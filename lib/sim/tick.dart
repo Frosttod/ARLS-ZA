@@ -494,8 +494,19 @@ TickOutcome advance({
     kWaterAbsorptionMlPerMin * minutes,
   );
 
-  var calories = state.caloriesKcal - calorieBurn + kcalAbsorbed;
-  var water = state.waterMl - waterLoss + waterAbsorbed;
+  // ⚠️ Neither reserve holds more than a day's worth, and the surplus is
+  // simply lost. A stomach is not a warehouse: eating four tins on a full
+  // stomach banks nothing, and without this the bar sits at a hundred per cent
+  // for hours afterwards while the surplus quietly drains — which reads, from
+  // the player's side, as calories that have stopped working.
+  var calories = math.min(
+    constants.caloriesDailyKcal,
+    state.caloriesKcal - calorieBurn + kcalAbsorbed,
+  );
+  var water = math.min(
+    constants.waterDailyMl,
+    state.waterMl - waterLoss + waterAbsorbed,
+  );
   var blood = state.bloodMl - bloodLoss;
 
   var floored = false;
