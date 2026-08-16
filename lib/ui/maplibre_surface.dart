@@ -109,7 +109,8 @@ class MapLibreSurface extends StatefulWidget {
   State<MapLibreSurface> createState() => _MapLibreSurfaceState();
 }
 
-class _MapLibreSurfaceState extends State<MapLibreSurface> {
+class _MapLibreSurfaceState extends State<MapLibreSurface>
+    with SingleTickerProviderStateMixin {
   MapLibreMapController? _controller;
 
   /// The camera's zoom, held here because the game drives it rather than
@@ -134,6 +135,11 @@ class _MapLibreSurfaceState extends State<MapLibreSurface> {
 
   /// One camera move at a time, for the same reason.
   bool _zooming = false;
+
+  /// §6.1a: drives the pulse on anything hunting the player. Runs only while
+  /// something is — a heartbeat under an empty street is a frame a second
+  /// spent on nothing.
+  AnimationController? _pulse;
 
   @override
   Widget build(BuildContext context) {
@@ -216,6 +222,14 @@ class _MapLibreSurfaceState extends State<MapLibreSurface> {
         if (marker.headingDeg != null) marker,
     ];
 
+    final alerted = [
+      for (final marker in widget.markers)
+        if (marker.alert != null) marker,
+    ];
+    _keepPulse(
+      wanted: alerted.any((marker) => marker.alert == MarkerAlert.hunting),
+    );
+
     final gestures = GestureDetector(
       // Opaque, so the gestures reach here rather than the platform view. The
       // markers are circles the platform view draws, so their taps are ours to
@@ -235,7 +249,10 @@ class _MapLibreSurfaceState extends State<MapLibreSurface> {
     );
 
     final rings = reachRingsOf(widget.markers);
-    if ((counted.isEmpty && rings.isEmpty && facing.isEmpty) ||
+    if ((counted.isEmpty &&
+            rings.isEmpty &&
+            facing.isEmpty &&
+            alerted.isEmpty) ||
         centre == null) {
       return gestures;
     }
@@ -271,6 +288,37 @@ class _MapLibreSurfaceState extends State<MapLibreSurface> {
                       colour: Theme.of(context).brightness == Brightness.dark
                           ? const Color(0xFF7A8B8F)
                           : const Color(0xFF4A5A5E),
+                    ),
+                  ),
+                ),
+              ),
+
+            // §6.1a: how much attention each of them is paying. Green has
+            // not noticed, amber heard something, red is coming — and red
+            // pulses, because that one is a clock.
+            if (alerted.isNotEmpty)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: AnimatedBuilder(
+                    animation: _pulse ?? const AlwaysStoppedAnimation(0),
+                    builder: (context, _) => CustomPaint(
+                      painter: _AlertPainter(
+                        markers: [
+                          for (final marker in alerted)
+                            (
+                              at: offsetOf(
+                                marker.at,
+                                centre: GeoPoint(
+                                  centre.latitude,
+                                  centre.longitude,
+                                ),
+                                zoom: _zoom,
+                              ),
+                              alert: marker.alert!,
+                            ),
+                        ],
+                        pulse: _pulse?.value ?? 0,
+                      ),
                     ),
                   ),
                 ),
@@ -429,6 +477,25 @@ class _MapLibreSurfaceState extends State<MapLibreSurface> {
         logicalWidth: MediaQuery.sizeOf(context).width,
         latitude: centre?.latitude ?? 52,
       );
+
+  @override
+  void dispose() {
+    _pulse?.dispose();
+    super.dispose();
+  }
+
+  /// Starts or stops the pulse to match what is on the map.
+  void _keepPulse({required bool wanted}) {
+    if (wanted && _pulse == null) {
+      _pulse = AnimationController(
+        vsync: this,
+        duration: const Duration(milliseconds: 900),
+      )..repeat(reverse: true);
+    } else if (!wanted && _pulse != null) {
+      _pulse!.dispose();
+      _pulse = null;
+    }
+  }
 
   @override
   void didUpdateWidget(MapLibreSurface oldWidget) {
@@ -644,5 +711,60 @@ class _FacingPainter extends CustomPainter {
       }
     }
     return false;
+  }
+}
+
+/// The ring that says how much attention something is paying (§6.1a).
+class _AlertPainter extends CustomPainter {
+  const _AlertPainter({required this.markers, required this.pulse});
+
+  final List<({Offset at, MarkerAlert alert})> markers;
+
+  /// 0 to 1 and back, driving the ring on anything hunting the player.
+  final double pulse;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final middle = Offset(size.width / 2, size.height / 2);
+
+    for (final marker in markers) {
+      final centre = middle + marker.at;
+      if (centre.dx < -30 ||
+          centre.dy < -30 ||
+          centre.dx > size.width + 30 ||
+          centre.dy > size.height + 30) {
+        continue;
+      }
+
+      final hunting = marker.alert == MarkerAlert.hunting;
+      final radius = hunting ? 11 + 5 * pulse : 11.0;
+
+      canvas.drawCircle(
+        centre,
+        radius,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = hunting ? 2.5 : 1.8
+          ..color = Color(kAlertColours[marker.alert]!)
+              .withValues(alpha: hunting ? 0.9 - 0.3 * pulse : 0.75),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_AlertPainter old) =>
+      old.pulse != pulse ||
+      old.markers.length != markers.length ||
+      !_sameMarkers(old.markers, markers);
+
+  static bool _sameMarkers(
+    List<({Offset at, MarkerAlert alert})> a,
+    List<({Offset at, MarkerAlert alert})> b,
+  ) {
+    for (var i = 0; i < a.length; i++) {
+      if (a[i].alert != b[i].alert) return false;
+      if ((a[i].at - b[i].at).distance > 0.5) return false;
+    }
+    return true;
   }
 }

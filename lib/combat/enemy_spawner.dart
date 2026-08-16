@@ -101,6 +101,7 @@ EnemySpawn spawnEnemies({
   GeoPoint? shelterAt,
   List<MapFeature> obstacles = const [],
   int cap = kActiveCap,
+  double sightFactor = 1,
 }) {
   final filter = SpawnFilter(obstacles);
   final alive = [for (final enemy in existing) if (!enemy.isDead) enemy];
@@ -145,6 +146,7 @@ EnemySpawn spawnEnemies({
         at: at,
         home: origin.centre,
         random: random,
+        sightFactor: sightFactor,
       );
 
       enemies.add(enemy);

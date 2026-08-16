@@ -19,7 +19,7 @@ Każdy zamknięty etap dostaje sekcję **Dziennik wykonania** z decyzjami podję
 | 8 | Schron, obóz, pętla dobowa | ⬜ | — | — |
 | 9 | Onboarding, dostępność, zgodność | ⬜ | — | — |
 
-**Metryki:** 1157 testów · `flutter analyze` czysty · schemat bazy **v11** · release APK 89,5 MB bez devtools
+**Metryki:** 1163 testy · `flutter analyze` czysty · schemat bazy **v11** · release APK 89,5 MB bez devtools
 
 ### Zablokowane na użytkowniku
 
@@ -376,7 +376,7 @@ Dwa wnioski na przyszłość:
 | 5.3 | ✅ Jawna szansa trafienia w panelu ognia wraz z największym składnikiem błędu | §5.1.4 |
 | 5.4 | ✅ Model obrażeń: `5,1 × J^0,6 × wound_factor × mnożnik_lokalizacji × (1 − ochrona)` | §5.1.5 |
 | 5.5 | ✅ Szwędacz: parametry, maszyna stanów, budżet sprintu, smycz 400 m, utrata kontaktu 45 s | §6.1, §6.1a, §6.2 |
-| 5.6 | ✅ Ruch przeciwników po linii prostej (routing OSM poza MVP) | §6.3 |
+| 5.6 | ✅ Ruch przeciwników: linia prosta z lokalnym omijaniem wody i terenów §3.5 (routing OSM poza MVP) | §6.3 |
 | 5.7 | ✅ Namierzanie jednego celu, koszt przełączenia 1,2 s, brak automatyki po śmierci celu | §5.5.1 |
 | 5.8 | 🟡 HUD walki grupowej: liczba zaangażowanych, dystans do najbliższego, czy ktoś ma jeszcze sprint (pasek per przeciwnik zostaje) | §5.5.2 |
 | 5.9 | Przerwanie przeładowania przy zbliżeniu <5 m | §5.5.4 |

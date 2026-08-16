@@ -67,6 +67,15 @@ class LootWorld {
   /// What the last pass over the tiles found in the way (§3.5).
   List<MapFeature> get obstacles => _obstacles;
 
+  bool _denseUrban = false;
+
+  /// Whether the last pass was over a built-up place (§10.1's own measure).
+  ///
+  /// The same count that decides whether the procedural layer has to invent
+  /// villages: enough real places nearby means a town, and §5.6.1 damps both
+  /// sound and sight in one.
+  bool get denseUrban => _denseUrban;
+
   /// Points at the pack, or at nothing.
   Future<void> useSource(MapSource? source) async {
     final path = source is InstalledPack ? source.path : null;
@@ -133,6 +142,7 @@ class LootWorld {
         .toList();
 
     final found = _countMatching(withinNormal);
+    _denseUrban = found >= kThinMapPoiCount * 3;
     final spawner = LootSpawner(
       tables: tables,
       backupMode: found < kThinMapPoiCount,

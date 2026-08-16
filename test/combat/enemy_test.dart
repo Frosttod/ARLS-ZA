@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:arls_za/combat/enemy.dart';
 import 'package:arls_za/map/geometry.dart';
+import 'package:arls_za/safety/spawn_exclusion.dart';
 import 'package:test/test.dart';
 
 /// §6.1, §6.1a, §6.2. What comes towards the player, and what stops it.
@@ -408,6 +409,127 @@ void main() {
       );
 
       expect(stopped.headingDeg, chasing.headingDeg);
+    });
+  });
+
+  group('what it can notice, where it is standing (§5.6.1)', () {
+    test('a street of blocks costs it a third of its sight', () {
+      final field = spawn(EnemyKind.walker);
+      final town = Enemy.spawn(
+        id: 'w2',
+        kind: EnemyKind.walker,
+        at: home,
+        home: home,
+        random: Random(1),
+        sightFactor: 0.7,
+      );
+
+      expect(field.sightM, 80);
+      expect(town.sightM, closeTo(56, 0.01));
+    });
+
+    test('and it charges from inside sixty per cent of that', () {
+      final town = Enemy.spawn(
+        id: 'w2',
+        kind: EnemyKind.walker,
+        at: home,
+        home: home,
+        random: Random(1),
+        sightFactor: 0.7,
+      );
+
+      expect(town.chaseM, closeTo(33.6, 0.01));
+    });
+
+    test('a player at seventy metres is seen in a field and not in a town', () {
+      // The same distance, the same Walker, two different streets.
+      final field = advanceEnemy(
+        spawn(EnemyKind.walker),
+        playerAt: north(70),
+        elapsed: const Duration(seconds: 1),
+      );
+      final town = advanceEnemy(
+        Enemy.spawn(
+          id: 'w2',
+          kind: EnemyKind.walker,
+          at: home,
+          home: home,
+          random: Random(1),
+          sightFactor: 0.7,
+        ),
+        playerAt: north(70),
+        elapsed: const Duration(seconds: 1),
+      );
+
+      expect(field.state, EnemyState.alert);
+      expect(town.state, EnemyState.idle);
+    });
+  });
+
+  group('what it will not walk through (§6.3)', () {
+    /// A lake between the enemy and the player.
+    MapFeature lake() => MapFeature(
+      tags: const {'natural': 'water'},
+      shape: FeatureShape.area,
+      geometry: [
+        GeoPoint(north(20).latitude, home.longitude - 0.002),
+        GeoPoint(north(20).latitude, home.longitude + 0.002),
+        GeoPoint(north(45).latitude, home.longitude + 0.002),
+        GeoPoint(north(45).latitude, home.longitude - 0.002),
+      ],
+    );
+
+    test('it does not swim a lake to reach somebody', () {
+      // A thing that swims a lake is a thing nobody believes in, and the cost
+      // of not believing in it is the whole atmosphere.
+      var enemy = spawn(EnemyKind.walker);
+      final ground = SpawnFilter([lake()]);
+
+      // Long enough to walk into it: a Walker covers about a metre a second.
+      for (var i = 0; i < 60; i++) {
+        enemy = advanceEnemy(
+          enemy,
+          playerAt: north(70),
+          elapsed: const Duration(seconds: 1),
+          ground: ground,
+        );
+      }
+
+      expect(ground.refuse(enemy.position), isNull);
+    });
+
+    test('it goes round rather than stopping dead at the edge', () {
+      var enemy = spawn(EnemyKind.walker);
+      final ground = SpawnFilter([lake()]);
+
+      for (var i = 0; i < 60; i++) {
+        enemy = advanceEnemy(
+          enemy,
+          playerAt: north(70),
+          elapsed: const Duration(seconds: 1),
+          ground: ground,
+        );
+      }
+
+      // It has moved off the line it started on, which is what going round
+      // looks like from above.
+      expect(
+        (enemy.position.longitude - home.longitude).abs(),
+        greaterThan(0.0001),
+      );
+    });
+
+    test('with nothing in the way it still walks straight at them', () {
+      final after = run(
+        spawn(EnemyKind.walker),
+        playerAt: north(70),
+        total: const Duration(seconds: 5),
+      );
+
+      expect(
+        (after.position.longitude - home.longitude).abs(),
+        lessThan(1e-9),
+      );
     });
   });
 }

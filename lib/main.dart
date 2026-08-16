@@ -1378,6 +1378,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         elapsed: elapsed,
         now: now,
         obstacles: _world?.obstacles ?? const [],
+        // §5.6.1: walls that swallow a shot swallow a silhouette too.
+        denseUrban: _world?.denseUrban ?? false,
       );
     });
   }
@@ -1470,6 +1472,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       error: error,
       random: Random(),
       suppressed: _inventory.value.countOf('tool_suppressor') > 0,
+      // §5.6.1: a built-up street in daylight takes a third off what is heard.
+      denseUrban: _world?.denseUrban ?? false,
       night: false,
     );
 
@@ -1582,6 +1586,11 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
           // them a radius and nothing directional — but knowing that one of
           // them has turned towards you is the whole of the warning.
           headingDeg: enemy.headingDeg,
+          alert: switch (enemy.state) {
+            EnemyState.chase || EnemyState.spent => MarkerAlert.hunting,
+            EnemyState.alert => MarkerAlert.searching,
+            EnemyState.idle || EnemyState.returning => MarkerAlert.calm,
+          },
         ),
 
       // §4.8: grey, and gone after a day.

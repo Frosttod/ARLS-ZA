@@ -74,7 +74,12 @@ class CombatSession {
     List<SpawnOrigin> origins = const [],
     List<MapFeature> obstacles = const [],
     GeoPoint? shelterAt,
+    bool denseUrban = false,
   }) {
+    // §3.5's features are what a person may not be sent through; most of them
+    // — water, private land, a railway — are also what a body cannot walk
+    // through. Reused rather than read twice.
+    final ground = SpawnFilter(obstacles);
     // The dead, and everything the player has walked away from. Somebody who
     // covers three kilometres would otherwise finish the walk simulating every
     // street they crossed.
@@ -82,7 +87,12 @@ class CombatSession {
       for (final enemy in enemies)
         if (!enemy.isDead &&
             enemy.position.distanceTo(playerAt) <= kForgetEnemiesM)
-          advanceEnemy(enemy, playerAt: playerAt, elapsed: elapsed),
+          advanceEnemy(
+            enemy,
+            playerAt: playerAt,
+            elapsed: elapsed,
+            ground: ground,
+          ),
     ];
 
     // §6.4: the hotspots of §6.5 will be passed in when they exist. Until
@@ -99,6 +109,10 @@ class CombatSession {
       seed: seed ^ now.hour ^ (now.day << 5),
       shelterAt: shelterAt,
       obstacles: obstacles,
+      // §5.6.1: the built-up damping cuts both ways. Walls that swallow a shot
+      // swallow a silhouette, so something in a street of blocks notices less
+      // far than the same thing in a field.
+      sightFactor: denseUrban ? 0.7 : 1,
     );
 
     return CombatSession(

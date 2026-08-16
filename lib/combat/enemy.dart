@@ -21,6 +21,7 @@ library;
 import 'dart:math' as math;
 
 import '../map/geometry.dart';
+import '../safety/spawn_exclusion.dart';
 
 /// §6.1a: what an enemy is doing.
 enum EnemyState {
@@ -166,6 +167,7 @@ class Enemy {
     this.heardAt,
     this.investigateLeft = Duration.zero,
     this.headingDeg,
+    this.sightFactor = 1,
   });
 
   /// Rolls the ranges of §6.2 once, at spawn. Two Walkers are not the same
@@ -176,6 +178,7 @@ class Enemy {
     required GeoPoint at,
     required GeoPoint home,
     required math.Random random,
+    double sightFactor = 1,
   }) {
     double between((double, double) range) =>
         range.$1 + random.nextDouble() * (range.$2 - range.$1);
@@ -188,6 +191,7 @@ class Enemy {
       bloodMl: between(kind.bloodMl),
       walkKmh: between(kind.walkKmh),
       runKmh: between(kind.runKmh),
+      sightFactor: sightFactor,
     );
   }
 
@@ -221,6 +225,14 @@ class Enemy {
   /// §5.6.2: how much turning the place over is left before it gives up.
   final Duration investigateLeft;
 
+  /// §5.6.1's built-up damping, applied to what it can notice.
+  ///
+  /// A street of six-storey blocks is not a field: something forty metres away
+  /// behind two buildings is not seen, and the same walls that swallow a shot
+  /// swallow a silhouette. One factor rather than a line of sight per pair,
+  /// because §6.2 gives detection as a radius and this keeps it one.
+  final double sightFactor;
+
   /// Which way it is facing, as a compass bearing, or null while it is not
   /// moving at all.
   ///
@@ -231,6 +243,12 @@ class Enemy {
   final double? headingDeg;
 
   Duration get budget => sprintLeft ?? kind.sprintBudget;
+
+  /// How far this one actually notices anything, here (§6.2, §5.6.1).
+  double get sightM => kind.detectionM * sightFactor;
+
+  /// §6.1a: it charges inside sixty per cent of what it can see.
+  double get chaseM => sightM * 0.6;
 
   bool get isDead => bloodLostMl >= bloodMl * kind.deathAtLoss;
 
@@ -251,6 +269,7 @@ class Enemy {
     bool forgetNoise = false,
     Duration? investigateLeft,
     double? headingDeg,
+    double? sightFactor,
   }) => Enemy(
     id: id,
     kind: kind,
@@ -268,6 +287,7 @@ class Enemy {
         ? Duration.zero
         : investigateLeft ?? this.investigateLeft,
     headingDeg: headingDeg ?? this.headingDeg,
+    sightFactor: sightFactor ?? this.sightFactor,
   );
 
   /// The wound of §5.1.5, taken.
@@ -297,6 +317,7 @@ Enemy advanceEnemy(
   required GeoPoint playerAt,
   required Duration elapsed,
   bool heardShot = false,
+  SpawnFilter? ground,
 }) {
   if (enemy.isDead || elapsed <= Duration.zero) return enemy;
 
@@ -340,7 +361,7 @@ Enemy advanceEnemy(
   // the player is not the nearer answer — something in front of you beats
   // something you heard.
   final noise = enemy.heardAt;
-  final seen = distance <= enemy.kind.detectionM;
+  final seen = distance <= enemy.sightM;
   final investigating =
       noise != null && !seen && state != EnemyState.returning;
 
@@ -370,6 +391,7 @@ Enemy advanceEnemy(
     enemy.position,
     target,
     metres: enemy.speedKmh * seconds / 3.6,
+    ground: ground,
   );
 
   final standingStill = state == EnemyState.idle && !investigating;
@@ -412,7 +434,7 @@ EnemyState _nextState(
         : EnemyState.returning;
   }
 
-  final noticed = heardShot || distance <= enemy.kind.detectionM;
+  final noticed = heardShot || distance <= enemy.sightM;
   if (!noticed) {
     // §5.6.2: a sound already heard is still worth walking to, so it stays
     // alert rather than forgetting the moment the player is out of sight.
@@ -434,23 +456,58 @@ EnemyState _nextState(
     return EnemyState.spent;
   }
 
-  if (heardShot || distance <= enemy.kind.chaseM) {
+  if (heardShot || distance <= enemy.chaseM) {
     return enemy.budget > Duration.zero ? EnemyState.chase : EnemyState.spent;
   }
 
   return EnemyState.alert;
 }
 
-/// Straight at it (§6.3's MVP simplification: no routing, and walls do not
-/// stop anything yet).
-GeoPoint _towards(GeoPoint from, GeoPoint to, {required double metres}) {
+/// Towards it, round whatever cannot be walked through.
+///
+/// §6.3 settles for straight lines in the MVP and says routing over the OSM
+/// graph comes later. This is neither: it is one step at a time, and where
+/// that step would land in a river or inside a wall it is tried at an angle
+/// instead. A thing that swims a lake to reach somebody is a thing nobody
+/// believes in, and the cost of not believing in it is the whole atmosphere.
+///
+/// It is deliberately local. Something can still walk into a courtyard and
+/// press against the far wall, because it has no idea the courtyard is one —
+/// and that is honest for a creature with no map.
+GeoPoint _towards(
+  GeoPoint from,
+  GeoPoint to, {
+  required double metres,
+  SpawnFilter? ground,
+}) {
   final distance = from.distanceTo(to);
   if (distance <= 0 || metres <= 0) return from;
-  if (metres >= distance) return to;
 
-  final fraction = metres / distance;
+  final step = metres >= distance ? distance : metres;
+  final bearing = from.bearingTo(to);
+
+  // Straight first, then further and further off it. Fifteen degrees is a
+  // shoulder's width at a stride, and a hundred and five is as far round as a
+  // thing will go before it simply waits.
+  for (final turn in const [0.0, 15, -15, 35, -35, 60, -60, 105, -105]) {
+    final at = _step(from, bearing: bearing + turn, metres: step);
+    if (ground == null || ground.refuse(at) == null) return at;
+  }
+
+  return from;
+}
+
+/// One step of [metres] on a compass [bearing].
+GeoPoint _step(
+  GeoPoint from, {
+  required double bearing,
+  required double metres,
+}) {
+  final radians = bearing * math.pi / 180;
+
   return GeoPoint(
-    from.latitude + (to.latitude - from.latitude) * fraction,
-    from.longitude + (to.longitude - from.longitude) * fraction,
+    from.latitude + metres * math.cos(radians) / metresPerDegreeLat,
+    from.longitude +
+        metres * math.sin(radians) / metresPerDegreeLon(from.latitude),
   );
 }

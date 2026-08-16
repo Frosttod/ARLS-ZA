@@ -30,6 +30,23 @@ enum MarkerKind {
   shelter,
 }
 
+/// How much attention a marker is paying to the player (§6.1a).
+///
+/// §12: never colour alone. The ring is a shortcut for what the HUD already
+/// says in words and what the cone shows in direction — three ways of reading
+/// the same fact, so nobody has to be able to tell red from orange to play.
+enum MarkerAlert {
+  /// It has not noticed anything. Green, and steady.
+  calm,
+
+  /// Something was heard, or it is turning the place over (§5.6.2). Amber.
+  searching,
+
+  /// It has the player and is coming. Red, and pulsing, because this is the
+  /// one that is a clock.
+  hunting,
+}
+
 /// One thing on the map.
 class MapMarker {
   const MapMarker({
@@ -40,6 +57,7 @@ class MapMarker {
     this.reachM,
     this.count = 1,
     this.headingDeg,
+    this.alert,
   });
 
   /// Stable across frames, so the renderer can move a marker instead of
@@ -53,6 +71,10 @@ class MapMarker {
   /// Read out by the screen reader, and shown on tap. §12 requires that
   /// nothing on this map is knowable by colour alone.
   final String? label;
+
+  /// §6.1a: how much attention it is paying, or null for anything that pays
+  /// none — a lootbox does not notice people.
+  final MarkerAlert? alert;
 
   /// Which way it is facing, as a compass bearing (§3.6). Null for anything
   /// that does not face — a lootbox has no front.
@@ -84,6 +106,7 @@ class MapMarker {
     double? reachM,
     int? count,
     double? headingDeg,
+    MarkerAlert? alert,
   }) => MapMarker(
     id: id,
     kind: kind,
@@ -92,6 +115,7 @@ class MapMarker {
     reachM: reachM ?? this.reachM,
     count: count ?? this.count,
     headingDeg: headingDeg ?? this.headingDeg,
+    alert: alert ?? this.alert,
   );
 }
 
@@ -224,3 +248,10 @@ List<double> reachRingsOf(List<MapMarker> markers) {
 
   return rings;
 }
+
+/// §12's colours for [MarkerAlert], as ARGB.
+const Map<MarkerAlert, int> kAlertColours = {
+  MarkerAlert.calm: 0xFF4E8A4A,
+  MarkerAlert.searching: 0xFFE8B33A,
+  MarkerAlert.hunting: 0xFFA82D17,
+};
