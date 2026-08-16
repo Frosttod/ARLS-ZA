@@ -31,6 +31,8 @@ import '../location/power_source.dart';
 import '../location/sampling_policy.dart';
 import '../safety/player_safety.dart';
 import '../sim/daylight.dart';
+import '../map/geometry.dart';
+import '../shelter/shelter.dart';
 import '../sim/occupation.dart';
 import '../sim/physiology.dart';
 import '../sim/tick.dart';
@@ -143,6 +145,14 @@ class GameLoop {
 
   SimState _state;
   Occupation? _occupation;
+
+  /// §8: what the player has built. Handed in from outside rather than read
+  /// here, because the loop must not depend on the save layer — the tick
+  /// engine runs in an isolate and the migration tests run without Flutter.
+  List<Shelter> _shelters = const [];
+
+  /// §8.1: the place the player is standing in, or null for the open street.
+  Shelter? _inside;
   PositionFix? _lastFix;
   double _speedKmh = 0;
 
@@ -190,6 +200,59 @@ class GameLoop {
   SimState get state => _state;
 
   Occupation? get occupation => _occupation;
+
+  /// §8.1: which of them the player is inside, or null out in the open.
+  Shelter? get insideShelter => _inside;
+
+  /// §8: what the player has built. Setting it re-reads which one they are in,
+  /// so walking through the door does not wait for the next fix.
+  void setShelters(List<Shelter> shelters) {
+    _shelters = shelters;
+    _applyShelter();
+    _publish();
+  }
+
+  /// §2.1, §2.5.1: the zone follows the walls, and sleep follows the zone.
+  ///
+  /// Sleep is a state rather than an action (§2.5.1): night, under a roof, and
+  /// nothing else being done. Nobody presses anything — a character who is in
+  /// their shelter at two in the morning is asleep, which is exactly what a
+  /// player with the phone on a bedside table has actually done.
+  void _applyShelter() {
+    final fix = _lastFix ?? _displayFix;
+    final now = _state.lastUpdate;
+
+    _inside = fix == null
+        ? null
+        : shelterAt(
+            GeoPoint(fix.latitude, fix.longitude),
+            _shelters,
+            now: now,
+          );
+
+    final inside = _inside;
+    final night =
+        fix != null &&
+        isNightAt(
+          momentUtc: now,
+          latitude: fix.latitude,
+          longitude: fix.longitude,
+        );
+
+    // §2.1a.1: something the player deliberately started outranks sleep. A
+    // character who chose to read at midnight is reading, and paying for it.
+    final busy = _occupation != null && !_occupation!.kind.isDefault;
+    final asleep = inside != null && night && !busy;
+
+    _state = _state.copyWith(
+      zone: switch ((inside?.kind, asleep)) {
+        (null, _) => MetabolicZone.open,
+        (_, true) => MetabolicZone.sleep,
+        (ShelterKind.main, _) => MetabolicZone.shelter,
+        (ShelterKind.camp, _) => MetabolicZone.camp,
+      },
+    );
+  }
 
   /// Starts the position source and the tick cadence, replaying whatever time
   /// passed since the save was last written.
@@ -290,8 +353,13 @@ class GameLoop {
   }
 
   TickInput _buildInput({required bool offline}) {
+    _applyShelter();
     final sheltered = _state.zone.isSheltered;
-    final asleep = _occupation?.kind == OccupationKind.sleep;
+
+    // §2.5.1: sleep is the default state under a roof at night, not a button.
+    // The zone already carries that decision, so reading it back keeps the two
+    // from ever disagreeing.
+    final asleep = _state.zone == MetabolicZone.sleep;
 
     return TickInput(
       // A lost signal means the position cannot be trusted, so movement is not

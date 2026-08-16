@@ -48,6 +48,17 @@ class GeoPoint {
     return degrees < 0 ? degrees + 360 : degrees;
   }
 
+  /// A point [metres] away on compass [bearingDeg]. The inverse of
+  /// [bearingTo], and flat-earth for the same reason.
+  GeoPoint offsetBy({required double metres, required double bearingDeg}) {
+    final radians = bearingDeg * math.pi / 180;
+
+    return GeoPoint(
+      latitude + metres * math.cos(radians) / metresPerDegreeLat,
+      longitude + metres * math.sin(radians) / metresPerDegreeLon(latitude),
+    );
+  }
+
   @override
   String toString() =>
       'GeoPoint(${latitude.toStringAsFixed(6)}, '

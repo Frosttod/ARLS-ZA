@@ -333,3 +333,50 @@ class GroundItems extends Table {
     'FOREIGN KEY (profile_id) REFERENCES profiles (id) ON DELETE CASCADE',
   ];
 }
+
+/// The place the player comes back to (§8).
+///
+/// ⚠️ **These coordinates are the player's home address.** §8.2 is explicit
+/// about what that means: they are written here, they never leave the phone,
+/// and this table is excluded from Android's automatic backup — an unencrypted
+/// cloud copy of where somebody sleeps is not a risk worth any convenience.
+@DataClassName('ShelterRow')
+class Shelters extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get profileId => integer()();
+
+  /// `main` or `camp` (§8.5.1). Text rather than an index so a save is
+  /// readable, as everywhere else in this schema.
+  TextColumn get kind => text()();
+
+  RealColumn get latitude => real()();
+  RealColumn get longitude => real()();
+
+  /// §2.1a.3: building runs against the clock, so the record keeps when it
+  /// began and what it was going to take. Recomputing the second from the
+  /// first would let a hammer lost halfway through lengthen a finished job.
+  DateTimeColumn get startedAt => dateTime()();
+  IntColumn get buildSeconds => integer()();
+
+  /// §8.4: `storage:2,lounge:1`. Absent means nought, which is what every
+  /// shelter starts as.
+  TextColumn get modules => text().withDefault(const Constant(''))();
+
+  /// §8.5.2: when the player was last inside. A camp nobody comes back to
+  /// falls down; the shelter never does.
+  DateTimeColumn get visitedAt => dateTime().nullable()();
+
+  /// §8.4, §18.2: the module currently going up, as `lounge:2`, and when it
+  /// will be finished. Both null when nothing is being built.
+  ///
+  /// On the row rather than in an occupation because it has to finish while
+  /// the app is dead — §8.3 says as much about the shelter itself, and a
+  /// nine-hour workshop is even less of a thing to sit and watch.
+  TextColumn get building => text().nullable()();
+  DateTimeColumn get buildingReadyAt => dateTime().nullable()();
+
+  @override
+  List<String> get customConstraints => [
+    'FOREIGN KEY (profile_id) REFERENCES profiles (id) ON DELETE CASCADE',
+  ];
+}

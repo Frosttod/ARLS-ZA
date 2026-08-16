@@ -1,7 +1,7 @@
 # ARLS-ZA — lista kontrolna systemów
 
 Stan na dzień **2026-08-16**. Wygenerowana po przejściu pełnego zestawu
-testów: **1273 testy, `flutter analyze` czysty, schemat bazy v12**.
+testów: **1340 testów, `flutter analyze` czysty, schemat bazy v12**.
 
 Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 
@@ -17,7 +17,7 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 
 | Obszar | Testy | Co jest tam pilnowane |
 | :---- | ----: | :---- |
-| `combat` | 224 | tabela kalibracyjna §5.1.2 wiersz po wierszu, obrażenia §5.1.5, budżet sprintu, maszyna stanów, hałas, spawn, magazynek, dodatki |
+| `combat` | 229 | tabela kalibracyjna §5.1.2 wiersz po wierszu, obrażenia §5.1.5, budżet sprintu, maszyna stanów, hałas, spawn, magazynek, dodatki |
 | `ui` | 237 | HUD, ekwipunek, panele, arkusze, geometria dotknięć i pierścieni |
 | `sim` | 175 | tick, metabolizm, tętno, wchłanianie, sen, nawyk gry |
 | `loot` | 130 | tabele, spawner, przeszukanie, rzeczy na ziemi, przeszkody |
@@ -25,14 +25,15 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 | `inventory` | 80 | dwa limity §18.1a, sloty, porcje, dodatki, trwałość |
 | `items` | 71 | katalog jako dane: bilans, nazwy, sloty, użycia |
 | `location` | 53 | bramka dokładności, filtr Kalmana, martwa strefa, anty-cheat |
-| `db` | 50 | migracje v1→v12, integralność, warstwa gorąca i ciepła |
+| `db` | 50 | migracje v1→v13, integralność, warstwa gorąca i ciepła |
+| `shelter` | 45 | strefy §8.1, czasy budowy §8.3, moduły §8.4, obozy §8.5.2, receptury §18.2 |
 | `devtools` | 44 | symulator GPS, nakładka, zegar |
 | `game` | 43 | pętla gry, nadrabianie przerw, próbkowanie |
 | `safety` | 34 | strefy wykluczone §3.5 |
 | `core` | 30 | deterministyczny RNG, zegar |
 | `notes` | 14 | notatki §19.1, podstawianie nazw miejsc |
 
-**Razem 1273.**
+**Razem 1340.**
 
 ### Rzeczy, które testy trzymają jako liczby, a nie jako intencje
 
@@ -100,7 +101,17 @@ Kolejność jest celowa: rzeczy wyżej blokują ocenę tych niżej.
 - [ ] Dwa egzemplarze tego samego przedmiotu nie mylą się przy wyrzucaniu
 - [ ] Zamiana plecaka na mniejszy nie niszczy starego
 
-### 2.5. Interfejs
+### 2.5. Schron (etap 8)
+
+- [ ] Schron staje tam, gdzie stoisz, i po ~2 h (z młotkiem) zaczyna działać
+- [ ] W strefie 50 m przeciwnicy zatrzymują się na granicy i nie wchodzą
+- [ ] Ze strefy nie da się strzelać — „Ognia" jest wyszarzone z powodem
+- [ ] **Noc w schronie spłaca dług senny bez klikania czegokolwiek** (§2.5.1)
+- [ ] Moduł buduje się przy zamkniętej aplikacji i jest gotowy po powrocie
+- [ ] Obóz bliżej niż 800 m od schronu jest odmówiony z podaniem powodu
+- [ ] Znacznik schronu (niebieski) siedzi na właściwym miejscu
+
+### 2.6. Interfejs
 
 - [ ] Komunikaty pod paskami HUD nie zasłaniają menu
 - [ ] Dotknięcie statusu otwiera wyjaśnienie
@@ -120,6 +131,10 @@ Rzeczy świadomie odłożone, z powodem i miejscem, w którym wrócą.
 | Ciała nie są zapisywane | jak cała sesja walki (§6.4 odtwarza populację przy każdym uruchomieniu); ciało żyje 6 h w obrębie sesji | razem z zapisem sesji walki |
 | Światło broni nic nie oświetla | §6.2 daje przeciwnikom promień wykrycia bez kierunku; latarka wymaga modelu widzenia | etap 7 |
 | Budynki nie blokują ruchu przeciwników | warstwa budynków w paczkach nie niesie typu; woda i strefy §3.5 już blokują | po przebudowie paczek |
+| Zawartość magazynu schronu | pojemność (25 kg + moduł, 3 l/kg) jest policzona, ale nie ma gdzie odłożyć rzeczy — to własna tabela i własny ekran | etap 8 (8.5) |
+| Budowa modułu nie jest bramkowana strefą | §2.1a.3 chce, by zajęcie schronowe liczyło się tylko w strefie; moduł liczy się z zegara, jak sam schron w §8.3 | razem ze składem schronu |
+| Brak powiadomienia po ukończeniu budowy | §8.3 prosi o powiadomienie; kanał powiadomień to osobna praca razem z §16.3 | etap 9 |
+| Konflikt §8.3 vs §18.3 | §8.3: 3 h gołymi rękami, z narzędziami −35%. §18.3: bez narzędzi ×2,5. Wdrożono §8.3 — do rozstrzygnięcia | do decyzji |
 | Pomiar dobowego czasu gry nie jest zapisywany | model tempa gotowy, zapis to zmiana schematu razem ze składem ognisk | etap 6 |
 | `{street}` w notatkach | paczki PMTiles bez warstwy `transportation_name` | przebudowa 17 paczek |
 | Dźwięki | ~55 plików, licencje od pierwszego pliku | etap 7 |

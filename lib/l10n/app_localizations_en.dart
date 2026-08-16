@@ -488,6 +488,108 @@ class L10nEn extends L10n {
   String get menuShelter => 'SHELTER';
 
   @override
+  String get shelterTitle => 'Shelter';
+
+  @override
+  String get campTitle => 'Camp';
+
+  @override
+  String get shelterCamps => 'Camps';
+
+  @override
+  String get shelterBuild => 'Build';
+
+  @override
+  String get shelterBuildHere => 'Build here';
+
+  @override
+  String get shelterSafeZone => 'Safe zone';
+
+  @override
+  String get shelterSleep => 'Sleep quality';
+
+  @override
+  String get shelterStorage => 'Capacity';
+
+  @override
+  String get shelterNoFix =>
+      'No position — a shelter goes where you are standing.';
+
+  @override
+  String get shelterNeedsTool =>
+      'Needs a hammer. From Workshop 2, a multitool as well.';
+
+  @override
+  String shelterMissing(String what) {
+    return 'Missing: $what';
+  }
+
+  @override
+  String shelterBuildingLeft(String time) {
+    return '$time left';
+  }
+
+  @override
+  String get shelterNoneWhat =>
+      'It goes up where you are standing, and that is where you will come back to sleep. Fifty metres of ground the dead do not walk into — and out of which you cannot shoot either.';
+
+  @override
+  String get campWhat =>
+      'Somewhere else you spend your day: work, a lecture hall, a relative’s flat. Twenty metres, a chest, and a night worth seven tenths of one. Two at most, and not within 800 m of anything you have already built.';
+
+  @override
+  String get campTooMany => 'Two camps is the limit. Take one down first.';
+
+  @override
+  String get campTooCloseToShelter =>
+      'Under 800 m from the shelter — that would just be a second front door.';
+
+  @override
+  String get campTooCloseToCamp => 'Under 800 m from the other camp.';
+
+  @override
+  String get campTooCloseToHotspot => 'Too close to the middle of a hotspot.';
+
+  @override
+  String get campDecaying =>
+      'Nobody has been here in a fortnight. It is coming apart.';
+
+  @override
+  String get moduleStorage => 'Storage';
+
+  @override
+  String get moduleWorkshop => 'Workshop';
+
+  @override
+  String get moduleLounge => 'Lounge';
+
+  @override
+  String get moduleLaboratory => 'Laboratory';
+
+  @override
+  String get moduleStorageWhat =>
+      'Fifty kilograms a level, on top of the twenty-five the shelter holds bare.';
+
+  @override
+  String get moduleWorkshopWhat =>
+      'Repairs: to 60% of condition, then 85%, then as new. Level 2 also opens complex recipes.';
+
+  @override
+  String get moduleLoungeWhat =>
+      'Fifteen per cent a level off what a night has to cover — an hour of the night given back.';
+
+  @override
+  String get moduleLaboratoryWhat =>
+      'Three per cent a level more out of everything eaten and drunk.';
+
+  @override
+  String get shelterBuildStarted =>
+      'Work started. It carries on with the app closed.';
+
+  @override
+  String get shelterInside => 'You cannot fire from inside your own zone.';
+
+  @override
   String get menuSettings => 'SETTINGS';
 
   @override

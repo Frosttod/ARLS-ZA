@@ -913,6 +913,180 @@ abstract class L10n {
   /// **'SHELTER'**
   String get menuShelter;
 
+  /// No description provided for @shelterTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Shelter'**
+  String get shelterTitle;
+
+  /// No description provided for @campTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Camp'**
+  String get campTitle;
+
+  /// No description provided for @shelterCamps.
+  ///
+  /// In en, this message translates to:
+  /// **'Camps'**
+  String get shelterCamps;
+
+  /// No description provided for @shelterBuild.
+  ///
+  /// In en, this message translates to:
+  /// **'Build'**
+  String get shelterBuild;
+
+  /// No description provided for @shelterBuildHere.
+  ///
+  /// In en, this message translates to:
+  /// **'Build here'**
+  String get shelterBuildHere;
+
+  /// No description provided for @shelterSafeZone.
+  ///
+  /// In en, this message translates to:
+  /// **'Safe zone'**
+  String get shelterSafeZone;
+
+  /// No description provided for @shelterSleep.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep quality'**
+  String get shelterSleep;
+
+  /// No description provided for @shelterStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'Capacity'**
+  String get shelterStorage;
+
+  /// No description provided for @shelterNoFix.
+  ///
+  /// In en, this message translates to:
+  /// **'No position — a shelter goes where you are standing.'**
+  String get shelterNoFix;
+
+  /// No description provided for @shelterNeedsTool.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs a hammer. From Workshop 2, a multitool as well.'**
+  String get shelterNeedsTool;
+
+  /// No description provided for @shelterMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Missing: {what}'**
+  String shelterMissing(String what);
+
+  /// No description provided for @shelterBuildingLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'{time} left'**
+  String shelterBuildingLeft(String time);
+
+  /// No description provided for @shelterNoneWhat.
+  ///
+  /// In en, this message translates to:
+  /// **'It goes up where you are standing, and that is where you will come back to sleep. Fifty metres of ground the dead do not walk into — and out of which you cannot shoot either.'**
+  String get shelterNoneWhat;
+
+  /// No description provided for @campWhat.
+  ///
+  /// In en, this message translates to:
+  /// **'Somewhere else you spend your day: work, a lecture hall, a relative’s flat. Twenty metres, a chest, and a night worth seven tenths of one. Two at most, and not within 800 m of anything you have already built.'**
+  String get campWhat;
+
+  /// No description provided for @campTooMany.
+  ///
+  /// In en, this message translates to:
+  /// **'Two camps is the limit. Take one down first.'**
+  String get campTooMany;
+
+  /// No description provided for @campTooCloseToShelter.
+  ///
+  /// In en, this message translates to:
+  /// **'Under 800 m from the shelter — that would just be a second front door.'**
+  String get campTooCloseToShelter;
+
+  /// No description provided for @campTooCloseToCamp.
+  ///
+  /// In en, this message translates to:
+  /// **'Under 800 m from the other camp.'**
+  String get campTooCloseToCamp;
+
+  /// No description provided for @campTooCloseToHotspot.
+  ///
+  /// In en, this message translates to:
+  /// **'Too close to the middle of a hotspot.'**
+  String get campTooCloseToHotspot;
+
+  /// No description provided for @campDecaying.
+  ///
+  /// In en, this message translates to:
+  /// **'Nobody has been here in a fortnight. It is coming apart.'**
+  String get campDecaying;
+
+  /// No description provided for @moduleStorage.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage'**
+  String get moduleStorage;
+
+  /// No description provided for @moduleWorkshop.
+  ///
+  /// In en, this message translates to:
+  /// **'Workshop'**
+  String get moduleWorkshop;
+
+  /// No description provided for @moduleLounge.
+  ///
+  /// In en, this message translates to:
+  /// **'Lounge'**
+  String get moduleLounge;
+
+  /// No description provided for @moduleLaboratory.
+  ///
+  /// In en, this message translates to:
+  /// **'Laboratory'**
+  String get moduleLaboratory;
+
+  /// No description provided for @moduleStorageWhat.
+  ///
+  /// In en, this message translates to:
+  /// **'Fifty kilograms a level, on top of the twenty-five the shelter holds bare.'**
+  String get moduleStorageWhat;
+
+  /// No description provided for @moduleWorkshopWhat.
+  ///
+  /// In en, this message translates to:
+  /// **'Repairs: to 60% of condition, then 85%, then as new. Level 2 also opens complex recipes.'**
+  String get moduleWorkshopWhat;
+
+  /// No description provided for @moduleLoungeWhat.
+  ///
+  /// In en, this message translates to:
+  /// **'Fifteen per cent a level off what a night has to cover — an hour of the night given back.'**
+  String get moduleLoungeWhat;
+
+  /// No description provided for @moduleLaboratoryWhat.
+  ///
+  /// In en, this message translates to:
+  /// **'Three per cent a level more out of everything eaten and drunk.'**
+  String get moduleLaboratoryWhat;
+
+  /// No description provided for @shelterBuildStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Work started. It carries on with the app closed.'**
+  String get shelterBuildStarted;
+
+  /// No description provided for @shelterInside.
+  ///
+  /// In en, this message translates to:
+  /// **'You cannot fire from inside your own zone.'**
+  String get shelterInside;
+
   /// No description provided for @menuSettings.
   ///
   /// In en, this message translates to:

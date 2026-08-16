@@ -491,6 +491,108 @@ class L10nPl extends L10n {
   String get menuShelter => 'SCHRON';
 
   @override
+  String get shelterTitle => 'Schron';
+
+  @override
+  String get campTitle => 'Obóz';
+
+  @override
+  String get shelterCamps => 'Obozy';
+
+  @override
+  String get shelterBuild => 'Buduj';
+
+  @override
+  String get shelterBuildHere => 'Buduj tutaj';
+
+  @override
+  String get shelterSafeZone => 'Strefa bezpieczna';
+
+  @override
+  String get shelterSleep => 'Jakość snu';
+
+  @override
+  String get shelterStorage => 'Pojemność';
+
+  @override
+  String get shelterNoFix =>
+      'Brak pozycji — schron powstaje tam, gdzie stoisz.';
+
+  @override
+  String get shelterNeedsTool =>
+      'Wymaga młotka. Od Warsztatu 2 także multitoola.';
+
+  @override
+  String shelterMissing(String what) {
+    return 'Brakuje: $what';
+  }
+
+  @override
+  String shelterBuildingLeft(String time) {
+    return 'Zostało $time';
+  }
+
+  @override
+  String get shelterNoneWhat =>
+      'Powstaje tam, gdzie stoisz, i to tam będziesz wracać spać. Pięćdziesiąt metrów ziemi, na którą umarli nie wchodzą — i z której ty też nie strzelasz.';
+
+  @override
+  String get campWhat =>
+      'Gdzieś indziej, gdzie spędzasz dzień: praca, uczelnia, mieszkanie rodziny. Dwadzieścia metrów, skrzynia i noc warta siedem dziesiątych. Najwyżej dwa i nie bliżej niż 800 m od tego, co już stoi.';
+
+  @override
+  String get campTooMany => 'Dwa obozy to maksimum. Najpierw zwiń któryś.';
+
+  @override
+  String get campTooCloseToShelter =>
+      'Bliżej niż 800 m od schronu — to byłyby po prostu drugie drzwi.';
+
+  @override
+  String get campTooCloseToCamp => 'Bliżej niż 800 m od drugiego obozu.';
+
+  @override
+  String get campTooCloseToHotspot => 'Za blisko środka ogniska.';
+
+  @override
+  String get campDecaying =>
+      'Nikogo tu nie było od dwóch tygodni. Zaczyna się rozpadać.';
+
+  @override
+  String get moduleStorage => 'Magazyn';
+
+  @override
+  String get moduleWorkshop => 'Warsztat';
+
+  @override
+  String get moduleLounge => 'Salon';
+
+  @override
+  String get moduleLaboratory => 'Laboratorium';
+
+  @override
+  String get moduleStorageWhat =>
+      'Pięćdziesiąt kilogramów na poziom, ponad dwadzieścia pięć, które schron mieści goły.';
+
+  @override
+  String get moduleWorkshopWhat =>
+      'Naprawy: do 60% kondycji, potem 85%, potem jak nowe. Poziom 2 otwiera też receptury złożone.';
+
+  @override
+  String get moduleLoungeWhat =>
+      'Piętnaście procent na poziom mniej do przespania — godzina nocy do odzyskania.';
+
+  @override
+  String get moduleLaboratoryWhat =>
+      'Trzy procent na poziom więcej z każdego posiłku i napoju.';
+
+  @override
+  String get shelterBuildStarted =>
+      'Praca ruszyła. Idzie dalej przy zamkniętej aplikacji.';
+
+  @override
+  String get shelterInside => 'Ze swojej strefy nie strzelasz.';
+
+  @override
   String get menuSettings => 'USTAWIENIA';
 
   @override

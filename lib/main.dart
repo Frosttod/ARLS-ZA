@@ -29,6 +29,7 @@ import 'combat/magazine.dart';
 import 'combat/enemy.dart';
 import 'combat/noise.dart';
 import 'combat/remains.dart';
+import 'combat/sanctuary.dart';
 import 'combat/shot.dart';
 import 'loot/loot_spawner.dart';
 import 'loot/loot_store.dart';
@@ -41,8 +42,12 @@ import 'loot/search.dart';
 import 'notes/note.dart';
 import 'ui/combat_panel.dart';
 import 'ui/ground_sheet.dart';
+import 'shelter/recipes.dart';
+import 'shelter/shelter.dart';
+import 'shelter/shelter_store.dart';
 import 'ui/place_sheet.dart';
 import 'ui/remains_sheet.dart';
+import 'ui/shelter_screen.dart';
 import 'ui/item_details_sheet.dart';
 import 'ui/note_sheet.dart';
 import 'ui/notices.dart';
@@ -305,6 +310,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
   /// §10.3: the bodies, with their pockets still in them.
   List<Remains> _remains = const [];
+
+  /// §8: the shelter and the camps, as the save last had them.
+  List<Shelter> _shelters = const [];
 
   /// §12: what the game has just said. Under the HUD, never over the menu.
   final ValueNotifier<List<Notice>> _notices = ValueNotifier(const []);
@@ -685,6 +693,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
           ? null
           : GeoPoint(fix.latitude, fix.longitude);
       unawaited(_checkRelocation(snapshot));
+      unawaited(_settleShelters(snapshot));
       unawaited(_spawnLoot(snapshot));
       _advanceCombat(snapshot);
     });
@@ -700,6 +709,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       _loading = false;
     });
 
+    await _reloadShelters();
     await _resolveMap();
     if (mounted) await _offerPermissions();
   }
@@ -1483,6 +1493,12 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         elapsed: elapsed,
         now: now,
         obstacles: _world?.obstacles ?? const [],
+        // §8.1: they wait at the edge of what the player built.
+        sanctuaries: _sanctuaries,
+        shelterAt: _shelters
+            .where((s) => s.kind == ShelterKind.main)
+            .firstOrNull
+            ?.position,
         // §5.6.1: walls that swallow a shot swallow a silhouette too.
         denseUrban: _world?.denseUrban ?? false,
       );
@@ -1973,6 +1989,197 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     );
   }
 
+  // ------------------------------------------------------------- shelter ---
+
+  /// §8.1: the circles the fight does not happen inside.
+  List<Sanctuary> get _sanctuaries => [
+    for (final place in _shelters)
+      if (place.isReadyAt(DateTime.now().toUtc()))
+        Sanctuary(at: place.position, radiusM: place.kind.safeRadiusM),
+  ];
+
+  /// §8: what has been built, from the save.
+  Future<void> _reloadShelters() async {
+    final character = _character;
+    if (character == null) return;
+
+    final places = await ShelterStore(
+      widget.session.db,
+    ).load(character.profile.id, DateTime.now().toUtc());
+    if (!mounted) return;
+
+    setState(() => _shelters = places);
+    _loop?.setShelters(places);
+  }
+
+  /// Re-reads them when something they depend on has moved on.
+  ///
+  /// Cheap and rare: only when a building finished, or when the player has
+  /// walked into one — §8.5.2's clock on a camp restarts on a visit, and a
+  /// visit is not an event the loop can raise on its own.
+  Future<void> _settleShelters(GameSnapshot snapshot) async {
+    if (_shelters.isEmpty) return;
+
+    final now = snapshot.state.lastUpdate;
+    final fix = snapshot.displayFix;
+    final at = fix == null ? null : GeoPoint(fix.latitude, fix.longitude);
+
+    final finished = _shelters.any(
+      (place) =>
+          place.buildingReadyAt != null &&
+          !now.isBefore(place.buildingReadyAt!),
+    );
+
+    final inside = at == null ? null : shelterAt(at, _shelters, now: now);
+    final stale =
+        inside != null &&
+        (inside.visitedAt == null ||
+            now.difference(inside.visitedAt!) > const Duration(hours: 1));
+
+    if (!finished && !stale) return;
+
+    if (stale) {
+      await ShelterStore(widget.session.db).visited(inside.id, now);
+    }
+    await _reloadShelters();
+  }
+
+  Future<void> _openShelter() async {
+    final character = _character;
+    final catalogue = _catalogue;
+    if (character == null || catalogue == null) return;
+
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => StatefulBuilder(
+          builder: (context, _) => ShelterScreen(
+            shelters: _shelters,
+            at: _standingAt.value,
+            now: DateTime.now().toUtc(),
+            carried: _carriedCounts(),
+            itemNameOf: (id) {
+              final definition = catalogue[id];
+              if (definition == null) return id;
+
+              final language = Localizations.localeOf(context).languageCode;
+              return definition.name.resolve(
+                language: language,
+                lookup: (_names ?? ItemNames.empty).forLanguage(language),
+              );
+            },
+            hasTools: _carries('tool_hammer') || _carries('tool_axe'),
+            hasHammer: _carries('tool_hammer'),
+            hasMultitool: _carries('tool_multitool'),
+            onBuild: (kind) => unawaited(_buildShelter(kind)),
+            onBuildModule: (module) => unawaited(_buildModule(module)),
+          ),
+        ),
+      ),
+    );
+    await _reloadShelters();
+  }
+
+  /// §8.3: starts the work where the player is standing.
+  ///
+  /// ⚠️ That is, in practice, their home address (§8.2). It goes in the local
+  /// save and nowhere else — `allowBackup` is off for the whole database.
+  Future<void> _buildShelter(ShelterKind kind) async {
+    final character = _character;
+    final at = _standingAt.value;
+    if (character == null || at == null) return;
+
+    if (kind == ShelterKind.camp) {
+      final refusal = campRefusalAt(at, existing: _shelters);
+      if (refusal != null) return;
+      if (missingFor(kCampMaterials, _carriedCounts()).isNotEmpty) return;
+
+      await _spendMaterials(kCampMaterials);
+    }
+
+    await ShelterStore(widget.session.db).begin(
+      character.profile.id,
+      kind: kind,
+      at: at,
+      now: DateTime.now().toUtc(),
+      buildTime: buildTimeFor(
+        kind,
+        hasTools: _carries('tool_hammer') || _carries('tool_axe'),
+      ),
+    );
+
+    await _reloadShelters();
+    if (!mounted) return;
+    _say(L10n.of(context).shelterBuildStarted);
+  }
+
+  /// §8.4, §18.2: one level onto one module, against the clock.
+  Future<void> _buildModule(ShelterModule module) async {
+    final shelter = _shelters
+        .where((place) => place.kind == ShelterKind.main)
+        .firstOrNull;
+    if (shelter == null || shelter.building != null) return;
+
+    final recipe = nextLevelOf(module, have: shelter.levelOf(module));
+    if (recipe == null) return;
+
+    final hammer = _carries('tool_hammer');
+    final multitool = _carries('tool_multitool');
+    if (!toolsAllow(recipe, hasHammer: hammer, hasMultitool: multitool)) return;
+    if (missingFor(recipe.materials, _carriedCounts()).isNotEmpty) return;
+
+    await _spendMaterials(recipe.materials);
+    await ShelterStore(widget.session.db).beginModule(
+      shelter.id,
+      module: module,
+      level: recipe.level,
+      readyAt: DateTime.now().toUtc().add(
+        moduleWork(
+          recipe,
+          hasHammer: hammer,
+          hasMultitool: multitool,
+          workshopLevel: shelter.levelOf(ShelterModule.workshop),
+        ),
+      ),
+    );
+
+    await _reloadShelters();
+    if (!mounted) return;
+    _say(L10n.of(context).shelterBuildStarted);
+  }
+
+  /// Takes what a build costs out of the pack (§18.2).
+  Future<void> _spendMaterials(Map<String, int> materials) async {
+    var pack = _inventory.value;
+
+    for (final entry in materials.entries) {
+      var left = entry.value;
+      while (left > 0) {
+        final line = pack.carried
+            .where((piece) => piece.itemId == entry.key)
+            .firstOrNull;
+        if (line == null) break;
+
+        final taken = line.count < left ? line.count : left;
+        pack = pack.removeLine(line, count: taken) ?? pack;
+        left -= taken;
+      }
+    }
+
+    _inventory.value = pack;
+    await _saveInventory();
+  }
+
+  /// How many of each thing is in the pack, which is what §18.2 counts in.
+  Map<String, int> _carriedCounts() {
+    final counts = <String, int>{};
+    for (final line in _inventory.value.carried) {
+      counts[line.itemId] = (counts[line.itemId] ?? 0) + line.count;
+    }
+    return counts;
+  }
+
+  bool _carries(String itemId) => _carriedIds().contains(itemId);
+
   /// §10.3: marks where something went down, for as long as it is worth
   /// coming back to.
   void _remember(Enemy enemy) {
@@ -2123,6 +2330,15 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
             EnemyState.alert => MarkerAlert.searching,
             EnemyState.idle || EnemyState.returning => MarkerAlert.calm,
           },
+        ),
+
+      // §3.6: blue, and there is only ever one of them plus the camps.
+      for (final place in _shelters)
+        MapMarker(
+          id: 'shelter.${place.id}',
+          kind: MarkerKind.shelter,
+          at: place.position,
+          reachM: place.kind.safeRadiusM,
         ),
 
       // §10.3: bone white, with a skull on it. Stays until it is not worth
@@ -2843,8 +3059,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
                   unawaited(_openSettings());
                 case MapMenuEntry.inventory:
                   unawaited(_openInventory());
-                case MapMenuEntry.profile:
                 case MapMenuEntry.shelter:
+                  unawaited(_openShelter());
+                case MapMenuEntry.profile:
                   break;
               }
             },

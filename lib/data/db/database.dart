@@ -29,7 +29,7 @@ import 'tables.dart';
 part 'database.g.dart';
 
 /// Bumped only alongside a migration step in [_migration]. Never reused.
-const int kSchemaVersion = 12;
+const int kSchemaVersion = 13;
 
 /// Keys used in [MetaEntries].
 abstract final class MetaKeys {
@@ -57,6 +57,7 @@ abstract final class MetaKeys {
     InventoryLines,
     LootBoxes,
     GroundItems,
+    Shelters,
   ],
 )
 class SaveDatabase extends _$SaveDatabase {
@@ -69,7 +70,7 @@ class SaveDatabase extends _$SaveDatabase {
   /// follow a constant reference. `schema_test.dart` keeps it in step with
   /// [kSchemaVersion].
   @override
-  int get schemaVersion => 12;
+  int get schemaVersion => 13;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -166,6 +167,13 @@ class SaveDatabase extends _$SaveDatabase {
         // §5.6.3: what is bolted to a weapon. Empty reads as a bare one, which
         // is what every line written before this was.
         await m.addColumn(inventoryLines, inventoryLines.attachments);
+      }
+
+      if (from < 13) {
+        // §8: the place the player comes back to. A table of its own because
+        // it outlives every session and because it is the one record in the
+        // save that must never be backed up (§8.2).
+        await m.createTable(shelters);
       }
 
       await _writeSchemaVersion(to);
@@ -332,6 +340,23 @@ class SaveDatabase extends _$SaveDatabase {
   Future<void> removeGroundItems(List<int> ids) async {
     if (ids.isEmpty) return;
     await (delete(groundItems)..where((t) => t.id.isIn(ids))).go();
+  }
+
+  // ------------------------------------------------------------- shelter ---
+
+  Future<List<ShelterRow>> sheltersFor(int profileId) => (select(
+    shelters,
+  )..where((t) => t.profileId.equals(profileId))).get();
+
+  Future<int> addShelter(SheltersCompanion shelter) =>
+      into(shelters).insert(shelter);
+
+  Future<void> updateShelter(int id, SheltersCompanion changes) async {
+    await (update(shelters)..where((t) => t.id.equals(id))).write(changes);
+  }
+
+  Future<void> removeShelter(int id) async {
+    await (delete(shelters)..where((t) => t.id.equals(id))).go();
   }
 
   // -------------------------------------------------------- maintenance ---

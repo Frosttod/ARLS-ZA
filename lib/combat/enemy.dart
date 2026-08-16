@@ -609,15 +609,7 @@ GeoPoint _step(
   GeoPoint from, {
   required double bearing,
   required double metres,
-}) {
-  final radians = bearing * math.pi / 180;
-
-  return GeoPoint(
-    from.latitude + metres * math.cos(radians) / metresPerDegreeLat,
-    from.longitude +
-        metres * math.sin(radians) / metresPerDegreeLon(from.latitude),
-  );
-}
+}) => from.offsetBy(metres: metres, bearingDeg: bearing);
 
 /// A starting direction for something that has never moved.
 ///

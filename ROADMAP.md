@@ -16,7 +16,7 @@ Każdy zamknięty etap dostaje sekcję **Dziennik wykonania** z decyzjami podję
 | 5 | Walka, przeciwnicy, hałas | 🟡 14/14 zadań, przed testem w terenie | — | — |
 | 6 | Ognisko z pełnym cyklem | ⬜ | — | — |
 | 7 | Audio pozycyjne i haptyka | ⬜ | — | — |
-| 8 | Schron, obóz, pętla dobowa | ⬜ | — | — |
+| 8 | Schron, obóz, pętla dobowa | 🟡 | 6/9 | schemat v13 |
 | 9 | Onboarding, dostępność, zgodność | ⬜ | — | — |
 
 **Metryki:** 1263 testy · `flutter analyze` czysty · schemat bazy **v12** · release APK 89,5 MB bez devtools
@@ -443,12 +443,12 @@ Dwa wnioski na przyszłość:
 
 | # | Zadanie | Odniesienie |
 | :---- | :---- | :---- |
-| 8.1 | Budowa schronu podstawowego, ~3 h, postęp w tle z powiadomieniem | §8.3 |
-| 8.2 | Strefy: 50 m dla bezpieczeństwa i blokady ataku — oba promienie równe | §8.1 |
-| 8.3 | Prywatność lokalizacji schronu: `allowBackup=false` dla rekordu lub szyfrowanie | §8.2, §11.1.3 |
-| 8.4 | Obóz: 20 m, ~40 min budowy, prosta skrzynia +30 kg, max 2, wygasanie po 14/21 dniach | §8.5 |
-| 8.5 | Magazyn bazowy 25 kg z limitem objętości 3 l/kg | §18.2, §18.1a |
-| 8.6 | Zajęcia schronowe tykające przy zamkniętej aplikacji, anulowane przy zmianie strefy | §2.1a.3–2.1a.4 |
+| 8.1 | ✅ Budowa schronu podstawowego, ~3 h, postęp liczony z zegara (powiadomienie: brak) | §8.3 |
+| 8.2 | ✅ Strefy: 50 m dla bezpieczeństwa i blokady ataku — jeden promień na oba | §8.1 |
+| 8.3 | ✅ Prywatność lokalizacji schronu: `allowBackup=false` dla całej bazy | §8.2, §11.1.3 |
+| 8.4 | ✅ Obóz: 20 m, ~40 min budowy, max 2, wygasanie po 14/21 dniach (skrzynia: pojemność bez zawartości) | §8.5 |
+| 8.5 | 🟡 Magazyn bazowy 25 kg z limitem 3 l/kg — pojemność policzona, składowanie przedmiotów jeszcze nie | §18.2, §18.1a |
+| 8.6 | 🟡 Sen automatyczny (strefa + noc + brak zajęcia); moduły liczą się z zegara bez bramki strefy | §2.1a.3–2.1a.4 |
 | 8.7 | Śmierć: Hardcore z zabezpieczeniami, Softcore z utratą przytomności i skrytkami | §9.1, §9.2 |
 | 8.8 | Przemieszczenie gracza w czasie nieprzytomności, okno łaski 10 min | §9.2.1 |
 | 8.9 | Ekran powrotu po przerwie: co urosło, co stracone, czy była horda | §16.3 |

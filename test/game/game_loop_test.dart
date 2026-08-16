@@ -10,6 +10,8 @@ import 'package:arls_za/game/game_loop.dart';
 import 'package:arls_za/location/movement_integrity.dart';
 import 'package:arls_za/location/position_source.dart';
 import 'package:arls_za/location/power_source.dart';
+import 'package:arls_za/map/geometry.dart';
+import 'package:arls_za/shelter/shelter.dart';
 import 'package:arls_za/safety/player_safety.dart';
 import 'package:arls_za/sim/body.dart';
 import 'package:arls_za/sim/occupation.dart';
@@ -28,6 +30,10 @@ void main() {
   ).toSimConstants();
 
   final t0 = DateTime.utc(2026, 8, 10, 12);
+
+  /// Two in the morning in Poznań, which §2.5.1 calls night by the sun rather
+  /// than by a clock rule.
+  final midnight = DateTime.utc(2026, 8, 10, 0, 30);
 
   /// Lets the broadcast streams deliver. Fixes reach the loop through a
   /// StreamController, which is asynchronous by contract, so a test that steps
@@ -60,15 +66,15 @@ void main() {
       int profileId,
     })
   >
-  buildLoop({SimState? initial, PowerSource? power}) async {
-    final wall = ManualWallClock(t0);
+  buildLoop({SimState? initial, PowerSource? power, DateTime? startAt}) async {
+    final wall = ManualWallClock(startAt ?? t0);
     final scaled = ScaledWallClock(base: wall);
     final clock = GameClock(wallClock: scaled);
 
     final session = await SaveBootstrap(
       paths: paths,
       clock: clock,
-    ).boot(now: t0);
+    ).boot(now: startAt ?? t0);
 
     final profileId = await session.db.createProfile(
       profile: ProfilesCompanion.insert(
@@ -573,13 +579,15 @@ void main() {
       );
     });
 
-    test('sleeping in the shelter pays down the debt', () async {
-      final tired = SimState.fresh(at: t0, constants: constants).copyWith(
-        zone: MetabolicZone.shelter,
+    test('sleeping under a roof at night pays the debt down (§2.5.1)', () async {
+      // Nobody presses anything. Sleep is the default state of somebody who is
+      // in their shelter in the dark with nothing else on — which is exactly
+      // what a phone on a bedside table has actually done.
+      final tired = SimState.fresh(at: midnight, constants: constants).copyWith(
         sleepDebtSeconds: const Duration(hours: 5).inSeconds,
       );
 
-      final rig = await buildLoop(initial: tired);
+      final rig = await buildLoop(initial: tired, startAt: midnight);
       addTearDown(() async {
         await rig.loop.dispose();
         await rig.source.dispose();
@@ -587,13 +595,21 @@ void main() {
       });
 
       await rig.loop.start();
-      rig.loop.beginOccupation(
-        Occupation(
-          kind: OccupationKind.sleep,
-          startedAt: t0,
-          requiredWork: const Duration(hours: 8),
+      rig.source.jumpTo(52.4064, 16.9252);
+      rig.source.step();
+      await pump();
+
+      rig.loop.setShelters([
+        Shelter(
+          id: 1,
+          kind: ShelterKind.main,
+          position: const GeoPoint(52.4064, 16.9252),
+          startedAt: midnight.subtract(const Duration(days: 1)),
+          buildTime: kShelterBuildTime,
         ),
-      );
+      ]);
+
+      expect(rig.loop.state.zone, MetabolicZone.sleep);
 
       rig.wall.advance(const Duration(hours: 4));
       await rig.loop.onPaused(rig.wall.nowUtc());
@@ -603,6 +619,73 @@ void main() {
         lessThan(const Duration(hours: 5)),
         reason: 'four hours asleep must reduce a five-hour debt',
       );
+    });
+
+    test('and reading at midnight is reading, not sleeping (§2.1a.1)', () async {
+      // Something the player deliberately started outranks the default state.
+      final rig = await buildLoop(
+        initial: SimState.fresh(at: midnight, constants: constants),
+        startAt: midnight,
+      );
+      addTearDown(() async {
+        await rig.loop.dispose();
+        await rig.source.dispose();
+        await rig.session.close();
+      });
+
+      await rig.loop.start();
+      rig.source.jumpTo(52.4064, 16.9252);
+      rig.source.step();
+      await pump();
+
+      rig.loop.beginOccupation(
+        Occupation(
+          kind: OccupationKind.reading,
+          startedAt: midnight,
+          requiredWork: const Duration(hours: 3),
+        ),
+      );
+      rig.loop.setShelters([
+        Shelter(
+          id: 1,
+          kind: ShelterKind.main,
+          position: const GeoPoint(52.4064, 16.9252),
+          startedAt: midnight.subtract(const Duration(days: 1)),
+          buildTime: kShelterBuildTime,
+        ),
+      ]);
+
+      expect(rig.loop.state.zone, MetabolicZone.shelter);
+    });
+
+    test('a half-built shelter keeps nothing out (§8.3)', () async {
+      final rig = await buildLoop(
+        initial: SimState.fresh(at: midnight, constants: constants),
+        startAt: midnight,
+      );
+      addTearDown(() async {
+        await rig.loop.dispose();
+        await rig.source.dispose();
+        await rig.session.close();
+      });
+
+      await rig.loop.start();
+      rig.source.jumpTo(52.4064, 16.9252);
+      rig.source.step();
+      await pump();
+
+      rig.loop.setShelters([
+        Shelter(
+          id: 1,
+          kind: ShelterKind.main,
+          position: const GeoPoint(52.4064, 16.9252),
+          startedAt: midnight,
+          buildTime: kShelterBuildTime,
+        ),
+      ]);
+
+      expect(rig.loop.state.zone, MetabolicZone.open);
+      expect(rig.loop.insideShelter, isNull);
     });
   });
 

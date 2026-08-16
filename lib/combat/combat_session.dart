@@ -18,6 +18,7 @@ import '../safety/spawn_exclusion.dart';
 import 'enemy.dart';
 import 'enemy_spawner.dart';
 import 'noise.dart';
+import 'sanctuary.dart';
 
 /// How far away something has to be before the game stops thinking about it.
 ///
@@ -74,6 +75,7 @@ class CombatSession {
     List<SpawnOrigin> origins = const [],
     List<MapFeature> obstacles = const [],
     GeoPoint? shelterAt,
+    List<Sanctuary> sanctuaries = const [],
     bool denseUrban = false,
   }) {
     // §3.5's features are what a person may not be sent through; most of them
@@ -95,12 +97,23 @@ class CombatSession {
           ),
     ];
 
+    // §8.1: they wait at the edge. Pushed back out rather than stopped, so
+    // something that walked at a shelter ends up standing on the boundary
+    // facing it — which is the picture §8.1 asks for, and the reason nobody
+    // can camp their own doorway.
+    final held = sanctuaries.isEmpty
+        ? moved
+        : [
+            for (final enemy in moved)
+              enemy.copyWith(position: keepOut(enemy.position, sanctuaries)),
+          ];
+
     // §6.4: the hotspots of §6.5 will be passed in when they exist. Until
     // then the ambient trickle is the whole population, which is the one part
     // of §6.4 that does not depend on them.
     final spawn = spawnEnemies(
       playerAt: playerAt,
-      existing: moved,
+      existing: held,
       origins: origins.isEmpty
           ? [SpawnOrigin.ambient(centre: playerAt, radiusM: kAmbientRadiusM)]
           : origins,

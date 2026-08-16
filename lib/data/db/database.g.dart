@@ -5184,6 +5184,684 @@ class GroundItemsCompanion extends UpdateCompanion<GroundItem> {
   }
 }
 
+class $SheltersTable extends Shelters
+    with TableInfo<$SheltersTable, ShelterRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SheltersTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _profileIdMeta = const VerificationMeta(
+    'profileId',
+  );
+  @override
+  late final GeneratedColumn<int> profileId = GeneratedColumn<int>(
+    'profile_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  @override
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+    'kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _latitudeMeta = const VerificationMeta(
+    'latitude',
+  );
+  @override
+  late final GeneratedColumn<double> latitude = GeneratedColumn<double>(
+    'latitude',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _longitudeMeta = const VerificationMeta(
+    'longitude',
+  );
+  @override
+  late final GeneratedColumn<double> longitude = GeneratedColumn<double>(
+    'longitude',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _startedAtMeta = const VerificationMeta(
+    'startedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> startedAt = GeneratedColumn<DateTime>(
+    'started_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _buildSecondsMeta = const VerificationMeta(
+    'buildSeconds',
+  );
+  @override
+  late final GeneratedColumn<int> buildSeconds = GeneratedColumn<int>(
+    'build_seconds',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _modulesMeta = const VerificationMeta(
+    'modules',
+  );
+  @override
+  late final GeneratedColumn<String> modules = GeneratedColumn<String>(
+    'modules',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _visitedAtMeta = const VerificationMeta(
+    'visitedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> visitedAt = GeneratedColumn<DateTime>(
+    'visited_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _buildingMeta = const VerificationMeta(
+    'building',
+  );
+  @override
+  late final GeneratedColumn<String> building = GeneratedColumn<String>(
+    'building',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _buildingReadyAtMeta = const VerificationMeta(
+    'buildingReadyAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> buildingReadyAt =
+      GeneratedColumn<DateTime>(
+        'building_ready_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    profileId,
+    kind,
+    latitude,
+    longitude,
+    startedAt,
+    buildSeconds,
+    modules,
+    visitedAt,
+    building,
+    buildingReadyAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'shelters';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ShelterRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('profile_id')) {
+      context.handle(
+        _profileIdMeta,
+        profileId.isAcceptableOrUnknown(data['profile_id']!, _profileIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_profileIdMeta);
+    }
+    if (data.containsKey('kind')) {
+      context.handle(
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_kindMeta);
+    }
+    if (data.containsKey('latitude')) {
+      context.handle(
+        _latitudeMeta,
+        latitude.isAcceptableOrUnknown(data['latitude']!, _latitudeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_latitudeMeta);
+    }
+    if (data.containsKey('longitude')) {
+      context.handle(
+        _longitudeMeta,
+        longitude.isAcceptableOrUnknown(data['longitude']!, _longitudeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_longitudeMeta);
+    }
+    if (data.containsKey('started_at')) {
+      context.handle(
+        _startedAtMeta,
+        startedAt.isAcceptableOrUnknown(data['started_at']!, _startedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_startedAtMeta);
+    }
+    if (data.containsKey('build_seconds')) {
+      context.handle(
+        _buildSecondsMeta,
+        buildSeconds.isAcceptableOrUnknown(
+          data['build_seconds']!,
+          _buildSecondsMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_buildSecondsMeta);
+    }
+    if (data.containsKey('modules')) {
+      context.handle(
+        _modulesMeta,
+        modules.isAcceptableOrUnknown(data['modules']!, _modulesMeta),
+      );
+    }
+    if (data.containsKey('visited_at')) {
+      context.handle(
+        _visitedAtMeta,
+        visitedAt.isAcceptableOrUnknown(data['visited_at']!, _visitedAtMeta),
+      );
+    }
+    if (data.containsKey('building')) {
+      context.handle(
+        _buildingMeta,
+        building.isAcceptableOrUnknown(data['building']!, _buildingMeta),
+      );
+    }
+    if (data.containsKey('building_ready_at')) {
+      context.handle(
+        _buildingReadyAtMeta,
+        buildingReadyAt.isAcceptableOrUnknown(
+          data['building_ready_at']!,
+          _buildingReadyAtMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ShelterRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ShelterRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      profileId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}profile_id'],
+      )!,
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kind'],
+      )!,
+      latitude: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}latitude'],
+      )!,
+      longitude: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}longitude'],
+      )!,
+      startedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}started_at'],
+      )!,
+      buildSeconds: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}build_seconds'],
+      )!,
+      modules: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}modules'],
+      )!,
+      visitedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}visited_at'],
+      ),
+      building: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}building'],
+      ),
+      buildingReadyAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}building_ready_at'],
+      ),
+    );
+  }
+
+  @override
+  $SheltersTable createAlias(String alias) {
+    return $SheltersTable(attachedDatabase, alias);
+  }
+}
+
+class ShelterRow extends DataClass implements Insertable<ShelterRow> {
+  final int id;
+  final int profileId;
+
+  /// `main` or `camp` (§8.5.1). Text rather than an index so a save is
+  /// readable, as everywhere else in this schema.
+  final String kind;
+  final double latitude;
+  final double longitude;
+
+  /// §2.1a.3: building runs against the clock, so the record keeps when it
+  /// began and what it was going to take. Recomputing the second from the
+  /// first would let a hammer lost halfway through lengthen a finished job.
+  final DateTime startedAt;
+  final int buildSeconds;
+
+  /// §8.4: `storage:2,lounge:1`. Absent means nought, which is what every
+  /// shelter starts as.
+  final String modules;
+
+  /// §8.5.2: when the player was last inside. A camp nobody comes back to
+  /// falls down; the shelter never does.
+  final DateTime? visitedAt;
+
+  /// §8.4, §18.2: the module currently going up, as `lounge:2`, and when it
+  /// will be finished. Both null when nothing is being built.
+  ///
+  /// On the row rather than in an occupation because it has to finish while
+  /// the app is dead — §8.3 says as much about the shelter itself, and a
+  /// nine-hour workshop is even less of a thing to sit and watch.
+  final String? building;
+  final DateTime? buildingReadyAt;
+  const ShelterRow({
+    required this.id,
+    required this.profileId,
+    required this.kind,
+    required this.latitude,
+    required this.longitude,
+    required this.startedAt,
+    required this.buildSeconds,
+    required this.modules,
+    this.visitedAt,
+    this.building,
+    this.buildingReadyAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['profile_id'] = Variable<int>(profileId);
+    map['kind'] = Variable<String>(kind);
+    map['latitude'] = Variable<double>(latitude);
+    map['longitude'] = Variable<double>(longitude);
+    map['started_at'] = Variable<DateTime>(startedAt);
+    map['build_seconds'] = Variable<int>(buildSeconds);
+    map['modules'] = Variable<String>(modules);
+    if (!nullToAbsent || visitedAt != null) {
+      map['visited_at'] = Variable<DateTime>(visitedAt);
+    }
+    if (!nullToAbsent || building != null) {
+      map['building'] = Variable<String>(building);
+    }
+    if (!nullToAbsent || buildingReadyAt != null) {
+      map['building_ready_at'] = Variable<DateTime>(buildingReadyAt);
+    }
+    return map;
+  }
+
+  SheltersCompanion toCompanion(bool nullToAbsent) {
+    return SheltersCompanion(
+      id: Value(id),
+      profileId: Value(profileId),
+      kind: Value(kind),
+      latitude: Value(latitude),
+      longitude: Value(longitude),
+      startedAt: Value(startedAt),
+      buildSeconds: Value(buildSeconds),
+      modules: Value(modules),
+      visitedAt: visitedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(visitedAt),
+      building: building == null && nullToAbsent
+          ? const Value.absent()
+          : Value(building),
+      buildingReadyAt: buildingReadyAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(buildingReadyAt),
+    );
+  }
+
+  factory ShelterRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ShelterRow(
+      id: serializer.fromJson<int>(json['id']),
+      profileId: serializer.fromJson<int>(json['profileId']),
+      kind: serializer.fromJson<String>(json['kind']),
+      latitude: serializer.fromJson<double>(json['latitude']),
+      longitude: serializer.fromJson<double>(json['longitude']),
+      startedAt: serializer.fromJson<DateTime>(json['startedAt']),
+      buildSeconds: serializer.fromJson<int>(json['buildSeconds']),
+      modules: serializer.fromJson<String>(json['modules']),
+      visitedAt: serializer.fromJson<DateTime?>(json['visitedAt']),
+      building: serializer.fromJson<String?>(json['building']),
+      buildingReadyAt: serializer.fromJson<DateTime?>(json['buildingReadyAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'profileId': serializer.toJson<int>(profileId),
+      'kind': serializer.toJson<String>(kind),
+      'latitude': serializer.toJson<double>(latitude),
+      'longitude': serializer.toJson<double>(longitude),
+      'startedAt': serializer.toJson<DateTime>(startedAt),
+      'buildSeconds': serializer.toJson<int>(buildSeconds),
+      'modules': serializer.toJson<String>(modules),
+      'visitedAt': serializer.toJson<DateTime?>(visitedAt),
+      'building': serializer.toJson<String?>(building),
+      'buildingReadyAt': serializer.toJson<DateTime?>(buildingReadyAt),
+    };
+  }
+
+  ShelterRow copyWith({
+    int? id,
+    int? profileId,
+    String? kind,
+    double? latitude,
+    double? longitude,
+    DateTime? startedAt,
+    int? buildSeconds,
+    String? modules,
+    Value<DateTime?> visitedAt = const Value.absent(),
+    Value<String?> building = const Value.absent(),
+    Value<DateTime?> buildingReadyAt = const Value.absent(),
+  }) => ShelterRow(
+    id: id ?? this.id,
+    profileId: profileId ?? this.profileId,
+    kind: kind ?? this.kind,
+    latitude: latitude ?? this.latitude,
+    longitude: longitude ?? this.longitude,
+    startedAt: startedAt ?? this.startedAt,
+    buildSeconds: buildSeconds ?? this.buildSeconds,
+    modules: modules ?? this.modules,
+    visitedAt: visitedAt.present ? visitedAt.value : this.visitedAt,
+    building: building.present ? building.value : this.building,
+    buildingReadyAt: buildingReadyAt.present
+        ? buildingReadyAt.value
+        : this.buildingReadyAt,
+  );
+  ShelterRow copyWithCompanion(SheltersCompanion data) {
+    return ShelterRow(
+      id: data.id.present ? data.id.value : this.id,
+      profileId: data.profileId.present ? data.profileId.value : this.profileId,
+      kind: data.kind.present ? data.kind.value : this.kind,
+      latitude: data.latitude.present ? data.latitude.value : this.latitude,
+      longitude: data.longitude.present ? data.longitude.value : this.longitude,
+      startedAt: data.startedAt.present ? data.startedAt.value : this.startedAt,
+      buildSeconds: data.buildSeconds.present
+          ? data.buildSeconds.value
+          : this.buildSeconds,
+      modules: data.modules.present ? data.modules.value : this.modules,
+      visitedAt: data.visitedAt.present ? data.visitedAt.value : this.visitedAt,
+      building: data.building.present ? data.building.value : this.building,
+      buildingReadyAt: data.buildingReadyAt.present
+          ? data.buildingReadyAt.value
+          : this.buildingReadyAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ShelterRow(')
+          ..write('id: $id, ')
+          ..write('profileId: $profileId, ')
+          ..write('kind: $kind, ')
+          ..write('latitude: $latitude, ')
+          ..write('longitude: $longitude, ')
+          ..write('startedAt: $startedAt, ')
+          ..write('buildSeconds: $buildSeconds, ')
+          ..write('modules: $modules, ')
+          ..write('visitedAt: $visitedAt, ')
+          ..write('building: $building, ')
+          ..write('buildingReadyAt: $buildingReadyAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    profileId,
+    kind,
+    latitude,
+    longitude,
+    startedAt,
+    buildSeconds,
+    modules,
+    visitedAt,
+    building,
+    buildingReadyAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ShelterRow &&
+          other.id == this.id &&
+          other.profileId == this.profileId &&
+          other.kind == this.kind &&
+          other.latitude == this.latitude &&
+          other.longitude == this.longitude &&
+          other.startedAt == this.startedAt &&
+          other.buildSeconds == this.buildSeconds &&
+          other.modules == this.modules &&
+          other.visitedAt == this.visitedAt &&
+          other.building == this.building &&
+          other.buildingReadyAt == this.buildingReadyAt);
+}
+
+class SheltersCompanion extends UpdateCompanion<ShelterRow> {
+  final Value<int> id;
+  final Value<int> profileId;
+  final Value<String> kind;
+  final Value<double> latitude;
+  final Value<double> longitude;
+  final Value<DateTime> startedAt;
+  final Value<int> buildSeconds;
+  final Value<String> modules;
+  final Value<DateTime?> visitedAt;
+  final Value<String?> building;
+  final Value<DateTime?> buildingReadyAt;
+  const SheltersCompanion({
+    this.id = const Value.absent(),
+    this.profileId = const Value.absent(),
+    this.kind = const Value.absent(),
+    this.latitude = const Value.absent(),
+    this.longitude = const Value.absent(),
+    this.startedAt = const Value.absent(),
+    this.buildSeconds = const Value.absent(),
+    this.modules = const Value.absent(),
+    this.visitedAt = const Value.absent(),
+    this.building = const Value.absent(),
+    this.buildingReadyAt = const Value.absent(),
+  });
+  SheltersCompanion.insert({
+    this.id = const Value.absent(),
+    required int profileId,
+    required String kind,
+    required double latitude,
+    required double longitude,
+    required DateTime startedAt,
+    required int buildSeconds,
+    this.modules = const Value.absent(),
+    this.visitedAt = const Value.absent(),
+    this.building = const Value.absent(),
+    this.buildingReadyAt = const Value.absent(),
+  }) : profileId = Value(profileId),
+       kind = Value(kind),
+       latitude = Value(latitude),
+       longitude = Value(longitude),
+       startedAt = Value(startedAt),
+       buildSeconds = Value(buildSeconds);
+  static Insertable<ShelterRow> custom({
+    Expression<int>? id,
+    Expression<int>? profileId,
+    Expression<String>? kind,
+    Expression<double>? latitude,
+    Expression<double>? longitude,
+    Expression<DateTime>? startedAt,
+    Expression<int>? buildSeconds,
+    Expression<String>? modules,
+    Expression<DateTime>? visitedAt,
+    Expression<String>? building,
+    Expression<DateTime>? buildingReadyAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (profileId != null) 'profile_id': profileId,
+      if (kind != null) 'kind': kind,
+      if (latitude != null) 'latitude': latitude,
+      if (longitude != null) 'longitude': longitude,
+      if (startedAt != null) 'started_at': startedAt,
+      if (buildSeconds != null) 'build_seconds': buildSeconds,
+      if (modules != null) 'modules': modules,
+      if (visitedAt != null) 'visited_at': visitedAt,
+      if (building != null) 'building': building,
+      if (buildingReadyAt != null) 'building_ready_at': buildingReadyAt,
+    });
+  }
+
+  SheltersCompanion copyWith({
+    Value<int>? id,
+    Value<int>? profileId,
+    Value<String>? kind,
+    Value<double>? latitude,
+    Value<double>? longitude,
+    Value<DateTime>? startedAt,
+    Value<int>? buildSeconds,
+    Value<String>? modules,
+    Value<DateTime?>? visitedAt,
+    Value<String?>? building,
+    Value<DateTime?>? buildingReadyAt,
+  }) {
+    return SheltersCompanion(
+      id: id ?? this.id,
+      profileId: profileId ?? this.profileId,
+      kind: kind ?? this.kind,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+      startedAt: startedAt ?? this.startedAt,
+      buildSeconds: buildSeconds ?? this.buildSeconds,
+      modules: modules ?? this.modules,
+      visitedAt: visitedAt ?? this.visitedAt,
+      building: building ?? this.building,
+      buildingReadyAt: buildingReadyAt ?? this.buildingReadyAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (profileId.present) {
+      map['profile_id'] = Variable<int>(profileId.value);
+    }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
+    }
+    if (latitude.present) {
+      map['latitude'] = Variable<double>(latitude.value);
+    }
+    if (longitude.present) {
+      map['longitude'] = Variable<double>(longitude.value);
+    }
+    if (startedAt.present) {
+      map['started_at'] = Variable<DateTime>(startedAt.value);
+    }
+    if (buildSeconds.present) {
+      map['build_seconds'] = Variable<int>(buildSeconds.value);
+    }
+    if (modules.present) {
+      map['modules'] = Variable<String>(modules.value);
+    }
+    if (visitedAt.present) {
+      map['visited_at'] = Variable<DateTime>(visitedAt.value);
+    }
+    if (building.present) {
+      map['building'] = Variable<String>(building.value);
+    }
+    if (buildingReadyAt.present) {
+      map['building_ready_at'] = Variable<DateTime>(buildingReadyAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SheltersCompanion(')
+          ..write('id: $id, ')
+          ..write('profileId: $profileId, ')
+          ..write('kind: $kind, ')
+          ..write('latitude: $latitude, ')
+          ..write('longitude: $longitude, ')
+          ..write('startedAt: $startedAt, ')
+          ..write('buildSeconds: $buildSeconds, ')
+          ..write('modules: $modules, ')
+          ..write('visitedAt: $visitedAt, ')
+          ..write('building: $building, ')
+          ..write('buildingReadyAt: $buildingReadyAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$SaveDatabase extends GeneratedDatabase {
   _$SaveDatabase(QueryExecutor e) : super(e);
   $SaveDatabaseManager get managers => $SaveDatabaseManager(this);
@@ -5200,6 +5878,7 @@ abstract class _$SaveDatabase extends GeneratedDatabase {
   late final $InventoryLinesTable inventoryLines = $InventoryLinesTable(this);
   late final $LootBoxesTable lootBoxes = $LootBoxesTable(this);
   late final $GroundItemsTable groundItems = $GroundItemsTable(this);
+  late final $SheltersTable shelters = $SheltersTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -5214,6 +5893,7 @@ abstract class _$SaveDatabase extends GeneratedDatabase {
     inventoryLines,
     lootBoxes,
     groundItems,
+    shelters,
   ];
   @override
   DriftDatabaseOptions get options =>
@@ -7713,6 +8393,315 @@ typedef $$GroundItemsTableProcessedTableManager =
       GroundItem,
       PrefetchHooks Function()
     >;
+typedef $$SheltersTableCreateCompanionBuilder =
+    SheltersCompanion Function({
+      Value<int> id,
+      required int profileId,
+      required String kind,
+      required double latitude,
+      required double longitude,
+      required DateTime startedAt,
+      required int buildSeconds,
+      Value<String> modules,
+      Value<DateTime?> visitedAt,
+      Value<String?> building,
+      Value<DateTime?> buildingReadyAt,
+    });
+typedef $$SheltersTableUpdateCompanionBuilder =
+    SheltersCompanion Function({
+      Value<int> id,
+      Value<int> profileId,
+      Value<String> kind,
+      Value<double> latitude,
+      Value<double> longitude,
+      Value<DateTime> startedAt,
+      Value<int> buildSeconds,
+      Value<String> modules,
+      Value<DateTime?> visitedAt,
+      Value<String?> building,
+      Value<DateTime?> buildingReadyAt,
+    });
+
+class $$SheltersTableFilterComposer
+    extends Composer<_$SaveDatabase, $SheltersTable> {
+  $$SheltersTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get profileId => $composableBuilder(
+    column: $table.profileId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get latitude => $composableBuilder(
+    column: $table.latitude,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get longitude => $composableBuilder(
+    column: $table.longitude,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get startedAt => $composableBuilder(
+    column: $table.startedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get buildSeconds => $composableBuilder(
+    column: $table.buildSeconds,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get modules => $composableBuilder(
+    column: $table.modules,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get visitedAt => $composableBuilder(
+    column: $table.visitedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get building => $composableBuilder(
+    column: $table.building,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get buildingReadyAt => $composableBuilder(
+    column: $table.buildingReadyAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$SheltersTableOrderingComposer
+    extends Composer<_$SaveDatabase, $SheltersTable> {
+  $$SheltersTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get profileId => $composableBuilder(
+    column: $table.profileId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get latitude => $composableBuilder(
+    column: $table.latitude,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get longitude => $composableBuilder(
+    column: $table.longitude,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get startedAt => $composableBuilder(
+    column: $table.startedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get buildSeconds => $composableBuilder(
+    column: $table.buildSeconds,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get modules => $composableBuilder(
+    column: $table.modules,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get visitedAt => $composableBuilder(
+    column: $table.visitedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get building => $composableBuilder(
+    column: $table.building,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get buildingReadyAt => $composableBuilder(
+    column: $table.buildingReadyAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$SheltersTableAnnotationComposer
+    extends Composer<_$SaveDatabase, $SheltersTable> {
+  $$SheltersTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get profileId =>
+      $composableBuilder(column: $table.profileId, builder: (column) => column);
+
+  GeneratedColumn<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
+
+  GeneratedColumn<double> get latitude =>
+      $composableBuilder(column: $table.latitude, builder: (column) => column);
+
+  GeneratedColumn<double> get longitude =>
+      $composableBuilder(column: $table.longitude, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get startedAt =>
+      $composableBuilder(column: $table.startedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get buildSeconds => $composableBuilder(
+    column: $table.buildSeconds,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get modules =>
+      $composableBuilder(column: $table.modules, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get visitedAt =>
+      $composableBuilder(column: $table.visitedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get building =>
+      $composableBuilder(column: $table.building, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get buildingReadyAt => $composableBuilder(
+    column: $table.buildingReadyAt,
+    builder: (column) => column,
+  );
+}
+
+class $$SheltersTableTableManager
+    extends
+        RootTableManager<
+          _$SaveDatabase,
+          $SheltersTable,
+          ShelterRow,
+          $$SheltersTableFilterComposer,
+          $$SheltersTableOrderingComposer,
+          $$SheltersTableAnnotationComposer,
+          $$SheltersTableCreateCompanionBuilder,
+          $$SheltersTableUpdateCompanionBuilder,
+          (
+            ShelterRow,
+            BaseReferences<_$SaveDatabase, $SheltersTable, ShelterRow>,
+          ),
+          ShelterRow,
+          PrefetchHooks Function()
+        > {
+  $$SheltersTableTableManager(_$SaveDatabase db, $SheltersTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SheltersTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SheltersTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SheltersTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> profileId = const Value.absent(),
+                Value<String> kind = const Value.absent(),
+                Value<double> latitude = const Value.absent(),
+                Value<double> longitude = const Value.absent(),
+                Value<DateTime> startedAt = const Value.absent(),
+                Value<int> buildSeconds = const Value.absent(),
+                Value<String> modules = const Value.absent(),
+                Value<DateTime?> visitedAt = const Value.absent(),
+                Value<String?> building = const Value.absent(),
+                Value<DateTime?> buildingReadyAt = const Value.absent(),
+              }) => SheltersCompanion(
+                id: id,
+                profileId: profileId,
+                kind: kind,
+                latitude: latitude,
+                longitude: longitude,
+                startedAt: startedAt,
+                buildSeconds: buildSeconds,
+                modules: modules,
+                visitedAt: visitedAt,
+                building: building,
+                buildingReadyAt: buildingReadyAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int profileId,
+                required String kind,
+                required double latitude,
+                required double longitude,
+                required DateTime startedAt,
+                required int buildSeconds,
+                Value<String> modules = const Value.absent(),
+                Value<DateTime?> visitedAt = const Value.absent(),
+                Value<String?> building = const Value.absent(),
+                Value<DateTime?> buildingReadyAt = const Value.absent(),
+              }) => SheltersCompanion.insert(
+                id: id,
+                profileId: profileId,
+                kind: kind,
+                latitude: latitude,
+                longitude: longitude,
+                startedAt: startedAt,
+                buildSeconds: buildSeconds,
+                modules: modules,
+                visitedAt: visitedAt,
+                building: building,
+                buildingReadyAt: buildingReadyAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$SheltersTableProcessedTableManager =
+    ProcessedTableManager<
+      _$SaveDatabase,
+      $SheltersTable,
+      ShelterRow,
+      $$SheltersTableFilterComposer,
+      $$SheltersTableOrderingComposer,
+      $$SheltersTableAnnotationComposer,
+      $$SheltersTableCreateCompanionBuilder,
+      $$SheltersTableUpdateCompanionBuilder,
+      (ShelterRow, BaseReferences<_$SaveDatabase, $SheltersTable, ShelterRow>),
+      ShelterRow,
+      PrefetchHooks Function()
+    >;
 
 class $SaveDatabaseManager {
   final _$SaveDatabase _db;
@@ -7735,4 +8724,6 @@ class $SaveDatabaseManager {
       $$LootBoxesTableTableManager(_db, _db.lootBoxes);
   $$GroundItemsTableTableManager get groundItems =>
       $$GroundItemsTableTableManager(_db, _db.groundItems);
+  $$SheltersTableTableManager get shelters =>
+      $$SheltersTableTableManager(_db, _db.shelters);
 }
