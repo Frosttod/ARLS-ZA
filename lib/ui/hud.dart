@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 
 import '../inventory/inventory.dart' show kPocketCapacityL;
 import '../l10n/app_localizations.dart';
+import 'status_notes.dart';
 import '../sim/physiology.dart';
 import '../sim/tick.dart';
 
@@ -185,7 +186,8 @@ class Hud extends StatelessWidget {
                   carriedKg: carriedKg,
                   // Blood loss costs carry capacity (§2.6): class II takes 10%.
                   comfortKg: carryComfortKg! * status.blood.carryPenalty,
-                  maxKg: (carryMaxKg ?? carryComfortKg! * 1.5) *
+                  maxKg:
+                      (carryMaxKg ?? carryComfortKg! * 1.5) *
                       status.blood.carryPenalty,
                   volumeL: carriedVolumeL,
                   capacityL: capacityL,
@@ -425,18 +427,13 @@ class _StatusRow extends StatelessWidget {
     final colours = HudColors.of(context);
     final l10n = L10n.of(context);
 
-    // §12: a word for what is wrong, and — on a tap — what it is costing.
-    // A status a player cannot ask about is a status they learn to ignore.
-    final chips = <({String label, String? detail})>[
-      for (final warning in warnings) (label: warning, detail: null),
-      if (status.blood.shockClass != ShockClass.none)
-        (label: l10n.statusShock, detail: l10n.statusShockWhat),
-      if (status.thirst.accuracyPenalty < 1)
-        (label: l10n.statusDehydrated, detail: l10n.statusDehydratedWhat),
-      if (status.hunger.actionTimeMultiplier > 1)
-        (label: l10n.statusStarving, detail: l10n.statusStarvingWhat),
-      if (status.sleep.extraMoa > 0)
-        (label: l10n.statusSleepDeprived, detail: l10n.statusSleepDeprivedWhat),
+    // §12: a word for what is wrong, and — on a tap — what it is costing,
+    // what fixes it, and where that is found. A status a player cannot ask
+    // about is a status they learn to ignore.
+    final chips = <({String label, StatusNote? note})>[
+      for (final warning in warnings) (label: warning, note: null),
+      for (final note in statusNotes(l10n, status))
+        (label: note.name, note: note),
     ];
 
     if (chips.isEmpty) return const SizedBox(height: 4);
@@ -447,9 +444,9 @@ class _StatusRow extends StatelessWidget {
       children: [
         for (final chip in chips)
           GestureDetector(
-            onTap: chip.detail == null
+            onTap: chip.note == null
                 ? null
-                : () => _explain(context, chip.label, chip.detail!, colours),
+                : () => _explain(context, chip.note!, colours),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
@@ -472,50 +469,102 @@ class _StatusRow extends StatelessWidget {
     );
   }
 
-  /// What this status is doing to the character, in the units it does it in.
-  void _explain(
-    BuildContext context,
-    String label,
-    String detail,
-    HudColors colours,
-  ) {
+  /// What this status is: how bad, what it costs, what fixes it, and where
+  /// that is found — always those four, always in that order.
+  void _explain(BuildContext context, StatusNote note, HudColors colours) {
     showModalBottomSheet<void>(
       context: context,
-      builder: (context) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 14,
-                  letterSpacing: 1.2,
-                  fontWeight: FontWeight.bold,
-                  color: colours.alert,
-                ),
+      builder: (context) {
+        final l10n = L10n.of(context);
+
+        // Scrolls: four paragraphs at the largest accessible text size do not
+        // fit a short phone, and §12 would rather they scrolled than shrank.
+        return SafeArea(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    note.level == null
+                        ? note.name
+                        : '${note.name} — ${note.level}',
+                    style: TextStyle(
+                      fontSize: 15,
+                      letterSpacing: 0.6,
+                      fontWeight: FontWeight.bold,
+                      color: colours.alert,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  _Section(
+                    heading: l10n.statusEffect,
+                    body: note.effect,
+                    colours: colours,
+                  ),
+                  _Section(
+                    heading: l10n.statusFix,
+                    body: note.fix,
+                    colours: colours,
+                  ),
+                  _Section(
+                    heading: l10n.statusWhere,
+                    body: note.where,
+                    colours: colours,
+                  ),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: Text(l10n.commonOk),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 10),
-              Text(
-                detail,
-                style: TextStyle(fontSize: 13, height: 1.45,
-                    color: colours.text),
-              ),
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: Text(L10n.of(context).noteClose),
-                ),
-              ),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
+}
+
+/// One labelled paragraph of a status sheet.
+class _Section extends StatelessWidget {
+  const _Section({
+    required this.heading,
+    required this.body,
+    required this.colours,
+  });
+
+  final String heading;
+  final String body;
+  final HudColors colours;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: 12),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          heading.toUpperCase(),
+          style: TextStyle(
+            fontSize: 9,
+            letterSpacing: 1.5,
+            color: colours.muted,
+          ),
+        ),
+        const SizedBox(height: 3),
+        Text(
+          body,
+          style: TextStyle(fontSize: 13, height: 1.4, color: colours.text),
+        ),
+      ],
+    ),
+  );
 }
 
 /// Carry load against the comfortable limit (§1.3, §18.1a).
@@ -561,7 +610,8 @@ class _CarryReadout extends StatelessWidget {
         Expanded(
           child: _LimitBar(
             label: massLabel,
-            value: '${carriedKg.toStringAsFixed(1)} / '
+            value:
+                '${carriedKg.toStringAsFixed(1)} / '
                 '${maxKg.toStringAsFixed(0)} kg',
             fraction: maxKg > 0 ? carriedKg / maxKg : 0,
             // Where the load stops being free. Drawn rather than described,
@@ -577,7 +627,8 @@ class _CarryReadout extends StatelessWidget {
         Expanded(
           child: _LimitBar(
             label: bulkLabel,
-            value: '${volumeL.toStringAsFixed(0)} / '
+            value:
+                '${volumeL.toStringAsFixed(0)} / '
                 '${capacityL.toStringAsFixed(0)} l',
             fraction: capacityL > 0 ? volumeL / capacityL : 0,
             warning: capacityL > 0 && volumeL > capacityL * 0.9,

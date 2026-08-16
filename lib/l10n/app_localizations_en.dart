@@ -234,20 +234,79 @@ class L10nEn extends L10n {
   String get hudWeakSignal => 'Weak signal';
 
   @override
-  String get statusShockWhat =>
-      'Blood loss. Class II costs a tenth of your carry limit and steadiness; class III takes a third and blurs everything. It does not heal by itself — the bleeding has to be stopped first (§2.6).';
+  String statusDegree(String degree) {
+    return '$degree degree';
+  }
 
   @override
-  String get statusDehydratedWhat =>
-      'Below 60% of your daily water the hands go first: aim, then decisions. Below 30% it is dangerous. Drinking works over about twenty minutes, not instantly (§2.3).';
+  String statusOfDaily(int percent) {
+    return '$percent% of the daily need';
+  }
 
   @override
-  String get statusStarvingWhat =>
-      'An empty stomach makes everything take longer — searching, bandaging, building. It does not kill quickly, it just makes every minute cost more (§2.2).';
+  String statusDebtHours(int hours) {
+    return '$hours h of debt';
+  }
 
   @override
-  String get statusSleepDeprivedWhat =>
-      'Sleep debt adds minutes of angle to every shot and takes the edge off your judgement. Only sleep pays it down, and only in a shelter (§2.5).';
+  String get statusEffect => 'Effect';
+
+  @override
+  String get statusFix => 'What to do';
+
+  @override
+  String get statusWhere => 'Where to find it';
+
+  @override
+  String get commonOk => 'OK';
+
+  @override
+  String get statusShockEffect =>
+      'Wider groups on every shot, less carried before it hurts, and above class III the picture dims and running makes you dizzy.';
+
+  @override
+  String get statusShockFix =>
+      'Stop the bleeding first — a bandage or a tourniquet. Blood comes back on its own afterwards, slowly, and only if you eat and drink.';
+
+  @override
+  String get statusShockWhere =>
+      'Pharmacies, clinics, ambulances; first-aid kits in offices and workshops.';
+
+  @override
+  String get statusDehydratedEffect =>
+      'Hands go first: aim and reaction time. Deeper down it takes decisions, then strength.';
+
+  @override
+  String get statusDehydratedFix =>
+      'Drink. It works over about twenty minutes, not instantly, so drink before you need it.';
+
+  @override
+  String get statusDehydratedWhere =>
+      'Shops, petrol stations, homes. Water from a tap or a stream has to be boiled or treated first.';
+
+  @override
+  String get statusStarvingEffect =>
+      'Everything takes longer — searching, bandaging, building — and precision goes with it.';
+
+  @override
+  String get statusStarvingFix =>
+      'Eat. Tins and dry food keep; anything cooked is worth more per kilogram carried.';
+
+  @override
+  String get statusStarvingWhere =>
+      'Shops, homes, restaurants, allotments. Bodies rarely carry more than a snack.';
+
+  @override
+  String get statusSleepDeprivedEffect =>
+      'Every shot spreads wider, everything takes longer to learn, and past a day awake the eyes close on their own for a few seconds at a time.';
+
+  @override
+  String get statusSleepDeprivedFix =>
+      'Sleep. Only sleep pays this down — and only somewhere safe enough to lie down, which means a shelter.';
+
+  @override
+  String get statusSleepDeprivedWhere =>
+      'Your own shelter. A bed or a mattress makes the hours count for more.';
 
   @override
   String get statusBleeding => 'Bleeding';

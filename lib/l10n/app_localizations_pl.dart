@@ -236,20 +236,79 @@ class L10nPl extends L10n {
   String get hudWeakSignal => 'Słaby sygnał';
 
   @override
-  String get statusShockWhat =>
-      'Utrata krwi. Klasa II zabiera dziesiątą część udźwigu i pewności ręki, klasa III jedną trzecią i rozmywa wszystko. Samo nie przejdzie — najpierw trzeba zatrzymać krwawienie (§2.6).';
+  String statusDegree(String degree) {
+    return '$degree stopnia';
+  }
 
   @override
-  String get statusDehydratedWhat =>
-      'Poniżej 60% dobowej wody najpierw idą ręce: celność, potem decyzje. Poniżej 30% robi się groźnie. Picie działa przez jakieś dwadzieścia minut, nie natychmiast (§2.3).';
+  String statusOfDaily(int percent) {
+    return '$percent% dobowej normy';
+  }
 
   @override
-  String get statusStarvingWhat =>
-      'Pusty żołądek wydłuża wszystko — przeszukiwanie, opatrywanie, budowanie. Nie zabija szybko, tylko sprawia, że każda minuta kosztuje więcej (§2.2).';
+  String statusDebtHours(int hours) {
+    return '$hours h długu';
+  }
 
   @override
-  String get statusSleepDeprivedWhat =>
-      'Dług snu dokłada minuty kątowe do każdego strzału i tępi ocenę sytuacji. Spłaca go wyłącznie sen, i tylko w schronie (§2.5).';
+  String get statusEffect => 'Wpływ';
+
+  @override
+  String get statusFix => 'Co zrobić';
+
+  @override
+  String get statusWhere => 'Gdzie znaleźć';
+
+  @override
+  String get commonOk => 'OK';
+
+  @override
+  String get statusShockEffect =>
+      'Rozrzut przy każdym strzale, mniejszy udźwig, a od III stopnia obraz ciemnieje i bieg powoduje zawroty głowy.';
+
+  @override
+  String get statusShockFix =>
+      'Najpierw zatrzymaj krwawienie — bandaż albo opaska uciskowa. Krew wraca sama, powoli, i tylko jeśli jesz i pijesz.';
+
+  @override
+  String get statusShockWhere =>
+      'Apteki, przychodnie, karetki; apteczki w biurach i warsztatach.';
+
+  @override
+  String get statusDehydratedEffect =>
+      'Najpierw ręce: celność i czas reakcji. Głębiej — decyzje, potem siła.';
+
+  @override
+  String get statusDehydratedFix =>
+      'Pij. Działa przez jakieś dwadzieścia minut, nie natychmiast — więc pij zanim będzie trzeba.';
+
+  @override
+  String get statusDehydratedWhere =>
+      'Sklepy, stacje paliw, mieszkania. Wodę z kranu albo ze strumienia trzeba najpierw przegotować lub uzdatnić.';
+
+  @override
+  String get statusStarvingEffect =>
+      'Wszystko trwa dłużej — przeszukiwanie, opatrywanie, budowanie — a z tym spada precyzja.';
+
+  @override
+  String get statusStarvingFix =>
+      'Zjedz. Konserwy i suchy prowiant się nie psują; ugotowane daje więcej na kilogram noszenia.';
+
+  @override
+  String get statusStarvingWhere =>
+      'Sklepy, mieszkania, restauracje, działki. Przy ciałach rzadko jest coś więcej niż przekąska.';
+
+  @override
+  String get statusSleepDeprivedEffect =>
+      'Każdy strzał ma większy rozrzut, nauka idzie wolniej, a po dobie na nogach oczy same zamykają się na kilka sekund.';
+
+  @override
+  String get statusSleepDeprivedFix =>
+      'Śpij. Tylko sen to spłaca — i tylko tam, gdzie da się położyć, czyli w schronie.';
+
+  @override
+  String get statusSleepDeprivedWhere =>
+      'Własny schron. Łóżko albo materac sprawia, że godziny liczą się mocniej.';
 
   @override
   String get statusBleeding => 'Krwawienie';

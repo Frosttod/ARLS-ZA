@@ -71,7 +71,7 @@ Future<void> showGroundItems(
                     ),
                     TextButton(
                       onPressed: () => Navigator.of(context).pop(),
-                      child: Text(l10n.noteClose),
+                      child: Text(l10n.commonOk),
                     ),
                   ],
                 ),
@@ -116,7 +116,7 @@ Future<void> showGroundItems(
                     alignment: Alignment.centerRight,
                     child: TextButton(
                       onPressed: () => Navigator.of(context).pop(),
-                      child: Text(l10n.noteClose),
+                      child: Text(l10n.commonOk),
                     ),
                   ),
                 ],

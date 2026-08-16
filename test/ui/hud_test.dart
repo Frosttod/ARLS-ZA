@@ -384,7 +384,15 @@ void main() {
     await tester.tap(find.text('ODWODNIENIE'));
     await tester.pumpAndSettle();
 
+    // Four questions in the order a person asks them: how bad, what it costs,
+    // what fixes it, where that is. No section numbers — the design document
+    // is where the numbers are argued, not the rain.
+    expect(find.textContaining('dobowej normy'), findsOneWidget);
+    expect(find.text('WPŁYW'), findsOneWidget);
+    expect(find.text('CO ZROBIĆ'), findsOneWidget);
+    expect(find.text('GDZIE ZNALEŹĆ'), findsOneWidget);
     expect(find.textContaining('celność'), findsOneWidget);
+    expect(find.textContaining('§'), findsNothing);
   });
 
   testWidgets('and the sheet closes again', (tester) async {
@@ -395,7 +403,7 @@ void main() {
 
     await tester.tap(find.text('ODWODNIENIE'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Odłóż'));
+    await tester.tap(find.text('OK'));
     await tester.pumpAndSettle();
 
     expect(find.textContaining('celność'), findsNothing);

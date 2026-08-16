@@ -487,29 +487,119 @@ abstract class L10n {
   /// **'Weak signal'**
   String get hudWeakSignal;
 
-  /// No description provided for @statusShockWhat.
+  /// No description provided for @statusDegree.
   ///
   /// In en, this message translates to:
-  /// **'Blood loss. Class II costs a tenth of your carry limit and steadiness; class III takes a third and blurs everything. It does not heal by itself — the bleeding has to be stopped first (§2.6).'**
-  String get statusShockWhat;
+  /// **'{degree} degree'**
+  String statusDegree(String degree);
 
-  /// No description provided for @statusDehydratedWhat.
+  /// No description provided for @statusOfDaily.
   ///
   /// In en, this message translates to:
-  /// **'Below 60% of your daily water the hands go first: aim, then decisions. Below 30% it is dangerous. Drinking works over about twenty minutes, not instantly (§2.3).'**
-  String get statusDehydratedWhat;
+  /// **'{percent}% of the daily need'**
+  String statusOfDaily(int percent);
 
-  /// No description provided for @statusStarvingWhat.
+  /// No description provided for @statusDebtHours.
   ///
   /// In en, this message translates to:
-  /// **'An empty stomach makes everything take longer — searching, bandaging, building. It does not kill quickly, it just makes every minute cost more (§2.2).'**
-  String get statusStarvingWhat;
+  /// **'{hours} h of debt'**
+  String statusDebtHours(int hours);
 
-  /// No description provided for @statusSleepDeprivedWhat.
+  /// No description provided for @statusEffect.
   ///
   /// In en, this message translates to:
-  /// **'Sleep debt adds minutes of angle to every shot and takes the edge off your judgement. Only sleep pays it down, and only in a shelter (§2.5).'**
-  String get statusSleepDeprivedWhat;
+  /// **'Effect'**
+  String get statusEffect;
+
+  /// No description provided for @statusFix.
+  ///
+  /// In en, this message translates to:
+  /// **'What to do'**
+  String get statusFix;
+
+  /// No description provided for @statusWhere.
+  ///
+  /// In en, this message translates to:
+  /// **'Where to find it'**
+  String get statusWhere;
+
+  /// No description provided for @commonOk.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get commonOk;
+
+  /// No description provided for @statusShockEffect.
+  ///
+  /// In en, this message translates to:
+  /// **'Wider groups on every shot, less carried before it hurts, and above class III the picture dims and running makes you dizzy.'**
+  String get statusShockEffect;
+
+  /// No description provided for @statusShockFix.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop the bleeding first — a bandage or a tourniquet. Blood comes back on its own afterwards, slowly, and only if you eat and drink.'**
+  String get statusShockFix;
+
+  /// No description provided for @statusShockWhere.
+  ///
+  /// In en, this message translates to:
+  /// **'Pharmacies, clinics, ambulances; first-aid kits in offices and workshops.'**
+  String get statusShockWhere;
+
+  /// No description provided for @statusDehydratedEffect.
+  ///
+  /// In en, this message translates to:
+  /// **'Hands go first: aim and reaction time. Deeper down it takes decisions, then strength.'**
+  String get statusDehydratedEffect;
+
+  /// No description provided for @statusDehydratedFix.
+  ///
+  /// In en, this message translates to:
+  /// **'Drink. It works over about twenty minutes, not instantly, so drink before you need it.'**
+  String get statusDehydratedFix;
+
+  /// No description provided for @statusDehydratedWhere.
+  ///
+  /// In en, this message translates to:
+  /// **'Shops, petrol stations, homes. Water from a tap or a stream has to be boiled or treated first.'**
+  String get statusDehydratedWhere;
+
+  /// No description provided for @statusStarvingEffect.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything takes longer — searching, bandaging, building — and precision goes with it.'**
+  String get statusStarvingEffect;
+
+  /// No description provided for @statusStarvingFix.
+  ///
+  /// In en, this message translates to:
+  /// **'Eat. Tins and dry food keep; anything cooked is worth more per kilogram carried.'**
+  String get statusStarvingFix;
+
+  /// No description provided for @statusStarvingWhere.
+  ///
+  /// In en, this message translates to:
+  /// **'Shops, homes, restaurants, allotments. Bodies rarely carry more than a snack.'**
+  String get statusStarvingWhere;
+
+  /// No description provided for @statusSleepDeprivedEffect.
+  ///
+  /// In en, this message translates to:
+  /// **'Every shot spreads wider, everything takes longer to learn, and past a day awake the eyes close on their own for a few seconds at a time.'**
+  String get statusSleepDeprivedEffect;
+
+  /// No description provided for @statusSleepDeprivedFix.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep. Only sleep pays this down — and only somewhere safe enough to lie down, which means a shelter.'**
+  String get statusSleepDeprivedFix;
+
+  /// No description provided for @statusSleepDeprivedWhere.
+  ///
+  /// In en, this message translates to:
+  /// **'Your own shelter. A bed or a mattress makes the hours count for more.'**
+  String get statusSleepDeprivedWhere;
 
   /// No description provided for @statusBleeding.
   ///
