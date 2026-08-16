@@ -673,6 +673,84 @@ abstract class L10n {
   /// **'Pharmacies, clinics, ambulances; first-aid kits in offices and workshops.'**
   String get statusBleedingWhere;
 
+  /// No description provided for @deathTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'THAT IS THE END'**
+  String get deathTitle;
+
+  /// No description provided for @downTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'YOU WENT DOWN'**
+  String get downTitle;
+
+  /// No description provided for @causeBloodLoss.
+  ///
+  /// In en, this message translates to:
+  /// **'Blood loss'**
+  String get causeBloodLoss;
+
+  /// No description provided for @causeThirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Dehydration'**
+  String get causeThirst;
+
+  /// No description provided for @causeStarvation.
+  ///
+  /// In en, this message translates to:
+  /// **'Starvation'**
+  String get causeStarvation;
+
+  /// No description provided for @deathWhat.
+  ///
+  /// In en, this message translates to:
+  /// **'Hardcore: this character is over. The streak goes into the Chronicle with everything it reached. A new one keeps your body — the same height, weight and age — and only the name changes.'**
+  String get deathWhat;
+
+  /// No description provided for @downWhat.
+  ///
+  /// In en, this message translates to:
+  /// **'You come round where you are, an hour from now, with a quarter of your blood and almost nothing in you. Whatever was in your hands is gone; about half of what you carried is scattered where you fell. For ten minutes afterwards they will take you for dead — and you cannot fight either.'**
+  String get downWhat;
+
+  /// No description provided for @downLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'{time}'**
+  String downLeft(String time);
+
+  /// No description provided for @downClosedApp.
+  ///
+  /// In en, this message translates to:
+  /// **'The hour runs whether the app is open or not.'**
+  String get downClosedApp;
+
+  /// No description provided for @downGrace.
+  ///
+  /// In en, this message translates to:
+  /// **'They still take you for dead. Do not give it away.'**
+  String get downGrace;
+
+  /// No description provided for @deathNewCharacter.
+  ///
+  /// In en, this message translates to:
+  /// **'New character'**
+  String get deathNewCharacter;
+
+  /// No description provided for @deathSameBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The same body, a new name.'**
+  String get deathSameBody;
+
+  /// No description provided for @downCaches.
+  ///
+  /// In en, this message translates to:
+  /// **'What you were carrying is scattered where you fell.'**
+  String get downCaches;
+
   /// No description provided for @statusShock.
   ///
   /// In en, this message translates to:
@@ -1014,6 +1092,18 @@ abstract class L10n {
   /// In en, this message translates to:
   /// **'No position — a shelter goes where you are standing.'**
   String get shelterNoFix;
+
+  /// No description provided for @shelterNotHere.
+  ///
+  /// In en, this message translates to:
+  /// **'You have to be at the shelter to build onto it.'**
+  String get shelterNotHere;
+
+  /// No description provided for @shelterWorkStopped.
+  ///
+  /// In en, this message translates to:
+  /// **'Work stopped — nobody is on the site.'**
+  String get shelterWorkStopped;
 
   /// No description provided for @shelterNeedsTool.
   ///
@@ -2038,7 +2128,7 @@ abstract class L10n {
   /// No description provided for @statMagazine.
   ///
   /// In en, this message translates to:
-  /// **'Magazine'**
+  /// **'rds'**
   String get statMagazine;
 
   /// No description provided for @statReload.
@@ -2170,7 +2260,7 @@ abstract class L10n {
   /// No description provided for @statLight.
   ///
   /// In en, this message translates to:
-  /// **'Light'**
+  /// **'light'**
   String get statLight;
 
   /// No description provided for @statBattery.

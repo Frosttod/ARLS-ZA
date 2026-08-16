@@ -54,7 +54,10 @@ void main() {
         buildTime: kShelterBuildTime,
       );
 
-      expect(building.coversAt(home, t0.add(const Duration(hours: 1))), isFalse);
+      expect(
+        building.coversAt(home, t0.add(const Duration(hours: 1))),
+        isFalse,
+      );
       expect(building.coversAt(home, t0.add(const Duration(hours: 4))), isTrue);
     });
   });
@@ -65,10 +68,7 @@ void main() {
     });
 
     test('a third less with a hammer and an axe', () {
-      expect(
-        buildTimeFor(ShelterKind.main, hasTools: true).inMinutes,
-        117,
-      );
+      expect(buildTimeFor(ShelterKind.main, hasTools: true).inMinutes, 117);
     });
 
     test('and about an hour twenty at the floor of both', () {
@@ -146,16 +146,19 @@ void main() {
       expect(built(kind: ShelterKind.camp).sleepRate, closeTo(0.7, 0.001));
     });
 
-    test('its chest holds more than the shelter does bare, and never grows', () {
-      expect(built(kind: ShelterKind.camp).storageKg, 30);
-      expect(
-        built(
-          kind: ShelterKind.camp,
-          modules: {ShelterModule.storage: 3},
-        ).kind.modular,
-        isFalse,
-      );
-    });
+    test(
+      'its chest holds more than the shelter does bare, and never grows',
+      () {
+        expect(built(kind: ShelterKind.camp).storageKg, 30);
+        expect(
+          built(
+            kind: ShelterKind.camp,
+            modules: {ShelterModule.storage: 3},
+          ).kind.modular,
+          isFalse,
+        );
+      },
+    );
   });
 
   group('where a camp may go (§8.5.2)', () {
@@ -262,6 +265,82 @@ void main() {
       ], now: t0);
 
       expect(place?.kind, ShelterKind.main);
+    });
+  });
+
+  group('work only happens on the site (§2.1a.3)', () {
+    Shelter site() => Shelter(
+      id: 1,
+      kind: ShelterKind.main,
+      position: home,
+      startedAt: t0,
+      buildTime: kShelterBuildTime,
+      buildLeft: kShelterBuildTime,
+    );
+
+    test('a half-built place is still somewhere you can stand', () {
+      // Not the same question as coverage: it keeps nothing out yet, but it is
+      // where you have to be to go on nailing boards to it.
+      expect(site().atSite(home), isTrue);
+      expect(site().coversAt(home, t0), isFalse);
+    });
+
+    test('an hour there takes an hour off it', () {
+      expect(
+        site().worked(const Duration(hours: 1)).buildLeft,
+        const Duration(hours: 2),
+      );
+    });
+
+    test('and it is finished when the work is, not when the clock is', () {
+      final done = site().worked(const Duration(hours: 3));
+
+      expect(done.isReadyAt(t0), isTrue);
+      expect(site().isReadyAt(t0.add(const Duration(days: 1))), isFalse);
+    });
+
+    test('never past done', () {
+      expect(site().worked(const Duration(days: 2)).buildLeft, Duration.zero);
+    });
+
+    test('the place comes before the module it goes into', () {
+      // A workshop cannot go up inside a building that is not up.
+      final both = site().copyWith(buildingLeft: const Duration(hours: 4));
+      final after = both.worked(const Duration(hours: 1));
+
+      expect(after.buildLeft, const Duration(hours: 2));
+      expect(after.buildingLeft, const Duration(hours: 4));
+    });
+
+    test('and takes its turn once the place is standing', () {
+      final standing = Shelter(
+        id: 1,
+        kind: ShelterKind.main,
+        position: home,
+        startedAt: t0,
+        buildTime: kShelterBuildTime,
+        buildLeft: Duration.zero,
+        buildingLeft: const Duration(hours: 4),
+      );
+
+      expect(
+        standing.worked(const Duration(hours: 1)).buildingLeft,
+        const Duration(hours: 3),
+      );
+    });
+
+    test('a row written before the rule falls back to the clock', () {
+      // An old save is not a save to break.
+      final old = Shelter(
+        id: 1,
+        kind: ShelterKind.main,
+        position: home,
+        startedAt: t0,
+        buildTime: kShelterBuildTime,
+      );
+
+      expect(old.isReadyAt(t0.add(const Duration(hours: 4))), isTrue);
+      expect(old.worked(const Duration(hours: 1)).buildLeft, isNull);
     });
   });
 }

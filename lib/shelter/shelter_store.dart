@@ -43,6 +43,7 @@ class ShelterStore {
             modules: Value(_wire(settled.modules)),
             building: const Value(null),
             buildingReadyAt: const Value(null),
+            buildingLeftSeconds: const Value(null),
           ),
         );
       }
@@ -67,7 +68,17 @@ class ShelterStore {
       longitude: at.longitude,
       startedAt: now,
       buildSeconds: buildTime.inSeconds,
+      buildLeftSeconds: Value(buildTime.inSeconds),
       visitedAt: Value(now),
+    ),
+  );
+
+  /// §2.1a.3: writes back what a stretch on the site bought.
+  Future<void> saveWork(Shelter place) => _db.updateShelter(
+    place.id,
+    SheltersCompanion(
+      buildLeftSeconds: Value(place.buildLeft?.inSeconds),
+      buildingLeftSeconds: Value(place.buildingLeft?.inSeconds),
     ),
   );
 
@@ -86,11 +97,13 @@ class ShelterStore {
     required ShelterModule module,
     required int level,
     required DateTime readyAt,
+    required Duration work,
   }) => _db.updateShelter(
     id,
     SheltersCompanion(
       building: Value('${module.name}:$level'),
       buildingReadyAt: Value(readyAt),
+      buildingLeftSeconds: Value(work.inSeconds),
     ),
   );
 
@@ -107,6 +120,9 @@ class ShelterStore {
       longitude: Value(at.longitude),
       startedAt: Value(now),
       buildSeconds: Value(buildTime.inSeconds),
+      // The whole job again, from nothing: §8.2 is explicit that moving costs
+      // the full rebuild, and that is the point of asking before doing it.
+      buildLeftSeconds: Value(buildTime.inSeconds),
       visitedAt: Value(now),
     ),
   );
@@ -127,6 +143,12 @@ class ShelterStore {
     building: _moduleOf(row.building),
     buildingLevel: _levelOf(row.building),
     buildingReadyAt: row.buildingReadyAt,
+    buildLeft: row.buildLeftSeconds == null
+        ? null
+        : Duration(seconds: row.buildLeftSeconds!),
+    buildingLeft: row.buildingLeftSeconds == null
+        ? null
+        : Duration(seconds: row.buildingLeftSeconds!),
   );
 }
 

@@ -174,11 +174,12 @@ void main() {
     expect(find.textContaining('Porównanie z'), findsNothing);
   });
 
-  testWidgets('two in the pack still compare, nothing being worn', (
+  testWidgets('two in the pack are not compared with each other', (
     tester,
   ) async {
-    // The case a player hits first: the new one is found before the old one
-    // comes off.
+    // The question a player is actually asking is "is this better than mine".
+    // Two things in the same pack answer a question nobody has — neither of
+    // them is doing anything for the character yet.
     await open(
       tester,
       itemId: 'armor_vest_plate',
@@ -187,7 +188,7 @@ void main() {
       ),
     );
 
-    expect(find.textContaining('w plecaku'), findsOneWidget);
+    expect(find.textContaining('Porównanie z'), findsNothing);
   });
 
   testWidgets('the swap can be made from here, without going back', (
@@ -276,14 +277,18 @@ void main() {
       expect(find.textContaining('Porównanie z'), findsNothing);
     });
 
-    testWidgets('two in the pack compare with each other', (tester) async {
+    testWidgets('and two worn copies compare against nothing either', (
+      tester,
+    ) async {
+      // The one on the body is the baseline. Comparing it against itself, or
+      // against the spare in the pack, reads backwards.
       await open(
         tester,
         line: found,
-        inventory: const Inventory(carried: [found, battered]),
+        inventory: const Inventory(worn: [found], carried: [battered]),
       );
 
-      expect(find.textContaining('w plecaku'), findsOneWidget);
+      expect(find.textContaining('Porównanie z'), findsNothing);
     });
   });
 

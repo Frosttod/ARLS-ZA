@@ -84,7 +84,12 @@ class ShelterScreen extends StatelessWidget {
               colours: colours,
             )
           else ...[
-            _Standing(shelter: shelter, now: now, colours: colours),
+            _Standing(
+              shelter: shelter,
+              now: now,
+              away: at == null || !shelter.atSite(at!),
+              colours: colours,
+            ),
             const SizedBox(height: 16),
             if (shelter.isReadyAt(now))
               for (final module in ShelterModule.values)
@@ -96,6 +101,9 @@ class ShelterScreen extends StatelessWidget {
                   itemNameOf: itemNameOf,
                   hasHammer: hasHammer,
                   hasMultitool: hasMultitool,
+                  // §2.1a.3: nailing shelves up from the other side of town is
+                  // not a thing, so the offer is refused here and says why.
+                  away: at == null || !shelter.atSite(at!),
                   onBuild: () => onBuildModule(module),
                   colours: colours,
                 ),
@@ -113,7 +121,12 @@ class ShelterScreen extends StatelessWidget {
           const SizedBox(height: 8),
 
           for (final camp in _camps) ...[
-            _Standing(shelter: camp, now: now, colours: colours),
+            _Standing(
+              shelter: camp,
+              now: now,
+              away: at == null || !camp.atSite(at!),
+              colours: colours,
+            ),
             const SizedBox(height: 12),
           ],
 
@@ -163,11 +176,15 @@ class _Standing extends StatelessWidget {
   const _Standing({
     required this.shelter,
     required this.now,
+    required this.away,
     required this.colours,
   });
 
   final Shelter shelter;
   final DateTime now;
+
+  /// §2.1a.3: the work is standing still while nobody is here.
+  final bool away;
   final HudColors colours;
 
   @override
@@ -201,8 +218,15 @@ class _Standing extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               Text(
-                l10n.shelterBuildingLeft(_short(shelter.readyAt.difference(now))),
-                style: TextStyle(fontSize: 13, color: colours.text),
+                away
+                    ? l10n.shelterWorkStopped
+                    : l10n.shelterBuildingLeft(
+                        _short(shelter.buildLeft ?? shelter.readyAt.difference(now)),
+                      ),
+                style: TextStyle(
+                  fontSize: 13,
+                  color: away ? const Color(0xFFE8B33A) : colours.text,
+                ),
               ),
             ] else ...[
               _Line(
@@ -251,12 +275,16 @@ class _ModuleRow extends StatelessWidget {
     required this.itemNameOf,
     required this.hasHammer,
     required this.hasMultitool,
+    required this.away,
     required this.onBuild,
     required this.colours,
   });
 
   final Shelter shelter;
   final ShelterModule module;
+
+  /// §2.1a.3: the player is not standing on the site.
+  final bool away;
   final DateTime now;
   final Map<String, int> carried;
   final String Function(String) itemNameOf;
@@ -321,14 +349,15 @@ class _ModuleRow extends StatelessWidget {
             if (underway) ...[
               const SizedBox(height: 8),
               Text(
-                l10n.shelterBuildingLeft(
-                  _short(
-                    shelter.buildingReadyAt!.difference(now).isNegative
-                        ? Duration.zero
-                        : shelter.buildingReadyAt!.difference(now),
-                  ),
+                away
+                    ? l10n.shelterWorkStopped
+                    : l10n.shelterBuildingLeft(
+                        _short(shelter.buildingLeft ?? Duration.zero),
+                      ),
+                style: TextStyle(
+                  fontSize: 13,
+                  color: away ? const Color(0xFFE8B33A) : colours.data,
                 ),
-                style: TextStyle(fontSize: 13, color: colours.data),
               ),
             ] else if (next != null) ...[
               const SizedBox(height: 8),
@@ -344,7 +373,9 @@ class _ModuleRow extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      !tools
+                      away
+                          ? l10n.shelterNotHere
+                          : !tools
                           ? l10n.shelterNeedsTool
                           : missing.isNotEmpty
                           ? l10n.shelterMissing(
@@ -356,7 +387,7 @@ class _ModuleRow extends StatelessWidget {
                           : _short(work),
                       style: TextStyle(
                         fontSize: 12,
-                        color: missing.isEmpty && tools
+                        color: missing.isEmpty && tools && !away
                             ? colours.muted
                             : const Color(0xFFE8B33A),
                       ),
@@ -364,7 +395,10 @@ class _ModuleRow extends StatelessWidget {
                   ),
                   FilledButton(
                     onPressed:
-                        missing.isEmpty && tools && shelter.building == null
+                        missing.isEmpty &&
+                            tools &&
+                            !away &&
+                            shelter.building == null
                         ? onBuild
                         : null,
                     child: Text(l10n.shelterBuild),

@@ -67,16 +67,29 @@ Future<void> showItemDetails(
         // the one in their hand, and the hand is `worn` — looking only in the
         // pack found a stale copy of it, so fitting anything did nothing.
         final current = _liveLine(pack, line);
-        final worn = _rival(current, item, pack.worn, catalogue);
-        final against = worn ?? _rival(current, item, pack.carried, catalogue);
+        // Against what is on the body, and nothing else. The question a player
+        // is actually asking is "is this better than mine" — comparing two
+        // things in the same pack answers a question nobody has, and comparing
+        // the worn one against another worn one answers it twice.
+        final onBody = pack.worn.any((other) => identical(other, current));
+        final against = onBody
+            ? null
+            : _rival(current, item, pack.worn, catalogue);
 
-        final mine = statsOf(item, condition: current.condition);
-      final theirs = against == null
-          ? const <ItemStat>[]
-          : statsOf(
-              catalogue[against.itemId]!,
-              condition: against.condition,
-            );
+        // §5.6.3: with whatever is bolted to each of them. Two rifles are only
+        // comparable as the rifles they are, suppressor and optic included.
+        final mine = statsOf(
+          item,
+          condition: current.condition,
+          attachments: _partsOf(current, catalogue),
+        );
+        final theirs = against == null
+            ? const <ItemStat>[]
+            : statsOf(
+                catalogue[against.itemId]!,
+                condition: against.condition,
+                attachments: _partsOf(against, catalogue),
+              );
 
       return SafeArea(
         child: Padding(
@@ -98,7 +111,7 @@ Future<void> showItemDetails(
                 Text(
                   '${l10n.itemCompare}: '
                   '${nameOf(catalogue[against.itemId]!)} '
-                  '(${worn != null ? l10n.itemWorn : l10n.itemCarried})',
+                  '(${l10n.itemWorn})',
                   style: TextStyle(fontSize: 11, color: colours.muted),
                 ),
               ],
@@ -420,3 +433,9 @@ CarriedItem _liveLine(Inventory pack, CarriedItem line) {
   }
   return line;
 }
+
+/// What is bolted to this piece, as definitions (§5.6.3).
+List<ItemDefinition> _partsOf(CarriedItem line, ItemCatalogue catalogue) => [
+  for (final id in line.attachments)
+    if (catalogue[id] != null) catalogue[id]!,
+];

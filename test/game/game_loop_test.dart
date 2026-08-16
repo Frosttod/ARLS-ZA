@@ -8,6 +8,7 @@ import 'package:arls_za/data/persistence/save_bootstrap.dart';
 import 'package:arls_za/devtools/simulated_position_source.dart';
 import 'package:arls_za/game/game_loop.dart';
 import 'package:arls_za/game/game_session.dart';
+import 'package:arls_za/sim/death.dart';
 import 'package:arls_za/sim/physiology.dart';
 import 'package:arls_za/location/movement_integrity.dart';
 import 'package:arls_za/location/position_source.dart';
@@ -1037,6 +1038,122 @@ void main() {
 
       final reopened = await GameSessionFactory(rig.session).loadActive();
       expect(reopened?.bleeding, BleedTier.moderate);
+    });
+  });
+
+  group('when the body gives out (§9)', () {
+    // Found in the field: a character with no blood left went on looting shops
+    // while a Walker chewed on them. Nothing had ever asked whether they were
+    // alive, so nothing behaved as though they were not.
+    test('softcore goes down rather than dying', () async {
+      final rig = await buildLoop();
+      addTearDown(() async {
+        await rig.loop.dispose();
+        await rig.source.dispose();
+        await rig.session.close();
+      });
+
+      await rig.loop.start();
+      rig.source.jumpTo(52.4064, 16.9252);
+      rig.source.step();
+      await pump();
+
+      rig.loop.applyWound(constants.bloodMaxMl * 0.5);
+      rig.wall.advance(const Duration(seconds: 5));
+      await rig.loop.onPaused(rig.wall.nowUtc());
+
+      expect(rig.loop.down, DownState.unconscious);
+      expect(rig.loop.canAct, isFalse);
+      expect(rig.loop.deathCause, DeathCause.bloodLoss);
+    });
+
+    test('and comes round an hour later, badly off (§9.2)', () async {
+      final rig = await buildLoop();
+      addTearDown(() async {
+        await rig.loop.dispose();
+        await rig.source.dispose();
+        await rig.session.close();
+      });
+
+      await rig.loop.start();
+      rig.source.jumpTo(52.4064, 16.9252);
+      rig.source.step();
+      await pump();
+
+      rig.loop.applyWound(constants.bloodMaxMl * 0.5);
+      rig.wall.advance(const Duration(seconds: 5));
+      await rig.loop.onPaused(rig.wall.nowUtc());
+
+      rig.wall.advance(const Duration(minutes: 61));
+      await rig.loop.onResumed();
+      rig.source.step();
+      await pump();
+      await rig.loop.onPaused(rig.wall.nowUtc());
+
+      // §9.2: up, and still being taken for dead for another ten minutes.
+      expect(rig.loop.down, DownState.grace);
+      expect(rig.loop.canAct, isTrue);
+      expect(
+        rig.loop.state.bloodMl / constants.bloodMaxMl,
+        greaterThan(0.2),
+      );
+    });
+
+    test('nothing dies asleep (§9.1)', () async {
+      // Permadeath caused by a phone on a bedside table is a one-star review.
+      final rig = await buildLoop(
+        initial: SimState.fresh(at: midnight, constants: constants),
+        startAt: midnight,
+      );
+      addTearDown(() async {
+        await rig.loop.dispose();
+        await rig.source.dispose();
+        await rig.session.close();
+      });
+
+      await rig.loop.start();
+      rig.source.jumpTo(52.4064, 16.9252);
+      rig.source.step();
+      await pump();
+
+      rig.loop.setShelters([
+        Shelter(
+          id: 1,
+          kind: ShelterKind.main,
+          position: const GeoPoint(52.4064, 16.9252),
+          startedAt: midnight.subtract(const Duration(days: 1)),
+          buildTime: kShelterBuildTime,
+          buildLeft: Duration.zero,
+        ),
+      ]);
+      expect(rig.loop.state.zone, MetabolicZone.sleep);
+
+      rig.loop.applyWound(constants.bloodMaxMl * 0.6);
+      rig.wall.advance(const Duration(seconds: 5));
+      await rig.loop.onPaused(rig.wall.nowUtc());
+
+      expect(rig.loop.down, DownState.none);
+    });
+
+    test('and the hour survives the app being closed', () async {
+      final rig = await buildLoop();
+      addTearDown(() async {
+        await rig.source.dispose();
+        await rig.session.close();
+      });
+
+      await rig.loop.start();
+      rig.source.jumpTo(52.4064, 16.9252);
+      rig.source.step();
+      await pump();
+
+      rig.loop.applyWound(constants.bloodMaxMl * 0.5);
+      rig.wall.advance(const Duration(seconds: 5));
+      await rig.loop.onPaused(rig.wall.nowUtc());
+      await rig.loop.dispose();
+
+      final reopened = await GameSessionFactory(rig.session).loadActive();
+      expect(reopened?.downUntil, isNotNull);
     });
   });
 }

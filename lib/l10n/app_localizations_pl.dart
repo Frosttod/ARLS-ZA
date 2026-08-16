@@ -352,6 +352,50 @@ class L10nPl extends L10n {
       'Apteki, przychodnie, karetki; apteczki w biurach i warsztatach.';
 
   @override
+  String get deathTitle => 'TO KONIEC';
+
+  @override
+  String get downTitle => 'STRACIŁEŚ PRZYTOMNOŚĆ';
+
+  @override
+  String get causeBloodLoss => 'Utrata krwi';
+
+  @override
+  String get causeThirst => 'Odwodnienie';
+
+  @override
+  String get causeStarvation => 'Wyczerpanie z głodu';
+
+  @override
+  String get deathWhat =>
+      'Hardcore: ta postać się skończyła. Passa trafia do Kroniki wraz ze wszystkim, co osiągnęła. Nowa zachowa Twoje ciało — ten sam wzrost, wagę i wiek — zmieni się tylko imię.';
+
+  @override
+  String get downWhat =>
+      'Ockniesz się tam, gdzie będziesz, za godzinę — z ćwiercią krwi i niemal pustym żołądkiem. To, co miałeś w rękach, przepadło; około połowy noszonego sprzętu leży tam, gdzie padłeś. Przez dziesięć minut po przebudzeniu będą Cię brać za martwego — ale i Ty nie możesz walczyć.';
+
+  @override
+  String downLeft(String time) {
+    return '$time';
+  }
+
+  @override
+  String get downClosedApp =>
+      'Godzina leci niezależnie od tego, czy aplikacja jest otwarta.';
+
+  @override
+  String get downGrace => 'Wciąż biorą Cię za martwego. Nie zdradź się.';
+
+  @override
+  String get deathNewCharacter => 'Nowa postać';
+
+  @override
+  String get deathSameBody => 'To samo ciało, nowe imię.';
+
+  @override
+  String get downCaches => 'To, co niosłeś, leży rozrzucone tam, gdzie padłeś.';
+
+  @override
   String get statusShock => 'Wstrząs';
 
   @override
@@ -546,6 +590,12 @@ class L10nPl extends L10n {
   @override
   String get shelterNoFix =>
       'Brak pozycji — schron powstaje tam, gdzie stoisz.';
+
+  @override
+  String get shelterNotHere => 'Żeby rozbudowywać schron, trzeba w nim być.';
+
+  @override
+  String get shelterWorkStopped => 'Praca stoi — nikogo nie ma na miejscu.';
 
   @override
   String get shelterNeedsTool =>
@@ -1112,7 +1162,7 @@ class L10nPl extends L10n {
   String get statMoa => 'Rozrzut';
 
   @override
-  String get statMagazine => 'Magazynek';
+  String get statMagazine => 'szt.';
 
   @override
   String get statReload => 'Przeładowanie';
@@ -1178,7 +1228,7 @@ class L10nPl extends L10n {
   String get statXpPerPage => 'XP za stronę';
 
   @override
-  String get statLight => 'Światło';
+  String get statLight => 'światła';
 
   @override
   String get statBattery => 'Bateria';

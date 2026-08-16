@@ -47,6 +47,7 @@ import 'shelter/shelter.dart';
 import 'shelter/shelter_store.dart';
 import 'ui/place_sheet.dart';
 import 'ui/remains_sheet.dart';
+import 'ui/down_screen.dart';
 import 'ui/shelter_screen.dart';
 import 'ui/item_details_sheet.dart';
 import 'ui/note_sheet.dart';
@@ -69,6 +70,7 @@ import 'map/pack_store.dart';
 import 'map/region_pack.dart';
 import 'safety/player_safety.dart';
 import 'sim/body.dart';
+import 'sim/death.dart';
 import 'sim/physiology.dart';
 import 'ui/app_settings.dart';
 import 'ui/character_creator.dart';
@@ -313,7 +315,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   List<Remains> _remains = const [];
 
   /// §8: the shelter and the camps, as the save last had them.
-  List<Shelter> _shelters = const [];
+  List<Shelter> _shelters = [];
+
+  /// §2.1a.3: when the last stretch of work on a site was credited.
+  DateTime? _workedAt;
 
   /// §12: what the game has just said. Under the HUD, never over the menu.
   final ValueNotifier<List<Notice>> _notices = ValueNotifier(const []);
@@ -695,6 +700,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
           : GeoPoint(fix.latitude, fix.longitude);
       unawaited(_checkRelocation(snapshot));
       unawaited(_settleShelters(snapshot));
+      unawaited(_settleDown(snapshot));
       unawaited(_spawnLoot(snapshot));
       _advanceCombat(snapshot);
     });
@@ -1500,7 +1506,12 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       return;
     }
 
-    _takeBlows(GeoPoint(fix.latitude, fix.longitude), now);
+    // §9.2: they took you for dead. Nothing swings at somebody on the ground,
+    // and nothing swings for ten minutes after they get up — which is the
+    // valve against waking inside a hotspot and going straight back down.
+    if ((_loop?.down ?? DownState.none) == DownState.none) {
+      _takeBlows(GeoPoint(fix.latitude, fix.longitude), now);
+    }
     _advanceReload(GeoPoint(fix.latitude, fix.longitude));
 
     setState(() {
@@ -2015,6 +2026,116 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     );
   }
 
+  // --------------------------------------------------------------- death ---
+
+  /// §9: everything that happens once, at the moment the body gives out.
+  ///
+  /// The loop decides *when* — it is the only thing that knows whether the
+  /// phone is asleep or has lost the sky, and §9.1 makes both of those reasons
+  /// a character may not die. This is the rest of it: what the character
+  /// leaves behind, and what the save has to remember.
+  Future<void> _settleDown(GameSnapshot snapshot) async {
+    final loop = _loop;
+    final character = _character;
+    if (loop == null || character == null) return;
+
+    if (loop.takeWentDown()) {
+      // §5.5.1: nothing is aimed at any more, and nothing is being searched.
+      setState(() {
+        _aim = _aim.released;
+        _search.value = null;
+        _usingLine.value = null;
+      });
+
+      if (loop.down == DownState.dead) {
+        await _factory.recordDeath(
+          character: character,
+          cause: (loop.deathCause ?? DeathCause.bloodLoss).wire,
+          now: snapshot.state.lastUpdate,
+        );
+      } else {
+        await _scatterKit(snapshot);
+      }
+    }
+
+    if (loop.takeJustWoke()) {
+      await _saveInventory();
+      if (mounted) _say(L10n.of(context).downCaches);
+    }
+  }
+
+  /// §9.2: the weapon in the hands is gone, and half of the rest is on the
+  /// ground where the character fell.
+  ///
+  /// Caches rather than a wipe, and they stay where the body fell rather than
+  /// following the player: §9.2.1 makes that the whole balance of the mode —
+  /// the penalty grows with how far the player has moved since, and no rule
+  /// had to be written to make it do that.
+  Future<void> _scatterKit(GameSnapshot snapshot) async {
+    final character = _character;
+    final catalogue = _catalogue;
+    final fix = snapshot.displayFix;
+    if (character == null || catalogue == null || fix == null) return;
+
+    final at = GeoPoint(fix.latitude, fix.longitude);
+    final random = Random(
+      character.profile.rngSeed ^ snapshot.state.lastUpdate.hashCode,
+    );
+    final store = DroppedStore(widget.session.db);
+
+    var pack = _inventory.value;
+
+    // Whatever was in the hands is simply gone. §9.2 is explicit, and it is
+    // what stops a deliberate death being a cheap way home.
+    for (final line in [...pack.worn]) {
+      final item = catalogue[line.itemId];
+      if (item == null) continue;
+      if (item.kind == ItemKind.firearm || item.kind == ItemKind.melee) {
+        pack = pack.removeLine(line, count: line.count) ?? pack;
+      }
+    }
+
+    // Half of the rest, by the piece rather than by the count: losing three of
+    // five bandages and keeping two is what §9.2 describes.
+    for (final line in [...pack.carried]) {
+      if (random.nextDouble() >= kWakeLossFraction) continue;
+
+      pack = pack.removeLine(line, count: line.count) ?? pack;
+      await store.drop(
+        character.profile.id,
+        DroppedItem(
+          id: 0,
+          itemId: line.itemId,
+          count: line.count,
+          condition: line.condition,
+          // Two or three caches in thirty to a hundred metres, so getting it
+          // back is a walk rather than a button.
+          position: at.offsetBy(
+            metres: 30 + random.nextDouble() * 70,
+            bearingDeg: random.nextDouble() * 360,
+          ),
+          droppedAt: DateTime.now().toUtc(),
+        ),
+      );
+    }
+
+    _inventory.value = pack;
+    await _saveInventory();
+    await _reloadDropped();
+  }
+
+  /// §9.1: a new character in the same body.
+  Future<void> _startOver(ActiveCharacter dead) async {
+    // The creator keeps height, weight, age and sex — it is still the player's
+    // own body, and sitting through the measurements again would be theatre.
+    setState(() {
+      _character = null;
+      _loop = null;
+    });
+    await _loop?.dispose();
+    if (mounted) await _boot();
+  }
+
   // ------------------------------------------------------------- shelter ---
 
   /// §8.1: the circles the fight does not happen inside.
@@ -2034,7 +2155,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     ).load(character.profile.id, DateTime.now().toUtc());
     if (!mounted) return;
 
-    setState(() => _shelters = places);
+    setState(() => _shelters = [...places]);
     _loop?.setShelters(places);
   }
 
@@ -2050,10 +2171,36 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final fix = snapshot.displayFix;
     final at = fix == null ? null : GeoPoint(fix.latitude, fix.longitude);
 
+    // §2.1a.3: work only happens on the site. A stretch of standing there is
+    // spent on whatever is going up; a stretch anywhere else buys nothing, so
+    // a player cannot start a nine-hour workshop and walk to the next town.
+    final since = _workedAt;
+    _workedAt = now;
+    if (at != null && since != null && now.isAfter(since)) {
+      final spent = now.difference(since);
+      var wrote = false;
+
+      for (var i = 0; i < _shelters.length; i++) {
+        final place = _shelters[i];
+        if (!place.atSite(at)) continue;
+        if (place.buildLeft == null && place.buildingLeft == null) continue;
+        if (place.buildLeft == Duration.zero &&
+            (place.buildingLeft ?? Duration.zero) == Duration.zero) {
+          continue;
+        }
+
+        final worked = place.worked(spent);
+        _shelters[i] = worked;
+        await ShelterStore(widget.session.db).saveWork(worked);
+        wrote = true;
+      }
+      if (wrote) await _reloadShelters();
+    }
+
     final finished = _shelters.any(
       (place) =>
-          place.buildingReadyAt != null &&
-          !now.isBefore(place.buildingReadyAt!),
+          place.building != null &&
+          (place.buildingLeft ?? Duration.zero) <= Duration.zero,
     );
 
     final inside = at == null ? null : shelterAt(at, _shelters, now: now);
@@ -2153,19 +2300,27 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     if (!toolsAllow(recipe, hasHammer: hammer, hasMultitool: multitool)) return;
     if (missingFor(recipe.materials, _carriedCounts()).isNotEmpty) return;
 
+    // §2.1a.3: you have to be standing in it to build onto it.
+    final at = _standingAt.value;
+    if (at == null || !shelter.atSite(at)) {
+      _say(L10n.of(context).shelterNotHere);
+      return;
+    }
+
+    final work = moduleWork(
+      recipe,
+      hasHammer: hammer,
+      hasMultitool: multitool,
+      workshopLevel: shelter.levelOf(ShelterModule.workshop),
+    );
+
     await _spendMaterials(recipe.materials);
     await ShelterStore(widget.session.db).beginModule(
       shelter.id,
       module: module,
       level: recipe.level,
-      readyAt: DateTime.now().toUtc().add(
-        moduleWork(
-          recipe,
-          hasHammer: hammer,
-          hasMultitool: multitool,
-          workshopLevel: shelter.levelOf(ShelterModule.workshop),
-        ),
-      ),
+      readyAt: DateTime.now().toUtc().add(work),
+      work: work,
     );
 
     await _reloadShelters();
@@ -2906,6 +3061,23 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     // Deliberately not waiting for a snapshot. The first one arrives with the
     // first fix, and a lock takes seconds — showing the region in the meantime
     // beats a title screen the player has already left.
+    // §9: nothing else is drawn while the character is not on their feet. The
+    // bug this exists to close: a character with no blood left went on looting
+    // shops while something chewed on them, because nothing had ever asked.
+    final down = _loop?.down ?? DownState.none;
+    if (character != null &&
+        (down == DownState.dead || down == DownState.unconscious)) {
+      return DownScreen(
+        state: down,
+        cause: _loop?.deathCause,
+        until: _loop?.downUntil,
+        now: snapshot?.state.lastUpdate ?? DateTime.now().toUtc(),
+        onNewCharacter: down == DownState.dead
+            ? () => unawaited(_startOver(character))
+            : null,
+      );
+    }
+
     if (source != null && character != null) {
       return Stack(
         children: [

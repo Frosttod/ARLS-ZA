@@ -44,7 +44,9 @@ void main() {
     expect(loaded.single.readyAt, t0.add(kShelterBuildTime));
   });
 
-  test('and it is not finished the moment it is begun (§8.3)', () async {
+  test('and it is only finished by work done on the site (§2.1a.3)', () async {
+    // Walking away does not build a shelter. Four hours in the next district
+    // buys nothing; four hours standing on the site buys the whole thing.
     await store.begin(
       profileId,
       kind: ShelterKind.main,
@@ -53,11 +55,14 @@ void main() {
       buildTime: kShelterBuildTime,
     );
 
-    final half = await store.load(profileId, t0.add(const Duration(hours: 1)));
-    expect(half.single.isReadyAt(t0.add(const Duration(hours: 1))), isFalse);
+    final away = t0.add(const Duration(hours: 4));
+    final untouched = await store.load(profileId, away);
+    expect(untouched.single.isReadyAt(away), isFalse);
 
-    final done = await store.load(profileId, t0.add(const Duration(hours: 4)));
-    expect(done.single.isReadyAt(t0.add(const Duration(hours: 4))), isTrue);
+    await store.saveWork(untouched.single.worked(const Duration(hours: 4)));
+
+    final done = await store.load(profileId, away);
+    expect(done.single.isReadyAt(away), isTrue);
   });
 
   test('modules survive the round trip (§8.4)', () async {

@@ -33,6 +33,8 @@ import '../safety/player_safety.dart';
 import '../sim/daylight.dart';
 import '../map/geometry.dart';
 import '../shelter/shelter.dart';
+import '../sim/body.dart';
+import '../sim/death.dart';
 import '../sim/occupation.dart';
 import '../sim/physiology.dart';
 import '../sim/tick.dart';
@@ -62,7 +64,19 @@ class GameSnapshot {
     this.combatBlocked = CombatBlock.none,
     this.clockRolledBack = false,
     this.lastFlushAt,
+    this.down = DownState.none,
+    this.downUntil,
+    this.deathCause,
   });
+
+  /// §9: on their feet, on the ground, still being ignored, or gone.
+  final DownState down;
+
+  /// §9.2: when the hour is up, or when the grace window closes.
+  final DateTime? downUntil;
+
+  /// §9.1: what did it, for the Chronicle and for the screen that says so.
+  final DeathCause? deathCause;
 
   final SimState state;
   final SimStatus status;
@@ -117,12 +131,20 @@ class GameLoop {
     required this.constants,
     required SimState initialState,
     BleedTier initialBleeding = BleedTier.none,
+    this.deathMode = DeathMode.softcore,
+    DateTime? downUntil,
+    // ignore: avoid_positional_boolean_parameters
+    bool dead = false,
     GameClock? clock,
     PowerSource? power,
     this.cadence = const Duration(seconds: 1),
     this.powerInterval = const Duration(seconds: 60),
   }) : _state = initialState,
        _bleeding = initialBleeding,
+       // ignore: prefer_initializing_formals
+       _downUntil = downUntil,
+       // ignore: prefer_initializing_formals
+       _dead = dead,
        power = power ?? const ConstantPowerSource(),
        clock = clock ?? session.clock {
     this.clock.restore(initialState.lastUpdate);
@@ -347,6 +369,9 @@ class GameLoop {
     _advanceOccupation(elapsed);
     await _applySampling(advanceResult.now);
 
+    _checkDown();
+    _checkWake();
+
     writer.stageHot(_toCompanion());
     await writer.flushIfDue(advanceResult.now);
     await _maybeSnapshot(advanceResult.now);
@@ -378,6 +403,88 @@ class GameLoop {
       // is real and measured (§3.3). Away with nothing measuring is.
       offline: offline || (!_appForeground && !_tracking),
     );
+  }
+
+  /// §9: whether the body has given out, and what that means for this mode.
+  ///
+  /// Called after every tick. The two refusals in §9.1 are checked here rather
+  /// than in the rules, because only the loop knows whether the phone is
+  /// asleep in a pocket or has lost the sky — and both of those are reasons a
+  /// character must never die.
+  void _checkDown() {
+    if (_dead || _downUntil != null) return;
+
+    final cause = fatalCause(statusOf(state: _state, constants: constants));
+    if (cause == null) return;
+
+    if (!mayDie(
+      asleep: _state.zone == MetabolicZone.sleep,
+      positionKnown: source.currentSignal != PositionSignal.lost,
+    )) {
+      return;
+    }
+
+    _cause = cause;
+    _wentDown = true;
+
+    if (deathMode == DeathMode.hardcore) {
+      _dead = true;
+    } else {
+      // §9.2: an hour on the ground, wall-clock, and it runs with the app
+      // closed — being unconscious cannot require watching a screen.
+      _downUntil = _state.lastUpdate.add(kUnconsciousFor);
+      _bleeding = BleedTier.none;
+    }
+
+    writer.stageHot(_toCompanion());
+  }
+
+  /// §9.2.1: comes round where the player physically is, once that is a place
+  /// somebody can be standing.
+  ///
+  /// A deferral rather than a punishment: waking on a bus would put the
+  /// character somewhere the player is not, and §0 makes that the one thing
+  /// this game may never do.
+  void _checkWake() {
+    final until = _downUntil;
+    if (until == null || _dead) return;
+
+    final now = _state.lastUpdate;
+    if (now.isBefore(until)) return;
+
+    if (!mayWake(
+      speedKmh: _speedKmh,
+      positionKnown: source.currentSignal != PositionSignal.lost,
+    )) {
+      _downUntil = now.add(const Duration(minutes: 1));
+      return;
+    }
+
+    if (_woken) {
+      // The grace window has run out too; the character is simply upright.
+      if (now.isAfter(until.add(kGraceAfterWaking))) {
+        _downUntil = null;
+        _woken = false;
+        writer.stageHot(_toCompanion());
+      }
+      return;
+    }
+
+    _woken = true;
+    _justWoke = true;
+    _state = wokenFrom(_state, constants);
+    writer.stageHot(_toCompanion());
+    _publish();
+  }
+
+  bool _woken = false;
+
+  /// Whether this snapshot is the one the character woke on.
+  bool _justWoke = false;
+  bool takeJustWoke() {
+    final was = _justWoke;
+    _justWoke = false;
+    return was;
   }
 
   /// Re-reads the battery when it is due, then sets the sampling rate the
@@ -462,6 +569,7 @@ class GameLoop {
       _occupation == null ? null : jsonEncode(_occupation!.toJson()),
     ),
     bleedTier: Value(_bleeding.name),
+    downUntil: Value(_downUntil),
   );
 
   void _publish() {
@@ -500,6 +608,9 @@ class GameLoop {
         ),
         clockRolledBack: _rolledBack,
         lastFlushAt: writer.lastHotFlush,
+        down: down,
+        downUntil: _downUntil,
+        deathCause: _cause,
       ),
     );
   }
@@ -542,6 +653,46 @@ class GameLoop {
 
   /// §2.6: what is still open, and going on costing.
   BleedTier _bleeding;
+
+  /// §9: how this character ends when the body gives out.
+  final DeathMode deathMode;
+
+  /// §9.2: when the hour on the ground runs out, then when the grace window
+  /// does. Null while upright and unhurt.
+  DateTime? _downUntil;
+
+  /// §9.1: set once, and then nothing else happens to this character.
+  bool _dead = false;
+  DeathCause? _cause;
+
+  /// §9: what the UI has to draw, and what every action has to check.
+  DownState get down {
+    if (_dead) return DownState.dead;
+
+    final until = _downUntil;
+    if (until == null) return DownState.none;
+
+    final now = _state.lastUpdate;
+    if (now.isBefore(until)) return DownState.unconscious;
+    if (now.isBefore(until.add(kGraceAfterWaking))) return DownState.grace;
+    return DownState.none;
+  }
+
+  /// §9: whether the player may act at all. False on the ground and after the
+  /// end; true during the grace window, which only stops the shooting.
+  bool get canAct => down == DownState.none || down == DownState.grace;
+
+  DateTime? get downUntil => _downUntil;
+  DeathCause? get deathCause => _cause;
+
+  /// Raised for one snapshot when the character goes down, so the UI can say
+  /// so once rather than every frame.
+  bool _wentDown = false;
+  bool takeWentDown() {
+    final was = _wentDown;
+    _wentDown = false;
+    return was;
+  }
 
   BleedTier get bleeding => _bleeding;
 

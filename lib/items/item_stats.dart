@@ -11,6 +11,7 @@
 /// their fingers in a street.
 library;
 
+import '../combat/attachment.dart';
 import 'item.dart';
 
 /// One reading about an item.
@@ -43,8 +44,26 @@ class ItemStat {
 /// Mass and bulk come last on purpose. They are the same two numbers for every
 /// item and they are already on the row the player tapped; what they came here
 /// for is what makes this vest different from that one.
-List<ItemStat> statsOf(ItemDefinition item, {double? condition}) {
-  double? prop(String name) => (item.props[name] as num?)?.toDouble();
+List<ItemStat> statsOf(
+  ItemDefinition item, {
+  double? condition,
+  List<ItemDefinition> attachments = const [],
+}) {
+  // §5.6.3: what is bolted on moves four of these numbers, and a player
+  // choosing between two rifles is choosing between the rifles they own —
+  // suppressor, optic and all — not between two catalogue entries.
+  final fitted = attachments.isEmpty || item.kind != ItemKind.firearm
+      ? null
+      : FittedWeapon(weapon: item, attachments: attachments);
+
+  double? prop(String name) => switch (name) {
+    'moa' when fitted != null => fitted.moa,
+    'magazine' when fitted != null => fitted.magazine.toDouble(),
+    'reload_seconds' when fitted != null =>
+      fitted.reloadTime.inMilliseconds / 1000,
+    'noise_range_m' when fitted != null => fitted.noiseRangeM,
+    _ => (item.props[name] as num?)?.toDouble(),
+  };
 
   ItemStat? stat(
     String key,

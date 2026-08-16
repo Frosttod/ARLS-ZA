@@ -147,6 +147,8 @@ class Shelter {
     this.building,
     this.buildingLevel = 0,
     this.buildingReadyAt,
+    this.buildLeft,
+    this.buildingLeft,
   });
 
   final int id;
@@ -180,7 +182,42 @@ class Shelter {
   /// itself — a nine-hour workshop is not a progress bar to sit and watch.
   final DateTime? buildingReadyAt;
 
+  /// §2.1a.3: work left on the place itself, spent only on the site.
+  ///
+  /// Null on a row written before the rule existed, which then falls back to
+  /// the plain deadline of [readyAt] — an old save is not a save to break.
+  final Duration? buildLeft;
+
+  /// The same for whatever module is going up.
+  final Duration? buildingLeft;
+
   DateTime get readyAt => startedAt.add(buildTime);
+
+  /// §2.1a.3: a stretch of [elapsed] spent standing on the site.
+  ///
+  /// ⚠️ Only on the site. Barricading a building is not something anybody does
+  /// from the other side of town, and §2.1a.3 says as much about every shelter
+  /// occupation — it ticks with the app closed, as long as the character stays
+  /// in the zone. What that buys the player is the right thing: put the phone
+  /// in a pocket and go and make dinner, not walk to the next district and
+  /// come back to a finished workshop.
+  Shelter worked(Duration elapsed) {
+    if (elapsed <= Duration.zero) return this;
+
+    final onPlace = buildLeft;
+    final onModule = buildingLeft;
+    if (onPlace == null && onModule == null) return this;
+
+    return copyWith(
+      // The place first: a module cannot go into a building that is not up.
+      buildLeft: onPlace == null
+          ? null
+          : _down(onPlace, elapsed),
+      buildingLeft: onModule == null || (onPlace != null && onPlace > elapsed)
+          ? onModule
+          : _down(onModule, elapsed),
+    );
+  }
 
   /// The shelter as it will be once whatever is going up has gone up.
   ///
@@ -189,8 +226,15 @@ class Shelter {
   /// know it.
   Shelter settledAt(DateTime now) {
     final module = building;
-    final ready = buildingReadyAt;
-    if (module == null || ready == null || now.isBefore(ready)) return this;
+    if (module == null) return this;
+
+    final left = buildingLeft;
+    if (left == null) {
+      final ready = buildingReadyAt;
+      if (ready == null || now.isBefore(ready)) return this;
+    } else if (left > Duration.zero) {
+      return this;
+    }
 
     return Shelter(
       id: id,
@@ -200,20 +244,34 @@ class Shelter {
       buildTime: buildTime,
       modules: {...modules, module: buildingLevel},
       visitedAt: visitedAt,
+      buildLeft: buildLeft,
     );
   }
 
-  bool isReadyAt(DateTime now) => !now.isBefore(readyAt);
+  bool isReadyAt(DateTime now) {
+    final left = buildLeft;
+    return left == null ? !now.isBefore(readyAt) : left <= Duration.zero;
+  }
 
   /// 0–1, for the one bar worth drawing.
   double progressAt(DateTime now) {
     if (buildTime <= Duration.zero) return 1;
 
-    final done = now.difference(startedAt).inMilliseconds;
+    final left = buildLeft;
+    final done = left == null
+        ? now.difference(startedAt).inMilliseconds
+        : buildTime.inMilliseconds - left.inMilliseconds;
     return (done / buildTime.inMilliseconds).clamp(0.0, 1.0);
   }
 
   int levelOf(ShelterModule module) => modules[module] ?? 0;
+
+  /// §2.1a.3: whether the player is standing on the site, finished or not.
+  ///
+  /// Not the same question as [coversAt]: a half-barricaded building keeps
+  /// nothing out, but it is still the place you have to be to go on nailing
+  /// boards to it.
+  bool atSite(GeoPoint at) => position.distanceTo(at) <= kind.safeRadiusM;
 
   /// §8.1: whether the player is standing inside the safe radius.
   ///
@@ -268,6 +326,8 @@ class Shelter {
     GeoPoint? position,
     DateTime? startedAt,
     Duration? buildTime,
+    Duration? buildLeft,
+    Duration? buildingLeft,
   }) => Shelter(
     id: id,
     kind: kind,
@@ -279,7 +339,14 @@ class Shelter {
     building: building,
     buildingLevel: buildingLevel,
     buildingReadyAt: buildingReadyAt,
+    buildLeft: buildLeft ?? this.buildLeft,
+    buildingLeft: buildingLeft ?? this.buildingLeft,
   );
+}
+
+Duration _down(Duration left, Duration by) {
+  final rest = left - by;
+  return rest.isNegative ? Duration.zero : rest;
 }
 
 /// Why a camp cannot go here (§8.5.2), or null when it can.

@@ -29,7 +29,7 @@ import 'tables.dart';
 part 'database.g.dart';
 
 /// Bumped only alongside a migration step in [_migration]. Never reused.
-const int kSchemaVersion = 13;
+const int kSchemaVersion = 14;
 
 /// Keys used in [MetaEntries].
 abstract final class MetaKeys {
@@ -70,7 +70,7 @@ class SaveDatabase extends _$SaveDatabase {
   /// follow a constant reference. `schema_test.dart` keeps it in step with
   /// [kSchemaVersion].
   @override
-  int get schemaVersion => 13;
+  int get schemaVersion => 14;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -174,6 +174,21 @@ class SaveDatabase extends _$SaveDatabase {
         // it outlives every session and because it is the one record in the
         // save that must never be backed up (§8.2).
         await m.createTable(shelters);
+      }
+
+      // Same shape as v5's: shelters was created in v13.
+      if (from >= 13 && from < 14) {
+        // §2.1a.3: work only counts while the player is on the site, so what
+        // is left has to be a number rather than a deadline. Null on an
+        // existing row reads as "the old deadline still applies".
+        await m.addColumn(shelters, shelters.buildLeftSeconds);
+        await m.addColumn(shelters, shelters.buildingLeftSeconds);
+      }
+
+      if (from < 14) {
+        // §9.2: a softcore character who has gone down. Null is upright,
+        // which is what every existing save was.
+        await m.addColumn(vitals, vitals.downUntil);
       }
 
       await _writeSchemaVersion(to);
@@ -341,6 +356,30 @@ class SaveDatabase extends _$SaveDatabase {
     if (ids.isEmpty) return;
     await (delete(groundItems)..where((t) => t.id.isIn(ids))).go();
   }
+
+  // --------------------------------------------------------------- death ---
+
+  /// §9.1: the character is over, and the row stays for the Chronicle.
+  Future<void> markProfileDead(
+    int id, {
+    required DateTime at,
+    required String cause,
+  }) async {
+    await (update(profiles)..where((t) => t.id.equals(id))).write(
+      ProfilesCompanion(
+        diedAt: Value(at),
+        deathCause: Value(cause),
+        isActive: const Value(false),
+      ),
+    );
+  }
+
+  Future<int> addChronicleEntry(ChronicleEntriesCompanion entry) =>
+      into(chronicleEntries).insert(entry);
+
+  Future<List<ChronicleEntry>> chronicleFor(int profileId) => (select(
+    chronicleEntries,
+  )..where((t) => t.profileId.equals(profileId))).get();
 
   // ------------------------------------------------------------- shelter ---
 

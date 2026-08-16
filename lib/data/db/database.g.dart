@@ -1138,6 +1138,17 @@ class $VitalsTable extends Vitals with TableInfo<$VitalsTable, Vital> {
     requiredDuringInsert: false,
     defaultValue: const Constant('none'),
   );
+  static const VerificationMeta _downUntilMeta = const VerificationMeta(
+    'downUntil',
+  );
+  @override
+  late final GeneratedColumn<DateTime> downUntil = GeneratedColumn<DateTime>(
+    'down_until',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _occupationJsonMeta = const VerificationMeta(
     'occupationJson',
   );
@@ -1212,6 +1223,7 @@ class $VitalsTable extends Vitals with TableInfo<$VitalsTable, Vital> {
     accuracyM,
     rngCursors,
     bleedTier,
+    downUntil,
     occupationJson,
     speedKmh,
     carriedKg,
@@ -1327,6 +1339,12 @@ class $VitalsTable extends Vitals with TableInfo<$VitalsTable, Vital> {
         bleedTier.isAcceptableOrUnknown(data['bleed_tier']!, _bleedTierMeta),
       );
     }
+    if (data.containsKey('down_until')) {
+      context.handle(
+        _downUntilMeta,
+        downUntil.isAcceptableOrUnknown(data['down_until']!, _downUntilMeta),
+      );
+    }
     if (data.containsKey('occupation_json')) {
       context.handle(
         _occupationJsonMeta,
@@ -1427,6 +1445,10 @@ class $VitalsTable extends Vitals with TableInfo<$VitalsTable, Vital> {
         DriftSqlType.string,
         data['${effectivePrefix}bleed_tier'],
       )!,
+      downUntil: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}down_until'],
+      ),
       occupationJson: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}occupation_json'],
@@ -1487,6 +1509,12 @@ class Vital extends DataClass implements Insertable<Vital> {
   /// the app would be first aid.
   final String bleedTier;
 
+  /// §9.2: when a softcore character comes round, or null while they are on
+  /// their feet. Wall-clock, and the one state in the game that runs with the
+  /// app closed on purpose — being unconscious cannot require watching a
+  /// screen.
+  final DateTime? downUntil;
+
   /// Occupation in progress, as JSON (§2.1a). Null when the character is idle.
   ///
   /// Stored opaquely rather than as columns: occupations gain fields as the
@@ -1523,6 +1551,7 @@ class Vital extends DataClass implements Insertable<Vital> {
     this.accuracyM,
     required this.rngCursors,
     required this.bleedTier,
+    this.downUntil,
     this.occupationJson,
     required this.speedKmh,
     required this.carriedKg,
@@ -1551,6 +1580,9 @@ class Vital extends DataClass implements Insertable<Vital> {
     }
     map['rng_cursors'] = Variable<String>(rngCursors);
     map['bleed_tier'] = Variable<String>(bleedTier);
+    if (!nullToAbsent || downUntil != null) {
+      map['down_until'] = Variable<DateTime>(downUntil);
+    }
     if (!nullToAbsent || occupationJson != null) {
       map['occupation_json'] = Variable<String>(occupationJson);
     }
@@ -1582,6 +1614,9 @@ class Vital extends DataClass implements Insertable<Vital> {
           : Value(accuracyM),
       rngCursors: Value(rngCursors),
       bleedTier: Value(bleedTier),
+      downUntil: downUntil == null && nullToAbsent
+          ? const Value.absent()
+          : Value(downUntil),
       occupationJson: occupationJson == null && nullToAbsent
           ? const Value.absent()
           : Value(occupationJson),
@@ -1611,6 +1646,7 @@ class Vital extends DataClass implements Insertable<Vital> {
       accuracyM: serializer.fromJson<double?>(json['accuracyM']),
       rngCursors: serializer.fromJson<String>(json['rngCursors']),
       bleedTier: serializer.fromJson<String>(json['bleedTier']),
+      downUntil: serializer.fromJson<DateTime?>(json['downUntil']),
       occupationJson: serializer.fromJson<String?>(json['occupationJson']),
       speedKmh: serializer.fromJson<double>(json['speedKmh']),
       carriedKg: serializer.fromJson<double>(json['carriedKg']),
@@ -1635,6 +1671,7 @@ class Vital extends DataClass implements Insertable<Vital> {
       'accuracyM': serializer.toJson<double?>(accuracyM),
       'rngCursors': serializer.toJson<String>(rngCursors),
       'bleedTier': serializer.toJson<String>(bleedTier),
+      'downUntil': serializer.toJson<DateTime?>(downUntil),
       'occupationJson': serializer.toJson<String?>(occupationJson),
       'speedKmh': serializer.toJson<double>(speedKmh),
       'carriedKg': serializer.toJson<double>(carriedKg),
@@ -1657,6 +1694,7 @@ class Vital extends DataClass implements Insertable<Vital> {
     Value<double?> accuracyM = const Value.absent(),
     String? rngCursors,
     String? bleedTier,
+    Value<DateTime?> downUntil = const Value.absent(),
     Value<String?> occupationJson = const Value.absent(),
     double? speedKmh,
     double? carriedKg,
@@ -1676,6 +1714,7 @@ class Vital extends DataClass implements Insertable<Vital> {
     accuracyM: accuracyM.present ? accuracyM.value : this.accuracyM,
     rngCursors: rngCursors ?? this.rngCursors,
     bleedTier: bleedTier ?? this.bleedTier,
+    downUntil: downUntil.present ? downUntil.value : this.downUntil,
     occupationJson: occupationJson.present
         ? occupationJson.value
         : this.occupationJson,
@@ -1709,6 +1748,7 @@ class Vital extends DataClass implements Insertable<Vital> {
           ? data.rngCursors.value
           : this.rngCursors,
       bleedTier: data.bleedTier.present ? data.bleedTier.value : this.bleedTier,
+      downUntil: data.downUntil.present ? data.downUntil.value : this.downUntil,
       occupationJson: data.occupationJson.present
           ? data.occupationJson.value
           : this.occupationJson,
@@ -1739,6 +1779,7 @@ class Vital extends DataClass implements Insertable<Vital> {
           ..write('accuracyM: $accuracyM, ')
           ..write('rngCursors: $rngCursors, ')
           ..write('bleedTier: $bleedTier, ')
+          ..write('downUntil: $downUntil, ')
           ..write('occupationJson: $occupationJson, ')
           ..write('speedKmh: $speedKmh, ')
           ..write('carriedKg: $carriedKg, ')
@@ -1763,6 +1804,7 @@ class Vital extends DataClass implements Insertable<Vital> {
     accuracyM,
     rngCursors,
     bleedTier,
+    downUntil,
     occupationJson,
     speedKmh,
     carriedKg,
@@ -1786,6 +1828,7 @@ class Vital extends DataClass implements Insertable<Vital> {
           other.accuracyM == this.accuracyM &&
           other.rngCursors == this.rngCursors &&
           other.bleedTier == this.bleedTier &&
+          other.downUntil == this.downUntil &&
           other.occupationJson == this.occupationJson &&
           other.speedKmh == this.speedKmh &&
           other.carriedKg == this.carriedKg &&
@@ -1807,6 +1850,7 @@ class VitalsCompanion extends UpdateCompanion<Vital> {
   final Value<double?> accuracyM;
   final Value<String> rngCursors;
   final Value<String> bleedTier;
+  final Value<DateTime?> downUntil;
   final Value<String?> occupationJson;
   final Value<double> speedKmh;
   final Value<double> carriedKg;
@@ -1826,6 +1870,7 @@ class VitalsCompanion extends UpdateCompanion<Vital> {
     this.accuracyM = const Value.absent(),
     this.rngCursors = const Value.absent(),
     this.bleedTier = const Value.absent(),
+    this.downUntil = const Value.absent(),
     this.occupationJson = const Value.absent(),
     this.speedKmh = const Value.absent(),
     this.carriedKg = const Value.absent(),
@@ -1846,6 +1891,7 @@ class VitalsCompanion extends UpdateCompanion<Vital> {
     this.accuracyM = const Value.absent(),
     this.rngCursors = const Value.absent(),
     this.bleedTier = const Value.absent(),
+    this.downUntil = const Value.absent(),
     this.occupationJson = const Value.absent(),
     this.speedKmh = const Value.absent(),
     this.carriedKg = const Value.absent(),
@@ -1870,6 +1916,7 @@ class VitalsCompanion extends UpdateCompanion<Vital> {
     Expression<double>? accuracyM,
     Expression<String>? rngCursors,
     Expression<String>? bleedTier,
+    Expression<DateTime>? downUntil,
     Expression<String>? occupationJson,
     Expression<double>? speedKmh,
     Expression<double>? carriedKg,
@@ -1890,6 +1937,7 @@ class VitalsCompanion extends UpdateCompanion<Vital> {
       if (accuracyM != null) 'accuracy_m': accuracyM,
       if (rngCursors != null) 'rng_cursors': rngCursors,
       if (bleedTier != null) 'bleed_tier': bleedTier,
+      if (downUntil != null) 'down_until': downUntil,
       if (occupationJson != null) 'occupation_json': occupationJson,
       if (speedKmh != null) 'speed_kmh': speedKmh,
       if (carriedKg != null) 'carried_kg': carriedKg,
@@ -1912,6 +1960,7 @@ class VitalsCompanion extends UpdateCompanion<Vital> {
     Value<double?>? accuracyM,
     Value<String>? rngCursors,
     Value<String>? bleedTier,
+    Value<DateTime?>? downUntil,
     Value<String?>? occupationJson,
     Value<double>? speedKmh,
     Value<double>? carriedKg,
@@ -1932,6 +1981,7 @@ class VitalsCompanion extends UpdateCompanion<Vital> {
       accuracyM: accuracyM ?? this.accuracyM,
       rngCursors: rngCursors ?? this.rngCursors,
       bleedTier: bleedTier ?? this.bleedTier,
+      downUntil: downUntil ?? this.downUntil,
       occupationJson: occupationJson ?? this.occupationJson,
       speedKmh: speedKmh ?? this.speedKmh,
       carriedKg: carriedKg ?? this.carriedKg,
@@ -1982,6 +2032,9 @@ class VitalsCompanion extends UpdateCompanion<Vital> {
     if (bleedTier.present) {
       map['bleed_tier'] = Variable<String>(bleedTier.value);
     }
+    if (downUntil.present) {
+      map['down_until'] = Variable<DateTime>(downUntil.value);
+    }
     if (occupationJson.present) {
       map['occupation_json'] = Variable<String>(occupationJson.value);
     }
@@ -2016,6 +2069,7 @@ class VitalsCompanion extends UpdateCompanion<Vital> {
           ..write('accuracyM: $accuracyM, ')
           ..write('rngCursors: $rngCursors, ')
           ..write('bleedTier: $bleedTier, ')
+          ..write('downUntil: $downUntil, ')
           ..write('occupationJson: $occupationJson, ')
           ..write('speedKmh: $speedKmh, ')
           ..write('carriedKg: $carriedKg, ')
@@ -5267,6 +5321,17 @@ class $SheltersTable extends Shelters
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _buildLeftSecondsMeta = const VerificationMeta(
+    'buildLeftSeconds',
+  );
+  @override
+  late final GeneratedColumn<int> buildLeftSeconds = GeneratedColumn<int>(
+    'build_left_seconds',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _modulesMeta = const VerificationMeta(
     'modules',
   );
@@ -5313,6 +5378,16 @@ class $SheltersTable extends Shelters
         type: DriftSqlType.dateTime,
         requiredDuringInsert: false,
       );
+  static const VerificationMeta _buildingLeftSecondsMeta =
+      const VerificationMeta('buildingLeftSeconds');
+  @override
+  late final GeneratedColumn<int> buildingLeftSeconds = GeneratedColumn<int>(
+    'building_left_seconds',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -5322,10 +5397,12 @@ class $SheltersTable extends Shelters
     longitude,
     startedAt,
     buildSeconds,
+    buildLeftSeconds,
     modules,
     visitedAt,
     building,
     buildingReadyAt,
+    buildingLeftSeconds,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -5393,6 +5470,15 @@ class $SheltersTable extends Shelters
     } else if (isInserting) {
       context.missing(_buildSecondsMeta);
     }
+    if (data.containsKey('build_left_seconds')) {
+      context.handle(
+        _buildLeftSecondsMeta,
+        buildLeftSeconds.isAcceptableOrUnknown(
+          data['build_left_seconds']!,
+          _buildLeftSecondsMeta,
+        ),
+      );
+    }
     if (data.containsKey('modules')) {
       context.handle(
         _modulesMeta,
@@ -5417,6 +5503,15 @@ class $SheltersTable extends Shelters
         buildingReadyAt.isAcceptableOrUnknown(
           data['building_ready_at']!,
           _buildingReadyAtMeta,
+        ),
+      );
+    }
+    if (data.containsKey('building_left_seconds')) {
+      context.handle(
+        _buildingLeftSecondsMeta,
+        buildingLeftSeconds.isAcceptableOrUnknown(
+          data['building_left_seconds']!,
+          _buildingLeftSecondsMeta,
         ),
       );
     }
@@ -5457,6 +5552,10 @@ class $SheltersTable extends Shelters
         DriftSqlType.int,
         data['${effectivePrefix}build_seconds'],
       )!,
+      buildLeftSeconds: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}build_left_seconds'],
+      ),
       modules: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}modules'],
@@ -5472,6 +5571,10 @@ class $SheltersTable extends Shelters
       buildingReadyAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}building_ready_at'],
+      ),
+      buildingLeftSeconds: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}building_left_seconds'],
       ),
     );
   }
@@ -5498,6 +5601,11 @@ class ShelterRow extends DataClass implements Insertable<ShelterRow> {
   final DateTime startedAt;
   final int buildSeconds;
 
+  /// §2.1a.3: how much of that work is left, and it only comes down while the
+  /// player is standing on the site. Null on a row written before the rule
+  /// existed, which then falls back to the plain deadline.
+  final int? buildLeftSeconds;
+
   /// §8.4: `storage:2,lounge:1`. Absent means nought, which is what every
   /// shelter starts as.
   final String modules;
@@ -5514,6 +5622,9 @@ class ShelterRow extends DataClass implements Insertable<ShelterRow> {
   /// nine-hour workshop is even less of a thing to sit and watch.
   final String? building;
   final DateTime? buildingReadyAt;
+
+  /// §2.1a.3 again, for the module: work left, spent only on site.
+  final int? buildingLeftSeconds;
   const ShelterRow({
     required this.id,
     required this.profileId,
@@ -5522,10 +5633,12 @@ class ShelterRow extends DataClass implements Insertable<ShelterRow> {
     required this.longitude,
     required this.startedAt,
     required this.buildSeconds,
+    this.buildLeftSeconds,
     required this.modules,
     this.visitedAt,
     this.building,
     this.buildingReadyAt,
+    this.buildingLeftSeconds,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -5537,6 +5650,9 @@ class ShelterRow extends DataClass implements Insertable<ShelterRow> {
     map['longitude'] = Variable<double>(longitude);
     map['started_at'] = Variable<DateTime>(startedAt);
     map['build_seconds'] = Variable<int>(buildSeconds);
+    if (!nullToAbsent || buildLeftSeconds != null) {
+      map['build_left_seconds'] = Variable<int>(buildLeftSeconds);
+    }
     map['modules'] = Variable<String>(modules);
     if (!nullToAbsent || visitedAt != null) {
       map['visited_at'] = Variable<DateTime>(visitedAt);
@@ -5546,6 +5662,9 @@ class ShelterRow extends DataClass implements Insertable<ShelterRow> {
     }
     if (!nullToAbsent || buildingReadyAt != null) {
       map['building_ready_at'] = Variable<DateTime>(buildingReadyAt);
+    }
+    if (!nullToAbsent || buildingLeftSeconds != null) {
+      map['building_left_seconds'] = Variable<int>(buildingLeftSeconds);
     }
     return map;
   }
@@ -5559,6 +5678,9 @@ class ShelterRow extends DataClass implements Insertable<ShelterRow> {
       longitude: Value(longitude),
       startedAt: Value(startedAt),
       buildSeconds: Value(buildSeconds),
+      buildLeftSeconds: buildLeftSeconds == null && nullToAbsent
+          ? const Value.absent()
+          : Value(buildLeftSeconds),
       modules: Value(modules),
       visitedAt: visitedAt == null && nullToAbsent
           ? const Value.absent()
@@ -5569,6 +5691,9 @@ class ShelterRow extends DataClass implements Insertable<ShelterRow> {
       buildingReadyAt: buildingReadyAt == null && nullToAbsent
           ? const Value.absent()
           : Value(buildingReadyAt),
+      buildingLeftSeconds: buildingLeftSeconds == null && nullToAbsent
+          ? const Value.absent()
+          : Value(buildingLeftSeconds),
     );
   }
 
@@ -5585,10 +5710,14 @@ class ShelterRow extends DataClass implements Insertable<ShelterRow> {
       longitude: serializer.fromJson<double>(json['longitude']),
       startedAt: serializer.fromJson<DateTime>(json['startedAt']),
       buildSeconds: serializer.fromJson<int>(json['buildSeconds']),
+      buildLeftSeconds: serializer.fromJson<int?>(json['buildLeftSeconds']),
       modules: serializer.fromJson<String>(json['modules']),
       visitedAt: serializer.fromJson<DateTime?>(json['visitedAt']),
       building: serializer.fromJson<String?>(json['building']),
       buildingReadyAt: serializer.fromJson<DateTime?>(json['buildingReadyAt']),
+      buildingLeftSeconds: serializer.fromJson<int?>(
+        json['buildingLeftSeconds'],
+      ),
     );
   }
   @override
@@ -5602,10 +5731,12 @@ class ShelterRow extends DataClass implements Insertable<ShelterRow> {
       'longitude': serializer.toJson<double>(longitude),
       'startedAt': serializer.toJson<DateTime>(startedAt),
       'buildSeconds': serializer.toJson<int>(buildSeconds),
+      'buildLeftSeconds': serializer.toJson<int?>(buildLeftSeconds),
       'modules': serializer.toJson<String>(modules),
       'visitedAt': serializer.toJson<DateTime?>(visitedAt),
       'building': serializer.toJson<String?>(building),
       'buildingReadyAt': serializer.toJson<DateTime?>(buildingReadyAt),
+      'buildingLeftSeconds': serializer.toJson<int?>(buildingLeftSeconds),
     };
   }
 
@@ -5617,10 +5748,12 @@ class ShelterRow extends DataClass implements Insertable<ShelterRow> {
     double? longitude,
     DateTime? startedAt,
     int? buildSeconds,
+    Value<int?> buildLeftSeconds = const Value.absent(),
     String? modules,
     Value<DateTime?> visitedAt = const Value.absent(),
     Value<String?> building = const Value.absent(),
     Value<DateTime?> buildingReadyAt = const Value.absent(),
+    Value<int?> buildingLeftSeconds = const Value.absent(),
   }) => ShelterRow(
     id: id ?? this.id,
     profileId: profileId ?? this.profileId,
@@ -5629,12 +5762,18 @@ class ShelterRow extends DataClass implements Insertable<ShelterRow> {
     longitude: longitude ?? this.longitude,
     startedAt: startedAt ?? this.startedAt,
     buildSeconds: buildSeconds ?? this.buildSeconds,
+    buildLeftSeconds: buildLeftSeconds.present
+        ? buildLeftSeconds.value
+        : this.buildLeftSeconds,
     modules: modules ?? this.modules,
     visitedAt: visitedAt.present ? visitedAt.value : this.visitedAt,
     building: building.present ? building.value : this.building,
     buildingReadyAt: buildingReadyAt.present
         ? buildingReadyAt.value
         : this.buildingReadyAt,
+    buildingLeftSeconds: buildingLeftSeconds.present
+        ? buildingLeftSeconds.value
+        : this.buildingLeftSeconds,
   );
   ShelterRow copyWithCompanion(SheltersCompanion data) {
     return ShelterRow(
@@ -5647,12 +5786,18 @@ class ShelterRow extends DataClass implements Insertable<ShelterRow> {
       buildSeconds: data.buildSeconds.present
           ? data.buildSeconds.value
           : this.buildSeconds,
+      buildLeftSeconds: data.buildLeftSeconds.present
+          ? data.buildLeftSeconds.value
+          : this.buildLeftSeconds,
       modules: data.modules.present ? data.modules.value : this.modules,
       visitedAt: data.visitedAt.present ? data.visitedAt.value : this.visitedAt,
       building: data.building.present ? data.building.value : this.building,
       buildingReadyAt: data.buildingReadyAt.present
           ? data.buildingReadyAt.value
           : this.buildingReadyAt,
+      buildingLeftSeconds: data.buildingLeftSeconds.present
+          ? data.buildingLeftSeconds.value
+          : this.buildingLeftSeconds,
     );
   }
 
@@ -5666,10 +5811,12 @@ class ShelterRow extends DataClass implements Insertable<ShelterRow> {
           ..write('longitude: $longitude, ')
           ..write('startedAt: $startedAt, ')
           ..write('buildSeconds: $buildSeconds, ')
+          ..write('buildLeftSeconds: $buildLeftSeconds, ')
           ..write('modules: $modules, ')
           ..write('visitedAt: $visitedAt, ')
           ..write('building: $building, ')
-          ..write('buildingReadyAt: $buildingReadyAt')
+          ..write('buildingReadyAt: $buildingReadyAt, ')
+          ..write('buildingLeftSeconds: $buildingLeftSeconds')
           ..write(')'))
         .toString();
   }
@@ -5683,10 +5830,12 @@ class ShelterRow extends DataClass implements Insertable<ShelterRow> {
     longitude,
     startedAt,
     buildSeconds,
+    buildLeftSeconds,
     modules,
     visitedAt,
     building,
     buildingReadyAt,
+    buildingLeftSeconds,
   );
   @override
   bool operator ==(Object other) =>
@@ -5699,10 +5848,12 @@ class ShelterRow extends DataClass implements Insertable<ShelterRow> {
           other.longitude == this.longitude &&
           other.startedAt == this.startedAt &&
           other.buildSeconds == this.buildSeconds &&
+          other.buildLeftSeconds == this.buildLeftSeconds &&
           other.modules == this.modules &&
           other.visitedAt == this.visitedAt &&
           other.building == this.building &&
-          other.buildingReadyAt == this.buildingReadyAt);
+          other.buildingReadyAt == this.buildingReadyAt &&
+          other.buildingLeftSeconds == this.buildingLeftSeconds);
 }
 
 class SheltersCompanion extends UpdateCompanion<ShelterRow> {
@@ -5713,10 +5864,12 @@ class SheltersCompanion extends UpdateCompanion<ShelterRow> {
   final Value<double> longitude;
   final Value<DateTime> startedAt;
   final Value<int> buildSeconds;
+  final Value<int?> buildLeftSeconds;
   final Value<String> modules;
   final Value<DateTime?> visitedAt;
   final Value<String?> building;
   final Value<DateTime?> buildingReadyAt;
+  final Value<int?> buildingLeftSeconds;
   const SheltersCompanion({
     this.id = const Value.absent(),
     this.profileId = const Value.absent(),
@@ -5725,10 +5878,12 @@ class SheltersCompanion extends UpdateCompanion<ShelterRow> {
     this.longitude = const Value.absent(),
     this.startedAt = const Value.absent(),
     this.buildSeconds = const Value.absent(),
+    this.buildLeftSeconds = const Value.absent(),
     this.modules = const Value.absent(),
     this.visitedAt = const Value.absent(),
     this.building = const Value.absent(),
     this.buildingReadyAt = const Value.absent(),
+    this.buildingLeftSeconds = const Value.absent(),
   });
   SheltersCompanion.insert({
     this.id = const Value.absent(),
@@ -5738,10 +5893,12 @@ class SheltersCompanion extends UpdateCompanion<ShelterRow> {
     required double longitude,
     required DateTime startedAt,
     required int buildSeconds,
+    this.buildLeftSeconds = const Value.absent(),
     this.modules = const Value.absent(),
     this.visitedAt = const Value.absent(),
     this.building = const Value.absent(),
     this.buildingReadyAt = const Value.absent(),
+    this.buildingLeftSeconds = const Value.absent(),
   }) : profileId = Value(profileId),
        kind = Value(kind),
        latitude = Value(latitude),
@@ -5756,10 +5913,12 @@ class SheltersCompanion extends UpdateCompanion<ShelterRow> {
     Expression<double>? longitude,
     Expression<DateTime>? startedAt,
     Expression<int>? buildSeconds,
+    Expression<int>? buildLeftSeconds,
     Expression<String>? modules,
     Expression<DateTime>? visitedAt,
     Expression<String>? building,
     Expression<DateTime>? buildingReadyAt,
+    Expression<int>? buildingLeftSeconds,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -5769,10 +5928,13 @@ class SheltersCompanion extends UpdateCompanion<ShelterRow> {
       if (longitude != null) 'longitude': longitude,
       if (startedAt != null) 'started_at': startedAt,
       if (buildSeconds != null) 'build_seconds': buildSeconds,
+      if (buildLeftSeconds != null) 'build_left_seconds': buildLeftSeconds,
       if (modules != null) 'modules': modules,
       if (visitedAt != null) 'visited_at': visitedAt,
       if (building != null) 'building': building,
       if (buildingReadyAt != null) 'building_ready_at': buildingReadyAt,
+      if (buildingLeftSeconds != null)
+        'building_left_seconds': buildingLeftSeconds,
     });
   }
 
@@ -5784,10 +5946,12 @@ class SheltersCompanion extends UpdateCompanion<ShelterRow> {
     Value<double>? longitude,
     Value<DateTime>? startedAt,
     Value<int>? buildSeconds,
+    Value<int?>? buildLeftSeconds,
     Value<String>? modules,
     Value<DateTime?>? visitedAt,
     Value<String?>? building,
     Value<DateTime?>? buildingReadyAt,
+    Value<int?>? buildingLeftSeconds,
   }) {
     return SheltersCompanion(
       id: id ?? this.id,
@@ -5797,10 +5961,12 @@ class SheltersCompanion extends UpdateCompanion<ShelterRow> {
       longitude: longitude ?? this.longitude,
       startedAt: startedAt ?? this.startedAt,
       buildSeconds: buildSeconds ?? this.buildSeconds,
+      buildLeftSeconds: buildLeftSeconds ?? this.buildLeftSeconds,
       modules: modules ?? this.modules,
       visitedAt: visitedAt ?? this.visitedAt,
       building: building ?? this.building,
       buildingReadyAt: buildingReadyAt ?? this.buildingReadyAt,
+      buildingLeftSeconds: buildingLeftSeconds ?? this.buildingLeftSeconds,
     );
   }
 
@@ -5828,6 +5994,9 @@ class SheltersCompanion extends UpdateCompanion<ShelterRow> {
     if (buildSeconds.present) {
       map['build_seconds'] = Variable<int>(buildSeconds.value);
     }
+    if (buildLeftSeconds.present) {
+      map['build_left_seconds'] = Variable<int>(buildLeftSeconds.value);
+    }
     if (modules.present) {
       map['modules'] = Variable<String>(modules.value);
     }
@@ -5839,6 +6008,9 @@ class SheltersCompanion extends UpdateCompanion<ShelterRow> {
     }
     if (buildingReadyAt.present) {
       map['building_ready_at'] = Variable<DateTime>(buildingReadyAt.value);
+    }
+    if (buildingLeftSeconds.present) {
+      map['building_left_seconds'] = Variable<int>(buildingLeftSeconds.value);
     }
     return map;
   }
@@ -5853,10 +6025,12 @@ class SheltersCompanion extends UpdateCompanion<ShelterRow> {
           ..write('longitude: $longitude, ')
           ..write('startedAt: $startedAt, ')
           ..write('buildSeconds: $buildSeconds, ')
+          ..write('buildLeftSeconds: $buildLeftSeconds, ')
           ..write('modules: $modules, ')
           ..write('visitedAt: $visitedAt, ')
           ..write('building: $building, ')
-          ..write('buildingReadyAt: $buildingReadyAt')
+          ..write('buildingReadyAt: $buildingReadyAt, ')
+          ..write('buildingLeftSeconds: $buildingLeftSeconds')
           ..write(')'))
         .toString();
   }
@@ -6395,6 +6569,7 @@ typedef $$VitalsTableCreateCompanionBuilder =
       Value<double?> accuracyM,
       Value<String> rngCursors,
       Value<String> bleedTier,
+      Value<DateTime?> downUntil,
       Value<String?> occupationJson,
       Value<double> speedKmh,
       Value<double> carriedKg,
@@ -6416,6 +6591,7 @@ typedef $$VitalsTableUpdateCompanionBuilder =
       Value<double?> accuracyM,
       Value<String> rngCursors,
       Value<String> bleedTier,
+      Value<DateTime?> downUntil,
       Value<String?> occupationJson,
       Value<double> speedKmh,
       Value<double> carriedKg,
@@ -6494,6 +6670,11 @@ class $$VitalsTableFilterComposer
 
   ColumnFilters<String> get bleedTier => $composableBuilder(
     column: $table.bleedTier,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get downUntil => $composableBuilder(
+    column: $table.downUntil,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6597,6 +6778,11 @@ class $$VitalsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<DateTime> get downUntil => $composableBuilder(
+    column: $table.downUntil,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get occupationJson => $composableBuilder(
     column: $table.occupationJson,
     builder: (column) => ColumnOrderings(column),
@@ -6681,6 +6867,9 @@ class $$VitalsTableAnnotationComposer
   GeneratedColumn<String> get bleedTier =>
       $composableBuilder(column: $table.bleedTier, builder: (column) => column);
 
+  GeneratedColumn<DateTime> get downUntil =>
+      $composableBuilder(column: $table.downUntil, builder: (column) => column);
+
   GeneratedColumn<String> get occupationJson => $composableBuilder(
     column: $table.occupationJson,
     builder: (column) => column,
@@ -6744,6 +6933,7 @@ class $$VitalsTableTableManager
                 Value<double?> accuracyM = const Value.absent(),
                 Value<String> rngCursors = const Value.absent(),
                 Value<String> bleedTier = const Value.absent(),
+                Value<DateTime?> downUntil = const Value.absent(),
                 Value<String?> occupationJson = const Value.absent(),
                 Value<double> speedKmh = const Value.absent(),
                 Value<double> carriedKg = const Value.absent(),
@@ -6763,6 +6953,7 @@ class $$VitalsTableTableManager
                 accuracyM: accuracyM,
                 rngCursors: rngCursors,
                 bleedTier: bleedTier,
+                downUntil: downUntil,
                 occupationJson: occupationJson,
                 speedKmh: speedKmh,
                 carriedKg: carriedKg,
@@ -6784,6 +6975,7 @@ class $$VitalsTableTableManager
                 Value<double?> accuracyM = const Value.absent(),
                 Value<String> rngCursors = const Value.absent(),
                 Value<String> bleedTier = const Value.absent(),
+                Value<DateTime?> downUntil = const Value.absent(),
                 Value<String?> occupationJson = const Value.absent(),
                 Value<double> speedKmh = const Value.absent(),
                 Value<double> carriedKg = const Value.absent(),
@@ -6803,6 +6995,7 @@ class $$VitalsTableTableManager
                 accuracyM: accuracyM,
                 rngCursors: rngCursors,
                 bleedTier: bleedTier,
+                downUntil: downUntil,
                 occupationJson: occupationJson,
                 speedKmh: speedKmh,
                 carriedKg: carriedKg,
@@ -8402,10 +8595,12 @@ typedef $$SheltersTableCreateCompanionBuilder =
       required double longitude,
       required DateTime startedAt,
       required int buildSeconds,
+      Value<int?> buildLeftSeconds,
       Value<String> modules,
       Value<DateTime?> visitedAt,
       Value<String?> building,
       Value<DateTime?> buildingReadyAt,
+      Value<int?> buildingLeftSeconds,
     });
 typedef $$SheltersTableUpdateCompanionBuilder =
     SheltersCompanion Function({
@@ -8416,10 +8611,12 @@ typedef $$SheltersTableUpdateCompanionBuilder =
       Value<double> longitude,
       Value<DateTime> startedAt,
       Value<int> buildSeconds,
+      Value<int?> buildLeftSeconds,
       Value<String> modules,
       Value<DateTime?> visitedAt,
       Value<String?> building,
       Value<DateTime?> buildingReadyAt,
+      Value<int?> buildingLeftSeconds,
     });
 
 class $$SheltersTableFilterComposer
@@ -8466,6 +8663,11 @@ class $$SheltersTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<int> get buildLeftSeconds => $composableBuilder(
+    column: $table.buildLeftSeconds,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<String> get modules => $composableBuilder(
     column: $table.modules,
     builder: (column) => ColumnFilters(column),
@@ -8483,6 +8685,11 @@ class $$SheltersTableFilterComposer
 
   ColumnFilters<DateTime> get buildingReadyAt => $composableBuilder(
     column: $table.buildingReadyAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get buildingLeftSeconds => $composableBuilder(
+    column: $table.buildingLeftSeconds,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -8531,6 +8738,11 @@ class $$SheltersTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get buildLeftSeconds => $composableBuilder(
+    column: $table.buildLeftSeconds,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get modules => $composableBuilder(
     column: $table.modules,
     builder: (column) => ColumnOrderings(column),
@@ -8548,6 +8760,11 @@ class $$SheltersTableOrderingComposer
 
   ColumnOrderings<DateTime> get buildingReadyAt => $composableBuilder(
     column: $table.buildingReadyAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get buildingLeftSeconds => $composableBuilder(
+    column: $table.buildingLeftSeconds,
     builder: (column) => ColumnOrderings(column),
   );
 }
@@ -8584,6 +8801,11 @@ class $$SheltersTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<int> get buildLeftSeconds => $composableBuilder(
+    column: $table.buildLeftSeconds,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get modules =>
       $composableBuilder(column: $table.modules, builder: (column) => column);
 
@@ -8595,6 +8817,11 @@ class $$SheltersTableAnnotationComposer
 
   GeneratedColumn<DateTime> get buildingReadyAt => $composableBuilder(
     column: $table.buildingReadyAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get buildingLeftSeconds => $composableBuilder(
+    column: $table.buildingLeftSeconds,
     builder: (column) => column,
   );
 }
@@ -8637,10 +8864,12 @@ class $$SheltersTableTableManager
                 Value<double> longitude = const Value.absent(),
                 Value<DateTime> startedAt = const Value.absent(),
                 Value<int> buildSeconds = const Value.absent(),
+                Value<int?> buildLeftSeconds = const Value.absent(),
                 Value<String> modules = const Value.absent(),
                 Value<DateTime?> visitedAt = const Value.absent(),
                 Value<String?> building = const Value.absent(),
                 Value<DateTime?> buildingReadyAt = const Value.absent(),
+                Value<int?> buildingLeftSeconds = const Value.absent(),
               }) => SheltersCompanion(
                 id: id,
                 profileId: profileId,
@@ -8649,10 +8878,12 @@ class $$SheltersTableTableManager
                 longitude: longitude,
                 startedAt: startedAt,
                 buildSeconds: buildSeconds,
+                buildLeftSeconds: buildLeftSeconds,
                 modules: modules,
                 visitedAt: visitedAt,
                 building: building,
                 buildingReadyAt: buildingReadyAt,
+                buildingLeftSeconds: buildingLeftSeconds,
               ),
           createCompanionCallback:
               ({
@@ -8663,10 +8894,12 @@ class $$SheltersTableTableManager
                 required double longitude,
                 required DateTime startedAt,
                 required int buildSeconds,
+                Value<int?> buildLeftSeconds = const Value.absent(),
                 Value<String> modules = const Value.absent(),
                 Value<DateTime?> visitedAt = const Value.absent(),
                 Value<String?> building = const Value.absent(),
                 Value<DateTime?> buildingReadyAt = const Value.absent(),
+                Value<int?> buildingLeftSeconds = const Value.absent(),
               }) => SheltersCompanion.insert(
                 id: id,
                 profileId: profileId,
@@ -8675,10 +8908,12 @@ class $$SheltersTableTableManager
                 longitude: longitude,
                 startedAt: startedAt,
                 buildSeconds: buildSeconds,
+                buildLeftSeconds: buildLeftSeconds,
                 modules: modules,
                 visitedAt: visitedAt,
                 building: building,
                 buildingReadyAt: buildingReadyAt,
+                buildingLeftSeconds: buildingLeftSeconds,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

@@ -350,6 +350,50 @@ class L10nEn extends L10n {
       'Pharmacies, clinics, ambulances; first-aid kits in offices and workshops.';
 
   @override
+  String get deathTitle => 'THAT IS THE END';
+
+  @override
+  String get downTitle => 'YOU WENT DOWN';
+
+  @override
+  String get causeBloodLoss => 'Blood loss';
+
+  @override
+  String get causeThirst => 'Dehydration';
+
+  @override
+  String get causeStarvation => 'Starvation';
+
+  @override
+  String get deathWhat =>
+      'Hardcore: this character is over. The streak goes into the Chronicle with everything it reached. A new one keeps your body — the same height, weight and age — and only the name changes.';
+
+  @override
+  String get downWhat =>
+      'You come round where you are, an hour from now, with a quarter of your blood and almost nothing in you. Whatever was in your hands is gone; about half of what you carried is scattered where you fell. For ten minutes afterwards they will take you for dead — and you cannot fight either.';
+
+  @override
+  String downLeft(String time) {
+    return '$time';
+  }
+
+  @override
+  String get downClosedApp => 'The hour runs whether the app is open or not.';
+
+  @override
+  String get downGrace => 'They still take you for dead. Do not give it away.';
+
+  @override
+  String get deathNewCharacter => 'New character';
+
+  @override
+  String get deathSameBody => 'The same body, a new name.';
+
+  @override
+  String get downCaches =>
+      'What you were carrying is scattered where you fell.';
+
+  @override
   String get statusShock => 'Shock';
 
   @override
@@ -543,6 +587,13 @@ class L10nEn extends L10n {
   @override
   String get shelterNoFix =>
       'No position — a shelter goes where you are standing.';
+
+  @override
+  String get shelterNotHere =>
+      'You have to be at the shelter to build onto it.';
+
+  @override
+  String get shelterWorkStopped => 'Work stopped — nobody is on the site.';
 
   @override
   String get shelterNeedsTool =>
@@ -1109,7 +1160,7 @@ class L10nEn extends L10n {
   String get statMoa => 'Dispersion';
 
   @override
-  String get statMagazine => 'Magazine';
+  String get statMagazine => 'rds';
 
   @override
   String get statReload => 'Reload';
@@ -1175,7 +1226,7 @@ class L10nEn extends L10n {
   String get statXpPerPage => 'XP a page';
 
   @override
-  String get statLight => 'Light';
+  String get statLight => 'light';
 
   @override
   String get statBattery => 'Battery';

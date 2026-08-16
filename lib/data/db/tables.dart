@@ -105,6 +105,12 @@ class Vitals extends Table {
   /// the app would be first aid.
   TextColumn get bleedTier => text().withDefault(const Constant('none'))();
 
+  /// §9.2: when a softcore character comes round, or null while they are on
+  /// their feet. Wall-clock, and the one state in the game that runs with the
+  /// app closed on purpose — being unconscious cannot require watching a
+  /// screen.
+  DateTimeColumn get downUntil => dateTime().nullable()();
+
   /// Occupation in progress, as JSON (§2.1a). Null when the character is idle.
   ///
   /// Stored opaquely rather than as columns: occupations gain fields as the
@@ -358,6 +364,11 @@ class Shelters extends Table {
   DateTimeColumn get startedAt => dateTime()();
   IntColumn get buildSeconds => integer()();
 
+  /// §2.1a.3: how much of that work is left, and it only comes down while the
+  /// player is standing on the site. Null on a row written before the rule
+  /// existed, which then falls back to the plain deadline.
+  IntColumn get buildLeftSeconds => integer().nullable()();
+
   /// §8.4: `storage:2,lounge:1`. Absent means nought, which is what every
   /// shelter starts as.
   TextColumn get modules => text().withDefault(const Constant(''))();
@@ -374,6 +385,9 @@ class Shelters extends Table {
   /// nine-hour workshop is even less of a thing to sit and watch.
   TextColumn get building => text().nullable()();
   DateTimeColumn get buildingReadyAt => dateTime().nullable()();
+
+  /// §2.1a.3 again, for the module: work left, spent only on site.
+  IntColumn get buildingLeftSeconds => integer().nullable()();
 
   @override
   List<String> get customConstraints => [

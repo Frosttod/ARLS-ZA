@@ -29,6 +29,7 @@ class ActiveCharacter {
     required this.body,
     required this.state,
     this.bleeding = BleedTier.none,
+    this.downUntil,
   });
 
   final Profile profile;
@@ -37,6 +38,15 @@ class ActiveCharacter {
 
   /// §2.6: what was still open when the app was last closed.
   final BleedTier bleeding;
+
+  /// §9.2: when the hour on the ground runs out, or null while upright.
+  final DateTime? downUntil;
+
+  /// §9: how this character ends.
+  DeathMode get deathMode => DeathMode.fromWire(profile.deathMode);
+
+  /// §9.1: hardcore, and already over.
+  bool get isDead => profile.diedAt != null;
 
   SimConstants get constants => body.toSimConstants();
 }
@@ -73,6 +83,9 @@ class GameSessionFactory {
       // §2.6: a wound that was still open when the app was closed is still
       // open. Without this a bleed ends every time somebody locks the screen.
       bleeding: BleedTier.fromWire(vitals.bleedTier),
+      // §9.2: an hour on the ground runs against the wall clock, so it goes on
+      // running while the app is dead. That is the point of it.
+      downUntil: vitals.downUntil,
       state: SimState(
         lastUpdate: vitals.lastUpdate,
         bloodMl: vitals.bloodMl,
@@ -147,6 +160,28 @@ class GameSessionFactory {
     return (latitude: latitude, longitude: longitude);
   }
 
+  /// §9.1: ends a hardcore character, and files them in the Chronicle.
+  ///
+  /// The row is kept rather than deleted: §13.1 is the whole point of playing
+  /// hardcore, and a streak nobody can look at afterwards is not a streak.
+  Future<void> recordDeath({
+    required ActiveCharacter character,
+    required String cause,
+    required DateTime now,
+  }) async {
+    await db.markProfileDead(character.profile.id, at: now, cause: cause);
+    await db.addChronicleEntry(
+      ChronicleEntriesCompanion.insert(
+        profileId: character.profile.id,
+        survivalDays: now.difference(character.profile.createdAt).inDays,
+        startedAt: character.profile.createdAt,
+        endedAt: now,
+        cause: cause,
+        deathMode: character.profile.deathMode,
+      ),
+    );
+  }
+
   /// Starts the loop for [character] over [source].
   Future<GameLoop> startLoop({
     required ActiveCharacter character,
@@ -161,6 +196,9 @@ class GameSessionFactory {
       constants: character.constants,
       initialState: character.state,
       initialBleeding: character.bleeding,
+      deathMode: character.deathMode,
+      downUntil: character.downUntil,
+      dead: character.isDead,
       clock: clock,
       power: power,
     );

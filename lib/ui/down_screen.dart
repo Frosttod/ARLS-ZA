@@ -1,0 +1,126 @@
+/// The screen for a character who is not on their feet (§9).
+///
+/// It covers the map completely and on purpose. The bug it exists to fix was
+/// a character with no blood left walking around looting shops while a Walker
+/// chewed on them — everything still worked, because nothing had ever asked
+/// whether the player was alive. A state the game does not draw is a state the
+/// game does not have.
+library;
+
+import 'package:flutter/material.dart';
+
+import '../l10n/app_localizations.dart';
+import '../sim/death.dart';
+import 'hud.dart' show HudColors;
+
+class DownScreen extends StatelessWidget {
+  const DownScreen({
+    required this.state,
+    required this.cause,
+    required this.until,
+    required this.now,
+    this.onNewCharacter,
+    super.key,
+  });
+
+  final DownState state;
+  final DeathCause? cause;
+
+  /// §9.2: when the hour is up. Null for the end of a hardcore character.
+  final DateTime? until;
+
+  final DateTime now;
+
+  /// §9.1: the same body, a new name. Null in softcore, where there is nothing
+  /// to start over.
+  final VoidCallback? onNewCharacter;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = L10n.of(context);
+    final colours = HudColors.of(context);
+    final dead = state == DownState.dead;
+    final left = until == null ? Duration.zero : until!.difference(now);
+
+    return Scaffold(
+      backgroundColor: const Color(0xFF07090A),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(28),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                dead ? l10n.deathTitle : l10n.downTitle,
+                style: TextStyle(
+                  fontSize: 22,
+                  letterSpacing: 1.5,
+                  fontWeight: FontWeight.bold,
+                  color: colours.alert,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                causeName(l10n, cause),
+                style: TextStyle(fontSize: 14, color: colours.muted),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                dead ? l10n.deathWhat : l10n.downWhat,
+                style: TextStyle(fontSize: 14, height: 1.5, color: colours.text),
+              ),
+
+              if (!dead) ...[
+                const SizedBox(height: 24),
+                Text(
+                  l10n.downLeft(_short(left.isNegative ? Duration.zero : left)),
+                  style: TextStyle(
+                    fontSize: 28,
+                    color: colours.data,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  // §9.2: the clock runs whether or not anybody is looking.
+                  l10n.downClosedApp,
+                  style: TextStyle(fontSize: 12, color: colours.muted),
+                ),
+              ],
+
+              if (onNewCharacter != null) ...[
+                const SizedBox(height: 28),
+                FilledButton(
+                  onPressed: onNewCharacter,
+                  child: Text(l10n.deathNewCharacter),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  // §9.1: the same body. It is still the player's height and
+                  // weight, so there is no creator to sit through again.
+                  l10n.deathSameBody,
+                  style: TextStyle(fontSize: 12, color: colours.muted),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+String causeName(L10n l10n, DeathCause? cause) => switch (cause) {
+  null => '',
+  DeathCause.bloodLoss => l10n.causeBloodLoss,
+  DeathCause.thirst => l10n.causeThirst,
+  DeathCause.starvation => l10n.causeStarvation,
+};
+
+String _short(Duration time) {
+  final minutes = time.inMinutes;
+  final seconds = time.inSeconds % 60;
+
+  return '$minutes:${seconds.toString().padLeft(2, '0')}';
+}

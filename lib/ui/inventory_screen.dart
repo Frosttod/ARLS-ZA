@@ -24,6 +24,7 @@ import '../devtools/dev_mode.dart';
 import '../inventory/body_slots.dart';
 import '../inventory/inventory.dart';
 import '../inventory/item_use.dart';
+import '../combat/attachment.dart';
 import '../items/item.dart';
 import '../items/item_catalogue.dart';
 import '../items/item_names.dart';
@@ -190,6 +191,17 @@ class InventoryScreen extends StatelessWidget {
                 action: action,
                 usingLine: usingLine,
                 onCancelAction: onCancelAction,
+                // §5.6.3: what is bolted to this very piece, so the row can
+                // say what the rifle actually does rather than what a
+                // catalogue entry of that name would do.
+                attachments: [
+                  for (final id in line.attachments)
+                    if (catalogue[id] != null) catalogue[id]!,
+                ],
+                attachmentNames: [
+                  for (final id in line.attachments)
+                    if (catalogue[id] != null) _nameOf(id, language),
+                ],
               ),
         ],
       ),
@@ -544,6 +556,8 @@ class _ItemRow extends StatefulWidget {
     required this.line,
     required this.definition,
     required this.name,
+    this.attachments = const [],
+    this.attachmentNames = const [],
     required this.kind,
     required this.l10n,
     super.key,
@@ -560,6 +574,11 @@ class _ItemRow extends StatefulWidget {
   final CarriedItem line;
   final ItemDefinition definition;
   final String name;
+
+  /// §5.6.3: what is on this weapon, and what those parts are called.
+  final List<ItemDefinition> attachments;
+  final List<String> attachmentNames;
+
   final String kind;
   final L10n l10n;
 
@@ -643,6 +662,29 @@ class _ItemRowState extends State<_ItemRow> {
                                 color: colours.muted,
                               ),
                             ),
+
+                            // §5.6.3: what is bolted on, and what it bought.
+                            // On the row rather than behind a tap, because
+                            // which of two rifles to carry into a town is
+                            // decided by exactly this line.
+                            if (widget.attachments.isNotEmpty) ...[
+                              const SizedBox(height: 2),
+                              Text(
+                                widget.attachmentNames.join(' · '),
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: colours.data,
+                                ),
+                              ),
+                              if (_bonuses().isNotEmpty)
+                                Text(
+                                  _bonuses(),
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: colours.data,
+                                  ),
+                                ),
+                            ],
                           ],
                         ),
                       ),
@@ -765,6 +807,50 @@ class _ItemRowState extends State<_ItemRow> {
 
   /// What the line is, plus whatever per-piece state it carries: how worn it
   /// is, or how far through a book the player has read (§4.6.3).
+  /// What the fitted parts changed, as the differences themselves.
+  ///
+  /// Differences rather than totals: "−1,5 MOA" is the reason to bolt the
+  /// thing on, and "3,2 MOA" is a number that means nothing without the one it
+  /// replaced.
+  String _bonuses() {
+    if (widget.attachments.isEmpty) return '';
+
+    final bare = FittedWeapon(weapon: widget.definition);
+    final fitted = FittedWeapon(
+      weapon: widget.definition,
+      attachments: widget.attachments,
+    );
+
+    final parts = <String>[];
+
+    void delta(String unit, double from, double to, {int decimals = 0}) {
+      final change = to - from;
+      if (change.abs() < 0.05) return;
+
+      final sign = change > 0 ? '+' : '−';
+      parts.add('$sign${change.abs().toStringAsFixed(decimals)} $unit');
+    }
+
+    delta('MOA', bare.moa, fitted.moa, decimals: 1);
+    delta(
+      widget.l10n.statMagazine,
+      bare.magazine.toDouble(),
+      fitted.magazine.toDouble(),
+    );
+    delta('m', bare.noiseRangeM, fitted.noiseRangeM);
+    delta(
+      's',
+      bare.reloadTime.inMilliseconds / 1000,
+      fitted.reloadTime.inMilliseconds / 1000,
+      decimals: 1,
+    );
+
+    if (fitted.lightRadiusM > 0) {
+      parts.add('${fitted.lightRadiusM.round()} m ${widget.l10n.statLight}');
+    }
+    return parts.join(' · ');
+  }
+
   String _subtitle() {
     final parts = <String>[widget.kind];
 
