@@ -917,8 +917,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       names: _names ?? ItemNames.empty,
       onWear: wearable && !worn ? () => unawaited(_wear(line)) : null,
       wearLabel: L10n.of(context).inventoryWear,
-      onAttach: (part) => unawaited(_attach(line, part)),
-      onDetach: (id) => unawaited(_detach(line, id)),
+      // The piece the sheet is showing now, not the one it was opened with:
+      // each fit rebuilds the line, and the sheet stays open across them.
+      onAttach: (current, part) => unawaited(_attach(current, part)),
+      onDetach: (current, id) => unawaited(_detach(current, id)),
     );
   }
 

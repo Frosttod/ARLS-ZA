@@ -7,6 +7,7 @@ import 'package:arls_za/l10n/app_localizations.dart';
 import 'package:arls_za/ui/item_details_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:arls_za/sim/body.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// SZCZEGÓŁY PRZEDMIOTU (§4.2–§4.7).
@@ -16,6 +17,10 @@ import 'package:flutter_test/flutter_test.dart';
 /// direction marked, because "protection 4 against protection 2, coverage 40
 /// against 55" is arithmetic nobody does in a street in the rain.
 void main() {
+  final body = BodyProfile.from(
+    const BodySpec(sex: Sex.male, ageYears: 30, heightCm: 180, weightKg: 80),
+  );
+
   final catalogue = ItemCatalogue.load([
     for (final asset in kBundledItemAssets)
       ItemSource(asset, File(asset).readAsStringSync()),
@@ -29,6 +34,7 @@ void main() {
     required Inventory inventory,
     VoidCallback? onWear,
     String? wearLabel,
+    void Function(CarriedItem line, CarriedItem attachment)? onAttach,
   }) async {
     final entry = line ?? CarriedItem(itemId: itemId!);
     await tester.pumpWidget(
@@ -51,6 +57,7 @@ void main() {
               names: names,
               onWear: onWear,
               wearLabel: wearLabel,
+              onAttach: onAttach,
             ),
             child: const Text('open'),
           ),
@@ -277,6 +284,60 @@ void main() {
       );
 
       expect(find.textContaining('w plecaku'), findsOneWidget);
+    });
+  });
+
+  group('what is bolted on (§5.6.3)', () {
+    testWidgets('the sheet hands back the piece it is showing, not the one it '
+        'was opened with', (tester) async {
+      // Found on a phone: fitting anything did nothing. Two reasons, and this
+      // is the second — the sheet outlives the object it was opened with, so a
+      // callback closing over that object bolts parts onto a piece the pack no
+      // longer has. The weapon here is in the hand, which is `worn`.
+      final pack = const Inventory()
+          .withPack('pack_daypack')
+          .wear('weapon_rifle_545')
+          .add('att_red_dot', catalogue, body: body)
+          .inventory;
+
+      CarriedItem? reported;
+      await open(
+        tester,
+        line: CarriedItem(itemId: 'weapon_rifle_545'),
+        inventory: pack,
+        onAttach: (line, _) => reported = line,
+      );
+
+      await tester.tap(find.text(L10n.of(tester.element(find.byType(
+        TextButton,
+      ).first)).attachmentFit));
+      await tester.pumpAndSettle();
+
+      expect(reported, isNotNull);
+      expect(
+        identical(
+          reported,
+          pack.worn.firstWhere((l) => l.itemId == 'weapon_rifle_545'),
+        ),
+        isTrue,
+        reason: 'the live piece out of the pack, not the copy passed in',
+      );
+    });
+
+    testWidgets('and offers the free rails it actually has', (tester) async {
+      await open(
+        tester,
+        line: CarriedItem(itemId: 'weapon_rifle_545'),
+        inventory: const Inventory()
+            .withPack('pack_daypack')
+            .wear('weapon_rifle_545')
+            .add('att_red_dot', catalogue, body: body)
+            .inventory,
+        onAttach: (_, _) {},
+      );
+
+      // Three rails on a 5.45 carbine, none of them used yet.
+      expect(find.textContaining('3'), findsWidgets);
     });
   });
 }

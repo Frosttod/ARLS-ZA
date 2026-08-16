@@ -390,21 +390,35 @@ class Inventory {
     if (line.attachments.contains(part.id)) return this;
     if (line.attachments.length >= attachmentSlots(weapon)) return this;
 
-    final index = carried.indexWhere((entry) => identical(entry, line));
+    // ⚠️ The weapon may be in the pack **or** in the hand, and the hand is
+    // `worn`. Found on a phone: fitting anything to the rifle actually being
+    // carried did nothing at all, because this only ever looked in `carried` —
+    // and the one weapon a player wants a light on is the one they are holding.
     final fitted = line.copyWith(
       attachments: [...line.attachments, part.id],
     );
 
     // Off the pack and onto the weapon: it is in one place or the other.
     final without = removeLine(attachment) ?? this;
-    final lines = [...without.carried];
-    final at = index >= 0 && index < lines.length
-        ? lines.indexWhere((entry) => identical(entry, line))
-        : -1;
-    if (at < 0) return this;
 
-    lines[at] = fitted;
-    return Inventory(carried: lines, worn: without.worn, packId: packId);
+    final lines = [
+      for (final entry in without.carried)
+        identical(entry, line) ? fitted : entry,
+    ];
+    final dressed = [
+      for (final entry in without.worn)
+        identical(entry, line) ? fitted : entry,
+    ];
+
+    // Neither list holds this very piece: it came from somewhere that is no
+    // longer part of this inventory, and quietly bolting the part onto a copy
+    // would lose it.
+    final placed =
+        lines.any((entry) => identical(entry, fitted)) ||
+        dressed.any((entry) => identical(entry, fitted));
+    if (!placed) return this;
+
+    return Inventory(carried: lines, worn: dressed, packId: packId);
   }
 
   /// Takes one off again, back into the pack.

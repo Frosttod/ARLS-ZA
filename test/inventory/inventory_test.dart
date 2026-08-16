@@ -813,6 +813,56 @@ void main() {
         .add('att_red_dot', catalogue, body: body)
         .inventory;
 
+    test('onto the rifle in the hand, which is where it matters', () {
+      // Found on a phone: fitting anything to the weapon actually being
+      // carried did nothing at all — attach only ever looked in `carried`, and
+      // a weapon in the hand is `worn`. The one rifle a player wants a light
+      // on is the one they are holding.
+      var kit = armed();
+      final rifle = kit.carried.firstWhere(
+        (l) => l.itemId == 'weapon_rifle_545',
+      );
+      kit = kit.wearLine(rifle, catalogue);
+
+      final held = kit.worn.firstWhere((l) => l.itemId == 'weapon_rifle_545');
+      final optic = kit.carried.firstWhere((l) => l.itemId == 'att_red_dot');
+
+      final after = kit.attach(held, optic, catalogue);
+
+      expect(
+        after.worn
+            .firstWhere((l) => l.itemId == 'weapon_rifle_545')
+            .attachments,
+        ['att_red_dot'],
+      );
+      expect(after.carried.where((l) => l.itemId == 'att_red_dot'), isEmpty);
+    });
+
+    test('and off it again, back into the pack', () {
+      var kit = armed();
+      final rifle = kit.carried.firstWhere(
+        (l) => l.itemId == 'weapon_rifle_545',
+      );
+      kit = kit.wearLine(rifle, catalogue);
+
+      final held = kit.worn.firstWhere((l) => l.itemId == 'weapon_rifle_545');
+      final optic = kit.carried.firstWhere((l) => l.itemId == 'att_red_dot');
+      kit = kit.attach(held, optic, catalogue);
+
+      final fitted = kit.worn.firstWhere(
+        (l) => l.itemId == 'weapon_rifle_545',
+      );
+      final after = kit.detach(fitted, 'att_red_dot', catalogue, body: body);
+
+      expect(
+        after.worn
+            .firstWhere((l) => l.itemId == 'weapon_rifle_545')
+            .attachments,
+        isEmpty,
+      );
+      expect(after.carried.where((l) => l.itemId == 'att_red_dot'), hasLength(1));
+    });
+
     test('an optic goes onto the rifle and out of the pack', () {
       final kit = armed();
       final rifle = kit.carried.firstWhere((l) => l.itemId == 'weapon_rifle_545');

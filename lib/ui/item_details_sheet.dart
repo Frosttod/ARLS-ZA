@@ -36,8 +36,8 @@ Future<void> showItemDetails(
   required ItemNames names,
   VoidCallback? onWear,
   String? wearLabel,
-  void Function(CarriedItem attachment)? onAttach,
-  void Function(String attachmentId)? onDetach,
+  void Function(CarriedItem line, CarriedItem attachment)? onAttach,
+  void Function(CarriedItem line, String attachmentId)? onDetach,
 }) {
   final language = Localizations.localeOf(context).languageCode;
   final item = catalogue[line.itemId];
@@ -63,8 +63,10 @@ Future<void> showItemDetails(
 
         // What this would replace: whatever occupies the same slot on the
         // body, read from the pack as it is now.
-        final fitted = pack.carried.where((l) => l.itemId == line.itemId);
-        final current = fitted.isEmpty ? line : fitted.first;
+        // ⚠️ Worn as well as carried. The weapon a player wants a light on is
+        // the one in their hand, and the hand is `worn` — looking only in the
+        // pack found a stale copy of it, so fitting anything did nothing.
+        final current = _liveLine(pack, line);
         final worn = _rival(current, item, pack.worn, catalogue);
         final against = worn ?? _rival(current, item, pack.carried, catalogue);
 
@@ -319,8 +321,12 @@ class _Attachments extends StatelessWidget {
   final String Function(ItemDefinition) nameOf;
   final HudColors colours;
   final L10n l10n;
-  final void Function(CarriedItem)? onAttach;
-  final void Function(String)? onDetach;
+  /// Handed the *current* piece as well as the part, because the sheet outlives
+  /// the object it was opened with: every fit rebuilds the line, and a callback
+  /// holding the old one would be bolting things onto a piece that is no longer
+  /// in the pack.
+  final void Function(CarriedItem line, CarriedItem attachment)? onAttach;
+  final void Function(CarriedItem line, String attachmentId)? onDetach;
 
   @override
   Widget build(BuildContext context) {
@@ -368,7 +374,7 @@ class _Attachments extends StatelessWidget {
                 ),
                 if (onDetach != null)
                   TextButton(
-                    onPressed: () => onDetach!(id),
+                    onPressed: () => onDetach!(line, id),
                     child: Text(l10n.attachmentRemove),
                   ),
               ],
@@ -387,7 +393,7 @@ class _Attachments extends StatelessWidget {
                   ),
                 ),
                 TextButton(
-                  onPressed: () => onAttach!(candidate),
+                  onPressed: () => onAttach!(line, candidate),
                   child: Text(l10n.attachmentFit),
                 ),
               ],
@@ -395,4 +401,22 @@ class _Attachments extends StatelessWidget {
       ],
     );
   }
+}
+
+/// The piece as the pack has it now, matched by identity first and by id after.
+///
+/// A sheet stays open across fits and removals, so the object it was opened
+/// with goes stale on the first one. Identity is the honest match — two rifles
+/// in one bag are two rifles — and the id is the fallback for exactly the case
+/// identity cannot survive: the very piece was rebuilt by the last edit.
+CarriedItem _liveLine(Inventory pack, CarriedItem line) {
+  final everything = [...pack.worn, ...pack.carried];
+
+  for (final entry in everything) {
+    if (identical(entry, line)) return entry;
+  }
+  for (final entry in everything) {
+    if (entry.itemId == line.itemId) return entry;
+  }
+  return line;
 }

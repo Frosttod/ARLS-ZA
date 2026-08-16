@@ -1,7 +1,7 @@
 # ARLS-ZA — lista kontrolna systemów
 
 Stan na dzień **2026-08-16**. Wygenerowana po przejściu pełnego zestawu
-testów: **1353 testy, `flutter analyze` czysty, schemat bazy v12**.
+testów: **1357 testów, `flutter analyze` czysty, schemat bazy v12**.
 
 Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 
@@ -18,11 +18,11 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 | Obszar | Testy | Co jest tam pilnowane |
 | :---- | ----: | :---- |
 | `combat` | 229 | tabela kalibracyjna §5.1.2 wiersz po wierszu, obrażenia §5.1.5, budżet sprintu, maszyna stanów, hałas, spawn, magazynek, dodatki |
-| `ui` | 249 | HUD, ekwipunek, panele, arkusze, geometria dotknięć i pierścieni |
+| `ui` | 251 | HUD, ekwipunek, panele, arkusze, geometria dotknięć i pierścieni |
 | `sim` | 181 | tick, metabolizm, tętno, wchłanianie, sen, nawyk gry |
 | `loot` | 130 | tabele, spawner, przeszukanie, rzeczy na ziemi, przeszkody |
 | `map` | 88 | PMTiles, MVT, geometria, namiary, pakiety regionów |
-| `inventory` | 80 | dwa limity §18.1a, sloty, porcje, dodatki, trwałość |
+| `inventory` | 82 | dwa limity §18.1a, sloty, porcje, dodatki, trwałość |
 | `items` | 71 | katalog jako dane: bilans, nazwy, sloty, użycia |
 | `location` | 53 | bramka dokładności, filtr Kalmana, martwa strefa, anty-cheat |
 | `db` | 50 | migracje v1→v13, integralność, warstwa gorąca i ciepła |
@@ -33,7 +33,7 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 | `core` | 30 | deterministyczny RNG, zegar |
 | `notes` | 14 | notatki §19.1, podstawianie nazw miejsc |
 
-**Razem 1353.**
+**Razem 1357.**
 
 ### Rzeczy, które testy trzymają jako liczby, a nie jako intencje
 
@@ -96,7 +96,8 @@ Kolejność jest celowa: rzeczy wyżej blokują ocenę tych niżej.
 ### 2.4. Ekwipunek i przedmioty
 
 - [ ] Broń da się założyć w slot W RĘKU i wtedy „Ognia" jest aktywne
-- [ ] Dodatki: montaż, zdejmowanie, wolne sloty widoczne w szczegółach
+- [ ] Dodatki: montaż i zdejmowanie **na broni trzymanej w ręku**, nie tylko w plecaku
+- [ ] Wolne sloty widoczne w szczegółach i maleją po montażu
 - [ ] Porcje: przerwane picie zostawia połowę butelki
 - [ ] Dwa egzemplarze tego samego przedmiotu nie mylą się przy wyrzucaniu
 - [ ] Zamiana plecaka na mniejszy nie niszczy starego
