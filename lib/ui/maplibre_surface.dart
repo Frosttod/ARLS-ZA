@@ -191,7 +191,12 @@ class _MapLibreSurfaceState extends State<MapLibreSurface> {
       ),
     );
 
-    return GestureDetector(
+    final counted = [
+      for (final marker in widget.markers)
+        if (marker.count > 1) marker,
+    ];
+
+    final gestures = GestureDetector(
       // Opaque, so the gestures reach here rather than the platform view. The
       // markers are circles the platform view draws, so their taps are ours to
       // find: the gesture arena is won here and the plugin never sees a finger.
@@ -207,6 +212,59 @@ class _MapLibreSurfaceState extends State<MapLibreSurface> {
       },
       onScaleEnd: (_) => _zoomAtGestureStart = null,
       child: map,
+    );
+
+    if (counted.isEmpty || centre == null) return gestures;
+
+    // §4.8: the number on a stack of dropped kit. Drawn on our side of the
+    // platform view because a MapLibre circle has no text, and computed from
+    // the same geometry as the tap handling — the player is always centred, so
+    // an offset from the middle is all it takes.
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final middle = Offset(
+          constraints.maxWidth / 2,
+          constraints.maxHeight / 2,
+        );
+
+        return Stack(
+          children: [
+            Positioned.fill(child: gestures),
+            for (final marker in counted)
+              Builder(
+                builder: (context) {
+                  final at =
+                      middle +
+                      offsetOf(
+                        marker.at,
+                        centre: GeoPoint(centre.latitude, centre.longitude),
+                        zoom: _zoom,
+                      );
+
+                  return Positioned(
+                    left: at.dx - 12,
+                    top: at.dy - 9,
+                    child: IgnorePointer(
+                      child: Container(
+                        alignment: Alignment.center,
+                        width: 24,
+                        height: 18,
+                        child: Text(
+                          '${marker.count}',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF0B0D0E),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+          ],
+        );
+      },
     );
   }
 

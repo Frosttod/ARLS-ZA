@@ -39,6 +39,7 @@ class MapMarker {
     required this.at,
     this.label,
     this.reachM,
+    this.count = 1,
   });
 
   /// Stable across frames, so the renderer can move a marker instead of
@@ -53,6 +54,14 @@ class MapMarker {
   /// nothing on this map is knowable by colour alone.
   final String? label;
 
+  /// How many things this one dot stands for (§4.8).
+  ///
+  /// A player who emptied their pack on a corner left fourteen rows in one
+  /// place, and fourteen overlapping circles is not a map — it is a smear. One
+  /// dot with a number on it is the same information in a form somebody can
+  /// use.
+  final int count;
+
   /// How close a player has to be for this to be worth anything (§10.2,
   /// §4.8), drawn as a ring around it.
   ///
@@ -61,14 +70,19 @@ class MapMarker {
   /// "am I close enough yet" from a guess into something to walk into.
   final double? reachM;
 
-  MapMarker copyWith({GeoPoint? at, String? label, double? reachM}) =>
-      MapMarker(
-        id: id,
-        kind: kind,
-        at: at ?? this.at,
-        label: label ?? this.label,
-        reachM: reachM ?? this.reachM,
-      );
+  MapMarker copyWith({
+    GeoPoint? at,
+    String? label,
+    double? reachM,
+    int? count,
+  }) => MapMarker(
+    id: id,
+    kind: kind,
+    at: at ?? this.at,
+    label: label ?? this.label,
+    reachM: reachM ?? this.reachM,
+    count: count ?? this.count,
+  );
 }
 
 /// The colour code of §3.6, as ARGB values.
@@ -105,6 +119,26 @@ const Map<MarkerKind, double> kMarkerRadius = {
 double metresPerPixel(double zoom, double latitude) =>
     156543.03392 * math.cos(latitude * math.pi / 180) / math.pow(2, zoom);
 
+/// Where a point sits on screen, in logical pixels from the middle.
+///
+/// The inverse of [markerAtOffset], and the reason both live here: a badge
+/// drawn a few pixels off the dot it counts is worse than no badge.
+Offset offsetOf(
+  GeoPoint point, {
+  required GeoPoint centre,
+  required double zoom,
+}) {
+  final scale = metresPerPixel(zoom, centre.latitude);
+
+  return Offset(
+    (point.longitude - centre.longitude) *
+        metresPerDegreeLon(centre.latitude) /
+        scale,
+    // Screen y grows downwards, latitude grows upwards.
+    -(point.latitude - centre.latitude) * metresPerDegreeLat / scale,
+  );
+}
+
 /// Which marker the player meant, tapping [offset] logical pixels from the
 /// centre of a map centred on [centre].
 ///
@@ -137,4 +171,37 @@ MapMarker? markerAtOffset(
     bestDistance = distance;
   }
   return best;
+}
+
+/// Folds markers that sit on top of each other into one (§4.8).
+///
+/// Only within [withinM] and only among the same kind: a pile of dropped kit
+/// and a shop are two different answers to "what is that", and merging them
+/// would say neither. The dot lands on the first of the group rather than on
+/// the average of it, so a marker never drifts off the thing it stands for
+/// into the middle of a road.
+List<MapMarker> clusterMarkers(
+  List<MapMarker> markers, {
+  double withinM = 25,
+}) {
+  final clustered = <MapMarker>[];
+  final taken = List<bool>.filled(markers.length, false);
+
+  for (var i = 0; i < markers.length; i++) {
+    if (taken[i]) continue;
+    final first = markers[i];
+
+    var count = first.count;
+    for (var j = i + 1; j < markers.length; j++) {
+      if (taken[j] || markers[j].kind != first.kind) continue;
+      if (first.at.distanceTo(markers[j].at) > withinM) continue;
+
+      taken[j] = true;
+      count += markers[j].count;
+    }
+
+    clustered.add(count == first.count ? first : first.copyWith(count: count));
+  }
+
+  return clustered;
 }

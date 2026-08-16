@@ -34,6 +34,7 @@ import 'ui/ground_sheet.dart';
 import 'ui/place_sheet.dart';
 import 'ui/item_details_sheet.dart';
 import 'ui/note_sheet.dart';
+import 'ui/notices.dart';
 import 'ui/search_panel.dart';
 import 'game/game_session.dart';
 import 'game/relocation.dart';
@@ -290,6 +291,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// The very piece being eaten or drunk (§4.7), so a mouthful comes out of
   /// the bottle in hand rather than out of whichever one the list finds first.
   final ValueNotifier<CarriedItem?> _usingLine = ValueNotifier(null);
+
+  /// §12: what the game has just said. Under the HUD, never over the menu.
+  final ValueNotifier<List<Notice>> _notices = ValueNotifier(const []);
 
   /// What the last reconnaissance revealed, for §10.2.1's ten minutes.
   AreaKnowledge? _knowledge;
@@ -1703,11 +1707,19 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   }
 
   /// One line, at the bottom, gone in a few seconds. The player is walking.
+  /// §12: the game says something, under the HUD rather than over the menu.
   void _say(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), duration: const Duration(seconds: 4)),
-    );
+
+    final notice = Notice(message, DateTime.now());
+    _notices.value = [notice, ..._notices.value];
+
+    Timer(kNoticeLifetime, () {
+      if (!mounted) return;
+      _notices.value = _notices.value
+          .where((other) => !identical(other, notice))
+          .toList();
+    });
   }
 
   /// Sends the player wherever the current refusal can actually be changed.
@@ -1811,6 +1823,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     _dropped.dispose();
     _standingAt.dispose();
     _usingLine.dispose();
+    _notices.dispose();
     super.dispose();
   }
 
@@ -1857,7 +1870,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
                   fallbackCentre: _packCentre,
                 ),
             fix: snapshot?.displayFix,
-            markers: _lootMarkers(),
+            // §4.8: a pack emptied on a corner is fourteen rows in one place,
+            // and fourteen overlapping circles is a smear rather than a map.
+            markers: clusterMarkers(_lootMarkers()),
             onMarkerTap: _showMarker,
             searchPanel: snapshot == null
                 ? null
@@ -1909,6 +1924,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
                     carriedVolumeL: _carriedVolumeL,
                     capacityL: _capacityL(character.body),
                   ),
+            notices: NoticeStack(notices: _notices),
             onMenu: (entry) {
               // Profile and shelter arrive with the systems behind them
               // (§7, §8). The two that have something to show are wired.

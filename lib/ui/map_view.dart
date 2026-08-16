@@ -46,6 +46,7 @@ class MapScreen extends StatefulWidget {
     this.headingDeg,
     this.markers = const [],
     this.onMarkerTap,
+    this.notices,
     this.economy = false,
     this.hasPack = true,
     this.hud,
@@ -78,6 +79,11 @@ class MapScreen extends StatefulWidget {
 
   /// The HUD of §3.6, laid over the top of the map.
   final Widget? hud;
+
+  /// What the game just said, under the HUD (§12). Never at the bottom: that
+  /// is where the menu and the searching controls are, so a message about a
+  /// full pack would sit on the button for doing something about it.
+  final Widget? notices;
 
   final void Function(MapMenuEntry)? onMenu;
 
@@ -129,7 +135,12 @@ class _MapScreenState extends State<MapScreen> {
                 top: 0,
                 left: 0,
                 right: 0,
-                child: SafeArea(child: widget.hud!),
+                child: SafeArea(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [widget.hud!, ?widget.notices],
+                  ),
+                ),
               ),
             Positioned(
               left: 0,
@@ -169,7 +180,12 @@ class _MapScreenState extends State<MapScreen> {
               top: 0,
               left: 0,
               right: 0,
-              child: SafeArea(child: widget.hud!),
+              child: SafeArea(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [widget.hud!, ?widget.notices],
+                ),
+              ),
             ),
 
           if (!widget.hasPack)
