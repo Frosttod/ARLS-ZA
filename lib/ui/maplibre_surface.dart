@@ -75,6 +75,7 @@ class MapLibreSurface extends StatefulWidget {
     required this.source,
     required this.centre,
     required this.markers,
+    this.noise,
     this.onMarkerTap,
     required this.economy,
     this.fallbackCentre,
@@ -97,6 +98,9 @@ class MapLibreSurface extends StatefulWidget {
   final GeoPoint? fallbackCentre;
 
   final List<MapMarker> markers;
+
+  /// §5.6.5: a sound spreading, or null when the street is quiet.
+  final NoiseWave? noise;
 
   /// What to do when the player taps one. Null where the map is decoration —
   /// the region picker's preview, for instance.
@@ -234,8 +238,12 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
       for (final marker in widget.markers)
         if (marker.alert != null) marker,
     ];
+    final wave = widget.noise;
+    final spreading = wave?.progressAt(DateTime.now());
     _keepPulse(
-      wanted: alerted.any((marker) => marker.alert == MarkerAlert.hunting),
+      wanted:
+          spreading != null ||
+          alerted.any((marker) => marker.alert == MarkerAlert.hunting),
     );
 
     final gestures = Listener(
@@ -298,7 +306,8 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
     if ((counted.isEmpty &&
             rings.isEmpty &&
             facing.isEmpty &&
-            alerted.isEmpty) ||
+            alerted.isEmpty &&
+            spreading == null) ||
         centre == null) {
       return gestures;
     }
@@ -335,6 +344,41 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
                           ? const Color(0xFF7A8B8F)
                           : const Color(0xFF4A5A5E),
                     ),
+                  ),
+                ),
+              ),
+
+            // §5.6.5: what the last shot woke up, at the radius it actually
+            // carried. A number nobody was shown is not a consequence.
+            if (wave != null && spreading != null)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: AnimatedBuilder(
+                    animation: _pulse ?? const AlwaysStoppedAnimation(0),
+                    builder: (context, _) {
+                      final now = DateTime.now();
+                      final reached = wave.progressAt(now);
+                      if (reached == null) return const SizedBox.shrink();
+
+                      return CustomPaint(
+                        painter: _NoisePainter(
+                          at:
+                              offsetOf(
+                                wave.at,
+                                centre: GeoPoint(
+                                  centre.latitude,
+                                  centre.longitude,
+                                ),
+                                zoom: _zoom,
+                              ),
+                          radiusPx:
+                              wave.radiusM *
+                              reached /
+                              metresPerPixel(_zoom, centre.latitude),
+                          fade: 1 - reached,
+                        ),
+                      );
+                    },
                   ),
                 ),
               ),
@@ -815,4 +859,38 @@ class _AlertPainter extends CustomPainter {
     }
     return true;
   }
+}
+
+/// The circle a shot pushes out across the map (§5.6.5).
+class _NoisePainter extends CustomPainter {
+  const _NoisePainter({
+    required this.at,
+    required this.radiusPx,
+    required this.fade,
+  });
+
+  final Offset at;
+  final double radiusPx;
+
+  /// 1 at the moment of the shot, 0 as the wave dies.
+  final double fade;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (radiusPx <= 1) return;
+
+    final centre = Offset(size.width / 2, size.height / 2) + at;
+    canvas.drawCircle(
+      centre,
+      radiusPx,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2
+        ..color = const Color(0xFFA82D17).withValues(alpha: 0.55 * fade),
+    );
+  }
+
+  @override
+  bool shouldRepaint(_NoisePainter old) =>
+      old.radiusPx != radiusPx || old.fade != fade || old.at != at;
 }

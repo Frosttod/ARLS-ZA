@@ -19,7 +19,7 @@ Każdy zamknięty etap dostaje sekcję **Dziennik wykonania** z decyzjami podję
 | 8 | Schron, obóz, pętla dobowa | ⬜ | — | — |
 | 9 | Onboarding, dostępność, zgodność | ⬜ | — | — |
 
-**Metryki:** 1205 testów · `flutter analyze` czysty · schemat bazy **v11** · release APK 89,5 MB bez devtools
+**Metryki:** 1209 testów · `flutter analyze` czysty · schemat bazy **v11** · release APK 89,5 MB bez devtools
 
 ### Zablokowane na użytkowniku
 
@@ -382,7 +382,7 @@ Dwa wnioski na przyszłość:
 | 5.9 | ✅ Magazynek i przeładowanie z przerwaniem przy zbliżeniu <5 m | §5.5.4 |
 | 5.10 | ✅ Limit 8 aktywnych przeciwników w promieniu 300 m (Horda podnosi do 12) | §5.5.6 |
 | 5.11 | ✅ **System hałasu:** promienie, modyfikatory otoczenia, reakcja przeciwników, limit 6 reagujących, kumulacja 30 s | §5.6 |
-| 5.12 | ⬜ Wizualizacja fali hałasu na mapie — jedyne, co zostało z etapu | §5.6.5 |
+| 5.12 | ✅ Wizualizacja fali hałasu na mapie: okrąg ~1,5 s o promieniu efektywnym | §5.6.5 |
 | 5.13 | Dystanse zaangażowania: wykrycie od 150 m, walka 50–250 m, poniżej 20 m tryb wręcz | §5.2 |
 | 5.14 | ✅ Zasady spawnu: nigdy bliżej niż 150 m, nigdy w strefach wykluczonych, nigdy w 200 m od schronu | §6.4 |
 

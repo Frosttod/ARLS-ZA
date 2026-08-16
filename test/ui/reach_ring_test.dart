@@ -222,4 +222,37 @@ void main() {
       expect(reachRingsOf(const []), isEmpty);
     });
   });
+
+  group('a sound spreading (§5.6.5)', () {
+    final fired = DateTime.utc(2026, 8, 16, 12);
+    final wave = NoiseWave(at: at, radiusM: 700, startedAt: fired);
+
+    test('it starts at the shot and grows', () {
+      expect(wave.progressAt(fired), 0);
+      expect(
+        wave.progressAt(fired.add(const Duration(milliseconds: 750))),
+        closeTo(0.5, 0.01),
+      );
+    });
+
+    test('and is over in about a second and a half', () {
+      // §5.6.5's own figure. A ring that lingers is a ring that stops meaning
+      // "just now".
+      expect(
+        wave.progressAt(fired.add(const Duration(milliseconds: 1499))),
+        greaterThan(0.99),
+      );
+      expect(wave.progressAt(fired.add(NoiseWave.spread)), isNull);
+    });
+
+    test('a shot from a minute ago draws nothing', () {
+      expect(wave.progressAt(fired.add(const Duration(minutes: 1))), isNull);
+    });
+
+    test('it carries the radius the noise actually reached', () {
+      // Not the weapon's nominal figure: night, weather and built-up ground
+      // have all had their say by the time it gets here (§5.6.1).
+      expect(wave.radiusM, 700);
+    });
+  });
 }

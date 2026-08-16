@@ -256,3 +256,33 @@ const Map<MarkerAlert, int> kAlertColours = {
   MarkerAlert.searching: 0xFFE8B33A,
   MarkerAlert.hunting: 0xFFA82D17,
 };
+
+/// A sound the player made, spreading (§5.6.5).
+///
+/// One and a half seconds of circle, at the radius the noise actually carried
+/// — so the answer to "what did I just wake up" is on the screen rather than
+/// in a number nobody was shown. §5.6.2's amber rings on the ones that heard
+/// it are the other half of the same sentence.
+class NoiseWave {
+  const NoiseWave({
+    required this.at,
+    required this.radiusM,
+    required this.startedAt,
+  });
+
+  final GeoPoint at;
+  final double radiusM;
+  final DateTime startedAt;
+
+  /// §5.6.5: about a second and a half of spreading.
+  static const Duration spread = Duration(milliseconds: 1500);
+
+  /// How far out it has got, 0–1, or null once it is over.
+  double? progressAt(DateTime now) {
+    final elapsed = now.difference(startedAt);
+    if (elapsed.isNegative) return 0;
+    if (elapsed >= spread) return null;
+
+    return elapsed.inMilliseconds / spread.inMilliseconds;
+  }
+}

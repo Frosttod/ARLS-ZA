@@ -2367,12 +2367,14 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
                   required markers,
                   required economy,
                   onMarkerTap,
+                  noise,
                 }) => MapLibreSurface(
                   source: source,
                   centre: centre,
                   markers: markers,
                   economy: economy,
                   onMarkerTap: onMarkerTap,
+                  noise: noise,
                   fallbackCentre: _packCentre,
                 ),
             fix: snapshot?.displayFix,
@@ -2380,6 +2382,15 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
             // and fourteen overlapping circles is a smear rather than a map.
             markers: clusterMarkers(_lootMarkers()),
             onMarkerTap: _showMarker,
+            // §5.6.5: what the last shot woke up, drawn at the radius it
+            // actually carried.
+            noise: _combat.open == null
+                ? null
+                : NoiseWave(
+                    at: _combat.open!.at,
+                    radiusM: _combat.open!.radiusM,
+                    startedAt: _combat.open!.startedAt.toLocal(),
+                  ),
             searchPanel: snapshot == null
                 ? null
                 : Builder(
