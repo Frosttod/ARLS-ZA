@@ -2335,6 +2335,30 @@ abstract class L10n {
   /// **'Fit'**
   String get attachmentFit;
 
+  /// No description provided for @attachmentRefused.
+  ///
+  /// In en, this message translates to:
+  /// **'It will not go on that.'**
+  String get attachmentRefused;
+
+  /// No description provided for @attachmentWrongWeapon.
+  ///
+  /// In en, this message translates to:
+  /// **'It does not fit this weapon.'**
+  String get attachmentWrongWeapon;
+
+  /// No description provided for @attachmentAlreadyOn.
+  ///
+  /// In en, this message translates to:
+  /// **'One of those is already on it.'**
+  String get attachmentAlreadyOn;
+
+  /// No description provided for @attachmentNoRail.
+  ///
+  /// In en, this message translates to:
+  /// **'No rail left on this weapon.'**
+  String get attachmentNoRail;
+
   /// No description provided for @attachmentRemove.
   ///
   /// In en, this message translates to:

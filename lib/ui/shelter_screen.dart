@@ -7,6 +7,9 @@
 /// planks" is a reason to go out, and a hidden row is nothing at all.
 library;
 
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
@@ -15,11 +18,10 @@ import '../shelter/recipes.dart';
 import '../shelter/shelter.dart';
 import 'hud.dart' show HudColors;
 
-class ShelterScreen extends StatelessWidget {
+class ShelterScreen extends StatefulWidget {
   const ShelterScreen({
     required this.shelters,
-    required this.at,
-    required this.now,
+    required this.standingAt,
     required this.carried,
     required this.itemNameOf,
     required this.hasTools,
@@ -31,13 +33,15 @@ class ShelterScreen extends StatelessWidget {
     super.key,
   });
 
-  final List<Shelter> shelters;
+  /// ⚠️ Listened to, not passed by value. This is a pushed route: handed a
+  /// list, it kept showing the one it opened with, so starting a build left
+  /// the counter at zero until somebody backed out and came in again. Fourth
+  /// time this shape of bug has been fixed in this app.
+  final ValueListenable<List<Shelter>> shelters;
 
   /// Where the player is standing. Null with no fix, which is the one state
   /// where nothing here can be started — a shelter goes where you are.
-  final GeoPoint? at;
-
-  final DateTime now;
+  final ValueListenable<GeoPoint?> standingAt;
 
   /// Item id to how many are carried, for §18.2's costs.
   final Map<String, int> carried;
@@ -57,17 +61,52 @@ class ShelterScreen extends StatelessWidget {
   /// §8.5.2: hotspot centres, which a camp may not sit inside.
   final List<GeoPoint> hotspots;
 
-  Shelter? get _main =>
+  @override
+  State<ShelterScreen> createState() => _ShelterScreenState();
+}
+
+class _ShelterScreenState extends State<ShelterScreen> {
+  /// §8.3: the counters are the whole content of this screen while something
+  /// is going up, and a screen whose only content is a number that never moves
+  /// reads as broken.
+  Timer? _tick;
+
+  @override
+  void initState() {
+    super.initState();
+    _tick = Timer.periodic(
+      const Duration(seconds: 1),
+      (_) => setState(() {}),
+    );
+  }
+
+  @override
+  void dispose() {
+    _tick?.cancel();
+    super.dispose();
+  }
+
+  Shelter? _main(List<Shelter> shelters) =>
       shelters.where((s) => s.kind == ShelterKind.main).firstOrNull;
 
-  List<Shelter> get _camps =>
+  List<Shelter> _camps(List<Shelter> shelters) =>
       [for (final s in shelters) if (s.kind == ShelterKind.camp) s];
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => ValueListenableBuilder<List<Shelter>>(
+    valueListenable: widget.shelters,
+    builder: (context, shelters, _) =>
+        ValueListenableBuilder<GeoPoint?>(
+          valueListenable: widget.standingAt,
+          builder: (context, at, _) => _body(context, shelters, at),
+        ),
+  );
+
+  Widget _body(BuildContext context, List<Shelter> shelters, GeoPoint? at) {
     final l10n = L10n.of(context);
     final colours = HudColors.of(context);
-    final shelter = _main;
+    final shelter = _main(shelters);
+    final now = DateTime.now().toUtc();
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.menuShelter)),
@@ -78,16 +117,16 @@ class ShelterScreen extends StatelessWidget {
             _BuildOffer(
               kind: ShelterKind.main,
               body: l10n.shelterNoneWhat,
-              time: buildTimeFor(ShelterKind.main, hasTools: hasTools),
+              time: buildTimeFor(ShelterKind.main, hasTools: widget.hasTools),
               refusal: at == null ? l10n.shelterNoFix : null,
-              onBuild: () => onBuild(ShelterKind.main),
+              onBuild: () => widget.onBuild(ShelterKind.main),
               colours: colours,
             )
           else ...[
             _Standing(
               shelter: shelter,
               now: now,
-              away: at == null || !shelter.atSite(at!),
+              away: at == null || !shelter.atSite(at),
               colours: colours,
             ),
             const SizedBox(height: 16),
@@ -97,14 +136,14 @@ class ShelterScreen extends StatelessWidget {
                   shelter: shelter,
                   module: module,
                   now: now,
-                  carried: carried,
-                  itemNameOf: itemNameOf,
-                  hasHammer: hasHammer,
-                  hasMultitool: hasMultitool,
+                  carried: widget.carried,
+                  itemNameOf: widget.itemNameOf,
+                  hasHammer: widget.hasHammer,
+                  hasMultitool: widget.hasMultitool,
                   // §2.1a.3: nailing shelves up from the other side of town is
                   // not a thing, so the offer is refused here and says why.
-                  away: at == null || !shelter.atSite(at!),
-                  onBuild: () => onBuildModule(module),
+                  away: at == null || !shelter.atSite(at),
+                  onBuild: () => widget.onBuildModule(module),
                   colours: colours,
                 ),
           ],
@@ -120,11 +159,11 @@ class ShelterScreen extends StatelessWidget {
           ),
           const SizedBox(height: 8),
 
-          for (final camp in _camps) ...[
+          for (final camp in _camps(shelters)) ...[
             _Standing(
               shelter: camp,
               now: now,
-              away: at == null || !camp.atSite(at!),
+              away: at == null || !camp.atSite(at),
               colours: colours,
             ),
             const SizedBox(height: 12),
@@ -133,9 +172,9 @@ class ShelterScreen extends StatelessWidget {
           _BuildOffer(
             kind: ShelterKind.camp,
             body: l10n.campWhat,
-            time: buildTimeFor(ShelterKind.camp, hasTools: hasTools),
-            refusal: _campRefusal(l10n),
-            onBuild: () => onBuild(ShelterKind.camp),
+            time: buildTimeFor(ShelterKind.camp, hasTools: widget.hasTools),
+            refusal: _campRefusal(l10n, shelters, at),
+            onBuild: () => widget.onBuild(ShelterKind.camp),
             colours: colours,
           ),
         ],
@@ -143,16 +182,16 @@ class ShelterScreen extends StatelessWidget {
     );
   }
 
-  String? _campRefusal(L10n l10n) {
+  String? _campRefusal(L10n l10n, List<Shelter> shelters, GeoPoint? at) {
     final here = at;
     if (here == null) return l10n.shelterNoFix;
 
-    final missing = missingFor(kCampMaterials, carried);
+    final missing = missingFor(kCampMaterials, widget.carried);
     if (missing.isNotEmpty) {
       return l10n.shelterMissing(
         [
           for (final entry in missing.entries)
-            '${itemNameOf(entry.key)} ×${entry.value}',
+            '${widget.itemNameOf(entry.key)} ×${entry.value}',
         ].join(', '),
       );
     }
@@ -160,7 +199,7 @@ class ShelterScreen extends StatelessWidget {
     return switch (campRefusalAt(
       here,
       existing: shelters,
-      hotspots: hotspots,
+      hotspots: widget.hotspots,
     )) {
       null => null,
       CampRefusal.tooMany => l10n.campTooMany,
@@ -529,4 +568,90 @@ String _short(Duration time) {
   final minutes = time.inMinutes % 60;
 
   return hours <= 0 ? '$minutes min' : '$hours h $minutes min';
+}
+
+/// What is going up right now, under the stats bar on the map (§8.3).
+///
+/// The same slot the tin of stew uses, for the same reason: it is the thing
+/// the player is waiting on, and the bottom of the screen belongs to whatever
+/// they are deciding next. Only while they are standing on the site — off it
+/// the work is not happening, and a bar that crept along in a bus would be a
+/// lie about the one rule this system has.
+class BuildProgress extends StatelessWidget {
+  const BuildProgress({required this.shelter, required this.now, super.key});
+
+  final Shelter shelter;
+  final DateTime now;
+
+  /// The bar worth drawing here, or null when nothing is going up.
+  static BuildProgress? of(List<Shelter> shelters, GeoPoint? at, DateTime now) {
+    if (at == null) return null;
+
+    for (final place in shelters) {
+      if (!place.atSite(at)) continue;
+      if (!place.isReadyAt(now) || place.building != null) {
+        return BuildProgress(shelter: place, now: now);
+      }
+    }
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = L10n.of(context);
+    final colours = HudColors.of(context);
+    final onPlace = !shelter.isReadyAt(now);
+
+    final left = onPlace
+        ? (shelter.buildLeft ?? shelter.readyAt.difference(now))
+        : (shelter.buildingLeft ?? Duration.zero);
+    final total = onPlace
+        ? shelter.buildTime
+        : (shelter.buildingLeft ?? Duration.zero) + left;
+
+    final done = total <= Duration.zero
+        ? 1.0
+        : 1 - left.inSeconds / total.inSeconds;
+
+    return Material(
+      color: colours.panel.withValues(alpha: 0.92),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 6, 12, 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    onPlace
+                        ? (shelter.kind == ShelterKind.main
+                              ? l10n.shelterTitle
+                              : l10n.campTitle)
+                        : moduleName(l10n, shelter.building!),
+                    style: TextStyle(fontSize: 13, color: colours.text),
+                  ),
+                ),
+                Text(
+                  _short(left.isNegative ? Duration.zero : left),
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: colours.data,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            LinearProgressIndicator(
+              value: done.clamp(0.0, 1.0),
+              minHeight: 4,
+              backgroundColor: colours.muted.withValues(alpha: 0.25),
+              color: colours.data,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

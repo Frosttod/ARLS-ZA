@@ -1269,6 +1269,18 @@ class L10nPl extends L10n {
   String get attachmentFit => 'Zamontuj';
 
   @override
+  String get attachmentRefused => 'Nie da się tego zamontować.';
+
+  @override
+  String get attachmentWrongWeapon => 'Nie pasuje do tej broni.';
+
+  @override
+  String get attachmentAlreadyOn => 'Taki już tam jest.';
+
+  @override
+  String get attachmentNoRail => 'Brak wolnego slotu w tej broni.';
+
+  @override
   String get attachmentRemove => 'Zdejmij';
 
   @override

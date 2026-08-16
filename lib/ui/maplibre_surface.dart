@@ -135,9 +135,8 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
   /// What each circle was last written as, so an unchanged one costs nothing.
   final Map<String, String> _drawn = {};
 
-  /// One reconciliation at a time. The calls are asynchronous and a pinch can
-  /// start a second pass while the first is still talking to the platform.
-  bool _syncing = false;
+  /// One reconciliation at a time, and never a dropped one.
+  final SyncGate _gate = SyncGate();
 
   /// One camera move at a time, for the same reason.
   bool _zooming = false;
@@ -692,8 +691,7 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
   /// actually changed, and a zoom does not touch it at all, because MapLibre
   /// already knows where a geographic point belongs on screen.
   Future<void> _syncMarkers(MapLibreMapController controller) async {
-    if (_syncing) return;
-    _syncing = true;
+    if (!_gate.enter()) return;
 
     try {
       final wanted = {for (final marker in widget.markers) marker.id: marker};
@@ -730,14 +728,49 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
         _drawn[marker.id] = shape;
       }
     } finally {
-      _syncing = false;
+      // Nothing here, so a throw cannot leave the gate shut for good.
     }
+
+    if (_gate.leave()) await _syncMarkers(controller);
   }
 
   /// MapLibre wants `#rrggbb`; the colour code is stored as ARGB so it can be
   /// used by Flutter painters too.
   static String _hex(int argb) =>
       '#${(argb & 0xFFFFFF).toRadixString(16).padLeft(6, '0')}';
+}
+
+/// One job at a time, and never a job thrown away.
+///
+/// ⚠️ Dropped work, not deferred work, was the bug this exists for. A marker
+/// sync that arrived while another was in flight used to be discarded — and on
+/// a cold start the style, the first fix and the first loot spawn all land
+/// within a few frames of each other, so the one update that actually carried
+/// the markers was the one that got swallowed. The map stayed empty until the
+/// next restart, when the markers already existed before the style loaded.
+class SyncGate {
+  bool _busy = false;
+  bool _again = false;
+
+  /// True if the caller may run. False means somebody else is running and this
+  /// request has been remembered for them.
+  bool enter() {
+    if (_busy) {
+      _again = true;
+      return false;
+    }
+    _busy = true;
+    return true;
+  }
+
+  /// True if the work has to be done once more.
+  bool leave() {
+    _busy = false;
+    if (!_again) return false;
+
+    _again = false;
+    return true;
+  }
 }
 
 /// The rings that say what is within reach, drawn around the middle.

@@ -39,9 +39,8 @@ void main() {
         ],
         supportedLocales: L10n.supportedLocales,
         home: ShelterScreen(
-          shelters: shelters,
-          at: at,
-          now: t0,
+          shelters: ValueNotifier(shelters),
+          standingAt: ValueNotifier(at),
           carried: carried,
           itemNameOf: (id) => id,
           hasTools: hasTools,
@@ -52,7 +51,8 @@ void main() {
         ),
       ),
     );
-    await tester.pumpAndSettle();
+    // A one-second ticker keeps the counters honest, so the tree never settles.
+    await tester.pump(const Duration(milliseconds: 50));
   }
 
   Shelter built({
@@ -168,6 +168,117 @@ void main() {
         find.byType(FilledButton),
       ).last;
       expect(camp.onPressed, isNull);
+    });
+  });
+
+  group('the counter starts the moment the work does', () {
+    testWidgets('a build under way is counted down, not left at zero', (
+      tester,
+    ) async {
+      // Found on a phone: starting a build left this screen showing nothing
+      // until somebody backed out and came in again — it is a pushed route,
+      // and it was handed a list rather than listening to one.
+      final shelters = ValueNotifier<List<Shelter>>(const []);
+      addTearDown(shelters.dispose);
+
+      tester.view.physicalSize = const Size(1080, 4200);
+      tester.view.devicePixelRatio = 3;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: const Locale('pl'),
+          localizationsDelegates: const [
+            L10n.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: L10n.supportedLocales,
+          home: ShelterScreen(
+            shelters: shelters,
+            standingAt: ValueNotifier<GeoPoint?>(home),
+            carried: const {},
+            itemNameOf: (id) => id,
+            hasTools: true,
+            hasHammer: true,
+            hasMultitool: false,
+            onBuild: (_) {},
+            onBuildModule: (_) {},
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 50));
+
+      expect(find.textContaining('Zostało'), findsNothing);
+
+      shelters.value = [
+        Shelter(
+          id: 1,
+          kind: ShelterKind.main,
+          position: home,
+          startedAt: DateTime.now().toUtc(),
+          buildTime: kShelterBuildTime,
+          buildLeft: kShelterBuildTime,
+        ),
+      ];
+      await tester.pump(const Duration(milliseconds: 50));
+
+      expect(find.textContaining('Zostało'), findsOneWidget);
+    });
+  });
+
+  group('the bar on the map (§8.3)', () {
+    testWidgets('is there while something is going up on this site', (
+      tester,
+    ) async {
+      final site = Shelter(
+        id: 1,
+        kind: ShelterKind.main,
+        position: home,
+        startedAt: t0,
+        buildTime: kShelterBuildTime,
+        buildLeft: const Duration(hours: 1),
+      );
+
+      expect(BuildProgress.of([site], home, t0), isNotNull);
+    });
+
+    testWidgets('and nowhere near it when the player has walked off', (
+      tester,
+    ) async {
+      // The work is not happening off the site, so a bar creeping along on a
+      // bus would be a lie about the one rule this system has.
+      final site = Shelter(
+        id: 1,
+        kind: ShelterKind.main,
+        position: home,
+        startedAt: t0,
+        buildTime: kShelterBuildTime,
+        buildLeft: const Duration(hours: 1),
+      );
+
+      expect(
+        BuildProgress.of(
+          [site],
+          GeoPoint(home.latitude + 0.02, home.longitude),
+          t0,
+        ),
+        isNull,
+      );
+    });
+
+    testWidgets('and gone once everything is finished', (tester) async {
+      final done = Shelter(
+        id: 1,
+        kind: ShelterKind.main,
+        position: home,
+        startedAt: t0,
+        buildTime: kShelterBuildTime,
+        buildLeft: Duration.zero,
+      );
+
+      expect(BuildProgress.of([done], home, t0), isNull);
     });
   });
 }

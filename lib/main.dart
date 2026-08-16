@@ -29,6 +29,7 @@ import 'combat/magazine.dart';
 import 'combat/enemy.dart';
 import 'combat/noise.dart';
 import 'combat/remains.dart';
+import 'combat/attachment.dart';
 import 'combat/sanctuary.dart';
 import 'combat/shot.dart';
 import 'loot/loot_spawner.dart';
@@ -315,7 +316,11 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   List<Remains> _remains = const [];
 
   /// §8: the shelter and the camps, as the save last had them.
-  List<Shelter> _shelters = [];
+  /// §8: listened to rather than passed by value — the shelter screen is a
+  /// pushed route, and a pushed route handed a list keeps showing the list it
+  /// opened with. Starting a build then left the counter at zero until
+  /// somebody backed out and came in again.
+  final ValueNotifier<List<Shelter>> _shelters = ValueNotifier(const []);
 
   /// §2.1a.3: when the last stretch of work on a site was credited.
   DateTime? _workedAt;
@@ -935,7 +940,32 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final catalogue = _catalogue;
     if (catalogue == null) return;
 
-    _inventory.value = _inventory.value.attach(line, part, catalogue);
+    final before = _inventory.value;
+    final after = before.attach(line, part, catalogue);
+
+    // A refusal that looks exactly like a working button is the worst thing
+    // this screen can do, and it is what the last two reports were about. If
+    // nothing moved, say which rule said no.
+    if (identical(after, before)) {
+      final weapon = catalogue[line.itemId];
+      final fitting = catalogue[part.itemId];
+      if (!mounted) return;
+
+      _say(
+        weapon == null || fitting == null
+            ? L10n.of(context).attachmentRefused
+            : !fitsWeapon(fitting, weapon)
+            ? L10n.of(context).attachmentWrongWeapon
+            : line.attachments.contains(fitting.id)
+            ? L10n.of(context).attachmentAlreadyOn
+            : line.attachments.length >= attachmentSlots(weapon)
+            ? L10n.of(context).attachmentNoRail
+            : L10n.of(context).attachmentRefused,
+      );
+      return;
+    }
+
+    _inventory.value = after;
     await _saveInventory();
   }
 
@@ -1524,7 +1554,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         obstacles: _world?.obstacles ?? const [],
         // §8.1: they wait at the edge of what the player built.
         sanctuaries: _sanctuaries,
-        shelterAt: _shelters
+        shelterAt: _shelters.value
             .where((s) => s.kind == ShelterKind.main)
             .firstOrNull
             ?.position,
@@ -2140,7 +2170,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
   /// §8.1: the circles the fight does not happen inside.
   List<Sanctuary> get _sanctuaries => [
-    for (final place in _shelters)
+    for (final place in _shelters.value)
       if (place.isReadyAt(DateTime.now().toUtc()))
         Sanctuary(at: place.position, radiusM: place.kind.safeRadiusM),
   ];
@@ -2155,7 +2185,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     ).load(character.profile.id, DateTime.now().toUtc());
     if (!mounted) return;
 
-    setState(() => _shelters = [...places]);
+    setState(() => _shelters.value = [...places]);
     _loop?.setShelters(places);
   }
 
@@ -2165,7 +2195,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// walked into one — §8.5.2's clock on a camp restarts on a visit, and a
   /// visit is not an event the loop can raise on its own.
   Future<void> _settleShelters(GameSnapshot snapshot) async {
-    if (_shelters.isEmpty) return;
+    if (_shelters.value.isEmpty) return;
 
     final now = snapshot.state.lastUpdate;
     final fix = snapshot.displayFix;
@@ -2180,8 +2210,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       final spent = now.difference(since);
       var wrote = false;
 
-      for (var i = 0; i < _shelters.length; i++) {
-        final place = _shelters[i];
+      final places = [..._shelters.value];
+      for (var i = 0; i < places.length; i++) {
+        final place = places[i];
         if (!place.atSite(at)) continue;
         if (place.buildLeft == null && place.buildingLeft == null) continue;
         if (place.buildLeft == Duration.zero &&
@@ -2190,20 +2221,23 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         }
 
         final worked = place.worked(spent);
-        _shelters[i] = worked;
+        places[i] = worked;
+        _shelters.value = [...places];
         await ShelterStore(widget.session.db).saveWork(worked);
         wrote = true;
       }
       if (wrote) await _reloadShelters();
     }
 
-    final finished = _shelters.any(
+    final finished = _shelters.value.any(
       (place) =>
           place.building != null &&
           (place.buildingLeft ?? Duration.zero) <= Duration.zero,
     );
 
-    final inside = at == null ? null : shelterAt(at, _shelters, now: now);
+    final inside = at == null
+        ? null
+        : shelterAt(at, _shelters.value, now: now);
     final stale =
         inside != null &&
         (inside.visitedAt == null ||
@@ -2224,11 +2258,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => StatefulBuilder(
-          builder: (context, _) => ShelterScreen(
+        builder: (_) => ShelterScreen(
             shelters: _shelters,
-            at: _standingAt.value,
-            now: DateTime.now().toUtc(),
+            standingAt: _standingAt,
             carried: _carriedCounts(),
             itemNameOf: (id) {
               final definition = catalogue[id];
@@ -2246,7 +2278,6 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
             onBuild: (kind) => unawaited(_buildShelter(kind)),
             onBuildModule: (module) => unawaited(_buildModule(module)),
           ),
-        ),
       ),
     );
     await _reloadShelters();
@@ -2262,7 +2293,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     if (character == null || at == null) return;
 
     if (kind == ShelterKind.camp) {
-      final refusal = campRefusalAt(at, existing: _shelters);
+      final refusal = campRefusalAt(at, existing: _shelters.value);
       if (refusal != null) return;
       if (missingFor(kCampMaterials, _carriedCounts()).isNotEmpty) return;
 
@@ -2287,7 +2318,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
   /// §8.4, §18.2: one level onto one module, against the clock.
   Future<void> _buildModule(ShelterModule module) async {
-    final shelter = _shelters
+    final shelter = _shelters.value
         .where((place) => place.kind == ShelterKind.main)
         .firstOrNull;
     if (shelter == null || shelter.building != null) return;
@@ -2514,7 +2545,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         ),
 
       // §3.6: blue, and there is only ever one of them plus the camps.
-      for (final place in _shelters)
+      for (final place in _shelters.value)
         MapMarker(
           id: 'shelter.${place.id}',
           kind: MarkerKind.shelter,
@@ -3034,6 +3065,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     _dropped.dispose();
     _standingAt.dispose();
     _usingLine.dispose();
+    _shelters.dispose();
     _notices.dispose();
     super.dispose();
   }
@@ -3113,12 +3145,18 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
                     radiusM: _combat.open!.radiusM,
                     startedAt: _combat.open!.startedAt.toLocal(),
                   ),
-            // §4.6, §10.2: the bar for whatever is running, at the top.
-            progress: _search.value == null || !_search.value!.isRunning
-                ? null
-                : ActionProgress(
+            // §4.6, §10.2, §8.3: the bar for whatever is running, at the top.
+            // Eating and building are the same thing from the player's side —
+            // something they are waiting on — so they share the one slot.
+            progress: _search.value != null && _search.value!.isRunning
+                ? ActionProgress(
                     search: _search.value!,
                     onCancel: _cancelSearch,
+                  )
+                : BuildProgress.of(
+                    _shelters.value,
+                    _standingAt.value,
+                    DateTime.now().toUtc(),
                   ),
             searchPanel: snapshot == null
                 ? null

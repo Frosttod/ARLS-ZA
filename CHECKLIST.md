@@ -1,7 +1,7 @@
 # ARLS-ZA — lista kontrolna systemów
 
 Stan na dzień **2026-08-16**. Wygenerowana po przejściu pełnego zestawu
-testów: **1382 testy, `flutter analyze` czysty, schemat bazy v12**.
+testów: **1392 testy, `flutter analyze` czysty, schemat bazy v12**.
 
 Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 
@@ -18,7 +18,7 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 | Obszar | Testy | Co jest tam pilnowane |
 | :---- | ----: | :---- |
 | `combat` | 229 | tabela kalibracyjna §5.1.2 wiersz po wierszu, obrażenia §5.1.5, budżet sprintu, maszyna stanów, hałas, spawn, magazynek, dodatki |
-| `ui` | 251 | HUD, ekwipunek, panele, arkusze, geometria dotknięć i pierścieni |
+| `ui` | 269 | HUD, ekwipunek, panele, arkusze, geometria dotknięć i pierścieni |
 | `sim` | 195 | tick, metabolizm, tętno, wchłanianie, sen, nawyk gry |
 | `loot` | 130 | tabele, spawner, przeszukanie, rzeczy na ziemi, przeszkody |
 | `map` | 88 | PMTiles, MVT, geometria, namiary, pakiety regionów |
@@ -33,7 +33,7 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 | `core` | 30 | deterministyczny RNG, zegar |
 | `notes` | 14 | notatki §19.1, podstawianie nazw miejsc |
 
-**Razem 1382.**
+**Razem 1392.**
 
 ### Rzeczy, które testy trzymają jako liczby, a nie jako intencje
 
@@ -72,6 +72,7 @@ Kolejność jest celowa: rzeczy wyżej blokują ocenę tych niżej.
 - [ ] Skrzynki odnawiają się po 4–8 h
 - [ ] Kliknięcie w znacznik pokazuje szczegóły z dowolnej odległości
 - [ ] Rzeczy na ziemi grupują się w jedną kropkę z liczbą
+- [ ] **Znaczniki są widoczne od razu po starcie gry**, bez restartu
 
 ### 2.3. Etap 5 — walka
 
@@ -97,6 +98,7 @@ Kolejność jest celowa: rzeczy wyżej blokują ocenę tych niżej.
 
 - [ ] Broń da się założyć w slot W RĘKU i wtedy „Ognia" jest aktywne
 - [ ] Dodatki: montaż i zdejmowanie **na broni trzymanej w ręku**, nie tylko w plecaku
+- [ ] Odmowa montażu mówi, która reguła zabroniła (brak slotu, nie pasuje, już jest)
 - [ ] Wolne sloty widoczne w szczegółach i maleją po montażu
 - [ ] Wiersz broni w ekwipunku pokazuje dodatki i to, co dały (−MOA, +szt.)
 - [ ] Porównanie wyłącznie z tym, co na ciele — nigdy dwa z plecaka
@@ -115,6 +117,8 @@ Kolejność jest celowa: rzeczy wyżej blokują ocenę tych niżej.
 - [ ] Znacznik schronu (niebieski) siedzi na właściwym miejscu
 - [ ] **Praca stoi, gdy odejdziesz** — pasek nie rusza poza strefą
 - [ ] Rozbudowa modułu jest odmówiona spoza schronu, z podaniem powodu
+- [ ] **Licznik budowy rusza od razu** po jej rozpoczęciu, bez wychodzenia z ekranu
+- [ ] Pasek budowy jest pod paskiem statystyk, gdy stoisz na placu
 
 ### 2.6. Śmierć (§9)
 

@@ -1267,6 +1267,18 @@ class L10nEn extends L10n {
   String get attachmentFit => 'Fit';
 
   @override
+  String get attachmentRefused => 'It will not go on that.';
+
+  @override
+  String get attachmentWrongWeapon => 'It does not fit this weapon.';
+
+  @override
+  String get attachmentAlreadyOn => 'One of those is already on it.';
+
+  @override
+  String get attachmentNoRail => 'No rail left on this weapon.';
+
+  @override
   String get attachmentRemove => 'Take off';
 
   @override
