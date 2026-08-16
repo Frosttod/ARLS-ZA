@@ -357,6 +357,7 @@ Dwa wnioski na przyszłość:
 | 4.9 | ✅ Przeszkody: drzwi, kłódka, szyba — trzy drogi (cicha, narzędziowa, siłowa), hałas wg §5.6.1, wyważone zostaje wyważone | §19.3 |
 | 4.10 | ✅ Porzucone przedmioty na mapie: 24 h, limit 50 (najstarsze odpadają), stan i postęp lektury przetrwają, podniesienie z 15 m | §4.8 |
 | 4.11 | ✅ `notes.json` — 16 notatek PL/EN, podstawianie `{district}`/`{city}` z kafelków; `{street}` wymaga przebudowy paczek (brak warstwy `transportation_name`) | §19.1 |
+| 4.12 | ✅ Katalog przedmiotów na stronie projektu, generowany z `assets/data/*.json` (`tool/build_item_pages.dart`) | §4.1 |
 
 ⚠️ **Pułapka fleksyjna (polski):** zdania z placeholderem muszą być konstruowane tak, by nazwa stała w mianowniku („ulica {street}", nigdy „z {street}") — §19.1.1.
 
