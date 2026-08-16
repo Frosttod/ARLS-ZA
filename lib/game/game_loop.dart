@@ -469,6 +469,21 @@ class GameLoop {
     _publish();
   }
 
+  /// A wound, in millilitres of blood (§2.6, §6.2).
+  ///
+  /// Straight out of the reserve rather than into a queue: §2.2's absorption
+  /// is about a stomach, and nothing about being hit is gradual. Never below
+  /// zero — §9's death arrives with the shelter in stage 8, and until then a
+  /// character at nothing left is a character the game simply stops hurting.
+  void applyWound(double bloodLossMl) {
+    if (bloodLossMl <= 0) return;
+
+    final left = _state.bloodMl - bloodLossMl;
+    _state = _state.copyWith(bloodMl: left < 0 ? 0 : left);
+    writer.stageHot(_toCompanion());
+    _publish();
+  }
+
   /// Applies a developer-mode override (§11.2).
   void applyOverride(SimState forced) {
     _state = forced.copyWith(lastUpdate: _state.lastUpdate);

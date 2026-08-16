@@ -597,6 +597,14 @@ class L10nPl extends L10n {
   String get placeHolds => 'Można znaleźć';
 
   @override
+  String combatHurt(int millilitres) {
+    return 'Trafiony — $millilitres ml';
+  }
+
+  @override
+  String get combatStrike => 'Cios';
+
+  @override
   String get combatFire => 'Ognia';
 
   @override

@@ -24,6 +24,7 @@ import 'items/item_names.dart';
 import 'combat/aim.dart';
 import 'combat/ballistics.dart';
 import 'combat/combat_session.dart';
+import 'combat/engagement.dart';
 import 'combat/enemy.dart';
 import 'combat/noise.dart';
 import 'combat/shot.dart';
@@ -316,6 +317,14 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// §5.5.1: the one being aimed at. One target for a firearm, and nothing
   /// takes its place when it dies.
   Aim _aim = const Aim();
+
+  /// §6.2: when each of them last swung, so the interval between blows is the
+  /// one on the table rather than one a frame.
+  final Map<String, DateTime> _lastBlow = {};
+
+  /// §5.4: when the player last swung. A blade has a swing time and swinging
+  /// faster than the blade allows is not a thing a person can do.
+  DateTime? _lastSwing;
 
   /// What the last reconnaissance revealed, for §10.2.1's ten minutes.
   AreaKnowledge? _knowledge;
@@ -1372,6 +1381,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       return;
     }
 
+    _takeBlows(GeoPoint(fix.latitude, fix.longitude), now);
+
     setState(() {
       _combat = _combat.advance(
         playerAt: GeoPoint(fix.latitude, fix.longitude),
@@ -1511,6 +1522,139 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
           ? l10n.combatHit(outcome.bloodLossMl.round())
           : l10n.combatMiss,
     );
+  }
+
+  /// §5.2, §5.5.3: everything in reach swings, and being surrounded hurts.
+  ///
+  /// Below twenty metres §5.2 stops pretending GPS knows where anybody is
+  /// standing and settles it abstractly, which is what this is: no positions,
+  /// no facing, just how many of them are on you and how often each can swing.
+  void _takeBlows(GeoPoint at, DateTime now) {
+    final loop = _loop;
+    final catalogue = _catalogue;
+    if (loop == null || catalogue == null) return;
+
+    final inReach = [
+      for (final enemy in _combat.enemies)
+        if (!enemy.isDead && enemy.position.distanceTo(at) <= kMeleeM) enemy,
+    ];
+    if (inReach.isEmpty) {
+      _lastBlow.clear();
+      return;
+    }
+
+    // §5.5.3: the player answers one of them and the rest swing freely, which
+    // is why letting a group close is very nearly a sentence.
+    final crowding = flankingMultiplier(inReach.length);
+    var taken = 0.0;
+
+    for (final enemy in inReach) {
+      final last = _lastBlow[enemy.id];
+      if (last != null && now.difference(last) < enemy.kind.attackInterval) {
+        continue;
+      }
+      _lastBlow[enemy.id] = now;
+
+      // §4.4: armour reduces a blow only where it covers, and a bite is blunt.
+      final protection = _inventory.value.protectionAgainst(
+        catalogue: catalogue,
+        slot: 'torso_armor',
+        hitRoll: Random().nextDouble(),
+        blunt: true,
+      );
+
+      taken +=
+          enemy.kind.damageMl * crowding * (1 - protection.clamp(0, 1) / 5);
+    }
+
+    if (taken <= 0) return;
+
+    loop.applyWound(taken);
+    _say(L10n.of(context).combatHurt(taken.round()));
+  }
+
+  /// §5.4: hands, or whatever is in them.
+  ///
+  /// Computational rather than a test of thumbs (§5.4's own recommendation for
+  /// the MVP): the decision was made when the player let something get within
+  /// twenty metres, not in the tap that follows.
+  Future<void> _strike() async {
+    final character = _character;
+    final catalogue = _catalogue;
+    final target = _target;
+    final fix = _snapshot?.displayFix;
+    if (character == null || catalogue == null || target == null ||
+        fix == null) {
+      return;
+    }
+
+    final blade = _meleeInHand;
+    final swing = Duration(
+      milliseconds:
+          (((blade?.props['swing_seconds'] as num?)?.toDouble() ?? 1.4) * 1000)
+              .round(),
+    );
+
+    final now = DateTime.now();
+    final last = _lastSwing;
+    if (last != null && now.difference(last) < swing) return;
+    _lastSwing = now;
+
+    final limits = _inventory.value.limits(character.body, catalogue);
+    final chance = meleeHitChance(
+      // §7's Melee skill does not exist yet, so everybody swings like a
+      // novice — which is §5.4's own baseline.
+      skill: 0,
+      carriedKg: _carriedKg,
+      maxCarryKg: limits.maxKg,
+      fatigue: character.constants.maxHeartRate <= character.constants.restingHeartRate
+          ? 0
+          : ((_snapshot?.state.heartRateBpm ?? 70) -
+                    character.constants.restingHeartRate) /
+                (character.constants.maxHeartRate -
+                    character.constants.restingHeartRate),
+    );
+
+    final landed = Random().nextDouble() < chance;
+    final damage =
+        (blade?.props['blood_ml_per_hit'] as num?)?.toDouble() ?? 40;
+
+    setState(() {
+      if (landed) _combat = _combat.wound(target.id, damage);
+
+      // §5.6.1: hands and a blade are twenty-five metres of noise, which is
+      // the whole reason to use them.
+      _combat = _combat.heard(
+        NoiseEvent(
+          at: GeoPoint(fix.latitude, fix.longitude),
+          radiusM: NoiseKind.melee.baseM,
+          startedAt: DateTime.now().toUtc(),
+        ),
+        playerAt: GeoPoint(fix.latitude, fix.longitude),
+      );
+
+      final still = _combat.enemies.where((e) => e.id == target.id).firstOrNull;
+      if (still == null || still.isDead) _aim = _aim.released;
+    });
+
+    if (!mounted) return;
+    _say(
+      landed
+          ? L10n.of(context).combatHit(damage.round())
+          : L10n.of(context).combatMiss,
+    );
+  }
+
+  /// What is in the hand, if it is something to swing (§5.4).
+  ItemDefinition? get _meleeInHand {
+    final catalogue = _catalogue;
+    if (catalogue == null) return null;
+
+    for (final line in _inventory.value.worn) {
+      final item = catalogue[line.itemId];
+      if (item != null && item.kind == ItemKind.melee) return item;
+    }
+    return null;
   }
 
   /// §5.5.2: what the HUD says about a fight, or null when there is none.
@@ -2181,6 +2325,19 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
                           onFire: weapon == null || round == null
                               ? null
                               : () => unawaited(_fire()),
+                          // §5.2: below twenty metres the receiver has nothing
+                          // useful to say about anybody's position, so the
+                          // fight stops being about distance and becomes about
+                          // what is in your hands.
+                          onStrike: target.position.distanceTo(
+                                    GeoPoint(
+                                      snapshot.displayFix?.latitude ?? 0,
+                                      snapshot.displayFix?.longitude ?? 0,
+                                    ),
+                                  ) <=
+                                  kMeleeM
+                              ? () => unawaited(_strike())
+                              : null,
                         );
                       }
 

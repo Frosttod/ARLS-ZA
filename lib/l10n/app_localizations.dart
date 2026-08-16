@@ -1141,6 +1141,18 @@ abstract class L10n {
   /// **'Holds'**
   String get placeHolds;
 
+  /// No description provided for @combatHurt.
+  ///
+  /// In en, this message translates to:
+  /// **'Hit — {millilitres} ml lost'**
+  String combatHurt(int millilitres);
+
+  /// No description provided for @combatStrike.
+  ///
+  /// In en, this message translates to:
+  /// **'Strike'**
+  String get combatStrike;
+
   /// No description provided for @combatFire.
   ///
   /// In en, this message translates to:

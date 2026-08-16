@@ -18,6 +18,7 @@ void main() {
     ErrorSource dominant = ErrorSource.movement,
     VoidCallback? onFire,
     bool canFire = true,
+    VoidCallback? onStrike,
     String? refusal,
   }) async {
     await tester.pumpWidget(
@@ -38,6 +39,7 @@ void main() {
             dominant: dominant,
             refusal: refusal,
             onFire: canFire ? onFire ?? () {} : null,
+            onStrike: onStrike,
           ),
         ),
       ),
@@ -105,5 +107,39 @@ void main() {
       tester.widget<FilledButton>(find.byType(FilledButton)).onPressed,
       isNotNull,
     );
+  });
+
+  group('hands, once it is close (§5.2, §5.4)', () {
+    testWidgets('nothing to swing at across a street', (tester) async {
+      // Below twenty metres the receiver has nothing useful to say about
+      // anybody's position, and above it a fist reaches nobody.
+      await pump(tester);
+
+      expect(find.text('Cios'), findsNothing);
+    });
+
+    testWidgets('and a strike when it is on top of you', (tester) async {
+      await pump(tester, onStrike: () {});
+
+      expect(find.text('Cios'), findsOneWidget);
+    });
+
+    testWidgets('which swings once per press', (tester) async {
+      var swings = 0;
+      await pump(tester, onStrike: () => swings++);
+
+      await tester.tap(find.text('Cios'));
+      await tester.pumpAndSettle();
+
+      expect(swings, 1);
+    });
+
+    testWidgets('with the trigger still there beside it', (tester) async {
+      // §5.6.3's whole choice: the loud answer and the quiet one, together.
+      await pump(tester, onStrike: () {});
+
+      expect(find.text('Ognia'), findsOneWidget);
+      expect(find.text('Cios'), findsOneWidget);
+    });
   });
 }

@@ -595,6 +595,14 @@ class L10nEn extends L10n {
   String get placeHolds => 'Holds';
 
   @override
+  String combatHurt(int millilitres) {
+    return 'Hit — $millilitres ml lost';
+  }
+
+  @override
+  String get combatStrike => 'Strike';
+
+  @override
   String get combatFire => 'Fire';
 
   @override

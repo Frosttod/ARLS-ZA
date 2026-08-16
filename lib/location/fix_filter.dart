@@ -224,11 +224,22 @@ class FixFilter {
   bool _looksStationary() {
     if (_path.length < 2) return true;
 
+    // ⚠️ The dead zone is never smaller than the uncertainty of the fixes it
+    // is judging. Found at a kitchen table: indoors the receiver reports
+    // fifteen to twenty-five metres of accuracy and wanders about that much,
+    // which cleared a fixed eight-metre gate and charged a sitting player for
+    // a walk — heart rate, water and calories, all for a phone on a worktop.
+    // Movement smaller than the error bar is not movement.
+    final uncertainty = _path
+        .map((fix) => fix.accuracyM)
+        .reduce((a, b) => a > b ? a : b);
+    final gate = uncertainty > deadZoneM ? uncertainty : deadZoneM;
+
     // Distance settles it on its own. Asking for [minSamples] first would make
     // the warm-up cost proportional to the cadence: at one fix a minute the
     // filter would swallow the first seven minutes of a walk.
     final net = _path.first.distanceTo(_path.last);
-    if (net >= deadZoneM) return false;
+    if (net >= gate) return false;
 
     // Under the dead zone the answer is in the shape, and a short path has no
     // shape worth reading.

@@ -24,6 +24,7 @@ class CombatPanel extends StatelessWidget {
     required this.chance,
     required this.dominant,
     required this.onFire,
+    this.onStrike,
     this.refusal,
     super.key,
   });
@@ -42,6 +43,10 @@ class CombatPanel extends StatelessWidget {
   /// Null while there is nothing to fire — no weapon in hand, or no round for
   /// it. The reason is said in [refusal] rather than left to a dead button.
   final VoidCallback? onFire;
+
+  /// §5.2, §5.4: hands, once something is inside twenty metres. Null while it
+  /// is further off than a person can reach.
+  final VoidCallback? onStrike;
 
   final String? refusal;
 
@@ -114,6 +119,13 @@ class CombatPanel extends StatelessWidget {
                   ],
                 ),
               ),
+              if (onStrike != null) ...[
+                OutlinedButton(
+                  onPressed: onStrike,
+                  child: Text(l10n.combatStrike),
+                ),
+                const SizedBox(width: 8),
+              ],
               FilledButton(
                 onPressed: onFire,
                 child: Text(l10n.combatFire),

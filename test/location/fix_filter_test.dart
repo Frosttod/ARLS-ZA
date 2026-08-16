@@ -129,6 +129,69 @@ void main() {
     });
   });
 
+  group('a phone on a worktop, indoors (§3.2)', () {
+    // Found at a kitchen table: indoors the receiver reports fifteen to
+    // twenty-five metres of accuracy and wanders about that much, which
+    // cleared the fixed eight-metre gate. A sitting player was charged for a
+    // walk — heart rate, water and calories, all for a phone on a worktop.
+    test('scatter the size of the error bar is not movement', () {
+      final filter = FixFilter();
+      var moved = 0.0;
+
+      for (var i = 0; i < 12; i++) {
+        final outcome = filter.accept(
+          fixAt(
+            seconds: i * 5,
+            north: i.isEven ? 9 : -9,
+            east: i % 3 == 0 ? 8 : -7,
+            accuracyM: 18,
+          ),
+        );
+        if (outcome is FixAccepted) moved += outcome.movedM;
+      }
+
+      expect(moved, 0);
+    });
+
+    test('and the same scatter on a clear sky is', () {
+      // Six metres of accuracy and nine of movement is somebody moving.
+      final filter = FixFilter();
+      var moved = 0.0;
+
+      for (var i = 0; i < 12; i++) {
+        final outcome = filter.accept(
+          fixAt(
+            seconds: i * 5,
+            north: i.isEven ? 9 : -9,
+            east: i % 3 == 0 ? 8 : -7,
+            accuracyM: 6,
+          ),
+        );
+        if (outcome is FixAccepted) moved += outcome.movedM;
+      }
+
+      expect(moved, greaterThan(0));
+    });
+
+    test('a real walk still counts through a poor fix', () {
+      // The gate rises with the uncertainty; it does not close. Sixty metres
+      // in a straight line is a walk whatever the receiver thinks of itself.
+      final filter = FixFilter();
+      var moved = 0.0;
+
+      for (var i = 0; i < 8; i++) {
+        final outcome = filter.accept(
+          fixAt(seconds: i * 10, north: i * 20.0, accuracyM: 20),
+        );
+        if (outcome is FixAccepted) moved += outcome.movedM;
+      }
+
+      // Smoothing keeps some of it back on the way up to speed; what matters
+      // is that a walk through a poor fix is still a walk.
+      expect(moved, greaterThan(60));
+    });
+  });
+
   group('a person actually walking', () {
     /// A straight line at [speedMps], sampled every five seconds, with the same
     /// scatter on top that the stationary fixtures use. A noiseless walk would
