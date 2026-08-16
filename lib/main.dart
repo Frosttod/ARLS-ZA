@@ -1878,7 +1878,14 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
                         onSearchHere: _startObjectSearch,
                         onBreach: _startBreach,
                         droppedLabel: _groundLabel(),
-                        onTakeDropped: _catalogue == null ? null : _openGround,
+                        // Only with something actually underfoot. Found on a
+                        // walk: the glyph stayed on the panel from anywhere,
+                        // so "can I pick that up from here" was answered by
+                        // pressing it and finding out.
+                        onTakeDropped:
+                            _catalogue == null || _pilesInReach().isEmpty
+                            ? null
+                            : _openGround,
                         onCancel: _cancelSearch,
                       );
                     },

@@ -197,7 +197,7 @@ void main() {
       expect(find.byIcon(Icons.travel_explore), findsOneWidget);
       expect(find.byIcon(Icons.search), findsNothing);
       expect(find.byIcon(Icons.manage_search), findsNothing);
-      expect(find.byIcon(Icons.backpack_outlined), findsNothing);
+      expect(find.byIcon(Icons.back_hand_outlined), findsNothing);
     });
 
     testWidgets('a place in reach brings its depths with it', (tester) async {
@@ -228,13 +228,21 @@ void main() {
   });
 
   group('what is lying here (§4.8)', () {
+    testWidgets('nothing underfoot, no hand on the panel', (tester) async {
+      // Found on a walk: the glyph stayed from anywhere, so "can I reach that
+      // from here" was answered by pressing it and finding out.
+      await pump(tester, droppedLabel: 'Nóż', onTakeDropped: null);
+
+      expect(find.byIcon(Icons.back_hand_outlined), findsNothing);
+    });
+
     testWidgets('picking it up is a glyph and nothing else', (tester) async {
       // What is down there belongs to the list this opens. Spelling it out on
       // the panel as well cost a line of the map for something the player is
       // about to be shown properly.
       await pump(tester, droppedLabel: 'Nóż  +2', onTakeDropped: () {});
 
-      expect(find.byIcon(Icons.backpack_outlined), findsOneWidget);
+      expect(find.byIcon(Icons.back_hand_outlined), findsOneWidget);
       expect(find.textContaining('Nóż'), findsNothing);
     });
 
@@ -245,7 +253,7 @@ void main() {
 
       final tooltip = tester.widget<IconButton>(
         find.ancestor(
-          of: find.byIcon(Icons.backpack_outlined),
+          of: find.byIcon(Icons.back_hand_outlined),
           matching: find.byType(IconButton),
         ),
       );
@@ -260,7 +268,7 @@ void main() {
         droppedLabel: 'Nóż',
         onTakeDropped: () => taken++,
       );
-      await tester.tap(find.byIcon(Icons.backpack_outlined));
+      await tester.tap(find.byIcon(Icons.back_hand_outlined));
       await tester.pumpAndSettle();
 
       expect(taken, 1);
@@ -269,7 +277,7 @@ void main() {
     testWidgets('an empty street offers nothing to pick up', (tester) async {
       await pump(tester);
 
-      expect(find.byIcon(Icons.backpack_outlined), findsNothing);
+      expect(find.byIcon(Icons.back_hand_outlined), findsNothing);
     });
   });
 

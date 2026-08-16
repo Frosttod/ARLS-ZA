@@ -289,11 +289,12 @@ class _Actions extends StatelessWidget {
                 ),
 
             if (onTakeDropped != null)
-              // Into the pack, which is what the act is. What is down there is
-              // the list's business, and the list is what this opens.
+              // A hand, because the act is reaching down for something. The
+              // pack said where it ends up rather than what the button does,
+              // which is one step too far along for a glyph.
               IconButton(
                 onPressed: onTakeDropped,
-                icon: const Icon(Icons.backpack_outlined),
+                icon: const Icon(Icons.back_hand_outlined),
                 tooltip: droppedLabel == null
                     ? l10n.droppedTake
                     : '${l10n.droppedTake} \u00b7 $droppedLabel',
