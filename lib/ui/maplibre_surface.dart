@@ -383,9 +383,9 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
                 ),
               ),
 
-            // §6.1a: how much attention each of them is paying. Green has
-            // not noticed, amber heard something, red is coming — and red
-            // pulses, because that one is a clock.
+            // §6.1a: a question mark for something looking for the player, an
+            // exclamation for something that has found them. Nothing at all
+            // for the ones that have noticed nobody.
             if (alerted.isNotEmpty)
               Positioned.fill(
                 child: IgnorePointer(
@@ -805,13 +805,22 @@ class _FacingPainter extends CustomPainter {
   }
 }
 
-/// The ring that says how much attention something is paying (§6.1a).
+/// A mark beside anything paying attention to the player (§6.1a).
+///
+/// ⚠️ A glyph rather than a ring. A ring around a dot reads as part of the
+/// dot — on a phone at arm's length it is a slightly thicker marker and
+/// nothing more. A question mark and an exclamation mark are read rather than
+/// noticed, which is what this has to be: whether something is looking for you
+/// or has found you is the difference between walking on and running.
+///
+/// §12: the colour is a shortcut, never the message. The HUD says the same in
+/// words and the cone says which way it is walking.
 class _AlertPainter extends CustomPainter {
   const _AlertPainter({required this.markers, required this.pulse});
 
   final List<({Offset at, MarkerAlert alert})> markers;
 
-  /// 0 to 1 and back, driving the ring on anything hunting the player.
+  /// 0 to 1 and back, so the one that has found the player will not sit still.
   final double pulse;
 
   @override
@@ -819,6 +828,10 @@ class _AlertPainter extends CustomPainter {
     final middle = Offset(size.width / 2, size.height / 2);
 
     for (final marker in markers) {
+      // Nothing at all for something that has not noticed anybody: a map
+      // marked everywhere is a map marked nowhere.
+      if (marker.alert == MarkerAlert.calm) continue;
+
       final centre = middle + marker.at;
       if (centre.dx < -30 ||
           centre.dy < -30 ||
@@ -828,17 +841,28 @@ class _AlertPainter extends CustomPainter {
       }
 
       final hunting = marker.alert == MarkerAlert.hunting;
-      final radius = hunting ? 11 + 5 * pulse : 11.0;
+      final painter = TextPainter(
+        text: TextSpan(
+          text: hunting ? '!' : '?',
+          style: TextStyle(
+            fontSize: hunting ? 20 + 3 * pulse : 18,
+            fontWeight: FontWeight.bold,
+            color: Color(
+              kAlertColours[marker.alert]!,
+            ).withValues(alpha: hunting ? 1 - 0.25 * pulse : 0.95),
+            shadows: const [
+              Shadow(color: Color(0xFFFFFFFF), blurRadius: 3),
+            ],
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout();
 
-      canvas.drawCircle(
-        centre,
-        radius,
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = hunting ? 2.5 : 1.8
-          ..color = Color(
-            kAlertColours[marker.alert]!,
-          ).withValues(alpha: hunting ? 0.9 - 0.3 * pulse : 0.75),
+      // Above and to the right of the dot, where it does not sit on the thing
+      // it is about.
+      painter.paint(
+        canvas,
+        centre + Offset(6, -10 - painter.height / 2),
       );
     }
   }
@@ -860,6 +884,8 @@ class _AlertPainter extends CustomPainter {
     return true;
   }
 }
+
+
 
 /// The circle a shot pushes out across the map (§5.6.5).
 class _NoisePainter extends CustomPainter {

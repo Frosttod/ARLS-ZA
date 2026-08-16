@@ -2442,32 +2442,45 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
                       // §5.1.4: while something is being aimed at, the panel
                       // is the odds and the trigger. Searching a shop with a
                       // Walker in the sights is not a thing to offer.
+                      // ⚠️ Whenever something is aimed at, weapon or no
+                      // weapon. Found on a phone: tapping an enemy with
+                      // nothing in hand looked like the tap had missed,
+                      // because the panel only appeared when a shot could be
+                      // worked out — so the one case where a player most
+                      // needs to be told what they are looking at showed them
+                      // nothing at all.
                       final target = _target;
                       final error = target == null ? null : _aimError(target);
-                      if (target != null && error != null) {
+                      if (target != null) {
                         final weapon = _weapon;
                         final round = weapon == null
                             ? null
                             : _roundFor(weapon);
 
                         return CombatPanel(
-                          targetName: L10n.of(context).mapMarkerEnemy,
+                          targetName: enemyKindName(
+                            L10n.of(context),
+                            target.kind,
+                          ),
+                          state: target.state,
                           distanceM: target.position.distanceTo(
                             GeoPoint(
                               snapshot.displayFix?.latitude ?? 0,
                               snapshot.displayFix?.longitude ?? 0,
                             ),
                           ),
-                          chance: hitChance(
-                            moa: error.total,
-                            distanceM: target.position.distanceTo(
-                              GeoPoint(
-                                snapshot.displayFix?.latitude ?? 0,
-                                snapshot.displayFix?.longitude ?? 0,
-                              ),
-                            ),
-                          ),
-                          dominant: error.dominant,
+                          chance: error == null
+                              ? null
+                              : hitChance(
+                                  moa: error.total,
+                                  distanceM: target.position.distanceTo(
+                                    GeoPoint(
+                                      snapshot.displayFix?.latitude ?? 0,
+                                      snapshot.displayFix?.longitude ?? 0,
+                                    ),
+                                  ),
+                                ),
+                          dominant: error?.dominant,
                           condition: target.condition,
                           sprintLeft: target.sprintLeftFraction,
                           loaded: _loaded,

@@ -24,6 +24,7 @@ class CombatPanel extends StatelessWidget {
     required this.distanceM,
     required this.chance,
     required this.dominant,
+    required this.state,
     required this.condition,
     required this.sprintLeft,
     required this.onFire,
@@ -41,11 +42,17 @@ class CombatPanel extends StatelessWidget {
 
   final double distanceM;
 
-  /// §5.1.4: 0–1, and shown as a whole percentage.
-  final double chance;
+  /// §5.1.4: 0–1, and shown as a whole percentage. Null with nothing in hand
+  /// to fire — there is no chance to state, and stating one anyway would be a
+  /// number about a shot nobody can take.
+  final double? chance;
 
-  /// §5.1.4: the largest component of the error.
-  final ErrorSource dominant;
+  /// §5.1.4: the largest component of the error. Null for the same reason.
+  final ErrorSource? dominant;
+
+  /// §6.1a, in the player's words: it has not seen you, it is looking for
+  /// you, or it is coming.
+  final EnemyState state;
 
   /// §5.5.1: how badly hurt it looks. Three words, because that is all anybody
   /// could honestly tell at two hundred metres.
@@ -81,11 +88,14 @@ class CombatPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final colours = HudColors.of(context);
     final l10n = L10n.of(context);
-    final percent = (chance * 100).round();
+    final odds = chance;
+    final percent = odds == null ? null : (odds * 100).round();
 
     // §12: never colour alone. The percentage is the information; the colour
     // only saves a moment reading it.
-    final colour = percent >= 60
+    final colour = percent == null
+        ? colours.muted
+        : percent >= 60
         ? colours.data
         : percent >= 25
         ? const Color(0xFFE8B33A)
@@ -107,6 +117,7 @@ class CombatPanel extends StatelessWidget {
                     Text(
                       '$targetName · ${l10n.combatDistance(distanceM.round())}'
                       ' · ${conditionName(l10n, condition)}'
+                      ' · ${stateName(l10n, state)}'
                       '${magazine > 0 ? ' · ${l10n.combatRounds(loaded, magazine)}' : ''}',
                       style: TextStyle(fontSize: 12, color: colours.text),
                     ),
@@ -146,7 +157,7 @@ class CombatPanel extends StatelessWidget {
                     Row(
                       children: [
                         Text(
-                          l10n.combatChance(percent),
+                          percent == null ? '—' : l10n.combatChance(percent),
                           style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.bold,
@@ -158,7 +169,7 @@ class CombatPanel extends StatelessWidget {
                         Text(
                           // What is costing the shot, so a miss can be
                           // answered rather than resented.
-                          errorName(l10n, dominant),
+                          dominant == null ? '' : errorName(l10n, dominant!),
                           style: TextStyle(
                             fontSize: 10,
                             letterSpacing: 1.2,
@@ -213,6 +224,20 @@ class CombatPanel extends StatelessWidget {
     );
   }
 }
+
+/// §6.1a, in the player's words rather than the machine's.
+String stateName(L10n l10n, EnemyState state) => switch (state) {
+  EnemyState.idle || EnemyState.returning => l10n.enemyCalm,
+  EnemyState.alert => l10n.enemySearching,
+  EnemyState.chase || EnemyState.spent => l10n.enemyHunting,
+};
+
+/// §6.2's three sorts, named.
+String enemyKindName(L10n l10n, EnemyKind kind) => switch (kind) {
+  EnemyKind.walker => l10n.enemyWalker,
+  EnemyKind.leaper => l10n.enemyLeaper,
+  EnemyKind.brute => l10n.enemyBrute,
+};
 
 /// §5.5.1's estimate, in words.
 String conditionName(L10n l10n, EnemyCondition condition) => switch (condition) {

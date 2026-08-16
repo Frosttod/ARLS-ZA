@@ -612,6 +612,24 @@ class L10nEn extends L10n {
   String get combatStrike => 'Strike';
 
   @override
+  String get enemyWalker => 'Walker';
+
+  @override
+  String get enemyLeaper => 'Leaper';
+
+  @override
+  String get enemyBrute => 'Brute';
+
+  @override
+  String get enemyCalm => 'has not seen you';
+
+  @override
+  String get enemySearching => 'looking for you';
+
+  @override
+  String get enemyHunting => 'coming for you';
+
+  @override
   String get enemyHealthy => 'Healthy';
 
   @override

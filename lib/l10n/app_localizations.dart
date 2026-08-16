@@ -1171,6 +1171,42 @@ abstract class L10n {
   /// **'Strike'**
   String get combatStrike;
 
+  /// No description provided for @enemyWalker.
+  ///
+  /// In en, this message translates to:
+  /// **'Walker'**
+  String get enemyWalker;
+
+  /// No description provided for @enemyLeaper.
+  ///
+  /// In en, this message translates to:
+  /// **'Leaper'**
+  String get enemyLeaper;
+
+  /// No description provided for @enemyBrute.
+  ///
+  /// In en, this message translates to:
+  /// **'Brute'**
+  String get enemyBrute;
+
+  /// No description provided for @enemyCalm.
+  ///
+  /// In en, this message translates to:
+  /// **'has not seen you'**
+  String get enemyCalm;
+
+  /// No description provided for @enemySearching.
+  ///
+  /// In en, this message translates to:
+  /// **'looking for you'**
+  String get enemySearching;
+
+  /// No description provided for @enemyHunting.
+  ///
+  /// In en, this message translates to:
+  /// **'coming for you'**
+  String get enemyHunting;
+
   /// No description provided for @enemyHealthy.
   ///
   /// In en, this message translates to:

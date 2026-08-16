@@ -614,6 +614,24 @@ class L10nPl extends L10n {
   String get combatStrike => 'Cios';
 
   @override
+  String get enemyWalker => 'Szwędacz';
+
+  @override
+  String get enemyLeaper => 'Skakun';
+
+  @override
+  String get enemyBrute => 'Brutal';
+
+  @override
+  String get enemyCalm => 'nie widzi cię';
+
+  @override
+  String get enemySearching => 'szuka cię';
+
+  @override
+  String get enemyHunting => 'idzie po ciebie';
+
+  @override
   String get enemyHealthy => 'Zdrowy';
 
   @override

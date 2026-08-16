@@ -15,8 +15,9 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   Future<void> pump(
     WidgetTester tester, {
-    double chance = 0.26,
-    ErrorSource dominant = ErrorSource.movement,
+    double? chance = 0.26,
+    ErrorSource? dominant = ErrorSource.movement,
+    EnemyState state = EnemyState.chase,
     EnemyCondition condition = EnemyCondition.healthy,
     double sprintLeft = 1,
     VoidCallback? onFire,
@@ -44,6 +45,7 @@ void main() {
             distanceM: 84,
             chance: chance,
             dominant: dominant,
+            state: state,
             condition: condition,
             sprintLeft: sprintLeft,
             refusal: refusal,
@@ -241,6 +243,48 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(reloads, 1);
+    });
+  });
+
+  group('a target with nothing in hand (§5.5.1)', () {
+    testWidgets('still says what it is and what it is doing', (tester) async {
+      // Found on a phone: tapping an enemy bare-handed looked like the tap had
+      // missed, because the panel only appeared once a shot could be worked
+      // out — so the one case where a player most needs telling showed them
+      // nothing.
+      await pump(
+        tester,
+        chance: null,
+        dominant: null,
+        canFire: false,
+        refusal: 'Nic w ręku.',
+      );
+
+      expect(find.textContaining('Przeciwnik'), findsOneWidget);
+      expect(find.text('Nic w ręku.'), findsOneWidget);
+    });
+
+    testWidgets('and shows a dash rather than an invented chance', (
+      tester,
+    ) async {
+      // A percentage about a shot nobody can take is a lie with a number on
+      // it.
+      await pump(tester, chance: null, dominant: null, canFire: false);
+
+      expect(find.text('—'), findsOneWidget);
+      expect(find.textContaining('%'), findsNothing);
+    });
+
+    testWidgets('what it is doing is in words (§6.1a)', (tester) async {
+      await pump(tester, state: EnemyState.alert);
+
+      expect(find.textContaining('szuka cię'), findsOneWidget);
+    });
+
+    testWidgets('and coming for you reads as coming for you', (tester) async {
+      await pump(tester, state: EnemyState.chase);
+
+      expect(find.textContaining('idzie po ciebie'), findsOneWidget);
     });
   });
 }
