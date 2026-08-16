@@ -54,6 +54,7 @@ class MapScreen extends StatefulWidget {
     this.hud,
     this.onMenu,
     this.searchPanel,
+    this.progress,
     super.key,
   });
 
@@ -95,6 +96,13 @@ class MapScreen extends StatefulWidget {
   /// The searching controls of §10.2 and §19.3, above the menu. Null where
   /// there is nothing to search — without a map pack there is no loot layer.
   final Widget? searchPanel;
+
+  /// §10.2, §4.6: what is running right now, drawn under the stats bar.
+  ///
+  /// At the top because the bottom of the screen is where the fight is: a
+  /// combat panel over the bar for the tin of stew being eaten is how the
+  /// player loses sight of the one thing they are waiting for.
+  final Widget? progress;
 
   @override
   State<MapScreen> createState() => _MapScreenState();
@@ -143,7 +151,7 @@ class _MapScreenState extends State<MapScreen> {
                 child: SafeArea(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
-                    children: [widget.hud!, ?widget.notices],
+                    children: [widget.hud!, ?widget.progress, ?widget.notices],
                   ),
                 ),
               ),
@@ -299,5 +307,6 @@ String markerLabel(L10n l10n, MapMarker marker) =>
       MarkerKind.enemy => l10n.mapMarkerEnemy,
       MarkerKind.loot => l10n.mapMarkerLoot,
       MarkerKind.dropped => l10n.mapMarkerDropped,
+      MarkerKind.remains => l10n.mapMarkerRemains,
       MarkerKind.shelter => l10n.mapMarkerShelter,
     };

@@ -28,6 +28,7 @@ import 'combat/engagement.dart';
 import 'combat/magazine.dart';
 import 'combat/enemy.dart';
 import 'combat/noise.dart';
+import 'combat/remains.dart';
 import 'combat/shot.dart';
 import 'loot/loot_spawner.dart';
 import 'loot/loot_store.dart';
@@ -41,6 +42,7 @@ import 'notes/note.dart';
 import 'ui/combat_panel.dart';
 import 'ui/ground_sheet.dart';
 import 'ui/place_sheet.dart';
+import 'ui/remains_sheet.dart';
 import 'ui/item_details_sheet.dart';
 import 'ui/note_sheet.dart';
 import 'ui/notices.dart';
@@ -300,6 +302,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// The very piece being eaten or drunk (§4.7), so a mouthful comes out of
   /// the bottle in hand rather than out of whichever one the list finds first.
   final ValueNotifier<CarriedItem?> _usingLine = ValueNotifier(null);
+
+  /// §10.3: the bodies, with their pockets still in them.
+  List<Remains> _remains = const [];
 
   /// §12: what the game has just said. Under the HUD, never over the menu.
   final ValueNotifier<List<Notice>> _notices = ValueNotifier(const []);
@@ -896,7 +901,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     await showItemDetails(
       context,
       line: line,
-      inventory: _inventory.value,
+      inventory: _inventory,
       catalogue: catalogue,
       names: _names ?? ItemNames.empty,
       onWear: wearable && !worn ? () => unawaited(_wear(line)) : null,
@@ -1232,6 +1237,25 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       return;
     }
 
+    if (marker.kind == MarkerKind.remains) {
+      final id = marker.id.substring('remains.'.length);
+      final body = _remains.where((b) => b.id == id).firstOrNull;
+      if (body == null) return;
+
+      unawaited(
+        showRemains(
+          context,
+          kindName: enemyKindName(L10n.of(context), body.kind),
+          distanceM: body.position.distanceTo(at),
+          searched: body.searched,
+          onSearch: body.searched || body.position.distanceTo(at) > kStillnessM
+              ? null
+              : () => unawaited(_searchRemains(body)),
+        ),
+      );
+      return;
+    }
+
     if (marker.kind == MarkerKind.dropped) {
       final id = int.tryParse(marker.id.split('.').last);
       final item = _dropped.value.where((i) => i.id == id).firstOrNull;
@@ -1247,7 +1271,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
             pagesTotal: item.pagesTotal,
             pagesRead: item.pagesRead,
           ),
-          inventory: _inventory.value,
+          inventory: _inventory,
           catalogue: catalogue,
           names: _names ?? ItemNames.empty,
         ),
@@ -1290,7 +1314,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
               pagesTotal: pile.pagesTotal,
               pagesRead: pile.pagesRead,
             ),
-            inventory: _inventory.value,
+            inventory: _inventory,
             catalogue: _catalogue!,
             names: _names ?? ItemNames.empty,
           ),
@@ -1452,6 +1476,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     _advanceReload(GeoPoint(fix.latitude, fix.longitude));
 
     setState(() {
+      // §10.3: bodies nobody came back for stop being worth drawing.
+      _remains = sweepRemains(_remains, now);
       _combat = _combat.advance(
         playerAt: GeoPoint(fix.latitude, fix.longitude),
         elapsed: elapsed,
@@ -1609,13 +1635,20 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final l10n = L10n.of(context);
     setState(() {
       var session = _combat;
-      if (outcome.hit) session = session.wound(target.id, outcome.bloodLossMl);
+      if (outcome.hit) {
+        session = session.wound(
+          target.id,
+          outcome.bloodLossMl,
+          bleeding: outcome.bleedMlPerSecond,
+        );
+      }
 
-      // §4.8: what it was carrying stays where it fell, for whoever comes
-      // back for it. A body that vanishes is a fight with nothing on the
-      // other side of it.
+      // §10.3: a body, not a heap. What it was carrying stays in its pockets
+      // until somebody walks over and puts a hand in them — dropping it on
+      // the ground would answer, from two hundred metres off, the one
+      // question worth walking over to answer.
       final down = session.enemies.where((e) => e.id == target.id).firstOrNull;
-      if (down != null && down.isDead) unawaited(_leaveRemains(down));
+      if (down != null && down.isDead) _remember(down);
 
       // §5.6: heard whether or not it hit, from where it was fired.
       session = session.heard(
@@ -1633,10 +1666,21 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       if (still == null || still.isDead) _aim = _aim.released;
     });
 
+    // §2.6: where it landed and what it opened. A head shot that ends it is
+    // worth saying as an execution; a leg that keeps bleeding is worth saying
+    // because it changes whether to run or to stay.
+    final down = _combat.enemies.where((e) => e.id == target.id).firstOrNull;
     _say(
-      outcome.hit
-          ? l10n.combatHit(outcome.bloodLossMl.round())
-          : l10n.combatMiss,
+      !outcome.hit
+          ? l10n.combatMiss
+          : down == null || down.isDead
+          ? (outcome.location == HitLocation.head
+                ? l10n.combatExecution
+                : l10n.combatDown)
+          : l10n.combatHitAt(
+              hitLocationName(l10n, outcome.location!),
+              outcome.bloodLossMl.round(),
+            ),
     );
   }
 
@@ -1663,6 +1707,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     // is why letting a group close is very nearly a sentence.
     final crowding = flankingMultiplier(inReach.length);
     var taken = 0.0;
+    HitLocation? worst;
 
     for (final enemy in inReach) {
       final last = _lastBlow[enemy.id];
@@ -1670,6 +1715,12 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         continue;
       }
       _lastBlow[enemy.id] = now;
+
+      // §2.6: teeth and hands land where they land. A bite to the arm the
+      // player put up is not the bite that takes them down, and the log is
+      // where the difference gets said.
+      final where = rollHitLocation(Random().nextDouble());
+      if (worst == null || where.multiplier > worst.multiplier) worst = where;
 
       // §4.4: armour reduces a blow only where it covers, and a bite is blunt.
       final protection = _inventory.value.protectionAgainst(
@@ -1680,13 +1731,20 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       );
 
       taken +=
-          enemy.kind.damageMl * crowding * (1 - protection.clamp(0, 1) / 5);
+          enemy.kind.damageMl *
+          crowding *
+          where.multiplier *
+          (1 - protection.clamp(0, 1) / 5);
     }
 
-    if (taken <= 0) return;
+    if (taken <= 0 || worst == null) return;
 
     loop.applyWound(taken);
-    _say(L10n.of(context).combatHurt(taken.round()));
+    _say(
+      L10n.of(
+        context,
+      ).combatHurtAt(hitLocationName(L10n.of(context), worst), taken.round()),
+    );
   }
 
   /// §5.5.4: the magazine goes in, unless something gets to the player first.
@@ -1781,7 +1839,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final catalogue = _catalogue;
     final target = _target;
     final fix = _snapshot?.displayFix;
-    if (character == null || catalogue == null || target == null ||
+    if (character == null ||
+        catalogue == null ||
+        target == null ||
         fix == null) {
       return;
     }
@@ -1805,7 +1865,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       skill: 0,
       carriedKg: _carriedKg,
       maxCarryKg: limits.maxKg,
-      fatigue: character.constants.maxHeartRate <= character.constants.restingHeartRate
+      fatigue:
+          character.constants.maxHeartRate <=
+              character.constants.restingHeartRate
           ? 0
           : ((_snapshot?.state.heartRateBpm ?? 70) -
                     character.constants.restingHeartRate) /
@@ -1814,11 +1876,25 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     );
 
     final landed = Random().nextDouble() < chance;
+    final where = rollHitLocation(Random().nextDouble());
     final damage =
-        (blade?.props['blood_ml_per_hit'] as num?)?.toDouble() ?? 40;
+        ((blade?.props['blood_ml_per_hit'] as num?)?.toDouble() ?? 40) *
+        where.multiplier;
 
     setState(() {
-      if (landed) _combat = _combat.wound(target.id, damage);
+      // §2.6: a blade opens what it lands in, and a throat opened is a fight
+      // that finishes itself.
+      if (landed) {
+        _combat = _combat.wound(
+          target.id,
+          damage,
+          bleeding: switch (where) {
+            HitLocation.head => 5,
+            HitLocation.torso => 3,
+            _ => 1,
+          },
+        );
+      }
 
       // §5.6.1: hands and a blade are twenty-five metres of noise, which is
       // the whole reason to use them.
@@ -1833,16 +1909,24 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
       final still = _combat.enemies.where((e) => e.id == target.id).firstOrNull;
       if (still == null || still.isDead) {
-        if (still != null) unawaited(_leaveRemains(still));
+        if (still != null) _remember(still);
         _aim = _aim.released;
       }
     });
 
     if (!mounted) return;
+    final left = _combat.enemies.where((e) => e.id == target.id).firstOrNull;
     _say(
-      landed
-          ? L10n.of(context).combatHit(damage.round())
-          : L10n.of(context).combatMiss,
+      !landed
+          ? L10n.of(context).combatMiss
+          : left == null || left.isDead
+          ? (where == HitLocation.head
+                ? L10n.of(context).combatExecution
+                : L10n.of(context).combatDown)
+          : L10n.of(context).combatHitAt(
+              hitLocationName(L10n.of(context), where),
+              damage.round(),
+            ),
     );
   }
 
@@ -1858,23 +1942,90 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     return null;
   }
 
+  /// §10.3: marks where something went down.
+  /// Everything the player can do standing exactly here (§10.2, §19.3, §4.8).
+  ///
+  /// Built in one place because it is drawn in two: on its own when nothing is
+  /// in the sights, and stacked over the combat panel when something is.
+  Widget _actionPanel(BuildContext context) {
+    final box = _boxInReach();
+
+    return SearchPanel(
+      search: _search.value,
+      targetName: box?.name,
+      canSearchHere: box != null,
+      // §10.3.5: how much of this place is left to turn over, so the panel can
+      // grey out a pass there is no longer room for.
+      searchUnitsLeft: box?.searchUnitsLeft ?? 0,
+      barrier: _barrierOn(box),
+      carried: _carriedIds(),
+      onSearchArea: _startAreaSearch,
+      onSearchHere: _startObjectSearch,
+      onBreach: _startBreach,
+      droppedLabel: _groundLabel(),
+      // Only with something actually underfoot. Found on a walk: the glyph
+      // stayed on the panel from anywhere, so "can I pick that up from here"
+      // was answered by pressing it and finding out.
+      onTakeDropped: _catalogue == null || _pilesInReach().isEmpty
+          ? null
+          : _openGround,
+      onCancel: _cancelSearch,
+    );
+  }
+
+  /// §10.3: marks where something went down, for as long as it is worth
+  /// coming back to.
+  void _remember(Enemy enemy) {
+    _remains = addRemains(
+      _remains,
+      Remains(
+        id: enemy.id,
+        kind: enemy.kind,
+        position: enemy.position,
+        diedAt: DateTime.now().toUtc(),
+      ),
+    );
+  }
+
+  /// §10.3: turns out the pockets of the body in reach.
+  ///
+  /// Only from arm's length, and only once. What comes out lands on the ground
+  /// where it fell, which is the same pile machinery §4.8 already has — the
+  /// difference is that nobody could see it from across the street.
+  Future<void> _searchRemains(Remains body) async {
+    final at = _standingAt.value;
+    if (at == null || body.searched) return;
+    if (body.position.distanceTo(at) > kStillnessM) return;
+
+    setState(() {
+      _remains = [
+        for (final other in _remains)
+          other.id == body.id ? other.emptied : other,
+      ];
+    });
+
+    await _leaveRemainsOf(body);
+    if (!mounted) return;
+    _say(L10n.of(context).remainsSearched);
+  }
+
   /// §4.8, §10.3: what is left where something went down.
   ///
   /// Not a loot table of its own: a Walker was a person with pockets, so it is
   /// the scraps §18.2 already knows about plus, rarely, whatever it was
   /// carrying. Seeded from the enemy, so the same body always held the same
   /// thing however many times the app is restarted over it.
-  Future<void> _leaveRemains(Enemy enemy) async {
+  Future<void> _leaveRemainsOf(Remains body) async {
     final character = _character;
     if (character == null) return;
 
-    final random = Random(character.profile.rngSeed ^ enemy.id.hashCode);
+    final random = Random(character.profile.rngSeed ^ body.id.hashCode);
     final drops = <String>[
       if (random.nextDouble() < 0.55) 'mat_fabric',
       if (random.nextDouble() < 0.30) 'mat_metal',
       if (random.nextDouble() < 0.18) 'med_bandage',
       // §10.3.3: ammunition on a body is a windfall, not an income.
-      if (enemy.kind != EnemyKind.walker && random.nextDouble() < 0.12)
+      if (body.kind != EnemyKind.walker && random.nextDouble() < 0.12)
         'ammo_9x19',
     ];
     if (drops.isEmpty) return;
@@ -1887,7 +2038,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
           id: 0,
           itemId: itemId,
           count: itemId == 'ammo_9x19' ? 3 + random.nextInt(8) : 1,
-          position: enemy.position,
+          position: body.position,
           droppedAt: DateTime.now().toUtc(),
         ),
       );
@@ -1958,9 +2109,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       // ⚠️ The last place the player was, never a default of nought — an
       // island off Africa is further than the forget radius from everything,
       // so a single fix without a position wiped every enemy off the map.
-      for (final enemy in _combat.near(
-        _standingAt.value ?? GeoPoint(0, 0),
-      ))
+      for (final enemy in _combat.near(_standingAt.value ?? GeoPoint(0, 0)))
         MapMarker(
           id: enemy.id,
           kind: MarkerKind.enemy,
@@ -1974,6 +2123,16 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
             EnemyState.alert => MarkerAlert.searching,
             EnemyState.idle || EnemyState.returning => MarkerAlert.calm,
           },
+        ),
+
+      // §10.3: bone white, with a skull on it. Stays until it is not worth
+      // walking back to.
+      for (final body in _remains)
+        MapMarker(
+          id: 'remains.${body.id}',
+          kind: MarkerKind.remains,
+          at: body.position,
+          reachM: kStillnessM,
         ),
 
       // §4.8: grey, and gone after a day.
@@ -2043,7 +2202,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       // §2.1a: a search counts only while the game can still see where the
       // player is. A position it has stopped trusting cannot answer the one
       // question a search asks — did they stand still?
-      present: snapshot != null && snapshot.signal != PositionSignal.unavailable,
+      present:
+          snapshot != null && snapshot.signal != PositionSignal.unavailable,
     );
 
     if (next.isRunning) {
@@ -2161,7 +2321,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final opened = box.openedAtTime(now);
     setState(() {
       _boxes = [
-        for (final b in _boxes) if (b.poiId == poiId) opened else b,
+        for (final b in _boxes)
+          if (b.poiId == poiId) opened else b,
       ];
     });
 
@@ -2218,10 +2379,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final previous = _knowledge;
     final radius = searchRadiusM(
       // Reconnaissance is §7 and does not exist yet; binoculars do.
-      binoculars: _inventory.value.countOf('tool_binoculars') > 0 ||
-          _inventory.value.worn.any(
-            (line) => line.itemId == 'tool_binoculars',
-          ),
+      binoculars:
+          _inventory.value.countOf('tool_binoculars') > 0 ||
+          _inventory.value.worn.any((line) => line.itemId == 'tool_binoculars'),
     );
 
     final found = <String>{
@@ -2280,7 +2440,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     // second pass over the same shelves is a different draw rather than the
     // first one again.
     final random = Random(
-      character.profile.rngSeed ^ poiId.hashCode ^ (box.searchUnits * 2654435761),
+      character.profile.rngSeed ^
+          poiId.hashCode ^
+          (box.searchUnits * 2654435761),
     );
     final drop = table.roll(random, depth: depth, catalogue: catalogue);
 
@@ -2323,7 +2485,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     setState(() {
       _inventory.value = inventory;
       _boxes = [
-        for (final b in _boxes) if (b.poiId == poiId) searched else b,
+        for (final b in _boxes)
+          if (b.poiId == poiId) searched else b,
       ];
     });
 
@@ -2352,7 +2515,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         })
         .join(', ');
 
-    _say('${l10n.searchFound(listed)}${refused ? ' · ${l10n.searchNoRoom}' : ''}');
+    _say(
+      '${l10n.searchFound(listed)}${refused ? ' · ${l10n.searchNoRoom}' : ''}',
+    );
   }
 
   /// One line, at the bottom, gone in a few seconds. The player is walking.
@@ -2534,6 +2699,13 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
                     radiusM: _combat.open!.radiusM,
                     startedAt: _combat.open!.startedAt.toLocal(),
                   ),
+            // §4.6, §10.2: the bar for whatever is running, at the top.
+            progress: _search.value == null || !_search.value!.isRunning
+                ? null
+                : ActionProgress(
+                    search: _search.value!,
+                    onCancel: _cancelSearch,
+                  ),
             searchPanel: snapshot == null
                 ? null
                 : Builder(
@@ -2551,99 +2723,95 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
                       final target = _target;
                       final error = target == null ? null : _aimError(target);
                       if (target != null) {
+                        // §5.5.1 and §10.2 at once: what can be done standing
+                        // here sits *above* the fight, not behind it. Found on
+                        // a phone: taking a target buried the search and
+                        // pick-up glyphs under the combat panel, so a body at
+                        // the player's feet could not be gone through until
+                        // the fight was over.
                         final weapon = _weapon;
-                        final round = weapon == null
-                            ? null
-                            : _roundFor(weapon);
+                        final round = weapon == null ? null : _roundFor(weapon);
 
-                        return CombatPanel(
-                          targetName: enemyKindName(
-                            L10n.of(context),
-                            target.kind,
-                          ),
-                          state: target.state,
-                          distanceM: target.position.distanceTo(
-                            GeoPoint(
-                              snapshot.displayFix?.latitude ?? 0,
-                              snapshot.displayFix?.longitude ?? 0,
+                        return Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _actionPanel(context),
+                            CombatPanel(
+                              targetName: enemyKindName(
+                                L10n.of(context),
+                                target.kind,
+                              ),
+                              state: target.state,
+                              distanceM: target.position.distanceTo(
+                                GeoPoint(
+                                  snapshot.displayFix?.latitude ?? 0,
+                                  snapshot.displayFix?.longitude ?? 0,
+                                ),
+                              ),
+                              chance: error == null
+                                  ? null
+                                  : hitChance(
+                                      moa: error.total,
+                                      distanceM: target.position.distanceTo(
+                                        GeoPoint(
+                                          snapshot.displayFix?.latitude ?? 0,
+                                          snapshot.displayFix?.longitude ?? 0,
+                                        ),
+                                      ),
+                                    ),
+                              dominant: error?.dominant,
+                              settling:
+                                  _aim.spreadMultiplierAt(DateTime.now()) >
+                                  1.02,
+                              condition: target.condition,
+                              sprintLeft: target.sprintLeftFraction,
+                              bloodLeft: target.bloodLeft,
+                              bleeding: target.isBleeding,
+                              loaded: _loaded,
+                              magazine: weapon == null
+                                  ? 0
+                                  : magazineSize(
+                                      weapon,
+                                      attachments: _attachmentsFor(weapon),
+                                    ),
+                              reloading: _reload != null,
+                              refusal: weapon == null
+                                  ? L10n.of(context).combatNoWeapon
+                                  : _loaded <= 0 && round == null
+                                  ? L10n.of(context).combatNoAmmo
+                                  : null,
+                              onReload:
+                                  weapon == null ||
+                                      round == null ||
+                                      _reload != null
+                                  ? null
+                                  : _startReload,
+                              onFire:
+                                  weapon == null ||
+                                      _loaded <= 0 ||
+                                      _reload != null
+                                  ? null
+                                  : () => unawaited(_fire()),
+                              // §5.2: below twenty metres the receiver has nothing
+                              // useful to say about anybody's position, so the
+                              // fight stops being about distance and becomes about
+                              // what is in your hands.
+                              onStrike:
+                                  target.position.distanceTo(
+                                        GeoPoint(
+                                          snapshot.displayFix?.latitude ?? 0,
+                                          snapshot.displayFix?.longitude ?? 0,
+                                        ),
+                                      ) <=
+                                      kMeleeM
+                                  ? () => unawaited(_strike())
+                                  : null,
                             ),
-                          ),
-                          chance: error == null
-                              ? null
-                              : hitChance(
-                                  moa: error.total,
-                                  distanceM: target.position.distanceTo(
-                                    GeoPoint(
-                                      snapshot.displayFix?.latitude ?? 0,
-                                      snapshot.displayFix?.longitude ?? 0,
-                                    ),
-                                  ),
-                                ),
-                          dominant: error?.dominant,
-                          settling: _aim.spreadMultiplierAt(DateTime.now()) > 1.02,
-                          condition: target.condition,
-                          sprintLeft: target.sprintLeftFraction,
-                          loaded: _loaded,
-                          magazine: weapon == null
-                              ? 0
-                              : magazineSize(
-                                  weapon,
-                                  attachments: _attachmentsFor(weapon),
-                                ),
-                          reloading: _reload != null,
-                          refusal: weapon == null
-                              ? L10n.of(context).combatNoWeapon
-                              : _loaded <= 0 && round == null
-                              ? L10n.of(context).combatNoAmmo
-                              : null,
-                          onReload:
-                              weapon == null || round == null || _reload != null
-                              ? null
-                              : _startReload,
-                          onFire: weapon == null || _loaded <= 0 || _reload != null
-                              ? null
-                              : () => unawaited(_fire()),
-                          // §5.2: below twenty metres the receiver has nothing
-                          // useful to say about anybody's position, so the
-                          // fight stops being about distance and becomes about
-                          // what is in your hands.
-                          onStrike: target.position.distanceTo(
-                                    GeoPoint(
-                                      snapshot.displayFix?.latitude ?? 0,
-                                      snapshot.displayFix?.longitude ?? 0,
-                                    ),
-                                  ) <=
-                                  kMeleeM
-                              ? () => unawaited(_strike())
-                              : null,
+                          ],
                         );
                       }
 
-                      final box = _boxInReach();
-                      return SearchPanel(
-                        search: _search.value,
-                        targetName: box?.name,
-                        canSearchHere: box != null,
-                        // §10.3.5: how much of this place is left to turn
-                        // over, so the panel can grey out a pass there is no
-                        // longer room for.
-                        searchUnitsLeft: box?.searchUnitsLeft ?? 0,
-                        barrier: _barrierOn(box),
-                        carried: _carriedIds(),
-                        onSearchArea: _startAreaSearch,
-                        onSearchHere: _startObjectSearch,
-                        onBreach: _startBreach,
-                        droppedLabel: _groundLabel(),
-                        // Only with something actually underfoot. Found on a
-                        // walk: the glyph stayed on the panel from anywhere,
-                        // so "can I pick that up from here" was answered by
-                        // pressing it and finding out.
-                        onTakeDropped:
-                            _catalogue == null || _pilesInReach().isEmpty
-                            ? null
-                            : _openGround,
-                        onCancel: _cancelSearch,
-                      );
+                      return _actionPanel(context);
                     },
                   ),
             headingDeg: snapshot?.fix?.headingDeg,

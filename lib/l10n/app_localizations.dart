@@ -859,6 +859,42 @@ abstract class L10n {
   /// **'Dropped item'**
   String get mapMarkerDropped;
 
+  /// No description provided for @mapMarkerRemains.
+  ///
+  /// In en, this message translates to:
+  /// **'Body'**
+  String get mapMarkerRemains;
+
+  /// No description provided for @remainsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Body'**
+  String get remainsTitle;
+
+  /// No description provided for @remainsSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Search it'**
+  String get remainsSearch;
+
+  /// No description provided for @remainsSearched.
+  ///
+  /// In en, this message translates to:
+  /// **'Pockets turned out.'**
+  String get remainsSearched;
+
+  /// No description provided for @remainsEmptied.
+  ///
+  /// In en, this message translates to:
+  /// **'Already turned out.'**
+  String get remainsEmptied;
+
+  /// No description provided for @remainsUnsearched.
+  ///
+  /// In en, this message translates to:
+  /// **'Nobody has been through it. Come within arm’s reach to search it.'**
+  String get remainsUnsearched;
+
   /// No description provided for @mapMarkerShelter.
   ///
   /// In en, this message translates to:
@@ -1290,6 +1326,54 @@ abstract class L10n {
   /// In en, this message translates to:
   /// **'On target'**
   String get combatOnTarget;
+
+  /// No description provided for @combatHurtAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Hit — {where}, {millilitres} ml lost'**
+  String combatHurtAt(String where, int millilitres);
+
+  /// No description provided for @combatHitAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Hit — {where}, {millilitres} ml'**
+  String combatHitAt(String where, int millilitres);
+
+  /// No description provided for @combatExecution.
+  ///
+  /// In en, this message translates to:
+  /// **'Head shot. It is over.'**
+  String get combatExecution;
+
+  /// No description provided for @hitHead.
+  ///
+  /// In en, this message translates to:
+  /// **'head'**
+  String get hitHead;
+
+  /// No description provided for @hitTorso.
+  ///
+  /// In en, this message translates to:
+  /// **'torso'**
+  String get hitTorso;
+
+  /// No description provided for @hitArms.
+  ///
+  /// In en, this message translates to:
+  /// **'arm'**
+  String get hitArms;
+
+  /// No description provided for @hitLegs.
+  ///
+  /// In en, this message translates to:
+  /// **'leg'**
+  String get hitLegs;
+
+  /// No description provided for @enemyBleeding.
+  ///
+  /// In en, this message translates to:
+  /// **'bleeding'**
+  String get enemyBleeding;
 
   /// No description provided for @combatFire.
   ///

@@ -20,6 +20,8 @@ void main() {
     EnemyState state = EnemyState.chase,
     EnemyCondition condition = EnemyCondition.healthy,
     double sprintLeft = 1,
+    double bloodLeft = 1,
+    bool bleeding = false,
     VoidCallback? onFire,
     bool canFire = true,
     VoidCallback? onStrike,
@@ -48,6 +50,8 @@ void main() {
             state: state,
             condition: condition,
             sprintLeft: sprintLeft,
+            bloodLeft: bloodLeft,
+            bleeding: bleeding,
             refusal: refusal,
             onFire: canFire ? onFire ?? () {} : null,
             onStrike: onStrike,
@@ -180,7 +184,7 @@ void main() {
       await pump(tester, sprintLeft: 0.4);
 
       final bar = tester.widget<LinearProgressIndicator>(
-        find.byType(LinearProgressIndicator),
+        find.byType(LinearProgressIndicator).last,
       );
 
       expect(bar.value, closeTo(0.4, 0.001));
@@ -192,11 +196,27 @@ void main() {
       expect(
         tester
             .widget<LinearProgressIndicator>(
-              find.byType(LinearProgressIndicator),
+              find.byType(LinearProgressIndicator).last,
             )
             .value,
         0,
       );
+    });
+
+    testWidgets('and what it has left in it (§2.6)', (tester) async {
+      // The other half of "is this worth another round": a thing bleeding out
+      // is a thing to back away from rather than to spend a magazine on.
+      await pump(tester, bloodLeft: 0.3, bleeding: true);
+
+      expect(
+        tester
+            .widget<LinearProgressIndicator>(
+              find.byType(LinearProgressIndicator).first,
+            )
+            .value,
+        closeTo(0.3, 0.001),
+      );
+      expect(find.textContaining(RegExp('krwaw|bleed')), findsOneWidget);
     });
   });
 

@@ -1,8 +1,7 @@
 # ARLS-ZA — lista kontrolna systemów
 
-Stan na dzień **2026-08-16**, commit `d3ababd`. Wygenerowana po przejściu
-pełnego zestawu testów: **1263 testy, `flutter analyze` czysty, schemat bazy
-v12**.
+Stan na dzień **2026-08-16**. Wygenerowana po przejściu pełnego zestawu
+testów: **1273 testy, `flutter analyze` czysty, schemat bazy v12**.
 
 Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 
@@ -18,7 +17,7 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 
 | Obszar | Testy | Co jest tam pilnowane |
 | :---- | ----: | :---- |
-| `combat` | 214 | tabela kalibracyjna §5.1.2 wiersz po wierszu, obrażenia §5.1.5, budżet sprintu, maszyna stanów, hałas, spawn, magazynek, dodatki |
+| `combat` | 224 | tabela kalibracyjna §5.1.2 wiersz po wierszu, obrażenia §5.1.5, budżet sprintu, maszyna stanów, hałas, spawn, magazynek, dodatki |
 | `ui` | 237 | HUD, ekwipunek, panele, arkusze, geometria dotknięć i pierścieni |
 | `sim` | 175 | tick, metabolizm, tętno, wchłanianie, sen, nawyk gry |
 | `loot` | 130 | tabele, spawner, przeszukanie, rzeczy na ziemi, przeszkody |
@@ -33,7 +32,7 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 | `core` | 30 | deterministyczny RNG, zegar |
 | `notes` | 14 | notatki §19.1, podstawianie nazw miejsc |
 
-**Razem 1263.**
+**Razem 1273.**
 
 ### Rzeczy, które testy trzymają jako liczby, a nie jako intencje
 
@@ -85,7 +84,11 @@ Kolejność jest celowa: rzeczy wyżej blokują ocenę tych niżej.
 - [ ] Zwarcie: dwóch przeciwników przy mnożniku 1,3 boli wyraźnie
 - [ ] Przeładowanie przerywane przy zbliżeniu <5 m
 - [ ] Fala hałasu po strzale jest widoczna i odpowiada promieniowi
-- [ ] Ciało zostawia coś do podniesienia
+- [ ] Ciało zostawia czaszkę na mapie, a łup dopiero po przeszukaniu z bliska
+- [ ] Log trafień nazywa miejsce (głowa — egzekucja, tors, ręce, nogi)
+- [ ] Ranny przeciwnik wykrwawia się w biegu — pasek krwi na panelu spada
+- [ ] Paski jedzenia/picia są na górze i nie chowają się pod panelem walki
+- [ ] Ikony szukania i podnoszenia są nad panelem zaznaczonego wroga
 - [ ] **700 m hałasu karabinu w gęstej zabudowie — czy nie za karzące?**
       (§5.6.5 sam oznacza to jako do rozstrzygnięcia w terenie)
 
@@ -113,7 +116,8 @@ Rzeczy świadomie odłożone, z powodem i miejscem, w którym wrócą.
 | Co | Dlaczego odłożone | Wraca w |
 | :---- | :---- | :---- |
 | Stan magazynka nie jest zapisywany | karabin przeładowujący się przy zamkniętej aplikacji to drobne kłamstwo; uczciwa naprawa to zmiana schematu razem z magazynem schronu | etap 8 |
-| Lokalizacja trafienia | strzał zawsze liczy tors; uczciwie to losowanie lokalizacji po obu stronach plus pancerz per lokalizacja | etap 5+ |
+| Pancerz per lokalizacja | lokalizacja trafienia losowana po obu stronach, ale pancerz nadal liczy się jednym progiem torsa | etap 5+ |
+| Ciała nie są zapisywane | jak cała sesja walki (§6.4 odtwarza populację przy każdym uruchomieniu); ciało żyje 6 h w obrębie sesji | razem z zapisem sesji walki |
 | Światło broni nic nie oświetla | §6.2 daje przeciwnikom promień wykrycia bez kierunku; latarka wymaga modelu widzenia | etap 7 |
 | Budynki nie blokują ruchu przeciwników | warstwa budynków w paczkach nie niesie typu; woda i strefy §3.5 już blokują | po przebudowie paczek |
 | Pomiar dobowego czasu gry nie jest zapisywany | model tempa gotowy, zapis to zmiana schematu razem ze składem ognisk | etap 6 |

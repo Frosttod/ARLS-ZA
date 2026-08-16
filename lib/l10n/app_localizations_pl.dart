@@ -450,6 +450,25 @@ class L10nPl extends L10n {
   String get mapMarkerDropped => 'Porzucony przedmiot';
 
   @override
+  String get mapMarkerRemains => 'Ciało';
+
+  @override
+  String get remainsTitle => 'Ciało';
+
+  @override
+  String get remainsSearch => 'Przeszukaj';
+
+  @override
+  String get remainsSearched => 'Kieszenie przeszukane.';
+
+  @override
+  String get remainsEmptied => 'Już przeszukane.';
+
+  @override
+  String get remainsUnsearched =>
+      'Nikt tu nie zaglądał. Podejdź na wyciągnięcie ręki, aby przeszukać.';
+
+  @override
   String get mapMarkerShelter => 'Schron';
 
   @override
@@ -678,6 +697,34 @@ class L10nPl extends L10n {
 
   @override
   String get combatOnTarget => 'Namierzony';
+
+  @override
+  String combatHurtAt(String where, int millilitres) {
+    return 'Dostałeś — $where, $millilitres ml';
+  }
+
+  @override
+  String combatHitAt(String where, int millilitres) {
+    return 'Trafienie — $where, $millilitres ml';
+  }
+
+  @override
+  String get combatExecution => 'Strzał w głowę. Koniec.';
+
+  @override
+  String get hitHead => 'głowa';
+
+  @override
+  String get hitTorso => 'tors';
+
+  @override
+  String get hitArms => 'ręka';
+
+  @override
+  String get hitLegs => 'noga';
+
+  @override
+  String get enemyBleeding => 'krwawi';
 
   @override
   String get combatFire => 'Ognia';

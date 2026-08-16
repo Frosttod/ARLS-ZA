@@ -46,7 +46,7 @@ void main() {
             onPressed: () => showItemDetails(
               context,
               line: entry,
-              inventory: inventory,
+              inventory: ValueNotifier(inventory),
               catalogue: catalogue,
               names: names,
               onWear: onWear,

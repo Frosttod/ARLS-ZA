@@ -248,6 +248,10 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
       for (final marker in widget.markers)
         if (marker.alert != null) marker,
     ];
+    final bodies = [
+      for (final marker in widget.markers)
+        if (marker.kind == MarkerKind.remains) marker,
+    ];
     final wave = widget.noise;
     final spreading = wave?.progressAt(DateTime.now());
     _keepPulse(
@@ -389,6 +393,29 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
                         ),
                       );
                     },
+                  ),
+                ),
+              ),
+
+            // §10.3: a skull where something went down, so a body reads as a
+            // body rather than as another grey dot to walk past.
+            if (bodies.isNotEmpty)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: CustomPaint(
+                    painter: _RemainsPainter(
+                      at: [
+                        for (final marker in bodies)
+                          offsetOf(
+                              marker.at,
+                              centre: GeoPoint(
+                                centre.latitude,
+                                centre.longitude,
+                              ),
+                              zoom: _zoom,
+                            ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -825,6 +852,50 @@ class _FacingPainter extends CustomPainter {
 ///
 /// §12: the colour is a shortcut, never the message. The HUD says the same in
 /// words and the cone says which way it is walking.
+/// A skull on every body (§10.3, §12).
+class _RemainsPainter extends CustomPainter {
+  const _RemainsPainter({required this.at});
+
+  final List<Offset> at;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final middle = Offset(size.width / 2, size.height / 2);
+
+    for (final offset in at) {
+      final centre = middle + offset;
+      if (centre.dx < -30 ||
+          centre.dy < -30 ||
+          centre.dx > size.width + 30 ||
+          centre.dy > size.height + 30) {
+        continue;
+      }
+
+      final painter = TextPainter(
+        text: const TextSpan(
+          text: '☠',
+          style: TextStyle(
+            fontSize: 16,
+            color: Color(0xFF2B2B2B),
+            shadows: [Shadow(color: Color(0xFFFFFFFF), blurRadius: 3)],
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout();
+
+      painter.paint(
+        canvas,
+        centre - Offset(painter.width / 2, painter.height / 2),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_RemainsPainter old) =>
+      old.at.length != at.length ||
+      [for (var i = 0; i < at.length; i++) old.at[i] != at[i]].contains(true);
+}
+
 class _AlertPainter extends CustomPainter {
   const _AlertPainter({required this.markers, required this.pulse});
 

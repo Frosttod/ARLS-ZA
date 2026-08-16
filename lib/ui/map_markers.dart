@@ -26,6 +26,10 @@ enum MarkerKind {
   /// §3.6: grey. Dropped by the player, gone after 24 hours (§4.8).
   dropped,
 
+  /// §10.3: a body, with its pockets still in it. Bone white, and marked with
+  /// a skull rather than only a colour (§12).
+  remains,
+
   /// §3.6: blue. There is only ever one (§8).
   shelter,
 }
@@ -127,6 +131,7 @@ const Map<MarkerKind, int> kMarkerColours = {
   MarkerKind.enemy: 0xFFD93A2B,
   MarkerKind.loot: 0xFFE8B33A,
   MarkerKind.dropped: 0xFF8C8F92,
+  MarkerKind.remains: 0xFFE6E1D6,
   MarkerKind.shelter: 0xFF3A7BD9,
 };
 
@@ -142,6 +147,7 @@ const Map<MarkerKind, double> kMarkerRadius = {
   MarkerKind.enemy: 7,
   MarkerKind.loot: 6,
   MarkerKind.dropped: 5,
+  MarkerKind.remains: 6,
   MarkerKind.shelter: 9,
 };
 

@@ -186,6 +186,7 @@ class Enemy {
     this.investigateLeft = Duration.zero,
     this.headingDeg,
     this.sightFactor = 1,
+    this.bleedMlPerSecond = 0,
   });
 
   /// Rolls the ranges of §6.2 once, at spawn. Two Walkers are not the same
@@ -242,6 +243,13 @@ class Enemy {
 
   /// §5.6.2: how much turning the place over is left before it gives up.
   final Duration investigateLeft;
+
+  /// §2.6: how fast it is losing blood from what has already hit it.
+  ///
+  /// Three good hits can put something down before it reaches the player,
+  /// which is what makes backing away from a wounded one a tactic rather than
+  /// cowardice.
+  final double bleedMlPerSecond;
 
   /// §5.6.1's built-up damping, applied to what it can notice.
   ///
@@ -308,6 +316,7 @@ class Enemy {
     Duration? investigateLeft,
     double? headingDeg,
     double? sightFactor,
+    double? bleedMlPerSecond,
   }) => Enemy(
     id: id,
     kind: kind,
@@ -326,11 +335,23 @@ class Enemy {
         : investigateLeft ?? this.investigateLeft,
     headingDeg: headingDeg ?? this.headingDeg,
     sightFactor: sightFactor ?? this.sightFactor,
+    bleedMlPerSecond: bleedMlPerSecond ?? this.bleedMlPerSecond,
   );
 
   /// The wound of §5.1.5, taken.
-  Enemy hit(double bloodLoss) =>
-      copyWith(bloodLostMl: bloodLostMl + bloodLoss);
+  ///
+  /// [bleedMlPerSecond] adds to whatever is already open: a second hole does
+  /// not close the first.
+  Enemy hit(double bloodLoss, {double bleeding = 0}) => copyWith(
+    bloodLostMl: bloodLostMl + bloodLoss,
+    bleedMlPerSecond: bleedMlPerSecond + bleeding,
+  );
+
+  /// §2.6: how much blood it has left, 0–1, against what kills it.
+  double get bloodLeft =>
+      (1 - bloodLostMl / (bloodMl * kind.deathAtLoss)).clamp(0.0, 1.0);
+
+  bool get isBleeding => bleedMlPerSecond > 0;
 
   /// §5.6.2: something was heard over there.
   ///
@@ -360,6 +381,13 @@ Enemy advanceEnemy(
   if (enemy.isDead || elapsed <= Duration.zero) return enemy;
 
   final seconds = elapsed.inMicroseconds / Duration.microsecondsPerSecond;
+
+  // §2.6: what is already open goes on costing, whatever it does next.
+  if (enemy.isBleeding) {
+    final bled = enemy.hit(enemy.bleedMlPerSecond * seconds);
+    if (bled.isDead) return bled;
+    enemy = bled;
+  }
   final distance = enemy.position.distanceTo(playerAt);
 
   // §6.1a: contact is the player being near, not the enemy trying.

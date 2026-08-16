@@ -4,9 +4,11 @@
 /// decision: what to spend the next half-minute to three minutes on. Standing
 /// still is the cost of both, so both live where a thumb already is.
 ///
-/// While a search runs the panel becomes the search: a bar, the time left, and
-/// one way out. Nothing else on the map is worth reading during it, and §3.5
-/// would rather the player looked up anyway.
+/// While something is running the bar for it lives at the *top* of the screen,
+/// under the stats, and not here — found on a phone: a bite of stew taken with
+/// a Walker in the sights put the progress bar underneath the combat panel,
+/// so the one thing the player was waiting on was the one thing they could not
+/// see. See [ActionProgress].
 library;
 
 import 'package:flutter/material.dart';
@@ -49,6 +51,9 @@ class SearchPanel extends StatelessWidget {
 
   final VoidCallback onSearchArea;
   final void Function(SearchDepth depth) onSearchHere;
+
+  /// Kept for the callers that still hand it in; the bar that uses it now
+  /// lives in [ActionProgress].
   final VoidCallback onCancel;
 
   /// §19.3: what shuts the place in reach, or null when it is open or there is
@@ -72,51 +77,64 @@ class SearchPanel extends StatelessWidget {
     final colours = HudColors.of(context);
     final running = search;
 
+    // A pass already under way rules out starting another one; the glyphs
+    // stay where they are and go grey, so the panel does not reshuffle under
+    // a thumb halfway to a button.
+    final busy = running != null && running.isRunning;
+
     return Material(
       color: colours.panel.withValues(alpha: 0.92),
       child: SafeArea(
         top: false,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(12, 10, 12, 6),
-          child: running != null && running.isRunning
-              ? _Running(search: running, onCancel: onCancel, colours: colours)
-              : _Actions(
-                  targetName: targetName,
-                  canSearchHere: canSearchHere,
-                  searchUnitsLeft: searchUnitsLeft,
-                  barrier: canSearchHere ? barrier : null,
-                  carried: carried,
-                  onBreach: onBreach,
-                  onSearchArea: onSearchArea,
-                  onSearchHere: onSearchHere,
-                  onTakeDropped: onTakeDropped,
-                  droppedLabel: droppedLabel,
-                  colours: colours,
-                  l10n: l10n,
-                ),
+          child: _Actions(
+            targetName: targetName,
+            canSearchHere: canSearchHere,
+            searchUnitsLeft: searchUnitsLeft,
+            barrier: canSearchHere ? barrier : null,
+            carried: carried,
+            onBreach: busy ? null : onBreach,
+            onSearchArea: busy ? null : onSearchArea,
+            onSearchHere: busy ? null : onSearchHere,
+            onTakeDropped: busy ? null : onTakeDropped,
+            droppedLabel: droppedLabel,
+            colours: colours,
+            l10n: l10n,
+          ),
         ),
       ),
     );
   }
 }
 
-class _Running extends StatelessWidget {
-  const _Running({
+/// What is running right now, at the top of the screen (§10.2, §4.6).
+///
+/// Under the stats bar rather than over the thumb, because it is a thing to
+/// watch rather than a thing to press — and because the bottom of the map
+/// belongs to whatever the player is deciding next, which during a long search
+/// is quite often a fight.
+class ActionProgress extends StatelessWidget {
+  const ActionProgress({
     required this.search,
     required this.onCancel,
-    required this.colours,
+    super.key,
   });
 
   final Search search;
   final VoidCallback onCancel;
-  final HudColors colours;
 
   @override
   Widget build(BuildContext context) {
     final l10n = L10n.of(context);
+    final colours = HudColors.of(context);
     final seconds = search.remaining.inSeconds;
 
-    return Column(
+    return Material(
+      color: colours.panel.withValues(alpha: 0.92),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 6, 12, 8),
+        child: Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -156,7 +174,9 @@ class _Running extends StatelessWidget {
           search.isArea || search.isUse ? '' : l10n.searchNoise,
           style: TextStyle(fontSize: 11, color: colours.muted),
         ),
-      ],
+          ],
+        ),
+      ),
     );
   }
 }
@@ -198,8 +218,8 @@ class _Actions extends StatelessWidget {
   final Barrier? barrier;
   final Set<String> carried;
   final void Function(BarrierBreach)? onBreach;
-  final VoidCallback onSearchArea;
-  final void Function(SearchDepth) onSearchHere;
+  final VoidCallback? onSearchArea;
+  final void Function(SearchDepth)? onSearchHere;
 
   /// §4.8: opens the heap at the player's feet. Null when there is none.
   final VoidCallback? onTakeDropped;
@@ -283,8 +303,9 @@ class _Actions extends StatelessWidget {
                   caption: '${depth.seconds} s',
                   tooltip: _depthName(l10n, depth),
                   colours: colours,
-                  onPressed: depth.cost <= searchUnitsLeft
-                      ? () => onSearchHere(depth)
+                  onPressed:
+                      onSearchHere != null && depth.cost <= searchUnitsLeft
+                      ? () => onSearchHere!(depth)
                       : null,
                 ),
 

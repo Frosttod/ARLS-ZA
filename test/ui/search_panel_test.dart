@@ -1,5 +1,7 @@
 import 'package:arls_za/loot/loot_table.dart';
 import 'package:arls_za/loot/obstacle.dart';
+import 'package:arls_za/loot/search.dart';
+import 'package:arls_za/map/geometry.dart';
 import 'package:arls_za/l10n/app_localizations.dart';
 import 'package:arls_za/ui/search_panel.dart';
 import 'package:flutter/material.dart';
@@ -26,6 +28,7 @@ void main() {
     Set<String> carried = const {},
     String? droppedLabel,
     VoidCallback? onTakeDropped,
+    Search? search,
   }) async {
     await tester.pumpWidget(
       MaterialApp(
@@ -39,7 +42,7 @@ void main() {
         supportedLocales: L10n.supportedLocales,
         home: Scaffold(
           body: SearchPanel(
-            search: null,
+            search: search,
             targetName: 'Apteka',
             canSearchHere: canSearchHere,
             searchUnitsLeft: left,
@@ -291,5 +294,77 @@ void main() {
     await pump(tester);
 
     expect(tester.takeException(), isNull);
+  });
+
+  group('while something is already running (§10.2)', () {
+    testWidgets('nothing here can be started twice', (tester) async {
+      // The glyphs stay where they are and go grey rather than vanishing: a
+      // panel that reshuffles under a thumb halfway to a button is worse than
+      // a button that refuses.
+      await tester.pumpWidget(const SizedBox());
+      await pump(
+        tester,
+        search: Search.area(
+          at: const GeoPoint(52.4, 16.9),
+          now: DateTime.utc(2026, 8, 16, 12),
+        ),
+      );
+
+      final buttons = tester.widgetList<InkWell>(find.byType(InkWell));
+      expect(buttons, isNotEmpty);
+      expect(buttons.every((button) => button.onTap == null), isTrue);
+    });
+
+    testWidgets('and the bar for it is not down here (§4.6)', (tester) async {
+      // It lives under the stats bar instead. Found on a phone: a tin of stew
+      // eaten with a Walker in the sights put the bar under the combat panel.
+      await pump(
+        tester,
+        search: Search.area(
+          at: const GeoPoint(52.4, 16.9),
+          now: DateTime.utc(2026, 8, 16, 12),
+        ),
+      );
+
+      expect(find.byType(LinearProgressIndicator), findsNothing);
+    });
+  });
+
+  group('the bar that moved to the top (§4.6, §10.2)', () {
+    testWidgets('says what is running, how long, and how to stop', (
+      tester,
+    ) async {
+      var cancelled = false;
+      final search = Search.area(
+        at: const GeoPoint(52.4, 16.9),
+        now: DateTime.utc(2026, 8, 16, 12),
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: const Locale('pl'),
+          localizationsDelegates: const [
+            L10n.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: L10n.supportedLocales,
+          home: Scaffold(
+            body: ActionProgress(
+              search: search,
+              onCancel: () => cancelled = true,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(LinearProgressIndicator), findsOneWidget);
+      expect(find.textContaining('s'), findsWidgets);
+
+      await tester.tap(find.byType(TextButton));
+      expect(cancelled, isTrue);
+    });
   });
 }

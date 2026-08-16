@@ -28,6 +28,8 @@ class CombatPanel extends StatelessWidget {
     this.settling = false,
     required this.condition,
     required this.sprintLeft,
+    required this.bloodLeft,
+    this.bleeding = false,
     required this.onFire,
     this.onStrike,
     this.onReload,
@@ -58,6 +60,12 @@ class CombatPanel extends StatelessWidget {
   /// §5.5.1: how badly hurt it looks. Three words, because that is all anybody
   /// could honestly tell at two hundred metres.
   final EnemyCondition condition;
+
+  /// §2.6: how much blood it has left against what kills it, 0–1.
+  final double bloodLeft;
+
+  /// §2.6: whether something opened is still costing it.
+  final bool bleeding;
 
   /// §5.5.2: how much sprint it has left, 0–1. The tactical fact of a group
   /// fight — one that has burned its budget can be walked away from.
@@ -122,11 +130,41 @@ class CombatPanel extends StatelessWidget {
                     Text(
                       '$targetName · ${l10n.combatDistance(distanceM.round())}'
                       ' · ${conditionName(l10n, condition)}'
+                      '${bleeding ? ' · ${l10n.enemyBleeding}' : ''}'
                       ' · ${stateName(l10n, state)}'
                       '${magazine > 0 ? ' · ${l10n.combatRounds(loaded, magazine)}' : ''}',
                       style: TextStyle(fontSize: 12, color: colours.text),
                     ),
                     const SizedBox(height: 3),
+
+                    // §2.6: what is left in it, which is the other half of
+                    // "is this worth another round".
+                    Row(
+                      children: [
+                        Text(
+                          l10n.hudBlood,
+                          style: TextStyle(
+                            fontSize: 9,
+                            letterSpacing: 1.1,
+                            color: colours.muted,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: SizedBox(
+                            height: 4,
+                            child: LinearProgressIndicator(
+                              value: bloodLeft.clamp(0.0, 1.0),
+                              backgroundColor: colours.muted.withValues(
+                                alpha: 0.25,
+                              ),
+                              color: bleeding ? colours.alert : colours.data,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
 
                     // §5.5.2: what it has left in its legs, as a bar rather
                     // than a number — the question is "can it still catch me",
@@ -240,6 +278,14 @@ class CombatPanel extends StatelessWidget {
     );
   }
 }
+
+/// §2.6, in the words a log needs.
+String hitLocationName(L10n l10n, HitLocation location) => switch (location) {
+  HitLocation.head => l10n.hitHead,
+  HitLocation.torso => l10n.hitTorso,
+  HitLocation.arms => l10n.hitArms,
+  HitLocation.legs => l10n.hitLegs,
+};
 
 /// §6.1a, in the player's words rather than the machine's.
 String stateName(L10n l10n, EnemyState state) => switch (state) {

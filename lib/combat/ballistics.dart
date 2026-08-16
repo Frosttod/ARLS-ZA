@@ -18,6 +18,37 @@ library;
 
 import 'dart:math' as math;
 
+/// Where a hit landed (§2.6, §5.1.5).
+///
+/// The shares are the ones §2.6 uses for a torso-aimed shot: most of what is
+/// hit is torso, a head is rare and decisive, and a limb is neither. Nobody
+/// aims at a leg — this is where the round went, not where it was sent.
+enum HitLocation {
+  head(share: 0.12, multiplier: 4.0),
+  torso(share: 0.45, multiplier: 1.0),
+  arms(share: 0.18, multiplier: 0.6),
+  legs(share: 0.25, multiplier: 0.7);
+
+  const HitLocation({required this.share, required this.multiplier});
+
+  /// How often a hit lands here.
+  final double share;
+
+  /// §2.6: what it does to the wound.
+  final double multiplier;
+}
+
+/// Rolls where a hit landed.
+HitLocation rollHitLocation(double roll) {
+  var left = roll.clamp(0.0, 0.999);
+
+  for (final location in HitLocation.values) {
+    if (left < location.share) return location;
+    left -= location.share;
+  }
+  return HitLocation.torso;
+}
+
 /// What is being shot at, in metres (§5.1).
 enum TargetSize {
   /// The default of §5.1.2's table.

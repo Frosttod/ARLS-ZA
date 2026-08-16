@@ -16,6 +16,7 @@
 /// a player actually hits.
 library;
 
+import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 
 import '../inventory/inventory.dart';
@@ -30,7 +31,7 @@ import 'hud.dart' show HudColors;
 Future<void> showItemDetails(
   BuildContext context, {
   required CarriedItem line,
-  required Inventory inventory,
+  required ValueListenable<Inventory> inventory,
   required ItemCatalogue catalogue,
   required ItemNames names,
   VoidCallback? onWear,
@@ -47,18 +48,27 @@ Future<void> showItemDetails(
     lookup: names.forLanguage(language),
   );
 
-  // What this would replace: whatever occupies the same slot on the body.
-  final worn = _rival(line, item, inventory.worn, catalogue);
-  final against = worn ?? _rival(line, item, inventory.carried, catalogue);
-
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
-    builder: (context) {
-      final colours = HudColors.of(context);
-      final l10n = L10n.of(context);
+    // ⚠️ The live pack, not a copy of it. This is a pushed route over a game
+    // that keeps running: handed a snapshot, fitting a sight to a rifle
+    // changed nothing on screen and looked broken. Fourth time this shape of
+    // bug has come back.
+    builder: (context) => ValueListenableBuilder<Inventory>(
+      valueListenable: inventory,
+      builder: (context, pack, _) {
+        final colours = HudColors.of(context);
+        final l10n = L10n.of(context);
 
-      final mine = statsOf(item, condition: line.condition);
+        // What this would replace: whatever occupies the same slot on the
+        // body, read from the pack as it is now.
+        final fitted = pack.carried.where((l) => l.itemId == line.itemId);
+        final current = fitted.isEmpty ? line : fitted.first;
+        final worn = _rival(current, item, pack.worn, catalogue);
+        final against = worn ?? _rival(current, item, pack.carried, catalogue);
+
+        final mine = statsOf(item, condition: current.condition);
       final theirs = against == null
           ? const <ItemStat>[]
           : statsOf(
@@ -96,9 +106,9 @@ Future<void> showItemDetails(
               if (item.kind == ItemKind.firearm) ...[
                 const SizedBox(height: 12),
                 _Attachments(
-                  line: line,
+                  line: current,
                   weapon: item,
-                  inventory: inventory,
+                  inventory: pack,
                   catalogue: catalogue,
                   nameOf: nameOf,
                   colours: colours,
@@ -148,7 +158,8 @@ Future<void> showItemDetails(
           ),
         ),
       );
-    },
+      },
+    ),
   );
 }
 

@@ -57,7 +57,6 @@ void main() {
     double roll = 0.0,
     bool suppressed = false,
     double protection = 0,
-    double locationMultiplier = 1,
   }) => fireAt(
     weapon: catalogue[weapon]!,
     ammo: ammo == null ? null : catalogue[ammo],
@@ -67,7 +66,6 @@ void main() {
     random: _FixedRoll(roll),
     suppressed: suppressed,
     protection: protection,
-    locationMultiplier: locationMultiplier,
   );
 
   group('the odds are the ones on the screen (§5.1.4)', () {
@@ -104,17 +102,19 @@ void main() {
       final buck = fire(
         weapon: 'weapon_shotgun_pump',
         ammo: 'ammo_12ga_buck',
+        roll: 0.3,
       );
       final slug = fire(
         weapon: 'weapon_shotgun_pump',
         ammo: 'ammo_12ga_slug',
+        roll: 0.3,
       );
 
       expect(slug.bloodLossMl, greaterThan(buck.bloodLossMl));
     });
 
     test('a carbine takes about three shots to a Walker (§5.1.5)', () {
-      final outcome = fire();
+      final outcome = fire(roll: 0.3);
       final shots = walker.bloodMl * walker.kind.deathAtLoss /
           outcome.bloodLossMl;
 
@@ -122,7 +122,11 @@ void main() {
     });
 
     test('a pistol takes about seven', () {
-      final outcome = fire(weapon: 'weapon_pistol_9mm', ammo: 'ammo_9x19');
+      final outcome = fire(
+        weapon: 'weapon_pistol_9mm',
+        ammo: 'ammo_9x19',
+        roll: 0.3,
+      );
       final shots = walker.bloodMl * walker.kind.deathAtLoss /
           outcome.bloodLossMl;
 
@@ -130,16 +134,29 @@ void main() {
     });
 
     test('armour takes its share', () {
-      final bare = fire().bloodLossMl;
-      final vested = fire(protection: 0.5).bloodLossMl;
+      final bare = fire(roll: 0.3).bloodLossMl;
+      final vested = fire(roll: 0.3, protection: 0.5).bloodLossMl;
 
       expect(vested, closeTo(bare / 2, 0.5));
     });
 
-    test('a head is worth four torsos (§2.6)', () {
+    test('where it lands decides what it does (§2.6)', () {
+      // A roll of nought is a head; the shares run head, torso, arms, legs.
+      final head = fire(roll: 0);
+      final torso = fire(roll: 0.3);
+
+      expect(head.location, HitLocation.head);
+      expect(torso.location, HitLocation.torso);
+      expect(head.bloodLossMl, closeTo(4 * torso.bloodLossMl, 1));
+    });
+
+    test('and what it goes on costing afterwards', () {
+      // §2.6: three good hits can put something down before it reaches the
+      // player, which is what makes backing away from a wounded one a tactic.
+      expect(fire(roll: 0.3).bleedMlPerSecond, greaterThan(0));
       expect(
-        fire(locationMultiplier: 4).bloodLossMl,
-        closeTo(4 * fire().bloodLossMl, 0.5),
+        fire(roll: 0.9).bleedMlPerSecond,
+        lessThan(fire(roll: 0.3).bleedMlPerSecond),
       );
     });
 

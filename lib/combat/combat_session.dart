@@ -134,11 +134,17 @@ class CombatSession {
   }
 
   /// A wound from §5.1.5, landed on one of them.
-  CombatSession wound(String enemyId, double bloodLossMl) => CombatSession(
+  CombatSession wound(
+    String enemyId,
+    double bloodLossMl, {
+    double bleeding = 0,
+  }) => CombatSession(
     seed: seed,
     enemies: [
       for (final enemy in enemies)
-        enemy.id == enemyId ? enemy.hit(bloodLossMl) : enemy,
+        enemy.id == enemyId
+            ? enemy.hit(bloodLossMl, bleeding: bleeding)
+            : enemy,
     ],
     open: open,
   );

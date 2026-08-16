@@ -447,6 +447,25 @@ class L10nEn extends L10n {
   String get mapMarkerDropped => 'Dropped item';
 
   @override
+  String get mapMarkerRemains => 'Body';
+
+  @override
+  String get remainsTitle => 'Body';
+
+  @override
+  String get remainsSearch => 'Search it';
+
+  @override
+  String get remainsSearched => 'Pockets turned out.';
+
+  @override
+  String get remainsEmptied => 'Already turned out.';
+
+  @override
+  String get remainsUnsearched =>
+      'Nobody has been through it. Come within arm’s reach to search it.';
+
+  @override
   String get mapMarkerShelter => 'Shelter';
 
   @override
@@ -676,6 +695,34 @@ class L10nEn extends L10n {
 
   @override
   String get combatOnTarget => 'On target';
+
+  @override
+  String combatHurtAt(String where, int millilitres) {
+    return 'Hit — $where, $millilitres ml lost';
+  }
+
+  @override
+  String combatHitAt(String where, int millilitres) {
+    return 'Hit — $where, $millilitres ml';
+  }
+
+  @override
+  String get combatExecution => 'Head shot. It is over.';
+
+  @override
+  String get hitHead => 'head';
+
+  @override
+  String get hitTorso => 'torso';
+
+  @override
+  String get hitArms => 'arm';
+
+  @override
+  String get hitLegs => 'leg';
+
+  @override
+  String get enemyBleeding => 'bleeding';
 
   @override
   String get combatFire => 'Fire';

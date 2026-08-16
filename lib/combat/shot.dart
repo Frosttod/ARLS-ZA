@@ -28,6 +28,8 @@ class ShotOutcome {
     required this.bloodLossMl,
     required this.noiseM,
     required this.dominant,
+    this.location,
+    this.bleedMlPerSecond = 0,
   });
 
   /// §5.1.4: the number that was on screen before the trigger was pressed.
@@ -43,6 +45,17 @@ class ShotOutcome {
 
   /// §5.1.4: the largest source of error, for the words beside the percentage.
   final ErrorSource dominant;
+
+  /// §2.6: where it landed. Null on a miss.
+  final HitLocation? location;
+
+  /// §2.6: what it goes on costing after the fact.
+  ///
+  /// A torso or a head opens something that keeps bleeding; a limb mostly does
+  /// not. This is why three good hits can put something down before it reaches
+  /// the player, and why a player who runs from a wounded one is not being
+  /// cowardly.
+  final double bleedMlPerSecond;
 }
 
 /// The error budget for a shot with this weapon, in this body, at this target.
@@ -99,10 +112,10 @@ ShotOutcome fireAt({
   bool openGround = false,
   bool badWeather = false,
   double protection = 0,
-  double locationMultiplier = 1,
 }) {
   final chance = hitChance(moa: error.total, distanceM: distanceM);
   final hit = random.nextDouble() < chance;
+  final location = hit ? rollHitLocation(random.nextDouble()) : null;
 
   final energy = (weapon.props['muzzle_energy_j'] as num?)?.toDouble() ?? 0;
 
@@ -122,14 +135,23 @@ ShotOutcome fireAt({
   return ShotOutcome(
     chance: chance,
     hit: hit,
+    location: location,
     bloodLossMl: hit
         ? bloodLossMl(
             energyJ: energy,
             woundFactor: wound,
-            locationMultiplier: locationMultiplier,
+            locationMultiplier: location!.multiplier,
             protection: protection,
           )
         : 0,
+    // §2.6: a hole in a torso or a head keeps costing after the shot. A limb
+    // bleeds a little and mostly stops.
+    bleedMlPerSecond: switch (location) {
+      null => 0,
+      HitLocation.head => 6,
+      HitLocation.torso => 4,
+      _ => 1.2,
+    },
     // A miss is heard exactly as well as a hit. That is the whole cost of
     // firing at a poor chance.
     noiseM: noiseRadiusM(
