@@ -150,10 +150,18 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
   /// A tap waiting to see whether it is the first half of a double tap.
   Timer? _pendingTap;
 
-  /// §6.1a: drives the pulse on anything hunting the player. Runs only while
-  /// something is — a heartbeat under an empty street is a frame a second
-  /// spent on nothing.
-  AnimationController? _pulse;
+  /// §6.1a: drives the pulse on anything hunting the player.
+  ///
+  /// ⚠️ One controller for the life of the state, started and stopped rather
+  /// than made and thrown away. Found on a phone, as a red screen after the
+  /// display was locked and woken: a SingleTickerProviderStateMixin may create
+  /// exactly one ticker ever, and disposing the controller does not give the
+  /// permission back. It still runs only while something is actually hunting —
+  /// a heartbeat under an empty street is a frame a second spent on nothing.
+  late final AnimationController _pulse = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 900),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -356,7 +364,7 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
               Positioned.fill(
                 child: IgnorePointer(
                   child: AnimatedBuilder(
-                    animation: _pulse ?? const AlwaysStoppedAnimation(0),
+                    animation: _pulse,
                     builder: (context, _) {
                       final now = DateTime.now();
                       final reached = wave.progressAt(now);
@@ -392,7 +400,7 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
               Positioned.fill(
                 child: IgnorePointer(
                   child: AnimatedBuilder(
-                    animation: _pulse ?? const AlwaysStoppedAnimation(0),
+                    animation: _pulse,
                     builder: (context, _) => CustomPaint(
                       painter: _AlertPainter(
                         markers: [
@@ -409,7 +417,7 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
                               alert: marker.alert!,
                             ),
                         ],
-                        pulse: _pulse?.value ?? 0,
+                        pulse: _pulse.value,
                       ),
                     ),
                   ),
@@ -574,20 +582,19 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
   @override
   void dispose() {
     _pendingTap?.cancel();
-    _pulse?.dispose();
+    _pulse.dispose();
     super.dispose();
   }
 
   /// Starts or stops the pulse to match what is on the map.
+  ///
+  /// Idempotent, because it is called from build: asking a running controller
+  /// to run again is nothing, and so is stopping a stopped one.
   void _keepPulse({required bool wanted}) {
-    if (wanted && _pulse == null) {
-      _pulse = AnimationController(
-        vsync: this,
-        duration: const Duration(milliseconds: 900),
-      )..repeat(reverse: true);
-    } else if (!wanted && _pulse != null) {
-      _pulse!.dispose();
-      _pulse = null;
+    if (wanted && !_pulse.isAnimating) {
+      _pulse.repeat(reverse: true);
+    } else if (!wanted && _pulse.isAnimating) {
+      _pulse.stop();
     }
   }
 
