@@ -206,6 +206,11 @@ class _MapLibreSurfaceState extends State<MapLibreSurface> {
         if (marker.count > 1) marker,
     ];
 
+    final facing = [
+      for (final marker in widget.markers)
+        if (marker.headingDeg != null) marker,
+    ];
+
     final gestures = GestureDetector(
       // Opaque, so the gestures reach here rather than the platform view. The
       // markers are circles the platform view draws, so their taps are ours to
@@ -225,7 +230,10 @@ class _MapLibreSurfaceState extends State<MapLibreSurface> {
     );
 
     final rings = reachRingsOf(widget.markers);
-    if ((counted.isEmpty && rings.isEmpty) || centre == null) return gestures;
+    if ((counted.isEmpty && rings.isEmpty && facing.isEmpty) ||
+        centre == null) {
+      return gestures;
+    }
 
     // §4.8: the number on a stack of dropped kit. Drawn on our side of the
     // platform view because a MapLibre circle has no text, and computed from
@@ -258,6 +266,34 @@ class _MapLibreSurfaceState extends State<MapLibreSurface> {
                       colour: Theme.of(context).brightness == Brightness.dark
                           ? const Color(0xFF7A8B8F)
                           : const Color(0xFF4A5A5E),
+                    ),
+                  ),
+                ),
+              ),
+
+            // §3.6: which way each of them is walking. Drawn on our side
+            // because a MapLibre circle has no direction, and from the same
+            // geometry as everything else here.
+            if (facing.isNotEmpty)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: CustomPaint(
+                    painter: _FacingPainter(
+                      markers: [
+                        for (final marker in facing)
+                          (
+                            at: offsetOf(
+                              marker.at,
+                              centre: GeoPoint(
+                                centre.latitude,
+                                centre.longitude,
+                              ),
+                              zoom: _zoom,
+                            ),
+                            headingDeg: marker.headingDeg!,
+                            colour: Color(kMarkerColours[marker.kind]!),
+                          ),
+                      ],
                     ),
                   ),
                 ),
@@ -534,6 +570,73 @@ class _ReachPainter extends CustomPainter {
     }
     for (var i = 0; i < radiiPx.length; i++) {
       if ((old.radiiPx[i] - radiiPx[i]).abs() > 0.5) return true;
+    }
+    return false;
+  }
+}
+
+/// Which way each marker is walking (§3.6).
+///
+/// ⚠️ A direction of travel, never a field of view. §6.2 gives an enemy a
+/// detection radius and nothing directional, so a cone that read as vision
+/// would be a lie the player would plan around — the same reason the player's
+/// own cone disappears when they stop rather than pointing the last way they
+/// went.
+class _FacingPainter extends CustomPainter {
+  const _FacingPainter({required this.markers});
+
+  final List<({Offset at, double headingDeg, Color colour})> markers;
+
+  /// Narrow enough to read as a direction rather than as a searchlight.
+  static const double spreadDeg = 50;
+  static const double reachPx = 26;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final middle = Offset(size.width / 2, size.height / 2);
+
+    for (final marker in markers) {
+      final centre = middle + marker.at;
+      if (centre.dx < -reachPx ||
+          centre.dy < -reachPx ||
+          centre.dx > size.width + reachPx ||
+          centre.dy > size.height + reachPx) {
+        continue;
+      }
+
+      // Screen coordinates put zero degrees east and y downwards, so a compass
+      // bearing turns a quarter turn anticlockwise.
+      final start = (marker.headingDeg - spreadDeg / 2 - 90) * math.pi / 180;
+
+      canvas.drawPath(
+        Path()
+          ..moveTo(centre.dx, centre.dy)
+          ..arcTo(
+            Rect.fromCircle(center: centre, radius: reachPx),
+            start,
+            spreadDeg * math.pi / 180,
+            false,
+          )
+          ..close(),
+        Paint()
+          ..shader = RadialGradient(
+            colors: [
+              marker.colour.withValues(alpha: 0.45),
+              marker.colour.withValues(alpha: 0.0),
+            ],
+          ).createShader(Rect.fromCircle(center: centre, radius: reachPx)),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_FacingPainter old) {
+    if (old.markers.length != markers.length) return true;
+    for (var i = 0; i < markers.length; i++) {
+      if ((old.markers[i].at - markers[i].at).distance > 0.5) return true;
+      if ((old.markers[i].headingDeg - markers[i].headingDeg).abs() > 1) {
+        return true;
+      }
     }
     return false;
   }

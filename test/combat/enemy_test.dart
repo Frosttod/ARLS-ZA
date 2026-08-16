@@ -341,4 +341,73 @@ void main() {
       expect(twice.bloodLostMl, 500);
     });
   });
+
+  group('which way it is facing (§3.6)', () {
+    // ⚠️ Where it is going, never what it can see. §6.2 gives an enemy a
+    // detection radius and nothing directional, so a cone read as vision would
+    // be a lie the player would plan around.
+    GeoPoint east(double metres) => GeoPoint(
+      home.latitude,
+      home.longitude + metres / metresPerDegreeLon(home.latitude),
+    );
+
+    test('something that has not moved faces nowhere', () {
+      final quiet = advanceEnemy(
+        spawn(EnemyKind.walker),
+        playerAt: north(900),
+        elapsed: const Duration(seconds: 5),
+      );
+
+      expect(quiet.headingDeg, isNull);
+    });
+
+    test('walking north reads as north', () {
+      final chasing = run(
+        spawn(EnemyKind.walker),
+        playerAt: north(40),
+        total: const Duration(seconds: 3),
+      );
+
+      expect(chasing.headingDeg, closeTo(0, 2));
+    });
+
+    test('and walking east reads as ninety degrees', () {
+      final chasing = run(
+        spawn(EnemyKind.walker),
+        playerAt: east(40),
+        total: const Duration(seconds: 3),
+      );
+
+      expect(chasing.headingDeg, closeTo(90, 2));
+    });
+
+    test('walking away is a hundred and eighty', () {
+      // Sent home after losing contact: it turns its back.
+      final far = spawn(EnemyKind.walker, at: 450);
+      final going = run(
+        far,
+        playerAt: north(900),
+        total: const Duration(seconds: 20),
+      );
+
+      expect(going.state, EnemyState.returning);
+      expect(going.headingDeg, closeTo(180, 2));
+    });
+
+    test('one that stops keeps the way it last faced', () {
+      // Snapping north on the frame it stops would read as it turning round.
+      final chasing = run(
+        spawn(EnemyKind.walker),
+        playerAt: north(40),
+        total: const Duration(seconds: 3),
+      );
+      final stopped = advanceEnemy(
+        chasing,
+        playerAt: north(900),
+        elapsed: const Duration(seconds: 1),
+      );
+
+      expect(stopped.headingDeg, chasing.headingDeg);
+    });
+  });
 }

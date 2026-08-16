@@ -31,6 +31,23 @@ class GeoPoint {
     return math.sqrt(dLat * dLat + dLon * dLon);
   }
 
+  /// Compass bearing to [other]: zero is north, ninety is east.
+  ///
+  /// Flat-earth over these distances, like everything else here — the error
+  /// against a great circle at a kilometre is far below what a marker on a
+  /// phone screen can show.
+  double bearingTo(GeoPoint other) {
+    final north = (other.latitude - latitude) * metresPerDegreeLat;
+    final east =
+        (other.longitude - longitude) *
+        metresPerDegreeLon((latitude + other.latitude) / 2);
+
+    if (north == 0 && east == 0) return 0;
+
+    final degrees = math.atan2(east, north) * 180 / math.pi;
+    return degrees < 0 ? degrees + 360 : degrees;
+  }
+
   @override
   String toString() =>
       'GeoPoint(${latitude.toStringAsFixed(6)}, '

@@ -1578,6 +1578,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
           id: enemy.id,
           kind: MarkerKind.enemy,
           at: enemy.position,
+          // §3.6: which way it is walking. Not a field of view — §6.2 gives
+          // them a radius and nothing directional — but knowing that one of
+          // them has turned towards you is the whole of the warning.
+          headingDeg: enemy.headingDeg,
         ),
 
       // §4.8: grey, and gone after a day.

@@ -40,6 +40,7 @@ class MapMarker {
     this.label,
     this.reachM,
     this.count = 1,
+    this.headingDeg,
   });
 
   /// Stable across frames, so the renderer can move a marker instead of
@@ -53,6 +54,14 @@ class MapMarker {
   /// Read out by the screen reader, and shown on tap. §12 requires that
   /// nothing on this map is knowable by colour alone.
   final String? label;
+
+  /// Which way it is facing, as a compass bearing (§3.6). Null for anything
+  /// that does not face — a lootbox has no front.
+  ///
+  /// ⚠️ Where it is going, not what it can see. §6.2 gives enemies a detection
+  /// radius and nothing directional, so a cone drawn as a field of view would
+  /// be a lie the player would plan around.
+  final double? headingDeg;
 
   /// How many things this one dot stands for (§4.8).
   ///
@@ -75,6 +84,7 @@ class MapMarker {
     String? label,
     double? reachM,
     int? count,
+    double? headingDeg,
   }) => MapMarker(
     id: id,
     kind: kind,
@@ -82,6 +92,7 @@ class MapMarker {
     label: label ?? this.label,
     reachM: reachM ?? this.reachM,
     count: count ?? this.count,
+    headingDeg: headingDeg ?? this.headingDeg,
   );
 }
 

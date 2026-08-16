@@ -165,6 +165,7 @@ class Enemy {
     this.sinceContact = Duration.zero,
     this.heardAt,
     this.investigateLeft = Duration.zero,
+    this.headingDeg,
   });
 
   /// Rolls the ranges of §6.2 once, at spawn. Two Walkers are not the same
@@ -220,6 +221,15 @@ class Enemy {
   /// §5.6.2: how much turning the place over is left before it gives up.
   final Duration investigateLeft;
 
+  /// Which way it is facing, as a compass bearing, or null while it is not
+  /// moving at all.
+  ///
+  /// ⚠️ Where it is *going*, never what it can see. Detection in §6.2 is a
+  /// radius and nothing else, so drawing this as a field of view would be a
+  /// lie a player would act on — the same reason §3.6 refuses to leave the
+  /// player's own cone pointing the last way they walked.
+  final double? headingDeg;
+
   Duration get budget => sprintLeft ?? kind.sprintBudget;
 
   bool get isDead => bloodLostMl >= bloodMl * kind.deathAtLoss;
@@ -240,6 +250,7 @@ class Enemy {
     GeoPoint? heardAt,
     bool forgetNoise = false,
     Duration? investigateLeft,
+    double? headingDeg,
   }) => Enemy(
     id: id,
     kind: kind,
@@ -256,6 +267,7 @@ class Enemy {
     investigateLeft: forgetNoise
         ? Duration.zero
         : investigateLeft ?? this.investigateLeft,
+    headingDeg: headingDeg ?? this.headingDeg,
   );
 
   /// The wound of §5.1.5, taken.
@@ -360,10 +372,15 @@ Enemy advanceEnemy(
     metres: enemy.speedKmh * seconds / 3.6,
   );
 
+  final standingStill = state == EnemyState.idle && !investigating;
+
   return enemy.copyWith(
-    position: state == EnemyState.idle && !investigating
-        ? enemy.position
-        : moved,
+    position: standingStill ? enemy.position : moved,
+    // Facing where it is walking. Something that has stopped keeps the way it
+    // last faced rather than snapping north.
+    headingDeg: standingStill || moved.distanceTo(enemy.position) < 0.05
+        ? enemy.headingDeg
+        : enemy.position.bearingTo(moved),
     state: state,
     sprintLeft: budget,
     sinceContact: sinceContact,
