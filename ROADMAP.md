@@ -19,7 +19,7 @@ Każdy zamknięty etap dostaje sekcję **Dziennik wykonania** z decyzjami podję
 | 8 | Schron, obóz, pętla dobowa | ⬜ | — | — |
 | 9 | Onboarding, dostępność, zgodność | ⬜ | — | — |
 
-**Metryki:** 1228 testów · `flutter analyze` czysty · schemat bazy **v11** · release APK 89,5 MB bez devtools
+**Metryki:** 1244 testy · `flutter analyze` czysty · schemat bazy **v11** · release APK 89,5 MB bez devtools
 
 ### Zablokowane na użytkowniku
 
@@ -400,7 +400,7 @@ Dwa wnioski na przyszłość:
 | :---- | :---- | :---- |
 | 6.1 | Rozmieszczenie: 500–2000 m od schronu, min. 450 m między centrami, promień do 200 m | §6.5.1 |
 | 6.2 | Poziomy 1–10: promień, limit wrogów, respawn, skład | §6.5.2 |
-| 6.3 | Wzrost: `max(2h, 8h − 0.25h × dzień) × random(0.6, 1.4)`, 25% czasu uśpionego | §6.5.3 |
+| 6.3 | Wzrost: `max(2h, 8h − 0.25h × dzień) × random(0.6, 1.4)`; ⚠️ zamiast stałych 25% czasu uśpionego — tempo mierzone stylem gry (`lib/sim/play_habit.dart`), godzina gry ×3,5 plus podłoga 0,10/h. Pomiar dobowy do zapisania (schemat v12) | §6.5.3, §16.4 |
 | 6.4 | Powiadomienie push przy awansie z nazwą ulicy z OSM | §6.5.3 |
 | 6.5 | Integralność, punkty za eliminacje, 50% poza promieniem, regeneracja +5%/h | §6.5.4 |
 | 6.6 | Wzburzenie po zbiciu poziomu: 10 min, ×3 respawn, +50% limitu, skład o szczebel wyżej | §6.5.4 |
