@@ -35,6 +35,9 @@ Rzeczy, których nie da się zrobić z poziomu repozytorium.
 
 ---
 
+Lista kontrolna systemów — co udowadnia maszyna, a co wyłącznie spacer —
+mieszka w [CHECKLIST.md](CHECKLIST.md).
+
 ## Zasady prowadzenia prac
 
 1. **Etap kończy się kryterium wyjścia, nie poczuciem gotowości.** Kryterium jest sprawdzalne — testem, pomiarem albo demonstracją na urządzeniu.
