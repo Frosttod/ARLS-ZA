@@ -25,6 +25,7 @@ class CombatPanel extends StatelessWidget {
     required this.chance,
     required this.dominant,
     required this.state,
+    this.weaponName,
     this.settling = false,
     required this.condition,
     required this.sprintLeft,
@@ -55,7 +56,16 @@ class CombatPanel extends StatelessWidget {
 
   /// §6.1a, in the player's words: it has not seen you, it is looking for
   /// you, or it is coming.
+  ///
+  /// ⚠️ Not drawn any more. §12 already carries it twice — the `?` or `!` over
+  /// the dot and the threat line on the HUD — and a third copy pushed the one
+  /// thing the panel was missing off the row. Kept on the widget because the
+  /// screen reader still reads it (§12) and because removing a field to save a
+  /// line is how a state stops being modelled at all.
   final EnemyState state;
+
+  /// §5.5.4: what is in the player's hands, by name. Null with empty hands.
+  final String? weaponName;
 
   /// §5.5.1: how badly hurt it looks. Three words, because that is all anybody
   /// could honestly tell at two hundred metres.
@@ -127,14 +137,22 @@ class CombatPanel extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    // What it is, how far, how hurt — and then what is in the
+                    // player's own hands. What the Walker is *thinking* is
+                    // already on the map as a glyph over its head (§6.1a), and
+                    // saying it twice cost the line the weapon needed.
                     Text(
                       '$targetName · ${l10n.combatDistance(distanceM.round())}'
                       ' · ${conditionName(l10n, condition)}'
-                      '${bleeding ? ' · ${l10n.enemyBleeding}' : ''}'
-                      ' · ${stateName(l10n, state)}'
-                      '${magazine > 0 ? ' · ${l10n.combatRounds(loaded, magazine)}' : ''}',
+                      '${bleeding ? ' · ${l10n.enemyBleeding}' : ''}',
                       style: TextStyle(fontSize: 12, color: colours.text),
                     ),
+                    if (weaponName != null)
+                      Text(
+                        '$weaponName'
+                        '${magazine > 0 ? ' · ${l10n.combatRounds(loaded, magazine)}' : ''}',
+                        style: TextStyle(fontSize: 12, color: colours.data),
+                      ),
                     const SizedBox(height: 3),
 
                     // §2.6: what is left in it, which is the other half of

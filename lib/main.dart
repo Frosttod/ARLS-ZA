@@ -699,10 +699,14 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         _sessionStart ??= snapshot.state.lastUpdate;
         _snapshot = snapshot;
       });
+      // ⚠️ Sticky. A snapshot without a position is the phone having nothing
+      // to say, not the player having vanished — and everything that reads
+      // this measures *from* it, so a single blank frame put every enemy and
+      // every lootbox off the map for as long as it lasted.
       final fix = snapshot.displayFix;
-      _standingAt.value = fix == null
-          ? null
-          : GeoPoint(fix.latitude, fix.longitude);
+      if (fix != null) {
+        _standingAt.value = GeoPoint(fix.latitude, fix.longitude);
+      }
       unawaited(_checkRelocation(snapshot));
       unawaited(_settleShelters(snapshot));
       unawaited(_settleDown(snapshot));
@@ -1551,6 +1555,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         playerAt: GeoPoint(fix.latitude, fix.longitude),
         elapsed: elapsed,
         now: now,
+        // §10.3: whatever bled out on the way leaves a body, exactly as one
+        // that went down under the sights does.
+        onDeath: _remember,
         obstacles: _world?.obstacles ?? const [],
         // §8.1: they wait at the edge of what the player built.
         sanctuaries: _sanctuaries,
@@ -2392,6 +2399,15 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
   bool _carries(String itemId) => _carriedIds().contains(itemId);
 
+  /// An item's name in the player's language.
+  String _nameOfItem(ItemDefinition item) {
+    final language = Localizations.localeOf(context).languageCode;
+    return item.name.resolve(
+      language: language,
+      lookup: (_names ?? ItemNames.empty).forLanguage(language),
+    );
+  }
+
   /// §10.3: marks where something went down, for as long as it is worth
   /// coming back to.
   void _remember(Enemy enemy) {
@@ -3194,6 +3210,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
                                 target.kind,
                               ),
                               state: target.state,
+                          weaponName: weapon == null
+                              ? null
+                              : _nameOfItem(weapon),
                               distanceM: target.position.distanceTo(
                                 GeoPoint(
                                   snapshot.displayFix?.latitude ?? 0,

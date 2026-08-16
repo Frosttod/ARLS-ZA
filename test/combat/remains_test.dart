@@ -1,3 +1,6 @@
+import 'dart:math';
+
+import 'package:arls_za/combat/combat_session.dart';
 import 'package:arls_za/combat/enemy.dart';
 import 'package:arls_za/combat/remains.dart';
 import 'package:arls_za/map/geometry.dart';
@@ -55,6 +58,55 @@ void main() {
 
       expect(sweepRemains([body()], now), isEmpty);
       expect(body().isGoneAt(now), isTrue);
+    });
+  });
+
+  group('a body is left wherever it falls', () {
+    // Found on a phone: no skull after a kill. Most kills no longer happen at
+    // the moment of the shot — §2.6's bleeding means a hit thing runs on and
+    // falls over somewhere else, in the middle of a tick — and the tick simply
+    // dropped it from the list without telling anybody.
+    test('including one that bleeds out on the way', () {
+      final walker = Enemy.spawn(
+        id: 'walker.1',
+        kind: EnemyKind.walker,
+        at: const GeoPoint(52.4064, 16.9252),
+        home: const GeoPoint(52.4064, 16.9252),
+        random: Random(1),
+      ).hit(0, bleeding: 400);
+
+      final session = CombatSession(seed: 3, enemies: [walker]);
+
+      final fallen = <Enemy>[];
+      session.advance(
+        playerAt: const GeoPoint(52.4064, 16.9252),
+        elapsed: const Duration(seconds: 30),
+        now: DateTime.utc(2026, 8, 16, 12),
+        onDeath: fallen.add,
+      );
+
+      expect(fallen, hasLength(1));
+      expect(fallen.single.id, 'walker.1');
+    });
+
+    test('and nothing is reported for one still on its feet', () {
+      final walker = Enemy.spawn(
+        id: 'walker.1',
+        kind: EnemyKind.walker,
+        at: const GeoPoint(52.4064, 16.9252),
+        home: const GeoPoint(52.4064, 16.9252),
+        random: Random(1),
+      );
+
+      final fallen = <Enemy>[];
+      CombatSession(seed: 3, enemies: [walker]).advance(
+        playerAt: const GeoPoint(52.4064, 16.9252),
+        elapsed: const Duration(seconds: 5),
+        now: DateTime.utc(2026, 8, 16, 12),
+        onDeath: fallen.add,
+      );
+
+      expect(fallen, isEmpty);
     });
   });
 }

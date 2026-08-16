@@ -1,7 +1,7 @@
 # ARLS-ZA — lista kontrolna systemów
 
 Stan na dzień **2026-08-16**. Wygenerowana po przejściu pełnego zestawu
-testów: **1392 testy, `flutter analyze` czysty, schemat bazy v12**.
+testów: **1395 testów, `flutter analyze` czysty, schemat bazy v12**.
 
 Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 
@@ -17,7 +17,7 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 
 | Obszar | Testy | Co jest tam pilnowane |
 | :---- | ----: | :---- |
-| `combat` | 229 | tabela kalibracyjna §5.1.2 wiersz po wierszu, obrażenia §5.1.5, budżet sprintu, maszyna stanów, hałas, spawn, magazynek, dodatki |
+| `combat` | 231 | tabela kalibracyjna §5.1.2 wiersz po wierszu, obrażenia §5.1.5, budżet sprintu, maszyna stanów, hałas, spawn, magazynek, dodatki |
 | `ui` | 269 | HUD, ekwipunek, panele, arkusze, geometria dotknięć i pierścieni |
 | `sim` | 195 | tick, metabolizm, tętno, wchłanianie, sen, nawyk gry |
 | `loot` | 130 | tabele, spawner, przeszukanie, rzeczy na ziemi, przeszkody |
@@ -33,7 +33,7 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 | `core` | 30 | deterministyczny RNG, zegar |
 | `notes` | 14 | notatki §19.1, podstawianie nazw miejsc |
 
-**Razem 1392.**
+**Razem 1395.**
 
 ### Rzeczy, które testy trzymają jako liczby, a nie jako intencje
 
@@ -87,6 +87,9 @@ Kolejność jest celowa: rzeczy wyżej blokują ocenę tych niżej.
 - [ ] Przeładowanie przerywane przy zbliżeniu <5 m
 - [ ] Fala hałasu po strzale jest widoczna i odpowiada promieniowi
 - [ ] Ciało zostawia czaszkę na mapie, a łup dopiero po przeszukaniu z bliska
+- [ ] **Czaszka pojawia się także, gdy wróg wykrwawi się w biegu**, nie tylko pod celownikiem
+- [ ] Ikony przeciwników nie znikają przy chwilowym braku pozycji
+- [ ] Panel walki pokazuje nazwę broni w rękach, nie stan wroga
 - [ ] Log trafień nazywa miejsce (głowa — egzekucja, tors, ręce, nogi)
 - [ ] Ranny przeciwnik wykrwawia się w biegu — pasek krwi na panelu spada
 - [ ] Paski jedzenia/picia są na górze i nie chowają się pod panelem walki

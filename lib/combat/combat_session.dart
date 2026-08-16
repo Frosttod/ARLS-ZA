@@ -77,6 +77,7 @@ class CombatSession {
     GeoPoint? shelterAt,
     List<Sanctuary> sanctuaries = const [],
     bool denseUrban = false,
+    void Function(Enemy dead)? onDeath,
   }) {
     // §3.5's features are what a person may not be sent through; most of them
     // — water, private land, a railway — are also what a body cannot walk
@@ -85,17 +86,29 @@ class CombatSession {
     // The dead, and everything the player has walked away from. Somebody who
     // covers three kilometres would otherwise finish the walk simulating every
     // street they crossed.
-    final moved = [
-      for (final enemy in enemies)
-        if (!enemy.isDead &&
-            enemy.position.distanceTo(playerAt) <= kForgetEnemiesM)
-          advanceEnemy(
-            enemy,
-            playerAt: playerAt,
-            elapsed: elapsed,
-            ground: ground,
-          ),
-    ];
+    // ⚠️ Deaths are reported, not merely dropped. Most of them do not happen
+    // at the moment of the shot any more: §2.6's bleeding means a hit thing
+    // runs on and falls over somewhere else entirely, in the middle of a tick.
+    // Whoever is watching has to be told, or the body it should have left is a
+    // body nobody ever hears about.
+    final moved = <Enemy>[];
+    for (final enemy in enemies) {
+      if (enemy.isDead) continue;
+      if (enemy.position.distanceTo(playerAt) > kForgetEnemiesM) continue;
+
+      final after = advanceEnemy(
+        enemy,
+        playerAt: playerAt,
+        elapsed: elapsed,
+        ground: ground,
+      );
+
+      if (after.isDead) {
+        onDeath?.call(after);
+        continue;
+      }
+      moved.add(after);
+    }
 
     // §8.1: they wait at the edge. Pushed back out rather than stopped, so
     // something that walked at a shelter ends up standing on the boundary

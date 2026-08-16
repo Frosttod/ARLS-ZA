@@ -22,6 +22,7 @@ void main() {
     double sprintLeft = 1,
     double bloodLeft = 1,
     bool bleeding = false,
+    String? weaponName = 'Karabinek',
     VoidCallback? onFire,
     bool canFire = true,
     VoidCallback? onStrike,
@@ -52,6 +53,7 @@ void main() {
             sprintLeft: sprintLeft,
             bloodLeft: bloodLeft,
             bleeding: bleeding,
+            weaponName: weaponName,
             refusal: refusal,
             onFire: canFire ? onFire ?? () {} : null,
             onStrike: onStrike,
@@ -295,16 +297,28 @@ void main() {
       expect(find.textContaining('%'), findsNothing);
     });
 
-    testWidgets('what it is doing is in words (§6.1a)', (tester) async {
-      await pump(tester, state: EnemyState.alert);
-
-      expect(find.textContaining('szuka cię'), findsOneWidget);
-    });
-
-    testWidgets('and coming for you reads as coming for you', (tester) async {
+    testWidgets('what it is doing is not repeated here (§12)', (tester) async {
+      // It is already on the map as a `?` or a `!` over the dot, and on the
+      // HUD as a threat line. A third copy pushed off the one thing the panel
+      // was missing: what is in the player's own hands.
       await pump(tester, state: EnemyState.chase);
 
-      expect(find.textContaining('idzie po ciebie'), findsOneWidget);
+      expect(find.textContaining('idzie po ciebie'), findsNothing);
+    });
+
+    testWidgets('what is in your hands is (§5.5.4)', (tester) async {
+      await pump(tester, weaponName: 'Karabinek 5,45', loaded: 12,
+          magazine: 30);
+
+      expect(find.textContaining('Karabinek 5,45'), findsOneWidget);
+    });
+
+    testWidgets('and empty hands say nothing rather than nothing at all', (
+      tester,
+    ) async {
+      await pump(tester, weaponName: null);
+
+      expect(find.textContaining('/'), findsNothing);
     });
   });
 }
