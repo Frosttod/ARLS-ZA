@@ -38,6 +38,13 @@ bool fitsWeapon(ItemDefinition attachment, ItemDefinition weapon) {
   return accepts.contains(weapon.props['caliber']);
 }
 
+/// §5.6.3: how many things this weapon can carry at once.
+///
+/// Rails, a barrel thread, a magazine well — a revolver has less to bolt
+/// anything to than a carbine, and the data says which is which.
+int attachmentSlots(ItemDefinition weapon) =>
+    (weapon.props['attachment_slots'] as num?)?.toInt() ?? 0;
+
 /// A weapon with whatever is on it, as one set of numbers to shoot with.
 class FittedWeapon {
   const FittedWeapon({required this.weapon, this.attachments = const []});

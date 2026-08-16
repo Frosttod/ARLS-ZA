@@ -1,5 +1,5 @@
 {
-  "_comment": "Firearms (design doc §4.2). Muzzle energies are the ones §10.3.1 balanced the damage model against and must not be edited without redoing that table — they decide how many hits each enemy of §6.2 takes. Reload times are §4.2's, for a character with 0% skill. Noise ranges are §5.6.1: they are the reason a .22 is worth carrying at all.",
+  "_comment": "attachment_slots is how many things §5.6.3 lets a weapon carry at once — rails, a barrel thread, a magazine well. Fewer on a revolver than on a carbine, because there is less to bolt anything to. Firearms (design doc §4.2). Muzzle energies are the ones §10.3.1 balanced the damage model against and must not be edited without redoing that table — they decide how many hits each enemy of §6.2 takes. Reload times are §4.2's, for a character with 0% skill. Noise ranges are §5.6.1: they are the reason a .22 is worth carrying at all.",
   "schema": 1,
   "items": [
     {
@@ -23,7 +23,7 @@
         "reload_seconds": 3.5,
         "effective_range_m": 90,
         "noise_range_m": 250
-      }
+      , "attachment_slots": 2}
     },
     {
       "id": "weapon_revolver_38",
@@ -47,7 +47,7 @@
         "reload_note": "loose rounds, 2.5 s each (§4.2)",
         "effective_range_m": 35,
         "noise_range_m": 600
-      }
+      , "attachment_slots": 1}
     },
     {
       "id": "weapon_pistol_9mm",
@@ -70,7 +70,7 @@
         "reload_seconds": 3.0,
         "effective_range_m": 40,
         "noise_range_m": 600
-      }
+      , "attachment_slots": 2}
     },
     {
       "id": "weapon_smg_9mm",
@@ -93,7 +93,7 @@
         "reload_seconds": 3.5,
         "effective_range_m": 100,
         "noise_range_m": 650
-      }
+      , "attachment_slots": 3}
     },
     {
       "id": "weapon_rifle_545",
@@ -116,7 +116,7 @@
         "reload_seconds": 3.5,
         "effective_range_m": 300,
         "noise_range_m": 700
-      }
+      , "attachment_slots": 3}
     },
     {
       "id": "weapon_rifle_762x39",
@@ -139,7 +139,7 @@
         "reload_seconds": 3.5,
         "effective_range_m": 300,
         "noise_range_m": 720
-      }
+      , "attachment_slots": 3}
     },
     {
       "id": "weapon_shotgun_pump",
@@ -164,7 +164,7 @@
         "reload_note": "1.2 s per shell, pump (§4.2)",
         "effective_range_m": 40,
         "noise_range_m": 800
-      }
+      , "attachment_slots": 2}
     },
     {
       "id": "weapon_rifle_mosin",
@@ -188,7 +188,7 @@
         "reload_note": "loose rounds, 2.5 s each (§4.2)",
         "effective_range_m": 500,
         "noise_range_m": 900
-      }
+      , "attachment_slots": 2}
     }
   ]
 }

@@ -234,6 +234,13 @@ class InventoryLines extends Table {
   /// could hold.
   RealColumn get portion => real().withDefault(const Constant(1))();
 
+  /// §5.6.3: what is bolted to this piece, as item ids separated by commas.
+  ///
+  /// A list in a column, which is a compromise: a table of its own would be
+  /// correct and would also mean a join for something that is never queried on
+  /// its own. Empty for everything that is not a weapon with something on it.
+  TextColumn get attachments => text().withDefault(const Constant(''))();
+
   @override
   List<String> get customConstraints => [
     'FOREIGN KEY (profile_id) REFERENCES profiles (id) ON DELETE CASCADE',

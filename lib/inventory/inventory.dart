@@ -18,6 +18,7 @@ library;
 
 import '../items/item.dart';
 import '../items/item_catalogue.dart';
+import '../combat/attachment.dart';
 import 'body_slots.dart';
 import '../sim/body.dart';
 
@@ -66,6 +67,7 @@ class CarriedItem {
     this.pagesRead = 0,
     this.noteId,
     this.portion = 1,
+    this.attachments = const [],
   });
 
   final String itemId;
@@ -82,6 +84,13 @@ class CarriedItem {
   /// Which note this copy is (§19.1). Null for everything that is not one.
   final String? noteId;
 
+  /// §5.6.3: what is bolted to this particular weapon, by item id.
+  ///
+  /// On the piece rather than on the player, because two rifles in one pack
+  /// are two rifles: the one with the suppressor is the one worth carrying to
+  /// a town, and the other is the one to leave.
+  final List<String> attachments;
+
   /// How much of this piece is left, 0–1 (§4.7).
   ///
   /// A bottle put down half way through is half a bottle, not a wasted one and
@@ -95,6 +104,7 @@ class CarriedItem {
     double? condition,
     int? pagesRead,
     double? portion,
+    List<String>? attachments,
   }) => CarriedItem(
     itemId: itemId,
     count: count ?? this.count,
@@ -103,6 +113,7 @@ class CarriedItem {
     pagesRead: pagesRead ?? this.pagesRead,
     noteId: noteId,
     portion: portion ?? this.portion,
+    attachments: attachments ?? this.attachments,
   );
 
   /// Mass of this line, using the rolled page count where there is one.
@@ -360,6 +371,74 @@ class Inventory {
     }
 
     return Inventory(carried: lines, worn: worn, packId: packId);
+  }
+
+  /// §5.6.3: bolts [attachment] onto [line], out of the pack.
+  ///
+  /// Refused where it does not fit the weapon, where there is no rail left, or
+  /// where one of the same is already on — a second red dot on one rifle is
+  /// not a thing, and the arithmetic would happily stack it.
+  Inventory attach(
+    CarriedItem line,
+    CarriedItem attachment,
+    ItemCatalogue catalogue,
+  ) {
+    final weapon = catalogue[line.itemId];
+    final part = catalogue[attachment.itemId];
+    if (weapon == null || part == null) return this;
+    if (!fitsWeapon(part, weapon)) return this;
+    if (line.attachments.contains(part.id)) return this;
+    if (line.attachments.length >= attachmentSlots(weapon)) return this;
+
+    final index = carried.indexWhere((entry) => identical(entry, line));
+    final fitted = line.copyWith(
+      attachments: [...line.attachments, part.id],
+    );
+
+    // Off the pack and onto the weapon: it is in one place or the other.
+    final without = removeLine(attachment) ?? this;
+    final lines = [...without.carried];
+    final at = index >= 0 && index < lines.length
+        ? lines.indexWhere((entry) => identical(entry, line))
+        : -1;
+    if (at < 0) return this;
+
+    lines[at] = fitted;
+    return Inventory(carried: lines, worn: without.worn, packId: packId);
+  }
+
+  /// Takes one off again, back into the pack.
+  Inventory detach(
+    CarriedItem line,
+    String attachmentId,
+    ItemCatalogue catalogue, {
+    required BodyProfile body,
+  }) {
+    if (!line.attachments.contains(attachmentId)) return this;
+
+    final stripped = line.copyWith(
+      attachments: [
+        for (final id in line.attachments)
+          if (id != attachmentId) id,
+      ],
+    );
+
+    final lines = [
+      for (final entry in carried)
+        identical(entry, line) ? stripped : entry,
+    ];
+    final worn = [
+      for (final entry in this.worn)
+        identical(entry, line) ? stripped : entry,
+    ];
+
+    // Never destroyed for want of room: §18.1a's overflow is a state, not a
+    // reason to lose something.
+    return Inventory(
+      carried: [...lines, CarriedItem(itemId: attachmentId)],
+      worn: worn,
+      packId: packId,
+    );
   }
 
   /// Removes pieces of one particular entry.

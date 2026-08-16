@@ -939,6 +939,23 @@ class L10nEn extends L10n {
   String get statCondition => 'Condition';
 
   @override
+  String get attachmentsFitted => 'Fitted';
+
+  @override
+  String attachmentsFree(int count) {
+    return '$count free';
+  }
+
+  @override
+  String get attachmentsNone => 'Nothing fitted';
+
+  @override
+  String get attachmentFit => 'Fit';
+
+  @override
+  String get attachmentRemove => 'Take off';
+
+  @override
   String get itemDetails => 'Details';
 
   @override

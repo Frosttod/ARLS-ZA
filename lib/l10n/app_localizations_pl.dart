@@ -942,6 +942,23 @@ class L10nPl extends L10n {
   String get statCondition => 'Stan';
 
   @override
+  String get attachmentsFitted => 'Zamontowane';
+
+  @override
+  String attachmentsFree(int count) {
+    return 'wolne sloty: $count';
+  }
+
+  @override
+  String get attachmentsNone => 'Nic nie zamontowano';
+
+  @override
+  String get attachmentFit => 'Zamontuj';
+
+  @override
+  String get attachmentRemove => 'Zdejmij';
+
+  @override
   String get itemDetails => 'Szczegóły';
 
   @override

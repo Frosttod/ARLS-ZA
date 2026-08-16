@@ -23,7 +23,6 @@ import 'items/item_catalogue.dart';
 import 'items/item_names.dart';
 import 'combat/aim.dart';
 import 'combat/ballistics.dart';
-import 'combat/attachment.dart';
 import 'combat/combat_session.dart';
 import 'combat/engagement.dart';
 import 'combat/magazine.dart';
@@ -902,7 +901,33 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       names: _names ?? ItemNames.empty,
       onWear: wearable && !worn ? () => unawaited(_wear(line)) : null,
       wearLabel: L10n.of(context).inventoryWear,
+      onAttach: (part) => unawaited(_attach(line, part)),
+      onDetach: (id) => unawaited(_detach(line, id)),
     );
+  }
+
+  /// §5.6.3: bolts something onto this very weapon.
+  Future<void> _attach(CarriedItem line, CarriedItem part) async {
+    final catalogue = _catalogue;
+    if (catalogue == null) return;
+
+    _inventory.value = _inventory.value.attach(line, part, catalogue);
+    await _saveInventory();
+  }
+
+  /// And takes it off again, back into the pack.
+  Future<void> _detach(CarriedItem line, String attachmentId) async {
+    final catalogue = _catalogue;
+    final character = _character;
+    if (catalogue == null || character == null) return;
+
+    _inventory.value = _inventory.value.detach(
+      line,
+      attachmentId,
+      catalogue,
+      body: character.body,
+    );
+    await _saveInventory();
   }
 
   /// Developer builds only. Puts a plausible kit in the pack so the screen can
@@ -1470,13 +1495,27 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final catalogue = _catalogue;
     if (catalogue == null) return const [];
 
-    return FittedWeapon.from(
-      weapon: weapon,
-      carried: [
-        for (final line in _inventory.value.carried)
-          if (catalogue[line.itemId] != null) catalogue[line.itemId]!,
-      ],
-    ).attachments;
+    // What is on this weapon, not what is in the pack. Two rifles in one bag
+    // are two rifles: the one with the suppressor is the one worth carrying
+    // into a town (§5.6.3).
+    final line = _wieldedLine;
+    if (line == null) return const [];
+
+    return [
+      for (final id in line.attachments)
+        if (catalogue[id] != null) catalogue[id]!,
+    ];
+  }
+
+  /// The very piece in the hand, rather than its definition.
+  CarriedItem? get _wieldedLine {
+    final catalogue = _catalogue;
+    if (catalogue == null) return null;
+
+    for (final line in _inventory.value.worn) {
+      if (catalogue[line.itemId]?.kind == ItemKind.firearm) return line;
+    }
+    return null;
   }
 
   /// A round that fits it, out of the pack (§10.3.3: the calibre string is the

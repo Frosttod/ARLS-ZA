@@ -64,6 +64,9 @@ class InventoryStore {
         pagesRead: row.pagesRead,
         noteId: row.noteId,
         portion: row.portion,
+        attachments: row.attachments.isEmpty
+            ? const []
+            : row.attachments.split(','),
       );
       (row.slot == _slotWorn ? worn : carried).add(line);
     }
@@ -103,5 +106,6 @@ class InventoryStore {
     pagesRead: Value(line.pagesRead),
     noteId: Value(line.noteId),
     portion: Value(line.portion),
+    attachments: Value(line.attachments.join(',')),
   );
 }

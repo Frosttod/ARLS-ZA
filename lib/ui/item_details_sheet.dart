@@ -20,6 +20,7 @@ import 'package:flutter/material.dart';
 
 import '../inventory/inventory.dart';
 import '../items/item.dart';
+import '../combat/attachment.dart';
 import '../items/item_catalogue.dart';
 import '../items/item_names.dart';
 import '../items/item_stats.dart';
@@ -34,6 +35,8 @@ Future<void> showItemDetails(
   required ItemNames names,
   VoidCallback? onWear,
   String? wearLabel,
+  void Function(CarriedItem attachment)? onAttach,
+  void Function(String attachmentId)? onDetach,
 }) {
   final language = Localizations.localeOf(context).languageCode;
   final item = catalogue[line.itemId];
@@ -87,6 +90,24 @@ Future<void> showItemDetails(
                   style: TextStyle(fontSize: 11, color: colours.muted),
                 ),
               ],
+              // §5.6.3: what is on this weapon, and what is left to put on
+              // it. On the piece rather than on the player: two rifles in one
+              // pack are two rifles.
+              if (item.kind == ItemKind.firearm) ...[
+                const SizedBox(height: 12),
+                _Attachments(
+                  line: line,
+                  weapon: item,
+                  inventory: inventory,
+                  catalogue: catalogue,
+                  nameOf: nameOf,
+                  colours: colours,
+                  l10n: l10n,
+                  onAttach: onAttach,
+                  onDetach: onDetach,
+                ),
+              ],
+
               const SizedBox(height: 14),
               Flexible(
                 child: SingleChildScrollView(
@@ -265,3 +286,102 @@ String _statLabel(L10n l10n, String key) => switch (key) {
   'bulk' => l10n.statBulk,
   _ => key,
 };
+
+/// §5.6.3: the rails on one weapon, filled and empty.
+class _Attachments extends StatelessWidget {
+  const _Attachments({
+    required this.line,
+    required this.weapon,
+    required this.inventory,
+    required this.catalogue,
+    required this.nameOf,
+    required this.colours,
+    required this.l10n,
+    required this.onAttach,
+    required this.onDetach,
+  });
+
+  final CarriedItem line;
+  final ItemDefinition weapon;
+  final Inventory inventory;
+  final ItemCatalogue catalogue;
+  final String Function(ItemDefinition) nameOf;
+  final HudColors colours;
+  final L10n l10n;
+  final void Function(CarriedItem)? onAttach;
+  final void Function(String)? onDetach;
+
+  @override
+  Widget build(BuildContext context) {
+    final slots = attachmentSlots(weapon);
+    if (slots <= 0) return const SizedBox.shrink();
+
+    final free = slots - line.attachments.length;
+
+    // What is in the pack that would go on this, and is not already on it.
+    final candidates = [
+      for (final carried in inventory.carried)
+        if (catalogue[carried.itemId] != null &&
+            fitsWeapon(catalogue[carried.itemId]!, weapon) &&
+            !line.attachments.contains(carried.itemId))
+          carried,
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '${l10n.attachmentsFitted} · ${l10n.attachmentsFree(free)}',
+          style: TextStyle(
+            fontSize: 10,
+            letterSpacing: 1.1,
+            color: colours.muted,
+          ),
+        ),
+        const SizedBox(height: 4),
+
+        if (line.attachments.isEmpty)
+          Text(
+            l10n.attachmentsNone,
+            style: TextStyle(fontSize: 12, color: colours.muted),
+          )
+        else
+          for (final id in line.attachments)
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    catalogue[id] == null ? id : nameOf(catalogue[id]!),
+                    style: TextStyle(fontSize: 13, color: colours.text),
+                  ),
+                ),
+                if (onDetach != null)
+                  TextButton(
+                    onPressed: () => onDetach!(id),
+                    child: Text(l10n.attachmentRemove),
+                  ),
+              ],
+            ),
+
+        // Only where there is a rail left: an offer that would be refused is
+        // worse than no offer.
+        if (free > 0 && onAttach != null)
+          for (final candidate in candidates)
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    nameOf(catalogue[candidate.itemId]!),
+                    style: TextStyle(fontSize: 13, color: colours.muted),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () => onAttach!(candidate),
+                  child: Text(l10n.attachmentFit),
+                ),
+              ],
+            ),
+      ],
+    );
+  }
+}

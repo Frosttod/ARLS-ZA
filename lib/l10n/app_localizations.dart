@@ -1783,6 +1783,36 @@ abstract class L10n {
   /// **'Condition'**
   String get statCondition;
 
+  /// No description provided for @attachmentsFitted.
+  ///
+  /// In en, this message translates to:
+  /// **'Fitted'**
+  String get attachmentsFitted;
+
+  /// No description provided for @attachmentsFree.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} free'**
+  String attachmentsFree(int count);
+
+  /// No description provided for @attachmentsNone.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing fitted'**
+  String get attachmentsNone;
+
+  /// No description provided for @attachmentFit.
+  ///
+  /// In en, this message translates to:
+  /// **'Fit'**
+  String get attachmentFit;
+
+  /// No description provided for @attachmentRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Take off'**
+  String get attachmentRemove;
+
   /// No description provided for @itemDetails.
   ///
   /// In en, this message translates to:

@@ -29,7 +29,7 @@ import 'tables.dart';
 part 'database.g.dart';
 
 /// Bumped only alongside a migration step in [_migration]. Never reused.
-const int kSchemaVersion = 11;
+const int kSchemaVersion = 12;
 
 /// Keys used in [MetaEntries].
 abstract final class MetaKeys {
@@ -69,7 +69,7 @@ class SaveDatabase extends _$SaveDatabase {
   /// follow a constant reference. `schema_test.dart` keeps it in step with
   /// [kSchemaVersion].
   @override
-  int get schemaVersion => 11;
+  int get schemaVersion => 12;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -159,6 +159,13 @@ class SaveDatabase extends _$SaveDatabase {
         // §4.7: how much of a piece is left. One reads as whole, which is what
         // every line written before this was.
         await m.addColumn(inventoryLines, inventoryLines.portion);
+      }
+
+      // Same shape as v5's: inventory_lines was created in v3.
+      if (from >= 3 && from < 12) {
+        // §5.6.3: what is bolted to a weapon. Empty reads as a bare one, which
+        // is what every line written before this was.
+        await m.addColumn(inventoryLines, inventoryLines.attachments);
       }
 
       await _writeSchemaVersion(to);

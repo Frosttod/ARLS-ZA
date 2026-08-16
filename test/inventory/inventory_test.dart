@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:arls_za/combat/attachment.dart';
 import 'package:arls_za/inventory/body_slots.dart';
 import 'package:arls_za/inventory/inventory.dart';
 import 'package:arls_za/items/item_catalogue.dart';
@@ -801,6 +802,124 @@ void main() {
         BodySlot.hand.wire,
       );
       expect(wearSlotOf(catalogue['cloth_boots']!), BodySlot.feet.wire);
+    });
+  });
+
+  group('what is bolted to which weapon (§5.6.3)', () {
+    Inventory armed() => const Inventory()
+        .withPack('pack_daypack')
+        .add('weapon_rifle_545', catalogue, body: body)
+        .inventory
+        .add('att_red_dot', catalogue, body: body)
+        .inventory;
+
+    test('an optic goes onto the rifle and out of the pack', () {
+      final kit = armed();
+      final rifle = kit.carried.firstWhere((l) => l.itemId == 'weapon_rifle_545');
+      final optic = kit.carried.firstWhere((l) => l.itemId == 'att_red_dot');
+
+      final after = kit.attach(rifle, optic, catalogue);
+
+      expect(
+        after.carried
+            .firstWhere((l) => l.itemId == 'weapon_rifle_545')
+            .attachments,
+        ['att_red_dot'],
+      );
+      expect(after.carried.where((l) => l.itemId == 'att_red_dot'), isEmpty);
+    });
+
+    test('and comes off again into the pack', () {
+      var kit = armed();
+      final rifle = kit.carried.firstWhere((l) => l.itemId == 'weapon_rifle_545');
+      final optic = kit.carried.firstWhere((l) => l.itemId == 'att_red_dot');
+      kit = kit.attach(rifle, optic, catalogue);
+
+      final fitted = kit.carried.firstWhere(
+        (l) => l.itemId == 'weapon_rifle_545',
+      );
+      final after = kit.detach(fitted, 'att_red_dot', catalogue, body: body);
+
+      expect(
+        after.carried
+            .firstWhere((l) => l.itemId == 'weapon_rifle_545')
+            .attachments,
+        isEmpty,
+      );
+      expect(after.countOf('att_red_dot'), 1);
+    });
+
+    test('two rifles in one pack are two rifles', () {
+      // The whole reason this lives on the piece: the one with the suppressor
+      // is the one worth carrying into a town.
+      var kit = const Inventory()
+          .withPack('pack_trekking')
+          .add('weapon_rifle_545', catalogue, body: body)
+          .inventory
+          .add('weapon_rifle_545', catalogue, body: body)
+          .inventory
+          .add('att_red_dot', catalogue, body: body)
+          .inventory;
+
+      final first = kit.carried.firstWhere((l) => l.itemId == 'weapon_rifle_545');
+      final optic = kit.carried.firstWhere((l) => l.itemId == 'att_red_dot');
+      kit = kit.attach(first, optic, catalogue);
+
+      final rifles = kit.carried
+          .where((l) => l.itemId == 'weapon_rifle_545')
+          .toList();
+
+      expect(rifles.where((l) => l.attachments.isNotEmpty), hasLength(1));
+      expect(rifles.where((l) => l.attachments.isEmpty), hasLength(1));
+    });
+
+    test('what does not fit is refused', () {
+      // §10.3.3's calibre string, again: a suppressor for 5.45 is not a
+      // shotgun part.
+      var kit = const Inventory()
+          .withPack('pack_daypack')
+          .add('weapon_shotgun_pump', catalogue, body: body)
+          .inventory
+          .add('tool_suppressor', catalogue, body: body)
+          .inventory;
+
+      final shotgun = kit.carried.firstWhere(
+        (l) => l.itemId == 'weapon_shotgun_pump',
+      );
+      final can = kit.carried.firstWhere((l) => l.itemId == 'tool_suppressor');
+
+      expect(kit.attach(shotgun, can, catalogue).carried
+          .firstWhere((l) => l.itemId == 'weapon_shotgun_pump')
+          .attachments, isEmpty);
+    });
+
+    test('a second of the same is refused', () {
+      // Two red dots on one rifle is not a thing, and the arithmetic would
+      // happily stack it.
+      var kit = armed().add('att_red_dot', catalogue, body: body).inventory;
+      final rifle = kit.carried.firstWhere((l) => l.itemId == 'weapon_rifle_545');
+      final optics = kit.carried
+          .where((l) => l.itemId == 'att_red_dot')
+          .toList();
+
+      kit = kit.attach(rifle, optics.first, catalogue);
+      final fitted = kit.carried.firstWhere(
+        (l) => l.itemId == 'weapon_rifle_545',
+      );
+      final again = kit.attach(fitted, optics.last, catalogue);
+
+      expect(
+        again.carried
+            .firstWhere((l) => l.itemId == 'weapon_rifle_545')
+            .attachments,
+        hasLength(1),
+      );
+    });
+
+    test('and so is one rail too many', () {
+      expect(attachmentSlots(catalogue['weapon_revolver_38']!), 1);
+      expect(attachmentSlots(catalogue['weapon_rifle_545']!), 3);
+      expect(attachmentSlots(catalogue['melee_knife']!), 0);
     });
   });
 }
