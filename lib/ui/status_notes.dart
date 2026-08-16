@@ -36,7 +36,23 @@ typedef StatusNote = ({
 ///
 /// Blood before water before food before sleep: that is the order they kill
 /// in, and it is the order a player should read them in.
-List<StatusNote> statusNotes(L10n l10n, SimStatus status) => [
+List<StatusNote> statusNotes(
+  L10n l10n,
+  SimStatus status, {
+  BleedTier bleeding = BleedTier.none,
+}) => [
+  // §2.6: first, because it is the only one on this list with a clock on it.
+  // Everything else gets worse over hours; this one is millilitres a minute.
+  if (bleeding != BleedTier.none)
+    (
+      name: l10n.statusBleeding,
+      level: bleedingName(l10n, bleeding),
+      effect: l10n.statusBleedingEffect(bleeding.mlPerMinute.round()),
+      fix: bleeding == BleedTier.arterial
+          ? l10n.statusBleedingFixArterial
+          : l10n.statusBleedingFix,
+      where: l10n.statusBleedingWhere,
+    ),
   if (status.blood.shockClass != ShockClass.none)
     (
       name: l10n.statusShock,
@@ -70,6 +86,15 @@ List<StatusNote> statusNotes(L10n l10n, SimStatus status) => [
       where: l10n.statusSleepDeprivedWhere,
     ),
 ];
+
+/// §2.6's own four words for it.
+String bleedingName(L10n l10n, BleedTier tier) => switch (tier) {
+  BleedTier.none => '',
+  BleedTier.superficial => l10n.bleedSuperficial,
+  BleedTier.moderate => l10n.bleedModerate,
+  BleedTier.severe => l10n.bleedSevere,
+  BleedTier.arterial => l10n.bleedArterial,
+};
 
 /// The clinical grades, which start at II — class I is a donation.
 String _shockDegree(ShockClass shock) => switch (shock) {

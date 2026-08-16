@@ -323,6 +323,35 @@ class L10nPl extends L10n {
   String get statusSleepDeprived => 'Niewyspanie';
 
   @override
+  String get bleedSuperficial => 'powierzchowne';
+
+  @override
+  String get bleedModerate => 'umiarkowane';
+
+  @override
+  String get bleedSevere => 'silne';
+
+  @override
+  String get bleedArterial => 'tętnicze';
+
+  @override
+  String statusBleedingEffect(int millilitres) {
+    return '$millilitres ml na minutę, a bieg to zwielokrotnia — przy tętnie 160 wobec spoczynkowego 70 jest to ponad dwa razy tyle. Dopóki coś jest otwarte, krew w ogóle nie wraca.';
+  }
+
+  @override
+  String get statusBleedingFix =>
+      'Opatrunek uciskowy i stanie w miejscu, dopóki trwa.';
+
+  @override
+  String get statusBleedingFixArterial =>
+      'Staza, i nic innego. Opatrunek tego nie utrzyma.';
+
+  @override
+  String get statusBleedingWhere =>
+      'Apteki, przychodnie, karetki; apteczki w biurach i warsztatach.';
+
+  @override
   String get statusShock => 'Wstrząs';
 
   @override
@@ -1038,6 +1067,10 @@ class L10nPl extends L10n {
 
   @override
   String get inventoryNoWound => 'Nie ma czego opatrywać.';
+
+  @override
+  String get inventoryWrongDressing =>
+      'Ten opatrunek nie wystarczy na tę ranę.';
 
   @override
   String get slotHead => 'Głowa';

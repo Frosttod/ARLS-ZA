@@ -116,11 +116,13 @@ class GameLoop {
     required this.profileId,
     required this.constants,
     required SimState initialState,
+    BleedTier initialBleeding = BleedTier.none,
     GameClock? clock,
     PowerSource? power,
     this.cadence = const Duration(seconds: 1),
     this.powerInterval = const Duration(seconds: 60),
   }) : _state = initialState,
+       _bleeding = initialBleeding,
        power = power ?? const ConstantPowerSource(),
        clock = clock ?? session.clock {
     this.clock.restore(initialState.lastUpdate);
@@ -370,7 +372,7 @@ class GameLoop {
           ? _speedKmh
           : 0,
       loadKg: 0, // inventory arrives in stage 4
-      bleedTier: BleedTier.none, // combat arrives in stage 5
+      bleedTier: _bleeding,
       sleeping: asleep && sheltered,
       // Away from the screen but still being tracked is not offline: the walk
       // is real and measured (§3.3). Away with nothing measuring is.
@@ -459,6 +461,7 @@ class GameLoop {
     occupationJson: Value(
       _occupation == null ? null : jsonEncode(_occupation!.toJson()),
     ),
+    bleedTier: Value(_bleeding.name),
   );
 
   void _publish() {
@@ -537,14 +540,36 @@ class GameLoop {
     _publish();
   }
 
+  /// §2.6: what is still open, and going on costing.
+  BleedTier _bleeding;
+
+  BleedTier get bleeding => _bleeding;
+
+  /// §2.6: a dressing, in the grade it can handle.
+  ///
+  /// Down to the grade rather than to nothing: a pressure dressing on an
+  /// arterial bleed is not a tourniquet, and §2.6's table is explicit that
+  /// only a tourniquet answers that one.
+  void treatBleeding(BleedTier down) {
+    if (_bleeding.index <= down.index) return;
+
+    _bleeding = down;
+    writer.stageHot(_toCompanion());
+    _publish();
+  }
+
   /// A wound, in millilitres of blood (§2.6, §6.2).
   ///
   /// Straight out of the reserve rather than into a queue: §2.2's absorption
   /// is about a stomach, and nothing about being hit is gradual. Never below
   /// zero — §9's death arrives with the shelter in stage 8, and until then a
   /// character at nothing left is a character the game simply stops hurting.
-  void applyWound(double bloodLossMl) {
+  void applyWound(double bloodLossMl, {BleedTier bleeding = BleedTier.none}) {
     if (bloodLossMl <= 0) return;
+
+    // The worse of the two: a bite on top of an open wound does not make the
+    // open one better, and §2.6 has no notion of two bleeds at once.
+    if (bleeding.index > _bleeding.index) _bleeding = bleeding;
 
     final left = _state.bloodMl - bloodLossMl;
     _state = _state.copyWith(bloodMl: left < 0 ? 0 : left);

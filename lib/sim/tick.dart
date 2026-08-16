@@ -53,6 +53,14 @@ enum MetabolicZone {
   );
 }
 
+/// §2.6: how fast blood comes back with nothing open and a full stomach.
+///
+/// Sixty millilitres an hour puts a two-litre loss — the far side of class III
+/// — back in about a day and a half, and a survivable class II back overnight.
+/// Slower than a real plasma refill on purpose: it has to be worth carrying
+/// food home for, not something that happens while the phone is in a pocket.
+const double kBloodRegenMlPerHour = 60;
+
 /// Constants a tick needs that do not change during a session. Derived once
 /// from the character sheet (§1.3) by `BodyProfile.toSimConstants`.
 class SimConstants {
@@ -507,7 +515,36 @@ TickOutcome advance({
     constants.waterDailyMl,
     state.waterMl - waterLoss + waterAbsorbed,
   );
-  var blood = state.bloodMl - bloodLoss;
+  // §2.6: blood comes back, slowly, and only out of what is eaten and drunk.
+  //
+  // Not in the document as a number, and it has to be one: without it a
+  // character who survives a bad fight is in class IV shock for the rest of
+  // their life, with every bandage in the world refusing to help because
+  // nothing is bleeding any more. Plasma volume is restored in a day or two
+  // when fed and watered, which is what this is — the red cells §2.6 does not
+  // model would take weeks.
+  //
+  // Nothing at all while something is open: the body cannot refill a bucket
+  // with a hole in it, and that is what makes stopping a bleed the first job
+  // rather than an optional one.
+  //
+  // ⚠️ The *rate* depends on the state at the start of the step, so this term
+  // is not linear in elapsed time the way consumption is — a single forty-hour
+  // step credits more than forty one-hour steps, because the one-hour steps
+  // watch the stomach empty. The same shape as absorption, and bounded the
+  // same way: [advanceInChunks] is what every gap over an hour goes through,
+  // so the drift is at most one hour of regeneration.
+  final regenerated =
+      input.bleedTier == BleedTier.none && bloodLoss <= 0
+      ? kBloodRegenMlPerHour *
+            (seconds / Duration.secondsPerHour) *
+            _nourishment(state, constants)
+      : 0.0;
+
+  var blood = math.min(
+    constants.bloodMaxMl,
+    state.bloodMl - bloodLoss + regenerated,
+  );
 
   var floored = false;
   if (isOffline) {
@@ -622,4 +659,22 @@ TickOutcome advanceInChunks({
     waterLostMl: water,
     bloodLostMl: blood,
   );
+}
+
+/// §2.2, §2.3: how much of that regeneration the body can actually pay for.
+///
+/// Blood is made out of what is eaten and drunk. An empty character does not
+/// rebuild anything, and a half-fed one rebuilds at half speed — which is the
+/// whole reason a fight is followed by a meal rather than by a nap.
+double _nourishment(SimState state, SimConstants constants) {
+  final fed = constants.caloriesDailyKcal <= 0
+      ? 0.0
+      : (state.caloriesKcal / constants.caloriesDailyKcal).clamp(0.0, 1.0);
+  final watered = constants.waterDailyMl <= 0
+      ? 0.0
+      : (state.waterMl / constants.waterDailyMl).clamp(0.0, 1.0);
+
+  // The worse of the two, not the average: being well fed does not make up
+  // for having nothing to drink.
+  return fed < watered ? fed : watered;
 }

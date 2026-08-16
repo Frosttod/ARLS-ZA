@@ -79,6 +79,7 @@ class Hud extends StatelessWidget {
     required this.status,
     required this.constants,
     this.warnings = const [],
+    this.bleeding = BleedTier.none,
     this.threat,
     this.carryComfortKg,
     this.carryMaxKg,
@@ -97,6 +98,11 @@ class Hud extends StatelessWidget {
   /// because from the player's side they are the same kind of thing — a reason
   /// the game is not behaving as they expect.
   final List<String> warnings;
+
+  /// §2.6: what is still open. Its own chip rather than part of the blood
+  /// readout, because it is the only status on the HUD with a clock on it —
+  /// everything else gets worse over hours, this one over minutes.
+  final BleedTier bleeding;
 
   /// §5.5.2: how many are in the fight and how close the nearest is. Null when
   /// nothing has noticed the player, which is most of the time.
@@ -173,7 +179,11 @@ class Hud extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 6),
-              _StatusRow(status: status, warnings: warnings),
+              _StatusRow(
+                status: status,
+                warnings: warnings,
+                bleeding: bleeding,
+              ),
               if (threat != null) ...[
                 const SizedBox(height: 6),
                 _Threat(reading: threat!, colours: colours),
@@ -417,10 +427,15 @@ class _HeartRate extends StatelessWidget {
 /// learned yet is decoration; a word is readable on the first run and by a
 /// screen reader (§12).
 class _StatusRow extends StatelessWidget {
-  const _StatusRow({required this.status, this.warnings = const []});
+  const _StatusRow({
+    required this.status,
+    this.warnings = const [],
+    this.bleeding = BleedTier.none,
+  });
 
   final SimStatus status;
   final List<String> warnings;
+  final BleedTier bleeding;
 
   @override
   Widget build(BuildContext context) {
@@ -432,7 +447,7 @@ class _StatusRow extends StatelessWidget {
     // about is a status they learn to ignore.
     final chips = <({String label, StatusNote? note})>[
       for (final warning in warnings) (label: warning, note: null),
-      for (final note in statusNotes(l10n, status))
+      for (final note in statusNotes(l10n, status, bleeding: bleeding))
         (label: note.name, note: note),
     ];
 

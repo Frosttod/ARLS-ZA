@@ -69,6 +69,7 @@ import 'map/pack_store.dart';
 import 'map/region_pack.dart';
 import 'safety/player_safety.dart';
 import 'sim/body.dart';
+import 'sim/physiology.dart';
 import 'ui/app_settings.dart';
 import 'ui/character_creator.dart';
 import 'ui/language_picker.dart';
@@ -1070,12 +1071,21 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final use = definition == null ? null : useOf(definition);
     if (definition == null || use == null) return;
 
-    // Nothing in the loop carries a wound yet — combat is stage 5 — so a
-    // dressing has nothing to treat. Spending one for no effect would be worse
-    // than saying so.
+    // §2.6: a dressing with nothing open to close is a dressing spent for
+    // nothing, and there is no getting it back. Refused, and told why — the
+    // way out of a low blood volume with nothing bleeding is food, water and
+    // time, not another bandage.
     if (use.stopsBleedingTo != null && use.kcal == 0 && use.waterMl == 0) {
-      _say(L10n.of(context).inventoryNoWound);
-      return;
+      if (loop.bleeding == BleedTier.none) {
+        _say(L10n.of(context).inventoryNoWound);
+        return;
+      }
+      // §2.6: down to the grade it can handle, not to nothing. A pressure
+      // dressing on an arterial bleed is not a tourniquet.
+      if (use.stopsBleedingTo!.index >= loop.bleeding.index) {
+        _say(L10n.of(context).inventoryWrongDressing);
+        return;
+      }
     }
 
     final fix = _snapshot?.displayFix;
@@ -1127,6 +1137,12 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     }
 
     loop.applyUse(kcal: use.kcal * portion, waterMl: use.waterMl * portion);
+
+    // §2.6: what the dressing was for. After the item is gone, so an
+    // interrupted one neither heals nor is consumed.
+    final treats = use.stopsBleedingTo;
+    if (treats != null) loop.treatBleeding(treats);
+
     if (!mounted) return;
 
     final language = Localizations.localeOf(context).languageCode;
@@ -1755,7 +1771,15 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
     if (taken <= 0 || worst == null) return;
 
-    loop.applyWound(taken);
+    // §2.6: teeth and nails leave something open. A moderate bleed is what a
+    // pressure dressing answers — which is the whole reason to carry one, and
+    // the reason walking away from a clinch is not the end of the fight.
+    loop.applyWound(
+      taken,
+      bleeding: worst == HitLocation.head || worst == HitLocation.torso
+          ? BleedTier.moderate
+          : BleedTier.superficial,
+    );
     _say(
       L10n.of(
         context,
@@ -3043,6 +3067,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
                     status: snapshot.status,
                     constants: character.constants,
                     warnings: _warnings(l10n, snapshot),
+                    bleeding: _loop?.bleeding ?? BleedTier.none,
                     carryComfortKg: character.body.carryComfortKg,
                     carryMaxKg: character.body.carryMaxKg,
                     carriedKg: _carriedKg,

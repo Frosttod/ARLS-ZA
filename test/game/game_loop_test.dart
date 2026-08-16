@@ -7,6 +7,8 @@ import 'package:arls_za/data/db/database.dart';
 import 'package:arls_za/data/persistence/save_bootstrap.dart';
 import 'package:arls_za/devtools/simulated_position_source.dart';
 import 'package:arls_za/game/game_loop.dart';
+import 'package:arls_za/game/game_session.dart';
+import 'package:arls_za/sim/physiology.dart';
 import 'package:arls_za/location/movement_integrity.dart';
 import 'package:arls_za/location/position_source.dart';
 import 'package:arls_za/location/power_source.dart';
@@ -943,6 +945,98 @@ void main() {
 
       expect(rig.loop.state.lastUpdate, honest.lastUpdate);
       expect(rig.loop.state.caloriesKcal, honest.caloriesKcal);
+    });
+  });
+
+  group('a wound is open until something closes it (§2.6)', () {
+    test('a bite starts a bleed the tick can see', () async {
+      // Found on a phone: the loop still had `bleedTier: none` hard-wired from
+      // before stage 5, so a character came out of a fight at 40% blood with
+      // nothing bleeding — and every bandage in the pack refused, because
+      // there was nothing to treat.
+      final rig = await buildLoop();
+      addTearDown(() async {
+        await rig.loop.dispose();
+        await rig.source.dispose();
+        await rig.session.close();
+      });
+
+      await rig.loop.start();
+      rig.loop.applyWound(200, bleeding: BleedTier.moderate);
+
+      expect(rig.loop.bleeding, BleedTier.moderate);
+
+      final before = rig.loop.state.bloodMl;
+      rig.wall.advance(const Duration(minutes: 10));
+      await rig.loop.onPaused(rig.wall.nowUtc());
+
+      expect(
+        rig.loop.state.bloodMl,
+        lessThan(before),
+        reason: 'twenty-five millilitres a minute has to actually leave',
+      );
+    });
+
+    test('a dressing takes it down to what it can handle', () async {
+      final rig = await buildLoop();
+      addTearDown(() async {
+        await rig.loop.dispose();
+        await rig.source.dispose();
+        await rig.session.close();
+      });
+
+      await rig.loop.start();
+      rig.loop.applyWound(200, bleeding: BleedTier.severe);
+      rig.loop.treatBleeding(BleedTier.superficial);
+
+      expect(rig.loop.bleeding, BleedTier.superficial);
+    });
+
+    test('and never upwards — a bandage cannot make it worse', () async {
+      final rig = await buildLoop();
+      addTearDown(() async {
+        await rig.loop.dispose();
+        await rig.source.dispose();
+        await rig.session.close();
+      });
+
+      await rig.loop.start();
+      rig.loop.applyWound(50, bleeding: BleedTier.superficial);
+      rig.loop.treatBleeding(BleedTier.moderate);
+
+      expect(rig.loop.bleeding, BleedTier.superficial);
+    });
+
+    test('the worse of two wounds is the one that counts', () async {
+      final rig = await buildLoop();
+      addTearDown(() async {
+        await rig.loop.dispose();
+        await rig.source.dispose();
+        await rig.session.close();
+      });
+
+      await rig.loop.start();
+      rig.loop.applyWound(50, bleeding: BleedTier.moderate);
+      rig.loop.applyWound(50, bleeding: BleedTier.superficial);
+
+      expect(rig.loop.bleeding, BleedTier.moderate);
+    });
+
+    test('and it is still open after the app is closed', () async {
+      // A bleed that ends every time somebody locks the screen is not a bleed.
+      final rig = await buildLoop();
+      addTearDown(() async {
+        await rig.source.dispose();
+        await rig.session.close();
+      });
+
+      await rig.loop.start();
+      rig.loop.applyWound(200, bleeding: BleedTier.moderate);
+      await rig.loop.onPaused(rig.wall.nowUtc());
+      await rig.loop.dispose();
+
+      final reopened = await GameSessionFactory(rig.session).loadActive();
+      expect(reopened?.bleeding, BleedTier.moderate);
     });
   });
 }

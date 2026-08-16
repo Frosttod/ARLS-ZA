@@ -321,6 +321,35 @@ class L10nEn extends L10n {
   String get statusSleepDeprived => 'Sleep-deprived';
 
   @override
+  String get bleedSuperficial => 'superficial';
+
+  @override
+  String get bleedModerate => 'moderate';
+
+  @override
+  String get bleedSevere => 'severe';
+
+  @override
+  String get bleedArterial => 'arterial';
+
+  @override
+  String statusBleedingEffect(int millilitres) {
+    return '$millilitres ml a minute, and running multiplies it — at 160 bpm against a resting 70 it is more than twice that. Blood does not come back at all while something is open.';
+  }
+
+  @override
+  String get statusBleedingFix =>
+      'A pressure dressing, and stand still while it goes on.';
+
+  @override
+  String get statusBleedingFixArterial =>
+      'A tourniquet, and nothing else. A dressing will not hold this one.';
+
+  @override
+  String get statusBleedingWhere =>
+      'Pharmacies, clinics, ambulances; first-aid kits in offices and workshops.';
+
+  @override
   String get statusShock => 'Shock';
 
   @override
@@ -1035,6 +1064,10 @@ class L10nEn extends L10n {
 
   @override
   String get inventoryNoWound => 'Nothing to dress.';
+
+  @override
+  String get inventoryWrongDressing =>
+      'That dressing is not enough for this wound.';
 
   @override
   String get slotHead => 'Head';

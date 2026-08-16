@@ -381,4 +381,101 @@ void main() {
       expect(status.totalExtraMoa, 8.0);
     });
   });
+
+  group('blood comes back (§2.6)', () {
+    // Found on a phone: a character came out of a fight in class IV shock and
+    // stayed there. Nothing was bleeding any more, so every bandage in the
+    // pack refused — and nothing in the model ever put a millilitre back. The
+    // model needs a way out of a bad fight that is not a new character.
+    SimState bled(double fraction) => fresh().copyWith(
+      bloodMl: constants.bloodMaxMl * (1 - fraction),
+    );
+
+    test('with a full stomach and nothing open', () {
+      final after = advance(
+        state: bled(0.35),
+        constants: constants,
+        elapsed: const Duration(hours: 10),
+      );
+
+      expect(after.state.bloodMl, greaterThan(bled(0.35).bloodMl));
+    });
+
+    test('and a bad loss is back in a day or so, if you keep eating', () {
+      // Through the chunked path, which is what any gap over an hour takes:
+      // the rate follows the stomach, so a single forty-hour step would credit
+      // meals the character never ate.
+      var state = bled(0.40);
+      for (var hour = 0; hour < 40; hour++) {
+        state = advanceInChunks(
+          state: state,
+          constants: constants,
+          elapsed: const Duration(hours: 1),
+        ).state.copyWith(
+          // A meal and a bottle each hour: this test is about the blood, and
+          // starving to death on the way would be a different one.
+          caloriesKcal: constants.caloriesDailyKcal,
+          waterMl: constants.waterDailyMl,
+        );
+      }
+
+      expect(state.bloodMl / constants.bloodMaxMl, greaterThan(0.95));
+    });
+
+    test('never above what the body holds', () {
+      final after = advance(
+        state: fresh(),
+        constants: constants,
+        elapsed: const Duration(days: 3),
+      );
+
+      expect(after.state.bloodMl, lessThanOrEqualTo(constants.bloodMaxMl));
+    });
+
+    test('nothing at all while something is still open', () {
+      // The body cannot refill a bucket with a hole in it, which is what makes
+      // stopping the bleed the first job rather than an optional one.
+      final after = advance(
+        state: bled(0.30),
+        constants: constants,
+        elapsed: const Duration(hours: 4),
+        input: const TickInput(bleedTier: BleedTier.superficial),
+      );
+
+      expect(after.state.bloodMl, lessThan(bled(0.30).bloodMl));
+    });
+
+    test('and none of it on an empty stomach', () {
+      // Blood is made out of what is eaten and drunk.
+      final starving = bled(0.30).copyWith(caloriesKcal: 0, waterMl: 0);
+      final after = advance(
+        state: starving,
+        constants: constants,
+        elapsed: const Duration(hours: 10),
+      );
+
+      expect(after.state.bloodMl, closeTo(starving.bloodMl, 1));
+    });
+
+    test('half-fed is half speed', () {
+      final full = advance(
+        state: bled(0.30),
+        constants: constants,
+        elapsed: const Duration(hours: 10),
+      );
+      final half = advance(
+        state: bled(0.30).copyWith(
+          caloriesKcal: constants.caloriesDailyKcal * 0.5,
+          waterMl: constants.waterDailyMl * 0.5,
+        ),
+        constants: constants,
+        elapsed: const Duration(hours: 10),
+      );
+
+      final gainedFull = full.state.bloodMl - bled(0.30).bloodMl;
+      final gainedHalf = half.state.bloodMl - bled(0.30).bloodMl;
+      expect(gainedHalf, lessThan(gainedFull));
+      expect(gainedHalf, greaterThan(0));
+    });
+  });
 }

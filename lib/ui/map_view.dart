@@ -197,7 +197,7 @@ class _MapScreenState extends State<MapScreen> {
               child: SafeArea(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
-                  children: [widget.hud!, ?widget.notices],
+                  children: [widget.hud!, ?widget.progress, ?widget.notices],
                 ),
               ),
             ),

@@ -49,6 +49,8 @@ void main() {
     bool economy = false,
     void Function(MapMenuEntry)? onMenu,
     Locale locale = const Locale('pl'),
+    Widget? hud,
+    Widget? progress,
   }) async {
     await tester.pumpWidget(
       MaterialApp(
@@ -68,6 +70,8 @@ void main() {
           hasPack: hasPack,
           economy: economy,
           onMenu: onMenu,
+          hud: hud,
+          progress: progress,
         ),
       ),
     );
@@ -264,5 +268,37 @@ void main() {
 
     expect(find.text('PROFILE'), findsOneWidget);
     expect(find.text('SHELTER'), findsOneWidget);
+  });
+
+  group('what is running (§4.6, §10.2)', () {
+    // Found on a phone: the bar for a tin of stew was hidden behind the combat
+    // panel, so it moved up under the stats — and then only appeared on the
+    // waiting screen, because the map's own branch never got it.
+    testWidgets('is drawn under the stats bar, on the map itself', (
+      tester,
+    ) async {
+      await pumpMap(
+        tester,
+        at: fix,
+        hud: const Text('STATS'),
+        progress: const Text('EATING'),
+      );
+
+      expect(find.text('EATING'), findsOneWidget);
+      expect(
+        tester.getCenter(find.text('EATING')).dy,
+        greaterThan(tester.getCenter(find.text('STATS')).dy),
+      );
+    });
+
+    testWidgets('and on the waiting screen too', (tester) async {
+      await pumpMap(
+        tester,
+        hud: const Text('STATS'),
+        progress: const Text('EATING'),
+      );
+
+      expect(find.text('EATING'), findsOneWidget);
+    });
   });
 }

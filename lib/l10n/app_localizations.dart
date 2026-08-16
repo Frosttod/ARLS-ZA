@@ -625,6 +625,54 @@ abstract class L10n {
   /// **'Sleep-deprived'**
   String get statusSleepDeprived;
 
+  /// No description provided for @bleedSuperficial.
+  ///
+  /// In en, this message translates to:
+  /// **'superficial'**
+  String get bleedSuperficial;
+
+  /// No description provided for @bleedModerate.
+  ///
+  /// In en, this message translates to:
+  /// **'moderate'**
+  String get bleedModerate;
+
+  /// No description provided for @bleedSevere.
+  ///
+  /// In en, this message translates to:
+  /// **'severe'**
+  String get bleedSevere;
+
+  /// No description provided for @bleedArterial.
+  ///
+  /// In en, this message translates to:
+  /// **'arterial'**
+  String get bleedArterial;
+
+  /// No description provided for @statusBleedingEffect.
+  ///
+  /// In en, this message translates to:
+  /// **'{millilitres} ml a minute, and running multiplies it — at 160 bpm against a resting 70 it is more than twice that. Blood does not come back at all while something is open.'**
+  String statusBleedingEffect(int millilitres);
+
+  /// No description provided for @statusBleedingFix.
+  ///
+  /// In en, this message translates to:
+  /// **'A pressure dressing, and stand still while it goes on.'**
+  String get statusBleedingFix;
+
+  /// No description provided for @statusBleedingFixArterial.
+  ///
+  /// In en, this message translates to:
+  /// **'A tourniquet, and nothing else. A dressing will not hold this one.'**
+  String get statusBleedingFixArterial;
+
+  /// No description provided for @statusBleedingWhere.
+  ///
+  /// In en, this message translates to:
+  /// **'Pharmacies, clinics, ambulances; first-aid kits in offices and workshops.'**
+  String get statusBleedingWhere;
+
   /// No description provided for @statusShock.
   ///
   /// In en, this message translates to:
@@ -1902,6 +1950,12 @@ abstract class L10n {
   /// In en, this message translates to:
   /// **'Nothing to dress.'**
   String get inventoryNoWound;
+
+  /// No description provided for @inventoryWrongDressing.
+  ///
+  /// In en, this message translates to:
+  /// **'That dressing is not enough for this wound.'**
+  String get inventoryWrongDressing;
 
   /// No description provided for @slotHead.
   ///

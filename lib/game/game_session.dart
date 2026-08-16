@@ -18,6 +18,7 @@ import '../location/device_position_source.dart';
 import '../location/position_source.dart';
 import '../location/power_source.dart';
 import '../sim/body.dart';
+import '../sim/physiology.dart';
 import '../sim/tick.dart';
 import 'game_loop.dart';
 
@@ -27,11 +28,15 @@ class ActiveCharacter {
     required this.profile,
     required this.body,
     required this.state,
+    this.bleeding = BleedTier.none,
   });
 
   final Profile profile;
   final BodyProfile body;
   final SimState state;
+
+  /// §2.6: what was still open when the app was last closed.
+  final BleedTier bleeding;
 
   SimConstants get constants => body.toSimConstants();
 }
@@ -65,6 +70,9 @@ class GameSessionFactory {
     return ActiveCharacter(
       profile: profile,
       body: body,
+      // §2.6: a wound that was still open when the app was closed is still
+      // open. Without this a bleed ends every time somebody locks the screen.
+      bleeding: BleedTier.fromWire(vitals.bleedTier),
       state: SimState(
         lastUpdate: vitals.lastUpdate,
         bloodMl: vitals.bloodMl,
@@ -152,6 +160,7 @@ class GameSessionFactory {
       profileId: character.profile.id,
       constants: character.constants,
       initialState: character.state,
+      initialBleeding: character.bleeding,
       clock: clock,
       power: power,
     );
