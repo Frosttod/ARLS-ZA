@@ -9,7 +9,6 @@
 /// the tests that check a marker is not being drawn somewhere §3.5 forbids.
 library;
 
-import 'dart:math' as math;
 import 'dart:ui' show Offset;
 
 import '../map/geometry.dart';
@@ -121,14 +120,6 @@ const Map<MarkerKind, double> kMarkerRadius = {
   MarkerKind.dropped: 5,
   MarkerKind.shelter: 9,
 };
-
-/// How many metres one logical pixel covers at this zoom and latitude.
-///
-/// ⚠️ Logical pixels, not device ones. MapLibre's zoom is defined against CSS
-/// pixels, which is the same trap that once made "one kilometre across the
-/// screen" mean 330 m on a phone with a device pixel ratio of three.
-double metresPerPixel(double zoom, double latitude) =>
-    156543.03392 * math.cos(latitude * math.pi / 180) / math.pow(2, zoom);
 
 /// Where a point sits on screen, in logical pixels from the middle.
 ///

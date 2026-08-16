@@ -104,11 +104,14 @@ void main() {
     );
   });
 
-  test('and a marker that fits the slop at 13 does not at 18', () {
+  test('and a marker that fits the slop at 12 does not at 18', () {
+    // ⚠️ The zoom numbers moved by one when the tile convention was corrected:
+    // MapLibre serves 512-pixel tiles, so its zoom z is the ground of a
+    // 256-tile z+1. Everything measured in pixels shifted with it.
     final markers = [markerAt('block', north: 300)];
 
     expect(
-      markerAtOffset(markers, Offset.zero, centre: centre, zoom: 13)?.id,
+      markerAtOffset(markers, Offset.zero, centre: centre, zoom: 12)?.id,
       'block',
     );
     expect(

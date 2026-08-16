@@ -19,6 +19,23 @@ import 'enemy.dart';
 import 'enemy_spawner.dart';
 import 'noise.dart';
 
+/// How far away something has to be before the game stops thinking about it.
+///
+/// A player walks kilometres in a session. Without this every Walker ever made
+/// would still be in the list at the end of it, wandering a street nobody is
+/// on — and §6.1a's leash sends them home, which is precisely where nobody is
+/// looking. Beyond this they are forgotten, and the ground they stood on is
+/// repopulated from scratch if the player ever comes back.
+const double kForgetEnemiesM = 900;
+
+/// A gap longer than this and the world moved on without us.
+///
+/// §11.1.2 replays a gap for the body because a body keeps burning calories
+/// with the phone in a pocket. A street does not: what a Walker did during
+/// eight hours of sleep is not knowable and not worth pretending to know, so
+/// the street is simply repopulated.
+const Duration kCombatGapForgotten = Duration(minutes: 5);
+
 /// §6.4: how far out the ambient trickle is kept stocked.
 ///
 /// Wider than §5.5.6's three-hundred-metre cap so that something can walk in
@@ -58,9 +75,13 @@ class CombatSession {
     List<MapFeature> obstacles = const [],
     GeoPoint? shelterAt,
   }) {
+    // The dead, and everything the player has walked away from. Somebody who
+    // covers three kilometres would otherwise finish the walk simulating every
+    // street they crossed.
     final moved = [
       for (final enemy in enemies)
-        if (!enemy.isDead)
+        if (!enemy.isDead &&
+            enemy.position.distanceTo(playerAt) <= kForgetEnemiesM)
           advanceEnemy(enemy, playerAt: playerAt, elapsed: elapsed),
     ];
 

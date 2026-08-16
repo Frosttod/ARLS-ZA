@@ -1359,16 +1359,16 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final since = _combatAt;
     _combatAt = now;
 
-    // A first tick, or one after the app was away: nothing to walk through.
-    // §11.1.2 replays the gap for the body, not for a street the player has
-    // since left.
+    // A first tick, or one after the app was away. §11.1.2 replays a gap for
+    // the body, because a body keeps burning calories in a pocket; a street
+    // does not. What a Walker did during eight hours of sleep is not knowable,
+    // so the street is emptied and made again rather than guessed at.
     final elapsed = since == null ? Duration.zero : now.difference(since);
-    if (elapsed <= Duration.zero || elapsed > const Duration(minutes: 5)) {
-      _combat = CombatSession(
-        seed: character.profile.rngSeed,
-        enemies: _combat.enemies,
-        open: _combat.open,
-      );
+    if (elapsed <= Duration.zero || elapsed > kCombatGapForgotten) {
+      setState(() {
+        _combat = CombatSession(seed: character.profile.rngSeed);
+        _aim = const Aim();
+      });
       return;
     }
 

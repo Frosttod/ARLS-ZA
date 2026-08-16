@@ -137,7 +137,23 @@ double distanceToArea(GeoPoint point, List<GeoPoint> ring) {
 }
 
 /// Web-mercator resolution at the equator, in metres per pixel at zoom 0.
-const double _equatorMetresPerPixel = 156543.03392;
+///
+/// ⚠️ Halved for MapLibre's 512-pixel tiles. The familiar 156543 figure is for
+/// 256-pixel tiles, and MapLibre — like Mapbox GL before it — serves 512s, so
+/// its zoom z covers the ground of a 256-tile zoom z+1. Found on a phone: the
+/// counts drawn over clustered markers sat at twice their proper distance from
+/// the player, which is exactly this factor.
+const double _equatorMetresPerPixel = 156543.03392 / 2;
+
+/// How many metres one logical pixel covers at this zoom and latitude.
+///
+/// ⚠️ Logical pixels, not device ones. MapLibre's zoom is defined against CSS
+/// pixels, which is the trap that once made "one kilometre across the screen"
+/// mean 330 m on a phone with a device pixel ratio of three.
+double metresPerPixel(double zoom, double latitude) =>
+    _equatorMetresPerPixel *
+    math.cos(latitude * math.pi / 180).abs() /
+    math.pow(2, zoom);
 
 /// The zoom level at which [metresAcross] fills a viewport [pixelWidth] wide.
 ///

@@ -258,4 +258,78 @@ void main() {
           session.enemies.length);
     });
   });
+
+  group('what the game stops thinking about', () {
+    test('something the player walked away from is forgotten', () {
+      // Otherwise a three-kilometre walk ends with every street the player
+      // crossed still being simulated.
+      final left = Enemy.spawn(
+        id: 'w1',
+        kind: EnemyKind.walker,
+        at: north(300),
+        home: north(300),
+        random: Random(1),
+      );
+
+      final after = CombatSession(seed: 1, enemies: [left]).advance(
+        playerAt: north(1400),
+        elapsed: const Duration(seconds: 1),
+        now: now,
+      );
+
+      expect(after.enemies.any((enemy) => enemy.id == 'w1'), isFalse);
+    });
+
+    test('and something still nearby is not', () {
+      final close = Enemy.spawn(
+        id: 'w1',
+        kind: EnemyKind.walker,
+        at: north(300),
+        home: north(300),
+        random: Random(1),
+      );
+
+      final after = CombatSession(seed: 1, enemies: [close]).advance(
+        playerAt: player,
+        elapsed: const Duration(seconds: 1),
+        now: now,
+      );
+
+      expect(after.enemies.any((enemy) => enemy.id == 'w1'), isTrue);
+    });
+
+    test('a long walk does not leave a trail of them behind it', () {
+      var session = const CombatSession(seed: 2);
+      for (var step = 0; step < 12; step++) {
+        session = session.advance(
+          playerAt: north(step * 200),
+          elapsed: const Duration(seconds: 30),
+          now: now,
+        );
+      }
+
+      // Whatever is out there is out there *here*, not spread over two
+      // kilometres of streets nobody is on.
+      for (final enemy in session.enemies) {
+        expect(
+          enemy.position.distanceTo(north(11 * 200)),
+          lessThanOrEqualTo(kForgetEnemiesM),
+        );
+      }
+    });
+
+    test('the population does not grow without bound', () {
+      var session = const CombatSession(seed: 2);
+      for (var step = 0; step < 20; step++) {
+        session = session.advance(
+          playerAt: north(step * 150),
+          elapsed: const Duration(seconds: 30),
+          now: now,
+        );
+      }
+
+      // §6.4's ambient trickle over a 600 m disc is a handful, not a horde.
+      expect(session.enemies.length, lessThanOrEqualTo(12));
+    });
+  });
 }

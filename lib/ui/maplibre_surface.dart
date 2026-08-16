@@ -41,6 +41,11 @@ const double kStreetZoom = 17.5;
 /// Three kilometres covers the spawn radius with a margin, and nothing else
 /// changes: the map still cannot be dragged, so a player can only ever pull
 /// back around themselves.
+///
+/// ⚠️ This figure only became true when the tile convention was corrected:
+/// MapLibre serves 512-pixel tiles, so every "metres across the screen" the
+/// game asked for was coming out half as wide. Three kilometres used to mean
+/// fifteen hundred metres.
 const double kWidestViewM = 3000;
 
 /// The closest the map goes. Past this the tiles have nothing more to say —

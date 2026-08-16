@@ -154,7 +154,10 @@ void main() {
         latitude: 52.4,
       );
 
-      expect(zoom, closeTo(16.7, 0.3));
+      // ⚠️ One level lower than the 256-pixel-tile figure. MapLibre serves
+      // 512s, so its zoom z covers the ground of a 256-tile z+1 — the error
+      // that put marker counts at twice their proper distance from the player.
+      expect(zoom, closeTo(15.7, 0.3));
     });
 
     test('a wider screen shows the same distance at a closer zoom', () {

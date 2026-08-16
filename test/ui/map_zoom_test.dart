@@ -15,12 +15,11 @@ void main() {
   /// the game allows. The inverse of `zoomForWidth`.
   double metresAcrossAt(double logicalWidth, {double latitude = 52.4}) {
     final zoom = widestGameZoom(logicalWidth: logicalWidth, latitude: latitude);
-    final metresPerPixel =
-        156543.03392 *
-        math.cos(latitude * math.pi / 180).abs() /
-        math.pow(2, zoom);
 
-    return metresPerPixel * logicalWidth;
+    // ⚠️ The 512-pixel tile convention MapLibre actually serves, which is the
+    // whole point of this test: the familiar 156543 figure is for 256s, and
+    // using it made every distance the game asked for come out half as wide.
+    return metresPerPixel(zoom, latitude) * logicalWidth;
   }
 
   test('the widest view is the distance it claims to be', () {
