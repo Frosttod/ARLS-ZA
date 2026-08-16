@@ -163,4 +163,63 @@ void main() {
       expect(found?.id, 'a');
     });
   });
+
+  group('one ring round the player, not sixty-five round the markers', () {
+    // Found on a phone: a ring per marker meant sixty-five circles rewritten
+    // through the platform channel on every frame of a pinch, and the game
+    // stopped answering. Reach is symmetric — being within twenty-five metres
+    // of a shop is the shop being within twenty-five metres of you — so one
+    // ring says exactly the same thing.
+    MapMarker place(String id, {double? reachM = kSearchReachM}) =>
+        MapMarker(id: id, kind: MarkerKind.loot, at: at, reachM: reachM);
+
+    test('one ring per distance, however many markers there are', () {
+      final rings = reachRingsOf([
+        for (var i = 0; i < 40; i++) place('p$i'),
+      ]);
+
+      expect(rings, [kSearchReachM]);
+    });
+
+    test('two distances are two rings', () {
+      final rings = reachRingsOf([
+        place('p'),
+        MapMarker(
+          id: 'd',
+          kind: MarkerKind.dropped,
+          at: at,
+          reachM: kStillnessM,
+        ),
+      ]);
+
+      expect(rings, [kSearchReachM, kStillnessM]);
+    });
+
+    test('widest first, so the tight one is drawn over it', () {
+      final rings = reachRingsOf([
+        MapMarker(
+          id: 'd',
+          kind: MarkerKind.dropped,
+          at: at,
+          reachM: kStillnessM,
+        ),
+        place('p'),
+      ]);
+
+      expect(rings.first, greaterThan(rings.last));
+    });
+
+    test('markers with nothing to reach draw nothing', () {
+      final rings = reachRingsOf([
+        MapMarker(id: 'e', kind: MarkerKind.enemy, at: at),
+        place('p', reachM: null),
+      ]);
+
+      expect(rings, isEmpty);
+    });
+
+    test('an empty map draws nothing', () {
+      expect(reachRingsOf(const []), isEmpty);
+    });
+  });
 }

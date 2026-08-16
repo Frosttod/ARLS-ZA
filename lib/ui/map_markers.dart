@@ -205,3 +205,20 @@ List<MapMarker> clusterMarkers(
 
   return clustered;
 }
+
+/// The reach rings worth drawing, given what is on the map.
+///
+/// Reach is symmetric — being within twenty-five metres of a shop is the shop
+/// being within twenty-five metres of you — so one ring around the player says
+/// exactly what a ring around every marker said, at a fraction of the cost.
+/// Found on a phone: sixty-five rings redrawn through the platform channel on
+/// every frame of a pinch stopped the game answering.
+///
+/// Widest first, so a tight ring is drawn over a loose one rather than under.
+List<double> reachRingsOf(List<MapMarker> markers) {
+  final rings = <double>{
+    for (final marker in markers) ?marker.reachM,
+  }.toList()..sort((a, b) => b.compareTo(a));
+
+  return rings;
+}

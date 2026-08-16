@@ -120,6 +120,16 @@ class _MapLibreSurfaceState extends State<MapLibreSurface> {
   /// second is one nobody can tap.
   final Map<String, Circle> _circles = {};
 
+  /// What each circle was last written as, so an unchanged one costs nothing.
+  final Map<String, String> _drawn = {};
+
+  /// One reconciliation at a time. The calls are asynchronous and a pinch can
+  /// start a second pass while the first is still talking to the platform.
+  bool _syncing = false;
+
+  /// One camera move at a time, for the same reason.
+  bool _zooming = false;
+
   @override
   Widget build(BuildContext context) {
     final centre = widget.centre;
@@ -214,7 +224,8 @@ class _MapLibreSurfaceState extends State<MapLibreSurface> {
       child: map,
     );
 
-    if (counted.isEmpty || centre == null) return gestures;
+    final rings = reachRingsOf(widget.markers);
+    if ((counted.isEmpty && rings.isEmpty) || centre == null) return gestures;
 
     // §4.8: the number on a stack of dropped kit. Drawn on our side of the
     // platform view because a MapLibre circle has no text, and computed from
@@ -230,6 +241,28 @@ class _MapLibreSurfaceState extends State<MapLibreSurface> {
         return Stack(
           children: [
             Positioned.fill(child: gestures),
+
+            // §10.2, §4.8: how close is close enough, drawn around the player
+            // rather than around every marker. Reach is symmetric, so it is
+            // the same statement — and one painter costs nothing next to
+            // sixty-five circles going over a platform channel.
+            if (rings.isNotEmpty)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: CustomPaint(
+                    painter: _ReachPainter(
+                      radiiPx: [
+                        for (final metres in rings)
+                          metres / metresPerPixel(_zoom, centre.latitude),
+                      ],
+                      colour: Theme.of(context).brightness == Brightness.dark
+                          ? const Color(0xFF7A8B8F)
+                          : const Color(0xFF4A5A5E),
+                    ),
+                  ),
+                ),
+              ),
+
             for (final marker in counted)
               Builder(
                 builder: (context) {
@@ -301,6 +334,24 @@ class _MapLibreSurfaceState extends State<MapLibreSurface> {
     final controller = _controller;
     if (controller == null) return;
 
+    // A pinch fires this on every frame of the gesture and each one is a
+    // camera move over the platform channel. Dropping the ones that arrive
+    // while the last is still travelling keeps the gesture smooth: the finger
+    // is still on the screen, so the next frame carries the same intent.
+    if (_zooming) return;
+    _zooming = true;
+
+    try {
+      await _applyZoom(controller, zoom);
+    } finally {
+      _zooming = false;
+    }
+  }
+
+  Future<void> _applyZoom(
+    MapLibreMapController controller,
+    double zoom,
+  ) async {
     final clamped = zoom.clamp(_widestZoom(context, widget.centre), kClosestZoom);
     if ((clamped - _zoom).abs() < 0.001) return;
     _zoom = clamped;
@@ -313,10 +364,10 @@ class _MapLibreSurfaceState extends State<MapLibreSurface> {
 
     await controller.moveCamera(CameraUpdate.newLatLngZoom(target, clamped));
 
-    // The reach rings are metres drawn in pixels, so a zoom changes all of
-    // them. Redrawn here rather than on the idle callback: a ring that lags
-    // the map by a frame reads as the reach itself moving.
-    await _syncMarkers(controller);
+    // The overlays drawn on our side — the reach rings and the counts on a
+    // stack — are metres measured in pixels, so a zoom moves all of them. The
+    // circles themselves are geographic and MapLibre has already placed them.
+    if (mounted) setState(() {});
   }
 
   Future<void> _zoomBy(double steps) => _zoomTo(_zoom + steps);
@@ -396,61 +447,54 @@ class _MapLibreSurfaceState extends State<MapLibreSurface> {
     }
   }
 
+  /// Reconciles the dots on the map with what the game says is there.
+  ///
+  /// ⚠️ Every call here is a platform channel round trip, and there can be
+  /// sixty-five markers. Found on a phone: a pinch fired this on every frame
+  /// of the gesture and the game stopped answering. So it does the least it
+  /// can — a circle is only written when what it should look like has
+  /// actually changed, and a zoom does not touch it at all, because MapLibre
+  /// already knows where a geographic point belongs on screen.
   Future<void> _syncMarkers(MapLibreMapController controller) async {
-    final wanted = {for (final marker in widget.markers) marker.id: marker};
+    if (_syncing) return;
+    _syncing = true;
 
-    for (final id in _circles.keys.toList()) {
-      if (wanted.containsKey(id.replaceAll('.reach', ''))) continue;
-      await controller.removeCircle(_circles.remove(id)!);
-    }
+    try {
+      final wanted = {for (final marker in widget.markers) marker.id: marker};
 
-    // The reach rings first, so a marker is never hidden under its own ring.
-    for (final marker in wanted.values) {
-      final reach = marker.reachM;
-      final id = '${marker.id}.reach';
-
-      if (reach == null) {
-        final stale = _circles.remove(id);
-        if (stale != null) await controller.removeCircle(stale);
-        continue;
+      for (final id in _circles.keys.toList()) {
+        if (wanted.containsKey(id)) continue;
+        await controller.removeCircle(_circles.remove(id)!);
+        _drawn.remove(id);
       }
 
-      // Metres, drawn in pixels: a ring that stayed the same size on screen
-      // would say nothing about how far away anything is.
-      final options = CircleOptions(
-        geometry: LatLng(marker.at.latitude, marker.at.longitude),
-        circleRadius: reach / metresPerPixel(_zoom, marker.at.latitude),
-        circleColor: _hex(kMarkerColours[marker.kind]!),
-        circleOpacity: 0.10,
-        circleStrokeColor: _hex(kMarkerColours[marker.kind]!),
-        circleStrokeWidth: 1,
-        circleStrokeOpacity: 0.5,
-      );
+      for (final marker in wanted.values) {
+        // What this circle should look like, as one comparable value. Two
+        // dots of the same kind in the same place are the same request, and
+        // the second one is a channel call for nothing.
+        final shape =
+            '${marker.at.latitude},${marker.at.longitude},${marker.kind.name}';
+        if (_drawn[marker.id] == shape) continue;
 
-      final existing = _circles[id];
-      if (existing == null) {
-        _circles[id] = await controller.addCircle(options);
-      } else {
-        await controller.updateCircle(existing, options);
+        final options = CircleOptions(
+          geometry: LatLng(marker.at.latitude, marker.at.longitude),
+          circleRadius: kMarkerRadius[marker.kind],
+          circleColor: _hex(kMarkerColours[marker.kind]!),
+          circleStrokeColor: '#000000',
+          circleStrokeWidth: 1.5,
+          circleOpacity: 0.9,
+        );
+
+        final existing = _circles[marker.id];
+        if (existing == null) {
+          _circles[marker.id] = await controller.addCircle(options);
+        } else {
+          await controller.updateCircle(existing, options);
+        }
+        _drawn[marker.id] = shape;
       }
-    }
-
-    for (final marker in wanted.values) {
-      final options = CircleOptions(
-        geometry: LatLng(marker.at.latitude, marker.at.longitude),
-        circleRadius: kMarkerRadius[marker.kind],
-        circleColor: _hex(kMarkerColours[marker.kind]!),
-        circleStrokeColor: '#000000',
-        circleStrokeWidth: 1.5,
-        circleOpacity: 0.9,
-      );
-
-      final existing = _circles[marker.id];
-      if (existing == null) {
-        _circles[marker.id] = await controller.addCircle(options);
-      } else {
-        await controller.updateCircle(existing, options);
-      }
+    } finally {
+      _syncing = false;
     }
   }
 
@@ -458,4 +502,39 @@ class _MapLibreSurfaceState extends State<MapLibreSurface> {
   /// used by Flutter painters too.
   static String _hex(int argb) =>
       '#${(argb & 0xFFFFFF).toRadixString(16).padLeft(6, '0')}';
+}
+
+/// The rings that say what is within reach, drawn around the middle.
+class _ReachPainter extends CustomPainter {
+  const _ReachPainter({required this.radiiPx, required this.colour});
+
+  final List<double> radiiPx;
+  final Color colour;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final middle = Offset(size.width / 2, size.height / 2);
+    final stroke = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1
+      ..color = colour.withValues(alpha: 0.45);
+
+    for (final radius in radiiPx) {
+      // A ring smaller than the pin or wider than the screen says nothing and
+      // costs a path.
+      if (radius < 4 || radius > size.longestSide) continue;
+      canvas.drawCircle(middle, radius, stroke);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_ReachPainter old) {
+    if (old.colour != colour || old.radiiPx.length != radiiPx.length) {
+      return true;
+    }
+    for (var i = 0; i < radiiPx.length; i++) {
+      if ((old.radiiPx[i] - radiiPx[i]).abs() > 0.5) return true;
+    }
+    return false;
+  }
 }
