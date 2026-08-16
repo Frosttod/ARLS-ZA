@@ -1611,6 +1611,12 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       var session = _combat;
       if (outcome.hit) session = session.wound(target.id, outcome.bloodLossMl);
 
+      // §4.8: what it was carrying stays where it fell, for whoever comes
+      // back for it. A body that vanishes is a fight with nothing on the
+      // other side of it.
+      final down = session.enemies.where((e) => e.id == target.id).firstOrNull;
+      if (down != null && down.isDead) unawaited(_leaveRemains(down));
+
       // §5.6: heard whether or not it hit, from where it was fired.
       session = session.heard(
         NoiseEvent(
@@ -1826,7 +1832,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       );
 
       final still = _combat.enemies.where((e) => e.id == target.id).firstOrNull;
-      if (still == null || still.isDead) _aim = _aim.released;
+      if (still == null || still.isDead) {
+        if (still != null) unawaited(_leaveRemains(still));
+        _aim = _aim.released;
+      }
     });
 
     if (!mounted) return;
@@ -1847,6 +1856,44 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       if (item != null && item.kind == ItemKind.melee) return item;
     }
     return null;
+  }
+
+  /// §4.8, §10.3: what is left where something went down.
+  ///
+  /// Not a loot table of its own: a Walker was a person with pockets, so it is
+  /// the scraps §18.2 already knows about plus, rarely, whatever it was
+  /// carrying. Seeded from the enemy, so the same body always held the same
+  /// thing however many times the app is restarted over it.
+  Future<void> _leaveRemains(Enemy enemy) async {
+    final character = _character;
+    if (character == null) return;
+
+    final random = Random(character.profile.rngSeed ^ enemy.id.hashCode);
+    final drops = <String>[
+      if (random.nextDouble() < 0.55) 'mat_fabric',
+      if (random.nextDouble() < 0.30) 'mat_metal',
+      if (random.nextDouble() < 0.18) 'med_bandage',
+      // §10.3.3: ammunition on a body is a windfall, not an income.
+      if (enemy.kind != EnemyKind.walker && random.nextDouble() < 0.12)
+        'ammo_9x19',
+    ];
+    if (drops.isEmpty) return;
+
+    final store = DroppedStore(widget.session.db);
+    for (final itemId in drops) {
+      await store.drop(
+        character.profile.id,
+        DroppedItem(
+          id: 0,
+          itemId: itemId,
+          count: itemId == 'ammo_9x19' ? 3 + random.nextInt(8) : 1,
+          position: enemy.position,
+          droppedAt: DateTime.now().toUtc(),
+        ),
+      );
+    }
+
+    await _reloadDropped();
   }
 
   /// §5.5.2: what the HUD says about a fight, or null when there is none.
@@ -2533,6 +2580,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
                                   ),
                                 ),
                           dominant: error?.dominant,
+                          settling: _aim.spreadMultiplierAt(DateTime.now()) > 1.02,
                           condition: target.condition,
                           sprintLeft: target.sprintLeftFraction,
                           loaded: _loaded,

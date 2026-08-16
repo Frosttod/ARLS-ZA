@@ -25,6 +25,7 @@ class CombatPanel extends StatelessWidget {
     required this.chance,
     required this.dominant,
     required this.state,
+    this.settling = false,
     required this.condition,
     required this.sprintLeft,
     required this.onFire,
@@ -81,6 +82,10 @@ class CombatPanel extends StatelessWidget {
   /// True while a magazine is going in — the trigger is not available and the
   /// panel says why.
   final bool reloading;
+
+  /// §5.5.1, §5.3: true while the sight picture is still being recovered, so
+  /// the rising percentage beside it is explained rather than mysterious.
+  final bool settling;
 
   final String? refusal;
 
@@ -163,6 +168,17 @@ class CombatPanel extends StatelessWidget {
                             fontWeight: FontWeight.bold,
                             color: colour,
                             fontFeatures: const [FontFeature.tabularFigures()],
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          // §5.3: a number that climbs on its own needs
+                          // saying, or it reads as the game changing its mind.
+                          settling ? l10n.combatAiming : l10n.combatOnTarget,
+                          style: TextStyle(
+                            fontSize: 10,
+                            letterSpacing: 1.2,
+                            color: settling ? colours.alert : colours.data,
                           ),
                         ),
                         const SizedBox(width: 8),

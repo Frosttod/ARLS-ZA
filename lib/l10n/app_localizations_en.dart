@@ -234,6 +234,22 @@ class L10nEn extends L10n {
   String get hudWeakSignal => 'Weak signal';
 
   @override
+  String get statusShockWhat =>
+      'Blood loss. Class II costs a tenth of your carry limit and steadiness; class III takes a third and blurs everything. It does not heal by itself — the bleeding has to be stopped first (§2.6).';
+
+  @override
+  String get statusDehydratedWhat =>
+      'Below 60% of your daily water the hands go first: aim, then decisions. Below 30% it is dangerous. Drinking works over about twenty minutes, not instantly (§2.3).';
+
+  @override
+  String get statusStarvingWhat =>
+      'An empty stomach makes everything take longer — searching, bandaging, building. It does not kill quickly, it just makes every minute cost more (§2.2).';
+
+  @override
+  String get statusSleepDeprivedWhat =>
+      'Sleep debt adds minutes of angle to every shot and takes the edge off your judgement. Only sleep pays it down, and only in a shelter (§2.5).';
+
+  @override
   String get statusBleeding => 'Bleeding';
 
   @override
@@ -654,6 +670,12 @@ class L10nEn extends L10n {
   String combatRounds(int loaded, int magazine) {
     return '$loaded / $magazine';
   }
+
+  @override
+  String get combatAiming => 'Aiming…';
+
+  @override
+  String get combatOnTarget => 'On target';
 
   @override
   String get combatFire => 'Fire';

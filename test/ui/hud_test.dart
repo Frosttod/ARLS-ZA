@@ -371,4 +371,33 @@ void main() {
       expect(find.byIcon(Icons.warning_amber_outlined), findsNothing);
     });
   });
+
+  testWidgets('a status says what it is costing, on a tap (§12)', (
+    tester,
+  ) async {
+    // A status a player cannot ask about is a status they learn to ignore.
+    await pumpHud(
+      tester,
+      healthy().copyWith(waterMl: constants.waterDailyMl * 0.2),
+    );
+
+    await tester.tap(find.text('ODWODNIENIE'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('celność'), findsOneWidget);
+  });
+
+  testWidgets('and the sheet closes again', (tester) async {
+    await pumpHud(
+      tester,
+      healthy().copyWith(waterMl: constants.waterDailyMl * 0.2),
+    );
+
+    await tester.tap(find.text('ODWODNIENIE'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Odłóż'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('celność'), findsNothing);
+  });
 }

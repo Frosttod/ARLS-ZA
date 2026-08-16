@@ -424,12 +424,19 @@ class _StatusRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final colours = HudColors.of(context);
     final l10n = L10n.of(context);
-    final chips = <String>[
-      ...warnings,
-      if (status.blood.shockClass != ShockClass.none) l10n.statusShock,
-      if (status.thirst.accuracyPenalty < 1) l10n.statusDehydrated,
-      if (status.hunger.actionTimeMultiplier > 1) l10n.statusStarving,
-      if (status.sleep.extraMoa > 0) l10n.statusSleepDeprived,
+
+    // §12: a word for what is wrong, and — on a tap — what it is costing.
+    // A status a player cannot ask about is a status they learn to ignore.
+    final chips = <({String label, String? detail})>[
+      for (final warning in warnings) (label: warning, detail: null),
+      if (status.blood.shockClass != ShockClass.none)
+        (label: l10n.statusShock, detail: l10n.statusShockWhat),
+      if (status.thirst.accuracyPenalty < 1)
+        (label: l10n.statusDehydrated, detail: l10n.statusDehydratedWhat),
+      if (status.hunger.actionTimeMultiplier > 1)
+        (label: l10n.statusStarving, detail: l10n.statusStarvingWhat),
+      if (status.sleep.extraMoa > 0)
+        (label: l10n.statusSleepDeprived, detail: l10n.statusSleepDeprivedWhat),
     ];
 
     if (chips.isEmpty) return const SizedBox(height: 4);
@@ -439,19 +446,74 @@ class _StatusRow extends StatelessWidget {
       runSpacing: 4,
       children: [
         for (final chip in chips)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(border: Border.all(color: colours.alert)),
-            child: Text(
-              chip.toUpperCase(),
-              style: TextStyle(
-                fontSize: 9,
-                letterSpacing: 1.2,
-                color: colours.alert,
+          GestureDetector(
+            onTap: chip.detail == null
+                ? null
+                : () => _explain(context, chip.label, chip.detail!, colours),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                border: Border.all(color: colours.alert),
+                borderRadius: BorderRadius.circular(2),
+              ),
+              child: Text(
+                // Upper case, as §3.6's HUD has always shown them: a status
+                // is a stamp rather than a sentence.
+                chip.label.toUpperCase(),
+                style: TextStyle(
+                  fontSize: 10,
+                  letterSpacing: 1.2,
+                  color: colours.alert,
+                ),
               ),
             ),
           ),
       ],
+    );
+  }
+
+  /// What this status is doing to the character, in the units it does it in.
+  void _explain(
+    BuildContext context,
+    String label,
+    String detail,
+    HudColors colours,
+  ) {
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 14,
+                  letterSpacing: 1.2,
+                  fontWeight: FontWeight.bold,
+                  color: colours.alert,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                detail,
+                style: TextStyle(fontSize: 13, height: 1.45,
+                    color: colours.text),
+              ),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text(L10n.of(context).noteClose),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

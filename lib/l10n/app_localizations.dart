@@ -487,6 +487,30 @@ abstract class L10n {
   /// **'Weak signal'**
   String get hudWeakSignal;
 
+  /// No description provided for @statusShockWhat.
+  ///
+  /// In en, this message translates to:
+  /// **'Blood loss. Class II costs a tenth of your carry limit and steadiness; class III takes a third and blurs everything. It does not heal by itself — the bleeding has to be stopped first (§2.6).'**
+  String get statusShockWhat;
+
+  /// No description provided for @statusDehydratedWhat.
+  ///
+  /// In en, this message translates to:
+  /// **'Below 60% of your daily water the hands go first: aim, then decisions. Below 30% it is dangerous. Drinking works over about twenty minutes, not instantly (§2.3).'**
+  String get statusDehydratedWhat;
+
+  /// No description provided for @statusStarvingWhat.
+  ///
+  /// In en, this message translates to:
+  /// **'An empty stomach makes everything take longer — searching, bandaging, building. It does not kill quickly, it just makes every minute cost more (§2.2).'**
+  String get statusStarvingWhat;
+
+  /// No description provided for @statusSleepDeprivedWhat.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep debt adds minutes of angle to every shot and takes the edge off your judgement. Only sleep pays it down, and only in a shelter (§2.5).'**
+  String get statusSleepDeprivedWhat;
+
   /// No description provided for @statusBleeding.
   ///
   /// In en, this message translates to:
@@ -1254,6 +1278,18 @@ abstract class L10n {
   /// In en, this message translates to:
   /// **'{loaded} / {magazine}'**
   String combatRounds(int loaded, int magazine);
+
+  /// No description provided for @combatAiming.
+  ///
+  /// In en, this message translates to:
+  /// **'Aiming…'**
+  String get combatAiming;
+
+  /// No description provided for @combatOnTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'On target'**
+  String get combatOnTarget;
 
   /// No description provided for @combatFire.
   ///

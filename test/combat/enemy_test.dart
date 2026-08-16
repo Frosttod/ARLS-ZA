@@ -615,4 +615,40 @@ void main() {
       expect(spent.sprintLeftFraction, 0);
     });
   });
+
+  group('losing interest after a shot (§5.6.2)', () {
+    test('it walks to where the sound was and then gives up', () {
+      // Zombies are not clever. A shot pulls them to the place it came from,
+      // and a player who then keeps quiet is a player they stop looking for.
+      var enemy = spawn(EnemyKind.walker, at: 200).hears(home);
+
+      for (var i = 0; i < 400; i++) {
+        enemy = advanceEnemy(
+          enemy,
+          playerAt: north(900),
+          elapsed: const Duration(seconds: 1),
+        );
+      }
+
+      expect(enemy.heardAt, isNull);
+      expect(enemy.state, isNot(EnemyState.chase));
+      expect(enemy.state, isNot(EnemyState.alert));
+    });
+
+    test('but a second shot puts it back on the trail', () {
+      var enemy = spawn(EnemyKind.walker, at: 200).hears(home);
+      for (var i = 0; i < 400; i++) {
+        enemy = advanceEnemy(
+          enemy,
+          playerAt: north(900),
+          elapsed: const Duration(seconds: 1),
+        );
+      }
+
+      final again = enemy.hears(north(300));
+
+      expect(again.heardAt, isNotNull);
+      expect(again.state, EnemyState.alert);
+    });
+  });
 }

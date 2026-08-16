@@ -236,6 +236,22 @@ class L10nPl extends L10n {
   String get hudWeakSignal => 'Słaby sygnał';
 
   @override
+  String get statusShockWhat =>
+      'Utrata krwi. Klasa II zabiera dziesiątą część udźwigu i pewności ręki, klasa III jedną trzecią i rozmywa wszystko. Samo nie przejdzie — najpierw trzeba zatrzymać krwawienie (§2.6).';
+
+  @override
+  String get statusDehydratedWhat =>
+      'Poniżej 60% dobowej wody najpierw idą ręce: celność, potem decyzje. Poniżej 30% robi się groźnie. Picie działa przez jakieś dwadzieścia minut, nie natychmiast (§2.3).';
+
+  @override
+  String get statusStarvingWhat =>
+      'Pusty żołądek wydłuża wszystko — przeszukiwanie, opatrywanie, budowanie. Nie zabija szybko, tylko sprawia, że każda minuta kosztuje więcej (§2.2).';
+
+  @override
+  String get statusSleepDeprivedWhat =>
+      'Dług snu dokłada minuty kątowe do każdego strzału i tępi ocenę sytuacji. Spłaca go wyłącznie sen, i tylko w schronie (§2.5).';
+
+  @override
   String get statusBleeding => 'Krwawienie';
 
   @override
@@ -656,6 +672,12 @@ class L10nPl extends L10n {
   String combatRounds(int loaded, int magazine) {
     return '$loaded / $magazine';
   }
+
+  @override
+  String get combatAiming => 'Celowanie…';
+
+  @override
+  String get combatOnTarget => 'Namierzony';
 
   @override
   String get combatFire => 'Ognia';
