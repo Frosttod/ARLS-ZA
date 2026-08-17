@@ -458,11 +458,21 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     // The map's own panel reads the action from this tree, so it follows the
     // same notifier the inventory screen does.
     _search.addListener(_onInventoryChanged);
+
+    // §2.1a.2: the loop owns sleep and this tree owns actions, so the one has
+    // to tell the other. Somebody halfway through a bandage is not somebody
+    // who has been sitting in a chair doing nothing.
+    _search.addListener(_tellLoopWhatWeAreDoing);
     unawaited(_boot());
   }
 
   void _onInventoryChanged() {
     if (mounted) setState(() {});
+  }
+
+  void _tellLoopWhatWeAreDoing() {
+    final action = _search.value;
+    _loop?.setActing(acting: action != null && action.isRunning);
   }
 
   Future<void> _boot() async {

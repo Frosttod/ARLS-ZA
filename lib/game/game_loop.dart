@@ -185,6 +185,24 @@ class GameLoop {
   /// be wrong in — the overnight case is covered by night itself, and nobody
   /// loses sleep they had already banked.
   DateTime? _settledAt;
+
+  /// §2.1a.2: whether a short action is running — eating, drinking, dressing a
+  /// wound, turning a place over (§4.7).
+  ///
+  /// Owned by the interface rather than by the loop, so it has to be handed in.
+  /// It matters here for one reason: somebody halfway through a bandage is not
+  /// somebody who has been sitting still doing nothing.
+  bool _acting = false;
+
+  /// Tells the loop that the player has started or finished one.
+  void setActing({required bool acting}) {
+    if (_acting == acting) return;
+
+    _acting = acting;
+    _applyShelter();
+    _publish();
+  }
+
   PositionFix? _lastFix;
   double _speedKmh = 0;
 
@@ -271,9 +289,16 @@ class GameLoop {
           longitude: fix.longitude,
         );
 
-    // §2.1a.1: something the player deliberately started outranks sleep. A
-    // character who chose to read at midnight is reading, and paying for it.
-    final busy = _occupation != null && !_occupation!.kind.isDefault;
+    // §2.1a.1, §2.1a.2: anything the player deliberately started outranks
+    // sleep. A character who chose to read at midnight is reading, and paying
+    // for it — and so is one halfway through a bandage.
+    //
+    // Both kinds count. An *occupation* is the long one the loop owns; an
+    // *action* is the short one the interface owns (§4.7: eating, drinking,
+    // dressing a wound, turning a place over). The loop cannot see the second
+    // kind on its own, which is why it is told.
+    final busy =
+        _acting || (_occupation != null && !_occupation!.kind.isDefault);
 
     // How long they have been under this roof with nothing on. Reset by
     // leaving and by starting anything — those are the two ways a person stops

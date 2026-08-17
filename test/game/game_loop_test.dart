@@ -1253,6 +1253,37 @@ void main() {
       expect(rig.loop.state.zone, MetabolicZone.shelter);
     });
 
+    test('a short action keeps them awake too (§2.1a.2)', () async {
+      // Somebody halfway through a bandage is not somebody who has been
+      // sitting in a chair doing nothing. Actions live in the interface, so
+      // the loop has to be told about them.
+      final rig = await buildLoop();
+      addTearDown(() async {
+        await rig.loop.dispose();
+        await rig.source.dispose();
+        await rig.session.close();
+      });
+
+      await rig.loop.start();
+      await arrive((loop: rig.loop, source: rig.source, wall: rig.wall));
+      rig.loop.setActing(acting: true);
+
+      rig.wall.advance(const Duration(minutes: 11));
+      await rig.loop.onPaused(rig.wall.nowUtc());
+
+      expect(rig.loop.state.zone, MetabolicZone.shelter);
+
+      // And the ten minutes begin again once it is finished, rather than the
+      // character dropping off the moment they swallow.
+      rig.loop.setActing(acting: false);
+      expect(rig.loop.state.zone, MetabolicZone.shelter);
+
+      rig.wall.advance(const Duration(minutes: 11));
+      await rig.loop.onPaused(rig.wall.nowUtc());
+
+      expect(rig.loop.state.zone, MetabolicZone.sleep);
+    });
+
     test('and being out of the zone starts the ten minutes again', () async {
       final rig = await buildLoop();
       addTearDown(() async {
