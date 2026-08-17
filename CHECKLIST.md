@@ -3,6 +3,8 @@
 Stan na dzień **2026-08-16**. Wygenerowana po przejściu pełnego zestawu
 testów: **1460 testów, `flutter analyze` czysty, schemat bazy v12**.
 
+Opis wszystkich mechanik z liczbami: [MECHANICS.md](MECHANICS.md).
+
 Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 
 1. **Co udowadnia maszyna** — testy przechodzą albo nie, i to jest fakt.

@@ -1,6 +1,6 @@
 # ARLS-ZA — roadmap wdrożenia
 
-Dokument wykonawczy do [ARLS-ZA_design_doc_v2.md](ARLS-ZA_design_doc_v2.md). Design doc mówi **co** i **dlaczego**; ten plik mówi **w jakiej kolejności**, **kiedy etap jest skończony** i **co ustaliliśmy przy klawiaturze**.
+Dokument wykonawczy do [ARLS-ZA_design_doc_v2.md](ARLS-ZA_design_doc_v2.md). Design doc mówi **co** i **dlaczego**; ten plik mówi **w jakiej kolejności**, **kiedy etap jest skończony** i **co ustaliliśmy przy klawiaturze**. Co gra **faktycznie robi**, z liczbami — [MECHANICS.md](MECHANICS.md).
 
 Każdy zamknięty etap dostaje sekcję **Dziennik wykonania** z decyzjami podjętymi w trakcie, niespodziankami i punktem wejścia dla następnej sesji. Jeśli nie ma czego tam wpisać, etap prawdopodobnie nie został naprawdę skończony.
 
