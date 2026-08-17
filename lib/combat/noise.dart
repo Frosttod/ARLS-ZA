@@ -92,6 +92,13 @@ NoiseReaction reactionAt(double distanceM, double radiusM) {
   return distanceM <= radiusM / 3 ? NoiseReaction.chase : NoiseReaction.alert;
 }
 
+/// How loud a sound has to be before it is worth running towards (§5.6.1).
+///
+/// A gunshot is heard from seven hundred metres and a knife from twenty-five.
+/// Anything at the loud end is a bang, and a bang is startling — which is the
+/// difference between a body that strolls over to look and one that arrives.
+const double kStartlingNoiseM = 200;
+
 /// One thing heard, at one place.
 class NoiseEvent {
   const NoiseEvent({
@@ -109,6 +116,16 @@ class NoiseEvent {
   final int shots;
 
   bool isOpenAt(DateTime now) => now.difference(startedAt) < kNoiseWindow;
+
+  /// §5.6.2: whether this is the kind of sound that gets bodies moving.
+  ///
+  /// ⚠️ A deliberate step past §5.6.2's own wording, which says "walk to the
+  /// point of the noise" for everything alike. Found on a walk: a shot that
+  /// missed brought them ambling over from four hundred metres, which reads as
+  /// a world that did not hear it. A shot is startling and a footstep is not,
+  /// and the whole cost of a firearm (§5.6.3) is that everything comes — the
+  /// speed at which it comes is what makes that a cost rather than a note.
+  bool get isStartling => radiusM >= kStartlingNoiseM;
 
   /// §5.6.2: another shot inside thirty seconds moves the point and holds
   /// their attention, rather than calling a second crowd.
@@ -182,7 +199,7 @@ List<Enemy> respondToNoise(
           // Close enough to place the player themselves, which is what makes
           // shooting from cover a bad idea when they are already near.
           enemy.hears(playerAt, chasing: true),
-        _ => enemy.hears(event.at),
+        _ => enemy.hears(event.at, hurrying: event.isStartling),
       },
   ];
 }

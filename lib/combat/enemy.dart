@@ -184,6 +184,7 @@ class Enemy {
     this.sinceContact = Duration.zero,
     this.heardAt,
     this.investigateLeft = Duration.zero,
+    this.hurrying = false,
     this.headingDeg,
     this.sightFactor = 1,
     this.bleedMlPerSecond = 0,
@@ -244,6 +245,12 @@ class Enemy {
   /// §5.6.2: how much turning the place over is left before it gives up.
   final Duration investigateLeft;
 
+  /// §5.6.2: whether it is on its way to something startling.
+  ///
+  /// Only ever true while investigating: once it arrives, or gives up, it is
+  /// walking again like everything else.
+  final bool hurrying;
+
   /// §2.6: how fast it is losing blood from what has already hit it.
   ///
   /// Three good hits can put something down before it reaches the player,
@@ -300,6 +307,11 @@ class Enemy {
 
   /// How fast it is moving right now, in km/h.
   double get speedKmh => switch (state) {
+    // §5.6.2: a body on its way to a gunshot is running, not strolling. What
+    // it does when it gets there is still a search — this is only how it
+    // covers the ground, and it is the difference between a shot that costs
+    // something and a shot that is a note in a log.
+    EnemyState.alert when hurrying => runKmh,
     EnemyState.idle || EnemyState.alert || EnemyState.returning => walkKmh,
     EnemyState.chase => runKmh,
     EnemyState.spent => runKmh * kSpentSpeedFraction,
@@ -314,6 +326,7 @@ class Enemy {
     GeoPoint? heardAt,
     bool forgetNoise = false,
     Duration? investigateLeft,
+    bool? hurrying,
     double? headingDeg,
     double? sightFactor,
     double? bleedMlPerSecond,
@@ -330,6 +343,7 @@ class Enemy {
     sprintLeft: sprintLeft ?? this.sprintLeft,
     sinceContact: sinceContact ?? this.sinceContact,
     heardAt: forgetNoise ? null : heardAt ?? this.heardAt,
+    hurrying: forgetNoise ? false : (hurrying ?? this.hurrying),
     investigateLeft: forgetNoise
         ? Duration.zero
         : investigateLeft ?? this.investigateLeft,
@@ -357,9 +371,14 @@ class Enemy {
   ///
   /// [chasing] for a sound made close enough to place the shooter directly —
   /// inside a third of the radius, where there is nothing left to work out.
-  Enemy hears(GeoPoint at, {bool chasing = false}) => copyWith(
+  Enemy hears(
+    GeoPoint at, {
+    bool chasing = false,
+    bool hurrying = false,
+  }) => copyWith(
     heardAt: at,
     investigateLeft: kInvestigateFor,
+    hurrying: hurrying,
     state: chasing && budget > Duration.zero
         ? EnemyState.chase
         : EnemyState.alert,

@@ -333,6 +333,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   }
 
   /// §8: the shelter and the camps, as the save last had them.
+  /// §5.5.6: which enemies the map is currently drawing, so one crossing the
+  /// edge does not flicker in and out with every step.
+  final Set<String> _shownEnemies = {};
+
   /// §8: listened to rather than passed by value — the shelter screen is a
   /// pushed route, and a pushed route handed a list keeps showing the list it
   /// opened with. Starting a build then left the counter at zero until
@@ -2834,7 +2838,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       // ⚠️ The last place the player was, never a default of nought — an
       // island off Africa is further than the forget radius from everything,
       // so a single fix without a position wiped every enemy off the map.
-      for (final enemy in _combat.near(_standingAt.value ?? GeoPoint(0, 0)))
+      for (final enemy in _visibleEnemies())
         MapMarker(
           id: enemy.id,
           kind: MarkerKind.enemy,
@@ -2890,6 +2894,43 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// might or might not be abandoned is exactly what reconnaissance is for.
   /// Hiding everything invented meant a walk through a city showed no cars and
   /// no bins at all — they were there, and nothing said so.
+  /// §5.5.6: what is close enough to be drawn, with a little hysteresis.
+  ///
+  /// ⚠️ Two different numbers were doing this job: the spawner makes things up
+  /// to six hundred metres out and the map drew them at three hundred, so a
+  /// walk down a street took one across that line and back and it read as
+  /// flickering. Nothing was appearing or disappearing — it was the same
+  /// Walker, in and out of a threshold.
+  ///
+  /// So a marker that is already drawn stays drawn a quarter further out.
+  /// Coming into view still costs the full approach, which is the half of the
+  /// rule §7's Reconnaissance is going to take over.
+  List<Enemy> _visibleEnemies() {
+    final at = _standingAt.value;
+    if (at == null) return const [];
+
+    final shown = <String>{};
+    final visible = <Enemy>[];
+
+    for (final enemy in _combat.enemies) {
+      if (enemy.isDead) continue;
+
+      final distance = enemy.position.distanceTo(at);
+      final limit = _shownEnemies.contains(enemy.id)
+          ? kActiveRadiusM * 1.25
+          : kActiveRadiusM;
+      if (distance > limit) continue;
+
+      shown.add(enemy.id);
+      visible.add(enemy);
+    }
+
+    _shownEnemies
+      ..clear()
+      ..addAll(shown);
+    return visible;
+  }
+
   bool _isVisible(LootBox box) {
     final table = _world?.tables[box.tableId];
     if (table == null || !table.hidden) return true;

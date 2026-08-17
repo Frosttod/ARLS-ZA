@@ -181,6 +181,47 @@ void main() {
       );
     });
 
+    test('a bang is run towards, a footstep is walked towards', () {
+      // ⚠️ A deliberate step past §5.6.2's own wording, which says "walk to
+      // the point of the noise" for everything alike. Found on a walk: a shot
+      // that missed brought them ambling over from four hundred metres, which
+      // reads as a world that did not hear it.
+      final toAShot = respondToNoise(
+        [walkerAt(500)],
+        event: shot(),
+        playerAt: north(900),
+      ).single;
+
+      final toAScuffle = respondToNoise(
+        [walkerAt(20)],
+        event: NoiseEvent(
+          at: here,
+          radiusM: NoiseKind.melee.baseM,
+          startedAt: DateTime.utc(2026, 8, 16, 12),
+        ),
+        playerAt: north(900),
+      ).single;
+
+      expect(toAShot.hurrying, isTrue);
+      expect(toAShot.speedKmh, toAShot.runKmh);
+
+      expect(toAScuffle.hurrying, isFalse);
+      expect(toAScuffle.speedKmh, toAScuffle.walkKmh);
+    });
+
+    test('and what it does when it gets there is still a search', () {
+      // Running is only how it covers the ground. §5.6.2's sixty seconds of
+      // turning the place over are unchanged.
+      final coming = respondToNoise(
+        [walkerAt(500)],
+        event: shot(),
+        playerAt: north(900),
+      ).single;
+
+      expect(coming.state, EnemyState.alert);
+      expect(coming.investigateLeft, greaterThan(Duration.zero));
+    });
+
     test('never more than six of them (§5.6.2)', () {
       // One shot beside a level-ten hotspot would otherwise bring twelve and
       // turn every mistake into a sentence.

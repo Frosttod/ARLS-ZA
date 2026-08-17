@@ -1,7 +1,7 @@
 # ARLS-ZA — lista kontrolna systemów
 
 Stan na dzień **2026-08-16**. Wygenerowana po przejściu pełnego zestawu
-testów: **1458 testów, `flutter analyze` czysty, schemat bazy v12**.
+testów: **1460 testów, `flutter analyze` czysty, schemat bazy v12**.
 
 Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 
@@ -17,7 +17,7 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 
 | Obszar | Testy | Co jest tam pilnowane |
 | :---- | ----: | :---- |
-| `combat` | 248 | tabela kalibracyjna §5.1.2 wiersz po wierszu, obrażenia §5.1.5, budżet sprintu, maszyna stanów, hałas, spawn, magazynek, dodatki |
+| `combat` | 250 | tabela kalibracyjna §5.1.2 wiersz po wierszu, obrażenia §5.1.5, budżet sprintu, maszyna stanów, hałas, spawn, magazynek, dodatki |
 | `ui` | 288 | HUD, ekwipunek, panele, arkusze, geometria dotknięć i pierścieni |
 | `sim` | 198 | tick, metabolizm, tętno, wchłanianie, sen, nawyk gry |
 | `loot` | 145 | tabele, spawner, przeszukanie, rzeczy na ziemi, przeszkody |
@@ -33,7 +33,7 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 | `core` | 30 | deterministyczny RNG, zegar |
 | `notes` | 14 | notatki §19.1, podstawianie nazw miejsc |
 
-**Razem 1458.**
+**Razem 1460.**
 
 ### Rzeczy, które testy trzymają jako liczby, a nie jako intencje
 
@@ -98,6 +98,9 @@ Kolejność jest celowa: rzeczy wyżej blokują ocenę tych niżej.
 - [ ] Przeładowanie przerywane przy zbliżeniu <5 m
 - [ ] Fala hałasu po strzale jest widoczna i odpowiada promieniowi
 - [ ] **Drugi strzał ściąga ich do drugiego strzału**, nie do pierwszego
+- [ ] **Po strzale biegną** do miejsca hałasu, nie idą — także gdy chybisz
+- [ ] Nóż i kroki nadal ściągają ich marszem
+- [ ] Znaczniki przeciwników nie migoczą przy granicy 300 m
 - [ ] Ten, kto już Cię goni, nie daje się odciągnąć hałasem
 - [ ] **Czaszki są na mapie po restarcie gry**, razem z tym, co przeszukane
 - [ ] **Wyjście z gry w trakcie walki nie jest ucieczką** — po powrocie „Wciąż Cię szukają"
