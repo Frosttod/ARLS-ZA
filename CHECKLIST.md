@@ -1,7 +1,7 @@
 # ARLS-ZA — lista kontrolna systemów
 
 Stan na dzień **2026-08-16**. Wygenerowana po przejściu pełnego zestawu
-testów: **1455 testów, `flutter analyze` czysty, schemat bazy v12**.
+testów: **1458 testów, `flutter analyze` czysty, schemat bazy v12**.
 
 Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 
@@ -18,9 +18,9 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 | Obszar | Testy | Co jest tam pilnowane |
 | :---- | ----: | :---- |
 | `combat` | 248 | tabela kalibracyjna §5.1.2 wiersz po wierszu, obrażenia §5.1.5, budżet sprintu, maszyna stanów, hałas, spawn, magazynek, dodatki |
-| `ui` | 286 | HUD, ekwipunek, panele, arkusze, geometria dotknięć i pierścieni |
+| `ui` | 288 | HUD, ekwipunek, panele, arkusze, geometria dotknięć i pierścieni |
 | `sim` | 198 | tick, metabolizm, tętno, wchłanianie, sen, nawyk gry |
-| `loot` | 144 | tabele, spawner, przeszukanie, rzeczy na ziemi, przeszkody |
+| `loot` | 145 | tabele, spawner, przeszukanie, rzeczy na ziemi, przeszkody |
 | `map` | 88 | PMTiles, MVT, geometria, namiary, pakiety regionów |
 | `inventory` | 84 | dwa limity §18.1a, sloty, porcje, dodatki, trwałość |
 | `items` | 71 | katalog jako dane: bilans, nazwy, sloty, użycia |
@@ -33,7 +33,7 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 | `core` | 30 | deterministyczny RNG, zegar |
 | `notes` | 14 | notatki §19.1, podstawianie nazw miejsc |
 
-**Razem 1455.**
+**Razem 1458.**
 
 ### Rzeczy, które testy trzymają jako liczby, a nie jako intencje
 
@@ -73,6 +73,8 @@ Kolejność jest celowa: rzeczy wyżej blokują ocenę tych niżej.
 - [ ] Budżet miejsca działa: 3 × pobieżne albo 2 × dokładne albo 1 × gruntowne
 - [ ] Otwarte od startu miejsca zdarzają się — ale nie wszystkie
 - [ ] **Samochody i śmietniki pojawiają się na ulicach** i dają materiały, nie broń
+- [ ] Auto, kosz i pobocze widać **bez rozpoznania**; dom i stodoła dopiero po nim
+- [ ] Okrąg strefy schronu jest **wokół schronu**, nie wokół gracza
 - [ ] Karetka stoi pod szpitalem, radiowóz pod komisariatem — oba zamknięte
 - [ ] Gęstość się nie zmieniła: nadal max 15 miejsc, nowe typy konkurują o te same sloty
 - [ ] Skrzynki odnawiają się po 4–8 h

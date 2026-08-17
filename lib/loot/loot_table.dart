@@ -117,6 +117,7 @@ class LootTable {
     required this.match,
     required this.entries,
     this.generated = false,
+    this.hidden = false,
     this.barrier,
   });
 
@@ -133,6 +134,15 @@ class LootTable {
   /// generate it. The OpenMapTiles building layer carries no type, so a house,
   /// a barn and a hunting stand are unfindable however the selector is written.
   final bool generated;
+
+  /// §10.2.1: whether it takes a look round to find at all.
+  ///
+  /// ⚠️ Not the same question as [generated]. A car standing in the street is
+  /// invented by §10.1 and is still perfectly visible from the pavement; a
+  /// house that might or might not be abandoned is exactly what reconnaissance
+  /// is for. Hiding everything invented meant a walk through a city showed no
+  /// cars and no bins at all — they were there, and nothing said so.
+  final bool hidden;
 
   /// What shuts this kind of place (§19.3). Null where nothing does — a car
   /// park has no door to force.
@@ -308,6 +318,7 @@ class LootTableSet {
               if (tag is String) tag,
           ],
           generated: entry['generated'] == true,
+          hidden: entry['hidden'] == true,
           barrier: Barrier.fromWire(entry['barrier'] as String?),
           entries: entries,
         ),

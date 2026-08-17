@@ -310,6 +310,7 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
     );
 
     final rings = reachRingsOf(widget.markers);
+    final zones = zonesOf(widget.markers);
     if (centre == null ||
         (widget.markers.isEmpty && rings.isEmpty && spreading == null)) {
       return gestures;
@@ -390,6 +391,33 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
                             marker.at,
                             centre: GeoPoint(centre.latitude, centre.longitude),
                             zoom: _zoom,
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+            // §8.1: the ground a shelter holds, drawn where the shelter is.
+            if (zones.isNotEmpty)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: CustomPaint(
+                    painter: _ZonePainter(
+                      zones: [
+                        for (final zone in zones)
+                          (
+                            at: offsetOf(
+                              zone.at,
+                              centre: GeoPoint(
+                                centre.latitude,
+                                centre.longitude,
+                              ),
+                              zoom: _zoom,
+                            ),
+                            radiusPx:
+                                zone.radiusM /
+                                metresPerPixel(_zoom, centre.latitude),
                           ),
                       ],
                     ),
@@ -805,6 +833,47 @@ class SyncGate {
     _again = false;
     return true;
   }
+}
+
+/// §8.1: the ground a shelter holds, drawn around the shelter.
+///
+/// ⚠️ Not one of [_ReachPainter]'s rings. Reach is symmetric and so it is
+/// drawn once around the player; a safe zone is a piece of ground and stays
+/// where the building is. Drawing it round the player put a fifty-metre circle
+/// on their feet that followed them down the street, which said the exact
+/// opposite of what §8.1 means.
+class _ZonePainter extends CustomPainter {
+  const _ZonePainter({required this.zones});
+
+  final List<({Offset at, double radiusPx})> zones;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final middle = Offset(size.width / 2, size.height / 2);
+
+    for (final zone in zones) {
+      if (zone.radiusPx < 4 || zone.radiusPx > size.longestSide) continue;
+
+      final at = middle + zone.at;
+      canvas
+        ..drawCircle(
+          at,
+          zone.radiusPx,
+          Paint()..color = const Color(0x143A7BD9),
+        )
+        ..drawCircle(
+          at,
+          zone.radiusPx,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 1.5
+            ..color = const Color(0x803A7BD9),
+        );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_ZonePainter old) => old.zones != zones;
 }
 
 /// The rings that say what is within reach, drawn around the middle.

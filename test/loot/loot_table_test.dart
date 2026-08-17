@@ -37,6 +37,34 @@ void main() {
       expect(procedural, hasLength(11));
     });
 
+    test('what needs looking for, and what does not (§10.2.1)', () {
+      // ⚠️ Not the same question as "was it invented". A car standing in the
+      // street is invented by §10.1 and is still perfectly visible from the
+      // pavement. Hiding everything invented meant a walk through a city
+      // showed no cars and no bins at all — they were there, and nothing said
+      // so.
+      LootTable table(String id) =>
+          tables.tables.firstWhere((t) => t.id == id);
+
+      for (final id in const [
+        'proc_abandoned_house',
+        'proc_barn',
+        'proc_hunting_stand',
+      ]) {
+        expect(table(id).hidden, isTrue, reason: id);
+      }
+
+      for (final id in const [
+        'proc_abandoned_car',
+        'proc_waste',
+        'proc_roadside',
+        'proc_ambulance',
+        'proc_police_car',
+      ]) {
+        expect(table(id).hidden, isFalse, reason: id);
+      }
+    });
+
     test('and every one of them is shut or open on purpose', () {
       // A vehicle nobody could open would be scenery; one anybody could open
       // would end the medical economy in an afternoon.

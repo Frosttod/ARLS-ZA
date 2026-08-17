@@ -2883,9 +2883,16 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     ];
   }
 
+  /// §10.2.1: whether this place can be seen without going and looking.
+  ///
+  /// ⚠️ Not "was it invented". A car standing in the street is invented by
+  /// §10.1 and is still perfectly visible from the pavement; a house that
+  /// might or might not be abandoned is exactly what reconnaissance is for.
+  /// Hiding everything invented meant a walk through a city showed no cars and
+  /// no bins at all — they were there, and nothing said so.
   bool _isVisible(LootBox box) {
     final table = _world?.tables[box.tableId];
-    if (table == null || table.source == LootSource.osm) return true;
+    if (table == null || !table.hidden) return true;
     return _revealed.contains(box.poiId);
   }
 

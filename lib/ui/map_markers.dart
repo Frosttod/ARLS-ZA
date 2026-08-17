@@ -307,11 +307,28 @@ List<MapMarker> clusterMarkers(
 /// Widest first, so a tight ring is drawn over a loose one rather than under.
 List<double> reachRingsOf(List<MapMarker> markers) {
   final rings = <double>{
-    for (final marker in markers) ?marker.reachM,
+    for (final marker in markers)
+      // ⚠️ Never a shelter. Reach is symmetric — being within twenty-five
+      // metres of a shop is the shop being within twenty-five metres of you —
+      // but a *safe zone* is not reach. It is a piece of ground around a
+      // building, and drawing it round the player instead put a fifty-metre
+      // circle on their feet that walked about with them. See [zonesOf].
+      if (marker.kind != MarkerKind.shelter) ?marker.reachM,
   }.toList()..sort((a, b) => b.compareTo(a));
 
   return rings;
 }
+
+/// The circles that belong to a place rather than to the player (§8.1).
+///
+/// A shelter's fifty metres is ground: the dead do not walk into it and the
+/// player does not shoot out of it, whether or not anybody is standing there.
+/// It has to be drawn where it is.
+List<({GeoPoint at, double radiusM})> zonesOf(List<MapMarker> markers) => [
+  for (final marker in markers)
+    if (marker.kind == MarkerKind.shelter && marker.reachM != null)
+      (at: marker.at, radiusM: marker.reachM!),
+];
 
 /// §12's colours for [MarkerAlert], as ARGB.
 const Map<MarkerAlert, int> kAlertColours = {

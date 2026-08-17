@@ -79,4 +79,34 @@ void main() {
 
     expect(marker.copyWith(count: 3).icon, PlaceIcon.medical);
   });
+
+  group('a safe zone is not a reach ring (§8.1)', () {
+    const shelter = MapMarker(
+      id: 'shelter.1',
+      kind: MarkerKind.shelter,
+      at: GeoPoint(52.4, 16.9),
+      reachM: 50,
+    );
+    const shop = MapMarker(
+      id: 'poi.1',
+      kind: MarkerKind.loot,
+      at: GeoPoint(52.4, 16.9),
+      reachM: 25,
+    );
+
+    test('reach is drawn around the player, and a shelter is not reach', () {
+      // ⚠️ Found on a phone: starting a shelter put a fifty-metre circle on
+      // the player's feet that walked down the street with them, which says
+      // the exact opposite of what §8.1 means.
+      expect(reachRingsOf(const [shelter, shop]), [25]);
+    });
+
+    test('the shelter gets a circle of its own, where it stands', () {
+      final zones = zonesOf(const [shelter, shop]);
+
+      expect(zones, hasLength(1));
+      expect(zones.single.radiusM, 50);
+      expect(zones.single.at, shelter.at);
+    });
+  });
 }
