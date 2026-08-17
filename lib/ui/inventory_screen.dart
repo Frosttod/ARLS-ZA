@@ -177,6 +177,7 @@ class InventoryScreen extends StatelessWidget {
                 key: ValueKey('$index.${line.itemId}'),
                 line: line,
                 definition: catalogue[line.itemId]!,
+                catalogue: catalogue,
                 name: _nameOf(line.itemId, language),
                 kind: kindName(l10n, catalogue[line.itemId]!.kind),
                 l10n: l10n,
@@ -252,8 +253,8 @@ class InventoryScreen extends StatelessWidget {
     final sorted = [...lines];
     sorted.sort((a, b) {
       final byMass = b
-          .massKg(catalogue[b.itemId]!)
-          .compareTo(a.massKg(catalogue[a.itemId]!));
+          .massKg(catalogue[b.itemId]!, catalogue: catalogue)
+          .compareTo(a.massKg(catalogue[a.itemId]!, catalogue: catalogue));
       return byMass != 0 ? byMass : a.itemId.compareTo(b.itemId);
     });
     return sorted;
@@ -386,7 +387,8 @@ class _SlotRow extends StatelessWidget {
             ),
             if (definition != null)
               Text(
-                '${worn!.massKg(definition).toStringAsFixed(1)} kg',
+                '${worn!.massKg(definition, catalogue: catalogue)
+                    .toStringAsFixed(1)} kg',
                 style: TextStyle(fontSize: 11, color: colours.data),
               ),
             if (worn != null && onTakeOff != null)
@@ -555,6 +557,7 @@ class _ItemRow extends StatefulWidget {
   const _ItemRow({
     required this.line,
     required this.definition,
+    required this.catalogue,
     required this.name,
     this.attachments = const [],
     this.attachmentNames = const [],
@@ -573,6 +576,10 @@ class _ItemRow extends StatefulWidget {
 
   final CarriedItem line;
   final ItemDefinition definition;
+
+  /// Needed for the mass of whatever is bolted on (§5.6.3, §18.1a).
+  final ItemCatalogue catalogue;
+
   final String name;
 
   /// §5.6.3: what is on this weapon, and what those parts are called.
@@ -605,8 +612,10 @@ class _ItemRowState extends State<_ItemRow> {
     final line = widget.line;
     final l10n = widget.l10n;
 
-    final mass = line.massKg(widget.definition);
-    final volume = line.volumeL(widget.definition);
+    // §5.6.3: with whatever is bolted on. A suppressor that costs nothing to
+    // carry is a suppressor nobody would ever leave behind.
+    final mass = line.massKg(widget.definition, catalogue: widget.catalogue);
+    final volume = line.volumeL(widget.definition, catalogue: widget.catalogue);
     final wearable =
         BodySlot.fromWire(wearSlotOf(widget.definition)) != null ||
         widget.definition.kind == ItemKind.backpack;

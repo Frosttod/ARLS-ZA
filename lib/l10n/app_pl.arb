@@ -353,6 +353,7 @@
   "errRestingHrRange": "Od 35 do 110 uderzeń na minutę",
   "droppedHere": "Na ziemi",
   "droppedTake": "Podnieś",
+  "droppedTooFar": "Za daleko, żeby po to sięgnąć.",
   "droppedExpires": "zostało {hours} h",
   "droppedNoRoom": "Nie mieści się w plecaku.",
   "groundEmpty": "Już nic tu nie ma.",

@@ -885,6 +885,40 @@ void main() {
       );
     });
 
+    test('and a fitted weapon weighs what is on it (§18.1a)', () {
+      // ⚠️ It did not, and that made every attachment free to carry. §18.1a's
+      // whole point is that mass is the thing a player runs out of — a bolt-on
+      // that costs nothing is a bolt-on nobody would ever leave behind.
+      var kit = armed();
+      final rifle = kit.carried.firstWhere(
+        (l) => l.itemId == 'weapon_rifle_545',
+      );
+      final bare = kit.massKg(catalogue);
+
+      kit = kit.attach(
+        rifle,
+        kit.carried.firstWhere((l) => l.itemId == 'att_red_dot'),
+        catalogue,
+      );
+
+      expect(
+        kit.massKg(catalogue),
+        closeTo(bare, 0.001),
+        reason: 'it moved from the pack onto the rifle, so nothing changed',
+      );
+
+      final fitted = kit.carried.firstWhere(
+        (l) => l.itemId == 'weapon_rifle_545',
+      );
+      expect(
+        fitted.massKg(catalogue['weapon_rifle_545']!, catalogue: catalogue),
+        greaterThan(
+          fitted.massKg(catalogue['weapon_rifle_545']!),
+        ),
+        reason: 'the rifle itself is heavier for wearing it',
+      );
+    });
+
     test('an optic goes onto the rifle and out of the pack', () {
       final kit = armed();
       final rifle = kit.carried.firstWhere((l) => l.itemId == 'weapon_rifle_545');

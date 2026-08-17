@@ -1100,6 +1100,9 @@ class L10nEn extends L10n {
   String get droppedTake => 'Pick up';
 
   @override
+  String get droppedTooFar => 'Too far to reach into.';
+
+  @override
   String droppedExpires(int hours) {
     return '$hours h left';
   }

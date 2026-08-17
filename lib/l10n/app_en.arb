@@ -432,6 +432,7 @@
   "errRestingHrRange": "Between 35 and 110 bpm",
   "droppedHere": "On the ground",
   "droppedTake": "Pick up",
+  "droppedTooFar": "Too far to reach into.",
   "droppedExpires": "{hours} h left",
   "@droppedExpires": {"placeholders": {"hours": {"type": "int"}}},
   "droppedNoRoom": "No room in the pack.",

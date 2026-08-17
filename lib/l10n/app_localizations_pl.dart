@@ -1102,6 +1102,9 @@ class L10nPl extends L10n {
   String get droppedTake => 'Podnieś';
 
   @override
+  String get droppedTooFar => 'Za daleko, żeby po to sięgnąć.';
+
+  @override
   String droppedExpires(int hours) {
     return 'zostało $hours h';
   }

@@ -161,4 +161,47 @@ void main() {
       expect(after.caloriesKcal, greaterThan(constants.caloriesDailyKcal * 0.4));
     });
   });
+
+  group('what the HUD tick promises (§2.3)', () {
+    test('half a litre is through in about twenty minutes', () {
+      // The figure §2.3 names, and the one the `+` on the water bar is a
+      // promise about. If this drifts, the mark on screen becomes a lie.
+      final drunk = resting(pendingWaterMl: 500);
+
+      final after = run(drunk, const Duration(minutes: 20));
+
+      expect(after.pendingWaterMl, closeTo(0, 1));
+
+      // What left the stomach arrived in the body, less the twenty minutes of
+      // ordinary sweat and breath that went out while it did.
+      final dry = run(resting(), const Duration(minutes: 20));
+      expect(after.waterMl - dry.waterMl, closeTo(500, 1));
+    });
+
+    test('and a tin of stew takes rather longer (§2.2)', () {
+      // Which is the whole point: food is something carried and taken before
+      // it is needed, not a button pressed when a bar turns red.
+      final eaten = resting(pendingKcal: 500);
+
+      expect(
+        run(eaten, const Duration(minutes: 20)).pendingKcal,
+        greaterThan(300),
+      );
+      expect(
+        run(eaten, const Duration(minutes: 63)).pendingKcal,
+        closeTo(0, 1),
+      );
+    });
+
+    test('the reserve climbs while it is arriving', () {
+      // The bar has to move, or the tick beside it says nothing.
+      final drunk = resting(pendingWaterMl: 500);
+
+      final five = run(drunk, const Duration(minutes: 5));
+      final ten = run(drunk, const Duration(minutes: 10));
+
+      expect(ten.waterMl, greaterThan(five.waterMl));
+      expect(ten.pendingWaterMl, lessThan(five.pendingWaterMl));
+    });
+  });
 }

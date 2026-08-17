@@ -1351,32 +1351,72 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     }
 
     if (marker.kind == MarkerKind.dropped) {
-      final id = int.tryParse(marker.id.split('.').last);
-      final item = _dropped.value.where((i) => i.id == id).firstOrNull;
-      if (item == null) return;
+      // ⚠️ The list, not one item. §4.8 gathers a dozen things dropped on one
+      // corner into a single dot with a number on it, and tapping that dot
+      // used to open the details of whichever row happened to be first —
+      // so a pile of fourteen answered a question about one of them, and
+      // never said what the other thirteen were.
+      unawaited(_showPileAt(marker.at));
+      return;
+    }
+  }
 
-      unawaited(
-        showItemDetails(
-          context,
-          line: CarriedItem(
-            itemId: item.itemId,
-            count: item.count,
-            condition: item.condition,
-            pagesTotal: item.pagesTotal,
-            pagesRead: item.pagesRead,
-            attachments: item.attachments,
+  /// §4.8: everything standing on one dot, as a list.
+  ///
+  /// Around the marker rather than around the player, because this is reached
+  /// by tapping the map: the pile is wherever the dot is, and the player may
+  /// be looking at it from across the street.
+  Future<void> _showPileAt(GeoPoint where) async {
+    final catalogue = _catalogue;
+    if (catalogue == null) return;
+
+    final here = ValueNotifier(where);
+    try {
+      await showGroundItems(
+        context,
+        dropped: _dropped,
+        at: here,
+        // The same radius §4.8 gathers a dot from, so the list holds exactly
+        // what the dot stands for.
+        reachM: kClusterM,
+        catalogue: catalogue,
+        names: _names ?? ItemNames.empty,
+        onTake: (pile) => unawaited(_takePileFrom(pile, where)),
+        onDetails: (pile) => unawaited(
+          showItemDetails(
+            context,
+            line: CarriedItem(
+              itemId: pile.itemId,
+              count: pile.count,
+              condition: pile.condition,
+              pagesTotal: pile.pagesTotal,
+              pagesRead: pile.pagesRead,
+              attachments: pile.attachments,
+            ),
+            inventory: _inventory,
+            catalogue: catalogue,
+            names: _names ?? ItemNames.empty,
+            fromPack: false,
           ),
-          inventory: _inventory,
-          catalogue: catalogue,
-          names: _names ?? ItemNames.empty,
-          // §4.8: it is on the pavement, not in the pack. Without this the
-          // sheet went looking for a piece with the same id among the player's
-          // own kit and found their rifle — so a rifle on the ground showed
-          // their sights, and taking one off it took it off theirs.
-          fromPack: false,
         ),
       );
+    } finally {
+      here.dispose();
     }
+  }
+
+  /// §4.8: picking it up still needs an arm's length.
+  ///
+  /// Looking at a pile from across the street is free; reaching into it is
+  /// not, and a button that quietly teleports things into a pack would undo
+  /// the walking this whole game is made of.
+  Future<void> _takePileFrom(GroundPile pile, GeoPoint where) async {
+    final at = _standingAt.value;
+    if (at == null || at.distanceTo(where) > kStillnessM) {
+      if (mounted) _say(L10n.of(context).droppedTooFar);
+      return;
+    }
+    await _takePile(pile);
   }
 
   /// Everything at the player's feet, gathered into piles (§4.8).

@@ -1,7 +1,7 @@
 # ARLS-ZA — lista kontrolna systemów
 
 Stan na dzień **2026-08-16**. Wygenerowana po przejściu pełnego zestawu
-testów: **1450 testów, `flutter analyze` czysty, schemat bazy v12**.
+testów: **1454 testy, `flutter analyze` czysty, schemat bazy v12**.
 
 Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 
@@ -19,10 +19,10 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 | :---- | ----: | :---- |
 | `combat` | 248 | tabela kalibracyjna §5.1.2 wiersz po wierszu, obrażenia §5.1.5, budżet sprintu, maszyna stanów, hałas, spawn, magazynek, dodatki |
 | `ui` | 286 | HUD, ekwipunek, panele, arkusze, geometria dotknięć i pierścieni |
-| `sim` | 195 | tick, metabolizm, tętno, wchłanianie, sen, nawyk gry |
+| `sim` | 198 | tick, metabolizm, tętno, wchłanianie, sen, nawyk gry |
 | `loot` | 144 | tabele, spawner, przeszukanie, rzeczy na ziemi, przeszkody |
 | `map` | 88 | PMTiles, MVT, geometria, namiary, pakiety regionów |
-| `inventory` | 83 | dwa limity §18.1a, sloty, porcje, dodatki, trwałość |
+| `inventory` | 84 | dwa limity §18.1a, sloty, porcje, dodatki, trwałość |
 | `items` | 71 | katalog jako dane: bilans, nazwy, sloty, użycia |
 | `location` | 53 | bramka dokładności, filtr Kalmana, martwa strefa, anty-cheat |
 | `db` | 50 | migracje v1→v17, integralność, warstwa gorąca i ciepła |
@@ -33,7 +33,7 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 | `core` | 30 | deterministyczny RNG, zegar |
 | `notes` | 14 | notatki §19.1, podstawianie nazw miejsc |
 
-**Razem 1450.**
+**Razem 1454.**
 
 ### Rzeczy, które testy trzymają jako liczby, a nie jako intencje
 
@@ -78,6 +78,8 @@ Kolejność jest celowa: rzeczy wyżej blokują ocenę tych niżej.
 - [ ] Skrzynki odnawiają się po 4–8 h
 - [ ] Kliknięcie w znacznik pokazuje szczegóły z dowolnej odległości
 - [ ] Rzeczy na ziemi grupują się w jedną kropkę z liczbą
+- [ ] **Kliknięcie w tę kropkę pokazuje listę wszystkiego, co tam leży**
+- [ ] Podniesienie z listy działa tylko z zasięgu ręki, inaczej mówi dlaczego
 - [ ] **Znaczniki są widoczne od razu po starcie gry**, bez restartu
 
 ### 2.3. Etap 5 — walka
@@ -119,6 +121,8 @@ Kolejność jest celowa: rzeczy wyżej blokują ocenę tych niżej.
 - [ ] **Broń na ziemi nie pokazuje dodatków tej z ekwipunku** i zdjęcie z jednej nie rusza drugiej
 - [ ] **Wyrzucony karabin wraca z tłumikiem i kolimatorem**, nie goły
 - [ ] Karabin z tłumikiem i goły leżą jako dwie osobne kupki
+- [ ] **Broń z dodatkami waży więcej** — widać w wierszu i w sumie udźwigu
+- [ ] Po jedzeniu/piciu pasek rośnie przez ~20 min, ze znacznikiem `+`
 - [ ] Porcje: przerwane picie zostawia połowę butelki
 - [ ] **Jedzenie, picie i opatrunek kończą się bez GPS** — w piwnicy, w windzie
 - [ ] Dwa egzemplarze tego samego przedmiotu nie mylą się przy wyrzucaniu

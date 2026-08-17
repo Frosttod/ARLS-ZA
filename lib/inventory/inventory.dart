@@ -117,26 +117,54 @@ class CarriedItem {
   );
 
   /// Mass of this line, using the rolled page count where there is one.
-  double massKg(ItemDefinition definition) {
+  /// What this piece weighs, in kilograms.
+  ///
+  /// ⚠️ Pass the catalogue for anything that can carry attachments. A rifle
+  /// with a suppressor, an optic and a long magazine is nearly a kilogram
+  /// heavier than the same rifle bare, and §18.1a's whole point is that mass
+  /// is the thing a player runs out of — a bolt-on that costs nothing to carry
+  /// is a bolt-on nobody would ever leave behind.
+  double massKg(ItemDefinition definition, {ItemCatalogue? catalogue}) {
     final pages = pagesTotal;
     if (pages != null) {
       final perPage = (definition.props['g_per_page'] as num?)?.toDouble() ?? 0;
       final cover = (definition.props['cover_g'] as num?)?.toDouble() ?? 0;
       return (pages * perPage + cover) / 1000 * count;
     }
+
     // Half a bottle weighs half. The bulk does not follow, because the bottle
     // is the same bottle either way — which is the honest asymmetry between
     // §18.1a's two limits.
-    return definition.weightKg * count * portion;
+    return (definition.weightKg + _fittedMassKg(catalogue)) * count * portion;
   }
 
-  double volumeL(ItemDefinition definition) {
+  double volumeL(ItemDefinition definition, {ItemCatalogue? catalogue}) {
     final pages = pagesTotal;
     if (pages != null) {
       final perPage = (definition.props['l_per_page'] as num?)?.toDouble() ?? 0;
       return pages * perPage * count;
     }
-    return definition.volumeL * count;
+    return (definition.volumeL + _fittedVolumeL(catalogue)) * count;
+  }
+
+  double _fittedMassKg(ItemCatalogue? catalogue) {
+    if (catalogue == null || attachments.isEmpty) return 0;
+
+    var total = 0.0;
+    for (final id in attachments) {
+      total += catalogue[id]?.weightKg ?? 0;
+    }
+    return total;
+  }
+
+  double _fittedVolumeL(ItemCatalogue? catalogue) {
+    if (catalogue == null || attachments.isEmpty) return 0;
+
+    var total = 0.0;
+    for (final id in attachments) {
+      total += catalogue[id]?.volumeL ?? 0;
+    }
+    return total;
   }
 }
 
@@ -217,7 +245,9 @@ class Inventory {
     var total = 0.0;
     for (final line in [...carried, ...worn]) {
       final definition = catalogue[line.itemId];
-      if (definition != null) total += line.massKg(definition);
+      if (definition != null) {
+        total += line.massKg(definition, catalogue: catalogue);
+      }
     }
     final pack = packId == null ? null : catalogue[packId!];
     return total + (pack?.weightKg ?? 0);
@@ -229,7 +259,9 @@ class Inventory {
     var total = 0.0;
     for (final line in carried) {
       final definition = catalogue[line.itemId];
-      if (definition != null) total += line.volumeL(definition);
+      if (definition != null) {
+        total += line.volumeL(definition, catalogue: catalogue);
+      }
     }
     return total;
   }
@@ -279,8 +311,8 @@ class Inventory {
       // was on it. Putting one down used to strip it.
       attachments: attachments,
     );
-    final massEach = one.massKg(definition);
-    final volumeEach = one.volumeL(definition);
+    final massEach = one.massKg(definition, catalogue: catalogue);
+    final volumeEach = one.volumeL(definition, catalogue: catalogue);
 
     final massRoom = limit.maxKg - massKg(catalogue);
     final volumeRoom = limit.capacityL - volumeL(catalogue);

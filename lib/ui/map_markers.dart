@@ -251,6 +251,12 @@ MapMarker? markerAtOffset(
 
 /// Folds markers that sit on top of each other into one (§4.8).
 ///
+/// How close two markers have to be to become one dot (§4.8).
+///
+/// Also what a tap on that dot lists: the pile it stands for is exactly the
+/// rows this radius gathered, so the two numbers have to be the same one.
+const double kClusterM = 25;
+
 /// Only within [withinM] and only among the same kind: a pile of dropped kit
 /// and a shop are two different answers to "what is that", and merging them
 /// would say neither. The dot lands on the first of the group rather than on
@@ -258,7 +264,7 @@ MapMarker? markerAtOffset(
 /// into the middle of a road.
 List<MapMarker> clusterMarkers(
   List<MapMarker> markers, {
-  double withinM = 25,
+  double withinM = kClusterM,
 }) {
   final clustered = <MapMarker>[];
   final taken = List<bool>.filled(markers.length, false);

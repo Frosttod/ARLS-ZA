@@ -2017,6 +2017,12 @@ abstract class L10n {
   /// **'Pick up'**
   String get droppedTake;
 
+  /// No description provided for @droppedTooFar.
+  ///
+  /// In en, this message translates to:
+  /// **'Too far to reach into.'**
+  String get droppedTooFar;
+
   /// No description provided for @droppedExpires.
   ///
   /// In en, this message translates to:
