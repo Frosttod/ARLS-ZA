@@ -11,11 +11,11 @@ Ten plik istnieje, bo trzy dokumenty nie odpowiadały na to pytanie:
 | `CHECKLIST.md` | **co jest przetestowane** i **jakie mamy długi** |
 | **`MECHANICS.md`** | **co gra faktycznie robi**, z liczbami |
 
-Różnica jest istotna, bo w kilkunastu miejscach **świadomie odeszliśmy od dokumentu projektowego** — czasem dlatego, że jego liczby były wewnętrznie sprzeczne, czasem dlatego, że spacer pokazał coś innego. Te decyzje żyły dotąd wyłącznie w komentarzach w kodzie. [Sekcja 13](#13-odejścia-od-dokumentu-projektowego) zbiera je w jednym miejscu.
+Różnica jest istotna, bo w kilkunastu miejscach **świadomie odeszliśmy od dokumentu projektowego** — czasem dlatego, że jego liczby były wewnętrznie sprzeczne, czasem dlatego, że spacer pokazał coś innego. Te decyzje żyły dotąd wyłącznie w komentarzach w kodzie. [Sekcja 14](#14-odejścia-od-dokumentu-projektowego) zbiera je w jednym miejscu.
 
 ⚠️ **Reguła utrzymania tego pliku:** liczba zmieniona w kodzie i nieprzeniesiona tutaj czyni ten dokument gorszym niż jego brak. Przy każdej zmianie stałej — aktualizuj sekcję.
 
-**Stan:** 1460 testów · schemat bazy v18 · etapy 0–2 zamknięte, 3–5 i 8 przed testem w terenie.
+**Stan:** 1466 testów · schemat bazy **v18** · etapy 0–2 zamknięte, 3–5 i 8 przed testem w terenie.
 
 ---
 
@@ -35,7 +35,8 @@ Różnica jest istotna, bo w kilkunastu miejscach **świadomie odeszliśmy od do
 12. [Schron i obóz](#12-schron-i-obóz)
 13. [Śmierć i utrata przytomności](#13-śmierć)
 14. [Odejścia od dokumentu projektowego](#14-odejścia-od-dokumentu-projektowego)
-15. [Czego jeszcze nie ma](#15-czego-jeszcze-nie-ma)
+15. [Zbudowane, jeszcze nieużyte](#15-zbudowane-jeszcze-nieużyte)
+16. [Czego jeszcze nie ma](#16-czego-jeszcze-nie-ma)
 
 ---
 
@@ -317,6 +318,28 @@ Dziewięć kształtów, czytanych z **tabeli lootu** (bo to ona decyduje, co jes
 
 Mapy **nie da się przeciągnąć**. Gracz jest zawsze na środku.
 
+### 7.5. Skąd biorą się kafelki (§3.1, §16.6)
+
+Gra **nie ma serwera kafelków** i nigdy nie odpytuje `tile.openstreetmap.org`
+— polityka tego serwera zabrania użycia produkcyjnego, a naruszenie kończy się
+blokadą po IP.
+
+| | |
+| :---- | :---- |
+| Format | **PMTiles v3**, jeden plik na region |
+| Dekoder MVT | własny, czytany w `Isolate.run` |
+| Warstwy używane | `poi`, `landuse`, `landcover`, `transportation`, `water` |
+| Zoom POI | 14 |
+| Katalog regionów | `assets/regions.json` |
+
+Dwie drogi do kafelków: **pobrana paczka** na urządzeniu albo **strumień po
+zakresach bajtów** z tego samego archiwum na hoście (§16.6), gdy gracz nie chce
+pobierać 50–200 MB. Paczka zawsze wygrywa.
+
+⚠️ Warstwa budynków w paczkach **nie niesie typu** — `building=house` nie
+pasuje do niczego, jakkolwiek napisać selektor. Stąd bierze się cały §10.1
+(punkty wymyślane) i stąd budynki nie blokują jeszcze ruchu przeciwników.
+
 ---
 
 ## 8. Przedmioty i ekwipunek
@@ -355,6 +378,17 @@ Siedzą **na konkretnej sztuce broni**, nie na graczu. Dwa karabiny w plecaku to
 | Tłumik | hałas **×0,29**, +0,3 MOA |
 
 Liczba slotów zależy od broni (rewolwer 1, karabin 3). **Masa dodatków wlicza się do udźwigu.** Dodatki przeżywają wyrzucenie broni na ziemię.
+
+### 8.4. Narzędzia do barier
+
+| Narzędzie | Masa | Otwiera | Czas | Hałas |
+| :---- | ----: | :---- | ----: | ----: |
+| **Wytrychy** | 0,1 kg | drzwi, kłódka | 60 / 45 s | **20 m** |
+| **Nożyce do kłódek** | 1,9 kg | kłódka | **10 s** | 60 m |
+| Łom | 1,2 kg | drzwi, kłódka | 12 / 25 s | 150 / 60 m |
+| Siekiera | 1,6 kg | drzwi | 12 s | 150 m |
+
+Łom i siekiera są jednocześnie bronią białą — `doubles_as_tool`.
 
 ---
 
@@ -415,6 +449,9 @@ Każde miejsce ma **budżet 6 jednostek**:
 | Dokładne | 90 s | 3 | 2–4 | + niepospolite |
 | Gruntowne | **180 s** | **6** | 3–5 | wszystko |
 
+Czyli: **3× pobieżne**, albo **2× dokładne**, albo **1× gruntowne**. Zaczęcie od
+gruntownego zamyka resztę.
+
 ⚠️ **Czas skaluje się rozmiarem miejsca.** Trzy minuty nad śmietnikiem to te
 same trzy minuty co nad supermarketem, i czyta się dokładnie tak.
 
@@ -428,8 +465,6 @@ Mnożnik działa **wyłącznie na czas**, nigdy na zawartość. Śmietnik przesz
 gruntownie to nadal śmietnik przeszukany gruntownie — po prostu kończy się
 szybciej. Minimum 5 s: poniżej przestaje być czynnością, a staje się
 przyciskiem z mignięciem.
-
-Czyli: **3× pobieżne**, albo **2× dokładne**, albo **1× gruntowne**. Zaczęcie od gruntownego zamyka resztę.
 
 ### 9.5. Bariery (§19.3)
 
@@ -457,7 +492,26 @@ i to jest cała decyzja.
 
 ⚠️ **Użycie przedmiotu (jedzenie, picie, opatrunek) nie wymaga GPS ani stania w miejscu.** To rzeczy, które robi ciało, a nie rzeczy, których świadkiem jest GPS.
 
-### 9.6. Rzeczy na ziemi
+### 9.6. Notatki (§19.1)
+
+Ślady po ludziach, którzy byli tu przed graczem. **16 notatek** w katalogu,
+przypisanych do rodzajów miejsc:
+
+| Kategoria | Ile |
+| :---- | ----: |
+| Kartka na drzwiach | 5 |
+| Dziennik | 5 |
+| Notatka służbowa | 4 |
+| Zapis radiowy | 1 |
+| Notatka pożegnalna | 1 |
+
+12 pospolitych, 4 niepospolite. **3 z nich niosą trop** — wskazówkę do innego
+miejsca.
+
+⚠️ Podstawianie `{street}` nie działa: paczki PMTiles nie mają warstwy
+`transportation_name`. Notatka mówi wtedy ogólniej, zamiast kłamać.
+
+### 9.7. Rzeczy na ziemi
 
 | | |
 | :---- | :---- |
@@ -770,7 +824,31 @@ Miejsca, w których kod **świadomie** robi coś innego niż `ARLS-ZA_design_doc
 
 ---
 
-## 15. Czego jeszcze nie ma
+## 15. Zbudowane, jeszcze nieużyte
+
+### 15.1. Pomiar stylu gry (§16.4)
+
+Model gotowy, nic go jeszcze nie czyta — czeka na ogniska (§6.5), którym ma
+dyktować tempo wzrostu.
+
+| | |
+| :---- | ----: |
+| Okno | 7 dni |
+| Waga godziny grania | **×3,5** |
+| Podłoga bezczynności | 0,10 / h |
+| Kredytowane godziny | 2–16 dziennie |
+
+`kredyt = grane × 3,5 + (24 − grane) × 0,10`, przycięte do 2–16.
+
+⚠️ Pierwsza wersja była odwrotna — świat gracza grającego rzadko rósł **dwa
+razy szybciej**. Zostawiony test pilnuje kierunku.
+
+⚠️ Pomiar **nie jest zapisywany** — to zmiana schematu, która przyjdzie razem
+ze składem ognisk.
+
+---
+
+## 16. Czego jeszcze nie ma
 
 | Mechanika | Stan | Blokuje |
 | :---- | :---- | :---- |
