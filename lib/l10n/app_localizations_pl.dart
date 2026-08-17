@@ -210,6 +210,9 @@ class L10nPl extends L10n {
   String get hudCalories => 'Kalorie';
 
   @override
+  String get hudSleep => 'Sen';
+
+  @override
   String get hudHeartRate => 'Tętno';
 
   @override
@@ -577,6 +580,33 @@ class L10nPl extends L10n {
 
   @override
   String get shelterBuildHere => 'Buduj tutaj';
+
+  @override
+  String get shelterCancel => 'Przerwij';
+
+  @override
+  String get shelterCancelTitle => 'Przerwać budowę?';
+
+  @override
+  String get shelterCancelKeep => 'Buduj dalej';
+
+  @override
+  String get shelterCancelConfirm => 'Przerwij';
+
+  @override
+  String get shelterCancelled => 'Praca porzucona.';
+
+  @override
+  String get shelterCancelShelterWhat =>
+      'Materiały są już w ścianach i nie wrócą. Miejsce znika razem z nimi, a budowa tutaj zacznie się od zera. Tego nie da się cofnąć.';
+
+  @override
+  String get shelterCancelCampWhat =>
+      'Obóz znika, a z nim wszystko, co w niego poszło. Postawienie go tu ponownie zacznie się od zera. Tego nie da się cofnąć.';
+
+  @override
+  String get shelterCancelModuleWhat =>
+      'Materiały na ten poziom przepadły — są już w konstrukcji. Ukończone poziomy zostają. Rozpoczęcie tego od nowa oznacza przyniesienie wszystkiego jeszcze raz. Tego nie da się cofnąć.';
 
   @override
   String get shelterSafeZone => 'Strefa bezpieczna';

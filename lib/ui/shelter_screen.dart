@@ -29,6 +29,7 @@ class ShelterScreen extends StatefulWidget {
     required this.hasMultitool,
     required this.onBuild,
     required this.onBuildModule,
+    required this.onCancelBuild,
     this.hotspots = const [],
     super.key,
   });
@@ -57,6 +58,10 @@ class ShelterScreen extends StatefulWidget {
 
   final void Function(ShelterKind kind) onBuild;
   final void Function(ShelterModule module) onBuildModule;
+
+  /// §8.3: gives up on whatever is going up. Asked about first, because the
+  /// materials are already in the walls and the work starts again from zero.
+  final void Function(Shelter place) onCancelBuild;
 
   /// §8.5.2: hotspot centres, which a camp may not sit inside.
   final List<GeoPoint> hotspots;
@@ -127,6 +132,7 @@ class _ShelterScreenState extends State<ShelterScreen> {
               shelter: shelter,
               now: now,
               away: at == null || !shelter.atSite(at),
+              onCancel: () => _confirmCancel(context, shelter),
               colours: colours,
             ),
             const SizedBox(height: 16),
@@ -144,6 +150,7 @@ class _ShelterScreenState extends State<ShelterScreen> {
                   // not a thing, so the offer is refused here and says why.
                   away: at == null || !shelter.atSite(at),
                   onBuild: () => widget.onBuildModule(module),
+                  onCancel: () => _confirmCancel(context, shelter),
                   colours: colours,
                 ),
           ],
@@ -164,6 +171,7 @@ class _ShelterScreenState extends State<ShelterScreen> {
               shelter: camp,
               now: now,
               away: at == null || !camp.atSite(at),
+              onCancel: () => _confirmCancel(context, camp),
               colours: colours,
             ),
             const SizedBox(height: 12),
@@ -180,6 +188,41 @@ class _ShelterScreenState extends State<ShelterScreen> {
         ],
       ),
     );
+  }
+
+  /// §8.3: says what giving up costs, before it costs it.
+  ///
+  /// Nothing here can be undone: the materials went into the walls, and the
+  /// hours start again from nothing. A confirmation is not friction — it is
+  /// the only place the player is ever told that.
+  Future<void> _confirmCancel(BuildContext context, Shelter place) async {
+    final l10n = L10n.of(context);
+
+    final sure = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.shelterCancelTitle),
+        content: Text(
+          place.building != null
+              ? l10n.shelterCancelModuleWhat
+              : place.kind == ShelterKind.main
+              ? l10n.shelterCancelShelterWhat
+              : l10n.shelterCancelCampWhat,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.shelterCancelKeep),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(l10n.shelterCancelConfirm),
+          ),
+        ],
+      ),
+    );
+
+    if (sure ?? false) widget.onCancelBuild(place);
   }
 
   String? _campRefusal(L10n l10n, List<Shelter> shelters, GeoPoint? at) {
@@ -216,6 +259,7 @@ class _Standing extends StatelessWidget {
     required this.shelter,
     required this.now,
     required this.away,
+    required this.onCancel,
     required this.colours,
   });
 
@@ -224,6 +268,10 @@ class _Standing extends StatelessWidget {
 
   /// §2.1a.3: the work is standing still while nobody is here.
   final bool away;
+
+  /// §8.3: gives up on it. Only offered while something is actually going up.
+  final VoidCallback onCancel;
+
   final HudColors colours;
 
   @override
@@ -265,6 +313,13 @@ class _Standing extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 13,
                   color: away ? const Color(0xFFE8B33A) : colours.text,
+                ),
+              ),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: onCancel,
+                  child: Text(l10n.shelterCancel),
                 ),
               ),
             ] else ...[
@@ -316,6 +371,7 @@ class _ModuleRow extends StatelessWidget {
     required this.hasMultitool,
     required this.away,
     required this.onBuild,
+    required this.onCancel,
     required this.colours,
   });
 
@@ -330,6 +386,10 @@ class _ModuleRow extends StatelessWidget {
   final bool hasHammer;
   final bool hasMultitool;
   final VoidCallback onBuild;
+
+  /// §8.3: gives up on the level going up right now.
+  final VoidCallback onCancel;
+
   final HudColors colours;
 
   @override
@@ -387,16 +447,26 @@ class _ModuleRow extends StatelessWidget {
 
             if (underway) ...[
               const SizedBox(height: 8),
-              Text(
-                away
-                    ? l10n.shelterWorkStopped
-                    : l10n.shelterBuildingLeft(
-                        _short(shelter.buildingLeft ?? Duration.zero),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      away
+                          ? l10n.shelterWorkStopped
+                          : l10n.shelterBuildingLeft(
+                              _short(shelter.buildingLeft ?? Duration.zero),
+                            ),
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: away ? const Color(0xFFE8B33A) : colours.data,
                       ),
-                style: TextStyle(
-                  fontSize: 13,
-                  color: away ? const Color(0xFFE8B33A) : colours.data,
-                ),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: onCancel,
+                    child: Text(l10n.shelterCancel),
+                  ),
+                ],
               ),
             ] else if (next != null) ...[
               const SizedBox(height: 8),

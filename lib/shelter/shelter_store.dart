@@ -133,6 +133,17 @@ class ShelterStore {
     ),
   );
 
+  /// §8.3: gives up on the module going up here. The levels already built
+  /// stay; the one in progress and the materials that went into it do not.
+  Future<void> cancelModule(int id) => _db.updateShelter(
+    id,
+    const SheltersCompanion(
+      building: Value(null),
+      buildingReadyAt: Value(null),
+      buildingLeftSeconds: Value(null),
+    ),
+  );
+
   Future<void> remove(int id) => _db.removeShelter(id);
 
   Shelter _fromRow(ShelterRow row) => Shelter(

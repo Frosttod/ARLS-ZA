@@ -439,6 +439,12 @@ abstract class L10n {
   /// **'Calories'**
   String get hudCalories;
 
+  /// No description provided for @hudSleep.
+  ///
+  /// In en, this message translates to:
+  /// **'Rest'**
+  String get hudSleep;
+
   /// No description provided for @hudHeartRate.
   ///
   /// In en, this message translates to:
@@ -1068,6 +1074,54 @@ abstract class L10n {
   /// In en, this message translates to:
   /// **'Build here'**
   String get shelterBuildHere;
+
+  /// No description provided for @shelterCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Give up'**
+  String get shelterCancel;
+
+  /// No description provided for @shelterCancelTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Give up on this?'**
+  String get shelterCancelTitle;
+
+  /// No description provided for @shelterCancelKeep.
+  ///
+  /// In en, this message translates to:
+  /// **'Carry on'**
+  String get shelterCancelKeep;
+
+  /// No description provided for @shelterCancelConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Give up'**
+  String get shelterCancelConfirm;
+
+  /// No description provided for @shelterCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Work abandoned.'**
+  String get shelterCancelled;
+
+  /// No description provided for @shelterCancelShelterWhat.
+  ///
+  /// In en, this message translates to:
+  /// **'The materials are already in the walls and they do not come back out. The place goes with them, and building here again starts from nothing. This cannot be undone.'**
+  String get shelterCancelShelterWhat;
+
+  /// No description provided for @shelterCancelCampWhat.
+  ///
+  /// In en, this message translates to:
+  /// **'The camp goes, and with it everything that went into it. Putting one here again starts from nothing. This cannot be undone.'**
+  String get shelterCancelCampWhat;
+
+  /// No description provided for @shelterCancelModuleWhat.
+  ///
+  /// In en, this message translates to:
+  /// **'The materials for this level are gone — they are in the frame. The levels already finished stay. Starting this one again means carrying the lot back. This cannot be undone.'**
+  String get shelterCancelModuleWhat;
 
   /// No description provided for @shelterSafeZone.
   ///

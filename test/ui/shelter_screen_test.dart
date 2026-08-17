@@ -48,6 +48,7 @@ void main() {
           hasMultitool: false,
           onBuild: (_) {},
           onBuildModule: (_) {},
+          onCancelBuild: (_) {},
         ),
       ),
     );
@@ -205,6 +206,7 @@ void main() {
             hasMultitool: false,
             onBuild: (_) {},
             onBuildModule: (_) {},
+            onCancelBuild: (_) {},
           ),
         ),
       );
@@ -279,6 +281,82 @@ void main() {
       );
 
       expect(BuildProgress.of([done], home, t0), isNull);
+    });
+  });
+
+  group('giving up on a build (§8.3)', () {
+    Shelter half() => Shelter(
+      id: 1,
+      kind: ShelterKind.main,
+      position: home,
+      startedAt: t0,
+      buildTime: kShelterBuildTime,
+      buildLeft: const Duration(hours: 2),
+    );
+
+    testWidgets('is offered while something is going up', (tester) async {
+      await pump(tester, shelters: [half()]);
+
+      expect(find.text('Przerwij'), findsWidgets);
+    });
+
+    testWidgets('and not once the place is standing', (tester) async {
+      // There is nothing to give up on: the hours are already in the walls.
+      await pump(tester, shelters: [built()]);
+
+      expect(find.text('Przerwij'), findsNothing);
+    });
+
+    testWidgets('says it cannot be undone before it happens', (tester) async {
+      Shelter? cancelled;
+
+      tester.view.physicalSize = const Size(1080, 4200);
+      tester.view.devicePixelRatio = 3;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: const Locale('pl'),
+          localizationsDelegates: const [
+            L10n.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: L10n.supportedLocales,
+          home: ShelterScreen(
+            shelters: ValueNotifier([half()]),
+            standingAt: ValueNotifier<GeoPoint?>(home),
+            carried: const {},
+            itemNameOf: (id) => id,
+            hasTools: true,
+            hasHammer: true,
+            hasMultitool: false,
+            onBuild: (_) {},
+            onBuildModule: (_) {},
+            onCancelBuild: (place) => cancelled = place,
+          ),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 50));
+
+      await tester.tap(find.text('Przerwij').first);
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.textContaining('nie da się cofnąć'), findsOneWidget);
+      expect(cancelled, isNull, reason: 'nothing until it is confirmed');
+
+      await tester.tap(find.text('Buduj dalej'));
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(cancelled, isNull, reason: 'backing out changes nothing');
+
+      await tester.tap(find.text('Przerwij').first);
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.tap(find.widgetWithText(FilledButton, 'Przerwij'));
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(cancelled, isNotNull);
     });
   });
 }

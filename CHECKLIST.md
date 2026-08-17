@@ -1,7 +1,7 @@
 # ARLS-ZA — lista kontrolna systemów
 
 Stan na dzień **2026-08-16**. Wygenerowana po przejściu pełnego zestawu
-testów: **1397 testów, `flutter analyze` czysty, schemat bazy v12**.
+testów: **1401 testów, `flutter analyze` czysty, schemat bazy v12**.
 
 Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 
@@ -18,7 +18,7 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 | Obszar | Testy | Co jest tam pilnowane |
 | :---- | ----: | :---- |
 | `combat` | 231 | tabela kalibracyjna §5.1.2 wiersz po wierszu, obrażenia §5.1.5, budżet sprintu, maszyna stanów, hałas, spawn, magazynek, dodatki |
-| `ui` | 269 | HUD, ekwipunek, panele, arkusze, geometria dotknięć i pierścieni |
+| `ui` | 274 | HUD, ekwipunek, panele, arkusze, geometria dotknięć i pierścieni |
 | `sim` | 195 | tick, metabolizm, tętno, wchłanianie, sen, nawyk gry |
 | `loot` | 130 | tabele, spawner, przeszukanie, rzeczy na ziemi, przeszkody |
 | `map` | 88 | PMTiles, MVT, geometria, namiary, pakiety regionów |
@@ -33,7 +33,7 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 | `core` | 30 | deterministyczny RNG, zegar |
 | `notes` | 14 | notatki §19.1, podstawianie nazw miejsc |
 
-**Razem 1397.**
+**Razem 1401.**
 
 ### Rzeczy, które testy trzymają jako liczby, a nie jako intencje
 
@@ -124,6 +124,7 @@ Kolejność jest celowa: rzeczy wyżej blokują ocenę tych niżej.
 - [ ] Pasek budowy jest pod paskiem statystyk, gdy stoisz na placu
 - [ ] **Schron postawiony wieczorem jest gotowy rano** — przy zamkniętej aplikacji
 - [ ] Postęp budowy przeżywa ubicie procesu (traci najwyżej 15 s)
+- [ ] Budowa da się przerwać, a okno mówi wprost, że nie da się tego cofnąć
 
 ### 2.6. Śmierć (§9)
 
@@ -141,6 +142,7 @@ Kolejność jest celowa: rzeczy wyżej blokują ocenę tych niżej.
 - [ ] Ugryzienie zaczyna krwawienie, bandaż je zatrzymuje
 - [ ] Po opatrzeniu krew wraca (najedzony i napojony), ~60 ml/h
 - [ ] Krwawienie przeżywa wygaszenie ekranu
+- [ ] Pasek snu jest pod wodą i kaloriami i spada w ciągu dnia
 - [ ] Dotknięcie statusu otwiera wyjaśnienie
 - [ ] Ikony akcji pojawiają się tylko w zasięgu
 - [ ] Czytelność w słońcu: ikony 22 px, liczby na stosach

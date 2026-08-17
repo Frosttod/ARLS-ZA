@@ -63,7 +63,9 @@ void main() {
   ) async {
     await pumpHud(tester, healthy());
 
-    expect(find.text('100%'), findsNWidgets(3));
+    // Blood, water, calories — and rest, which fails the same way they do:
+    // slowly, predictably, and entirely by choice (§2.5).
+    expect(find.text('100%'), findsNWidgets(4));
     expect(find.text('5319 ml'), findsOneWidget);
     expect(find.text('70'), findsOneWidget);
     expect(find.text('WSTRZĄS'), findsNothing);
@@ -407,5 +409,18 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.textContaining('celność'), findsNothing);
+  });
+
+  testWidgets('rest is a bar beside the other two (§2.5)', (tester) async {
+    // Four hours of debt against the eight §2.5.3 wants is half a bar.
+    await pumpHud(
+      tester,
+      healthy().copyWith(
+        sleepDebtSeconds: const Duration(hours: 4).inSeconds,
+      ),
+    );
+
+    expect(find.text('SEN'), findsOneWidget);
+    expect(find.text('50%'), findsOneWidget);
   });
 }

@@ -2238,7 +2238,21 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
           continue;
         }
 
-        final since = place.workedAt ?? now;
+        // ⚠️ A row that has never been credited starts its clock, and does not
+        // simply fall through. Found on a phone, twice over: a shelter carried
+        // across the migration that added this column had no stamp, the gap
+        // came out as nothing, and nothing was ever written — so the gap stayed
+        // nothing and the build never moved again. A missing stamp is "start
+        // counting", not "count nothing".
+        final since = place.workedAt;
+        if (since == null) {
+          final started = place.worked(Duration.zero, at: now);
+          places[i] = started;
+          _shelters.value = [...places];
+          await ShelterStore(widget.session.db).saveWork(started);
+          continue;
+        }
+
         final gap = now.isAfter(since) ? now.difference(since) : Duration.zero;
         final onSite = place.atSite(at);
 
@@ -2313,6 +2327,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
             hasMultitool: _carries('tool_multitool'),
             onBuild: (kind) => unawaited(_buildShelter(kind)),
             onBuildModule: (module) => unawaited(_buildModule(module)),
+            onCancelBuild: (place) => unawaited(_cancelBuild(place)),
           ),
       ),
     );
@@ -2350,6 +2365,26 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     await _reloadShelters();
     if (!mounted) return;
     _say(L10n.of(context).shelterBuildStarted);
+  }
+
+  /// §8.3: gives up on whatever is going up here.
+  ///
+  /// The materials are gone — they went into the walls — and the work starts
+  /// again from nothing. Both are said out loud before anything happens, and
+  /// nothing here is reversible.
+  Future<void> _cancelBuild(Shelter place) async {
+    final store = ShelterStore(widget.session.db);
+
+    if (place.building != null) {
+      // Only the module: the shelter itself is still standing.
+      await store.cancelModule(place.id);
+    } else {
+      await store.remove(place.id);
+    }
+
+    await _reloadShelters();
+    if (!mounted) return;
+    _say(L10n.of(context).shelterCancelled);
   }
 
   /// §8.4, §18.2: one level onto one module, against the clock.

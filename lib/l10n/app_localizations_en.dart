@@ -208,6 +208,9 @@ class L10nEn extends L10n {
   String get hudCalories => 'Calories';
 
   @override
+  String get hudSleep => 'Rest';
+
+  @override
   String get hudHeartRate => 'Heart rate';
 
   @override
@@ -574,6 +577,33 @@ class L10nEn extends L10n {
 
   @override
   String get shelterBuildHere => 'Build here';
+
+  @override
+  String get shelterCancel => 'Give up';
+
+  @override
+  String get shelterCancelTitle => 'Give up on this?';
+
+  @override
+  String get shelterCancelKeep => 'Carry on';
+
+  @override
+  String get shelterCancelConfirm => 'Give up';
+
+  @override
+  String get shelterCancelled => 'Work abandoned.';
+
+  @override
+  String get shelterCancelShelterWhat =>
+      'The materials are already in the walls and they do not come back out. The place goes with them, and building here again starts from nothing. This cannot be undone.';
+
+  @override
+  String get shelterCancelCampWhat =>
+      'The camp goes, and with it everything that went into it. Putting one here again starts from nothing. This cannot be undone.';
+
+  @override
+  String get shelterCancelModuleWhat =>
+      'The materials for this level are gone — they are in the frame. The levels already finished stay. Starting this one again means carrying the lot back. This cannot be undone.';
 
   @override
   String get shelterSafeZone => 'Safe zone';

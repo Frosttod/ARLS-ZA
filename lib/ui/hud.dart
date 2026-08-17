@@ -168,6 +168,22 @@ class Hud extends StatelessWidget {
                           warning: status.hunger.precisionPenalty < 1,
                           critical: status.hunger.actionTimeMultiplier > 1,
                         ),
+                        const SizedBox(height: 4),
+
+                        // §2.5: rest, on the same scale as the other two —
+                        // full is a night owed nothing, and the bar empties as
+                        // the debt grows against the eight hours §2.5.3 wants.
+                        // Beside them because it fails the same way: slowly,
+                        // predictably, and entirely by choice.
+                        _ThinBar(
+                          label: l10n.hudSleep,
+                          fraction:
+                              1 -
+                              state.sleepDebt.inSeconds /
+                                  kDailySleepNeed.inSeconds,
+                          warning: status.sleep.extraMoa > 0,
+                          critical: status.sleep.microsleeps,
+                        ),
                       ],
                     ),
                   ),
