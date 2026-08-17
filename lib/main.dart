@@ -2170,6 +2170,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       // §10.3.5: how much of this place is left to turn over, so the panel can
       // grey out a pass there is no longer room for.
       searchUnitsLeft: box?.searchUnitsLeft ?? 0,
+      // §10.3.5: what each depth costs in seconds, here. A bin is not a
+      // supermarket, and the caption is where the player finds that out.
+      searchTimes: _searchTimesAt(box),
       barrier: _barrierOn(box),
       carried: _carriedIds(),
       onSearchArea: _startAreaSearch,
@@ -2937,6 +2940,17 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     return _revealed.contains(box.poiId);
   }
 
+  /// §10.3.5: how long each depth takes at this place.
+  Map<SearchDepth, Duration> _searchTimesAt(LootBox? box) {
+    final table = box == null ? null : _world?.tables[box.tableId];
+
+    return {
+      for (final depth in SearchDepth.values)
+        depth:
+            table?.searchTime(depth) ?? Duration(seconds: depth.seconds),
+    };
+  }
+
   /// The box the player is standing at, if any (§19.3).
   LootBox? _boxInReach() {
     // The smoothed position, as the search itself uses: whether a place is
@@ -3056,6 +3070,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         now: DateTime.now().toUtc(),
         poiId: box.poiId,
         depth: depth,
+        // §10.3.5: scaled by how much place there is. Three minutes over a
+        // wheelie bin is the same three minutes as a supermarket, and reads
+        // as exactly that.
+        takes: _world?.tables[box.tableId]?.searchTime(depth),
       );
     });
     _startSearchTimer();

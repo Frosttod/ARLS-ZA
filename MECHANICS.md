@@ -409,13 +409,44 @@ Reguła: **czy trzeba tego szukać**, a nie czy zostało wymyślone. Samochód n
 
 Każde miejsce ma **budżet 6 jednostek**:
 
-| Głębokość | Czas | Koszt | Losowań | Rzadkość |
+| Głębokość | Czas bazowy | Koszt | Losowań | Rzadkość |
 | :---- | ----: | ----: | :---- | :---- |
 | Pobieżne | 30 s | 2 | 1–2 | tylko pospolite |
 | Dokładne | 90 s | 3 | 2–4 | + niepospolite |
 | Gruntowne | **180 s** | **6** | 3–5 | wszystko |
 
+⚠️ **Czas skaluje się rozmiarem miejsca.** Trzy minuty nad śmietnikiem to te
+same trzy minuty co nad supermarketem, i czyta się dokładnie tak.
+
+| Rozmiar | Mnożnik | Pobieżne / dokładne / gruntowne | Co |
+| :---- | ----: | :---- | :---- |
+| **tiny** | ×0,2 | 6 / 18 / 36 s | śmietnik, pobocze, punkt wody |
+| **small** | ×0,5 | 15 / 45 / **90 s** | samochód, karetka, radiowóz, ambona, wiata |
+| **normal** | ×1,0 | 30 / 90 / 180 s | sklepy, mieszkania, warsztaty, magazyny |
+
+Mnożnik działa **wyłącznie na czas**, nigdy na zawartość. Śmietnik przeszukany
+gruntownie to nadal śmietnik przeszukany gruntownie — po prostu kończy się
+szybciej. Minimum 5 s: poniżej przestaje być czynnością, a staje się
+przyciskiem z mignięciem.
+
 Czyli: **3× pobieżne**, albo **2× dokładne**, albo **1× gruntowne**. Zaczęcie od gruntownego zamyka resztę.
+
+### 9.5. Bariery (§19.3)
+
+| Bariera | Otwarte od startu | Siłą | Cicho | Narzędziem |
+| :---- | ----: | :---- | :---- | :---- |
+| **Drzwi** | 35% | 20 s / 150 m | wytrychy 60 s / 20 m | łom, siekiera 12 s / 150 m |
+| **Kłódka** | 10% | — | wytrychy 45 s / 20 m | **nożyce 10 s / 60 m**, łom/piła/multitool 25 s / 60 m |
+| **Okno** | 45% | 5 s / 150 m | — | — |
+
+⚠️ **Kłódki nie da się otworzyć bez narzędzia.** §19.3 nazywa ją barierą
+wymagającą narzędzia, a złagodzenie tego uczyniłoby każde narzędzie w grze
+opcjonalnym.
+
+**Nożyce do kłódek** (`tool_bolt_cutters`, 1,9 kg) to głośna i szybka
+odpowiedź; **wytrychy** (`tool_lockpicks`, 0,1 kg) to cicha i wolna. Dwa
+kilogramy jednozadaniowej stali kupują 35 sekund i płacą 40 metrami hałasu —
+i to jest cała decyzja.
 
 | | |
 | :---- | :---- |
@@ -426,7 +457,7 @@ Czyli: **3× pobieżne**, albo **2× dokładne**, albo **1× gruntowne**. Zaczę
 
 ⚠️ **Użycie przedmiotu (jedzenie, picie, opatrunek) nie wymaga GPS ani stania w miejscu.** To rzeczy, które robi ciało, a nie rzeczy, których świadkiem jest GPS.
 
-### 9.5. Rzeczy na ziemi
+### 9.6. Rzeczy na ziemi
 
 | | |
 | :---- | :---- |
@@ -731,6 +762,7 @@ Miejsca, w których kod **świadomie** robi coś innego niż `ARLS-ZA_design_doc
 | **Warsztat** | 3% na poziom | dostęp do napraw | Dokument sam oznacza swoją wersję jako niezbalansowaną. |
 | **Regeneracja krwi** | brak | **60 ml/h** | Bez tego przeżycie ciężkiej walki to dożywocie w klasie IV. |
 | **Widoczność miejsc** | proceduralne = ukryte | ukryte tylko to, czego trzeba szukać | Samochód na ulicy widać z chodnika. |
+| **Czas przeszukania** | jeden dla wszystkiego | **skalowany rozmiarem** ×0,2 / ×0,5 / ×1 | Trzy minuty nad śmietnikiem to te same trzy minuty co nad supermarketem. |
 | **Czas budowy schronu** | §8.3: −35% z narzędziami · §18.3: ×2,5 bez | wdrożono **§8.3** | Dokument sam sobie przeczy. **Do rozstrzygnięcia.** |
 | **Skrytki po utracie przytomności** | 48 h | **24 h** | Leżą jako zwykłe rzeczy na ziemi (§4.8), a te mają dobę. Dług. |
 | **Okno łaski** | warunkowe (przeciwnicy w 300 m) | zawsze 10 min | Dług. |

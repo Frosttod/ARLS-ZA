@@ -34,6 +34,36 @@ import 'obstacle.dart';
 const int kSearchBudget = 6;
 
 /// §10.3.5. Time is the cost, and the only one.
+/// How much place there is to turn over (§10.3.5).
+///
+/// ⚠️ §10.3.5 gives one set of times for everything, and on a walk that reads
+/// as nonsense: three minutes to search a wheelie bin, the same three minutes
+/// as a supermarket. The depths are still the same three decisions — how much
+/// of the place, how much of the time — but how long they take has to depend
+/// on how much place there is.
+///
+/// The multiplier is on the *time*, never on what comes out. A bin searched
+/// thoroughly is still a bin searched thoroughly; it is simply over sooner.
+enum PlaceSize {
+  /// A bin, a crate, a tap. One layer, and you can see most of it standing up.
+  tiny(0.2),
+
+  /// A car, an ambulance, a hunting stand: a few compartments, all in reach.
+  small(0.5),
+
+  /// A shop, a flat, a workshop. §10.3.5's own figures.
+  normal(1.0);
+
+  const PlaceSize(this.timeScale);
+
+  /// What §10.3.5's seconds are multiplied by.
+  final double timeScale;
+
+  static PlaceSize fromWire(String? value) =>
+      values.where((size) => size.name == value).firstOrNull ??
+      PlaceSize.normal;
+}
+
 enum SearchDepth {
   shallow(
     seconds: 30,
@@ -118,6 +148,7 @@ class LootTable {
     required this.entries,
     this.generated = false,
     this.hidden = false,
+    this.size = PlaceSize.normal,
     this.barrier,
   });
 
@@ -143,6 +174,19 @@ class LootTable {
   /// is for. Hiding everything invented meant a walk through a city showed no
   /// cars and no bins at all — they were there, and nothing said so.
   final bool hidden;
+
+  /// §10.3.5: how much place there is to turn over, which decides how long
+  /// each depth takes here.
+  final PlaceSize size;
+
+  /// How long [depth] takes at this place.
+  ///
+  /// Never less than five seconds: below that it stops being an action the
+  /// player decided to take and becomes a button with a flicker on it.
+  Duration searchTime(SearchDepth depth) {
+    final seconds = (depth.seconds * size.timeScale).round();
+    return Duration(seconds: seconds < 5 ? 5 : seconds);
+  }
 
   /// What shuts this kind of place (§19.3). Null where nothing does — a car
   /// park has no door to force.
@@ -319,6 +363,7 @@ class LootTableSet {
           ],
           generated: entry['generated'] == true,
           hidden: entry['hidden'] == true,
+          size: PlaceSize.fromWire(entry['size'] as String?),
           barrier: Barrier.fromWire(entry['barrier'] as String?),
           entries: entries,
         ),

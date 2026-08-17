@@ -25,6 +25,7 @@ class SearchPanel extends StatelessWidget {
     required this.targetName,
     required this.canSearchHere,
     required this.searchUnitsLeft,
+    this.searchTimes = const {},
     required this.onSearchArea,
     required this.onSearchHere,
     required this.onCancel,
@@ -48,6 +49,10 @@ class SearchPanel extends StatelessWidget {
   /// §10.3.5: how much of the place in reach is left to turn over, out of
   /// [kSearchBudget]. Decides which depths are still worth offering.
   final int searchUnitsLeft;
+
+  /// §10.3.5: how long each depth takes at the place in reach. A bin is not a
+  /// supermarket, and the caption is where the player finds that out.
+  final Map<SearchDepth, Duration> searchTimes;
 
   final VoidCallback onSearchArea;
   final void Function(SearchDepth depth) onSearchHere;
@@ -93,6 +98,7 @@ class SearchPanel extends StatelessWidget {
             canSearchHere: canSearchHere,
             searchUnitsLeft: searchUnitsLeft,
             barrier: canSearchHere ? barrier : null,
+            searchTimes: searchTimes,
             carried: carried,
             onBreach: busy ? null : onBreach,
             onSearchArea: busy ? null : onSearchArea,
@@ -198,6 +204,7 @@ class _Actions extends StatelessWidget {
     required this.targetName,
     required this.canSearchHere,
     required this.searchUnitsLeft,
+    required this.searchTimes,
     required this.barrier,
     required this.carried,
     required this.onBreach,
@@ -214,6 +221,9 @@ class _Actions extends StatelessWidget {
 
   /// §10.3.5: what is left of this place, out of [kSearchBudget].
   final int searchUnitsLeft;
+
+  /// §10.3.5: what each depth costs in seconds, at this place.
+  final Map<SearchDepth, Duration> searchTimes;
 
   final Barrier? barrier;
   final Set<String> carried;
@@ -300,7 +310,9 @@ class _Actions extends StatelessWidget {
               for (final depth in SearchDepth.values)
                 _ActionIcon(
                   icon: _depthIcon(depth),
-                  caption: '${depth.seconds} s',
+                  caption:
+                      '${(searchTimes[depth] ??
+                          Duration(seconds: depth.seconds)).inSeconds} s',
                   tooltip: _depthName(l10n, depth),
                   colours: colours,
                   onPressed:

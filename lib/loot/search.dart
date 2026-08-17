@@ -167,10 +167,12 @@ class Search {
     required DateTime now,
     required String poiId,
     required SearchDepth depth,
+    /// §10.3.5: how long this depth takes *here*. A bin is not a supermarket.
+    Duration? takes,
   }) => Search(
     anchor: at,
     startedAt: now,
-    requiredTime: Duration(seconds: depth.seconds),
+    requiredTime: takes ?? Duration(seconds: depth.seconds),
     targetPoiId: poiId,
     depth: depth,
   );

@@ -1,7 +1,7 @@
 # ARLS-ZA — lista kontrolna systemów
 
 Stan na dzień **2026-08-16**. Wygenerowana po przejściu pełnego zestawu
-testów: **1460 testów, `flutter analyze` czysty, schemat bazy v12**.
+testów: **1466 testów, `flutter analyze` czysty, schemat bazy v12**.
 
 Opis wszystkich mechanik z liczbami: [MECHANICS.md](MECHANICS.md).
 
@@ -22,7 +22,7 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 | `combat` | 250 | tabela kalibracyjna §5.1.2 wiersz po wierszu, obrażenia §5.1.5, budżet sprintu, maszyna stanów, hałas, spawn, magazynek, dodatki |
 | `ui` | 288 | HUD, ekwipunek, panele, arkusze, geometria dotknięć i pierścieni |
 | `sim` | 198 | tick, metabolizm, tętno, wchłanianie, sen, nawyk gry |
-| `loot` | 145 | tabele, spawner, przeszukanie, rzeczy na ziemi, przeszkody |
+| `loot` | 151 | tabele, spawner, przeszukanie, rzeczy na ziemi, przeszkody |
 | `map` | 88 | PMTiles, MVT, geometria, namiary, pakiety regionów |
 | `inventory` | 84 | dwa limity §18.1a, sloty, porcje, dodatki, trwałość |
 | `items` | 71 | katalog jako dane: bilans, nazwy, sloty, użycia |
@@ -35,7 +35,7 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 | `core` | 30 | deterministyczny RNG, zegar |
 | `notes` | 14 | notatki §19.1, podstawianie nazw miejsc |
 
-**Razem 1460.**
+**Razem 1466.**
 
 ### Rzeczy, które testy trzymają jako liczby, a nie jako intencje
 
@@ -74,6 +74,8 @@ Kolejność jest celowa: rzeczy wyżej blokują ocenę tych niżej.
 - [ ] Najdalszy punkt to ~15 minut marszu, nie 25
 - [ ] Dłuższe przeszukanie (90 s, 180 s) daje wyraźnie więcej niż 30 s
 - [ ] Budżet miejsca działa: 3 × pobieżne albo 2 × dokładne albo 1 × gruntowne
+- [ ] **Śmietnik to kilkanaście sekund, samochód 15–90 s, sklep pełne 30–180**
+- [ ] Samochód bywa zamknięty; nożyce ścinają kłódkę w 10 s, ale słychać z 60 m
 - [ ] Otwarte od startu miejsca zdarzają się — ale nie wszystkie
 - [ ] **Samochody i śmietniki pojawiają się na ulicach** i dają materiały, nie broń
 - [ ] Auto, kosz i pobocze widać **bez rozpoznania**; dom i stodoła dopiero po nim

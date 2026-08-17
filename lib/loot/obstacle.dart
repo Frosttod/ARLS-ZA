@@ -69,14 +69,25 @@ enum Barrier {
   /// catalogue optional.
   padlock(
     alreadyOpenShare: 0.10,
-    force: null,
     quiet: BarrierBreach(
       seconds: 45,
       noiseM: 20,
       toolIds: ['tool_lockpicks'],
       needsTool: true,
     ),
+    // ⚠️ Bolt cutters are the tool this barrier was written for, and there
+    // were none in the game: a padlock could only be levered at with a crowbar
+    // or worried at with a saw. Ten seconds against the lockpicks' forty-five,
+    // and sixty metres of noise against twenty — two kilograms of
+    // single-purpose steel bought speed and paid in attention, which is the
+    // shape every tool decision in §19.3 is supposed to have.
     pry: BarrierBreach(
+      seconds: 10,
+      noiseM: 60,
+      toolIds: ['tool_bolt_cutters'],
+      needsTool: true,
+    ),
+    force: BarrierBreach(
       seconds: 25,
       noiseM: 60,
       toolIds: ['melee_crowbar', 'tool_saw', 'tool_multitool'],

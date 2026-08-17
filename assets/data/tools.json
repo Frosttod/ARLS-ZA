@@ -12,10 +12,19 @@
       "condition": 100,
       "condition_decay_per_use": 0.1,
       "rarity": "uncommon",
-      "loot_tags": ["garage", "industrial", "residential", "sport"],
+      "loot_tags": [
+        "garage",
+        "industrial",
+        "residential",
+        "sport"
+      ],
       "props": {
         "craft_time_modifier": -0.15,
-        "required_for": ["repair_basic", "craft_traps", "salvage_metal"],
+        "required_for": [
+          "repair_basic",
+          "craft_traps",
+          "salvage_metal"
+        ],
         "opens_cans": true
       }
     },
@@ -29,7 +38,10 @@
       "condition": 100,
       "condition_decay_per_use": 0.2,
       "rarity": "common",
-      "loot_tags": ["residential", "shop"],
+      "loot_tags": [
+        "residential",
+        "shop"
+      ],
       "props": {
         "opens_cans": true,
         "required_for": []
@@ -45,7 +57,12 @@
       "condition": 100,
       "condition_decay_per_use": 0.05,
       "rarity": "common",
-      "loot_tags": ["residential", "garage", "shop", "vehicle"],
+      "loot_tags": [
+        "residential",
+        "garage",
+        "shop",
+        "vehicle"
+      ],
       "props": {
         "light_radius_m": 25,
         "battery_hours": 6,
@@ -63,7 +80,11 @@
       "condition": 100,
       "condition_decay_per_use": 0.05,
       "rarity": "uncommon",
-      "loot_tags": ["sport", "garage", "industrial"],
+      "loot_tags": [
+        "sport",
+        "garage",
+        "industrial"
+      ],
       "props": {
         "light_radius_m": 18,
         "battery_hours": 8,
@@ -81,7 +102,11 @@
       "condition": 100,
       "condition_decay_per_use": 0.02,
       "rarity": "rare",
-      "loot_tags": ["hunting", "military", "sport"],
+      "loot_tags": [
+        "hunting",
+        "military",
+        "sport"
+      ],
       "props": {
         "search_radius_bonus_m": 60,
         "spot_enemy_bonus": 0.25
@@ -97,10 +122,17 @@
       "condition": 100,
       "condition_decay_per_use": 1.0,
       "rarity": "common",
-      "loot_tags": ["residential", "shop", "vehicle"],
+      "loot_tags": [
+        "residential",
+        "shop",
+        "vehicle"
+      ],
       "props": {
         "starts_fire": true,
-        "required_for": ["light_fire", "cook"]
+        "required_for": [
+          "light_fire",
+          "cook"
+        ]
       }
     },
     {
@@ -113,11 +145,18 @@
       "condition": 100,
       "condition_decay_per_use": 5.0,
       "rarity": "common",
-      "loot_tags": ["residential", "shop", "rural"],
+      "loot_tags": [
+        "residential",
+        "shop",
+        "rural"
+      ],
       "props": {
         "starts_fire": true,
         "fails_when_wet": true,
-        "required_for": ["light_fire", "cook"]
+        "required_for": [
+          "light_fire",
+          "cook"
+        ]
       }
     },
     {
@@ -130,10 +169,17 @@
       "condition": 100,
       "condition_decay_per_use": 0.3,
       "rarity": "uncommon",
-      "loot_tags": ["garage", "industrial", "garden"],
+      "loot_tags": [
+        "garage",
+        "industrial",
+        "garden"
+      ],
       "props": {
         "craft_time_modifier": -0.2,
-        "required_for": ["cut_timber", "build_palisade"]
+        "required_for": [
+          "cut_timber",
+          "build_palisade"
+        ]
       }
     },
     {
@@ -146,10 +192,18 @@
       "condition": 100,
       "condition_decay_per_use": 0.05,
       "rarity": "uncommon",
-      "loot_tags": ["garage", "industrial", "vehicle"],
+      "loot_tags": [
+        "garage",
+        "industrial",
+        "vehicle"
+      ],
       "props": {
         "craft_time_modifier": -0.25,
-        "required_for": ["repair_generator", "salvage_vehicle", "build_workbench"]
+        "required_for": [
+          "repair_generator",
+          "salvage_vehicle",
+          "build_workbench"
+        ]
       }
     },
     {
@@ -162,11 +216,17 @@
       "condition": 100,
       "condition_decay_per_use": 1.5,
       "rarity": "rare",
-      "loot_tags": ["sport", "shop", "military"],
+      "loot_tags": [
+        "sport",
+        "shop",
+        "military"
+      ],
       "props": {
         "purifies_ml_per_use": 1000,
         "use_seconds": 120,
-        "required_for": ["purify_water"]
+        "required_for": [
+          "purify_water"
+        ]
       }
     },
     {
@@ -179,7 +239,11 @@
       "condition": 100,
       "condition_decay_per_use": 0.05,
       "rarity": "rare",
-      "loot_tags": ["residential", "shop", "military"],
+      "loot_tags": [
+        "residential",
+        "shop",
+        "military"
+      ],
       "props": {
         "needs_no_battery": true,
         "receives_broadcasts": true
@@ -195,7 +259,11 @@
       "condition": 100,
       "condition_decay_per_use": 2.0,
       "rarity": "rare",
-      "loot_tags": ["garage", "police", "residential"],
+      "loot_tags": [
+        "garage",
+        "police",
+        "residential"
+      ],
       "props": {
         "opens_locks": true,
         "use_seconds": 60,
@@ -213,10 +281,15 @@
       "condition": 100,
       "condition_decay_per_use": 4.0,
       "rarity": "common",
-      "loot_tags": ["residential", "shop"],
+      "loot_tags": [
+        "residential",
+        "shop"
+      ],
       "props": {
         "craft_time_modifier": -0.1,
-        "required_for": ["repair_clothing"]
+        "required_for": [
+          "repair_clothing"
+        ]
       }
     },
     {
@@ -229,10 +302,39 @@
       "condition": 100,
       "condition_decay_per_use": 3.0,
       "rarity": "uncommon",
-      "loot_tags": ["hunting", "police", "military"],
+      "loot_tags": [
+        "hunting",
+        "police",
+        "military"
+      ],
       "props": {
-        "required_for": ["repair_firearm"],
+        "required_for": [
+          "repair_firearm"
+        ],
         "use_seconds": 300
+      }
+    },
+    {
+      "id": "tool_bolt_cutters",
+      "type": "tool",
+      "name_key": "item.tool_bolt_cutters.name",
+      "weight_kg": 1.9,
+      "volume_l": 2.4,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 1.0,
+      "rarity": "uncommon",
+      "loot_tags": [
+        "hardware",
+        "industrial",
+        "garage",
+        "warehouse"
+      ],
+      "props": {
+        "cuts_locks": true,
+        "use_seconds": 10,
+        "quiet": false,
+        "note": "The loud answer to a padlock, and the fast one. Lockpicks take forty-five seconds and are heard from twenty metres; these take ten and are heard from sixty. Two kilograms of single-purpose steel is the price, which is the decision."
       }
     }
   ]
