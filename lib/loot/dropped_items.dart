@@ -35,6 +35,7 @@ class DroppedItem {
     this.condition,
     this.pagesTotal,
     this.pagesRead = 0,
+    this.attachments = const [],
   });
 
   /// Row id, or zero for one that has not been written yet.
@@ -49,6 +50,10 @@ class DroppedItem {
   final double? condition;
   final int? pagesTotal;
   final int pagesRead;
+
+  /// §5.6.3: what is bolted to it, by item id. Putting a rifle down is not a
+  /// way to lose its sights.
+  final List<String> attachments;
 
   final GeoPoint position;
   final DateTime droppedAt;
@@ -118,6 +123,7 @@ class GroundPile {
     this.condition,
     this.pagesTotal,
     this.pagesRead = 0,
+    this.attachments = const [],
   });
 
   final String itemId;
@@ -135,6 +141,10 @@ class GroundPile {
   final double? condition;
   final int? pagesTotal;
   final int pagesRead;
+
+  /// §5.6.3: what is on the pieces in this pile. They are only one pile
+  /// because they carry the same things.
+  final List<String> attachments;
 }
 
 /// Everything within [reachM] of [at], gathered into piles, nearest first.
@@ -159,6 +169,10 @@ List<GroundPile> pilesWithin(
       entry.item.condition ?? '',
       entry.item.pagesTotal ?? '',
       entry.item.pagesRead,
+      // §5.6.3: a suppressed rifle and a bare one are two piles, however alike
+      // the rest of them is. Merging them would let a player pick up the wrong
+      // one, which for the rarest things in the game is not a small mistake.
+      entry.item.attachments.join(','),
     ].join('|');
     piles.putIfAbsent(key, () => []).add(entry);
   }
@@ -173,6 +187,7 @@ List<GroundPile> pilesWithin(
         condition: group.first.item.condition,
         pagesTotal: group.first.item.pagesTotal,
         pagesRead: group.first.item.pagesRead,
+        attachments: group.first.item.attachments,
       ),
   ]..sort((a, b) => a.distanceM.compareTo(b.distanceM));
 }

@@ -1089,6 +1089,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         condition: line.condition,
         pagesTotal: line.pagesTotal,
         pagesRead: line.pagesRead,
+        // §5.6.3: the sights go down with the rifle, and come back up with it.
+        attachments: line.attachments,
         position: GeoPoint(fix.latitude, fix.longitude),
         droppedAt: DateTime.now().toUtc(),
       ),
@@ -1362,6 +1364,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
             condition: item.condition,
             pagesTotal: item.pagesTotal,
             pagesRead: item.pagesRead,
+            attachments: item.attachments,
           ),
           inventory: _inventory,
           catalogue: catalogue,
@@ -1410,6 +1413,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
               condition: pile.condition,
               pagesTotal: pile.pagesTotal,
               pagesRead: pile.pagesRead,
+              attachments: pile.attachments,
             ),
             inventory: _inventory,
             catalogue: _catalogue!,
@@ -1449,6 +1453,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       count: item.count,
       condition: item.condition,
       pagesTotal: item.pagesTotal,
+      attachments: item.attachments,
     );
     if (!result.isAccepted && (result.acceptedCount ?? 0) == 0) {
       if (mounted) _say(L10n.of(context).droppedNoRoom);
@@ -2255,6 +2260,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
           itemId: line.itemId,
           count: line.count,
           condition: line.condition,
+          attachments: line.attachments,
           // Two or three caches in thirty to a hundred metres, so getting it
           // back is a walk rather than a button.
           position: at.offsetBy(

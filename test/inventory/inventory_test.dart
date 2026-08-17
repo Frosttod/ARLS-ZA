@@ -863,6 +863,28 @@ void main() {
       expect(after.carried.where((l) => l.itemId == 'att_red_dot'), hasLength(1));
     });
 
+    test('and a rifle picked up off the pavement keeps its sights', () {
+      // ⚠️ Putting one down used to strip it: the sights, the suppressor and
+      // the long magazine simply stopped existing, because the row they were
+      // written to had nowhere to put them. They are the rarest things in the
+      // game (§5.6.3) and they were evaporating on the pavement.
+      final back = const Inventory()
+          .withPack('pack_daypack')
+          .add(
+            'weapon_rifle_545',
+            catalogue,
+            body: body,
+            attachments: const ['tool_suppressor', 'att_red_dot'],
+          )
+          .inventory;
+
+      expect(
+        back.carried.firstWhere((l) => l.itemId == 'weapon_rifle_545')
+            .attachments,
+        ['tool_suppressor', 'att_red_dot'],
+      );
+    });
+
     test('an optic goes onto the rifle and out of the pack', () {
       final kit = armed();
       final rifle = kit.carried.firstWhere((l) => l.itemId == 'weapon_rifle_545');

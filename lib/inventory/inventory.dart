@@ -262,6 +262,7 @@ class Inventory {
     double? condition,
     int? pagesTotal,
     String? noteId,
+    List<String> attachments = const [],
   }) {
     final definition = catalogue[itemId];
     if (definition == null) {
@@ -274,6 +275,9 @@ class Inventory {
       condition: condition,
       pagesTotal: pagesTotal,
       noteId: noteId,
+      // §5.6.3: picking a rifle up off the pavement gives it back with what
+      // was on it. Putting one down used to strip it.
+      attachments: attachments,
     );
     final massEach = one.massKg(definition);
     final volumeEach = one.volumeL(definition);
@@ -308,6 +312,7 @@ class Inventory {
         condition: condition,
         pagesTotal: pagesTotal,
         noteId: noteId,
+        attachments: attachments,
       ),
     );
 

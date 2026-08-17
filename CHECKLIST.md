@@ -1,7 +1,7 @@
 # ARLS-ZA — lista kontrolna systemów
 
 Stan na dzień **2026-08-16**. Wygenerowana po przejściu pełnego zestawu
-testów: **1446 testów, `flutter analyze` czysty, schemat bazy v12**.
+testów: **1450 testów, `flutter analyze` czysty, schemat bazy v12**.
 
 Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 
@@ -20,12 +20,12 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 | `combat` | 248 | tabela kalibracyjna §5.1.2 wiersz po wierszu, obrażenia §5.1.5, budżet sprintu, maszyna stanów, hałas, spawn, magazynek, dodatki |
 | `ui` | 286 | HUD, ekwipunek, panele, arkusze, geometria dotknięć i pierścieni |
 | `sim` | 195 | tick, metabolizm, tętno, wchłanianie, sen, nawyk gry |
-| `loot` | 141 | tabele, spawner, przeszukanie, rzeczy na ziemi, przeszkody |
+| `loot` | 144 | tabele, spawner, przeszukanie, rzeczy na ziemi, przeszkody |
 | `map` | 88 | PMTiles, MVT, geometria, namiary, pakiety regionów |
-| `inventory` | 82 | dwa limity §18.1a, sloty, porcje, dodatki, trwałość |
+| `inventory` | 83 | dwa limity §18.1a, sloty, porcje, dodatki, trwałość |
 | `items` | 71 | katalog jako dane: bilans, nazwy, sloty, użycia |
 | `location` | 53 | bramka dokładności, filtr Kalmana, martwa strefa, anty-cheat |
-| `db` | 50 | migracje v1→v16, integralność, warstwa gorąca i ciepła |
+| `db` | 50 | migracje v1→v17, integralność, warstwa gorąca i ciepła |
 | `shelter` | 55 | strefy §8.1, czasy budowy §8.3, moduły §8.4, obozy §8.5.2, receptury §18.2 |
 | `devtools` | 44 | symulator GPS, nakładka, zegar |
 | `game` | 59 | pętla gry, nadrabianie przerw, próbkowanie |
@@ -33,7 +33,7 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 | `core` | 30 | deterministyczny RNG, zegar |
 | `notes` | 14 | notatki §19.1, podstawianie nazw miejsc |
 
-**Razem 1446.**
+**Razem 1450.**
 
 ### Rzeczy, które testy trzymają jako liczby, a nie jako intencje
 
@@ -117,6 +117,8 @@ Kolejność jest celowa: rzeczy wyżej blokują ocenę tych niżej.
 - [ ] Wiersz broni w ekwipunku pokazuje dodatki i to, co dały (−MOA, +szt.)
 - [ ] Porównanie wyłącznie z tym, co na ciele — nigdy dwa z plecaka
 - [ ] **Broń na ziemi nie pokazuje dodatków tej z ekwipunku** i zdjęcie z jednej nie rusza drugiej
+- [ ] **Wyrzucony karabin wraca z tłumikiem i kolimatorem**, nie goły
+- [ ] Karabin z tłumikiem i goły leżą jako dwie osobne kupki
 - [ ] Porcje: przerwane picie zostawia połowę butelki
 - [ ] **Jedzenie, picie i opatrunek kończą się bez GPS** — w piwnicy, w windzie
 - [ ] Dwa egzemplarze tego samego przedmiotu nie mylą się przy wyrzucaniu
@@ -181,7 +183,6 @@ Rzeczy świadomie odłożone, z powodem i miejscem, w którym wrócą.
 | Zawartość magazynu schronu | pojemność (25 kg + moduł, 3 l/kg) jest policzona, ale nie ma gdzie odłożyć rzeczy — to własna tabela i własny ekran | etap 8 (8.5) |
 | Brak powiadomienia po ukończeniu budowy | §8.3 prosi o powiadomienie; kanał powiadomień to osobna praca razem z §16.3 | etap 9 |
 | Konflikt §8.3 vs §18.3 | §8.3: 3 h gołymi rękami, z narzędziami −35%. §18.3: bez narzędzi ×2,5. Wdrożono §8.3 — do rozstrzygnięcia | do decyzji |
-| Dodatki giną przy wyrzuceniu broni | `ground_items` nie ma kolumny na dodatki, więc rzucony karabin wraca goły — tłumik przepada | do zrobienia, v17 |
 | Skrytki §9.2 znikają po 24 h, nie po 48 | leżą jako zwykłe rzeczy na ziemi (§4.8), a te mają dobę | razem z §4.8 |
 | Okno łaski nie sprawdza, czy w ogóle ktoś jest w pobliżu | §9.2 chce warunkowego okna (przeciwnicy w 300 m); dziś zawsze 10 minut | etap 8 |
 | Regeneracja krwi nie jest liniowa w czasie | tempo zależy od stanu żołądka na początku kroku, jak wchłanianie; luki >1 h idą przez `advanceInChunks`, więc rozjazd to najwyżej godzina | świadome |

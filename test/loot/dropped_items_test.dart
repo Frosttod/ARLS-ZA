@@ -289,4 +289,60 @@ void main() {
       expect(pilesWithin(const [], here, reachM: 15), isEmpty);
     });
   });
+
+  group('what is bolted to a thing on the ground (§5.6.3)', () {
+    DroppedItem rifle({
+      List<String> attachments = const [],
+      double metres = 0,
+    }) => DroppedItem(
+      id: 1,
+      itemId: 'weapon_rifle_545',
+      attachments: attachments,
+      position: const GeoPoint(52.4064, 16.9252).offsetBy(
+        metres: metres,
+        bearingDeg: 0,
+      ),
+      droppedAt: DateTime.utc(2026, 8, 16, 12),
+    );
+
+    test('a bare rifle and a suppressed one are two piles', () {
+      // ⚠️ Merging them would let a player pick up the wrong one, and for the
+      // rarest things in the game (§5.6.3) that is not a small mistake.
+      final piles = pilesWithin(
+        [
+          rifle(),
+          rifle(attachments: const ['tool_suppressor'], metres: 2),
+        ],
+        const GeoPoint(52.4064, 16.9252),
+        reachM: 20,
+      );
+
+      expect(piles, hasLength(2));
+    });
+
+    test('and two identical ones are one', () {
+      final piles = pilesWithin(
+        [
+          rifle(attachments: const ['att_red_dot']),
+          rifle(attachments: const ['att_red_dot'], metres: 2),
+        ],
+        const GeoPoint(52.4064, 16.9252),
+        reachM: 20,
+      );
+
+      expect(piles, hasLength(1));
+      expect(piles.single.count, 2);
+      expect(piles.single.attachments, ['att_red_dot']);
+    });
+
+    test('a pile carries what is on it', () {
+      final piles = pilesWithin(
+        [rifle(attachments: const ['tool_suppressor'])],
+        const GeoPoint(52.4064, 16.9252),
+        reachM: 20,
+      );
+
+      expect(piles.single.attachments, ['tool_suppressor']);
+    });
+  });
 }

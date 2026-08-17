@@ -29,6 +29,9 @@ class DroppedStore {
           condition: row.condition,
           pagesTotal: row.pagesTotal,
           pagesRead: row.pagesRead,
+          attachments: row.attachments.isEmpty
+              ? const []
+              : row.attachments.split(','),
           position: GeoPoint(row.latitude, row.longitude),
           droppedAt: row.droppedAt,
         ),
@@ -54,6 +57,7 @@ class DroppedStore {
       condition: Value(item.condition),
       pagesTotal: Value(item.pagesTotal),
       pagesRead: Value(item.pagesRead),
+      attachments: Value(item.attachments.join(',')),
     ),
   );
 

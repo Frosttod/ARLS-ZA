@@ -29,7 +29,7 @@ import 'tables.dart';
 part 'database.g.dart';
 
 /// Bumped only alongside a migration step in [_migration]. Never reused.
-const int kSchemaVersion = 16;
+const int kSchemaVersion = 17;
 
 /// Keys used in [MetaEntries].
 abstract final class MetaKeys {
@@ -71,7 +71,7 @@ class SaveDatabase extends _$SaveDatabase {
   /// follow a constant reference. `schema_test.dart` keeps it in step with
   /// [kSchemaVersion].
   @override
-  int get schemaVersion => 16;
+  int get schemaVersion => 17;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -209,6 +209,14 @@ class SaveDatabase extends _$SaveDatabase {
         await m.addColumn(vitals, vitals.huntLatitude);
         await m.addColumn(vitals, vitals.huntLongitude);
         await m.addColumn(vitals, vitals.huntCount);
+      }
+
+      // Same shape as v5's: ground_items was created in v7.
+      if (from >= 7 && from < 17) {
+        // §5.6.3: what is bolted to a thing on the ground. Empty reads as
+        // bare, which is what every row written before this was — and, until
+        // now, what every rifle put down became.
+        await m.addColumn(groundItems, groundItems.attachments);
       }
 
       await _writeSchemaVersion(to);

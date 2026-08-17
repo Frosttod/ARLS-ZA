@@ -340,6 +340,15 @@ class GroundItems extends Table {
   IntColumn get pagesTotal => integer().nullable()();
   IntColumn get pagesRead => integer().withDefault(const Constant(0))();
 
+  /// §5.6.3: and what was bolted to it. Same shape as the inventory's column,
+  /// `att_red_dot,tool_suppressor`.
+  ///
+  /// ⚠️ Putting a rifle down used to strip it. The sights, the suppressor and
+  /// the long magazine simply stopped existing — the rarest things in the game
+  /// (§5.6.3), evaporating on the pavement because the row they were written
+  /// to had nowhere to put them.
+  TextColumn get attachments => text().withDefault(const Constant(''))();
+
   RealColumn get latitude => real()();
   RealColumn get longitude => real()();
 

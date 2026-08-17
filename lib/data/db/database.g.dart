@@ -4936,6 +4936,18 @@ class $GroundItemsTable extends GroundItems
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _attachmentsMeta = const VerificationMeta(
+    'attachments',
+  );
+  @override
+  late final GeneratedColumn<String> attachments = GeneratedColumn<String>(
+    'attachments',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
   static const VerificationMeta _latitudeMeta = const VerificationMeta(
     'latitude',
   );
@@ -4978,6 +4990,7 @@ class $GroundItemsTable extends GroundItems
     condition,
     pagesTotal,
     pagesRead,
+    attachments,
     latitude,
     longitude,
     droppedAt,
@@ -5035,6 +5048,15 @@ class $GroundItemsTable extends GroundItems
       context.handle(
         _pagesReadMeta,
         pagesRead.isAcceptableOrUnknown(data['pages_read']!, _pagesReadMeta),
+      );
+    }
+    if (data.containsKey('attachments')) {
+      context.handle(
+        _attachmentsMeta,
+        attachments.isAcceptableOrUnknown(
+          data['attachments']!,
+          _attachmentsMeta,
+        ),
       );
     }
     if (data.containsKey('latitude')) {
@@ -5098,6 +5120,10 @@ class $GroundItemsTable extends GroundItems
         DriftSqlType.int,
         data['${effectivePrefix}pages_read'],
       )!,
+      attachments: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}attachments'],
+      )!,
       latitude: attachedDatabase.typeMapping.read(
         DriftSqlType.double,
         data['${effectivePrefix}latitude'],
@@ -5130,6 +5156,15 @@ class GroundItem extends DataClass implements Insertable<GroundItem> {
   final double? condition;
   final int? pagesTotal;
   final int pagesRead;
+
+  /// §5.6.3: and what was bolted to it. Same shape as the inventory's column,
+  /// `att_red_dot,tool_suppressor`.
+  ///
+  /// ⚠️ Putting a rifle down used to strip it. The sights, the suppressor and
+  /// the long magazine simply stopped existing — the rarest things in the game
+  /// (§5.6.3), evaporating on the pavement because the row they were written
+  /// to had nowhere to put them.
+  final String attachments;
   final double latitude;
   final double longitude;
   final DateTime droppedAt;
@@ -5141,6 +5176,7 @@ class GroundItem extends DataClass implements Insertable<GroundItem> {
     this.condition,
     this.pagesTotal,
     required this.pagesRead,
+    required this.attachments,
     required this.latitude,
     required this.longitude,
     required this.droppedAt,
@@ -5159,6 +5195,7 @@ class GroundItem extends DataClass implements Insertable<GroundItem> {
       map['pages_total'] = Variable<int>(pagesTotal);
     }
     map['pages_read'] = Variable<int>(pagesRead);
+    map['attachments'] = Variable<String>(attachments);
     map['latitude'] = Variable<double>(latitude);
     map['longitude'] = Variable<double>(longitude);
     map['dropped_at'] = Variable<DateTime>(droppedAt);
@@ -5178,6 +5215,7 @@ class GroundItem extends DataClass implements Insertable<GroundItem> {
           ? const Value.absent()
           : Value(pagesTotal),
       pagesRead: Value(pagesRead),
+      attachments: Value(attachments),
       latitude: Value(latitude),
       longitude: Value(longitude),
       droppedAt: Value(droppedAt),
@@ -5197,6 +5235,7 @@ class GroundItem extends DataClass implements Insertable<GroundItem> {
       condition: serializer.fromJson<double?>(json['condition']),
       pagesTotal: serializer.fromJson<int?>(json['pagesTotal']),
       pagesRead: serializer.fromJson<int>(json['pagesRead']),
+      attachments: serializer.fromJson<String>(json['attachments']),
       latitude: serializer.fromJson<double>(json['latitude']),
       longitude: serializer.fromJson<double>(json['longitude']),
       droppedAt: serializer.fromJson<DateTime>(json['droppedAt']),
@@ -5213,6 +5252,7 @@ class GroundItem extends DataClass implements Insertable<GroundItem> {
       'condition': serializer.toJson<double?>(condition),
       'pagesTotal': serializer.toJson<int?>(pagesTotal),
       'pagesRead': serializer.toJson<int>(pagesRead),
+      'attachments': serializer.toJson<String>(attachments),
       'latitude': serializer.toJson<double>(latitude),
       'longitude': serializer.toJson<double>(longitude),
       'droppedAt': serializer.toJson<DateTime>(droppedAt),
@@ -5227,6 +5267,7 @@ class GroundItem extends DataClass implements Insertable<GroundItem> {
     Value<double?> condition = const Value.absent(),
     Value<int?> pagesTotal = const Value.absent(),
     int? pagesRead,
+    String? attachments,
     double? latitude,
     double? longitude,
     DateTime? droppedAt,
@@ -5238,6 +5279,7 @@ class GroundItem extends DataClass implements Insertable<GroundItem> {
     condition: condition.present ? condition.value : this.condition,
     pagesTotal: pagesTotal.present ? pagesTotal.value : this.pagesTotal,
     pagesRead: pagesRead ?? this.pagesRead,
+    attachments: attachments ?? this.attachments,
     latitude: latitude ?? this.latitude,
     longitude: longitude ?? this.longitude,
     droppedAt: droppedAt ?? this.droppedAt,
@@ -5253,6 +5295,9 @@ class GroundItem extends DataClass implements Insertable<GroundItem> {
           ? data.pagesTotal.value
           : this.pagesTotal,
       pagesRead: data.pagesRead.present ? data.pagesRead.value : this.pagesRead,
+      attachments: data.attachments.present
+          ? data.attachments.value
+          : this.attachments,
       latitude: data.latitude.present ? data.latitude.value : this.latitude,
       longitude: data.longitude.present ? data.longitude.value : this.longitude,
       droppedAt: data.droppedAt.present ? data.droppedAt.value : this.droppedAt,
@@ -5269,6 +5314,7 @@ class GroundItem extends DataClass implements Insertable<GroundItem> {
           ..write('condition: $condition, ')
           ..write('pagesTotal: $pagesTotal, ')
           ..write('pagesRead: $pagesRead, ')
+          ..write('attachments: $attachments, ')
           ..write('latitude: $latitude, ')
           ..write('longitude: $longitude, ')
           ..write('droppedAt: $droppedAt')
@@ -5285,6 +5331,7 @@ class GroundItem extends DataClass implements Insertable<GroundItem> {
     condition,
     pagesTotal,
     pagesRead,
+    attachments,
     latitude,
     longitude,
     droppedAt,
@@ -5300,6 +5347,7 @@ class GroundItem extends DataClass implements Insertable<GroundItem> {
           other.condition == this.condition &&
           other.pagesTotal == this.pagesTotal &&
           other.pagesRead == this.pagesRead &&
+          other.attachments == this.attachments &&
           other.latitude == this.latitude &&
           other.longitude == this.longitude &&
           other.droppedAt == this.droppedAt);
@@ -5313,6 +5361,7 @@ class GroundItemsCompanion extends UpdateCompanion<GroundItem> {
   final Value<double?> condition;
   final Value<int?> pagesTotal;
   final Value<int> pagesRead;
+  final Value<String> attachments;
   final Value<double> latitude;
   final Value<double> longitude;
   final Value<DateTime> droppedAt;
@@ -5324,6 +5373,7 @@ class GroundItemsCompanion extends UpdateCompanion<GroundItem> {
     this.condition = const Value.absent(),
     this.pagesTotal = const Value.absent(),
     this.pagesRead = const Value.absent(),
+    this.attachments = const Value.absent(),
     this.latitude = const Value.absent(),
     this.longitude = const Value.absent(),
     this.droppedAt = const Value.absent(),
@@ -5336,6 +5386,7 @@ class GroundItemsCompanion extends UpdateCompanion<GroundItem> {
     this.condition = const Value.absent(),
     this.pagesTotal = const Value.absent(),
     this.pagesRead = const Value.absent(),
+    this.attachments = const Value.absent(),
     required double latitude,
     required double longitude,
     required DateTime droppedAt,
@@ -5352,6 +5403,7 @@ class GroundItemsCompanion extends UpdateCompanion<GroundItem> {
     Expression<double>? condition,
     Expression<int>? pagesTotal,
     Expression<int>? pagesRead,
+    Expression<String>? attachments,
     Expression<double>? latitude,
     Expression<double>? longitude,
     Expression<DateTime>? droppedAt,
@@ -5364,6 +5416,7 @@ class GroundItemsCompanion extends UpdateCompanion<GroundItem> {
       if (condition != null) 'condition': condition,
       if (pagesTotal != null) 'pages_total': pagesTotal,
       if (pagesRead != null) 'pages_read': pagesRead,
+      if (attachments != null) 'attachments': attachments,
       if (latitude != null) 'latitude': latitude,
       if (longitude != null) 'longitude': longitude,
       if (droppedAt != null) 'dropped_at': droppedAt,
@@ -5378,6 +5431,7 @@ class GroundItemsCompanion extends UpdateCompanion<GroundItem> {
     Value<double?>? condition,
     Value<int?>? pagesTotal,
     Value<int>? pagesRead,
+    Value<String>? attachments,
     Value<double>? latitude,
     Value<double>? longitude,
     Value<DateTime>? droppedAt,
@@ -5390,6 +5444,7 @@ class GroundItemsCompanion extends UpdateCompanion<GroundItem> {
       condition: condition ?? this.condition,
       pagesTotal: pagesTotal ?? this.pagesTotal,
       pagesRead: pagesRead ?? this.pagesRead,
+      attachments: attachments ?? this.attachments,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
       droppedAt: droppedAt ?? this.droppedAt,
@@ -5420,6 +5475,9 @@ class GroundItemsCompanion extends UpdateCompanion<GroundItem> {
     if (pagesRead.present) {
       map['pages_read'] = Variable<int>(pagesRead.value);
     }
+    if (attachments.present) {
+      map['attachments'] = Variable<String>(attachments.value);
+    }
     if (latitude.present) {
       map['latitude'] = Variable<double>(latitude.value);
     }
@@ -5442,6 +5500,7 @@ class GroundItemsCompanion extends UpdateCompanion<GroundItem> {
           ..write('condition: $condition, ')
           ..write('pagesTotal: $pagesTotal, ')
           ..write('pagesRead: $pagesRead, ')
+          ..write('attachments: $attachments, ')
           ..write('latitude: $latitude, ')
           ..write('longitude: $longitude, ')
           ..write('droppedAt: $droppedAt')
@@ -9161,6 +9220,7 @@ typedef $$GroundItemsTableCreateCompanionBuilder =
       Value<double?> condition,
       Value<int?> pagesTotal,
       Value<int> pagesRead,
+      Value<String> attachments,
       required double latitude,
       required double longitude,
       required DateTime droppedAt,
@@ -9174,6 +9234,7 @@ typedef $$GroundItemsTableUpdateCompanionBuilder =
       Value<double?> condition,
       Value<int?> pagesTotal,
       Value<int> pagesRead,
+      Value<String> attachments,
       Value<double> latitude,
       Value<double> longitude,
       Value<DateTime> droppedAt,
@@ -9220,6 +9281,11 @@ class $$GroundItemsTableFilterComposer
 
   ColumnFilters<int> get pagesRead => $composableBuilder(
     column: $table.pagesRead,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get attachments => $composableBuilder(
+    column: $table.attachments,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -9283,6 +9349,11 @@ class $$GroundItemsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get attachments => $composableBuilder(
+    column: $table.attachments,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<double> get latitude => $composableBuilder(
     column: $table.latitude,
     builder: (column) => ColumnOrderings(column),
@@ -9330,6 +9401,11 @@ class $$GroundItemsTableAnnotationComposer
 
   GeneratedColumn<int> get pagesRead =>
       $composableBuilder(column: $table.pagesRead, builder: (column) => column);
+
+  GeneratedColumn<String> get attachments => $composableBuilder(
+    column: $table.attachments,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<double> get latitude =>
       $composableBuilder(column: $table.latitude, builder: (column) => column);
@@ -9379,6 +9455,7 @@ class $$GroundItemsTableTableManager
                 Value<double?> condition = const Value.absent(),
                 Value<int?> pagesTotal = const Value.absent(),
                 Value<int> pagesRead = const Value.absent(),
+                Value<String> attachments = const Value.absent(),
                 Value<double> latitude = const Value.absent(),
                 Value<double> longitude = const Value.absent(),
                 Value<DateTime> droppedAt = const Value.absent(),
@@ -9390,6 +9467,7 @@ class $$GroundItemsTableTableManager
                 condition: condition,
                 pagesTotal: pagesTotal,
                 pagesRead: pagesRead,
+                attachments: attachments,
                 latitude: latitude,
                 longitude: longitude,
                 droppedAt: droppedAt,
@@ -9403,6 +9481,7 @@ class $$GroundItemsTableTableManager
                 Value<double?> condition = const Value.absent(),
                 Value<int?> pagesTotal = const Value.absent(),
                 Value<int> pagesRead = const Value.absent(),
+                Value<String> attachments = const Value.absent(),
                 required double latitude,
                 required double longitude,
                 required DateTime droppedAt,
@@ -9414,6 +9493,7 @@ class $$GroundItemsTableTableManager
                 condition: condition,
                 pagesTotal: pagesTotal,
                 pagesRead: pagesRead,
+                attachments: attachments,
                 latitude: latitude,
                 longitude: longitude,
                 droppedAt: droppedAt,
