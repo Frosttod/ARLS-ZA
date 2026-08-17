@@ -34,6 +34,7 @@ import '../sim/daylight.dart';
 import '../map/geometry.dart';
 import '../shelter/shelter.dart';
 import '../sim/body.dart';
+import '../combat/pursuit.dart';
 import '../sim/death.dart';
 import '../sim/occupation.dart';
 import '../sim/physiology.dart';
@@ -133,6 +134,7 @@ class GameLoop {
     BleedTier initialBleeding = BleedTier.none,
     this.deathMode = DeathMode.softcore,
     DateTime? downUntil,
+    Pursuit? pursuit,
     // ignore: avoid_positional_boolean_parameters
     bool dead = false,
     GameClock? clock,
@@ -143,6 +145,8 @@ class GameLoop {
        _bleeding = initialBleeding,
        // ignore: prefer_initializing_formals
        _downUntil = downUntil,
+       // ignore: prefer_initializing_formals
+       _pursuit = pursuit,
        // ignore: prefer_initializing_formals
        _dead = dead,
        power = power ?? const ConstantPowerSource(),
@@ -629,6 +633,10 @@ class GameLoop {
     ),
     bleedTier: Value(_bleeding.name),
     downUntil: Value(_downUntil),
+    huntUntil: Value(_pursuit?.until),
+    huntLatitude: Value(_pursuit?.at.latitude),
+    huntLongitude: Value(_pursuit?.at.longitude),
+    huntCount: Value(_pursuit?.count ?? 0),
   );
 
   void _publish() {
@@ -720,6 +728,18 @@ class GameLoop {
 
   /// §9: how this character ends when the body gives out.
   final DeathMode deathMode;
+
+  /// §5.6.2: the fight the player last walked out of, or null for a quiet
+  /// street. Written with the vitals so that closing the app is not an escape.
+  Pursuit? _pursuit;
+
+  Pursuit? get pursuit => _pursuit;
+
+  /// Records that the street is stirred up, or that it has gone quiet.
+  void setPursuit(Pursuit? hunt) {
+    _pursuit = hunt;
+    writer.stageHot(_toCompanion());
+  }
 
   /// §9.2: when the hour on the ground runs out, then when the grace window
   /// does. Null while upright and unhurt.

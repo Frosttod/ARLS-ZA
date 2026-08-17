@@ -1,7 +1,7 @@
 # ARLS-ZA — lista kontrolna systemów
 
 Stan na dzień **2026-08-16**. Wygenerowana po przejściu pełnego zestawu
-testów: **1410 testów, `flutter analyze` czysty, schemat bazy v12**.
+testów: **1425 testów, `flutter analyze` czysty, schemat bazy v12**.
 
 Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 
@@ -17,7 +17,7 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 
 | Obszar | Testy | Co jest tam pilnowane |
 | :---- | ----: | :---- |
-| `combat` | 233 | tabela kalibracyjna §5.1.2 wiersz po wierszu, obrażenia §5.1.5, budżet sprintu, maszyna stanów, hałas, spawn, magazynek, dodatki |
+| `combat` | 248 | tabela kalibracyjna §5.1.2 wiersz po wierszu, obrażenia §5.1.5, budżet sprintu, maszyna stanów, hałas, spawn, magazynek, dodatki |
 | `ui` | 274 | HUD, ekwipunek, panele, arkusze, geometria dotknięć i pierścieni |
 | `sim` | 195 | tick, metabolizm, tętno, wchłanianie, sen, nawyk gry |
 | `loot` | 132 | tabele, spawner, przeszukanie, rzeczy na ziemi, przeszkody |
@@ -25,7 +25,7 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 | `inventory` | 82 | dwa limity §18.1a, sloty, porcje, dodatki, trwałość |
 | `items` | 71 | katalog jako dane: bilans, nazwy, sloty, użycia |
 | `location` | 53 | bramka dokładności, filtr Kalmana, martwa strefa, anty-cheat |
-| `db` | 50 | migracje v1→v15, integralność, warstwa gorąca i ciepła |
+| `db` | 50 | migracje v1→v16, integralność, warstwa gorąca i ciepła |
 | `shelter` | 55 | strefy §8.1, czasy budowy §8.3, moduły §8.4, obozy §8.5.2, receptury §18.2 |
 | `devtools` | 44 | symulator GPS, nakładka, zegar |
 | `game` | 59 | pętla gry, nadrabianie przerw, próbkowanie |
@@ -33,7 +33,7 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 | `core` | 30 | deterministyczny RNG, zegar |
 | `notes` | 14 | notatki §19.1, podstawianie nazw miejsc |
 
-**Razem 1410.**
+**Razem 1425.**
 
 ### Rzeczy, które testy trzymają jako liczby, a nie jako intencje
 
@@ -88,6 +88,9 @@ Kolejność jest celowa: rzeczy wyżej blokują ocenę tych niżej.
 - [ ] Fala hałasu po strzale jest widoczna i odpowiada promieniowi
 - [ ] **Drugi strzał ściąga ich do drugiego strzału**, nie do pierwszego
 - [ ] Ten, kto już Cię goni, nie daje się odciągnąć hałasem
+- [ ] **Czaszki są na mapie po restarcie gry**, razem z tym, co przeszukane
+- [ ] **Wyjście z gry w trakcie walki nie jest ucieczką** — po powrocie „Wciąż Cię szukają"
+- [ ] Spacer dookoła kwartału gubi ich naprawdę (15 min albo 500 m)
 - [ ] Ciało zostawia czaszkę na mapie, a łup dopiero po przeszukaniu z bliska
 - [ ] **Czaszka pojawia się także, gdy wróg wykrwawi się w biegu**, nie tylko pod celownikiem
 - [ ] Ikony przeciwników nie znikają przy chwilowym braku pozycji
@@ -164,7 +167,6 @@ Rzeczy świadomie odłożone, z powodem i miejscem, w którym wrócą.
 | :---- | :---- | :---- |
 | Stan magazynka nie jest zapisywany | karabin przeładowujący się przy zamkniętej aplikacji to drobne kłamstwo; uczciwa naprawa to zmiana schematu razem z magazynem schronu | etap 8 |
 | Pancerz per lokalizacja | lokalizacja trafienia losowana po obu stronach, ale pancerz nadal liczy się jednym progiem torsa | etap 5+ |
-| Ciała nie są zapisywane | jak cała sesja walki (§6.4 odtwarza populację przy każdym uruchomieniu); ciało żyje 6 h w obrębie sesji | razem z zapisem sesji walki |
 | Światło broni nic nie oświetla | §6.2 daje przeciwnikom promień wykrycia bez kierunku; latarka wymaga modelu widzenia | etap 7 |
 | Budynki nie blokują ruchu przeciwników | warstwa budynków w paczkach nie niesie typu; woda i strefy §3.5 już blokują | po przebudowie paczek |
 | Zawartość magazynu schronu | pojemność (25 kg + moduł, 3 l/kg) jest policzona, ale nie ma gdzie odłożyć rzeczy — to własna tabela i własny ekran | etap 8 (8.5) |

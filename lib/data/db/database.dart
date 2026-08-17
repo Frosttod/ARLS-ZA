@@ -29,7 +29,7 @@ import 'tables.dart';
 part 'database.g.dart';
 
 /// Bumped only alongside a migration step in [_migration]. Never reused.
-const int kSchemaVersion = 15;
+const int kSchemaVersion = 16;
 
 /// Keys used in [MetaEntries].
 abstract final class MetaKeys {
@@ -58,6 +58,7 @@ abstract final class MetaKeys {
     LootBoxes,
     GroundItems,
     Shelters,
+    RemainsEntries,
   ],
 )
 class SaveDatabase extends _$SaveDatabase {
@@ -70,7 +71,7 @@ class SaveDatabase extends _$SaveDatabase {
   /// follow a constant reference. `schema_test.dart` keeps it in step with
   /// [kSchemaVersion].
   @override
-  int get schemaVersion => 15;
+  int get schemaVersion => 16;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -196,6 +197,18 @@ class SaveDatabase extends _$SaveDatabase {
         // §8.3: when work was last credited. Null reads as "never", and the
         // first tick after the update simply starts the clock.
         await m.addColumn(shelters, shelters.workedAt);
+      }
+
+      if (from < 16) {
+        // §10.3: bodies outlive a session, because the player put them there.
+        await m.createTable(remainsEntries);
+
+        // §5.6.2: and a fight walked out of outlives one too, or closing the
+        // app is a perfect escape.
+        await m.addColumn(vitals, vitals.huntUntil);
+        await m.addColumn(vitals, vitals.huntLatitude);
+        await m.addColumn(vitals, vitals.huntLongitude);
+        await m.addColumn(vitals, vitals.huntCount);
       }
 
       await _writeSchemaVersion(to);
@@ -362,6 +375,29 @@ class SaveDatabase extends _$SaveDatabase {
   Future<void> removeGroundItems(List<int> ids) async {
     if (ids.isEmpty) return;
     await (delete(groundItems)..where((t) => t.id.isIn(ids))).go();
+  }
+
+  // -------------------------------------------------------------- bodies ---
+
+  Future<List<RemainsRow>> remainsFor(int profileId) => (select(
+    remainsEntries,
+  )..where((t) => t.profileId.equals(profileId))).get();
+
+  /// Writes a body, or leaves the one already there alone: the same enemy
+  /// cannot fall twice.
+  Future<void> addRemainsRow(RemainsEntriesCompanion body) async {
+    await into(remainsEntries).insert(body, mode: InsertMode.insertOrIgnore);
+  }
+
+  Future<void> markRemainsSearched(int profileId, String enemyId) async {
+    await (update(remainsEntries)..where(
+      (t) => t.profileId.equals(profileId) & t.enemyId.equals(enemyId),
+    )).write(const RemainsEntriesCompanion(searched: Value(true)));
+  }
+
+  Future<void> removeRemains(List<int> ids) async {
+    if (ids.isEmpty) return;
+    await (delete(remainsEntries)..where((t) => t.id.isIn(ids))).go();
   }
 
   // --------------------------------------------------------------- death ---

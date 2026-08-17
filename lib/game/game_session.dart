@@ -17,6 +17,8 @@ import '../devtools/dev_session.dart';
 import '../location/device_position_source.dart';
 import '../location/position_source.dart';
 import '../location/power_source.dart';
+import '../combat/pursuit.dart';
+import '../map/geometry.dart';
 import '../sim/body.dart';
 import '../sim/physiology.dart';
 import '../sim/tick.dart';
@@ -30,6 +32,7 @@ class ActiveCharacter {
     required this.state,
     this.bleeding = BleedTier.none,
     this.downUntil,
+    this.pursuit,
   });
 
   final Profile profile;
@@ -41,6 +44,9 @@ class ActiveCharacter {
 
   /// §9.2: when the hour on the ground runs out, or null while upright.
   final DateTime? downUntil;
+
+  /// §5.6.2: the fight the player last walked out of, or null.
+  final Pursuit? pursuit;
 
   /// §9: how this character ends.
   DeathMode get deathMode => DeathMode.fromWire(profile.deathMode);
@@ -86,6 +92,18 @@ class GameSessionFactory {
       // §9.2: an hour on the ground runs against the wall clock, so it goes on
       // running while the app is dead. That is the point of it.
       downUntil: vitals.downUntil,
+      // §5.6.2: what was still after them when the app went away. Closing it
+      // has to cost something, or nothing in §5 costs anything at all.
+      pursuit:
+          vitals.huntUntil == null ||
+              vitals.huntLatitude == null ||
+              vitals.huntLongitude == null
+          ? null
+          : Pursuit(
+              at: GeoPoint(vitals.huntLatitude!, vitals.huntLongitude!),
+              until: vitals.huntUntil!,
+              count: vitals.huntCount,
+            ),
       state: SimState(
         lastUpdate: vitals.lastUpdate,
         bloodMl: vitals.bloodMl,
@@ -198,6 +216,7 @@ class GameSessionFactory {
       initialBleeding: character.bleeding,
       deathMode: character.deathMode,
       downUntil: character.downUntil,
+      pursuit: character.pursuit,
       dead: character.isDead,
       clock: clock,
       power: power,

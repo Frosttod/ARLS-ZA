@@ -1023,6 +1023,9 @@ class L10nEn extends L10n {
   String get combatMiss => 'Missed.';
 
   @override
+  String get combatStillHunted => 'They are still looking for you.';
+
+  @override
   String get combatDown => 'It went down.';
 
   @override

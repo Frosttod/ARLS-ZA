@@ -1024,6 +1024,9 @@ class L10nPl extends L10n {
   String get combatMiss => 'Pudło.';
 
   @override
+  String get combatStillHunted => 'Wciąż Cię szukają.';
+
+  @override
   String get combatDown => 'Padł.';
 
   @override

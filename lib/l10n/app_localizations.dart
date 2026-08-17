@@ -1873,6 +1873,12 @@ abstract class L10n {
   /// **'Missed.'**
   String get combatMiss;
 
+  /// No description provided for @combatStillHunted.
+  ///
+  /// In en, this message translates to:
+  /// **'They are still looking for you.'**
+  String get combatStillHunted;
+
   /// No description provided for @combatDown.
   ///
   /// In en, this message translates to:

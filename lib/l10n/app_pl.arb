@@ -328,6 +328,7 @@
   "combatHit": "Trafienie — {millilitres} ml",
   "@combatHit": {"placeholders": {"millilitres": {"type": "int"}}},
   "combatMiss": "Pudło.",
+  "combatStillHunted": "Wciąż Cię szukają.",
   "combatDown": "Padł.",
   "combatHeard": "Słychać na {metres} m.",
   "@combatHeard": {"placeholders": {"metres": {"type": "int"}}},

@@ -28,7 +28,10 @@ import 'combat/engagement.dart';
 import 'combat/magazine.dart';
 import 'combat/enemy.dart';
 import 'combat/noise.dart';
+import 'combat/enemy_spawner.dart';
+import 'combat/pursuit.dart';
 import 'combat/remains.dart';
+import 'combat/remains_store.dart';
 import 'combat/attachment.dart';
 import 'combat/sanctuary.dart';
 import 'combat/shot.dart';
@@ -745,6 +748,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     }
 
     await _reloadShelters();
+    await _reloadRemains();
+    _resumeHunt(character);
     await _resolveMap();
     if (mounted) await _offerPermissions();
   }
@@ -1570,6 +1575,32 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     setState(() {
       // §10.3: bodies nobody came back for stop being worth drawing.
       _remains = sweepRemains(_remains, now);
+
+      // §5.6.2: while anything is actually after the player, the fight is
+      // written down — not the fighters, just the fact, the place and the
+      // number. Closing the app in the middle of one used to be a perfect
+      // escape, and nothing in §5 costs anything if the way out is free.
+      final engaged = [
+        for (final enemy in _combat.near(GeoPoint(fix.latitude, fix.longitude)))
+          if (!enemy.isDead &&
+              enemy.state != EnemyState.idle &&
+              enemy.state != EnemyState.returning)
+            enemy,
+      ].length;
+
+      if (engaged > 0) {
+        _loop?.setPursuit(
+          stirredUp(
+            at: GeoPoint(fix.latitude, fix.longitude),
+            now: now,
+            engaged: engaged,
+          ),
+        );
+      } else if (_loop?.pursuit != null &&
+          !_loop!.pursuit!.isWarmAt(now)) {
+        // Gone cold on its own: a walk round the block genuinely loses them.
+        _loop?.setPursuit(null);
+      }
       _combat = _combat.advance(
         playerAt: GeoPoint(fix.latitude, fix.longitude),
         elapsed: elapsed,
@@ -2082,6 +2113,58 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     );
   }
 
+  /// §5.6.2: a fight the player walked out of is a fight that was still going
+  /// on when they came back.
+  ///
+  /// ⚠️ Closing the app used to be a perfect escape: fire into a crowd, kill
+  /// the process, come back to an empty street. Nothing in §5 costs anything
+  /// if the way out is free. The enemies themselves are still not written down
+  /// — §6.4 remakes them — but the fight is, so a few of them are put back
+  /// *looking* for the player rather than on top of them. That is a warning
+  /// and a chance to leave, which is more than they had when they fired.
+  void _resumeHunt(ActiveCharacter character) {
+    final hunt = character.pursuit;
+    final at = _standingAt.value;
+    final now = DateTime.now().toUtc();
+    if (hunt == null || at == null) return;
+
+    final coming = hunt.resumedAt(at, now);
+    if (coming <= 0) {
+      _loop?.setPursuit(null);
+      return;
+    }
+
+    final random = Random(character.profile.rngSeed ^ hunt.until.hashCode);
+    final back = <Enemy>[];
+
+    for (var i = 0; i < coming; i++) {
+      // Out at the edge of the fight rather than in the player's lap: they
+      // spread out looking while the app was shut.
+      final where = at.offsetBy(
+        metres: kSpawnMinM + random.nextDouble() * 120,
+        bearingDeg: random.nextDouble() * 360,
+      );
+
+      back.add(
+        Enemy.spawn(
+          id: 'hunt.${hunt.until.millisecondsSinceEpoch}.$i',
+          kind: EnemyKind.walker,
+          at: where,
+          home: where,
+          random: random,
+          sightFactor: _world?.denseUrban ?? false ? 0.7 : 1,
+        ).hears(hunt.at),
+      );
+    }
+
+    setState(() => _combat = CombatSession(
+      seed: _combat.seed,
+      enemies: [..._combat.enemies, ...back],
+      open: _combat.open,
+    ));
+    _say(L10n.of(context).combatStillHunted);
+  }
+
   // --------------------------------------------------------------- death ---
 
   /// §9: everything that happens once, at the moment the body gives out.
@@ -2506,15 +2589,40 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// §10.3: marks where something went down, for as long as it is worth
   /// coming back to.
   void _remember(Enemy enemy) {
-    _remains = addRemains(
-      _remains,
-      Remains(
-        id: enemy.id,
-        kind: enemy.kind,
-        position: enemy.position,
-        diedAt: DateTime.now().toUtc(),
-      ),
+    final body = Remains(
+      id: enemy.id,
+      kind: enemy.kind,
+      position: enemy.position,
+      diedAt: DateTime.now().toUtc(),
     );
+
+    final before = _remains;
+    _remains = addRemains(_remains, body);
+
+    // §10.3: and onto the disk, because the player put it there. §6.4 remakes
+    // the living every run and that is right — a Walker is not a place — but a
+    // body is, and losing it to a restart takes away their own work.
+    if (!identical(_remains, before)) {
+      final character = _character;
+      if (character != null) {
+        unawaited(
+          RemainsStore(widget.session.db).add(character.profile.id, body),
+        );
+      }
+    }
+  }
+
+  /// §10.3: the bodies this character has left, from the save.
+  Future<void> _reloadRemains() async {
+    final character = _character;
+    if (character == null) return;
+
+    final bodies = await RemainsStore(
+      widget.session.db,
+    ).load(character.profile.id, DateTime.now().toUtc());
+    if (!mounted) return;
+
+    setState(() => _remains = bodies);
   }
 
   /// §10.3: turns out the pockets of the body in reach.
@@ -2533,6 +2641,13 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
           other.id == body.id ? other.emptied : other,
       ];
     });
+
+    final character = _character;
+    if (character != null) {
+      await RemainsStore(
+        widget.session.db,
+      ).searched(character.profile.id, body.id);
+    }
 
     await _leaveRemainsOf(body);
     if (!mounted) return;

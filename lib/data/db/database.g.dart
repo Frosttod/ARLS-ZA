@@ -1149,6 +1149,51 @@ class $VitalsTable extends Vitals with TableInfo<$VitalsTable, Vital> {
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _huntUntilMeta = const VerificationMeta(
+    'huntUntil',
+  );
+  @override
+  late final GeneratedColumn<DateTime> huntUntil = GeneratedColumn<DateTime>(
+    'hunt_until',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _huntLatitudeMeta = const VerificationMeta(
+    'huntLatitude',
+  );
+  @override
+  late final GeneratedColumn<double> huntLatitude = GeneratedColumn<double>(
+    'hunt_latitude',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _huntLongitudeMeta = const VerificationMeta(
+    'huntLongitude',
+  );
+  @override
+  late final GeneratedColumn<double> huntLongitude = GeneratedColumn<double>(
+    'hunt_longitude',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _huntCountMeta = const VerificationMeta(
+    'huntCount',
+  );
+  @override
+  late final GeneratedColumn<int> huntCount = GeneratedColumn<int>(
+    'hunt_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   static const VerificationMeta _occupationJsonMeta = const VerificationMeta(
     'occupationJson',
   );
@@ -1224,6 +1269,10 @@ class $VitalsTable extends Vitals with TableInfo<$VitalsTable, Vital> {
     rngCursors,
     bleedTier,
     downUntil,
+    huntUntil,
+    huntLatitude,
+    huntLongitude,
+    huntCount,
     occupationJson,
     speedKmh,
     carriedKg,
@@ -1345,6 +1394,36 @@ class $VitalsTable extends Vitals with TableInfo<$VitalsTable, Vital> {
         downUntil.isAcceptableOrUnknown(data['down_until']!, _downUntilMeta),
       );
     }
+    if (data.containsKey('hunt_until')) {
+      context.handle(
+        _huntUntilMeta,
+        huntUntil.isAcceptableOrUnknown(data['hunt_until']!, _huntUntilMeta),
+      );
+    }
+    if (data.containsKey('hunt_latitude')) {
+      context.handle(
+        _huntLatitudeMeta,
+        huntLatitude.isAcceptableOrUnknown(
+          data['hunt_latitude']!,
+          _huntLatitudeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('hunt_longitude')) {
+      context.handle(
+        _huntLongitudeMeta,
+        huntLongitude.isAcceptableOrUnknown(
+          data['hunt_longitude']!,
+          _huntLongitudeMeta,
+        ),
+      );
+    }
+    if (data.containsKey('hunt_count')) {
+      context.handle(
+        _huntCountMeta,
+        huntCount.isAcceptableOrUnknown(data['hunt_count']!, _huntCountMeta),
+      );
+    }
     if (data.containsKey('occupation_json')) {
       context.handle(
         _occupationJsonMeta,
@@ -1449,6 +1528,22 @@ class $VitalsTable extends Vitals with TableInfo<$VitalsTable, Vital> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}down_until'],
       ),
+      huntUntil: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}hunt_until'],
+      ),
+      huntLatitude: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}hunt_latitude'],
+      ),
+      huntLongitude: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}hunt_longitude'],
+      ),
+      huntCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}hunt_count'],
+      )!,
       occupationJson: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}occupation_json'],
@@ -1515,6 +1610,17 @@ class Vital extends DataClass implements Insertable<Vital> {
   /// screen.
   final DateTime? downUntil;
 
+  /// §5.6.2, §6.1a: a fight the player walked out of, and where.
+  ///
+  /// ⚠️ The enemies themselves are not written down — §6.4 remakes them every
+  /// run — so without this, closing the app is a perfect escape from anything.
+  /// Four numbers is all it takes to make it not one: when the street was last
+  /// stirred up, where, and by how many.
+  final DateTime? huntUntil;
+  final double? huntLatitude;
+  final double? huntLongitude;
+  final int huntCount;
+
   /// Occupation in progress, as JSON (§2.1a). Null when the character is idle.
   ///
   /// Stored opaquely rather than as columns: occupations gain fields as the
@@ -1552,6 +1658,10 @@ class Vital extends DataClass implements Insertable<Vital> {
     required this.rngCursors,
     required this.bleedTier,
     this.downUntil,
+    this.huntUntil,
+    this.huntLatitude,
+    this.huntLongitude,
+    required this.huntCount,
     this.occupationJson,
     required this.speedKmh,
     required this.carriedKg,
@@ -1583,6 +1693,16 @@ class Vital extends DataClass implements Insertable<Vital> {
     if (!nullToAbsent || downUntil != null) {
       map['down_until'] = Variable<DateTime>(downUntil);
     }
+    if (!nullToAbsent || huntUntil != null) {
+      map['hunt_until'] = Variable<DateTime>(huntUntil);
+    }
+    if (!nullToAbsent || huntLatitude != null) {
+      map['hunt_latitude'] = Variable<double>(huntLatitude);
+    }
+    if (!nullToAbsent || huntLongitude != null) {
+      map['hunt_longitude'] = Variable<double>(huntLongitude);
+    }
+    map['hunt_count'] = Variable<int>(huntCount);
     if (!nullToAbsent || occupationJson != null) {
       map['occupation_json'] = Variable<String>(occupationJson);
     }
@@ -1617,6 +1737,16 @@ class Vital extends DataClass implements Insertable<Vital> {
       downUntil: downUntil == null && nullToAbsent
           ? const Value.absent()
           : Value(downUntil),
+      huntUntil: huntUntil == null && nullToAbsent
+          ? const Value.absent()
+          : Value(huntUntil),
+      huntLatitude: huntLatitude == null && nullToAbsent
+          ? const Value.absent()
+          : Value(huntLatitude),
+      huntLongitude: huntLongitude == null && nullToAbsent
+          ? const Value.absent()
+          : Value(huntLongitude),
+      huntCount: Value(huntCount),
       occupationJson: occupationJson == null && nullToAbsent
           ? const Value.absent()
           : Value(occupationJson),
@@ -1647,6 +1777,10 @@ class Vital extends DataClass implements Insertable<Vital> {
       rngCursors: serializer.fromJson<String>(json['rngCursors']),
       bleedTier: serializer.fromJson<String>(json['bleedTier']),
       downUntil: serializer.fromJson<DateTime?>(json['downUntil']),
+      huntUntil: serializer.fromJson<DateTime?>(json['huntUntil']),
+      huntLatitude: serializer.fromJson<double?>(json['huntLatitude']),
+      huntLongitude: serializer.fromJson<double?>(json['huntLongitude']),
+      huntCount: serializer.fromJson<int>(json['huntCount']),
       occupationJson: serializer.fromJson<String?>(json['occupationJson']),
       speedKmh: serializer.fromJson<double>(json['speedKmh']),
       carriedKg: serializer.fromJson<double>(json['carriedKg']),
@@ -1672,6 +1806,10 @@ class Vital extends DataClass implements Insertable<Vital> {
       'rngCursors': serializer.toJson<String>(rngCursors),
       'bleedTier': serializer.toJson<String>(bleedTier),
       'downUntil': serializer.toJson<DateTime?>(downUntil),
+      'huntUntil': serializer.toJson<DateTime?>(huntUntil),
+      'huntLatitude': serializer.toJson<double?>(huntLatitude),
+      'huntLongitude': serializer.toJson<double?>(huntLongitude),
+      'huntCount': serializer.toJson<int>(huntCount),
       'occupationJson': serializer.toJson<String?>(occupationJson),
       'speedKmh': serializer.toJson<double>(speedKmh),
       'carriedKg': serializer.toJson<double>(carriedKg),
@@ -1695,6 +1833,10 @@ class Vital extends DataClass implements Insertable<Vital> {
     String? rngCursors,
     String? bleedTier,
     Value<DateTime?> downUntil = const Value.absent(),
+    Value<DateTime?> huntUntil = const Value.absent(),
+    Value<double?> huntLatitude = const Value.absent(),
+    Value<double?> huntLongitude = const Value.absent(),
+    int? huntCount,
     Value<String?> occupationJson = const Value.absent(),
     double? speedKmh,
     double? carriedKg,
@@ -1715,6 +1857,12 @@ class Vital extends DataClass implements Insertable<Vital> {
     rngCursors: rngCursors ?? this.rngCursors,
     bleedTier: bleedTier ?? this.bleedTier,
     downUntil: downUntil.present ? downUntil.value : this.downUntil,
+    huntUntil: huntUntil.present ? huntUntil.value : this.huntUntil,
+    huntLatitude: huntLatitude.present ? huntLatitude.value : this.huntLatitude,
+    huntLongitude: huntLongitude.present
+        ? huntLongitude.value
+        : this.huntLongitude,
+    huntCount: huntCount ?? this.huntCount,
     occupationJson: occupationJson.present
         ? occupationJson.value
         : this.occupationJson,
@@ -1749,6 +1897,14 @@ class Vital extends DataClass implements Insertable<Vital> {
           : this.rngCursors,
       bleedTier: data.bleedTier.present ? data.bleedTier.value : this.bleedTier,
       downUntil: data.downUntil.present ? data.downUntil.value : this.downUntil,
+      huntUntil: data.huntUntil.present ? data.huntUntil.value : this.huntUntil,
+      huntLatitude: data.huntLatitude.present
+          ? data.huntLatitude.value
+          : this.huntLatitude,
+      huntLongitude: data.huntLongitude.present
+          ? data.huntLongitude.value
+          : this.huntLongitude,
+      huntCount: data.huntCount.present ? data.huntCount.value : this.huntCount,
       occupationJson: data.occupationJson.present
           ? data.occupationJson.value
           : this.occupationJson,
@@ -1780,6 +1936,10 @@ class Vital extends DataClass implements Insertable<Vital> {
           ..write('rngCursors: $rngCursors, ')
           ..write('bleedTier: $bleedTier, ')
           ..write('downUntil: $downUntil, ')
+          ..write('huntUntil: $huntUntil, ')
+          ..write('huntLatitude: $huntLatitude, ')
+          ..write('huntLongitude: $huntLongitude, ')
+          ..write('huntCount: $huntCount, ')
           ..write('occupationJson: $occupationJson, ')
           ..write('speedKmh: $speedKmh, ')
           ..write('carriedKg: $carriedKg, ')
@@ -1790,7 +1950,7 @@ class Vital extends DataClass implements Insertable<Vital> {
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     profileId,
     lastUpdate,
     bloodMl,
@@ -1805,12 +1965,16 @@ class Vital extends DataClass implements Insertable<Vital> {
     rngCursors,
     bleedTier,
     downUntil,
+    huntUntil,
+    huntLatitude,
+    huntLongitude,
+    huntCount,
     occupationJson,
     speedKmh,
     carriedKg,
     pendingKcal,
     pendingWaterMl,
-  );
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1829,6 +1993,10 @@ class Vital extends DataClass implements Insertable<Vital> {
           other.rngCursors == this.rngCursors &&
           other.bleedTier == this.bleedTier &&
           other.downUntil == this.downUntil &&
+          other.huntUntil == this.huntUntil &&
+          other.huntLatitude == this.huntLatitude &&
+          other.huntLongitude == this.huntLongitude &&
+          other.huntCount == this.huntCount &&
           other.occupationJson == this.occupationJson &&
           other.speedKmh == this.speedKmh &&
           other.carriedKg == this.carriedKg &&
@@ -1851,6 +2019,10 @@ class VitalsCompanion extends UpdateCompanion<Vital> {
   final Value<String> rngCursors;
   final Value<String> bleedTier;
   final Value<DateTime?> downUntil;
+  final Value<DateTime?> huntUntil;
+  final Value<double?> huntLatitude;
+  final Value<double?> huntLongitude;
+  final Value<int> huntCount;
   final Value<String?> occupationJson;
   final Value<double> speedKmh;
   final Value<double> carriedKg;
@@ -1871,6 +2043,10 @@ class VitalsCompanion extends UpdateCompanion<Vital> {
     this.rngCursors = const Value.absent(),
     this.bleedTier = const Value.absent(),
     this.downUntil = const Value.absent(),
+    this.huntUntil = const Value.absent(),
+    this.huntLatitude = const Value.absent(),
+    this.huntLongitude = const Value.absent(),
+    this.huntCount = const Value.absent(),
     this.occupationJson = const Value.absent(),
     this.speedKmh = const Value.absent(),
     this.carriedKg = const Value.absent(),
@@ -1892,6 +2068,10 @@ class VitalsCompanion extends UpdateCompanion<Vital> {
     this.rngCursors = const Value.absent(),
     this.bleedTier = const Value.absent(),
     this.downUntil = const Value.absent(),
+    this.huntUntil = const Value.absent(),
+    this.huntLatitude = const Value.absent(),
+    this.huntLongitude = const Value.absent(),
+    this.huntCount = const Value.absent(),
     this.occupationJson = const Value.absent(),
     this.speedKmh = const Value.absent(),
     this.carriedKg = const Value.absent(),
@@ -1917,6 +2097,10 @@ class VitalsCompanion extends UpdateCompanion<Vital> {
     Expression<String>? rngCursors,
     Expression<String>? bleedTier,
     Expression<DateTime>? downUntil,
+    Expression<DateTime>? huntUntil,
+    Expression<double>? huntLatitude,
+    Expression<double>? huntLongitude,
+    Expression<int>? huntCount,
     Expression<String>? occupationJson,
     Expression<double>? speedKmh,
     Expression<double>? carriedKg,
@@ -1938,6 +2122,10 @@ class VitalsCompanion extends UpdateCompanion<Vital> {
       if (rngCursors != null) 'rng_cursors': rngCursors,
       if (bleedTier != null) 'bleed_tier': bleedTier,
       if (downUntil != null) 'down_until': downUntil,
+      if (huntUntil != null) 'hunt_until': huntUntil,
+      if (huntLatitude != null) 'hunt_latitude': huntLatitude,
+      if (huntLongitude != null) 'hunt_longitude': huntLongitude,
+      if (huntCount != null) 'hunt_count': huntCount,
       if (occupationJson != null) 'occupation_json': occupationJson,
       if (speedKmh != null) 'speed_kmh': speedKmh,
       if (carriedKg != null) 'carried_kg': carriedKg,
@@ -1961,6 +2149,10 @@ class VitalsCompanion extends UpdateCompanion<Vital> {
     Value<String>? rngCursors,
     Value<String>? bleedTier,
     Value<DateTime?>? downUntil,
+    Value<DateTime?>? huntUntil,
+    Value<double?>? huntLatitude,
+    Value<double?>? huntLongitude,
+    Value<int>? huntCount,
     Value<String?>? occupationJson,
     Value<double>? speedKmh,
     Value<double>? carriedKg,
@@ -1982,6 +2174,10 @@ class VitalsCompanion extends UpdateCompanion<Vital> {
       rngCursors: rngCursors ?? this.rngCursors,
       bleedTier: bleedTier ?? this.bleedTier,
       downUntil: downUntil ?? this.downUntil,
+      huntUntil: huntUntil ?? this.huntUntil,
+      huntLatitude: huntLatitude ?? this.huntLatitude,
+      huntLongitude: huntLongitude ?? this.huntLongitude,
+      huntCount: huntCount ?? this.huntCount,
       occupationJson: occupationJson ?? this.occupationJson,
       speedKmh: speedKmh ?? this.speedKmh,
       carriedKg: carriedKg ?? this.carriedKg,
@@ -2035,6 +2231,18 @@ class VitalsCompanion extends UpdateCompanion<Vital> {
     if (downUntil.present) {
       map['down_until'] = Variable<DateTime>(downUntil.value);
     }
+    if (huntUntil.present) {
+      map['hunt_until'] = Variable<DateTime>(huntUntil.value);
+    }
+    if (huntLatitude.present) {
+      map['hunt_latitude'] = Variable<double>(huntLatitude.value);
+    }
+    if (huntLongitude.present) {
+      map['hunt_longitude'] = Variable<double>(huntLongitude.value);
+    }
+    if (huntCount.present) {
+      map['hunt_count'] = Variable<int>(huntCount.value);
+    }
     if (occupationJson.present) {
       map['occupation_json'] = Variable<String>(occupationJson.value);
     }
@@ -2070,6 +2278,10 @@ class VitalsCompanion extends UpdateCompanion<Vital> {
           ..write('rngCursors: $rngCursors, ')
           ..write('bleedTier: $bleedTier, ')
           ..write('downUntil: $downUntil, ')
+          ..write('huntUntil: $huntUntil, ')
+          ..write('huntLatitude: $huntLatitude, ')
+          ..write('huntLongitude: $huntLongitude, ')
+          ..write('huntCount: $huntCount, ')
           ..write('occupationJson: $occupationJson, ')
           ..write('speedKmh: $speedKmh, ')
           ..write('carriedKg: $carriedKg, ')
@@ -6092,6 +6304,513 @@ class SheltersCompanion extends UpdateCompanion<ShelterRow> {
   }
 }
 
+class $RemainsEntriesTable extends RemainsEntries
+    with TableInfo<$RemainsEntriesTable, RemainsRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $RemainsEntriesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _profileIdMeta = const VerificationMeta(
+    'profileId',
+  );
+  @override
+  late final GeneratedColumn<int> profileId = GeneratedColumn<int>(
+    'profile_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _enemyIdMeta = const VerificationMeta(
+    'enemyId',
+  );
+  @override
+  late final GeneratedColumn<String> enemyId = GeneratedColumn<String>(
+    'enemy_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  @override
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+    'kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _latitudeMeta = const VerificationMeta(
+    'latitude',
+  );
+  @override
+  late final GeneratedColumn<double> latitude = GeneratedColumn<double>(
+    'latitude',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _longitudeMeta = const VerificationMeta(
+    'longitude',
+  );
+  @override
+  late final GeneratedColumn<double> longitude = GeneratedColumn<double>(
+    'longitude',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _diedAtMeta = const VerificationMeta('diedAt');
+  @override
+  late final GeneratedColumn<DateTime> diedAt = GeneratedColumn<DateTime>(
+    'died_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _searchedMeta = const VerificationMeta(
+    'searched',
+  );
+  @override
+  late final GeneratedColumn<bool> searched = GeneratedColumn<bool>(
+    'searched',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("searched" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    profileId,
+    enemyId,
+    kind,
+    latitude,
+    longitude,
+    diedAt,
+    searched,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'remains_entries';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<RemainsRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('profile_id')) {
+      context.handle(
+        _profileIdMeta,
+        profileId.isAcceptableOrUnknown(data['profile_id']!, _profileIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_profileIdMeta);
+    }
+    if (data.containsKey('enemy_id')) {
+      context.handle(
+        _enemyIdMeta,
+        enemyId.isAcceptableOrUnknown(data['enemy_id']!, _enemyIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_enemyIdMeta);
+    }
+    if (data.containsKey('kind')) {
+      context.handle(
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_kindMeta);
+    }
+    if (data.containsKey('latitude')) {
+      context.handle(
+        _latitudeMeta,
+        latitude.isAcceptableOrUnknown(data['latitude']!, _latitudeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_latitudeMeta);
+    }
+    if (data.containsKey('longitude')) {
+      context.handle(
+        _longitudeMeta,
+        longitude.isAcceptableOrUnknown(data['longitude']!, _longitudeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_longitudeMeta);
+    }
+    if (data.containsKey('died_at')) {
+      context.handle(
+        _diedAtMeta,
+        diedAt.isAcceptableOrUnknown(data['died_at']!, _diedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_diedAtMeta);
+    }
+    if (data.containsKey('searched')) {
+      context.handle(
+        _searchedMeta,
+        searched.isAcceptableOrUnknown(data['searched']!, _searchedMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  RemainsRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return RemainsRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      profileId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}profile_id'],
+      )!,
+      enemyId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}enemy_id'],
+      )!,
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kind'],
+      )!,
+      latitude: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}latitude'],
+      )!,
+      longitude: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}longitude'],
+      )!,
+      diedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}died_at'],
+      )!,
+      searched: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}searched'],
+      )!,
+    );
+  }
+
+  @override
+  $RemainsEntriesTable createAlias(String alias) {
+    return $RemainsEntriesTable(attachedDatabase, alias);
+  }
+}
+
+class RemainsRow extends DataClass implements Insertable<RemainsRow> {
+  final int id;
+  final int profileId;
+
+  /// The enemy's own id, so the same body cannot be written twice.
+  final String enemyId;
+
+  /// §6.2's kind, by name — what it was decides what is in its pockets.
+  final String kind;
+  final double latitude;
+  final double longitude;
+  final DateTime diedAt;
+
+  /// Pockets already turned out. The mark stays on the map rather than the row
+  /// being deleted: a player who searched it should be able to see that they
+  /// did, or they walk back to it a second time.
+  final bool searched;
+  const RemainsRow({
+    required this.id,
+    required this.profileId,
+    required this.enemyId,
+    required this.kind,
+    required this.latitude,
+    required this.longitude,
+    required this.diedAt,
+    required this.searched,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['profile_id'] = Variable<int>(profileId);
+    map['enemy_id'] = Variable<String>(enemyId);
+    map['kind'] = Variable<String>(kind);
+    map['latitude'] = Variable<double>(latitude);
+    map['longitude'] = Variable<double>(longitude);
+    map['died_at'] = Variable<DateTime>(diedAt);
+    map['searched'] = Variable<bool>(searched);
+    return map;
+  }
+
+  RemainsEntriesCompanion toCompanion(bool nullToAbsent) {
+    return RemainsEntriesCompanion(
+      id: Value(id),
+      profileId: Value(profileId),
+      enemyId: Value(enemyId),
+      kind: Value(kind),
+      latitude: Value(latitude),
+      longitude: Value(longitude),
+      diedAt: Value(diedAt),
+      searched: Value(searched),
+    );
+  }
+
+  factory RemainsRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return RemainsRow(
+      id: serializer.fromJson<int>(json['id']),
+      profileId: serializer.fromJson<int>(json['profileId']),
+      enemyId: serializer.fromJson<String>(json['enemyId']),
+      kind: serializer.fromJson<String>(json['kind']),
+      latitude: serializer.fromJson<double>(json['latitude']),
+      longitude: serializer.fromJson<double>(json['longitude']),
+      diedAt: serializer.fromJson<DateTime>(json['diedAt']),
+      searched: serializer.fromJson<bool>(json['searched']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'profileId': serializer.toJson<int>(profileId),
+      'enemyId': serializer.toJson<String>(enemyId),
+      'kind': serializer.toJson<String>(kind),
+      'latitude': serializer.toJson<double>(latitude),
+      'longitude': serializer.toJson<double>(longitude),
+      'diedAt': serializer.toJson<DateTime>(diedAt),
+      'searched': serializer.toJson<bool>(searched),
+    };
+  }
+
+  RemainsRow copyWith({
+    int? id,
+    int? profileId,
+    String? enemyId,
+    String? kind,
+    double? latitude,
+    double? longitude,
+    DateTime? diedAt,
+    bool? searched,
+  }) => RemainsRow(
+    id: id ?? this.id,
+    profileId: profileId ?? this.profileId,
+    enemyId: enemyId ?? this.enemyId,
+    kind: kind ?? this.kind,
+    latitude: latitude ?? this.latitude,
+    longitude: longitude ?? this.longitude,
+    diedAt: diedAt ?? this.diedAt,
+    searched: searched ?? this.searched,
+  );
+  RemainsRow copyWithCompanion(RemainsEntriesCompanion data) {
+    return RemainsRow(
+      id: data.id.present ? data.id.value : this.id,
+      profileId: data.profileId.present ? data.profileId.value : this.profileId,
+      enemyId: data.enemyId.present ? data.enemyId.value : this.enemyId,
+      kind: data.kind.present ? data.kind.value : this.kind,
+      latitude: data.latitude.present ? data.latitude.value : this.latitude,
+      longitude: data.longitude.present ? data.longitude.value : this.longitude,
+      diedAt: data.diedAt.present ? data.diedAt.value : this.diedAt,
+      searched: data.searched.present ? data.searched.value : this.searched,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RemainsRow(')
+          ..write('id: $id, ')
+          ..write('profileId: $profileId, ')
+          ..write('enemyId: $enemyId, ')
+          ..write('kind: $kind, ')
+          ..write('latitude: $latitude, ')
+          ..write('longitude: $longitude, ')
+          ..write('diedAt: $diedAt, ')
+          ..write('searched: $searched')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    profileId,
+    enemyId,
+    kind,
+    latitude,
+    longitude,
+    diedAt,
+    searched,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is RemainsRow &&
+          other.id == this.id &&
+          other.profileId == this.profileId &&
+          other.enemyId == this.enemyId &&
+          other.kind == this.kind &&
+          other.latitude == this.latitude &&
+          other.longitude == this.longitude &&
+          other.diedAt == this.diedAt &&
+          other.searched == this.searched);
+}
+
+class RemainsEntriesCompanion extends UpdateCompanion<RemainsRow> {
+  final Value<int> id;
+  final Value<int> profileId;
+  final Value<String> enemyId;
+  final Value<String> kind;
+  final Value<double> latitude;
+  final Value<double> longitude;
+  final Value<DateTime> diedAt;
+  final Value<bool> searched;
+  const RemainsEntriesCompanion({
+    this.id = const Value.absent(),
+    this.profileId = const Value.absent(),
+    this.enemyId = const Value.absent(),
+    this.kind = const Value.absent(),
+    this.latitude = const Value.absent(),
+    this.longitude = const Value.absent(),
+    this.diedAt = const Value.absent(),
+    this.searched = const Value.absent(),
+  });
+  RemainsEntriesCompanion.insert({
+    this.id = const Value.absent(),
+    required int profileId,
+    required String enemyId,
+    required String kind,
+    required double latitude,
+    required double longitude,
+    required DateTime diedAt,
+    this.searched = const Value.absent(),
+  }) : profileId = Value(profileId),
+       enemyId = Value(enemyId),
+       kind = Value(kind),
+       latitude = Value(latitude),
+       longitude = Value(longitude),
+       diedAt = Value(diedAt);
+  static Insertable<RemainsRow> custom({
+    Expression<int>? id,
+    Expression<int>? profileId,
+    Expression<String>? enemyId,
+    Expression<String>? kind,
+    Expression<double>? latitude,
+    Expression<double>? longitude,
+    Expression<DateTime>? diedAt,
+    Expression<bool>? searched,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (profileId != null) 'profile_id': profileId,
+      if (enemyId != null) 'enemy_id': enemyId,
+      if (kind != null) 'kind': kind,
+      if (latitude != null) 'latitude': latitude,
+      if (longitude != null) 'longitude': longitude,
+      if (diedAt != null) 'died_at': diedAt,
+      if (searched != null) 'searched': searched,
+    });
+  }
+
+  RemainsEntriesCompanion copyWith({
+    Value<int>? id,
+    Value<int>? profileId,
+    Value<String>? enemyId,
+    Value<String>? kind,
+    Value<double>? latitude,
+    Value<double>? longitude,
+    Value<DateTime>? diedAt,
+    Value<bool>? searched,
+  }) {
+    return RemainsEntriesCompanion(
+      id: id ?? this.id,
+      profileId: profileId ?? this.profileId,
+      enemyId: enemyId ?? this.enemyId,
+      kind: kind ?? this.kind,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+      diedAt: diedAt ?? this.diedAt,
+      searched: searched ?? this.searched,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (profileId.present) {
+      map['profile_id'] = Variable<int>(profileId.value);
+    }
+    if (enemyId.present) {
+      map['enemy_id'] = Variable<String>(enemyId.value);
+    }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
+    }
+    if (latitude.present) {
+      map['latitude'] = Variable<double>(latitude.value);
+    }
+    if (longitude.present) {
+      map['longitude'] = Variable<double>(longitude.value);
+    }
+    if (diedAt.present) {
+      map['died_at'] = Variable<DateTime>(diedAt.value);
+    }
+    if (searched.present) {
+      map['searched'] = Variable<bool>(searched.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RemainsEntriesCompanion(')
+          ..write('id: $id, ')
+          ..write('profileId: $profileId, ')
+          ..write('enemyId: $enemyId, ')
+          ..write('kind: $kind, ')
+          ..write('latitude: $latitude, ')
+          ..write('longitude: $longitude, ')
+          ..write('diedAt: $diedAt, ')
+          ..write('searched: $searched')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$SaveDatabase extends GeneratedDatabase {
   _$SaveDatabase(QueryExecutor e) : super(e);
   $SaveDatabaseManager get managers => $SaveDatabaseManager(this);
@@ -6109,6 +6828,7 @@ abstract class _$SaveDatabase extends GeneratedDatabase {
   late final $LootBoxesTable lootBoxes = $LootBoxesTable(this);
   late final $GroundItemsTable groundItems = $GroundItemsTable(this);
   late final $SheltersTable shelters = $SheltersTable(this);
+  late final $RemainsEntriesTable remainsEntries = $RemainsEntriesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -6124,6 +6844,7 @@ abstract class _$SaveDatabase extends GeneratedDatabase {
     lootBoxes,
     groundItems,
     shelters,
+    remainsEntries,
   ];
   @override
   DriftDatabaseOptions get options =>
@@ -6626,6 +7347,10 @@ typedef $$VitalsTableCreateCompanionBuilder =
       Value<String> rngCursors,
       Value<String> bleedTier,
       Value<DateTime?> downUntil,
+      Value<DateTime?> huntUntil,
+      Value<double?> huntLatitude,
+      Value<double?> huntLongitude,
+      Value<int> huntCount,
       Value<String?> occupationJson,
       Value<double> speedKmh,
       Value<double> carriedKg,
@@ -6648,6 +7373,10 @@ typedef $$VitalsTableUpdateCompanionBuilder =
       Value<String> rngCursors,
       Value<String> bleedTier,
       Value<DateTime?> downUntil,
+      Value<DateTime?> huntUntil,
+      Value<double?> huntLatitude,
+      Value<double?> huntLongitude,
+      Value<int> huntCount,
       Value<String?> occupationJson,
       Value<double> speedKmh,
       Value<double> carriedKg,
@@ -6731,6 +7460,26 @@ class $$VitalsTableFilterComposer
 
   ColumnFilters<DateTime> get downUntil => $composableBuilder(
     column: $table.downUntil,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get huntUntil => $composableBuilder(
+    column: $table.huntUntil,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get huntLatitude => $composableBuilder(
+    column: $table.huntLatitude,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get huntLongitude => $composableBuilder(
+    column: $table.huntLongitude,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get huntCount => $composableBuilder(
+    column: $table.huntCount,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6839,6 +7588,26 @@ class $$VitalsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<DateTime> get huntUntil => $composableBuilder(
+    column: $table.huntUntil,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get huntLatitude => $composableBuilder(
+    column: $table.huntLatitude,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get huntLongitude => $composableBuilder(
+    column: $table.huntLongitude,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get huntCount => $composableBuilder(
+    column: $table.huntCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get occupationJson => $composableBuilder(
     column: $table.occupationJson,
     builder: (column) => ColumnOrderings(column),
@@ -6926,6 +7695,22 @@ class $$VitalsTableAnnotationComposer
   GeneratedColumn<DateTime> get downUntil =>
       $composableBuilder(column: $table.downUntil, builder: (column) => column);
 
+  GeneratedColumn<DateTime> get huntUntil =>
+      $composableBuilder(column: $table.huntUntil, builder: (column) => column);
+
+  GeneratedColumn<double> get huntLatitude => $composableBuilder(
+    column: $table.huntLatitude,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get huntLongitude => $composableBuilder(
+    column: $table.huntLongitude,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get huntCount =>
+      $composableBuilder(column: $table.huntCount, builder: (column) => column);
+
   GeneratedColumn<String> get occupationJson => $composableBuilder(
     column: $table.occupationJson,
     builder: (column) => column,
@@ -6990,6 +7775,10 @@ class $$VitalsTableTableManager
                 Value<String> rngCursors = const Value.absent(),
                 Value<String> bleedTier = const Value.absent(),
                 Value<DateTime?> downUntil = const Value.absent(),
+                Value<DateTime?> huntUntil = const Value.absent(),
+                Value<double?> huntLatitude = const Value.absent(),
+                Value<double?> huntLongitude = const Value.absent(),
+                Value<int> huntCount = const Value.absent(),
                 Value<String?> occupationJson = const Value.absent(),
                 Value<double> speedKmh = const Value.absent(),
                 Value<double> carriedKg = const Value.absent(),
@@ -7010,6 +7799,10 @@ class $$VitalsTableTableManager
                 rngCursors: rngCursors,
                 bleedTier: bleedTier,
                 downUntil: downUntil,
+                huntUntil: huntUntil,
+                huntLatitude: huntLatitude,
+                huntLongitude: huntLongitude,
+                huntCount: huntCount,
                 occupationJson: occupationJson,
                 speedKmh: speedKmh,
                 carriedKg: carriedKg,
@@ -7032,6 +7825,10 @@ class $$VitalsTableTableManager
                 Value<String> rngCursors = const Value.absent(),
                 Value<String> bleedTier = const Value.absent(),
                 Value<DateTime?> downUntil = const Value.absent(),
+                Value<DateTime?> huntUntil = const Value.absent(),
+                Value<double?> huntLatitude = const Value.absent(),
+                Value<double?> huntLongitude = const Value.absent(),
+                Value<int> huntCount = const Value.absent(),
                 Value<String?> occupationJson = const Value.absent(),
                 Value<double> speedKmh = const Value.absent(),
                 Value<double> carriedKg = const Value.absent(),
@@ -7052,6 +7849,10 @@ class $$VitalsTableTableManager
                 rngCursors: rngCursors,
                 bleedTier: bleedTier,
                 downUntil: downUntil,
+                huntUntil: huntUntil,
+                huntLatitude: huntLatitude,
+                huntLongitude: huntLongitude,
+                huntCount: huntCount,
                 occupationJson: occupationJson,
                 speedKmh: speedKmh,
                 carriedKg: carriedKg,
@@ -9012,6 +9813,259 @@ typedef $$SheltersTableProcessedTableManager =
       ShelterRow,
       PrefetchHooks Function()
     >;
+typedef $$RemainsEntriesTableCreateCompanionBuilder =
+    RemainsEntriesCompanion Function({
+      Value<int> id,
+      required int profileId,
+      required String enemyId,
+      required String kind,
+      required double latitude,
+      required double longitude,
+      required DateTime diedAt,
+      Value<bool> searched,
+    });
+typedef $$RemainsEntriesTableUpdateCompanionBuilder =
+    RemainsEntriesCompanion Function({
+      Value<int> id,
+      Value<int> profileId,
+      Value<String> enemyId,
+      Value<String> kind,
+      Value<double> latitude,
+      Value<double> longitude,
+      Value<DateTime> diedAt,
+      Value<bool> searched,
+    });
+
+class $$RemainsEntriesTableFilterComposer
+    extends Composer<_$SaveDatabase, $RemainsEntriesTable> {
+  $$RemainsEntriesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get profileId => $composableBuilder(
+    column: $table.profileId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get enemyId => $composableBuilder(
+    column: $table.enemyId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get latitude => $composableBuilder(
+    column: $table.latitude,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get longitude => $composableBuilder(
+    column: $table.longitude,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get diedAt => $composableBuilder(
+    column: $table.diedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get searched => $composableBuilder(
+    column: $table.searched,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$RemainsEntriesTableOrderingComposer
+    extends Composer<_$SaveDatabase, $RemainsEntriesTable> {
+  $$RemainsEntriesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get profileId => $composableBuilder(
+    column: $table.profileId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get enemyId => $composableBuilder(
+    column: $table.enemyId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get latitude => $composableBuilder(
+    column: $table.latitude,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get longitude => $composableBuilder(
+    column: $table.longitude,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get diedAt => $composableBuilder(
+    column: $table.diedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get searched => $composableBuilder(
+    column: $table.searched,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$RemainsEntriesTableAnnotationComposer
+    extends Composer<_$SaveDatabase, $RemainsEntriesTable> {
+  $$RemainsEntriesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get profileId =>
+      $composableBuilder(column: $table.profileId, builder: (column) => column);
+
+  GeneratedColumn<String> get enemyId =>
+      $composableBuilder(column: $table.enemyId, builder: (column) => column);
+
+  GeneratedColumn<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
+
+  GeneratedColumn<double> get latitude =>
+      $composableBuilder(column: $table.latitude, builder: (column) => column);
+
+  GeneratedColumn<double> get longitude =>
+      $composableBuilder(column: $table.longitude, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get diedAt =>
+      $composableBuilder(column: $table.diedAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get searched =>
+      $composableBuilder(column: $table.searched, builder: (column) => column);
+}
+
+class $$RemainsEntriesTableTableManager
+    extends
+        RootTableManager<
+          _$SaveDatabase,
+          $RemainsEntriesTable,
+          RemainsRow,
+          $$RemainsEntriesTableFilterComposer,
+          $$RemainsEntriesTableOrderingComposer,
+          $$RemainsEntriesTableAnnotationComposer,
+          $$RemainsEntriesTableCreateCompanionBuilder,
+          $$RemainsEntriesTableUpdateCompanionBuilder,
+          (
+            RemainsRow,
+            BaseReferences<_$SaveDatabase, $RemainsEntriesTable, RemainsRow>,
+          ),
+          RemainsRow,
+          PrefetchHooks Function()
+        > {
+  $$RemainsEntriesTableTableManager(
+    _$SaveDatabase db,
+    $RemainsEntriesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$RemainsEntriesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$RemainsEntriesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$RemainsEntriesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> profileId = const Value.absent(),
+                Value<String> enemyId = const Value.absent(),
+                Value<String> kind = const Value.absent(),
+                Value<double> latitude = const Value.absent(),
+                Value<double> longitude = const Value.absent(),
+                Value<DateTime> diedAt = const Value.absent(),
+                Value<bool> searched = const Value.absent(),
+              }) => RemainsEntriesCompanion(
+                id: id,
+                profileId: profileId,
+                enemyId: enemyId,
+                kind: kind,
+                latitude: latitude,
+                longitude: longitude,
+                diedAt: diedAt,
+                searched: searched,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int profileId,
+                required String enemyId,
+                required String kind,
+                required double latitude,
+                required double longitude,
+                required DateTime diedAt,
+                Value<bool> searched = const Value.absent(),
+              }) => RemainsEntriesCompanion.insert(
+                id: id,
+                profileId: profileId,
+                enemyId: enemyId,
+                kind: kind,
+                latitude: latitude,
+                longitude: longitude,
+                diedAt: diedAt,
+                searched: searched,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$RemainsEntriesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$SaveDatabase,
+      $RemainsEntriesTable,
+      RemainsRow,
+      $$RemainsEntriesTableFilterComposer,
+      $$RemainsEntriesTableOrderingComposer,
+      $$RemainsEntriesTableAnnotationComposer,
+      $$RemainsEntriesTableCreateCompanionBuilder,
+      $$RemainsEntriesTableUpdateCompanionBuilder,
+      (
+        RemainsRow,
+        BaseReferences<_$SaveDatabase, $RemainsEntriesTable, RemainsRow>,
+      ),
+      RemainsRow,
+      PrefetchHooks Function()
+    >;
 
 class $SaveDatabaseManager {
   final _$SaveDatabase _db;
@@ -9036,4 +10090,6 @@ class $SaveDatabaseManager {
       $$GroundItemsTableTableManager(_db, _db.groundItems);
   $$SheltersTableTableManager get shelters =>
       $$SheltersTableTableManager(_db, _db.shelters);
+  $$RemainsEntriesTableTableManager get remainsEntries =>
+      $$RemainsEntriesTableTableManager(_db, _db.remainsEntries);
 }

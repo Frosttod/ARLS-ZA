@@ -111,6 +111,17 @@ class Vitals extends Table {
   /// screen.
   DateTimeColumn get downUntil => dateTime().nullable()();
 
+  /// §5.6.2, §6.1a: a fight the player walked out of, and where.
+  ///
+  /// ⚠️ The enemies themselves are not written down — §6.4 remakes them every
+  /// run — so without this, closing the app is a perfect escape from anything.
+  /// Four numbers is all it takes to make it not one: when the street was last
+  /// stirred up, where, and by how many.
+  DateTimeColumn get huntUntil => dateTime().nullable()();
+  RealColumn get huntLatitude => real().nullable()();
+  RealColumn get huntLongitude => real().nullable()();
+  IntColumn get huntCount => integer().withDefault(const Constant(0))();
+
   /// Occupation in progress, as JSON (§2.1a). Null when the character is idle.
   ///
   /// Stored opaquely rather than as columns: occupations gain fields as the
@@ -400,5 +411,39 @@ class Shelters extends Table {
   @override
   List<String> get customConstraints => [
     'FOREIGN KEY (profile_id) REFERENCES profiles (id) ON DELETE CASCADE',
+  ];
+}
+
+/// §10.3: bodies, where they fell.
+///
+/// Persisted, unlike the enemies themselves. §6.4 remakes the population every
+/// time the game runs, and that is right for a Walker — it is not a place. A
+/// body is: the player put it there, remembered where, and is entitled to walk
+/// back for the pockets. Losing it to a restart takes away their own work.
+@DataClassName('RemainsRow')
+class RemainsEntries extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get profileId => integer()();
+
+  /// The enemy's own id, so the same body cannot be written twice.
+  TextColumn get enemyId => text()();
+
+  /// §6.2's kind, by name — what it was decides what is in its pockets.
+  TextColumn get kind => text()();
+
+  RealColumn get latitude => real()();
+  RealColumn get longitude => real()();
+
+  DateTimeColumn get diedAt => dateTime()();
+
+  /// Pockets already turned out. The mark stays on the map rather than the row
+  /// being deleted: a player who searched it should be able to see that they
+  /// did, or they walk back to it a second time.
+  BoolColumn get searched => boolean().withDefault(const Constant(false))();
+
+  @override
+  List<String> get customConstraints => [
+    'FOREIGN KEY (profile_id) REFERENCES profiles (id) ON DELETE CASCADE',
+    'UNIQUE (profile_id, enemy_id)',
   ];
 }
