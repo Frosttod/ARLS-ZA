@@ -16,10 +16,10 @@ Każdy zamknięty etap dostaje sekcję **Dziennik wykonania** z decyzjami podję
 | 5 | Walka, przeciwnicy, hałas | 🟡 14/14 zadań, przed testem w terenie | — | — |
 | 6 | Ognisko z pełnym cyklem | ⬜ | — | — |
 | 7 | Audio pozycyjne i haptyka | ⬜ | — | — |
-| 8 | Schron, obóz, pętla dobowa | 🟡 | 8/9 | schemat v14 |
+| 8 | Schron, obóz, pętla dobowa | 🟡 8/9 zadań, przed testem w terenie | — | schemat v17 |
 | 9 | Onboarding, dostępność, zgodność | ⬜ | — | — |
 
-**Metryki:** 1263 testy · `flutter analyze` czysty · schemat bazy **v12** · release APK 89,5 MB bez devtools
+**Metryki:** 1454 testy · `flutter analyze` czysty · schemat bazy **v17** · release APK 89,5 MB bez devtools
 
 ### Zablokowane na użytkowniku
 
