@@ -322,9 +322,6 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// somebody backed out and came in again.
   final ValueNotifier<List<Shelter>> _shelters = ValueNotifier(const []);
 
-  /// §2.1a.3: when the last stretch of work on a site was credited.
-  DateTime? _workedAt;
-
   /// §12: what the game has just said. Under the HUD, never over the menu.
   final ValueNotifier<List<Notice>> _notices = ValueNotifier(const []);
 
@@ -2175,6 +2172,12 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
   // ------------------------------------------------------------- shelter ---
 
+  /// §8.3: how often the progress of a build reaches the disk.
+  ///
+  /// Often enough that a killed process costs a few seconds of nailing, rarely
+  /// enough that a three-hour build is not ten thousand writes.
+  static const Duration kBuildWriteEvery = Duration(seconds: 15);
+
   /// §8.1: the circles the fight does not happen inside.
   List<Sanctuary> get _sanctuaries => [
     for (final place in _shelters.value)
@@ -2205,33 +2208,59 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     if (_shelters.value.isEmpty) return;
 
     final now = snapshot.state.lastUpdate;
-    final fix = snapshot.displayFix;
-    final at = fix == null ? null : GeoPoint(fix.latitude, fix.longitude);
 
-    // §2.1a.3: work only happens on the site. A stretch of standing there is
-    // spent on whatever is going up; a stretch anywhere else buys nothing, so
-    // a player cannot start a nine-hour workshop and walk to the next town.
-    final since = _workedAt;
-    _workedAt = now;
-    if (at != null && since != null && now.isAfter(since)) {
-      final spent = now.difference(since);
+    // ⚠️ The smoothed, sticky position — never `snapshot.displayFix`. A night
+    // at home is a night indoors, and indoors is where the accuracy gate has
+    // nothing to hand over: reading the fix straight off the snapshot meant
+    // the one place a shelter is ever built was the one place the game could
+    // not tell you were standing.
+    final at = _standingAt.value;
+
+    // §2.1a.3, §8.3: work only happens on the site, and it is measured against
+    // a timestamp on the row rather than one in memory. Held in memory it
+    // started again at nothing every time the process did — so a shelter left
+    // to build overnight, with the app closed exactly as §8.3 intends, was in
+    // the same state in the morning as it had been at bedtime.
+    //
+    // With the app dead nobody can know whether the player stayed. Crediting
+    // the gap to somebody standing on the site now is the generous reading of
+    // an unanswerable question, and the alternative — losing a night's work
+    // because a phone went to sleep — is the bug this exists to fix.
+    if (at != null) {
+      final places = [..._shelters.value];
       var wrote = false;
 
-      final places = [..._shelters.value];
       for (var i = 0; i < places.length; i++) {
         final place = places[i];
-        if (!place.atSite(at)) continue;
         if (place.buildLeft == null && place.buildingLeft == null) continue;
-        if (place.buildLeft == Duration.zero &&
-            (place.buildingLeft ?? Duration.zero) == Duration.zero) {
+        if ((place.buildLeft ?? Duration.zero) <= Duration.zero &&
+            (place.buildingLeft ?? Duration.zero) <= Duration.zero) {
           continue;
         }
 
-        final worked = place.worked(spent);
+        final since = place.workedAt ?? now;
+        final gap = now.isAfter(since) ? now.difference(since) : Duration.zero;
+        final onSite = place.atSite(at);
+
+        // In chunks rather than every tick: three hours of one-second writes
+        // is ten thousand of them for a bar nobody is watching. The stamp only
+        // moves when something is written, so nothing is lost by waiting.
+        if (gap < kBuildWriteEvery) continue;
+
+        // The stamp moves whether or not anything was earned. Without that, a
+        // walk to the shops and back would bank the whole walk.
+        final worked = place.worked(onSite ? gap : Duration.zero, at: now);
         places[i] = worked;
         _shelters.value = [...places];
         await ShelterStore(widget.session.db).saveWork(worked);
-        wrote = true;
+
+        // Only a finished job is worth re-reading the table for: that is when
+        // a module turns into a level and the row has to be settled.
+        wrote =
+            wrote ||
+            (place.isReadyAt(now) != worked.isReadyAt(now)) ||
+            (place.building != null &&
+                (worked.buildingLeft ?? Duration.zero) <= Duration.zero);
       }
       if (wrote) await _reloadShelters();
     }

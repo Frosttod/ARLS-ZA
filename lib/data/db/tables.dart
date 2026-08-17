@@ -369,6 +369,14 @@ class Shelters extends Table {
   /// existed, which then falls back to the plain deadline.
   IntColumn get buildLeftSeconds => integer().nullable()();
 
+  /// §8.3: when work was last credited against this place.
+  ///
+  /// ⚠️ On the row rather than in memory. Held in memory it started again at
+  /// nothing every time the process did — so a shelter left to build overnight,
+  /// with the app closed as §8.3 intends, was in exactly the same state in the
+  /// morning as it had been at bedtime.
+  DateTimeColumn get workedAt => dateTime().nullable()();
+
   /// §8.4: `storage:2,lounge:1`. Absent means nought, which is what every
   /// shelter starts as.
   TextColumn get modules => text().withDefault(const Constant(''))();

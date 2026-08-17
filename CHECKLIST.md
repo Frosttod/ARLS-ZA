@@ -1,7 +1,7 @@
 # ARLS-ZA — lista kontrolna systemów
 
 Stan na dzień **2026-08-16**. Wygenerowana po przejściu pełnego zestawu
-testów: **1395 testów, `flutter analyze` czysty, schemat bazy v12**.
+testów: **1397 testów, `flutter analyze` czysty, schemat bazy v12**.
 
 Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 
@@ -25,15 +25,15 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 | `inventory` | 82 | dwa limity §18.1a, sloty, porcje, dodatki, trwałość |
 | `items` | 71 | katalog jako dane: bilans, nazwy, sloty, użycia |
 | `location` | 53 | bramka dokładności, filtr Kalmana, martwa strefa, anty-cheat |
-| `db` | 50 | migracje v1→v14, integralność, warstwa gorąca i ciepła |
-| `shelter` | 52 | strefy §8.1, czasy budowy §8.3, moduły §8.4, obozy §8.5.2, receptury §18.2 |
+| `db` | 50 | migracje v1→v15, integralność, warstwa gorąca i ciepła |
+| `shelter` | 55 | strefy §8.1, czasy budowy §8.3, moduły §8.4, obozy §8.5.2, receptury §18.2 |
 | `devtools` | 44 | symulator GPS, nakładka, zegar |
 | `game` | 54 | pętla gry, nadrabianie przerw, próbkowanie |
 | `safety` | 34 | strefy wykluczone §3.5 |
 | `core` | 30 | deterministyczny RNG, zegar |
 | `notes` | 14 | notatki §19.1, podstawianie nazw miejsc |
 
-**Razem 1395.**
+**Razem 1397.**
 
 ### Rzeczy, które testy trzymają jako liczby, a nie jako intencje
 
@@ -122,6 +122,8 @@ Kolejność jest celowa: rzeczy wyżej blokują ocenę tych niżej.
 - [ ] Rozbudowa modułu jest odmówiona spoza schronu, z podaniem powodu
 - [ ] **Licznik budowy rusza od razu** po jej rozpoczęciu, bez wychodzenia z ekranu
 - [ ] Pasek budowy jest pod paskiem statystyk, gdy stoisz na placu
+- [ ] **Schron postawiony wieczorem jest gotowy rano** — przy zamkniętej aplikacji
+- [ ] Postęp budowy przeżywa ubicie procesu (traci najwyżej 15 s)
 
 ### 2.6. Śmierć (§9)
 

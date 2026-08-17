@@ -5332,6 +5332,17 @@ class $SheltersTable extends Shelters
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _workedAtMeta = const VerificationMeta(
+    'workedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> workedAt = GeneratedColumn<DateTime>(
+    'worked_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _modulesMeta = const VerificationMeta(
     'modules',
   );
@@ -5398,6 +5409,7 @@ class $SheltersTable extends Shelters
     startedAt,
     buildSeconds,
     buildLeftSeconds,
+    workedAt,
     modules,
     visitedAt,
     building,
@@ -5479,6 +5491,12 @@ class $SheltersTable extends Shelters
         ),
       );
     }
+    if (data.containsKey('worked_at')) {
+      context.handle(
+        _workedAtMeta,
+        workedAt.isAcceptableOrUnknown(data['worked_at']!, _workedAtMeta),
+      );
+    }
     if (data.containsKey('modules')) {
       context.handle(
         _modulesMeta,
@@ -5556,6 +5574,10 @@ class $SheltersTable extends Shelters
         DriftSqlType.int,
         data['${effectivePrefix}build_left_seconds'],
       ),
+      workedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}worked_at'],
+      ),
       modules: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}modules'],
@@ -5606,6 +5628,14 @@ class ShelterRow extends DataClass implements Insertable<ShelterRow> {
   /// existed, which then falls back to the plain deadline.
   final int? buildLeftSeconds;
 
+  /// §8.3: when work was last credited against this place.
+  ///
+  /// ⚠️ On the row rather than in memory. Held in memory it started again at
+  /// nothing every time the process did — so a shelter left to build overnight,
+  /// with the app closed as §8.3 intends, was in exactly the same state in the
+  /// morning as it had been at bedtime.
+  final DateTime? workedAt;
+
   /// §8.4: `storage:2,lounge:1`. Absent means nought, which is what every
   /// shelter starts as.
   final String modules;
@@ -5634,6 +5664,7 @@ class ShelterRow extends DataClass implements Insertable<ShelterRow> {
     required this.startedAt,
     required this.buildSeconds,
     this.buildLeftSeconds,
+    this.workedAt,
     required this.modules,
     this.visitedAt,
     this.building,
@@ -5652,6 +5683,9 @@ class ShelterRow extends DataClass implements Insertable<ShelterRow> {
     map['build_seconds'] = Variable<int>(buildSeconds);
     if (!nullToAbsent || buildLeftSeconds != null) {
       map['build_left_seconds'] = Variable<int>(buildLeftSeconds);
+    }
+    if (!nullToAbsent || workedAt != null) {
+      map['worked_at'] = Variable<DateTime>(workedAt);
     }
     map['modules'] = Variable<String>(modules);
     if (!nullToAbsent || visitedAt != null) {
@@ -5681,6 +5715,9 @@ class ShelterRow extends DataClass implements Insertable<ShelterRow> {
       buildLeftSeconds: buildLeftSeconds == null && nullToAbsent
           ? const Value.absent()
           : Value(buildLeftSeconds),
+      workedAt: workedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(workedAt),
       modules: Value(modules),
       visitedAt: visitedAt == null && nullToAbsent
           ? const Value.absent()
@@ -5711,6 +5748,7 @@ class ShelterRow extends DataClass implements Insertable<ShelterRow> {
       startedAt: serializer.fromJson<DateTime>(json['startedAt']),
       buildSeconds: serializer.fromJson<int>(json['buildSeconds']),
       buildLeftSeconds: serializer.fromJson<int?>(json['buildLeftSeconds']),
+      workedAt: serializer.fromJson<DateTime?>(json['workedAt']),
       modules: serializer.fromJson<String>(json['modules']),
       visitedAt: serializer.fromJson<DateTime?>(json['visitedAt']),
       building: serializer.fromJson<String?>(json['building']),
@@ -5732,6 +5770,7 @@ class ShelterRow extends DataClass implements Insertable<ShelterRow> {
       'startedAt': serializer.toJson<DateTime>(startedAt),
       'buildSeconds': serializer.toJson<int>(buildSeconds),
       'buildLeftSeconds': serializer.toJson<int?>(buildLeftSeconds),
+      'workedAt': serializer.toJson<DateTime?>(workedAt),
       'modules': serializer.toJson<String>(modules),
       'visitedAt': serializer.toJson<DateTime?>(visitedAt),
       'building': serializer.toJson<String?>(building),
@@ -5749,6 +5788,7 @@ class ShelterRow extends DataClass implements Insertable<ShelterRow> {
     DateTime? startedAt,
     int? buildSeconds,
     Value<int?> buildLeftSeconds = const Value.absent(),
+    Value<DateTime?> workedAt = const Value.absent(),
     String? modules,
     Value<DateTime?> visitedAt = const Value.absent(),
     Value<String?> building = const Value.absent(),
@@ -5765,6 +5805,7 @@ class ShelterRow extends DataClass implements Insertable<ShelterRow> {
     buildLeftSeconds: buildLeftSeconds.present
         ? buildLeftSeconds.value
         : this.buildLeftSeconds,
+    workedAt: workedAt.present ? workedAt.value : this.workedAt,
     modules: modules ?? this.modules,
     visitedAt: visitedAt.present ? visitedAt.value : this.visitedAt,
     building: building.present ? building.value : this.building,
@@ -5789,6 +5830,7 @@ class ShelterRow extends DataClass implements Insertable<ShelterRow> {
       buildLeftSeconds: data.buildLeftSeconds.present
           ? data.buildLeftSeconds.value
           : this.buildLeftSeconds,
+      workedAt: data.workedAt.present ? data.workedAt.value : this.workedAt,
       modules: data.modules.present ? data.modules.value : this.modules,
       visitedAt: data.visitedAt.present ? data.visitedAt.value : this.visitedAt,
       building: data.building.present ? data.building.value : this.building,
@@ -5812,6 +5854,7 @@ class ShelterRow extends DataClass implements Insertable<ShelterRow> {
           ..write('startedAt: $startedAt, ')
           ..write('buildSeconds: $buildSeconds, ')
           ..write('buildLeftSeconds: $buildLeftSeconds, ')
+          ..write('workedAt: $workedAt, ')
           ..write('modules: $modules, ')
           ..write('visitedAt: $visitedAt, ')
           ..write('building: $building, ')
@@ -5831,6 +5874,7 @@ class ShelterRow extends DataClass implements Insertable<ShelterRow> {
     startedAt,
     buildSeconds,
     buildLeftSeconds,
+    workedAt,
     modules,
     visitedAt,
     building,
@@ -5849,6 +5893,7 @@ class ShelterRow extends DataClass implements Insertable<ShelterRow> {
           other.startedAt == this.startedAt &&
           other.buildSeconds == this.buildSeconds &&
           other.buildLeftSeconds == this.buildLeftSeconds &&
+          other.workedAt == this.workedAt &&
           other.modules == this.modules &&
           other.visitedAt == this.visitedAt &&
           other.building == this.building &&
@@ -5865,6 +5910,7 @@ class SheltersCompanion extends UpdateCompanion<ShelterRow> {
   final Value<DateTime> startedAt;
   final Value<int> buildSeconds;
   final Value<int?> buildLeftSeconds;
+  final Value<DateTime?> workedAt;
   final Value<String> modules;
   final Value<DateTime?> visitedAt;
   final Value<String?> building;
@@ -5879,6 +5925,7 @@ class SheltersCompanion extends UpdateCompanion<ShelterRow> {
     this.startedAt = const Value.absent(),
     this.buildSeconds = const Value.absent(),
     this.buildLeftSeconds = const Value.absent(),
+    this.workedAt = const Value.absent(),
     this.modules = const Value.absent(),
     this.visitedAt = const Value.absent(),
     this.building = const Value.absent(),
@@ -5894,6 +5941,7 @@ class SheltersCompanion extends UpdateCompanion<ShelterRow> {
     required DateTime startedAt,
     required int buildSeconds,
     this.buildLeftSeconds = const Value.absent(),
+    this.workedAt = const Value.absent(),
     this.modules = const Value.absent(),
     this.visitedAt = const Value.absent(),
     this.building = const Value.absent(),
@@ -5914,6 +5962,7 @@ class SheltersCompanion extends UpdateCompanion<ShelterRow> {
     Expression<DateTime>? startedAt,
     Expression<int>? buildSeconds,
     Expression<int>? buildLeftSeconds,
+    Expression<DateTime>? workedAt,
     Expression<String>? modules,
     Expression<DateTime>? visitedAt,
     Expression<String>? building,
@@ -5929,6 +5978,7 @@ class SheltersCompanion extends UpdateCompanion<ShelterRow> {
       if (startedAt != null) 'started_at': startedAt,
       if (buildSeconds != null) 'build_seconds': buildSeconds,
       if (buildLeftSeconds != null) 'build_left_seconds': buildLeftSeconds,
+      if (workedAt != null) 'worked_at': workedAt,
       if (modules != null) 'modules': modules,
       if (visitedAt != null) 'visited_at': visitedAt,
       if (building != null) 'building': building,
@@ -5947,6 +5997,7 @@ class SheltersCompanion extends UpdateCompanion<ShelterRow> {
     Value<DateTime>? startedAt,
     Value<int>? buildSeconds,
     Value<int?>? buildLeftSeconds,
+    Value<DateTime?>? workedAt,
     Value<String>? modules,
     Value<DateTime?>? visitedAt,
     Value<String?>? building,
@@ -5962,6 +6013,7 @@ class SheltersCompanion extends UpdateCompanion<ShelterRow> {
       startedAt: startedAt ?? this.startedAt,
       buildSeconds: buildSeconds ?? this.buildSeconds,
       buildLeftSeconds: buildLeftSeconds ?? this.buildLeftSeconds,
+      workedAt: workedAt ?? this.workedAt,
       modules: modules ?? this.modules,
       visitedAt: visitedAt ?? this.visitedAt,
       building: building ?? this.building,
@@ -5997,6 +6049,9 @@ class SheltersCompanion extends UpdateCompanion<ShelterRow> {
     if (buildLeftSeconds.present) {
       map['build_left_seconds'] = Variable<int>(buildLeftSeconds.value);
     }
+    if (workedAt.present) {
+      map['worked_at'] = Variable<DateTime>(workedAt.value);
+    }
     if (modules.present) {
       map['modules'] = Variable<String>(modules.value);
     }
@@ -6026,6 +6081,7 @@ class SheltersCompanion extends UpdateCompanion<ShelterRow> {
           ..write('startedAt: $startedAt, ')
           ..write('buildSeconds: $buildSeconds, ')
           ..write('buildLeftSeconds: $buildLeftSeconds, ')
+          ..write('workedAt: $workedAt, ')
           ..write('modules: $modules, ')
           ..write('visitedAt: $visitedAt, ')
           ..write('building: $building, ')
@@ -8596,6 +8652,7 @@ typedef $$SheltersTableCreateCompanionBuilder =
       required DateTime startedAt,
       required int buildSeconds,
       Value<int?> buildLeftSeconds,
+      Value<DateTime?> workedAt,
       Value<String> modules,
       Value<DateTime?> visitedAt,
       Value<String?> building,
@@ -8612,6 +8669,7 @@ typedef $$SheltersTableUpdateCompanionBuilder =
       Value<DateTime> startedAt,
       Value<int> buildSeconds,
       Value<int?> buildLeftSeconds,
+      Value<DateTime?> workedAt,
       Value<String> modules,
       Value<DateTime?> visitedAt,
       Value<String?> building,
@@ -8665,6 +8723,11 @@ class $$SheltersTableFilterComposer
 
   ColumnFilters<int> get buildLeftSeconds => $composableBuilder(
     column: $table.buildLeftSeconds,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get workedAt => $composableBuilder(
+    column: $table.workedAt,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -8743,6 +8806,11 @@ class $$SheltersTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<DateTime> get workedAt => $composableBuilder(
+    column: $table.workedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get modules => $composableBuilder(
     column: $table.modules,
     builder: (column) => ColumnOrderings(column),
@@ -8806,6 +8874,9 @@ class $$SheltersTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<DateTime> get workedAt =>
+      $composableBuilder(column: $table.workedAt, builder: (column) => column);
+
   GeneratedColumn<String> get modules =>
       $composableBuilder(column: $table.modules, builder: (column) => column);
 
@@ -8865,6 +8936,7 @@ class $$SheltersTableTableManager
                 Value<DateTime> startedAt = const Value.absent(),
                 Value<int> buildSeconds = const Value.absent(),
                 Value<int?> buildLeftSeconds = const Value.absent(),
+                Value<DateTime?> workedAt = const Value.absent(),
                 Value<String> modules = const Value.absent(),
                 Value<DateTime?> visitedAt = const Value.absent(),
                 Value<String?> building = const Value.absent(),
@@ -8879,6 +8951,7 @@ class $$SheltersTableTableManager
                 startedAt: startedAt,
                 buildSeconds: buildSeconds,
                 buildLeftSeconds: buildLeftSeconds,
+                workedAt: workedAt,
                 modules: modules,
                 visitedAt: visitedAt,
                 building: building,
@@ -8895,6 +8968,7 @@ class $$SheltersTableTableManager
                 required DateTime startedAt,
                 required int buildSeconds,
                 Value<int?> buildLeftSeconds = const Value.absent(),
+                Value<DateTime?> workedAt = const Value.absent(),
                 Value<String> modules = const Value.absent(),
                 Value<DateTime?> visitedAt = const Value.absent(),
                 Value<String?> building = const Value.absent(),
@@ -8909,6 +8983,7 @@ class $$SheltersTableTableManager
                 startedAt: startedAt,
                 buildSeconds: buildSeconds,
                 buildLeftSeconds: buildLeftSeconds,
+                workedAt: workedAt,
                 modules: modules,
                 visitedAt: visitedAt,
                 building: building,

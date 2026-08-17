@@ -29,7 +29,7 @@ import 'tables.dart';
 part 'database.g.dart';
 
 /// Bumped only alongside a migration step in [_migration]. Never reused.
-const int kSchemaVersion = 14;
+const int kSchemaVersion = 15;
 
 /// Keys used in [MetaEntries].
 abstract final class MetaKeys {
@@ -70,7 +70,7 @@ class SaveDatabase extends _$SaveDatabase {
   /// follow a constant reference. `schema_test.dart` keeps it in step with
   /// [kSchemaVersion].
   @override
-  int get schemaVersion => 14;
+  int get schemaVersion => 15;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -189,6 +189,13 @@ class SaveDatabase extends _$SaveDatabase {
         // §9.2: a softcore character who has gone down. Null is upright,
         // which is what every existing save was.
         await m.addColumn(vitals, vitals.downUntil);
+      }
+
+      // Same shape as v5's: shelters was created in v13.
+      if (from >= 13 && from < 15) {
+        // §8.3: when work was last credited. Null reads as "never", and the
+        // first tick after the update simply starts the clock.
+        await m.addColumn(shelters, shelters.workedAt);
       }
 
       await _writeSchemaVersion(to);

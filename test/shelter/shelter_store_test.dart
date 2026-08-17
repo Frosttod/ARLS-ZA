@@ -65,6 +65,34 @@ void main() {
     expect(done.single.isReadyAt(away), isTrue);
   });
 
+  test('and the night counts, with the app closed (§8.3)', () async {
+    // Found on a phone: a shelter left to build overnight was in exactly the
+    // state at breakfast that it had been at bedtime. Work was measured
+    // against a timestamp held in memory, and memory starts again at nothing
+    // every time the process does.
+    await store.begin(
+      profileId,
+      kind: ShelterKind.main,
+      at: home,
+      now: t0,
+      buildTime: kShelterBuildTime,
+    );
+
+    // The process dies here. Nothing at all happens for eight hours.
+    final morning = t0.add(const Duration(hours: 8));
+    final reopened = await store.load(profileId, morning);
+    final place = reopened.single;
+
+    expect(place.workedAt, t0, reason: 'the stamp has to be on the row');
+
+    await store.saveWork(
+      place.worked(morning.difference(place.workedAt!), at: morning),
+    );
+
+    final done = await store.load(profileId, morning);
+    expect(done.single.isReadyAt(morning), isTrue);
+  });
+
   test('modules survive the round trip (§8.4)', () async {
     final id = await store.begin(
       profileId,

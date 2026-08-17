@@ -149,6 +149,7 @@ class Shelter {
     this.buildingReadyAt,
     this.buildLeft,
     this.buildingLeft,
+    this.workedAt,
   });
 
   final int id;
@@ -191,6 +192,14 @@ class Shelter {
   /// The same for whatever module is going up.
   final Duration? buildingLeft;
 
+  /// §8.3: when work was last credited against this place.
+  ///
+  /// ⚠️ Persisted, not held in memory. In memory it started again at nothing
+  /// every time the process did — so a shelter left to build overnight, with
+  /// the app closed exactly as §8.3 intends, was in the same state in the
+  /// morning as it had been at bedtime.
+  final DateTime? workedAt;
+
   DateTime get readyAt => startedAt.add(buildTime);
 
   /// §2.1a.3: a stretch of [elapsed] spent standing on the site.
@@ -201,14 +210,15 @@ class Shelter {
   /// in the zone. What that buys the player is the right thing: put the phone
   /// in a pocket and go and make dinner, not walk to the next district and
   /// come back to a finished workshop.
-  Shelter worked(Duration elapsed) {
-    if (elapsed <= Duration.zero) return this;
+  Shelter worked(Duration elapsed, {DateTime? at}) {
+    if (elapsed <= Duration.zero) return copyWith(workedAt: at);
 
     final onPlace = buildLeft;
     final onModule = buildingLeft;
-    if (onPlace == null && onModule == null) return this;
+    if (onPlace == null && onModule == null) return copyWith(workedAt: at);
 
     return copyWith(
+      workedAt: at,
       // The place first: a module cannot go into a building that is not up.
       buildLeft: onPlace == null
           ? null
@@ -245,6 +255,7 @@ class Shelter {
       modules: {...modules, module: buildingLevel},
       visitedAt: visitedAt,
       buildLeft: buildLeft,
+      workedAt: workedAt,
     );
   }
 
@@ -328,6 +339,7 @@ class Shelter {
     Duration? buildTime,
     Duration? buildLeft,
     Duration? buildingLeft,
+    DateTime? workedAt,
   }) => Shelter(
     id: id,
     kind: kind,
@@ -341,6 +353,7 @@ class Shelter {
     buildingReadyAt: buildingReadyAt,
     buildLeft: buildLeft ?? this.buildLeft,
     buildingLeft: buildingLeft ?? this.buildingLeft,
+    workedAt: workedAt ?? this.workedAt,
   );
 }
 

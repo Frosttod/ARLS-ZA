@@ -299,6 +299,14 @@ void main() {
       expect(site().isReadyAt(t0.add(const Duration(days: 1))), isFalse);
     });
 
+    test('the stamp moves even when nothing was earned', () {
+      // Otherwise a walk to the shops and back would bank the whole walk.
+      final away = site().worked(Duration.zero, at: t0);
+
+      expect(away.workedAt, t0);
+      expect(away.buildLeft, kShelterBuildTime);
+    });
+
     test('never past done', () {
       expect(site().worked(const Duration(days: 2)).buildLeft, Duration.zero);
     });

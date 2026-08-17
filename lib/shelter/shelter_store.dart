@@ -69,16 +69,20 @@ class ShelterStore {
       startedAt: now,
       buildSeconds: buildTime.inSeconds,
       buildLeftSeconds: Value(buildTime.inSeconds),
+      workedAt: Value(now),
       visitedAt: Value(now),
     ),
   );
 
-  /// §2.1a.3: writes back what a stretch on the site bought.
+  /// §2.1a.3, §8.3: writes back what a stretch on the site bought, and when
+  /// the crediting last happened. Both, always — the timestamp is what lets a
+  /// build survive the process being killed overnight.
   Future<void> saveWork(Shelter place) => _db.updateShelter(
     place.id,
     SheltersCompanion(
       buildLeftSeconds: Value(place.buildLeft?.inSeconds),
       buildingLeftSeconds: Value(place.buildingLeft?.inSeconds),
+      workedAt: Value(place.workedAt),
     ),
   );
 
@@ -104,6 +108,7 @@ class ShelterStore {
       building: Value('${module.name}:$level'),
       buildingReadyAt: Value(readyAt),
       buildingLeftSeconds: Value(work.inSeconds),
+      workedAt: Value(DateTime.now().toUtc()),
     ),
   );
 
@@ -123,6 +128,7 @@ class ShelterStore {
       // The whole job again, from nothing: §8.2 is explicit that moving costs
       // the full rebuild, and that is the point of asking before doing it.
       buildLeftSeconds: Value(buildTime.inSeconds),
+      workedAt: Value(now),
       visitedAt: Value(now),
     ),
   );
@@ -149,6 +155,7 @@ class ShelterStore {
     buildingLeft: row.buildingLeftSeconds == null
         ? null
         : Duration(seconds: row.buildingLeftSeconds!),
+    workedAt: row.workedAt,
   );
 }
 
