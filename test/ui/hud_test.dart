@@ -66,7 +66,7 @@ void main() {
     // Blood, water, calories — and rest, which fails the same way they do:
     // slowly, predictably, and entirely by choice (§2.5).
     expect(find.text('100%'), findsNWidgets(4));
-    expect(find.text('5319 ml'), findsOneWidget);
+    expect(find.text('5 319 ml'), findsOneWidget);
     expect(find.text('70'), findsOneWidget);
     expect(find.text('WSTRZĄS'), findsNothing);
     expect(find.text('ODWODNIENIE'), findsNothing);
@@ -82,10 +82,21 @@ void main() {
 
     expect(find.text('70%'), findsOneWidget);
     expect(
-      find.text('${(constants.bloodMaxMl * 0.7).round()} ml'),
+      find.textContaining('723 ml'),
       findsOneWidget,
       reason: 'millilitres are the unit every wound in §2.6 is measured in',
     );
+  });
+
+  testWidgets('and every bar carries its own figure', (tester) async {
+    // A share says how close to empty; only the number says whether the bottle
+    // in the pack closes the gap, and that is the decision being made in a
+    // shop.
+    await pumpHud(tester, healthy());
+
+    expect(find.textContaining('ml'), findsNWidgets(2));
+    expect(find.textContaining('kcal'), findsOneWidget);
+    expect(find.textContaining('h'), findsWidgets);
   });
 
   testWidgets('shock raises a named status, not just a colour (§12)', (

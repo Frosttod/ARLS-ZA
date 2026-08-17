@@ -1366,6 +1366,11 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
           inventory: _inventory,
           catalogue: catalogue,
           names: _names ?? ItemNames.empty,
+          // §4.8: it is on the pavement, not in the pack. Without this the
+          // sheet went looking for a piece with the same id among the player's
+          // own kit and found their rifle — so a rifle on the ground showed
+          // their sights, and taking one off it took it off theirs.
+          fromPack: false,
         ),
       );
     }
@@ -1409,6 +1414,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
             inventory: _inventory,
             catalogue: _catalogue!,
             names: _names ?? ItemNames.empty,
+            // A pile at the player's feet, same as a tap on the map: not
+            // theirs until they pick it up.
+            fromPack: false,
           ),
         ),
       ),

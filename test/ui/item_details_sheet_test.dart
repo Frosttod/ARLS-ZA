@@ -35,6 +35,7 @@ void main() {
     VoidCallback? onWear,
     String? wearLabel,
     void Function(CarriedItem line, CarriedItem attachment)? onAttach,
+    bool fromPack = true,
   }) async {
     final entry = line ?? CarriedItem(itemId: itemId!);
     await tester.pumpWidget(
@@ -58,6 +59,7 @@ void main() {
               onWear: onWear,
               wearLabel: wearLabel,
               onAttach: onAttach,
+              fromPack: fromPack,
             ),
             child: const Text('open'),
           ),
@@ -343,6 +345,69 @@ void main() {
 
       // Three rails on a 5.45 carbine, none of them used yet.
       expect(find.textContaining('3'), findsWidgets);
+    });
+  });
+
+  group('something on the ground is not something in the pack (§4.8)', () {
+    testWidgets('it does not borrow the sights off the rifle in your hands', (
+      tester,
+    ) async {
+      // Found on a phone: a rifle lying on the pavement showed the attachments
+      // of the rifle the player was carrying, and taking one off the ground
+      // copy took it off theirs. The sheet was matching by item id, and a
+      // thing on the ground has no counterpart in the pack to match against.
+      final mine = const Inventory()
+          .withPack('pack_daypack')
+          .wear('weapon_rifle_545')
+          .add('att_red_dot', catalogue, body: body)
+          .inventory;
+
+      final fitted = mine.attach(
+        mine.worn.firstWhere((l) => l.itemId == 'weapon_rifle_545'),
+        mine.carried.firstWhere((l) => l.itemId == 'att_red_dot'),
+        catalogue,
+      );
+
+      await open(
+        tester,
+        line: const CarriedItem(itemId: 'weapon_rifle_545'),
+        inventory: fitted,
+        fromPack: false,
+      );
+
+      expect(
+        find.text(L10n.of(tester.element(find.byType(TextButton).first))
+            .attachmentsNone),
+        findsOneWidget,
+        reason: 'the one on the ground is bare, whatever the player is holding',
+      );
+    });
+
+    testWidgets('and the one in the pack still does', (tester) async {
+      final mine = const Inventory()
+          .withPack('pack_daypack')
+          .wear('weapon_rifle_545')
+          .add('att_red_dot', catalogue, body: body)
+          .inventory;
+
+      final fitted = mine.attach(
+        mine.worn.firstWhere((l) => l.itemId == 'weapon_rifle_545'),
+        mine.carried.firstWhere((l) => l.itemId == 'att_red_dot'),
+        catalogue,
+      );
+
+      await open(
+        tester,
+        line: fitted.worn.firstWhere((l) => l.itemId == 'weapon_rifle_545'),
+        inventory: fitted,
+      );
+
+      expect(
+        find.text(L10n.of(tester.element(find.byType(TextButton).first))
+            .attachmentsNone),
+        findsNothing,
+        reason: 'their own rifle is wearing it',
+      );
     });
   });
 }

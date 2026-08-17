@@ -38,6 +38,13 @@ Future<void> showItemDetails(
   String? wearLabel,
   void Function(CarriedItem line, CarriedItem attachment)? onAttach,
   void Function(CarriedItem line, String attachmentId)? onDetach,
+  /// Whether this piece is one the player is carrying.
+  ///
+  /// False for anything being looked at from outside the pack — a pile on the
+  /// ground, a body's pockets. Such a thing has no counterpart in the
+  /// inventory, and pretending it does is how a rifle on the pavement ended up
+  /// wearing the sights off the one in the player's hands.
+  bool fromPack = true,
 }) {
   final language = Localizations.localeOf(context).languageCode;
   final item = catalogue[line.itemId];
@@ -66,7 +73,7 @@ Future<void> showItemDetails(
         // ⚠️ Worn as well as carried. The weapon a player wants a light on is
         // the one in their hand, and the hand is `worn` — looking only in the
         // pack found a stale copy of it, so fitting anything did nothing.
-        final current = _liveLine(pack, line);
+        final current = _liveLine(pack, line, mine: fromPack);
         // Against what is on the body, and nothing else. The question a player
         // is actually asking is "is this better than mine" — comparing two
         // things in the same pack answers a question nobody has, and comparing
@@ -422,12 +429,23 @@ class _Attachments extends StatelessWidget {
 /// with goes stale on the first one. Identity is the honest match — two rifles
 /// in one bag are two rifles — and the id is the fallback for exactly the case
 /// identity cannot survive: the very piece was rebuilt by the last edit.
-CarriedItem _liveLine(Inventory pack, CarriedItem line) {
+CarriedItem _liveLine(Inventory pack, CarriedItem line, {required bool mine}) {
+  // ⚠️ Only for a piece that came out of the pack. Found on a phone: tapping a
+  // rifle lying on the ground showed the attachments of the rifle in the
+  // player's own hands, and taking one off the ground copy took it off theirs
+  // — because the by-id match below happily found *their* weapon and every
+  // control on the sheet then pointed at it. Something on the ground is not in
+  // the pack, so there is nothing here to look up.
+  if (!mine) return line;
+
   final everything = [...pack.worn, ...pack.carried];
 
   for (final entry in everything) {
     if (identical(entry, line)) return entry;
   }
+
+  // By id only as a fallback, and only for a piece known to be in the pack:
+  // every fit rebuilds the line, so identity is gone after the first one.
   for (final entry in everything) {
     if (entry.itemId == line.itemId) return entry;
   }

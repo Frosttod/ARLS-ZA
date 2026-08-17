@@ -145,14 +145,18 @@ class Hud extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  _BloodReadout(status: status, label: l10n.hudBlood),
-                  const SizedBox(width: 16),
                   Expanded(
                     child: Column(
                       children: [
+                        // ⚠️ Every bar carries its own figure as well as
+                        // its percentage. A share tells a player how close to
+                        // empty they are; only the number tells them whether
+                        // the bottle in their pack closes the gap, and that is
+                        // the decision they are actually making in a shop.
                         _ThinBar(
                           label: l10n.hudWater,
                           fraction: status.thirst.fraction,
+                          amount: '${_grouped(state.waterMl)} ml',
                           // §2.3: what has been drunk and is still on its way.
                           incoming:
                               state.pendingWaterMl / constants.waterDailyMl,
@@ -163,6 +167,7 @@ class Hud extends StatelessWidget {
                         _ThinBar(
                           label: l10n.hudCalories,
                           fraction: status.hunger.fraction,
+                          amount: '${_grouped(state.caloriesKcal)} kcal',
                           incoming:
                               state.pendingKcal / constants.caloriesDailyKcal,
                           warning: status.hunger.precisionPenalty < 1,
@@ -181,8 +186,27 @@ class Hud extends StatelessWidget {
                               1 -
                               state.sleepDebt.inSeconds /
                                   kDailySleepNeed.inSeconds,
+                          amount: _hoursLeft(
+                            kDailySleepNeed - state.sleepDebt,
+                          ),
                           warning: status.sleep.extraMoa > 0,
                           critical: status.sleep.microsleeps,
+                        ),
+                        const SizedBox(height: 4),
+
+                        // §2.6: and blood, on the same scale as the rest of
+                        // them. It used to be a big number off to one side,
+                        // which said "this one is different" — and it is not.
+                        // It empties like the others and is read like the
+                        // others; the only thing that sets it apart is how
+                        // fast it can go, and a bar shows that better than a
+                        // figure standing on its own.
+                        _ThinBar(
+                          label: l10n.hudBlood,
+                          fraction: 1 - status.blood.lossFraction,
+                          amount: '${_grouped(status.blood.volumeMl)} ml',
+                          warning: status.blood.shockClass != ShockClass.none,
+                          critical: status.blood.isFatal,
                         ),
                       ],
                     ),
@@ -227,67 +251,11 @@ class Hud extends StatelessWidget {
   }
 }
 
-/// Blood is the one figure shown as an absolute number as well as a share.
-/// Millilitres are what every wound in §2.6 is measured in, and a player who
-/// learns to read them can judge whether a fight is survivable.
-class _BloodReadout extends StatelessWidget {
-  const _BloodReadout({required this.status, required this.label});
-
-  final SimStatus status;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final colours = HudColors.of(context);
-    final blood = status.blood;
-    final colour = switch (blood.shockClass) {
-      ShockClass.none => colours.text,
-      ShockClass.compensated => const Color(0xFFE8B33A),
-      ShockClass.decompensated => const Color(0xFFE07B39),
-      ShockClass.critical => colours.alert,
-    };
-
-    return Semantics(
-      label: '$label ${(1 - blood.lossFraction) * 100 ~/ 1}%',
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label.toUpperCase(),
-            style: TextStyle(
-              fontSize: 9,
-              letterSpacing: 1.5,
-              color: colours.muted,
-            ),
-          ),
-          Text(
-            '${((1 - blood.lossFraction) * 100).round()}%',
-            style: TextStyle(
-              fontSize: 20,
-              height: 1.1,
-              fontWeight: FontWeight.bold,
-              color: colour,
-              fontFeatures: const [FontFeature.tabularFigures()],
-            ),
-          ),
-          Text(
-            '${blood.volumeMl.round()} ml',
-            style: TextStyle(
-              fontSize: 10,
-              color: colours.muted,
-              fontFeatures: [FontFeature.tabularFigures()],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _ThinBar extends StatelessWidget {
   const _ThinBar({
     required this.label,
     required this.fraction,
+    required this.amount,
     required this.warning,
     required this.critical,
     this.incoming = 0,
@@ -295,6 +263,11 @@ class _ThinBar extends StatelessWidget {
 
   final String label;
   final double fraction;
+
+  /// The figure itself, in the unit the thing is measured in: millilitres,
+  /// kilocalories, hours. A share says how close to empty; only the number
+  /// says whether what is in the pack closes the gap.
+  final String amount;
 
   /// Eaten or drunk and still being absorbed (§2.2, §2.3), as a share of the
   /// daily requirement.
@@ -321,9 +294,9 @@ class _ThinBar extends StatelessWidget {
 
     return Semantics(
       label: incoming.abs() > 0.001
-          ? '$label ${(clamped * 100).round()}%, '
+          ? '$label $amount, ${(clamped * 100).round()}%, '
                 '${incoming > 0 ? "+" : "-"}${(incoming.abs() * 100).round()}%'
-          : '$label ${(clamped * 100).round()}%',
+          : '$label $amount, ${(clamped * 100).round()}%',
       child: Row(
         children: [
           SizedBox(
@@ -379,6 +352,19 @@ class _ThinBar extends StatelessWidget {
                   )
                 : const SizedBox.shrink(),
           ),
+          SizedBox(
+            width: 60,
+            child: Text(
+              amount,
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 9,
+                color: colours.muted,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+          ),
+          const SizedBox(width: 6),
           SizedBox(
             width: 34,
             child: Text(
@@ -824,4 +810,24 @@ class _Threat extends StatelessWidget {
       ],
     );
   }
+}
+
+/// A figure with its thousands set apart, because 2800 and 280 are one glance
+/// apart otherwise. A thin space, which does not wrap and is not a comma
+/// somebody could read as a decimal point.
+String _grouped(double value) {
+  final digits = value.round().abs().toString();
+  final out = StringBuffer(value < 0 ? '-' : '');
+
+  for (var i = 0; i < digits.length; i++) {
+    if (i > 0 && (digits.length - i) % 3 == 0) out.write('\u202f');
+    out.write(digits[i]);
+  }
+  return out.toString();
+}
+
+/// §2.5: rest still in the tank, against the eight hours §2.5.3 asks for.
+String _hoursLeft(Duration left) {
+  final hours = left.inMinutes / 60;
+  return '${(hours < 0 ? 0.0 : hours).toStringAsFixed(1)} h';
 }
