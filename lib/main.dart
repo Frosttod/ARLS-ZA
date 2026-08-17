@@ -722,6 +722,18 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       _loading = false;
     });
 
+    // ⚠️ Seeded from the save, before any fix arrives. Everything that asks
+    // "am I at my shelter" measures from this, and a shelter is a building —
+    // which is exactly where §3.2's gate has nothing to hand over. Without
+    // this a player who opened the app indoors was, as far as the game could
+    // tell, nowhere at all, and the build they left running never moved.
+    if (_standingAt.value == null) {
+      final last = await _factory.lastKnownPosition(character.profile.id);
+      if (last != null) {
+        _standingAt.value = GeoPoint(last.latitude, last.longitude);
+      }
+    }
+
     await _reloadShelters();
     await _resolveMap();
     if (mounted) await _offerPermissions();
@@ -2178,6 +2190,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// enough that a three-hour build is not ten thousand writes.
   static const Duration kBuildWriteEvery = Duration(seconds: 15);
 
+  /// True while something is changing the shelters out from under the pass
+  /// that credits work to them.
+  bool _shelterBusy = false;
+
   /// §8.1: the circles the fight does not happen inside.
   List<Sanctuary> get _sanctuaries => [
     for (final place in _shelters.value)
@@ -2205,7 +2221,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// walked into one — §8.5.2's clock on a camp restarts on a visit, and a
   /// visit is not an event the loop can raise on its own.
   Future<void> _settleShelters(GameSnapshot snapshot) async {
-    if (_shelters.value.isEmpty) return;
+    if (_shelters.value.isEmpty || _shelterBusy) return;
 
     final now = snapshot.state.lastUpdate;
 
@@ -2373,6 +2389,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// again from nothing. Both are said out loud before anything happens, and
   /// nothing here is reversible.
   Future<void> _cancelBuild(Shelter place) async {
+    // ⚠️ Held against the crediting pass. That pass carries its own copy of
+    // the list, and a copy taken a moment before a cancel would write the
+    // abandoned work straight back over it.
+    _shelterBusy = true;
     final store = ShelterStore(widget.session.db);
 
     if (place.building != null) {
@@ -2382,6 +2402,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       await store.remove(place.id);
     }
 
+    _shelterBusy = false;
     await _reloadShelters();
     if (!mounted) return;
     _say(L10n.of(context).shelterCancelled);

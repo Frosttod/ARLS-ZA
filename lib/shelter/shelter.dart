@@ -264,6 +264,31 @@ class Shelter {
     return left == null ? !now.isBefore(readyAt) : left <= Duration.zero;
   }
 
+  /// §8.3: work left on the place, counting the seconds since the last write.
+  ///
+  /// Progress reaches the disk in chunks — three hours of one-second writes is
+  /// ten thousand of them — so the stored figure is always a little stale. The
+  /// counter on screen is not allowed to be: a number that stands still for
+  /// fifteen seconds and then jumps reads as a game that is not running.
+  Duration buildLeftAt(DateTime now, {required bool onSite}) =>
+      _live(buildLeft, now, onSite: onSite);
+
+  /// The same for whatever module is going up.
+  Duration buildingLeftAt(DateTime now, {required bool onSite}) =>
+      _live(buildingLeft, now, onSite: onSite);
+
+  Duration _live(Duration? stored, DateTime now, {required bool onSite}) {
+    final left = stored ?? Duration.zero;
+    final since = workedAt;
+    if (!onSite || since == null || !now.isAfter(since)) return left;
+
+    // Never past done, and never counting the place's own hours twice: a
+    // module only starts moving once the walls are up.
+    final uncredited = now.difference(since);
+    final rest = left - uncredited;
+    return rest.isNegative ? Duration.zero : rest;
+  }
+
   /// 0–1, for the one bar worth drawing.
   double progressAt(DateTime now) {
     if (buildTime <= Duration.zero) return 1;

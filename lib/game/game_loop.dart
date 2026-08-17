@@ -177,6 +177,14 @@ class GameLoop {
 
   /// §8.1: the place the player is standing in, or null for the open street.
   Shelter? _inside;
+
+  /// §2.5.1: when the player last settled under a roof with nothing on.
+  ///
+  /// Null the moment they step outside or start anything. Not persisted: after
+  /// a restart the ten minutes begin again, which is the harmless direction to
+  /// be wrong in — the overnight case is covered by night itself, and nobody
+  /// loses sleep they had already banked.
+  DateTime? _settledAt;
   PositionFix? _lastFix;
   double _speedKmh = 0;
 
@@ -266,7 +274,27 @@ class GameLoop {
     // §2.1a.1: something the player deliberately started outranks sleep. A
     // character who chose to read at midnight is reading, and paying for it.
     final busy = _occupation != null && !_occupation!.kind.isDefault;
-    final asleep = inside != null && night && !busy;
+
+    // How long they have been under this roof with nothing on. Reset by
+    // leaving and by starting anything — those are the two ways a person stops
+    // settling down.
+    if (inside == null || busy) {
+      _settledAt = null;
+    } else {
+      _settledAt ??= now;
+    }
+
+    final settled =
+        _settledAt != null &&
+        now.difference(_settledAt!) >= kSettleToSleep;
+
+    // Night is the immediate case §2.5.1 describes. The ten minutes are the
+    // other half of the same idea: somebody who has been sitting in their own
+    // shelter doing nothing at all since before the news started is not
+    // "awake and idle", they are asleep in a chair. It costs them nothing they
+    // were using — the moment they start anything, or step outside, they are
+    // back on their feet.
+    final asleep = inside != null && !busy && (night || settled);
 
     _state = _state.copyWith(
       zone: switch ((inside?.kind, asleep)) {
@@ -367,6 +395,12 @@ class GameLoop {
 
     _state = outcome.state;
     _advanceOccupation(elapsed);
+
+    // Again, now that the clock has moved. The pass in [_buildInput] decided
+    // what this step was, and this one decides what the *next* one is — which
+    // is the difference between a character who settled down ten minutes ago
+    // and one the HUD still shows sitting up.
+    _applyShelter();
     await _applySampling(advanceResult.now);
 
     _checkDown();
@@ -619,6 +653,11 @@ class GameLoop {
   OccupationEndReason? beginOccupation(Occupation next) {
     final result = startOccupation(next: next, current: _occupation);
     _occupation = result.started;
+
+    // §2.1a.1: picking up a hammer is how somebody stops being asleep, and it
+    // has to take effect now rather than at the next tick — otherwise the
+    // screen shows a character building in their sleep.
+    _applyShelter();
     _publish();
     return result.previousEnded;
   }

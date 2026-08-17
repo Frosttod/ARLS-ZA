@@ -367,6 +367,20 @@ class TickOutcome {
 /// Sleep requirement per day (§2.5.3). Anything short of this accrues debt.
 const Duration kDailySleepNeed = Duration(hours: 8);
 
+/// §2.5.1: how long under a roof with nothing on before the character sleeps.
+///
+/// §2.5.1 makes sleep a state rather than an action, and names night as the
+/// condition. This is the same idea by day: somebody who has been sitting in
+/// their own shelter doing nothing at all for ten minutes is not "awake and
+/// idle", they are asleep in a chair. Ten minutes because it has to be longer
+/// than putting a kettle on and shorter than an afternoon.
+///
+/// ⚠️ A deliberate step past §2.5.3, which counts only hours of *night* in a
+/// shelter. A daytime nap pays the debt down here. It cannot be farmed — the
+/// debt stops at zero — and the cost is the same one every shelter hour has:
+/// the player is standing in one place instead of out finding anything.
+const Duration kSettleToSleep = Duration(minutes: 10);
+
 /// How far below the daily reserve water may fall before the model stops.
 ///
 /// The floor is the 10% of body mass §2.3 calls critical, expressed relative

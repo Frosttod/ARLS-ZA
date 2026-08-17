@@ -1156,6 +1156,128 @@ void main() {
       expect(reopened?.downUntil, isNotNull);
     });
   });
+
+  group('settling in by daylight (§2.5.1)', () {
+    Shelter home() => Shelter(
+      id: 1,
+      kind: ShelterKind.main,
+      position: const GeoPoint(52.4064, 16.9252),
+      startedAt: t0.subtract(const Duration(days: 1)),
+      buildTime: kShelterBuildTime,
+      buildLeft: Duration.zero,
+    );
+
+    /// Puts the player in their own doorway. The simulator walks a route when
+    /// it is stepped, so a test about standing still steps it once and then
+    /// leaves it alone.
+    Future<void> arrive(
+      ({GameLoop loop, SimulatedPositionSource source, dynamic wall}) rig,
+    ) async {
+      rig.source.jumpTo(52.4064, 16.9252);
+      rig.source.step();
+      await pump();
+      rig.loop.setShelters([home()]);
+    }
+
+    test('ten minutes of nothing under a roof is sleep', () async {
+      // Sitting in your own shelter doing nothing at all since before the news
+      // started is not "awake and idle" — it is asleep in a chair. Noon, so
+      // nothing here can be the night rule doing the work.
+      final rig = await buildLoop();
+      addTearDown(() async {
+        await rig.loop.dispose();
+        await rig.source.dispose();
+        await rig.session.close();
+      });
+
+      await rig.loop.start();
+      await arrive((loop: rig.loop, source: rig.source, wall: rig.wall));
+
+      expect(rig.loop.state.zone, MetabolicZone.shelter);
+
+      rig.wall.advance(const Duration(minutes: 11));
+      await rig.loop.onPaused(rig.wall.nowUtc());
+
+      expect(rig.loop.state.zone, MetabolicZone.sleep);
+    });
+
+    test('and it pays the debt down', () async {
+      final tired = SimState.fresh(at: t0, constants: constants).copyWith(
+        sleepDebtSeconds: const Duration(hours: 5).inSeconds,
+      );
+
+      final rig = await buildLoop(initial: tired);
+      addTearDown(() async {
+        await rig.loop.dispose();
+        await rig.source.dispose();
+        await rig.session.close();
+      });
+
+      await rig.loop.start();
+      await arrive((loop: rig.loop, source: rig.source, wall: rig.wall));
+
+      rig.wall.advance(const Duration(minutes: 11));
+      await rig.loop.onPaused(rig.wall.nowUtc());
+
+      final settled = rig.loop.state.sleepDebt;
+      rig.wall.advance(const Duration(hours: 2));
+      await rig.loop.onPaused(rig.wall.nowUtc());
+
+      expect(rig.loop.state.sleepDebt, lessThan(settled));
+    });
+
+    test('anything the player starts wakes them up (§2.1a.1)', () async {
+      final rig = await buildLoop();
+      addTearDown(() async {
+        await rig.loop.dispose();
+        await rig.source.dispose();
+        await rig.session.close();
+      });
+
+      await rig.loop.start();
+      await arrive((loop: rig.loop, source: rig.source, wall: rig.wall));
+
+      rig.wall.advance(const Duration(minutes: 11));
+      await rig.loop.onPaused(rig.wall.nowUtc());
+      expect(rig.loop.state.zone, MetabolicZone.sleep);
+
+      rig.loop.beginOccupation(
+        Occupation(
+          kind: OccupationKind.building,
+          startedAt: rig.wall.nowUtc(),
+          requiredWork: const Duration(hours: 3),
+        ),
+      );
+      await rig.loop.onPaused(rig.wall.nowUtc());
+
+      expect(rig.loop.state.zone, MetabolicZone.shelter);
+    });
+
+    test('and being out of the zone starts the ten minutes again', () async {
+      final rig = await buildLoop();
+      addTearDown(() async {
+        await rig.loop.dispose();
+        await rig.source.dispose();
+        await rig.session.close();
+      });
+
+      await rig.loop.start();
+      await arrive((loop: rig.loop, source: rig.source, wall: rig.wall));
+
+      rig.wall.advance(const Duration(minutes: 6));
+      await rig.loop.onPaused(rig.wall.nowUtc());
+
+      // Out of any zone and back into one: the clock does not carry over.
+      rig.loop.setShelters(const []);
+      expect(rig.loop.state.zone, MetabolicZone.open);
+      rig.loop.setShelters([home()]);
+
+      rig.wall.advance(const Duration(minutes: 6));
+      await rig.loop.onPaused(rig.wall.nowUtc());
+
+      expect(rig.loop.state.zone, MetabolicZone.shelter);
+    });
+  });
 }
 
 extension on GameLoop {

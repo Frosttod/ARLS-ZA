@@ -298,7 +298,13 @@ class _Standing extends StatelessWidget {
               // §8.3: against the clock, so this is a time to come back at
               // rather than a bar to sit in front of.
               LinearProgressIndicator(
-                value: shelter.progressAt(now),
+                value: shelter.buildTime <= Duration.zero
+                    ? 1
+                    : 1 -
+                          shelter
+                                  .buildLeftAt(now, onSite: !away)
+                                  .inMilliseconds /
+                              shelter.buildTime.inMilliseconds,
                 minHeight: 4,
                 backgroundColor: colours.muted.withValues(alpha: 0.25),
                 color: colours.data,
@@ -308,7 +314,11 @@ class _Standing extends StatelessWidget {
                 away
                     ? l10n.shelterWorkStopped
                     : l10n.shelterBuildingLeft(
-                        _short(shelter.buildLeft ?? shelter.readyAt.difference(now)),
+                        _short(
+                          shelter.buildLeft == null
+                              ? shelter.readyAt.difference(now)
+                              : shelter.buildLeftAt(now, onSite: !away),
+                        ),
                       ),
                 style: TextStyle(
                   fontSize: 13,
@@ -454,7 +464,9 @@ class _ModuleRow extends StatelessWidget {
                       away
                           ? l10n.shelterWorkStopped
                           : l10n.shelterBuildingLeft(
-                              _short(shelter.buildingLeft ?? Duration.zero),
+                              _short(
+                                shelter.buildingLeftAt(now, onSite: !away),
+                              ),
                             ),
                       style: TextStyle(
                         fontSize: 13,
@@ -672,16 +684,18 @@ class BuildProgress extends StatelessWidget {
     final colours = HudColors.of(context);
     final onPlace = !shelter.isReadyAt(now);
 
+    // On site by construction: [of] only returns a bar for a site the player
+    // is standing on, so the seconds run.
     final left = onPlace
-        ? (shelter.buildLeft ?? shelter.readyAt.difference(now))
-        : (shelter.buildingLeft ?? Duration.zero);
+        ? shelter.buildLeftAt(now, onSite: true)
+        : shelter.buildingLeftAt(now, onSite: true);
     final total = onPlace
         ? shelter.buildTime
-        : (shelter.buildingLeft ?? Duration.zero) + left;
+        : (shelter.buildingLeft ?? Duration.zero);
 
     final done = total <= Duration.zero
         ? 1.0
-        : 1 - left.inSeconds / total.inSeconds;
+        : 1 - left.inMilliseconds / total.inMilliseconds;
 
     return Material(
       color: colours.panel.withValues(alpha: 0.92),
