@@ -33,7 +33,11 @@ void main() {
   );
 
   /// A spread of places at increasing distance, as a real street would give.
-  List<Poi> spread(int count, {double stepM = 100}) => [
+  ///
+  /// Fifty metres apart: at the beta spawn radius a hundred-metre step runs
+  /// out of ground before it runs out of places, and the cap would never be
+  /// the thing being tested.
+  List<Poi> spread(int count, {double stepM = 50}) => [
     for (var i = 1; i <= count; i++)
       Poi(
         position: GeoPoint(
@@ -47,7 +51,7 @@ void main() {
   ];
 
   group('the cap of §10', () {
-    test('never more than fifteen active within 2 km', () {
+    test('never more than fifteen active inside the radius', () {
       final plan = spawner.plan(
         centre: centre,
         candidates: spread(200),
@@ -164,7 +168,9 @@ void main() {
     test('a thin map gives what it has rather than failing', () {
       final plan = spawner.plan(
         centre: centre,
-        candidates: [poiAt(300), poiAt(1500)],
+        // Both inside the beta radius: the point of this test is that two
+        // places produce two boxes, not that a distant one is dropped.
+        candidates: [poiAt(300), poiAt(1000)],
         existing: const [],
         now: now,
         seed: 2,

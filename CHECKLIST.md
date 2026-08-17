@@ -68,7 +68,8 @@ Kolejność jest celowa: rzeczy wyżej blokują ocenę tych niżej.
 
 ### 2.2. Etap 4 — loot i przeszukanie
 
-- [ ] W promieniu 600 m jest 5 miejsc, w 2 km nie więcej niż 15
+- [ ] W promieniu 600 m jest 5 miejsc, w **1,2 km** nie więcej niż 15
+- [ ] Najdalszy punkt to ~15 minut marszu, nie 25
 - [ ] Dłuższe przeszukanie (90 s, 180 s) daje wyraźnie więcej niż 30 s
 - [ ] Budżet miejsca działa: 3 × pobieżne albo 2 × dokładne albo 1 × gruntowne
 - [ ] Otwarte od startu miejsca zdarzają się — ale nie wszystkie

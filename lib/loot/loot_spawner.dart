@@ -34,10 +34,23 @@ import 'loot_table.dart';
 const int kMaxActiveBoxes = 15;
 
 /// §10. Also the radius the POI query runs over.
-const double kSpawnRadiusM = 2000;
+///
+/// ⚠️ **Beta figure, deliberately below §10's two kilometres.** Measured on a
+/// walk through Poznań: fourteen places on the map and the furthest of them
+/// nearly two kilometres out — twenty-five minutes' walk each way, for one
+/// shop. They were not errands, they were noise on the map, and a marker
+/// nobody will ever walk to teaches a player to stop reading markers.
+///
+/// Twelve hundred metres is about fifteen minutes: far enough to be a
+/// decision, near enough to be a decision somebody actually makes. §10's
+/// figure comes back when hotspots (§6.5) give the far ones a reason to exist.
+const double kSpawnRadiusM = 1200;
 
 /// §10.1 widens the search where the map is thin.
-const double kSpawnRadiusBackupM = 3000;
+///
+/// A village has to reach further for anything at all, so the backup keeps
+/// half again on top — the same ratio §10.1 had at the wider figure.
+const double kSpawnRadiusBackupM = 1800;
 
 /// How many are guaranteed close enough to be worth a detour rather than a
 /// journey. Six hundred metres is seven minutes' walk.

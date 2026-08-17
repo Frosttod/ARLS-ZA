@@ -19,7 +19,7 @@ Każdy zamknięty etap dostaje sekcję **Dziennik wykonania** z decyzjami podję
 | 8 | Schron, obóz, pętla dobowa | 🟡 8/9 zadań, przed testem w terenie | — | schemat v17 |
 | 9 | Onboarding, dostępność, zgodność | ⬜ | — | — |
 
-**Metryki:** 1454 testy · `flutter analyze` czysty · schemat bazy **v17** · release APK 89,5 MB bez devtools
+**Metryki:** 1458 testów · `flutter analyze` czysty · schemat bazy **v18** · release APK 89,5 MB bez devtools
 
 ### Zablokowane na użytkowniku
 
