@@ -387,6 +387,9 @@ class L10nPl extends L10n {
       'Godzina leci niezależnie od tego, czy aplikacja jest otwarta.';
 
   @override
+  String get downLog => 'Ostatnie chwile';
+
+  @override
   String get downGrace => 'Wciąż biorą Cię za martwego. Nie zdradź się.';
 
   @override

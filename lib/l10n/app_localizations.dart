@@ -733,6 +733,12 @@ abstract class L10n {
   /// **'The hour runs whether the app is open or not.'**
   String get downClosedApp;
 
+  /// No description provided for @downLog.
+  ///
+  /// In en, this message translates to:
+  /// **'The last of it'**
+  String get downLog;
+
   /// No description provided for @downGrace.
   ///
   /// In en, this message translates to:

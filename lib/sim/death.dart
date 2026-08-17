@@ -25,7 +25,21 @@ const Duration kUnconsciousFor = Duration(minutes: 60);
 const Duration kGraceAfterWaking = Duration(minutes: 10);
 
 /// §9.2: what is left in the tank on waking. Class III shock, and hungry.
-const double kWakeBloodFraction = 0.25;
+///
+/// ⚠️ §9.2's own row reads "25% of maximum (class III shock)", and those two
+/// halves contradict each other: §2.6 puts class III at 30–40% *lost*, which
+/// is 60–70% remaining. A quarter remaining is 75% lost — class IV, which
+/// §2.6 defines as unconsciousness leading to death.
+///
+/// Taken literally it is unplayable, and it was: a character woke at 25%,
+/// the next tick found them in class IV, and the game put them straight back
+/// on the ground for another hour. On a phone that read as a timer that would
+/// not run out and a save that kept reverting to the moment of death.
+///
+/// So the class wins over the figure — it is the half of the row that says
+/// what the state is *for*. Sixty-five per cent is the middle of class III:
+/// badly hurt, everything harder, and alive.
+const double kWakeBloodFraction = 0.65;
 const double kWakeReservesFraction = 0.15;
 
 /// §9.2: how much of what was carried is simply gone.

@@ -318,6 +318,20 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// §10.3: the bodies, with their pockets still in them.
   List<Remains> _remains = const [];
 
+  /// §5.5: the last of the fight, in the order it happened.
+  ///
+  /// ⚠️ Kept because of one sentence after a walk: "I do not know how I died".
+  /// Every line of it was on screen at the time and every line of it was gone
+  /// by the time it mattered — a notice lasts seconds and a death is exactly
+  /// the moment somebody wants the last minute back. Thirty lines is about two
+  /// minutes of a bad fight.
+  final List<String> _combatLog = [];
+
+  void _logCombat(String line) {
+    _combatLog.add(line);
+    if (_combatLog.length > 30) _combatLog.removeAt(0);
+  }
+
   /// §8: the shelter and the camps, as the save last had them.
   /// §8: listened to rather than passed by value — the shelter screen is a
   /// pushed route, and a pushed route handed a list keeps showing the list it
@@ -1866,6 +1880,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
               hitLocationName(l10n, outcome.location!),
               outcome.bloodLossMl.round(),
             ),
+      remember: true,
     );
   }
 
@@ -1956,7 +1971,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
     if (tooClose) {
       setState(() => _reload = null);
-      _say(L10n.of(context).combatReloadBroken);
+      _say(L10n.of(context).combatReloadBroken, remember: true);
       return;
     }
 
@@ -2120,6 +2135,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
               hitLocationName(L10n.of(context), where),
               damage.round(),
             ),
+      remember: true,
     );
   }
 
@@ -2215,7 +2231,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       enemies: [..._combat.enemies, ...back],
       open: _combat.open,
     ));
-    _say(L10n.of(context).combatStillHunted);
+    _say(L10n.of(context).combatStillHunted, remember: true);
   }
 
   // --------------------------------------------------------------- death ---
@@ -2277,8 +2293,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
     var pack = _inventory.value;
 
-    // Whatever was in the hands is simply gone. §9.2 is explicit, and it is
-    // what stops a deliberate death being a cheap way home.
+    // Whatever was in the hands is simply gone, and it does not turn up in a
+    // cache either. §9.2 is explicit, and it is what stops a deliberate death
+    // from being a cheap way home.
     for (final line in [...pack.worn]) {
       final item = catalogue[line.itemId];
       if (item == null) continue;
@@ -2287,9 +2304,14 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       }
     }
 
-    // Half of the rest, by the piece rather than by the count: losing three of
-    // five bandages and keeping two is what §9.2 describes.
-    for (final line in [...pack.carried]) {
+    // ⚠️ Worn as well as carried. §9.2 says "the rest of the kit worn", and
+    // taking only what was in the pack meant a character woke up in the same
+    // boots, coat and vest they went down in — the entire cost of a blackout
+    // fell on whatever happened to be loose.
+    //
+    // Half of it, by the piece: losing three of five bandages and keeping two
+    // is what §9.2 describes, and a stack is one piece.
+    for (final line in [...pack.worn, ...pack.carried]) {
       if (random.nextDouble() >= kWakeLossFraction) continue;
 
       pack = pack.removeLine(line, count: line.count) ?? pack;
@@ -3235,7 +3257,13 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
   /// One line, at the bottom, gone in a few seconds. The player is walking.
   /// §12: the game says something, under the HUD rather than over the menu.
-  void _say(String message) {
+  /// Says something, and — for anything that belongs to a fight — writes it
+  /// down as well.
+  ///
+  /// A notice lasts seconds. A death is exactly the moment somebody wants the
+  /// last minute back, which is why [remember] exists at all.
+  void _say(String message, {bool remember = false}) {
+    if (remember) _logCombat(message);
     if (!mounted) return;
 
     final notice = Notice(message, DateTime.now());
@@ -3388,7 +3416,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         state: down,
         cause: _loop?.deathCause,
         until: _loop?.downUntil,
-        now: snapshot?.state.lastUpdate ?? DateTime.now().toUtc(),
+        log: _combatLog,
         onNewCharacter: down == DownState.dead
             ? () => unawaited(_startOver(character))
             : null,

@@ -111,6 +111,16 @@ class Vitals extends Table {
   /// screen.
   DateTimeColumn get downUntil => dateTime().nullable()();
 
+  /// §9.2: when they stop being taken for dead, or null once they are on
+  /// their feet properly.
+  ///
+  /// ⚠️ Its own column, and not a flag in memory. Held in memory, "already
+  /// woken" was forgotten every time the process died — so reopening the app
+  /// ran the waking again, put the character back to a quarter of their blood
+  /// and announced the caches a second time. A character cannot wake up twice
+  /// from the same blackout.
+  DateTimeColumn get graceUntil => dateTime().nullable()();
+
   /// §5.6.2, §6.1a: a fight the player walked out of, and where.
   ///
   /// ⚠️ The enemies themselves are not written down — §6.4 remakes them every

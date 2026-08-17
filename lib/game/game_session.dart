@@ -32,6 +32,7 @@ class ActiveCharacter {
     required this.state,
     this.bleeding = BleedTier.none,
     this.downUntil,
+    this.graceUntil,
     this.pursuit,
   });
 
@@ -44,6 +45,9 @@ class ActiveCharacter {
 
   /// §9.2: when the hour on the ground runs out, or null while upright.
   final DateTime? downUntil;
+
+  /// §9.2: when they stop being taken for dead, or null once they are.
+  final DateTime? graceUntil;
 
   /// §5.6.2: the fight the player last walked out of, or null.
   final Pursuit? pursuit;
@@ -92,6 +96,7 @@ class GameSessionFactory {
       // §9.2: an hour on the ground runs against the wall clock, so it goes on
       // running while the app is dead. That is the point of it.
       downUntil: vitals.downUntil,
+      graceUntil: vitals.graceUntil,
       // §5.6.2: what was still after them when the app went away. Closing it
       // has to cost something, or nothing in §5 costs anything at all.
       pursuit:
@@ -216,6 +221,7 @@ class GameSessionFactory {
       initialBleeding: character.bleeding,
       deathMode: character.deathMode,
       downUntil: character.downUntil,
+      graceUntil: character.graceUntil,
       pursuit: character.pursuit,
       dead: character.isDead,
       clock: clock,

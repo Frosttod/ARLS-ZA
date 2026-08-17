@@ -73,8 +73,27 @@ void main() {
       constants,
     );
 
-    test('a quarter of the blood — class III shock', () {
-      expect(woken.bloodMl / constants.bloodMaxMl, closeTo(0.25, 0.001));
+    test('class III shock, and alive (§9.2)', () {
+      // ⚠️ §9.2's row says "25% of maximum (class III shock)" and those two
+      // halves disagree: §2.6 puts class III at 30–40% lost. A quarter
+      // remaining is class IV, which is unconsciousness leading to death — so
+      // taken literally the character woke up and went straight back down,
+      // for ever. The class wins over the figure.
+      final left = woken.bloodMl / constants.bloodMaxMl;
+
+      expect(left, closeTo(0.65, 0.001));
+      expect(
+        fatalCause(
+          statusOf(
+            state: SimState.fresh(at: t0, constants: constants).copyWith(
+              bloodMl: woken.bloodMl,
+            ),
+            constants: constants,
+          ),
+        ),
+        isNull,
+        reason: 'waking up must not itself be fatal',
+      );
     });
 
     test('and fifteen per cent of everything else', () {

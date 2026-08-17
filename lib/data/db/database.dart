@@ -29,7 +29,7 @@ import 'tables.dart';
 part 'database.g.dart';
 
 /// Bumped only alongside a migration step in [_migration]. Never reused.
-const int kSchemaVersion = 17;
+const int kSchemaVersion = 18;
 
 /// Keys used in [MetaEntries].
 abstract final class MetaKeys {
@@ -71,7 +71,7 @@ class SaveDatabase extends _$SaveDatabase {
   /// follow a constant reference. `schema_test.dart` keeps it in step with
   /// [kSchemaVersion].
   @override
-  int get schemaVersion => 17;
+  int get schemaVersion => 18;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -217,6 +217,13 @@ class SaveDatabase extends _$SaveDatabase {
         // bare, which is what every row written before this was — and, until
         // now, what every rifle put down became.
         await m.addColumn(groundItems, groundItems.attachments);
+      }
+
+      if (from < 18) {
+        // §9.2: waking up is a thing that happened, not a thing the process
+        // remembers. Null reads as "on their feet", which every save written
+        // before this was.
+        await m.addColumn(vitals, vitals.graceUntil);
       }
 
       await _writeSchemaVersion(to);

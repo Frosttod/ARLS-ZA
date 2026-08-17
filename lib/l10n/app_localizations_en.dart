@@ -384,6 +384,9 @@ class L10nEn extends L10n {
   String get downClosedApp => 'The hour runs whether the app is open or not.';
 
   @override
+  String get downLog => 'The last of it';
+
+  @override
   String get downGrace => 'They still take you for dead. Do not give it away.';
 
   @override

@@ -189,6 +189,7 @@
   "downLeft": "{time}",
   "@downLeft": {"placeholders": {"time": {"type": "String"}}},
   "downClosedApp": "The hour runs whether the app is open or not.",
+  "downLog": "The last of it",
   "downGrace": "They still take you for dead. Do not give it away.",
   "deathNewCharacter": "New character",
   "deathSameBody": "The same body, a new name.",

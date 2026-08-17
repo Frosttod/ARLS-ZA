@@ -113,6 +113,7 @@
   "downLeft": "{time}",
   "@downLeft": {"placeholders": {"time": {"type": "String"}}},
   "downClosedApp": "Godzina leci niezależnie od tego, czy aplikacja jest otwarta.",
+  "downLog": "Ostatnie chwile",
   "downGrace": "Wciąż biorą Cię za martwego. Nie zdradź się.",
   "deathNewCharacter": "Nowa postać",
   "deathSameBody": "To samo ciało, nowe imię.",

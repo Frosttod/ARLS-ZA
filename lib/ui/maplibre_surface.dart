@@ -683,6 +683,11 @@ class _MarkerPainter extends CustomPainter {
         continue;
       }
 
+      // §10.3: a body is drawn as a skull and nothing else. A dot under it
+      // read as a second thing lying there — and grey is what dropped kit is,
+      // so it read as exactly the wrong one.
+      if (marker.kind == MarkerKind.remains) continue;
+
       final radius = kMarkerRadius[marker.kind]!;
       final colour = Color(kMarkerColours[marker.kind]!);
 

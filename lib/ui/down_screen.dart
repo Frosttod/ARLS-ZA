@@ -7,18 +7,20 @@
 /// game does not have.
 library;
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
 import '../sim/death.dart';
 import 'hud.dart' show HudColors;
 
-class DownScreen extends StatelessWidget {
+class DownScreen extends StatefulWidget {
   const DownScreen({
     required this.state,
     required this.cause,
     required this.until,
-    required this.now,
+    this.log = const [],
     this.onNewCharacter,
     super.key,
   });
@@ -29,18 +31,51 @@ class DownScreen extends StatelessWidget {
   /// §9.2: when the hour is up. Null for the end of a hardcore character.
   final DateTime? until;
 
-  final DateTime now;
+  /// §5.5: the last of the fight, oldest first.
+  ///
+  /// ⚠️ The one thing a player actually asks at this screen is "how did I
+  /// die". Every line of it was on screen at the time and every line of it was
+  /// gone by the time it mattered.
+  final List<String> log;
 
   /// §9.1: the same body, a new name. Null in softcore, where there is nothing
   /// to start over.
   final VoidCallback? onNewCharacter;
 
   @override
+  State<DownScreen> createState() => _DownScreenState();
+}
+
+class _DownScreenState extends State<DownScreen> {
+  /// The hour runs on the wall clock (§9.2), so the screen has to as well —
+  /// a countdown that only moves when a tick happens reads as a stopped one.
+  Timer? _tick;
+
+  @override
+  void initState() {
+    super.initState();
+    _tick = Timer.periodic(
+      const Duration(seconds: 1),
+      (_) => setState(() {}),
+    );
+  }
+
+  @override
+  void dispose() {
+    _tick?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = L10n.of(context);
     final colours = HudColors.of(context);
+    final state = widget.state;
+    final until = widget.until;
     final dead = state == DownState.dead;
-    final left = until == null ? Duration.zero : until!.difference(now);
+    final left = until == null
+        ? Duration.zero
+        : until.difference(DateTime.now().toUtc());
 
     return Scaffold(
       backgroundColor: const Color(0xFF07090A),
@@ -62,7 +97,7 @@ class DownScreen extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Text(
-                causeName(l10n, cause),
+                causeName(l10n, widget.cause),
                 style: TextStyle(fontSize: 14, color: colours.muted),
               ),
               const SizedBox(height: 20),
@@ -89,10 +124,48 @@ class DownScreen extends StatelessWidget {
                 ),
               ],
 
-              if (onNewCharacter != null) ...[
+              // §5.5: the last of the fight. The one question anybody asks at
+              // this screen is "how did I die", and every line of the answer
+              // was on screen at the time and gone by the time it mattered.
+              if (widget.log.isNotEmpty) ...[
+                const SizedBox(height: 24),
+                Text(
+                  l10n.downLog.toUpperCase(),
+                  style: TextStyle(
+                    fontSize: 9,
+                    letterSpacing: 1.5,
+                    color: colours.muted,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Flexible(
+                  child: SingleChildScrollView(
+                    reverse: true,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        for (final line in widget.log)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 2),
+                            child: Text(
+                              line,
+                              style: TextStyle(
+                                fontSize: 12,
+                                height: 1.35,
+                                color: colours.text,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+
+              if (widget.onNewCharacter != null) ...[
                 const SizedBox(height: 28),
                 FilledButton(
-                  onPressed: onNewCharacter,
+                  onPressed: widget.onNewCharacter,
                   child: Text(l10n.deathNewCharacter),
                 ),
                 const SizedBox(height: 8),

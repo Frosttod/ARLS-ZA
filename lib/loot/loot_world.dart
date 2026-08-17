@@ -33,6 +33,15 @@ const int kThinMapPoiCount = 8;
 /// `12 − density`, so a village with six real places gets six invented ones.
 const int kThinMapTarget = 12;
 
+/// How many invented points a city gets anyway (§10.1).
+///
+/// A city has plenty of real places, so the generator used to sit idle there —
+/// and with it went the cars and bins that only it produces. Four is enough
+/// that a walk down an ordinary street meets one or two, and few enough that
+/// they cannot crowd out the shops: the spawner's fifteen slots are unchanged
+/// and everything competes for them.
+const int kStreetFurniture = 4;
+
 /// How far the player must move before the spawner is worth running again.
 ///
 /// Re-planning on every fix would read tiles once a second while somebody
@@ -182,19 +191,32 @@ class LootWorld {
       // So the ring gets topped up locally, from the same generator §10.1
       // already uses, and only by as much as it is short.
       final nearReal = _countNear(candidates, centre);
-      if (nearReal < kNearRing) {
-        candidates = [
-          ...candidates,
-          ...generateProceduralPoints(
-            centre: centre,
-            radiusM: kNearRingM,
-            wanted: kNearRing - nearReal,
-            seed: seed,
-            roads: roads,
-            areas: ground.areas,
-          ),
-        ];
-      }
+
+      // ⚠️ And a share of the street even when it is not short. Found on a
+      // walk through Poznań: the generator only ever ran where the ring was
+      // empty, so a city produced no invented points at all — which meant the
+      // cars and the bins §10.1's mix puts on ordinary streets simply did not
+      // exist for anybody living in one.
+      //
+      // They cost nothing in density: the spawner's fifteen places are the
+      // same fifteen, and these compete for them like everything else. What
+      // changes is what a street can turn out to be, not how much of it there
+      // is.
+      final invented = nearReal < kNearRing
+          ? kNearRing - nearReal + kStreetFurniture
+          : kStreetFurniture;
+
+      candidates = [
+        ...candidates,
+        ...generateProceduralPoints(
+          centre: centre,
+          radiusM: kNearRingM,
+          wanted: invented,
+          seed: seed,
+          roads: roads,
+          areas: ground.areas,
+        ),
+      ];
     }
 
     // §10.3.3: an ambulance outside the hospital, a patrol car outside the

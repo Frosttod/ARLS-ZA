@@ -134,6 +134,7 @@ class GameLoop {
     BleedTier initialBleeding = BleedTier.none,
     this.deathMode = DeathMode.softcore,
     DateTime? downUntil,
+    DateTime? graceUntil,
     Pursuit? pursuit,
     // ignore: avoid_positional_boolean_parameters
     bool dead = false,
@@ -145,6 +146,8 @@ class GameLoop {
        _bleeding = initialBleeding,
        // ignore: prefer_initializing_formals
        _downUntil = downUntil,
+       // ignore: prefer_initializing_formals
+       _graceUntil = graceUntil,
        // ignore: prefer_initializing_formals
        _pursuit = pursuit,
        // ignore: prefer_initializing_formals
@@ -434,6 +437,7 @@ class GameLoop {
 
     _checkDown();
     _checkWake();
+    _checkGrace();
 
     writer.stageHot(_toCompanion());
     await writer.flushIfDue(advanceResult.now);
@@ -523,24 +527,25 @@ class GameLoop {
       return;
     }
 
-    if (_woken) {
-      // The grace window has run out too; the character is simply upright.
-      if (now.isAfter(until.add(kGraceAfterWaking))) {
-        _downUntil = null;
-        _woken = false;
-        writer.stageHot(_toCompanion());
-      }
-      return;
-    }
-
-    _woken = true;
+    // Up, and the hour is over for good: the deadline is cleared in the same
+    // breath as the state is restored, so nothing can run this twice.
+    _downUntil = null;
+    _graceUntil = now.add(kGraceAfterWaking);
     _justWoke = true;
     _state = wokenFrom(_state, constants);
+
     writer.stageHot(_toCompanion());
     _publish();
   }
 
-  bool _woken = false;
+  /// §9.2: the ten minutes are over and the street has noticed them again.
+  void _checkGrace() {
+    final grace = _graceUntil;
+    if (grace == null || _state.lastUpdate.isBefore(grace)) return;
+
+    _graceUntil = null;
+    writer.stageHot(_toCompanion());
+  }
 
   /// Whether this snapshot is the one the character woke on.
   bool _justWoke = false;
@@ -633,6 +638,7 @@ class GameLoop {
     ),
     bleedTier: Value(_bleeding.name),
     downUntil: Value(_downUntil),
+    graceUntil: Value(_graceUntil),
     huntUntil: Value(_pursuit?.until),
     huntLatitude: Value(_pursuit?.at.latitude),
     huntLongitude: Value(_pursuit?.at.longitude),
@@ -741,9 +747,17 @@ class GameLoop {
     writer.stageHot(_toCompanion());
   }
 
-  /// §9.2: when the hour on the ground runs out, then when the grace window
-  /// does. Null while upright and unhurt.
+  /// §9.2: when the hour on the ground runs out. Null once they are up.
   DateTime? _downUntil;
+
+  /// §9.2: when they stop being taken for dead. Null once that has passed.
+  ///
+  /// ⚠️ Persisted, and not a flag in memory. Held in memory, "already woken"
+  /// was forgotten every time the process died — so reopening the app ran the
+  /// waking again, put the character back to a quarter of their blood and
+  /// announced the caches a second time. A character cannot wake up twice from
+  /// the same blackout.
+  DateTime? _graceUntil;
 
   /// §9.1: set once, and then nothing else happens to this character.
   bool _dead = false;
@@ -753,12 +767,14 @@ class GameLoop {
   DownState get down {
     if (_dead) return DownState.dead;
 
-    final until = _downUntil;
-    if (until == null) return DownState.none;
-
     final now = _state.lastUpdate;
-    if (now.isBefore(until)) return DownState.unconscious;
-    if (now.isBefore(until.add(kGraceAfterWaking))) return DownState.grace;
+
+    final until = _downUntil;
+    if (until != null && now.isBefore(until)) return DownState.unconscious;
+
+    final grace = _graceUntil;
+    if (grace != null && now.isBefore(grace)) return DownState.grace;
+
     return DownState.none;
   }
 
@@ -766,7 +782,10 @@ class GameLoop {
   /// end; true during the grace window, which only stops the shooting.
   bool get canAct => down == DownState.none || down == DownState.grace;
 
-  DateTime? get downUntil => _downUntil;
+  /// What the screen counts down to: the hour on the ground, then the ten
+  /// minutes of being ignored.
+  DateTime? get downUntil => _downUntil ?? _graceUntil;
+
   DeathCause? get deathCause => _cause;
 
   /// Raised for one snapshot when the character goes down, so the UI can say

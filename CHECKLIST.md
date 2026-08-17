@@ -1,7 +1,7 @@
 # ARLS-ZA — lista kontrolna systemów
 
 Stan na dzień **2026-08-16**. Wygenerowana po przejściu pełnego zestawu
-testów: **1454 testy, `flutter analyze` czysty, schemat bazy v12**.
+testów: **1455 testów, `flutter analyze` czysty, schemat bazy v12**.
 
 Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 
@@ -25,7 +25,7 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 | `inventory` | 84 | dwa limity §18.1a, sloty, porcje, dodatki, trwałość |
 | `items` | 71 | katalog jako dane: bilans, nazwy, sloty, użycia |
 | `location` | 53 | bramka dokładności, filtr Kalmana, martwa strefa, anty-cheat |
-| `db` | 50 | migracje v1→v17, integralność, warstwa gorąca i ciepła |
+| `db` | 50 | migracje v1→v18, integralność, warstwa gorąca i ciepła |
 | `shelter` | 55 | strefy §8.1, czasy budowy §8.3, moduły §8.4, obozy §8.5.2, receptury §18.2 |
 | `devtools` | 44 | symulator GPS, nakładka, zegar |
 | `game` | 59 | pętla gry, nadrabianie przerw, próbkowanie |
@@ -33,7 +33,7 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 | `core` | 30 | deterministyczny RNG, zegar |
 | `notes` | 14 | notatki §19.1, podstawianie nazw miejsc |
 
-**Razem 1454.**
+**Razem 1455.**
 
 ### Rzeczy, które testy trzymają jako liczby, a nie jako intencje
 
@@ -157,6 +157,11 @@ Kolejność jest celowa: rzeczy wyżej blokują ocenę tych niżej.
 - [ ] Skrytki leżą tam, gdzie padłeś, 30–100 m od miejsca upadku
 - [ ] Przez 10 minut po przebudzeniu nikt nie atakuje i Ty też nie możesz
 - [ ] Sen i brak GPS nie mogą zabić (§9.1)
+- [ ] **Przebudzenie nie zabija ponownie** — po godzinie wstajesz w klasie III, nie IV
+- [ ] **Zamknięcie gry po przebudzeniu nie cofa stanu** — zjedzony posiłek zostaje
+- [ ] Licznik nieprzytomności tyka co sekundę
+- [ ] Ekran śmierci pokazuje log ostatnich chwil walki
+- [ ] Ginie połowa noszonego **i** połowa z plecaka, nie sam plecak
 
 ### 2.7. Interfejs
 
@@ -186,6 +191,7 @@ Rzeczy świadomie odłożone, z powodem i miejscem, w którym wrócą.
 | Budynki nie blokują ruchu przeciwników | warstwa budynków w paczkach nie niesie typu; woda i strefy §3.5 już blokują | po przebudowie paczek |
 | Zawartość magazynu schronu | pojemność (25 kg + moduł, 3 l/kg) jest policzona, ale nie ma gdzie odłożyć rzeczy — to własna tabela i własny ekran | etap 8 (8.5) |
 | Brak powiadomienia po ukończeniu budowy | §8.3 prosi o powiadomienie; kanał powiadomień to osobna praca razem z §16.3 | etap 9 |
+| Konflikt §9.2: „25% maksymalnej (klasa III)" | 25% pozostałej krwi to klasa **IV** wg §2.6, czyli śmierć — wdrożono klasę (65%), bo dosłowna liczba czyniła tryb niegrywalnym | rozstrzygnięte w kodzie |
 | Konflikt §8.3 vs §18.3 | §8.3: 3 h gołymi rękami, z narzędziami −35%. §18.3: bez narzędzi ×2,5. Wdrożono §8.3 — do rozstrzygnięcia | do decyzji |
 | Skrytki §9.2 znikają po 24 h, nie po 48 | leżą jako zwykłe rzeczy na ziemi (§4.8), a te mają dobę | razem z §4.8 |
 | Okno łaski nie sprawdza, czy w ogóle ktoś jest w pobliżu | §9.2 chce warunkowego okna (przeciwnicy w 300 m); dziś zawsze 10 minut | etap 8 |

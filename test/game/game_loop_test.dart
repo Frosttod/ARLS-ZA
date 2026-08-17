@@ -1135,6 +1135,52 @@ void main() {
       expect(rig.loop.down, DownState.none);
     });
 
+    test('and nobody wakes up twice from one blackout (§9.2)', () async {
+      // Found on a phone, and it corrupted the save: "already woken" was a
+      // flag in memory, so reopening the app ran the waking again — back to a
+      // quarter of the blood, the caches announced a second time, and the meal
+      // eaten in between simply undone.
+      final rig = await buildLoop();
+      addTearDown(() async {
+        await rig.source.dispose();
+        await rig.session.close();
+      });
+
+      await rig.loop.start();
+      rig.source.jumpTo(52.4064, 16.9252);
+      rig.source.step();
+      await pump();
+
+      rig.loop.applyWound(constants.bloodMaxMl * 0.5);
+      rig.wall.advance(const Duration(seconds: 5));
+      await rig.loop.onPaused(rig.wall.nowUtc());
+
+      rig.wall.advance(const Duration(minutes: 61));
+      await rig.loop.onResumed();
+      rig.source.step();
+      await pump();
+      await rig.loop.onPaused(rig.wall.nowUtc());
+
+      // Awake, and now eating: the reserves climb.
+      rig.loop.applyUse(kcal: 800, waterMl: 900);
+      rig.wall.advance(const Duration(minutes: 30));
+      await rig.loop.onPaused(rig.wall.nowUtc());
+
+      final fed = rig.loop.state.waterMl;
+      expect(fed, greaterThan(constants.waterDailyMl * 0.15));
+      await rig.loop.dispose();
+
+      // The process dies and comes back.
+      final reopened = await GameSessionFactory(rig.session).loadActive();
+      expect(reopened, isNotNull);
+      expect(reopened!.downUntil, isNull, reason: 'the hour is over');
+      expect(
+        reopened.state.waterMl,
+        closeTo(fed, 1),
+        reason: 'the meal is not undone by opening the app',
+      );
+    });
+
     test('and the hour survives the app being closed', () async {
       final rig = await buildLoop();
       addTearDown(() async {

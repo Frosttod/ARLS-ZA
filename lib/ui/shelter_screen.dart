@@ -644,12 +644,19 @@ String moduleWhat(L10n l10n, ShelterModule module) => switch (module) {
   ShelterModule.laboratory => l10n.moduleLaboratoryWhat,
 };
 
-/// Hours and minutes, which is how every time in §8 is quoted.
+/// Hours and minutes, which is how every time in §8 is quoted — and seconds
+/// once there is under an hour left.
+///
+/// A counter reading "12 min" for sixty seconds at a stretch looks stopped,
+/// and this screen is watched precisely when somebody is wondering whether it
+/// is running at all.
 String _short(Duration time) {
   final hours = time.inHours;
   final minutes = time.inMinutes % 60;
+  final seconds = time.inSeconds % 60;
 
-  return hours <= 0 ? '$minutes min' : '$hours h $minutes min';
+  if (hours > 0) return '$hours h $minutes min';
+  return '$minutes:${seconds.toString().padLeft(2, '0')}';
 }
 
 /// What is going up right now, under the stats bar on the map (§8.3).
