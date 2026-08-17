@@ -127,6 +127,60 @@ void main() {
       expect(after.single.heardAt!.latitude, closeTo(north(120).latitude, 1e-9));
     });
 
+    test('a second shot pulls them to the second shot', () {
+      // The economy of shooting, in one test. Every round pulls the street to
+      // wherever the player is standing now, so a firearm is for a fight that
+      // can be finished rather than for keeping one going.
+      final first = respondToNoise(
+        [walkerAt(500)],
+        event: shot(),
+        playerAt: north(900),
+      );
+      expect(first.single.state, EnemyState.alert);
+
+      final elsewhere = north(400);
+      final second = respondToNoise(
+        first,
+        event: NoiseEvent(
+          at: elsewhere,
+          radiusM: 600,
+          startedAt: DateTime.utc(2026, 8, 16, 12, 1),
+        ),
+        playerAt: north(400),
+      );
+
+      expect(
+        second.single.heardAt!.latitude,
+        closeTo(elsewhere.latitude, 1e-9),
+        reason: 'walking towards the last shot while the next one goes off '
+            'somewhere else is how a thing behaves that cannot hear',
+      );
+    });
+
+    test('but one already coming for you does not stop to listen', () {
+      // §5.6.2: something that has the player does not change target, or a
+      // group could be led away by dropping a tin.
+      final chasing = [
+        walkerAt(100).hears(north(120), chasing: true),
+      ];
+
+      final after = respondToNoise(
+        chasing,
+        event: NoiseEvent(
+          at: north(900),
+          radiusM: 600,
+          startedAt: DateTime.utc(2026, 8, 16, 12, 1),
+        ),
+        playerAt: north(120),
+      );
+
+      expect(after.single.state, EnemyState.chase);
+      expect(
+        after.single.heardAt!.latitude,
+        closeTo(north(120).latitude, 1e-9),
+      );
+    });
+
     test('never more than six of them (§5.6.2)', () {
       // One shot beside a level-ten hotspot would otherwise bring twelve and
       // turn every mistake into a sentence.

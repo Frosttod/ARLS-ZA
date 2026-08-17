@@ -1,7 +1,7 @@
 # ARLS-ZA — lista kontrolna systemów
 
 Stan na dzień **2026-08-16**. Wygenerowana po przejściu pełnego zestawu
-testów: **1406 testów, `flutter analyze` czysty, schemat bazy v12**.
+testów: **1410 testów, `flutter analyze` czysty, schemat bazy v12**.
 
 Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 
@@ -17,10 +17,10 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 
 | Obszar | Testy | Co jest tam pilnowane |
 | :---- | ----: | :---- |
-| `combat` | 231 | tabela kalibracyjna §5.1.2 wiersz po wierszu, obrażenia §5.1.5, budżet sprintu, maszyna stanów, hałas, spawn, magazynek, dodatki |
+| `combat` | 233 | tabela kalibracyjna §5.1.2 wiersz po wierszu, obrażenia §5.1.5, budżet sprintu, maszyna stanów, hałas, spawn, magazynek, dodatki |
 | `ui` | 274 | HUD, ekwipunek, panele, arkusze, geometria dotknięć i pierścieni |
 | `sim` | 195 | tick, metabolizm, tętno, wchłanianie, sen, nawyk gry |
-| `loot` | 130 | tabele, spawner, przeszukanie, rzeczy na ziemi, przeszkody |
+| `loot` | 132 | tabele, spawner, przeszukanie, rzeczy na ziemi, przeszkody |
 | `map` | 88 | PMTiles, MVT, geometria, namiary, pakiety regionów |
 | `inventory` | 82 | dwa limity §18.1a, sloty, porcje, dodatki, trwałość |
 | `items` | 71 | katalog jako dane: bilans, nazwy, sloty, użycia |
@@ -33,7 +33,7 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 | `core` | 30 | deterministyczny RNG, zegar |
 | `notes` | 14 | notatki §19.1, podstawianie nazw miejsc |
 
-**Razem 1406.**
+**Razem 1410.**
 
 ### Rzeczy, które testy trzymają jako liczby, a nie jako intencje
 
@@ -86,6 +86,8 @@ Kolejność jest celowa: rzeczy wyżej blokują ocenę tych niżej.
 - [ ] Zwarcie: dwóch przeciwników przy mnożniku 1,3 boli wyraźnie
 - [ ] Przeładowanie przerywane przy zbliżeniu <5 m
 - [ ] Fala hałasu po strzale jest widoczna i odpowiada promieniowi
+- [ ] **Drugi strzał ściąga ich do drugiego strzału**, nie do pierwszego
+- [ ] Ten, kto już Cię goni, nie daje się odciągnąć hałasem
 - [ ] Ciało zostawia czaszkę na mapie, a łup dopiero po przeszukaniu z bliska
 - [ ] **Czaszka pojawia się także, gdy wróg wykrwawi się w biegu**, nie tylko pod celownikiem
 - [ ] Ikony przeciwników nie znikają przy chwilowym braku pozycji
@@ -106,6 +108,7 @@ Kolejność jest celowa: rzeczy wyżej blokują ocenę tych niżej.
 - [ ] Wiersz broni w ekwipunku pokazuje dodatki i to, co dały (−MOA, +szt.)
 - [ ] Porównanie wyłącznie z tym, co na ciele — nigdy dwa z plecaka
 - [ ] Porcje: przerwane picie zostawia połowę butelki
+- [ ] **Jedzenie, picie i opatrunek kończą się bez GPS** — w piwnicy, w windzie
 - [ ] Dwa egzemplarze tego samego przedmiotu nie mylą się przy wyrzucaniu
 - [ ] Zamiana plecaka na mniejszy nie niszczy starego
 

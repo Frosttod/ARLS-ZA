@@ -117,6 +117,47 @@ void main() {
       expect(search.state, SearchState.lostPresence);
     });
 
+    test('but a bandage does not care about the sky (§4.7)', () {
+      // Found on a phone: a dressing started in a stairwell was lost along
+      // with the wound it was for, because the signal went. Eating, drinking
+      // and first aid are things a body does — they ask no question about
+      // where anybody stood, so a lost position invalidates nothing.
+      final using = Search.using(
+        at: here,
+        now: now,
+        itemId: 'med_bandage',
+        duration: const Duration(seconds: 90),
+        label: 'opatrunek',
+      );
+
+      final after = using.advance(
+        const Duration(seconds: 90),
+        at: null,
+        present: false,
+      );
+
+      expect(after.state, SearchState.done);
+    });
+
+    test('and neither does a bottle carried down the street', () {
+      final drinking = Search.using(
+        at: here,
+        now: now,
+        itemId: 'drink_water',
+        duration: const Duration(seconds: 25),
+        label: 'picie',
+      );
+
+      // Half a kilometre away and no signal: still drinking.
+      final after = drinking.advance(
+        const Duration(seconds: 25),
+        at: GeoPoint(here.latitude + 0.005, here.longitude),
+        present: false,
+      );
+
+      expect(after.state, SearchState.done);
+    });
+
     test('a cancelled search cannot be resumed by advancing it', () {
       final cancelled = Search.area(at: here, now: now).cancel();
 

@@ -132,9 +132,17 @@ NoiseEvent accumulate(NoiseEvent? open, NoiseEvent fresh) =>
 
 /// Who turns towards it, and what they do about it (§5.6.2).
 ///
-/// Only the ones not already busy: §5.6.2 is explicit that an enemy in a chase
-/// does not change target, and a group that abandoned its pursuit every time
-/// something clattered would be a group nobody could ever escape by moving.
+/// Not the ones already chasing: §5.6.2 is explicit that an enemy that has the
+/// player does not change target, and a group that abandoned its pursuit every
+/// time something clattered would be a group nobody could ever escape.
+///
+/// ⚠️ But the ones *investigating* a previous sound do turn. A second shot is
+/// a fresher answer to the question they are already asking, and walking to
+/// where the last one came from while the next one goes off somewhere else is
+/// how a thing behaves that cannot hear. What this buys is the whole economy
+/// of shooting: every round pulls the street to wherever the player is
+/// standing now, so a firearm is for a fight you can finish, not for keeping
+/// one going.
 List<Enemy> respondToNoise(
   List<Enemy> enemies, {
   required NoiseEvent event,
@@ -146,7 +154,8 @@ List<Enemy> respondToNoise(
             (enemy) =>
                 !enemy.isDead &&
                 (enemy.state == EnemyState.idle ||
-                    enemy.state == EnemyState.returning),
+                    enemy.state == EnemyState.returning ||
+                    enemy.state == EnemyState.alert),
           )
           .map(
             (enemy) => (

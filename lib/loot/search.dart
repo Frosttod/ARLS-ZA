@@ -227,14 +227,23 @@ class Search {
   /// [at] is where the player is now, and null means the position is not
   /// trusted — which ends the search, because §2.1a will not let one run on a
   /// position the game is guessing at.
+  ///
+  /// ⚠️ **Using something is exempt from both rules, position included.**
+  /// Found on a phone: a bandage started in a stairwell was lost along with
+  /// the wound it was for, because the signal went. Eating, drinking and first
+  /// aid are things a body does, not things the GPS witnesses — they ask no
+  /// question about where anybody stood, so there is nothing for a lost
+  /// position to invalidate. §2.1a.3 asks for presence for *field* work, and
+  /// swallowing is not field work. Anything else — searching, breaking in —
+  /// keeps both rules.
   Search advance(Duration delta, {required GeoPoint? at, bool present = true}) {
     if (!isRunning) return this;
 
-    if (!present || at == null) {
+    if (!isUse && (!present || at == null)) {
       return _endedAs(SearchState.lostPresence);
     }
     // Using something is not searching: a person can drink while walking.
-    if (!isUse && at.distanceTo(anchor) > kStillnessM) {
+    if (!isUse && at!.distanceTo(anchor) > kStillnessM) {
       final missed = strikes + 1;
       return missed >= kStillnessStrikes
           ? _endedAs(SearchState.cancelledByMovement)
