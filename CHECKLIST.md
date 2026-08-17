@@ -1,7 +1,7 @@
 # ARLS-ZA — lista kontrolna systemów
 
 Stan na dzień **2026-08-16**. Wygenerowana po przejściu pełnego zestawu
-testów: **1425 testów, `flutter analyze` czysty, schemat bazy v12**.
+testów: **1434 testy, `flutter analyze` czysty, schemat bazy v12**.
 
 Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 
@@ -18,7 +18,7 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 | Obszar | Testy | Co jest tam pilnowane |
 | :---- | ----: | :---- |
 | `combat` | 248 | tabela kalibracyjna §5.1.2 wiersz po wierszu, obrażenia §5.1.5, budżet sprintu, maszyna stanów, hałas, spawn, magazynek, dodatki |
-| `ui` | 274 | HUD, ekwipunek, panele, arkusze, geometria dotknięć i pierścieni |
+| `ui` | 283 | HUD, ekwipunek, panele, arkusze, geometria dotknięć i pierścieni |
 | `sim` | 195 | tick, metabolizm, tętno, wchłanianie, sen, nawyk gry |
 | `loot` | 132 | tabele, spawner, przeszukanie, rzeczy na ziemi, przeszkody |
 | `map` | 88 | PMTiles, MVT, geometria, namiary, pakiety regionów |
@@ -33,7 +33,7 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 | `core` | 30 | deterministyczny RNG, zegar |
 | `notes` | 14 | notatki §19.1, podstawianie nazw miejsc |
 
-**Razem 1425.**
+**Razem 1434.**
 
 ### Rzeczy, które testy trzymają jako liczby, a nie jako intencje
 
@@ -60,6 +60,9 @@ Kolejność jest celowa: rzeczy wyżej blokują ocenę tych niżej.
 - [ ] **Telefon na blacie w domu nie nalicza marszu** — tętno, woda i kalorie
       stoją (poprawka: bramka rośnie razem z niepewnością odczytu)
 - [ ] Znacznik gracza zostaje na środku przy zoomie i szczypaniu
+- [ ] **Kropki nie odklejają się od glifów przy zoomie** — wszystko rysowane jednym wzorem
+- [ ] Szczypanie jest płynne przy 60+ znacznikach na ekranie
+- [ ] Ikony typów miejsc czytelne w słońcu: krzyż, tarcza, sztućce, klucz, celownik, książka, dom, auto, kosz
 - [ ] Najszerszy zoom (3 km) nie jest za szeroki do gry
 - [ ] Zużycie baterii: ~1%/h w tle, ~4% na 30 min aktywności
 

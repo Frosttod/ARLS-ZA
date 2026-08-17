@@ -6,9 +6,16 @@
 /// exist in a widget test — and so swapping the renderer later touches one
 /// file.
 ///
-/// Markers are circles rather than symbols: symbols need image assets, and the
-/// style deliberately ships no sprite sheet (§3.1). A circle carries the colour
-/// code of §3.6 without a byte of art.
+/// ⚠️ **MapLibre draws the tiles and nothing else.** Every marker, ring, cone,
+/// glyph and wave is painted by us on top of it. That is not a style choice:
+/// annotations cost a platform-channel round trip each, up to sixty-five of
+/// them, rewritten whenever anything moved — which cost a pinch its frame rate
+/// and cost a cold start its markers entirely. It also means the dots and the
+/// taps are computed from one piece of arithmetic ([offsetOf]) rather than
+/// two, so they cannot drift apart.
+///
+/// No sprite sheet either (§3.1): the shapes are drawn, and the type glyphs
+/// come out of the icon font that is already in the binary.
 library;
 
 import 'dart:async';
@@ -127,15 +134,7 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
   /// Where the zoom stood when the current pinch began.
   double? _zoomAtGestureStart;
 
-  /// Circles currently on the map, by marker id. Kept so a marker that moved
-  /// is updated rather than removed and re-added — a marker that blinks every
-  /// second is one nobody can tap.
-  final Map<String, Circle> _circles = {};
-
-  /// What each circle was last written as, so an unchanged one costs nothing.
-  final Map<String, String> _drawn = {};
-
-  /// One reconciliation at a time, and never a dropped one.
+  /// One camera move at a time, and never a dropped one.
   final SyncGate _gate = SyncGate();
 
   /// One camera move at a time, for the same reason.
@@ -233,11 +232,6 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
       ),
     );
 
-    final counted = [
-      for (final marker in widget.markers)
-        if (marker.count > 1) marker,
-    ];
-
     final facing = [
       for (final marker in widget.markers)
         if (marker.headingDeg != null) marker,
@@ -316,26 +310,17 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
     );
 
     final rings = reachRingsOf(widget.markers);
-    if ((counted.isEmpty &&
-            rings.isEmpty &&
-            facing.isEmpty &&
-            alerted.isEmpty &&
-            spreading == null) ||
-        centre == null) {
+    if (centre == null ||
+        (widget.markers.isEmpty && rings.isEmpty && spreading == null)) {
       return gestures;
     }
 
-    // §4.8: the number on a stack of dropped kit. Drawn on our side of the
-    // platform view because a MapLibre circle has no text, and computed from
-    // the same geometry as the tap handling — the player is always centred, so
-    // an offset from the middle is all it takes.
+    // Everything above the tiles is drawn on our side of the platform view,
+    // from the same geometry the tap handling uses: the player is always
+    // centred, so an offset from the middle is all it takes. That is what
+    // stops a dot and the finger that hits it from ever disagreeing.
     return LayoutBuilder(
       builder: (context, constraints) {
-        final middle = Offset(
-          constraints.maxWidth / 2,
-          constraints.maxHeight / 2,
-        );
-
         return Stack(
           children: [
             Positioned.fill(child: gestures),
@@ -375,15 +360,11 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
 
                       return CustomPaint(
                         painter: _NoisePainter(
-                          at:
-                              offsetOf(
-                                wave.at,
-                                centre: GeoPoint(
-                                  centre.latitude,
-                                  centre.longitude,
-                                ),
-                                zoom: _zoom,
-                              ),
+                          at: offsetOf(
+                            wave.at,
+                            centre: GeoPoint(centre.latitude, centre.longitude),
+                            zoom: _zoom,
+                          ),
                           radiusPx:
                               wave.radiusM *
                               reached /
@@ -406,14 +387,26 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
                       at: [
                         for (final marker in bodies)
                           offsetOf(
-                              marker.at,
-                              centre: GeoPoint(
-                                centre.latitude,
-                                centre.longitude,
-                              ),
-                              zoom: _zoom,
-                            ),
+                            marker.at,
+                            centre: GeoPoint(centre.latitude, centre.longitude),
+                            zoom: _zoom,
+                          ),
                       ],
+                    ),
+                  ),
+                ),
+              ),
+
+            // §3.6: every dot on the map, in one pass. See [_MarkerPainter]
+            // for why this is not sixty-five platform-channel calls any more.
+            if (widget.markers.isNotEmpty)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: CustomPaint(
+                    painter: _MarkerPainter(
+                      markers: widget.markers,
+                      centre: GeoPoint(centre.latitude, centre.longitude),
+                      zoom: _zoom,
                     ),
                   ),
                 ),
@@ -476,39 +469,6 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
                     ),
                   ),
                 ),
-              ),
-
-            for (final marker in counted)
-              Builder(
-                builder: (context) {
-                  final at =
-                      middle +
-                      offsetOf(
-                        marker.at,
-                        centre: GeoPoint(centre.latitude, centre.longitude),
-                        zoom: _zoom,
-                      );
-
-                  return Positioned(
-                    left: at.dx - 12,
-                    top: at.dy - 9,
-                    child: IgnorePointer(
-                      child: Container(
-                        alignment: Alignment.center,
-                        width: 24,
-                        height: 18,
-                        child: Text(
-                          '${marker.count}',
-                          style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF0B0D0E),
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                },
               ),
           ],
         );
@@ -633,9 +593,11 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
   Future<void> _sync() async {
     final controller = _controller;
     if (controller == null) return;
+    if (!_gate.enter()) return;
 
     await _syncCamera(controller);
-    await _syncMarkers(controller);
+
+    if (_gate.leave()) await _sync();
   }
 
   /// Puts the player back under the pin after a zoom.
@@ -681,64 +643,131 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
       await controller.animateCamera(target);
     }
   }
+}
 
-  /// Reconciles the dots on the map with what the game says is there.
-  ///
-  /// ⚠️ Every call here is a platform channel round trip, and there can be
-  /// sixty-five markers. Found on a phone: a pinch fired this on every frame
-  /// of the gesture and the game stopped answering. So it does the least it
-  /// can — a circle is only written when what it should look like has
-  /// actually changed, and a zoom does not touch it at all, because MapLibre
-  /// already knows where a geographic point belongs on screen.
-  Future<void> _syncMarkers(MapLibreMapController controller) async {
-    if (!_gate.enter()) return;
+/// Every marker on the map, in one pass (§3.6).
+///
+/// ⚠️ This used to be MapLibre circle annotations, one platform-channel round
+/// trip each, up to sixty-five of them, rewritten every time anything moved.
+/// A pinch fired that on every frame and the game stopped answering; a cold
+/// start dropped the one update that carried the markers and the map came up
+/// empty. Both were the same mistake — asking another process to draw a dot we
+/// already know the screen position of.
+///
+/// Now it is one `paint()` per frame with the same arithmetic the tap handler
+/// already uses ([offsetOf]), so a dot and the finger that hits it can no
+/// longer disagree, and nothing crosses a channel at all.
+class _MarkerPainter extends CustomPainter {
+  const _MarkerPainter({
+    required this.markers,
+    required this.centre,
+    required this.zoom,
+  });
 
-    try {
-      final wanted = {for (final marker in widget.markers) marker.id: marker};
+  final List<MapMarker> markers;
+  final GeoPoint centre;
+  final double zoom;
 
-      for (final id in _circles.keys.toList()) {
-        if (wanted.containsKey(id)) continue;
-        await controller.removeCircle(_circles.remove(id)!);
-        _drawn.remove(id);
+  @override
+  void paint(Canvas canvas, Size size) {
+    final middle = Offset(size.width / 2, size.height / 2);
+
+    for (final marker in markers) {
+      final at = middle + offsetOf(marker.at, centre: centre, zoom: zoom);
+
+      // Off screen and not worth a single instruction more.
+      if (at.dx < -40 ||
+          at.dy < -40 ||
+          at.dx > size.width + 40 ||
+          at.dy > size.height + 40) {
+        continue;
       }
 
-      for (final marker in wanted.values) {
-        // What this circle should look like, as one comparable value. Two
-        // dots of the same kind in the same place are the same request, and
-        // the second one is a channel call for nothing.
-        final shape =
-            '${marker.at.latitude},${marker.at.longitude},${marker.kind.name}';
-        if (_drawn[marker.id] == shape) continue;
+      final radius = kMarkerRadius[marker.kind]!;
+      final colour = Color(kMarkerColours[marker.kind]!);
 
-        final options = CircleOptions(
-          geometry: LatLng(marker.at.latitude, marker.at.longitude),
-          circleRadius: kMarkerRadius[marker.kind],
-          circleColor: _hex(kMarkerColours[marker.kind]!),
-          circleStrokeColor: '#000000',
-          circleStrokeWidth: 1.5,
-          circleOpacity: 0.9,
+      // A dark rim, because §12 will not let a dot be legible only by its
+      // colour and a pale one on a pale street is no dot at all.
+      canvas
+        ..drawCircle(
+          at,
+          radius + 0.75,
+          Paint()..color = const Color(0xE6000000),
+        )
+        ..drawCircle(
+          at,
+          radius,
+          Paint()..color = colour.withValues(alpha: 0.9),
         );
 
-        final existing = _circles[marker.id];
-        if (existing == null) {
-          _circles[marker.id] = await controller.addCircle(options);
-        } else {
-          await controller.updateCircle(existing, options);
-        }
-        _drawn[marker.id] = shape;
-      }
-    } finally {
-      // Nothing here, so a throw cannot leave the gate shut for good.
-    }
+      final glyph = marker.icon;
+      if (glyph != null) _drawGlyph(canvas, at, glyph);
 
-    if (_gate.leave()) await _syncMarkers(controller);
+      if (marker.count > 1) _drawCount(canvas, at, marker.count);
+    }
   }
 
-  /// MapLibre wants `#rrggbb`; the colour code is stored as ARGB so it can be
-  /// used by Flutter painters too.
-  static String _hex(int argb) =>
-      '#${(argb & 0xFFFFFF).toRadixString(16).padLeft(6, '0')}';
+  /// §3.6: what kind of place it is, inside the dot.
+  ///
+  /// Inside rather than beside: a badge next to a marker drifts away from it
+  /// the moment the map moves, and this map moves constantly.
+  void _drawGlyph(Canvas canvas, Offset at, PlaceIcon glyph) {
+    final icon = _iconFor(glyph);
+
+    final painter = TextPainter(
+      text: TextSpan(
+        text: String.fromCharCode(icon.codePoint),
+        style: TextStyle(
+          fontSize: 11,
+          fontFamily: icon.fontFamily,
+          package: icon.fontPackage,
+          color: const Color(0xFF0B0D0E),
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+
+    painter.paint(canvas, at - Offset(painter.width / 2, painter.height / 2));
+  }
+
+  void _drawCount(Canvas canvas, Offset at, int count) {
+    final painter = TextPainter(
+      text: TextSpan(
+        text: '$count',
+        style: const TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+          color: Color(0xFF0B0D0E),
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout();
+
+    painter.paint(canvas, at - Offset(painter.width / 2, painter.height / 2));
+  }
+
+  @override
+  bool shouldRepaint(_MarkerPainter old) =>
+      old.zoom != zoom ||
+      old.centre != centre ||
+      old.markers.length != markers.length ||
+      !identical(old.markers, markers);
 }
+
+/// The seven shapes of §3.6, as glyphs.
+///
+/// Const, so the icon tree-shaker can still do its job.
+IconData _iconFor(PlaceIcon icon) => switch (icon) {
+  PlaceIcon.medical => Icons.local_hospital,
+  PlaceIcon.guarded => Icons.local_police,
+  PlaceIcon.food => Icons.restaurant,
+  PlaceIcon.tools => Icons.handyman,
+  PlaceIcon.weapons => Icons.gps_fixed,
+  PlaceIcon.books => Icons.menu_book,
+  PlaceIcon.home => Icons.home,
+  PlaceIcon.vehicle => Icons.directions_car,
+  PlaceIcon.waste => Icons.delete_outline,
+};
 
 /// One job at a time, and never a job thrown away.
 ///
@@ -964,9 +993,7 @@ class _AlertPainter extends CustomPainter {
             color: Color(
               kAlertColours[marker.alert]!,
             ).withValues(alpha: hunting ? 1 - 0.25 * pulse : 0.95),
-            shadows: const [
-              Shadow(color: Color(0xFFFFFFFF), blurRadius: 3),
-            ],
+            shadows: const [Shadow(color: Color(0xFFFFFFFF), blurRadius: 3)],
           ),
         ),
         textDirection: TextDirection.ltr,
@@ -974,10 +1001,7 @@ class _AlertPainter extends CustomPainter {
 
       // Above and to the right of the dot, where it does not sit on the thing
       // it is about.
-      painter.paint(
-        canvas,
-        centre + Offset(6, -10 - painter.height / 2),
-      );
+      painter.paint(canvas, centre + Offset(6, -10 - painter.height / 2));
     }
   }
 
@@ -998,8 +1022,6 @@ class _AlertPainter extends CustomPainter {
     return true;
   }
 }
-
-
 
 /// The circle a shot pushes out across the map (§5.6.5).
 class _NoisePainter extends CustomPainter {

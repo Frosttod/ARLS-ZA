@@ -51,6 +51,43 @@ enum MarkerAlert {
   hunting,
 }
 
+/// What kind of place a loot marker stands for (§3.6, §10).
+///
+/// A dot that says "something to search" sends a player three hundred metres
+/// to a florist. What they are actually deciding is which errand is worth the
+/// walk, and that decision needs the kind of place, not the fact of one.
+///
+/// Deliberately coarse. Eleven shapes on a map read at arm's length in the
+/// rain is nothing; seven is a legend somebody can hold in their head.
+enum PlaceIcon {
+  /// Pharmacy, clinic, hospital, ambulance.
+  medical,
+
+  /// Police, military — the two places with ammunition in them.
+  guarded,
+
+  /// Groceries, restaurants, allotments.
+  food,
+
+  /// Hardware, garages, workshops, warehouses: where §18.2's kilograms are.
+  tools,
+
+  /// Sports and hunting: where a weapon might be.
+  weapons,
+
+  /// Libraries and schools (§4.6).
+  books,
+
+  /// Houses, barns, anywhere somebody lived.
+  home,
+
+  /// A vehicle somebody left.
+  vehicle,
+
+  /// Bins, skips, roadsides. Materials, and not much else.
+  waste,
+}
+
 /// One thing on the map.
 class MapMarker {
   const MapMarker({
@@ -62,6 +99,7 @@ class MapMarker {
     this.count = 1,
     this.headingDeg,
     this.alert,
+    this.icon,
   });
 
   /// Stable across frames, so the renderer can move a marker instead of
@@ -75,6 +113,10 @@ class MapMarker {
   /// Read out by the screen reader, and shown on tap. §12 requires that
   /// nothing on this map is knowable by colour alone.
   final String? label;
+
+  /// §3.6: what kind of place this is, for anything that is one. Null for
+  /// enemies, bodies and dropped kit — those are what they are.
+  final PlaceIcon? icon;
 
   /// §6.1a: how much attention it is paying, or null for anything that pays
   /// none — a lootbox does not notice people.
@@ -120,6 +162,7 @@ class MapMarker {
     count: count ?? this.count,
     headingDeg: headingDeg ?? this.headingDeg,
     alert: alert ?? this.alert,
+    icon: icon,
   );
 }
 
@@ -300,3 +343,24 @@ class NoiseWave {
     return elapsed.inMilliseconds / spread.inMilliseconds;
   }
 }
+
+/// §10: which of §3.6's shapes a loot table earns.
+///
+/// Read off the table id rather than the OSM tag, because the table is what
+/// actually decides what is inside — and what is inside is the whole reason
+/// anybody walks there.
+PlaceIcon placeIconFor(String? tableId) => switch (tableId) {
+  'poi_pharmacy' || 'poi_hospital' => PlaceIcon.medical,
+  'poi_military' => PlaceIcon.guarded,
+  'poi_grocery' => PlaceIcon.food,
+  'poi_hardware' ||
+  'poi_industrial' ||
+  'poi_warehouse' ||
+  'proc_garage' => PlaceIcon.tools,
+  'poi_weapons' || 'poi_sports' || 'proc_hunting_stand' => PlaceIcon.weapons,
+  'poi_library' || 'poi_school' => PlaceIcon.books,
+  'proc_abandoned_house' || 'proc_barn' || 'proc_shelter' => PlaceIcon.home,
+  'proc_abandoned_car' => PlaceIcon.vehicle,
+  'proc_waste' || 'proc_roadside' => PlaceIcon.waste,
+  _ => PlaceIcon.home,
+};

@@ -2746,6 +2746,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
             // §10.2: how close is close enough to search it. Judging
             // twenty-five metres by eye on a map that zooms is guesswork.
             reachM: kSearchReachM,
+            // §3.6: what kind of place it is. A dot that only says "something
+            // to search" sends a player three hundred metres to a florist —
+            // the decision they are making is which errand is worth the walk.
+            icon: placeIconFor(box.tableId),
           ),
 
       // §3.6: red, and only what is near enough to be part of the fight
@@ -2777,6 +2781,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
           kind: MarkerKind.shelter,
           at: place.position,
           reachM: place.kind.safeRadiusM,
+          icon: PlaceIcon.home,
         ),
 
       // §10.3: bone white, with a skull on it. Stays until it is not worth
