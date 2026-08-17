@@ -76,6 +76,60 @@ const Map<String, String> kGeneratedSelectors = {
 /// The fallback when a point falls on none of the above.
 const String kRoadsideSelector = 'generated.roadside';
 
+/// A car somebody left, and a bin somebody filled.
+///
+/// Neither is in OpenStreetMap as a point — nobody maps the Passat outside
+/// number 14 — but both are the most ordinary things on any street, and both
+/// carry exactly what §18.2 is short of: wood, metal, plastic, cloth. Ammunition
+/// and weapons stay where they were, in the places that had them.
+const String kCarSelector = 'generated.car';
+const String kWasteSelector = 'generated.waste';
+
+/// The two vehicles worth a table of their own (§10.3.3).
+///
+/// Anchored to the building they belong to rather than scattered: an ambulance
+/// is outside a hospital and a patrol car is outside a station, and finding
+/// one anywhere else would say the world is random rather than abandoned.
+const String kAmbulanceSelector = 'generated.ambulance';
+const String kPoliceCarSelector = 'generated.police_car';
+
+/// What a point on this kind of ground turns out to be.
+///
+/// ⚠️ These are shares of the *same* points, not extra ones. §10's density
+/// caps are counted in places, so a street that grows cars and bins grows them
+/// instead of something else — the map gets more varied without getting more
+/// crowded, which is the only way to add anything to it at all.
+const Map<String, List<({String selector, int share})>> kGeneratedMix = {
+  'landuse.class=residential': [
+    (selector: 'generated.house', share: 60),
+    (selector: kWasteSelector, share: 25),
+    (selector: kCarSelector, share: 15),
+  ],
+  'landcover.class=farmland': [
+    (selector: 'generated.barn', share: 85),
+    (selector: kCarSelector, share: 15),
+  ],
+  'landcover.class=wood': [(selector: 'generated.hunting_stand', share: 100)],
+};
+
+/// And for a point that fell on no recognised ground at all.
+const List<({String selector, int share})> kRoadsideMix = [
+  (selector: kRoadsideSelector, share: 55),
+  (selector: kCarSelector, share: 30),
+  (selector: kWasteSelector, share: 15),
+];
+
+/// How far an emergency vehicle stands from the building it belongs to.
+const double kAnchoredVehicleM = 25;
+
+/// Which anchor earns which vehicle (§10.3.3).
+const Map<String, String> kAnchoredVehicles = {
+  'poi.class=hospital': kAmbulanceSelector,
+  'landuse.class=hospital': kAmbulanceSelector,
+  'poi.class=police': kPoliceCarSelector,
+  'poi.subclass=police': kPoliceCarSelector,
+};
+
 /// Invents up to [wanted] places around [centre].
 ///
 /// [roads] and [areas] come from the same tiles the real places did.
@@ -108,7 +162,7 @@ List<Poi> generateProceduralPoints({
       candidates.add(
         Poi(
           position: offset,
-          selectors: [_selectorFor(offset, areas)],
+          selectors: [_selectorFor(offset, areas, seed)],
           name: null,
           layer: 'generated',
         ),
@@ -146,13 +200,73 @@ List<Poi> generateProceduralPoints({
 }
 
 /// Which kind of place this ground suggests.
-String _selectorFor(GeoPoint point, List<GeneratedArea> areas) {
+String _selectorFor(GeoPoint point, List<GeneratedArea> areas, int seed) {
   for (final area in areas) {
     if (!isInsideRing(point, area.ring)) continue;
+
+    final mix = kGeneratedMix[area.selector];
+    if (mix != null) return _pickFrom(mix, seed, point);
+
     final selector = kGeneratedSelectors[area.selector];
     if (selector != null) return selector;
   }
-  return kRoadsideSelector;
+  return _pickFrom(kRoadsideMix, seed, point);
+}
+
+/// One of [mix], chosen by the seed and the point itself.
+///
+/// Deterministic, like everything else here: the same street gives the same
+/// car outside the same house every time, because a village that rearranges
+/// itself between sessions is a village nobody can learn.
+String _pickFrom(
+  List<({String selector, int share})> mix,
+  int seed,
+  GeoPoint point,
+) {
+  var total = 0;
+  for (final entry in mix) {
+    total += entry.share;
+  }
+  if (total <= 0) return kRoadsideSelector;
+
+  var roll = _stableHash(seed ^ 0x5eed, point) % total;
+  for (final entry in mix) {
+    if (roll < entry.share) return entry.selector;
+    roll -= entry.share;
+  }
+  return mix.last.selector;
+}
+
+/// §10.3.3: an ambulance outside the hospital, a patrol car outside the
+/// station.
+///
+/// One each, and only where the building is actually on the map. They are the
+/// two richest things in the game per kilogram carried, so they are not
+/// something a generator may sprinkle about — they are attached to a place
+/// that earns them.
+List<Poi> vehiclesBeside(List<Poi> anchors, {required int seed}) {
+  final vehicles = <Poi>[];
+
+  for (final anchor in anchors) {
+    String? kind;
+    for (final selector in anchor.selectors) {
+      kind ??= kAnchoredVehicles[selector];
+    }
+    if (kind == null) continue;
+
+    vehicles.add(
+      Poi(
+        position: anchor.position.offsetBy(
+          metres: kAnchoredVehicleM,
+          bearingDeg: (_stableHash(seed, anchor.position) % 360).toDouble(),
+        ),
+        selectors: [kind],
+        name: null,
+        layer: 'generated',
+      ),
+    );
+  }
+  return vehicles;
 }
 
 /// Points spaced along a road, with the direction at each one.

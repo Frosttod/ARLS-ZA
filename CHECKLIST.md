@@ -1,7 +1,7 @@
 # ARLS-ZA — lista kontrolna systemów
 
 Stan na dzień **2026-08-16**. Wygenerowana po przejściu pełnego zestawu
-testów: **1437 testów, `flutter analyze` czysty, schemat bazy v12**.
+testów: **1446 testów, `flutter analyze` czysty, schemat bazy v12**.
 
 Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 
@@ -20,7 +20,7 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 | `combat` | 248 | tabela kalibracyjna §5.1.2 wiersz po wierszu, obrażenia §5.1.5, budżet sprintu, maszyna stanów, hałas, spawn, magazynek, dodatki |
 | `ui` | 286 | HUD, ekwipunek, panele, arkusze, geometria dotknięć i pierścieni |
 | `sim` | 195 | tick, metabolizm, tętno, wchłanianie, sen, nawyk gry |
-| `loot` | 132 | tabele, spawner, przeszukanie, rzeczy na ziemi, przeszkody |
+| `loot` | 141 | tabele, spawner, przeszukanie, rzeczy na ziemi, przeszkody |
 | `map` | 88 | PMTiles, MVT, geometria, namiary, pakiety regionów |
 | `inventory` | 82 | dwa limity §18.1a, sloty, porcje, dodatki, trwałość |
 | `items` | 71 | katalog jako dane: bilans, nazwy, sloty, użycia |
@@ -33,7 +33,7 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 | `core` | 30 | deterministyczny RNG, zegar |
 | `notes` | 14 | notatki §19.1, podstawianie nazw miejsc |
 
-**Razem 1437.**
+**Razem 1446.**
 
 ### Rzeczy, które testy trzymają jako liczby, a nie jako intencje
 
@@ -72,6 +72,9 @@ Kolejność jest celowa: rzeczy wyżej blokują ocenę tych niżej.
 - [ ] Dłuższe przeszukanie (90 s, 180 s) daje wyraźnie więcej niż 30 s
 - [ ] Budżet miejsca działa: 3 × pobieżne albo 2 × dokładne albo 1 × gruntowne
 - [ ] Otwarte od startu miejsca zdarzają się — ale nie wszystkie
+- [ ] **Samochody i śmietniki pojawiają się na ulicach** i dają materiały, nie broń
+- [ ] Karetka stoi pod szpitalem, radiowóz pod komisariatem — oba zamknięte
+- [ ] Gęstość się nie zmieniła: nadal max 15 miejsc, nowe typy konkurują o te same sloty
 - [ ] Skrzynki odnawiają się po 4–8 h
 - [ ] Kliknięcie w znacznik pokazuje szczegóły z dowolnej odległości
 - [ ] Rzeczy na ziemi grupują się w jedną kropkę z liczbą

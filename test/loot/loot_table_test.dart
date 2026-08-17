@@ -24,14 +24,26 @@ void main() {
       expect(tables.problems, isEmpty, reason: tables.problems.join('\n'));
     });
 
-    test('are the twenty §10.3 asks for: 11 from OSM, 9 procedural', () {
+    test('are the twenty of §10.3, plus two vehicles worth a table', () {
+      // §10.3.3's ambulance and patrol car: the only two places in the game
+      // with medicine and ammunition worth the walk, so they are anchored to
+      // a hospital and a station rather than sprinkled by a generator.
       final osm = tables.tables.where((t) => t.source == LootSource.osm);
       final procedural = tables.tables.where(
         (t) => t.source == LootSource.procedural,
       );
 
       expect(osm, hasLength(11));
-      expect(procedural, hasLength(9));
+      expect(procedural, hasLength(11));
+    });
+
+    test('and every one of them is shut or open on purpose', () {
+      // A vehicle nobody could open would be scenery; one anybody could open
+      // would end the medical economy in an afternoon.
+      for (final id in const ['proc_ambulance', 'proc_police_car']) {
+        final table = tables.tables.firstWhere((t) => t.id == id);
+        expect(table.barrier, isNotNull, reason: id);
+      }
     });
 
     test('every entry names an item that exists', () {

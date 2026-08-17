@@ -197,6 +197,16 @@ class LootWorld {
       }
     }
 
+    // §10.3.3: an ambulance outside the hospital, a patrol car outside the
+    // station. Added to the same pool as everything else, so they compete for
+    // §10's fifteen slots rather than being extra — the map gets richer
+    // without getting more crowded, which is the only way anything new gets
+    // onto it at all.
+    candidates = [
+      ...candidates,
+      ...vehiclesBeside(candidates, seed: seed),
+    ];
+
     return spawner.plan(
       centre: centre,
       candidates: candidates,

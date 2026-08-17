@@ -1209,7 +1209,8 @@
       ],
       "match": [
         "poi.subclass=parking",
-        "poi.class=parking"
+        "poi.class=parking",
+        "generated.car"
       ],
       "entries": [
         {
@@ -1266,7 +1267,8 @@
           "min": 1,
           "max": 2
         }
-      ]
+      ],
+      "generated": true
     },
     {
       "id": "proc_abandoned_house",
@@ -1530,7 +1532,8 @@
       ],
       "match": [
         "poi.subclass=recycling",
-        "poi.class=recycling"
+        "poi.class=recycling",
+        "generated.waste"
       ],
       "entries": [
         {
@@ -1575,7 +1578,8 @@
           "min": 1,
           "max": 1
         }
-      ]
+      ],
+      "generated": true
     },
     {
       "id": "proc_shelter",
@@ -1795,6 +1799,120 @@
           "min": 1,
           "max": 1
         }
+      ]
+    },
+    {
+      "id": "proc_ambulance",
+      "_comment": "Anchored outside a hospital, never anywhere else. The richest medical find in the game, and shut: a vehicle nobody could open would be scenery, and one anybody could open would end the medical economy.",
+      "source": "procedural",
+      "match": [
+        "generated.ambulance"
+      ],
+      "barrier": "door",
+      "entries": [
+        {
+          "item": "med_bandage",
+          "weight": 30,
+          "min": 2,
+          "max": 5
+        },
+        {
+          "item": "med_tourniquet",
+          "weight": 16,
+          "min": 1,
+          "max": 2
+        },
+        {
+          "item": "med_painkillers",
+          "weight": 18,
+          "min": 1,
+          "max": 3
+        },
+        {
+          "item": "med_antiseptic",
+          "weight": 16,
+          "min": 1,
+          "max": 2
+        },
+        {
+          "item": "med_suture_kit",
+          "weight": 8,
+          "min": 1,
+          "max": 1
+        },
+        {
+          "item": "mat_fabric",
+          "weight": 20,
+          "min": 2,
+          "max": 6
+        },
+        {
+          "item": "mat_plastic",
+          "weight": 18,
+          "min": 2,
+          "max": 6
+        }
+      ],
+      "generated": true,
+      "osm": [
+        "amenity=hospital"
+      ]
+    },
+    {
+      "id": "proc_police_car",
+      "_comment": "Outside a station, and padlocked. One of only two places in the game with ammunition worth the walk (§10.3.3), which is why it is anchored to a building rather than scattered by a generator.",
+      "source": "procedural",
+      "match": [
+        "generated.police_car"
+      ],
+      "barrier": "padlock",
+      "entries": [
+        {
+          "item": "ammo_9x19",
+          "weight": 24,
+          "min": 6,
+          "max": 18
+        },
+        {
+          "item": "armor_vest_soft",
+          "weight": 8,
+          "min": 1,
+          "max": 1
+        },
+        {
+          "item": "melee_bat",
+          "weight": 14,
+          "min": 1,
+          "max": 1
+        },
+        {
+          "item": "tool_flashlight",
+          "weight": 16,
+          "min": 1,
+          "max": 1
+        },
+        {
+          "item": "med_bandage",
+          "weight": 18,
+          "min": 1,
+          "max": 3
+        },
+        {
+          "item": "mat_metal",
+          "weight": 20,
+          "min": 1,
+          "max": 4
+        },
+        {
+          "item": "mat_plastic",
+          "weight": 18,
+          "min": 1,
+          "max": 4
+        }
+      ],
+      "generated": true,
+      "osm": [
+        "amenity=police"
       ]
     }
   ]
