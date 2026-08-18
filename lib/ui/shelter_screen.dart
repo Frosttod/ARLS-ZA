@@ -7,7 +7,6 @@
 /// planks" is a reason to go out, and a hidden row is nothing at all.
 library;
 
-import 'fonts.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -17,6 +16,7 @@ import '../l10n/app_localizations.dart';
 import '../map/geometry.dart';
 import '../shelter/recipes.dart';
 import '../shelter/shelter.dart';
+import 'fonts.dart';
 import 'hud.dart' show HudColors;
 
 class ShelterScreen extends StatefulWidget {
@@ -32,6 +32,9 @@ class ShelterScreen extends StatefulWidget {
     required this.onBuildModule,
     required this.onCancelBuild,
     required this.onShelves,
+    required this.shelved,
+    required this.shelvedMassKg,
+    required this.shelvedVolumeL,
     this.hotspots = const [],
     super.key,
   });
@@ -67,6 +70,17 @@ class ShelterScreen extends StatefulWidget {
 
   /// §18.2: opening the shelves of a finished place.
   final void Function(Shelter place) onShelves;
+
+  /// §18.2: what is on the shelves of the main shelter, by item id.
+  ///
+  /// ⚠️ Counted towards every recipe alongside the pack. A player standing in
+  /// their own shelter is standing next to the shelf, and asking them to pick
+  /// twenty planks up off it before the button will light is bookkeeping, not
+  /// a decision.
+  final Map<String, int> shelved;
+
+  final double shelvedMassKg;
+  final double shelvedVolumeL;
 
   /// §8.5.2: hotspot centres, which a camp may not sit inside.
   final List<GeoPoint> hotspots;
@@ -149,6 +163,8 @@ class _ShelterScreenState extends State<ShelterScreen> {
               _ShelvesRow(
                 shelter: shelter,
                 away: at == null || !shelter.atSite(at),
+                massKg: widget.shelvedMassKg,
+                volumeL: widget.shelvedVolumeL,
                 onOpen: () => widget.onShelves(shelter),
                 colours: colours,
               ),
@@ -161,6 +177,7 @@ class _ShelterScreenState extends State<ShelterScreen> {
                   module: module,
                   now: now,
                   carried: widget.carried,
+                  shelved: widget.shelved,
                   itemNameOf: widget.itemNameOf,
                   hasHammer: widget.hasHammer,
                   hasMultitool: widget.hasMultitool,
@@ -361,13 +378,19 @@ class _Standing extends StatelessWidget {
                 value: '${(shelter.sleepRate * 100).round()}%',
                 colours: colours,
               ),
-              _Line(
-                label: l10n.shelterStorage,
-                value:
-                    '${shelter.storageKg.round()} kg · '
-                    '${shelter.storageL.round()} l',
-                colours: colours,
-              ),
+              // ⚠️ No storage line here any more. The shelves row below says
+              // the same capacity *and* how much of it is used, and a figure
+              // printed twice on one screen is a figure the reader has to
+              // check against itself. A camp keeps it, because a camp has no
+              // shelves row — its chest is the place itself.
+              if (shelter.kind == ShelterKind.camp)
+                _Line(
+                  label: l10n.shelterStorage,
+                  value:
+                      '${shelter.storageKg.round()} kg · '
+                      '${shelter.storageL.round()} l',
+                  colours: colours,
+                ),
               if (shelter.isDecayingAt(now))
                 Padding(
                   padding: const EdgeInsets.only(top: 6),
@@ -394,6 +417,7 @@ class _ModuleRow extends StatelessWidget {
     required this.module,
     required this.now,
     required this.carried,
+    required this.shelved,
     required this.itemNameOf,
     required this.hasHammer,
     required this.hasMultitool,
@@ -410,6 +434,10 @@ class _ModuleRow extends StatelessWidget {
   final bool away;
   final DateTime now;
   final Map<String, int> carried;
+
+  /// §18.2: what is on the shelves, counted alongside the pack.
+  final Map<String, int> shelved;
+
   final String Function(String) itemNameOf;
   final bool hasHammer;
   final bool hasMultitool;
@@ -427,9 +455,15 @@ class _ModuleRow extends StatelessWidget {
     final underway = shelter.building == module;
     final next = nextLevelOf(module, have: level);
 
+    // Pack and shelves together, because that is what is within reach.
+    final have = {...carried};
+    for (final entry in shelved.entries) {
+      have[entry.key] = (have[entry.key] ?? 0) + entry.value;
+    }
+
     final missing = next == null
         ? const <String, int>{}
-        : missingFor(next.materials, carried);
+        : missingFor(next.materials, have);
     final tools =
         next != null &&
         toolsAllow(next, hasHammer: hasHammer, hasMultitool: hasMultitool);
@@ -504,13 +538,36 @@ class _ModuleRow extends StatelessWidget {
               ),
             ] else if (next != null) ...[
               const SizedBox(height: 8),
-              Text(
-                [
-                  for (final entry in next.materials.entries)
-                    '${itemNameOf(entry.key)} ×${entry.value}',
-                ].join(' · '),
-                style: TextStyle(fontSize: 12, color: colours.text),
+
+              // ⚠️ Have against need, per material, rather than a list of
+              // what a level costs and a separate line about what is short.
+              // The question a player is answering here is "how many more
+              // planks", and the old pair of lines made them do the
+              // subtraction themselves.
+              for (final entry in next.materials.entries)
+                _Need(
+                  label: itemNameOf(entry.key),
+                  have: have[entry.key] ?? 0,
+                  need: entry.value,
+                  colours: colours,
+                ),
+
+              // §18.3: and the tool, on the same terms. A level that cannot be
+              // started for want of a multitool used to say only "needs a
+              // tool", which does not say which.
+              _Need(
+                label: itemNameOf('tool_hammer'),
+                have: hasHammer ? 1 : 0,
+                need: 1,
+                colours: colours,
               ),
+              if (module == ShelterModule.workshop && next.level >= 2)
+                _Need(
+                  label: itemNameOf('tool_multitool'),
+                  have: hasMultitool ? 1 : 0,
+                  need: 1,
+                  colours: colours,
+                ),
               const SizedBox(height: 6),
               Row(
                 children: [
@@ -775,9 +832,19 @@ class _ShelvesRow extends StatelessWidget {
   const _ShelvesRow({
     required this.shelter,
     required this.away,
+    required this.massKg,
+    required this.volumeL,
     required this.onOpen,
     required this.colours,
   });
+
+  /// §18.1a: how full, on the screen the player is already looking at.
+  ///
+  /// Both limits, because either is the one that runs out — and here rather
+  /// than only inside, because "have I room for this" is a question asked on
+  /// the way in, not after two taps.
+  final double massKg;
+  final double volumeL;
 
   final Shelter shelter;
 
@@ -806,13 +873,20 @@ class _ShelvesRow extends StatelessWidget {
                   style: TextStyle(fontSize: 14, color: colours.text),
                 ),
                 const SizedBox(height: 2),
-                // ⚠️ Not the capacity again. The card above already says
-                // what this place holds, and a number printed twice on one
-                // screen is a number a reader has to check against itself.
-                // What is worth saying here is what the shelf is *for*.
                 Text(
-                  away ? l10n.shelterNotHere : l10n.shelterShelvesWhat,
-                  style: TextStyle(fontSize: 11, color: colours.muted),
+                  away
+                      ? l10n.shelterNotHere
+                      : '${massKg.toStringAsFixed(1)} / '
+                            '${shelter.storageKg.toStringAsFixed(0)} kg'
+                            '   ·   '
+                            '${volumeL.toStringAsFixed(0)} / '
+                            '${shelter.storageL.toStringAsFixed(0)} l',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: colours.muted,
+                    fontFamily: kDataFont,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
                 ),
               ],
             ),
@@ -820,6 +894,57 @@ class _ShelvesRow extends StatelessWidget {
           TextButton(
             onPressed: away ? null : onOpen,
             child: Text(l10n.stashTitle),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// One line of "what this costs, and what you have" (§18.2, §18.3).
+///
+/// Amber until it is met, so the whole list can be read down the left edge
+/// without reading any of the words.
+class _Need extends StatelessWidget {
+  const _Need({
+    required this.label,
+    required this.have,
+    required this.need,
+    required this.colours,
+  });
+
+  final String label;
+  final int have;
+  final int need;
+  final HudColors colours;
+
+  @override
+  Widget build(BuildContext context) {
+    final met = have >= need;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 2),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 12,
+                color: met ? colours.muted : colours.text,
+              ),
+            ),
+          ),
+          Text(
+            '$have / $need',
+            style: TextStyle(
+              fontSize: 12,
+              color: met ? colours.muted : const Color(0xFFE8B33A),
+              fontFamily: kDataFont,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
           ),
         ],
       ),

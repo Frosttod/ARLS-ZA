@@ -2684,12 +2684,21 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final catalogue = _catalogue;
     if (character == null || catalogue == null) return;
 
+    // §18.2: the shelves, before the screen rather than behind a tap. What is
+    // on them decides whether a module can be started, so the screen that
+    // offers the module has to know.
+    await _loadShelvesOfMain();
+    if (!mounted) return;
+
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => ShelterScreen(
           shelters: _shelters,
           standingAt: _standingAt,
           carried: _carriedCounts(),
+          shelved: _shelvedCounts(),
+          shelvedMassKg: _stash.value.massKg(catalogue),
+          shelvedVolumeL: _stash.value.volumeL(catalogue),
           itemNameOf: (id) {
             final definition = catalogue[id];
             if (definition == null) return id;
@@ -2700,9 +2709,12 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
               lookup: (_names ?? ItemNames.empty).forLanguage(language),
             );
           },
-          hasTools: _carries('tool_hammer') || _carries('tool_axe'),
-          hasHammer: _carries('tool_hammer'),
-          hasMultitool: _carries('tool_multitool'),
+          // §18.3: a tool on the shelf is a tool in the shelter. Making the
+          // player pick their own hammer up off their own shelf before the
+          // button lights is bookkeeping, not a decision.
+          hasTools: _atHand('tool_hammer') || _atHand('tool_axe'),
+          hasHammer: _atHand('tool_hammer'),
+          hasMultitool: _atHand('tool_multitool'),
           onBuild: (kind) => unawaited(_buildShelter(kind)),
           onBuildModule: (module) => unawaited(_buildModule(module)),
           onShelves: (place) => unawaited(_openStash(place)),
@@ -2816,10 +2828,41 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
   /// Takes what a build costs out of the pack (§18.2).
   Future<void> _spendMaterials(Map<String, int> materials) async {
-    var pack = _inventory.value;
+    // ⚠️ The shelves first, the pack second.
+    //
+    // Everything on a shelf is already where the work is happening, and
+    // spending it first sends the player away carrying as little as possible —
+    // which is most of the reason §18.2 gives a shelter storage at all.
+    final owed = {...materials};
 
-    for (final entry in materials.entries) {
+    var shelf = _stash.value;
+    for (final itemId in owed.keys.toList()) {
+      var left = owed[itemId]!;
+
+      while (left > 0) {
+        final index = shelf.lines.indexWhere((line) => line.itemId == itemId);
+        if (index < 0) break;
+
+        final took = shelf.take(index, count: left);
+        final taken = took.taken;
+        if (taken == null) break;
+
+        shelf = took.stash;
+        left -= taken.count;
+      }
+
+      owed[itemId] = left;
+    }
+
+    if (!identical(shelf, _stash.value)) {
+      _stash.value = shelf;
+      await _saveShelf();
+    }
+
+    var pack = _inventory.value;
+    for (final entry in owed.entries) {
       var left = entry.value;
+
       while (left > 0) {
         final line = pack.carried
             .where((piece) => piece.itemId == entry.key)
@@ -2836,7 +2879,40 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     await _saveInventory();
   }
 
-  /// How many of each thing is in the pack, which is what §18.2 counts in.
+  /// §18.2: what is on the shelves of the main shelter, by item id.
+  Map<String, int> _shelvedCounts() {
+    final counts = <String, int>{};
+    for (final line in _stash.value.lines) {
+      counts[line.itemId] = (counts[line.itemId] ?? 0) + line.count;
+    }
+    return counts;
+  }
+
+  /// Carried or on the shelf — the two places a thing can be within reach of
+  /// somebody standing in their own shelter.
+  bool _atHand(String itemId) =>
+      _carries(itemId) || (_shelvedCounts()[itemId] ?? 0) > 0;
+
+  /// §18.2: reads the shelves of the main shelter into [_stash].
+  Future<void> _loadShelvesOfMain() async {
+    final character = _character;
+    final catalogue = _catalogue;
+    final main = _shelters.value
+        .where((place) => place.kind == ShelterKind.main)
+        .firstOrNull;
+
+    if (character == null || catalogue == null || main == null) {
+      _stash.value = const Stash(capacityKg: 0);
+      _openShelves = null;
+      return;
+    }
+
+    _openShelves = main;
+    _stash.value = await StashStore(
+      widget.session.db,
+    ).load(character.profile.id, main, catalogue);
+  }
+
   Map<String, int> _carriedCounts() {
     final counts = <String, int>{};
     for (final line in _inventory.value.carried) {

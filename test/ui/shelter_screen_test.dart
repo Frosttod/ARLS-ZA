@@ -49,6 +49,9 @@ void main() {
           onBuild: (_) {},
           onBuildModule: (_) {},
           onShelves: (_) {},
+          shelved: const {},
+          shelvedMassKg: 0,
+          shelvedVolumeL: 0,
           onCancelBuild: (_) {},
         ),
       ),
@@ -170,6 +173,11 @@ void main() {
       // Named, not just greyed: "under 800 m from the shelter" is something
       // a player can act on, and "no" is not. The camp's own description
       // mentions the distance too, hence two.
+      // ⚠️ Scrolled to first. The screen is a ListView and a ListView builds
+      // what it can see; the camps live below a shelter with its shelves and
+      // three modules on it, which is off the bottom of a test surface.
+      await tester.scrollUntilVisible(find.textContaining('800 m').first, 200);
+
       expect(find.textContaining('800 m'), findsNWidgets(2));
 
       final camp = tester
@@ -214,6 +222,9 @@ void main() {
             onBuild: (_) {},
             onBuildModule: (_) {},
             onShelves: (_) {},
+            shelved: const {},
+            shelvedMassKg: 0,
+            shelvedVolumeL: 0,
             onCancelBuild: (_) {},
           ),
         ),
@@ -343,6 +354,9 @@ void main() {
             onBuild: (_) {},
             onBuildModule: (_) {},
             onShelves: (_) {},
+            shelved: const {},
+            shelvedMassKg: 0,
+            shelvedVolumeL: 0,
             onCancelBuild: (place) => cancelled = place,
           ),
         ),
