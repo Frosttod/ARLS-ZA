@@ -50,6 +50,9 @@ if fix_accuracy_m > 25 and never_had_accurate_fix and since_start < 40s
 if fix_accuracy_m > 25 and time_since_last_accurate >= degrade_window
     then signal := degraded                      // Dopiero uporczywa niedokładność jest ostrzeżeniem, nie pojedynczy szeroki fix.
 
+if player_inside_shelter
+    then no_signal_warning := suppressed      // ⚠️ §2.1a.4 wyłącza odbiornik pod dachem celowo — postać się nie rusza, więc pozycja nie jest potrzebna. Strażnik zgłaszał to jako utratę sygnału: gra ostrzegała o własnej decyzji, na jedynym ekranie, gdzie nic nie jest nie tak.
+
 if no_fix_for >= 60s
     then signal := lost and movement_simulation := paused
                                                  // Zegar fizjologii idzie dalej; liczenie dystansu nie. Inaczej płaciłbyś za dryf GPS jak za spacer.
@@ -369,6 +372,10 @@ if item_has_attachments
 if weapon_dropped
     then attachments_stay_on_weapon              // §5.6.3. Karabin podniesiony z chodnika wraca z tym, co na nim było.
 
+if pack_order = kind | name | mass
+    then sort accordingly, always tie-break by translated name
+                                                 // §12. Plecak odpowiada na trzy różne pytania: gdzie bandaże, co odłożyć, czy mam łom. Jedna stała kolejność odpowiada na jedno i zamienia dwa pozostałe w przewijanie. ⚠️ Nazwa **przetłumaczona** — sortowanie polskiego plecaka po angielskich id stawiało Bandaż między Latarką a Liną.
+
 if item_is_note
     then never_stacks                            // Dwie notatki to dwie różne wiadomości od dwóch różnych ludzi.
 
@@ -473,8 +480,21 @@ if barrier = padlock and no_tool
 if barrier = window
     then force 5s / 150m only                    // Pięć sekund i sto pięćdziesiąt metrów hałasu. Nie ma cichej drogi przez szybę.
 
+if module_requirements_checked
+    then have := pack + shelves                  // §18.2. Stojący we własnym schronie stoi przy własnej półce. Kazanie mu podnieść dwadzieścia desek z półki, zanim przycisk się zaświeci, to księgowość, nie decyzja.
+
+if materials_spent
+    then shelves_first, then pack                // Wydawanie z półki najpierw wypuszcza gracza z jak najmniejszym obciążeniem — po to §18.2 daje schronowi magazyn.
+
 if breach_needs_tool and tool_missing
     then breach := unavailable                   // Narzędzie albo inna droga.
+
+if reconnaissance and 30% roll and last_find > 3min ago
+    then spawn car|skip at 30–75m and reveal it
+                                                 // ⚠️ Nie z dokumentu, figura beta. §10.1 stawia świat na realnych obiektach mapy — słusznie — i przez to osiedle mieszkaniowe bywa naprawdę puste. Rozejrzenie się już kosztuje 45 s bezruchu i 80 m hałasu; to jest to, co ten koszt kupuje tam, gdzie nie ma sklepów. Nigdy sklep, nigdy tam, gdzie §3.5 odmawia.
+
+if last_scout_find < 3min ago
+    then no_find                                 // ⚠️ Zawór całego pomysłu. Bez niego jeden róg i jeden przycisk to kran na surowce, a chodzenie, wyważanie drzwi i przeszukiwanie ciał stają się gorsze od stania na parkingu.
 
 if reconnaissance
     then duration := 45s and radius := 100m and noise := 80m and memory := 10min
