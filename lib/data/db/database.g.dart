@@ -6930,6 +6930,792 @@ class RemainsEntriesCompanion extends UpdateCompanion<RemainsRow> {
   }
 }
 
+class $ProfileStatsTable extends ProfileStats
+    with TableInfo<$ProfileStatsTable, StatsRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ProfileStatsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _profileIdMeta = const VerificationMeta(
+    'profileId',
+  );
+  @override
+  late final GeneratedColumn<int> profileId = GeneratedColumn<int>(
+    'profile_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _shotsFiredMeta = const VerificationMeta(
+    'shotsFired',
+  );
+  @override
+  late final GeneratedColumn<int> shotsFired = GeneratedColumn<int>(
+    'shots_fired',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _shotsHitMeta = const VerificationMeta(
+    'shotsHit',
+  );
+  @override
+  late final GeneratedColumn<int> shotsHit = GeneratedColumn<int>(
+    'shots_hit',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _swingsMeta = const VerificationMeta('swings');
+  @override
+  late final GeneratedColumn<int> swings = GeneratedColumn<int>(
+    'swings',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _swingsHitMeta = const VerificationMeta(
+    'swingsHit',
+  );
+  @override
+  late final GeneratedColumn<int> swingsHit = GeneratedColumn<int>(
+    'swings_hit',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _hitsHeadMeta = const VerificationMeta(
+    'hitsHead',
+  );
+  @override
+  late final GeneratedColumn<int> hitsHead = GeneratedColumn<int>(
+    'hits_head',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _hitsTorsoMeta = const VerificationMeta(
+    'hitsTorso',
+  );
+  @override
+  late final GeneratedColumn<int> hitsTorso = GeneratedColumn<int>(
+    'hits_torso',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _hitsArmsMeta = const VerificationMeta(
+    'hitsArms',
+  );
+  @override
+  late final GeneratedColumn<int> hitsArms = GeneratedColumn<int>(
+    'hits_arms',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _hitsLegsMeta = const VerificationMeta(
+    'hitsLegs',
+  );
+  @override
+  late final GeneratedColumn<int> hitsLegs = GeneratedColumn<int>(
+    'hits_legs',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _killsMeta = const VerificationMeta('kills');
+  @override
+  late final GeneratedColumn<int> kills = GeneratedColumn<int>(
+    'kills',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _bloodDealtMlMeta = const VerificationMeta(
+    'bloodDealtMl',
+  );
+  @override
+  late final GeneratedColumn<double> bloodDealtMl = GeneratedColumn<double>(
+    'blood_dealt_ml',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _bloodLostMlMeta = const VerificationMeta(
+    'bloodLostMl',
+  );
+  @override
+  late final GeneratedColumn<double> bloodLostMl = GeneratedColumn<double>(
+    'blood_lost_ml',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _searchesMeta = const VerificationMeta(
+    'searches',
+  );
+  @override
+  late final GeneratedColumn<int> searches = GeneratedColumn<int>(
+    'searches',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _blackoutsMeta = const VerificationMeta(
+    'blackouts',
+  );
+  @override
+  late final GeneratedColumn<int> blackouts = GeneratedColumn<int>(
+    'blackouts',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    profileId,
+    shotsFired,
+    shotsHit,
+    swings,
+    swingsHit,
+    hitsHead,
+    hitsTorso,
+    hitsArms,
+    hitsLegs,
+    kills,
+    bloodDealtMl,
+    bloodLostMl,
+    searches,
+    blackouts,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'profile_stats';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<StatsRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('profile_id')) {
+      context.handle(
+        _profileIdMeta,
+        profileId.isAcceptableOrUnknown(data['profile_id']!, _profileIdMeta),
+      );
+    }
+    if (data.containsKey('shots_fired')) {
+      context.handle(
+        _shotsFiredMeta,
+        shotsFired.isAcceptableOrUnknown(data['shots_fired']!, _shotsFiredMeta),
+      );
+    }
+    if (data.containsKey('shots_hit')) {
+      context.handle(
+        _shotsHitMeta,
+        shotsHit.isAcceptableOrUnknown(data['shots_hit']!, _shotsHitMeta),
+      );
+    }
+    if (data.containsKey('swings')) {
+      context.handle(
+        _swingsMeta,
+        swings.isAcceptableOrUnknown(data['swings']!, _swingsMeta),
+      );
+    }
+    if (data.containsKey('swings_hit')) {
+      context.handle(
+        _swingsHitMeta,
+        swingsHit.isAcceptableOrUnknown(data['swings_hit']!, _swingsHitMeta),
+      );
+    }
+    if (data.containsKey('hits_head')) {
+      context.handle(
+        _hitsHeadMeta,
+        hitsHead.isAcceptableOrUnknown(data['hits_head']!, _hitsHeadMeta),
+      );
+    }
+    if (data.containsKey('hits_torso')) {
+      context.handle(
+        _hitsTorsoMeta,
+        hitsTorso.isAcceptableOrUnknown(data['hits_torso']!, _hitsTorsoMeta),
+      );
+    }
+    if (data.containsKey('hits_arms')) {
+      context.handle(
+        _hitsArmsMeta,
+        hitsArms.isAcceptableOrUnknown(data['hits_arms']!, _hitsArmsMeta),
+      );
+    }
+    if (data.containsKey('hits_legs')) {
+      context.handle(
+        _hitsLegsMeta,
+        hitsLegs.isAcceptableOrUnknown(data['hits_legs']!, _hitsLegsMeta),
+      );
+    }
+    if (data.containsKey('kills')) {
+      context.handle(
+        _killsMeta,
+        kills.isAcceptableOrUnknown(data['kills']!, _killsMeta),
+      );
+    }
+    if (data.containsKey('blood_dealt_ml')) {
+      context.handle(
+        _bloodDealtMlMeta,
+        bloodDealtMl.isAcceptableOrUnknown(
+          data['blood_dealt_ml']!,
+          _bloodDealtMlMeta,
+        ),
+      );
+    }
+    if (data.containsKey('blood_lost_ml')) {
+      context.handle(
+        _bloodLostMlMeta,
+        bloodLostMl.isAcceptableOrUnknown(
+          data['blood_lost_ml']!,
+          _bloodLostMlMeta,
+        ),
+      );
+    }
+    if (data.containsKey('searches')) {
+      context.handle(
+        _searchesMeta,
+        searches.isAcceptableOrUnknown(data['searches']!, _searchesMeta),
+      );
+    }
+    if (data.containsKey('blackouts')) {
+      context.handle(
+        _blackoutsMeta,
+        blackouts.isAcceptableOrUnknown(data['blackouts']!, _blackoutsMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {profileId};
+  @override
+  StatsRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return StatsRow(
+      profileId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}profile_id'],
+      )!,
+      shotsFired: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}shots_fired'],
+      )!,
+      shotsHit: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}shots_hit'],
+      )!,
+      swings: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}swings'],
+      )!,
+      swingsHit: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}swings_hit'],
+      )!,
+      hitsHead: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}hits_head'],
+      )!,
+      hitsTorso: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}hits_torso'],
+      )!,
+      hitsArms: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}hits_arms'],
+      )!,
+      hitsLegs: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}hits_legs'],
+      )!,
+      kills: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}kills'],
+      )!,
+      bloodDealtMl: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}blood_dealt_ml'],
+      )!,
+      bloodLostMl: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}blood_lost_ml'],
+      )!,
+      searches: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}searches'],
+      )!,
+      blackouts: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}blackouts'],
+      )!,
+    );
+  }
+
+  @override
+  $ProfileStatsTable createAlias(String alias) {
+    return $ProfileStatsTable(attachedDatabase, alias);
+  }
+}
+
+class StatsRow extends DataClass implements Insertable<StatsRow> {
+  final int profileId;
+
+  /// §5.1: every trigger pull, and how many of them landed.
+  final int shotsFired;
+  final int shotsHit;
+
+  /// §5.4: the same for anything swung.
+  final int swings;
+  final int swingsHit;
+
+  /// §2.6: where the ones that landed landed.
+  final int hitsHead;
+  final int hitsTorso;
+  final int hitsArms;
+  final int hitsLegs;
+
+  /// §6.2: how many went down, and how much blood it took to do it.
+  final int kills;
+  final double bloodDealtMl;
+
+  /// §2.6: and how much of the player's own went the other way.
+  final double bloodLostMl;
+
+  /// §10.2: places turned over, and §9.2's blackouts.
+  final int searches;
+  final int blackouts;
+  const StatsRow({
+    required this.profileId,
+    required this.shotsFired,
+    required this.shotsHit,
+    required this.swings,
+    required this.swingsHit,
+    required this.hitsHead,
+    required this.hitsTorso,
+    required this.hitsArms,
+    required this.hitsLegs,
+    required this.kills,
+    required this.bloodDealtMl,
+    required this.bloodLostMl,
+    required this.searches,
+    required this.blackouts,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['profile_id'] = Variable<int>(profileId);
+    map['shots_fired'] = Variable<int>(shotsFired);
+    map['shots_hit'] = Variable<int>(shotsHit);
+    map['swings'] = Variable<int>(swings);
+    map['swings_hit'] = Variable<int>(swingsHit);
+    map['hits_head'] = Variable<int>(hitsHead);
+    map['hits_torso'] = Variable<int>(hitsTorso);
+    map['hits_arms'] = Variable<int>(hitsArms);
+    map['hits_legs'] = Variable<int>(hitsLegs);
+    map['kills'] = Variable<int>(kills);
+    map['blood_dealt_ml'] = Variable<double>(bloodDealtMl);
+    map['blood_lost_ml'] = Variable<double>(bloodLostMl);
+    map['searches'] = Variable<int>(searches);
+    map['blackouts'] = Variable<int>(blackouts);
+    return map;
+  }
+
+  ProfileStatsCompanion toCompanion(bool nullToAbsent) {
+    return ProfileStatsCompanion(
+      profileId: Value(profileId),
+      shotsFired: Value(shotsFired),
+      shotsHit: Value(shotsHit),
+      swings: Value(swings),
+      swingsHit: Value(swingsHit),
+      hitsHead: Value(hitsHead),
+      hitsTorso: Value(hitsTorso),
+      hitsArms: Value(hitsArms),
+      hitsLegs: Value(hitsLegs),
+      kills: Value(kills),
+      bloodDealtMl: Value(bloodDealtMl),
+      bloodLostMl: Value(bloodLostMl),
+      searches: Value(searches),
+      blackouts: Value(blackouts),
+    );
+  }
+
+  factory StatsRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return StatsRow(
+      profileId: serializer.fromJson<int>(json['profileId']),
+      shotsFired: serializer.fromJson<int>(json['shotsFired']),
+      shotsHit: serializer.fromJson<int>(json['shotsHit']),
+      swings: serializer.fromJson<int>(json['swings']),
+      swingsHit: serializer.fromJson<int>(json['swingsHit']),
+      hitsHead: serializer.fromJson<int>(json['hitsHead']),
+      hitsTorso: serializer.fromJson<int>(json['hitsTorso']),
+      hitsArms: serializer.fromJson<int>(json['hitsArms']),
+      hitsLegs: serializer.fromJson<int>(json['hitsLegs']),
+      kills: serializer.fromJson<int>(json['kills']),
+      bloodDealtMl: serializer.fromJson<double>(json['bloodDealtMl']),
+      bloodLostMl: serializer.fromJson<double>(json['bloodLostMl']),
+      searches: serializer.fromJson<int>(json['searches']),
+      blackouts: serializer.fromJson<int>(json['blackouts']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'profileId': serializer.toJson<int>(profileId),
+      'shotsFired': serializer.toJson<int>(shotsFired),
+      'shotsHit': serializer.toJson<int>(shotsHit),
+      'swings': serializer.toJson<int>(swings),
+      'swingsHit': serializer.toJson<int>(swingsHit),
+      'hitsHead': serializer.toJson<int>(hitsHead),
+      'hitsTorso': serializer.toJson<int>(hitsTorso),
+      'hitsArms': serializer.toJson<int>(hitsArms),
+      'hitsLegs': serializer.toJson<int>(hitsLegs),
+      'kills': serializer.toJson<int>(kills),
+      'bloodDealtMl': serializer.toJson<double>(bloodDealtMl),
+      'bloodLostMl': serializer.toJson<double>(bloodLostMl),
+      'searches': serializer.toJson<int>(searches),
+      'blackouts': serializer.toJson<int>(blackouts),
+    };
+  }
+
+  StatsRow copyWith({
+    int? profileId,
+    int? shotsFired,
+    int? shotsHit,
+    int? swings,
+    int? swingsHit,
+    int? hitsHead,
+    int? hitsTorso,
+    int? hitsArms,
+    int? hitsLegs,
+    int? kills,
+    double? bloodDealtMl,
+    double? bloodLostMl,
+    int? searches,
+    int? blackouts,
+  }) => StatsRow(
+    profileId: profileId ?? this.profileId,
+    shotsFired: shotsFired ?? this.shotsFired,
+    shotsHit: shotsHit ?? this.shotsHit,
+    swings: swings ?? this.swings,
+    swingsHit: swingsHit ?? this.swingsHit,
+    hitsHead: hitsHead ?? this.hitsHead,
+    hitsTorso: hitsTorso ?? this.hitsTorso,
+    hitsArms: hitsArms ?? this.hitsArms,
+    hitsLegs: hitsLegs ?? this.hitsLegs,
+    kills: kills ?? this.kills,
+    bloodDealtMl: bloodDealtMl ?? this.bloodDealtMl,
+    bloodLostMl: bloodLostMl ?? this.bloodLostMl,
+    searches: searches ?? this.searches,
+    blackouts: blackouts ?? this.blackouts,
+  );
+  StatsRow copyWithCompanion(ProfileStatsCompanion data) {
+    return StatsRow(
+      profileId: data.profileId.present ? data.profileId.value : this.profileId,
+      shotsFired: data.shotsFired.present
+          ? data.shotsFired.value
+          : this.shotsFired,
+      shotsHit: data.shotsHit.present ? data.shotsHit.value : this.shotsHit,
+      swings: data.swings.present ? data.swings.value : this.swings,
+      swingsHit: data.swingsHit.present ? data.swingsHit.value : this.swingsHit,
+      hitsHead: data.hitsHead.present ? data.hitsHead.value : this.hitsHead,
+      hitsTorso: data.hitsTorso.present ? data.hitsTorso.value : this.hitsTorso,
+      hitsArms: data.hitsArms.present ? data.hitsArms.value : this.hitsArms,
+      hitsLegs: data.hitsLegs.present ? data.hitsLegs.value : this.hitsLegs,
+      kills: data.kills.present ? data.kills.value : this.kills,
+      bloodDealtMl: data.bloodDealtMl.present
+          ? data.bloodDealtMl.value
+          : this.bloodDealtMl,
+      bloodLostMl: data.bloodLostMl.present
+          ? data.bloodLostMl.value
+          : this.bloodLostMl,
+      searches: data.searches.present ? data.searches.value : this.searches,
+      blackouts: data.blackouts.present ? data.blackouts.value : this.blackouts,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('StatsRow(')
+          ..write('profileId: $profileId, ')
+          ..write('shotsFired: $shotsFired, ')
+          ..write('shotsHit: $shotsHit, ')
+          ..write('swings: $swings, ')
+          ..write('swingsHit: $swingsHit, ')
+          ..write('hitsHead: $hitsHead, ')
+          ..write('hitsTorso: $hitsTorso, ')
+          ..write('hitsArms: $hitsArms, ')
+          ..write('hitsLegs: $hitsLegs, ')
+          ..write('kills: $kills, ')
+          ..write('bloodDealtMl: $bloodDealtMl, ')
+          ..write('bloodLostMl: $bloodLostMl, ')
+          ..write('searches: $searches, ')
+          ..write('blackouts: $blackouts')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    profileId,
+    shotsFired,
+    shotsHit,
+    swings,
+    swingsHit,
+    hitsHead,
+    hitsTorso,
+    hitsArms,
+    hitsLegs,
+    kills,
+    bloodDealtMl,
+    bloodLostMl,
+    searches,
+    blackouts,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is StatsRow &&
+          other.profileId == this.profileId &&
+          other.shotsFired == this.shotsFired &&
+          other.shotsHit == this.shotsHit &&
+          other.swings == this.swings &&
+          other.swingsHit == this.swingsHit &&
+          other.hitsHead == this.hitsHead &&
+          other.hitsTorso == this.hitsTorso &&
+          other.hitsArms == this.hitsArms &&
+          other.hitsLegs == this.hitsLegs &&
+          other.kills == this.kills &&
+          other.bloodDealtMl == this.bloodDealtMl &&
+          other.bloodLostMl == this.bloodLostMl &&
+          other.searches == this.searches &&
+          other.blackouts == this.blackouts);
+}
+
+class ProfileStatsCompanion extends UpdateCompanion<StatsRow> {
+  final Value<int> profileId;
+  final Value<int> shotsFired;
+  final Value<int> shotsHit;
+  final Value<int> swings;
+  final Value<int> swingsHit;
+  final Value<int> hitsHead;
+  final Value<int> hitsTorso;
+  final Value<int> hitsArms;
+  final Value<int> hitsLegs;
+  final Value<int> kills;
+  final Value<double> bloodDealtMl;
+  final Value<double> bloodLostMl;
+  final Value<int> searches;
+  final Value<int> blackouts;
+  const ProfileStatsCompanion({
+    this.profileId = const Value.absent(),
+    this.shotsFired = const Value.absent(),
+    this.shotsHit = const Value.absent(),
+    this.swings = const Value.absent(),
+    this.swingsHit = const Value.absent(),
+    this.hitsHead = const Value.absent(),
+    this.hitsTorso = const Value.absent(),
+    this.hitsArms = const Value.absent(),
+    this.hitsLegs = const Value.absent(),
+    this.kills = const Value.absent(),
+    this.bloodDealtMl = const Value.absent(),
+    this.bloodLostMl = const Value.absent(),
+    this.searches = const Value.absent(),
+    this.blackouts = const Value.absent(),
+  });
+  ProfileStatsCompanion.insert({
+    this.profileId = const Value.absent(),
+    this.shotsFired = const Value.absent(),
+    this.shotsHit = const Value.absent(),
+    this.swings = const Value.absent(),
+    this.swingsHit = const Value.absent(),
+    this.hitsHead = const Value.absent(),
+    this.hitsTorso = const Value.absent(),
+    this.hitsArms = const Value.absent(),
+    this.hitsLegs = const Value.absent(),
+    this.kills = const Value.absent(),
+    this.bloodDealtMl = const Value.absent(),
+    this.bloodLostMl = const Value.absent(),
+    this.searches = const Value.absent(),
+    this.blackouts = const Value.absent(),
+  });
+  static Insertable<StatsRow> custom({
+    Expression<int>? profileId,
+    Expression<int>? shotsFired,
+    Expression<int>? shotsHit,
+    Expression<int>? swings,
+    Expression<int>? swingsHit,
+    Expression<int>? hitsHead,
+    Expression<int>? hitsTorso,
+    Expression<int>? hitsArms,
+    Expression<int>? hitsLegs,
+    Expression<int>? kills,
+    Expression<double>? bloodDealtMl,
+    Expression<double>? bloodLostMl,
+    Expression<int>? searches,
+    Expression<int>? blackouts,
+  }) {
+    return RawValuesInsertable({
+      if (profileId != null) 'profile_id': profileId,
+      if (shotsFired != null) 'shots_fired': shotsFired,
+      if (shotsHit != null) 'shots_hit': shotsHit,
+      if (swings != null) 'swings': swings,
+      if (swingsHit != null) 'swings_hit': swingsHit,
+      if (hitsHead != null) 'hits_head': hitsHead,
+      if (hitsTorso != null) 'hits_torso': hitsTorso,
+      if (hitsArms != null) 'hits_arms': hitsArms,
+      if (hitsLegs != null) 'hits_legs': hitsLegs,
+      if (kills != null) 'kills': kills,
+      if (bloodDealtMl != null) 'blood_dealt_ml': bloodDealtMl,
+      if (bloodLostMl != null) 'blood_lost_ml': bloodLostMl,
+      if (searches != null) 'searches': searches,
+      if (blackouts != null) 'blackouts': blackouts,
+    });
+  }
+
+  ProfileStatsCompanion copyWith({
+    Value<int>? profileId,
+    Value<int>? shotsFired,
+    Value<int>? shotsHit,
+    Value<int>? swings,
+    Value<int>? swingsHit,
+    Value<int>? hitsHead,
+    Value<int>? hitsTorso,
+    Value<int>? hitsArms,
+    Value<int>? hitsLegs,
+    Value<int>? kills,
+    Value<double>? bloodDealtMl,
+    Value<double>? bloodLostMl,
+    Value<int>? searches,
+    Value<int>? blackouts,
+  }) {
+    return ProfileStatsCompanion(
+      profileId: profileId ?? this.profileId,
+      shotsFired: shotsFired ?? this.shotsFired,
+      shotsHit: shotsHit ?? this.shotsHit,
+      swings: swings ?? this.swings,
+      swingsHit: swingsHit ?? this.swingsHit,
+      hitsHead: hitsHead ?? this.hitsHead,
+      hitsTorso: hitsTorso ?? this.hitsTorso,
+      hitsArms: hitsArms ?? this.hitsArms,
+      hitsLegs: hitsLegs ?? this.hitsLegs,
+      kills: kills ?? this.kills,
+      bloodDealtMl: bloodDealtMl ?? this.bloodDealtMl,
+      bloodLostMl: bloodLostMl ?? this.bloodLostMl,
+      searches: searches ?? this.searches,
+      blackouts: blackouts ?? this.blackouts,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (profileId.present) {
+      map['profile_id'] = Variable<int>(profileId.value);
+    }
+    if (shotsFired.present) {
+      map['shots_fired'] = Variable<int>(shotsFired.value);
+    }
+    if (shotsHit.present) {
+      map['shots_hit'] = Variable<int>(shotsHit.value);
+    }
+    if (swings.present) {
+      map['swings'] = Variable<int>(swings.value);
+    }
+    if (swingsHit.present) {
+      map['swings_hit'] = Variable<int>(swingsHit.value);
+    }
+    if (hitsHead.present) {
+      map['hits_head'] = Variable<int>(hitsHead.value);
+    }
+    if (hitsTorso.present) {
+      map['hits_torso'] = Variable<int>(hitsTorso.value);
+    }
+    if (hitsArms.present) {
+      map['hits_arms'] = Variable<int>(hitsArms.value);
+    }
+    if (hitsLegs.present) {
+      map['hits_legs'] = Variable<int>(hitsLegs.value);
+    }
+    if (kills.present) {
+      map['kills'] = Variable<int>(kills.value);
+    }
+    if (bloodDealtMl.present) {
+      map['blood_dealt_ml'] = Variable<double>(bloodDealtMl.value);
+    }
+    if (bloodLostMl.present) {
+      map['blood_lost_ml'] = Variable<double>(bloodLostMl.value);
+    }
+    if (searches.present) {
+      map['searches'] = Variable<int>(searches.value);
+    }
+    if (blackouts.present) {
+      map['blackouts'] = Variable<int>(blackouts.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ProfileStatsCompanion(')
+          ..write('profileId: $profileId, ')
+          ..write('shotsFired: $shotsFired, ')
+          ..write('shotsHit: $shotsHit, ')
+          ..write('swings: $swings, ')
+          ..write('swingsHit: $swingsHit, ')
+          ..write('hitsHead: $hitsHead, ')
+          ..write('hitsTorso: $hitsTorso, ')
+          ..write('hitsArms: $hitsArms, ')
+          ..write('hitsLegs: $hitsLegs, ')
+          ..write('kills: $kills, ')
+          ..write('bloodDealtMl: $bloodDealtMl, ')
+          ..write('bloodLostMl: $bloodLostMl, ')
+          ..write('searches: $searches, ')
+          ..write('blackouts: $blackouts')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$SaveDatabase extends GeneratedDatabase {
   _$SaveDatabase(QueryExecutor e) : super(e);
   $SaveDatabaseManager get managers => $SaveDatabaseManager(this);
@@ -6948,6 +7734,7 @@ abstract class _$SaveDatabase extends GeneratedDatabase {
   late final $GroundItemsTable groundItems = $GroundItemsTable(this);
   late final $SheltersTable shelters = $SheltersTable(this);
   late final $RemainsEntriesTable remainsEntries = $RemainsEntriesTable(this);
+  late final $ProfileStatsTable profileStats = $ProfileStatsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -6964,6 +7751,7 @@ abstract class _$SaveDatabase extends GeneratedDatabase {
     groundItems,
     shelters,
     remainsEntries,
+    profileStats,
   ];
   @override
   DriftDatabaseOptions get options =>
@@ -10227,6 +11015,374 @@ typedef $$RemainsEntriesTableProcessedTableManager =
       RemainsRow,
       PrefetchHooks Function()
     >;
+typedef $$ProfileStatsTableCreateCompanionBuilder =
+    ProfileStatsCompanion Function({
+      Value<int> profileId,
+      Value<int> shotsFired,
+      Value<int> shotsHit,
+      Value<int> swings,
+      Value<int> swingsHit,
+      Value<int> hitsHead,
+      Value<int> hitsTorso,
+      Value<int> hitsArms,
+      Value<int> hitsLegs,
+      Value<int> kills,
+      Value<double> bloodDealtMl,
+      Value<double> bloodLostMl,
+      Value<int> searches,
+      Value<int> blackouts,
+    });
+typedef $$ProfileStatsTableUpdateCompanionBuilder =
+    ProfileStatsCompanion Function({
+      Value<int> profileId,
+      Value<int> shotsFired,
+      Value<int> shotsHit,
+      Value<int> swings,
+      Value<int> swingsHit,
+      Value<int> hitsHead,
+      Value<int> hitsTorso,
+      Value<int> hitsArms,
+      Value<int> hitsLegs,
+      Value<int> kills,
+      Value<double> bloodDealtMl,
+      Value<double> bloodLostMl,
+      Value<int> searches,
+      Value<int> blackouts,
+    });
+
+class $$ProfileStatsTableFilterComposer
+    extends Composer<_$SaveDatabase, $ProfileStatsTable> {
+  $$ProfileStatsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get profileId => $composableBuilder(
+    column: $table.profileId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get shotsFired => $composableBuilder(
+    column: $table.shotsFired,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get shotsHit => $composableBuilder(
+    column: $table.shotsHit,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get swings => $composableBuilder(
+    column: $table.swings,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get swingsHit => $composableBuilder(
+    column: $table.swingsHit,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get hitsHead => $composableBuilder(
+    column: $table.hitsHead,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get hitsTorso => $composableBuilder(
+    column: $table.hitsTorso,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get hitsArms => $composableBuilder(
+    column: $table.hitsArms,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get hitsLegs => $composableBuilder(
+    column: $table.hitsLegs,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get kills => $composableBuilder(
+    column: $table.kills,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get bloodDealtMl => $composableBuilder(
+    column: $table.bloodDealtMl,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get bloodLostMl => $composableBuilder(
+    column: $table.bloodLostMl,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get searches => $composableBuilder(
+    column: $table.searches,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get blackouts => $composableBuilder(
+    column: $table.blackouts,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ProfileStatsTableOrderingComposer
+    extends Composer<_$SaveDatabase, $ProfileStatsTable> {
+  $$ProfileStatsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get profileId => $composableBuilder(
+    column: $table.profileId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get shotsFired => $composableBuilder(
+    column: $table.shotsFired,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get shotsHit => $composableBuilder(
+    column: $table.shotsHit,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get swings => $composableBuilder(
+    column: $table.swings,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get swingsHit => $composableBuilder(
+    column: $table.swingsHit,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get hitsHead => $composableBuilder(
+    column: $table.hitsHead,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get hitsTorso => $composableBuilder(
+    column: $table.hitsTorso,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get hitsArms => $composableBuilder(
+    column: $table.hitsArms,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get hitsLegs => $composableBuilder(
+    column: $table.hitsLegs,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get kills => $composableBuilder(
+    column: $table.kills,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get bloodDealtMl => $composableBuilder(
+    column: $table.bloodDealtMl,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get bloodLostMl => $composableBuilder(
+    column: $table.bloodLostMl,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get searches => $composableBuilder(
+    column: $table.searches,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get blackouts => $composableBuilder(
+    column: $table.blackouts,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ProfileStatsTableAnnotationComposer
+    extends Composer<_$SaveDatabase, $ProfileStatsTable> {
+  $$ProfileStatsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get profileId =>
+      $composableBuilder(column: $table.profileId, builder: (column) => column);
+
+  GeneratedColumn<int> get shotsFired => $composableBuilder(
+    column: $table.shotsFired,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get shotsHit =>
+      $composableBuilder(column: $table.shotsHit, builder: (column) => column);
+
+  GeneratedColumn<int> get swings =>
+      $composableBuilder(column: $table.swings, builder: (column) => column);
+
+  GeneratedColumn<int> get swingsHit =>
+      $composableBuilder(column: $table.swingsHit, builder: (column) => column);
+
+  GeneratedColumn<int> get hitsHead =>
+      $composableBuilder(column: $table.hitsHead, builder: (column) => column);
+
+  GeneratedColumn<int> get hitsTorso =>
+      $composableBuilder(column: $table.hitsTorso, builder: (column) => column);
+
+  GeneratedColumn<int> get hitsArms =>
+      $composableBuilder(column: $table.hitsArms, builder: (column) => column);
+
+  GeneratedColumn<int> get hitsLegs =>
+      $composableBuilder(column: $table.hitsLegs, builder: (column) => column);
+
+  GeneratedColumn<int> get kills =>
+      $composableBuilder(column: $table.kills, builder: (column) => column);
+
+  GeneratedColumn<double> get bloodDealtMl => $composableBuilder(
+    column: $table.bloodDealtMl,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get bloodLostMl => $composableBuilder(
+    column: $table.bloodLostMl,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get searches =>
+      $composableBuilder(column: $table.searches, builder: (column) => column);
+
+  GeneratedColumn<int> get blackouts =>
+      $composableBuilder(column: $table.blackouts, builder: (column) => column);
+}
+
+class $$ProfileStatsTableTableManager
+    extends
+        RootTableManager<
+          _$SaveDatabase,
+          $ProfileStatsTable,
+          StatsRow,
+          $$ProfileStatsTableFilterComposer,
+          $$ProfileStatsTableOrderingComposer,
+          $$ProfileStatsTableAnnotationComposer,
+          $$ProfileStatsTableCreateCompanionBuilder,
+          $$ProfileStatsTableUpdateCompanionBuilder,
+          (
+            StatsRow,
+            BaseReferences<_$SaveDatabase, $ProfileStatsTable, StatsRow>,
+          ),
+          StatsRow,
+          PrefetchHooks Function()
+        > {
+  $$ProfileStatsTableTableManager(_$SaveDatabase db, $ProfileStatsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ProfileStatsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ProfileStatsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ProfileStatsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> profileId = const Value.absent(),
+                Value<int> shotsFired = const Value.absent(),
+                Value<int> shotsHit = const Value.absent(),
+                Value<int> swings = const Value.absent(),
+                Value<int> swingsHit = const Value.absent(),
+                Value<int> hitsHead = const Value.absent(),
+                Value<int> hitsTorso = const Value.absent(),
+                Value<int> hitsArms = const Value.absent(),
+                Value<int> hitsLegs = const Value.absent(),
+                Value<int> kills = const Value.absent(),
+                Value<double> bloodDealtMl = const Value.absent(),
+                Value<double> bloodLostMl = const Value.absent(),
+                Value<int> searches = const Value.absent(),
+                Value<int> blackouts = const Value.absent(),
+              }) => ProfileStatsCompanion(
+                profileId: profileId,
+                shotsFired: shotsFired,
+                shotsHit: shotsHit,
+                swings: swings,
+                swingsHit: swingsHit,
+                hitsHead: hitsHead,
+                hitsTorso: hitsTorso,
+                hitsArms: hitsArms,
+                hitsLegs: hitsLegs,
+                kills: kills,
+                bloodDealtMl: bloodDealtMl,
+                bloodLostMl: bloodLostMl,
+                searches: searches,
+                blackouts: blackouts,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> profileId = const Value.absent(),
+                Value<int> shotsFired = const Value.absent(),
+                Value<int> shotsHit = const Value.absent(),
+                Value<int> swings = const Value.absent(),
+                Value<int> swingsHit = const Value.absent(),
+                Value<int> hitsHead = const Value.absent(),
+                Value<int> hitsTorso = const Value.absent(),
+                Value<int> hitsArms = const Value.absent(),
+                Value<int> hitsLegs = const Value.absent(),
+                Value<int> kills = const Value.absent(),
+                Value<double> bloodDealtMl = const Value.absent(),
+                Value<double> bloodLostMl = const Value.absent(),
+                Value<int> searches = const Value.absent(),
+                Value<int> blackouts = const Value.absent(),
+              }) => ProfileStatsCompanion.insert(
+                profileId: profileId,
+                shotsFired: shotsFired,
+                shotsHit: shotsHit,
+                swings: swings,
+                swingsHit: swingsHit,
+                hitsHead: hitsHead,
+                hitsTorso: hitsTorso,
+                hitsArms: hitsArms,
+                hitsLegs: hitsLegs,
+                kills: kills,
+                bloodDealtMl: bloodDealtMl,
+                bloodLostMl: bloodLostMl,
+                searches: searches,
+                blackouts: blackouts,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ProfileStatsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$SaveDatabase,
+      $ProfileStatsTable,
+      StatsRow,
+      $$ProfileStatsTableFilterComposer,
+      $$ProfileStatsTableOrderingComposer,
+      $$ProfileStatsTableAnnotationComposer,
+      $$ProfileStatsTableCreateCompanionBuilder,
+      $$ProfileStatsTableUpdateCompanionBuilder,
+      (StatsRow, BaseReferences<_$SaveDatabase, $ProfileStatsTable, StatsRow>),
+      StatsRow,
+      PrefetchHooks Function()
+    >;
 
 class $SaveDatabaseManager {
   final _$SaveDatabase _db;
@@ -10253,4 +11409,6 @@ class $SaveDatabaseManager {
       $$SheltersTableTableManager(_db, _db.shelters);
   $$RemainsEntriesTableTableManager get remainsEntries =>
       $$RemainsEntriesTableTableManager(_db, _db.remainsEntries);
+  $$ProfileStatsTableTableManager get profileStats =>
+      $$ProfileStatsTableTableManager(_db, _db.profileStats);
 }

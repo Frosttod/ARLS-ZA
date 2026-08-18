@@ -1039,6 +1039,156 @@ abstract class L10n {
   /// **'PROFILE'**
   String get menuProfile;
 
+  /// No description provided for @profileBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This body'**
+  String get profileBody;
+
+  /// No description provided for @profileBlood.
+  ///
+  /// In en, this message translates to:
+  /// **'Blood volume'**
+  String get profileBlood;
+
+  /// No description provided for @profileEnergy.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily energy'**
+  String get profileEnergy;
+
+  /// No description provided for @profileWater.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily water'**
+  String get profileWater;
+
+  /// No description provided for @profileCarry.
+  ///
+  /// In en, this message translates to:
+  /// **'Carry, comfortable / hard'**
+  String get profileCarry;
+
+  /// No description provided for @profileHeart.
+  ///
+  /// In en, this message translates to:
+  /// **'Heart rate, rest to max'**
+  String get profileHeart;
+
+  /// No description provided for @profileAim.
+  ///
+  /// In en, this message translates to:
+  /// **'What is making you miss'**
+  String get profileAim;
+
+  /// No description provided for @profileTotalSpread.
+  ///
+  /// In en, this message translates to:
+  /// **'Together'**
+  String get profileTotalSpread;
+
+  /// No description provided for @profileAimWhat.
+  ///
+  /// In en, this message translates to:
+  /// **'Standing still removes the two largest rows: your own pace and your own pulse. Nothing else on this list can be fixed on the spot.'**
+  String get profileAimWhat;
+
+  /// No description provided for @profileFighting.
+  ///
+  /// In en, this message translates to:
+  /// **'Out there'**
+  String get profileFighting;
+
+  /// No description provided for @profileShots.
+  ///
+  /// In en, this message translates to:
+  /// **'Shots fired'**
+  String get profileShots;
+
+  /// No description provided for @profileAccuracy.
+  ///
+  /// In en, this message translates to:
+  /// **'Accuracy'**
+  String get profileAccuracy;
+
+  /// No description provided for @profileSwings.
+  ///
+  /// In en, this message translates to:
+  /// **'Swings'**
+  String get profileSwings;
+
+  /// No description provided for @profileKills.
+  ///
+  /// In en, this message translates to:
+  /// **'Put down'**
+  String get profileKills;
+
+  /// No description provided for @profileShotsPerKill.
+  ///
+  /// In en, this message translates to:
+  /// **'Rounds per kill'**
+  String get profileShotsPerKill;
+
+  /// No description provided for @profileBloodDealt.
+  ///
+  /// In en, this message translates to:
+  /// **'Blood taken'**
+  String get profileBloodDealt;
+
+  /// No description provided for @profileBloodLost.
+  ///
+  /// In en, this message translates to:
+  /// **'Blood lost'**
+  String get profileBloodLost;
+
+  /// No description provided for @profileSearches.
+  ///
+  /// In en, this message translates to:
+  /// **'Places searched'**
+  String get profileSearches;
+
+  /// No description provided for @profileBlackouts.
+  ///
+  /// In en, this message translates to:
+  /// **'Blackouts'**
+  String get profileBlackouts;
+
+  /// No description provided for @profileWhereTheyLand.
+  ///
+  /// In en, this message translates to:
+  /// **'Where your rounds land'**
+  String get profileWhereTheyLand;
+
+  /// No description provided for @profileNothingYet.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing has landed yet.'**
+  String get profileNothingYet;
+
+  /// No description provided for @profileSkills.
+  ///
+  /// In en, this message translates to:
+  /// **'Skills'**
+  String get profileSkills;
+
+  /// No description provided for @profileSkillsSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Not in the game yet. Until they are, everybody shoots like a novice — twenty-five minutes of angle, which is the largest row above.'**
+  String get profileSkillsSoon;
+
+  /// No description provided for @profileAliveDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Alive {days} d {hours} h'**
+  String profileAliveDays(int days, int hours);
+
+  /// No description provided for @profileAliveHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Alive {hours} h'**
+  String profileAliveHours(int hours);
+
   /// No description provided for @menuInventory.
   ///
   /// In en, this message translates to:

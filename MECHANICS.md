@@ -11,7 +11,7 @@ Ten plik istnieje, bo trzy dokumenty nie odpowiadały na to pytanie:
 | `CHECKLIST.md` | **co jest przetestowane** i **jakie mamy długi** |
 | **`MECHANICS.md`** | **co gra faktycznie robi**, z liczbami |
 
-Różnica jest istotna, bo w kilkunastu miejscach **świadomie odeszliśmy od dokumentu projektowego** — czasem dlatego, że jego liczby były wewnętrznie sprzeczne, czasem dlatego, że spacer pokazał coś innego. Te decyzje żyły dotąd wyłącznie w komentarzach w kodzie. [Sekcja 14](#14-odejścia-od-dokumentu-projektowego) zbiera je w jednym miejscu.
+Różnica jest istotna, bo w kilkunastu miejscach **świadomie odeszliśmy od dokumentu projektowego** — czasem dlatego, że jego liczby były wewnętrznie sprzeczne, czasem dlatego, że spacer pokazał coś innego. Te decyzje żyły dotąd wyłącznie w komentarzach w kodzie. [Sekcja 15](#15-odejścia-od-dokumentu-projektowego) zbiera je w jednym miejscu.
 
 ⚠️ **Reguła utrzymania tego pliku:** liczba zmieniona w kodzie i nieprzeniesiona tutaj czyni ten dokument gorszym niż jego brak. Przy każdej zmianie stałej — aktualizuj sekcję.
 
@@ -34,9 +34,10 @@ Różnica jest istotna, bo w kilkunastu miejscach **świadomie odeszliśmy od do
 11. [Przeciwnicy](#11-przeciwnicy)
 12. [Schron i obóz](#12-schron-i-obóz)
 13. [Śmierć i utrata przytomności](#13-śmierć)
-14. [Odejścia od dokumentu projektowego](#14-odejścia-od-dokumentu-projektowego)
-15. [Zbudowane, jeszcze nieużyte](#15-zbudowane-jeszcze-nieużyte)
-16. [Czego jeszcze nie ma](#16-czego-jeszcze-nie-ma)
+14. [Profil — statystyki postaci](#14-profil)
+15. [Odejścia od dokumentu projektowego](#15-odejścia-od-dokumentu-projektowego)
+16. [Zbudowane, jeszcze nieużyte](#16-zbudowane-jeszcze-nieużyte)
+17. [Czego jeszcze nie ma](#17-czego-jeszcze-nie-ma)
 
 ---
 
@@ -802,7 +803,72 @@ Ekran śmierci pokazuje **log ostatnich chwil walki** — 30 linii, około dwóc
 
 ---
 
-## 14. Odejścia od dokumentu projektowego
+## 14. Profil
+
+Ekran otwierany z menu mapy. Cztery pytania, w kolejności, w jakiej zadaje je
+gracz o własną postać: **jak długo żyję**, **czym jest to ciało**, **co teraz
+sprawia, że chybiam**, **co właściwie zrobiłem**.
+
+### 14.1. Licznik, nie stan (§13.1)
+
+Statystyki rosną i nigdy nie maleją. Dlatego mieszkają w osobnej tabeli
+(`profile_stats`, schemat v19) niż fizjologia: jedna jest nadpisywana co minutę
+stanem ciała, druga jest historią. Zapis po **każdym** zdarzeniu — jeden mały
+upsert, więc zamknięcie aplikacji w środku walki nic nie gubi.
+
+| Liczone | Gdzie w kodzie | Uwagi |
+| :---- | :---- | :---- |
+| Oddane strzały, trafienia | `_fire` | strzał w powietrze (§5.6.2) **nie liczy się** — nie był celowany, psułby celność |
+| Ciosy wręcz, trafienia | `_strike` | osobna celność, nie miesza się ze strzelecką |
+| Trafienia wg części ciała | `_fire`, `_strike` | głowa / tors / ręce / nogi |
+| Zabici | `_remember` | jedyny lejek, przez który przechodzi każda śmierć — i już odsiany z duplikatów |
+| Zadana utrata krwi | `_fire`, `_strike` | ml |
+| Własna utrata krwi | `_takeBlows` | ml |
+| Przeszukane miejsca | `_finishObjectSearch`, `_searchRemains` | |
+| Utraty przytomności | `_settleDown` | także śmierć w hardcore |
+
+Wskaźniki pochodne:
+
+| Wskaźnik | Wzór | Przed pierwszym zdarzeniem |
+| :---- | :---- | :---- |
+| Celność | trafienia / strzały | **—**, nie 0% |
+| Celność wręcz | trafienia / ciosy | **—** |
+| Naboi na przeciwnika | strzały / zabici | **—** |
+
+„—" zamiast zera jest świadome: gracz, który nie strzelał, nie ma celności, a
+pokazanie mu 0% byłoby grą mówiącą, że jest zły w czymś, czego nie robił.
+Kalibracja z §10.3.3 (około trzech naboi 5,45 na Chodzącego) jest tu
+**zmierzona**, nie obiecana.
+
+### 14.2. Budżet celowania w spoczynku (§5.1.1)
+
+Ekran pokazuje **cały** rozkład MOA — broń, umiejętność, tętno, ruch, cel,
+kondycja — liczony tym samym `ShotError`, którego używa spust. Tętno i ruch
+wpisane jako zero, bo to jest obraz „stoję spokojnie": różnica między tym
+widokiem a paskiem w walce jest dokładnie tym, co gracz sam sobie dokłada.
+
+Sens tej sekcji: największym wierszem jest prawie zawsze **własny puls albo
+własne tempo**, a obie rzeczy naprawia stanie w miejscu. To lekcja tańsza do
+odrobienia w schronie niż przed Chodzącym.
+
+### 14.3. Trafienia wg części ciała
+
+Pasek na każdą lokalizację, a na nim **znacznik oczekiwanego udziału z §2.6**
+(głowa 12%, tors 45%, ręce 18%, nogi 25%). Gracz trafiający w głowę znacznie
+częściej, niż przewiduje model, znalazł coś, czego model nie wie.
+
+### 14.4. Umiejętności
+
+Puste — §7 nie istnieje. Do tego czasu **każdy strzela jak nowicjusz**: 25 MOA,
+czyli największy wiersz budżetu z 14.2. Ekran mówi to wprost, zamiast pokazywać
+pustą listę.
+
+⚠️ Nic z tego nie opuszcza telefonu. §16.5 dopuszcza zagregowaną telemetrię —
+domyślnie wyłączoną, za zgodą — i to **nie jest** ona.
+
+---
+
+## 15. Odejścia od dokumentu projektowego
 
 Miejsca, w których kod **świadomie** robi coś innego niż `ARLS-ZA_design_doc_v2.md`. Każde ma powód.
 
@@ -824,9 +890,9 @@ Miejsca, w których kod **świadomie** robi coś innego niż `ARLS-ZA_design_doc
 
 ---
 
-## 15. Zbudowane, jeszcze nieużyte
+## 16. Zbudowane, jeszcze nieużyte
 
-### 15.1. Pomiar stylu gry (§16.4)
+### 16.1. Pomiar stylu gry (§16.4)
 
 Model gotowy, nic go jeszcze nie czyta — czeka na ogniska (§6.5), którym ma
 dyktować tempo wzrostu.
@@ -848,7 +914,7 @@ ze składem ognisk.
 
 ---
 
-## 16. Czego jeszcze nie ma
+## 17. Czego jeszcze nie ma
 
 | Mechanika | Stan | Blokuje |
 | :---- | :---- | :---- |
@@ -878,6 +944,6 @@ Większość stałych z tego dokumentu ma test, który pęknie przy zmianie. Je�
 1. zmień stałą w kodzie,
 2. popraw test, który ją trzyma,
 3. **popraw sekcję tutaj**,
-4. jeśli to odejście od dokumentu projektowego — dopisz wiersz do [sekcji 14](#14-odejścia-od-dokumentu-projektowego) z powodem.
+4. jeśli to odejście od dokumentu projektowego — dopisz wiersz do [sekcji 15](#15-odejścia-od-dokumentu-projektowego) z powodem.
 
 Punkt 4 jest najważniejszy. Powód zapomniany po trzech miesiącach wraca jako „dziwna liczba, pewnie błąd".

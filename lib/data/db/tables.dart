@@ -466,3 +466,51 @@ class RemainsEntries extends Table {
     'UNIQUE (profile_id, enemy_id)',
   ];
 }
+
+/// What a character has done, counted (§13.1, §16.5).
+///
+/// One row per character, all of it counters. Kept apart from `vitals` because
+/// vitals is rewritten every sixty seconds with the state of a body and this is
+/// a tally that only ever grows — mixing the two would mean rewriting a history
+/// to record a heartbeat.
+///
+/// ⚠️ Nothing here leaves the phone. §16.5 allows only aggregated telemetry,
+/// off by default and with explicit consent; this is the player's own record,
+/// for the player's own screen.
+@DataClassName('StatsRow')
+class ProfileStats extends Table {
+  IntColumn get profileId => integer()();
+
+  /// §5.1: every trigger pull, and how many of them landed.
+  IntColumn get shotsFired => integer().withDefault(const Constant(0))();
+  IntColumn get shotsHit => integer().withDefault(const Constant(0))();
+
+  /// §5.4: the same for anything swung.
+  IntColumn get swings => integer().withDefault(const Constant(0))();
+  IntColumn get swingsHit => integer().withDefault(const Constant(0))();
+
+  /// §2.6: where the ones that landed landed.
+  IntColumn get hitsHead => integer().withDefault(const Constant(0))();
+  IntColumn get hitsTorso => integer().withDefault(const Constant(0))();
+  IntColumn get hitsArms => integer().withDefault(const Constant(0))();
+  IntColumn get hitsLegs => integer().withDefault(const Constant(0))();
+
+  /// §6.2: how many went down, and how much blood it took to do it.
+  IntColumn get kills => integer().withDefault(const Constant(0))();
+  RealColumn get bloodDealtMl => real().withDefault(const Constant(0))();
+
+  /// §2.6: and how much of the player's own went the other way.
+  RealColumn get bloodLostMl => real().withDefault(const Constant(0))();
+
+  /// §10.2: places turned over, and §9.2's blackouts.
+  IntColumn get searches => integer().withDefault(const Constant(0))();
+  IntColumn get blackouts => integer().withDefault(const Constant(0))();
+
+  @override
+  Set<Column> get primaryKey => {profileId};
+
+  @override
+  List<String> get customConstraints => [
+    'FOREIGN KEY (profile_id) REFERENCES profiles (id) ON DELETE CASCADE',
+  ];
+}

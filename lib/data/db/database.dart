@@ -29,7 +29,7 @@ import 'tables.dart';
 part 'database.g.dart';
 
 /// Bumped only alongside a migration step in [_migration]. Never reused.
-const int kSchemaVersion = 18;
+const int kSchemaVersion = 19;
 
 /// Keys used in [MetaEntries].
 abstract final class MetaKeys {
@@ -59,6 +59,7 @@ abstract final class MetaKeys {
     GroundItems,
     Shelters,
     RemainsEntries,
+    ProfileStats,
   ],
 )
 class SaveDatabase extends _$SaveDatabase {
@@ -71,7 +72,7 @@ class SaveDatabase extends _$SaveDatabase {
   /// follow a constant reference. `schema_test.dart` keeps it in step with
   /// [kSchemaVersion].
   @override
-  int get schemaVersion => 18;
+  int get schemaVersion => 19;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -224,6 +225,13 @@ class SaveDatabase extends _$SaveDatabase {
         // remembers. Null reads as "on their feet", which every save written
         // before this was.
         await m.addColumn(vitals, vitals.graceUntil);
+      }
+
+      if (from < 19) {
+        // §13.1: what a character has done. A tally rather than a state, so it
+        // gets a table of its own — vitals is rewritten every minute and a
+        // history is not.
+        await m.createTable(profileStats);
       }
 
       await _writeSchemaVersion(to);
@@ -413,6 +421,16 @@ class SaveDatabase extends _$SaveDatabase {
   Future<void> removeRemains(List<int> ids) async {
     if (ids.isEmpty) return;
     await (delete(remainsEntries)..where((t) => t.id.isIn(ids))).go();
+  }
+
+  // --------------------------------------------------------------- stats ---
+
+  Future<StatsRow?> statsFor(int profileId) => (select(
+    profileStats,
+  )..where((t) => t.profileId.equals(profileId))).getSingleOrNull();
+
+  Future<void> writeStats(ProfileStatsCompanion stats) async {
+    await into(profileStats).insert(stats, mode: InsertMode.insertOrReplace);
   }
 
   // --------------------------------------------------------------- death ---

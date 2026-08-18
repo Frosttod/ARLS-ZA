@@ -76,6 +76,9 @@ import 'safety/player_safety.dart';
 import 'sim/body.dart';
 import 'sim/death.dart';
 import 'sim/physiology.dart';
+import 'sim/player_stats.dart';
+import 'sim/player_stats_store.dart';
+import 'ui/profile_screen.dart';
 import 'ui/app_settings.dart';
 import 'ui/character_creator.dart';
 import 'ui/language_picker.dart';
@@ -259,6 +262,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   DevSession? _dev;
 
   ActiveCharacter? _character;
+
+  /// §13.1: what this character has done, counted. Loaded with them.
+  PlayerStats _stats = PlayerStats.empty;
   GameLoop? _loop;
   GameSnapshot? _snapshot;
   bool _loading = true;
@@ -679,6 +685,11 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       if (!mounted) return;
       _inventory.value = loaded.inventory;
     }
+
+    _stats = await PlayerStatsStore(
+      widget.session.db,
+    ).load(character.profile.id);
+    if (!mounted) return;
 
     if (kDevTools && _useSimulator) {
       _dev = DevSession.attach(constants: character.constants);
@@ -1895,6 +1906,15 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       if (still == null || still.isDead) _aim = _aim.released;
     });
 
+    // ⚠️ Counted from the outcome rather than from the log line, so a shot
+    // fired while the app is being closed still lands in the tally.
+    _note(
+      (stats) => stats.fired(
+        where: outcome.hit ? outcome.location : null,
+        bloodMl: outcome.hit ? outcome.bloodLossMl : 0,
+      ),
+    );
+
     // §2.6: where it landed and what it opened. A head shot that ends it is
     // worth saying as an execution; a leg that keeps bleeding is worth saying
     // because it changes whether to run or to stay.
@@ -1911,6 +1931,21 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
               outcome.bloodLossMl.round(),
             ),
       remember: true,
+    );
+  }
+
+  /// §13.1: adds to the tally and puts it on disk.
+  ///
+  /// No [setState]: nothing on the HUD shows any of this. The profile screen
+  /// reads the tally when it opens, so a rebuild of the map for every trigger
+  /// pull would buy nothing at all.
+  void _note(PlayerStats Function(PlayerStats) change) {
+    _stats = change(_stats);
+
+    final character = _character;
+    if (character == null) return;
+    unawaited(
+      PlayerStatsStore(widget.session.db).save(character.profile.id, _stats),
     );
   }
 
@@ -2014,6 +2049,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
           ? BleedTier.moderate
           : BleedTier.superficial,
     );
+    _note((stats) => stats.hurt(taken));
     _say(
       L10n.of(
         context,
@@ -2188,6 +2224,13 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       }
     });
 
+    _note(
+      (stats) => stats.swung(
+        where: landed ? where : null,
+        bloodMl: landed ? damage : 0,
+      ),
+    );
+
     if (!mounted) return;
     final left = _combat.enemies.where((e) => e.id == target.id).firstOrNull;
     _say(
@@ -2329,6 +2372,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     if (loop == null || character == null) return;
 
     if (loop.takeWentDown()) {
+      _note((stats) => stats.wentDown());
+
       // §5.5.1: nothing is aimed at any more, and nothing is being searched.
       setState(() {
         _aim = _aim.released;
@@ -2336,9 +2381,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         _usingLine.value = null;
       });
 
-      _logCombat(
-        '— ${causeName(L10n.of(context), loop.deathCause)} —',
-      );
+      _logCombat('— ${causeName(L10n.of(context), loop.deathCause)} —');
 
       if (loop.down == DownState.dead) {
         await _factory.recordDeath(
@@ -2774,6 +2817,12 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     // the living every run and that is right — a Walker is not a place — but a
     // body is, and losing it to a restart takes away their own work.
     if (!identical(_remains, before)) {
+      // ⚠️ Here rather than at the trigger, because a death is noticed from
+      // three places — the shot, the swing, and the sweep that finds an enemy
+      // gone. [addRemains] is what settles which of them was first, so it is
+      // also the only place a kill can be counted exactly once.
+      _note((stats) => stats.killed());
+
       final character = _character;
       if (character != null) {
         unawaited(
@@ -2781,6 +2830,37 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         );
       }
     }
+  }
+
+  /// §13.1: the character, and what they have done.
+  Future<void> _openProfile() async {
+    final character = _character;
+    final snapshot = _snapshot;
+    if (character == null || snapshot == null) return;
+
+    final weapon = _weapon;
+
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => ProfileScreen(
+          name: character.profile.name,
+          body: character.body,
+          status: snapshot.status,
+          stats: _stats,
+          // §16.4: from the game's own clock, so a character created under
+          // the simulator ages at the same rate as everything else about them.
+          aliveFor: snapshot.state.lastUpdate.difference(
+            character.profile.createdAt,
+          ),
+          weaponMoa: weapon == null
+              ? null
+              : FittedWeapon(
+                  weapon: weapon,
+                  attachments: _attachmentsFor(weapon),
+                ).moa,
+        ),
+      ),
+    );
   }
 
   /// §10.3: the bodies this character has left, from the save.
@@ -2805,6 +2885,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final at = _standingAt.value;
     if (at == null || body.searched) return;
     if (body.position.distanceTo(at) > kStillnessM) return;
+
+    _note((stats) => stats.searchedSomething());
 
     setState(() {
       _remains = [
@@ -3325,6 +3407,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     if (box == null || table == null) return;
     if (!box.canSearchAt(depth)) return;
 
+    _note((stats) => stats.searchedSomething());
+
     // Seeded from the place, the character and how far into this place the
     // player already is, so the same search of the same shop gives the same
     // result however many times the app is restarted mid-search (§11) — and a
@@ -3360,12 +3444,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
           seed: character.profile.rngSeed ^ poiId.hashCode,
         );
         inventory = inventory
-            .add(
-              entry.key,
-              catalogue,
-              body: character.body,
-              noteId: note?.id,
-            )
+            .add(entry.key, catalogue, body: character.body, noteId: note?.id)
             .inventory;
         found[entry.key] = 1;
         continue;
@@ -3787,8 +3866,6 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
                   ),
             notices: NoticeStack(notices: _notices),
             onMenu: (entry) {
-              // Profile and shelter arrive with the systems behind them
-              // (§7, §8). The two that have something to show are wired.
               switch (entry) {
                 case MapMenuEntry.settings:
                   unawaited(_openSettings());
@@ -3797,7 +3874,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
                 case MapMenuEntry.shelter:
                   unawaited(_openShelter());
                 case MapMenuEntry.profile:
-                  break;
+                  unawaited(_openProfile());
               }
             },
           ),

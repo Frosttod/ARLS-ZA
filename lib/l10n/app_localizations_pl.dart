@@ -564,6 +564,87 @@ class L10nPl extends L10n {
   String get menuProfile => 'PROFIL';
 
   @override
+  String get profileBody => 'To ciało';
+
+  @override
+  String get profileBlood => 'Objętość krwi';
+
+  @override
+  String get profileEnergy => 'Zapotrzebowanie dobowe';
+
+  @override
+  String get profileWater => 'Woda na dobę';
+
+  @override
+  String get profileCarry => 'Udźwig, komfort / maks';
+
+  @override
+  String get profileHeart => 'Tętno, spoczynek do maks';
+
+  @override
+  String get profileAim => 'Co sprawia, że chybiasz';
+
+  @override
+  String get profileTotalSpread => 'Razem';
+
+  @override
+  String get profileAimWhat =>
+      'Stanie w miejscu usuwa dwa największe wiersze: własne tempo i własne tętno. Nic innego na tej liście nie da się naprawić od ręki.';
+
+  @override
+  String get profileFighting => 'W terenie';
+
+  @override
+  String get profileShots => 'Oddane strzały';
+
+  @override
+  String get profileAccuracy => 'Celność';
+
+  @override
+  String get profileSwings => 'Ciosy wręcz';
+
+  @override
+  String get profileKills => 'Zabici';
+
+  @override
+  String get profileShotsPerKill => 'Naboi na przeciwnika';
+
+  @override
+  String get profileBloodDealt => 'Zadana utrata krwi';
+
+  @override
+  String get profileBloodLost => 'Własna utrata krwi';
+
+  @override
+  String get profileSearches => 'Przeszukane miejsca';
+
+  @override
+  String get profileBlackouts => 'Utraty przytomności';
+
+  @override
+  String get profileWhereTheyLand => 'Gdzie trafiają Twoje strzały';
+
+  @override
+  String get profileNothingYet => 'Jeszcze nic nie trafiło.';
+
+  @override
+  String get profileSkills => 'Umiejętności';
+
+  @override
+  String get profileSkillsSoon =>
+      'Jeszcze ich nie ma. Dopóki nie będzie, każdy strzela jak nowicjusz — dwadzieścia pięć minut kątowych, czyli największy wiersz powyżej.';
+
+  @override
+  String profileAliveDays(int days, int hours) {
+    return 'Żyje $days d $hours h';
+  }
+
+  @override
+  String profileAliveHours(int hours) {
+    return 'Żyje $hours h';
+  }
+
+  @override
   String get menuInventory => 'EKWIPUNEK';
 
   @override

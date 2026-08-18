@@ -561,6 +561,87 @@ class L10nEn extends L10n {
   String get menuProfile => 'PROFILE';
 
   @override
+  String get profileBody => 'This body';
+
+  @override
+  String get profileBlood => 'Blood volume';
+
+  @override
+  String get profileEnergy => 'Daily energy';
+
+  @override
+  String get profileWater => 'Daily water';
+
+  @override
+  String get profileCarry => 'Carry, comfortable / hard';
+
+  @override
+  String get profileHeart => 'Heart rate, rest to max';
+
+  @override
+  String get profileAim => 'What is making you miss';
+
+  @override
+  String get profileTotalSpread => 'Together';
+
+  @override
+  String get profileAimWhat =>
+      'Standing still removes the two largest rows: your own pace and your own pulse. Nothing else on this list can be fixed on the spot.';
+
+  @override
+  String get profileFighting => 'Out there';
+
+  @override
+  String get profileShots => 'Shots fired';
+
+  @override
+  String get profileAccuracy => 'Accuracy';
+
+  @override
+  String get profileSwings => 'Swings';
+
+  @override
+  String get profileKills => 'Put down';
+
+  @override
+  String get profileShotsPerKill => 'Rounds per kill';
+
+  @override
+  String get profileBloodDealt => 'Blood taken';
+
+  @override
+  String get profileBloodLost => 'Blood lost';
+
+  @override
+  String get profileSearches => 'Places searched';
+
+  @override
+  String get profileBlackouts => 'Blackouts';
+
+  @override
+  String get profileWhereTheyLand => 'Where your rounds land';
+
+  @override
+  String get profileNothingYet => 'Nothing has landed yet.';
+
+  @override
+  String get profileSkills => 'Skills';
+
+  @override
+  String get profileSkillsSoon =>
+      'Not in the game yet. Until they are, everybody shoots like a novice — twenty-five minutes of angle, which is the largest row above.';
+
+  @override
+  String profileAliveDays(int days, int hours) {
+    return 'Alive $days d $hours h';
+  }
+
+  @override
+  String profileAliveHours(int hours) {
+    return 'Alive $hours h';
+  }
+
+  @override
   String get menuInventory => 'INVENTORY';
 
   @override
