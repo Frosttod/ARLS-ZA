@@ -186,9 +186,8 @@ class Hud extends StatelessWidget {
                               1 -
                               state.sleepDebt.inSeconds /
                                   kDailySleepNeed.inSeconds,
-                          amount: _hoursLeft(
-                            kDailySleepNeed - state.sleepDebt,
-                          ),
+                          amount: _hoursLeft(kDailySleepNeed - state.sleepDebt),
+                          incoming: _sleepIncoming(state),
                           warning: status.sleep.extraMoa > 0,
                           critical: status.sleep.microsleeps,
                         ),
@@ -205,6 +204,7 @@ class Hud extends StatelessWidget {
                           label: l10n.hudBlood,
                           fraction: 1 - status.blood.lossFraction,
                           amount: '${_grouped(status.blood.volumeMl)} ml',
+                          incoming: _bloodIncoming(state, constants, bleeding),
                           warning: status.blood.shockClass != ShockClass.none,
                           critical: status.blood.isFatal,
                         ),
@@ -249,6 +249,57 @@ class Hud extends StatelessWidget {
       ),
     );
   }
+}
+
+/// §2.5: an hour of sleep ahead, as a share of the night §2.5.3 wants.
+///
+/// ⚠️ An hour rather than a queue. Water and food have something actually in
+/// the stomach to point at (§2.2, §2.3); rest and blood have only a rate, so
+/// the tick shows where one hour at the current rate lands. Same mark, same
+/// meaning — something is coming — and the same hour for both, so the two can
+/// be read against each other.
+///
+/// Nothing while awake. The debt grows every waking hour and a mark that is
+/// always there says nothing at all; the point of it is that *right now*
+/// something is going the other way.
+double _sleepIncoming(SimState state) {
+  if (state.zone != MetabolicZone.sleep) return 0;
+  if (state.sleepDebt <= Duration.zero) return 0;
+
+  final ahead = state.sleepDebt < const Duration(hours: 1)
+      ? state.sleepDebt
+      : const Duration(hours: 1);
+  return ahead.inSeconds / kDailySleepNeed.inSeconds;
+}
+
+/// §2.6: an hour of blood, either way.
+///
+/// Negative while something is open, and at the rate the wound is *actually*
+/// losing it — §2.6 multiplies by the pulse, so the same cut costs twice as
+/// much running as standing, and a bar that ignored that would be reassuring
+/// at exactly the wrong moment.
+///
+/// Positive while it is being rebuilt, at what the body can pay for: blood is
+/// made out of what was eaten and drunk (§2.2, §2.3), so a starving character
+/// shows no mark at all, which is the honest answer.
+double _bloodIncoming(SimState state, SimConstants constants, BleedTier tier) {
+  if (constants.bloodMaxMl <= 0) return 0;
+
+  if (tier != BleedTier.none) {
+    return -bleedMlPerMinute(
+          tier: tier,
+          currentHr: state.heartRateBpm,
+          restingHr: constants.restingHeartRate,
+        ) *
+        60 /
+        constants.bloodMaxMl;
+  }
+
+  if (state.bloodMl >= constants.bloodMaxMl) return 0;
+
+  final room = constants.bloodMaxMl - state.bloodMl;
+  final hour = kBloodRegenMlPerHour * nourishment(state, constants);
+  return (hour < room ? hour : room) / constants.bloodMaxMl;
 }
 
 class _ThinBar extends StatelessWidget {

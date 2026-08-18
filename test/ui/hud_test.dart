@@ -1,5 +1,6 @@
 import 'package:arls_za/l10n/app_localizations.dart';
 import 'package:arls_za/sim/body.dart';
+import 'package:arls_za/sim/physiology.dart';
 import 'package:arls_za/sim/tick.dart';
 import 'package:arls_za/ui/hud.dart';
 import 'package:flutter/material.dart';
@@ -26,8 +27,9 @@ void main() {
     double carriedVolumeL = 0,
     double capacityL = 65,
     Brightness brightness = Brightness.dark,
-      ThreatReading? threat,
-}) async {
+    BleedTier bleeding = BleedTier.none,
+    ThreatReading? threat,
+  }) async {
     await tester.pumpWidget(
       MaterialApp(
         theme: ThemeData(brightness: brightness),
@@ -45,7 +47,8 @@ void main() {
             status: statusOf(state: state, constants: constants),
             constants: constants,
             warnings: warnings,
-          threat: threat,
+            bleeding: bleeding,
+            threat: threat,
             carryComfortKg: profile.carryComfortKg,
             carryMaxKg: profile.carryMaxKg,
             carriedKg: carriedKg,
@@ -208,6 +211,76 @@ void main() {
     expect(find.byIcon(Icons.remove), findsNothing);
   });
 
+  testWidgets('sleeping is a rising bar, and says so', (tester) async {
+    // §2.5: the debt falls a second per second under a roof. The mark is the
+    // only thing on the HUD that says the character is doing something about
+    // it — there is no button, so there has to be a sign.
+    await pumpHud(
+      tester,
+      healthy().copyWith(
+        zone: MetabolicZone.sleep,
+        sleepDebtSeconds: const Duration(hours: 3).inSeconds,
+      ),
+    );
+
+    expect(find.byIcon(Icons.add), findsOneWidget);
+    expect(find.byIcon(Icons.remove), findsNothing);
+  });
+
+  testWidgets('a debt nobody is paying off carries no mark', (tester) async {
+    // Awake with the same debt. The mark means *right now*, not "one day".
+    await pumpHud(
+      tester,
+      healthy().copyWith(sleepDebtSeconds: const Duration(hours: 3).inSeconds),
+    );
+
+    expect(find.byIcon(Icons.add), findsNothing);
+  });
+
+  testWidgets('blood being rebuilt is a rising bar', (tester) async {
+    // §2.6: 60 ml an hour, paid for out of §2.2 and §2.3. Fed and watered, so
+    // the body can afford it.
+    await pumpHud(
+      tester,
+      healthy().copyWith(bloodMl: constants.bloodMaxMl * 0.8),
+    );
+
+    expect(find.byIcon(Icons.add), findsOneWidget);
+  });
+
+  testWidgets('a starving body rebuilds nothing, and shows nothing', (
+    tester,
+  ) async {
+    // Blood is made out of what was eaten and drunk. An empty character
+    // showing a rising bar would be the HUD promising a recovery that is not
+    // coming.
+    await pumpHud(
+      tester,
+      healthy().copyWith(
+        bloodMl: constants.bloodMaxMl * 0.8,
+        caloriesKcal: 0,
+        waterMl: 0,
+      ),
+    );
+
+    expect(find.byIcon(Icons.add), findsNothing);
+  });
+
+  testWidgets('an open wound is a falling bar', (tester) async {
+    await pumpHud(
+      tester,
+      healthy().copyWith(bloodMl: constants.bloodMaxMl * 0.9),
+      bleeding: BleedTier.moderate,
+    );
+
+    expect(
+      find.byIcon(Icons.remove),
+      findsOneWidget,
+      reason: 'a bleed outweighs regeneration; the bar goes one way only',
+    );
+    expect(find.byIcon(Icons.add), findsNothing);
+  });
+
   testWidgets('a screen reader hears the same thing the eye does', (
     tester,
   ) async {
@@ -261,10 +334,7 @@ void main() {
       await pumpHud(tester, healthy(), carriedVolumeL: 65, capacityL: 65);
 
       expect(find.text('65 / 65 l'), findsOneWidget);
-      expect(
-        find.bySemanticsLabel(RegExp('65 of 65 litres')),
-        findsOneWidget,
-      );
+      expect(find.bySemanticsLabel(RegExp('65 of 65 litres')), findsOneWidget);
     });
   });
 
@@ -350,11 +420,7 @@ void main() {
       await pumpHud(
         tester,
         healthy(),
-        threat: const ThreatReading(
-          count: 1,
-          nearestM: 40,
-          anySprinting: true,
-        ),
+        threat: const ThreatReading(count: 1, nearestM: 40, anySprinting: true),
       );
 
       expect(find.textContaining('ma jeszcze sprint'), findsOneWidget);
@@ -426,9 +492,7 @@ void main() {
     // Four hours of debt against the eight §2.5.3 wants is half a bar.
     await pumpHud(
       tester,
-      healthy().copyWith(
-        sleepDebtSeconds: const Duration(hours: 4).inSeconds,
-      ),
+      healthy().copyWith(sleepDebtSeconds: const Duration(hours: 4).inSeconds),
     );
 
     expect(find.text('SEN'), findsOneWidget);

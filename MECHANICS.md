@@ -123,6 +123,19 @@ Zjedzone **nie jest** natychmiast we krwi. Trafia do żołądka i przechodzi dal
 
 Na pasku HUD widać to jako znacznik `+` przed wypełnieniem. To jest cała mechanika: jedzenie jest czymś, co się nosi i bierze **zanim** będzie potrzebne, a nie przyciskiem wciskanym, gdy pasek czerwienieje.
 
+**Znacznik kierunku ma każdy z czterech pasków** — woda, kalorie, sen, krew:
+
+| Pasek | `+` gdy | `−` gdy | Co pokazuje znacznik |
+| :---- | :---- | :---- | :---- |
+| Woda | trwa wchłanianie | — | ile jeszcze wejdzie z żołądka |
+| Kalorie | trwa wchłanianie | — | jw. |
+| Sen | postać **śpi** | — | godzina snu do przodu |
+| Krew | regeneracja (§4) | otwarta rana | godzina do przodu w obie strony |
+
+⚠️ Woda i kalorie mają **kolejkę** — coś realnie leży w żołądku i znacznik pokazuje to coś. Sen i krew mają tylko **tempo**, więc znacznik pokazuje, gdzie ląduje **godzina** przy obecnym tempie. Ta sama godzina dla obu, żeby dały się czytać jedno przy drugim.
+
+Brak znacznika na śnie, gdy postać nie śpi — dług rośnie każdą godzinę na jawie, a znak, który jest zawsze, nie mówi nic. Brak znacznika na krwi przy pustym żołądku — krew powstaje z tego, co zjedzone i wypite, więc głodujący nie regeneruje i pasek tego nie obiecuje.
+
 ⚠️ Zapas jest **capowany dobowym zapotrzebowaniem**. Nadmiar nie jest bankowany.
 
 ### 3.3. Progi odwodnienia

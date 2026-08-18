@@ -548,11 +548,10 @@ TickOutcome advance({
   // watch the stomach empty. The same shape as absorption, and bounded the
   // same way: [advanceInChunks] is what every gap over an hour goes through,
   // so the drift is at most one hour of regeneration.
-  final regenerated =
-      input.bleedTier == BleedTier.none && bloodLoss <= 0
+  final regenerated = input.bleedTier == BleedTier.none && bloodLoss <= 0
       ? kBloodRegenMlPerHour *
             (seconds / Duration.secondsPerHour) *
-            _nourishment(state, constants)
+            nourishment(state, constants)
       : 0.0;
 
   var blood = math.min(
@@ -680,7 +679,7 @@ TickOutcome advanceInChunks({
 /// Blood is made out of what is eaten and drunk. An empty character does not
 /// rebuild anything, and a half-fed one rebuilds at half speed — which is the
 /// whole reason a fight is followed by a meal rather than by a nap.
-double _nourishment(SimState state, SimConstants constants) {
+double nourishment(SimState state, SimConstants constants) {
   final fed = constants.caloriesDailyKcal <= 0
       ? 0.0
       : (state.caloriesKcal / constants.caloriesDailyKcal).clamp(0.0, 1.0);
