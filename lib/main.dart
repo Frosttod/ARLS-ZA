@@ -737,6 +737,14 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       }
       unawaited(_checkRelocation(snapshot));
       unawaited(_settleShelters(snapshot));
+
+      // ⚠️ Also from the tick, not only from the interface's own timer. Found
+      // on a phone at night: a meal started and the screen went off, the timer
+      // stopped firing, and the action never finished — so the character was
+      // "eating" for ever, which meant they never went back to sleep either.
+      // The loop keeps ticking in the background; this rides on it.
+      unawaited(_advanceSearch());
+      _tellLoopWhatWeAreDoing();
       unawaited(_settleDown(snapshot));
       unawaited(_spawnLoot(snapshot));
       _advanceCombat(snapshot);
@@ -1667,8 +1675,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
             engaged: engaged,
           ),
         );
-      } else if (_loop?.pursuit != null &&
-          !_loop!.pursuit!.isWarmAt(now)) {
+      } else if (_loop?.pursuit != null && !_loop!.pursuit!.isWarmAt(now)) {
         // Gone cold on its own: a walk round the block genuinely loses them.
         _loop?.setPursuit(null);
       }
@@ -2233,11 +2240,13 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       );
     }
 
-    setState(() => _combat = CombatSession(
-      seed: _combat.seed,
-      enemies: [..._combat.enemies, ...back],
-      open: _combat.open,
-    ));
+    setState(
+      () => _combat = CombatSession(
+        seed: _combat.seed,
+        enemies: [..._combat.enemies, ...back],
+        open: _combat.open,
+      ),
+    );
     _say(L10n.of(context).combatStillHunted, remember: true);
   }
 
@@ -2370,6 +2379,18 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// that credits work to them.
   bool _shelterBusy = false;
 
+  /// §8.1: whether the player is standing on ground they built.
+  ///
+  /// ⚠️ From the sticky position, never straight off the snapshot. A shelter
+  /// is a building and a building is where §3.2's gate has nothing to hand
+  /// over — reading the fix directly meant the one place the rule exists to
+  /// cover was the one place it did not apply, and a player could shoot out of
+  /// their own doorway whenever the signal dropped.
+  bool _inOwnZone() {
+    final at = _standingAt.value;
+    return at != null && inSanctuary(at, _sanctuaries);
+  }
+
   /// §8.1: the circles the fight does not happen inside.
   List<Sanctuary> get _sanctuaries => [
     for (final place in _shelters.value)
@@ -2477,9 +2498,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
           (place.buildingLeft ?? Duration.zero) <= Duration.zero,
     );
 
-    final inside = at == null
-        ? null
-        : shelterAt(at, _shelters.value, now: now);
+    final inside = at == null ? null : shelterAt(at, _shelters.value, now: now);
     final stale =
         inside != null &&
         (inside.visitedAt == null ||
@@ -2501,26 +2520,26 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => ShelterScreen(
-            shelters: _shelters,
-            standingAt: _standingAt,
-            carried: _carriedCounts(),
-            itemNameOf: (id) {
-              final definition = catalogue[id];
-              if (definition == null) return id;
+          shelters: _shelters,
+          standingAt: _standingAt,
+          carried: _carriedCounts(),
+          itemNameOf: (id) {
+            final definition = catalogue[id];
+            if (definition == null) return id;
 
-              final language = Localizations.localeOf(context).languageCode;
-              return definition.name.resolve(
-                language: language,
-                lookup: (_names ?? ItemNames.empty).forLanguage(language),
-              );
-            },
-            hasTools: _carries('tool_hammer') || _carries('tool_axe'),
-            hasHammer: _carries('tool_hammer'),
-            hasMultitool: _carries('tool_multitool'),
-            onBuild: (kind) => unawaited(_buildShelter(kind)),
-            onBuildModule: (module) => unawaited(_buildModule(module)),
-            onCancelBuild: (place) => unawaited(_cancelBuild(place)),
-          ),
+            final language = Localizations.localeOf(context).languageCode;
+            return definition.name.resolve(
+              language: language,
+              lookup: (_names ?? ItemNames.empty).forLanguage(language),
+            );
+          },
+          hasTools: _carries('tool_hammer') || _carries('tool_axe'),
+          hasHammer: _carries('tool_hammer'),
+          hasMultitool: _carries('tool_multitool'),
+          onBuild: (kind) => unawaited(_buildShelter(kind)),
+          onBuildModule: (module) => unawaited(_buildModule(module)),
+          onCancelBuild: (place) => unawaited(_cancelBuild(place)),
+        ),
       ),
     );
     await _reloadShelters();
@@ -2946,8 +2965,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
     return {
       for (final depth in SearchDepth.values)
-        depth:
-            table?.searchTime(depth) ?? Duration(seconds: depth.seconds),
+        depth: table?.searchTime(depth) ?? Duration(seconds: depth.seconds),
     };
   }
 
@@ -3573,9 +3591,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
                                 target.kind,
                               ),
                               state: target.state,
-                          weaponName: weapon == null
-                              ? null
-                              : _nameOfItem(weapon),
+                              weaponName: weapon == null
+                                  ? null
+                                  : _nameOfItem(weapon),
                               distanceM: target.position.distanceTo(
                                 GeoPoint(
                                   snapshot.displayFix?.latitude ?? 0,
@@ -3609,7 +3627,14 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
                                       attachments: _attachmentsFor(weapon),
                                     ),
                               reloading: _reload != null,
-                              refusal: weapon == null
+                              // §8.1: the same fifty metres that keeps them
+                              // out keeps the player's fire in. Two different
+                              // numbers would make a ring nobody can win in.
+                              refusal: _inOwnZone()
+                                  ? L10n.of(context).shelterInside
+                                  : _loop?.down == DownState.grace
+                                  ? L10n.of(context).downGrace
+                                  : weapon == null
                                   ? L10n.of(context).combatNoWeapon
                                   : _loaded <= 0 && round == null
                                   ? L10n.of(context).combatNoAmmo
@@ -3623,7 +3648,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
                               onFire:
                                   weapon == null ||
                                       _loaded <= 0 ||
-                                      _reload != null
+                                      _reload != null ||
+                                      // §9.2: the grace window cuts both ways.
+                                      _loop?.down == DownState.grace ||
+                                      _inOwnZone()
                                   ? null
                                   : () => unawaited(_fire()),
                               // §5.2: below twenty metres the receiver has nothing
@@ -3631,13 +3659,17 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
                               // fight stops being about distance and becomes about
                               // what is in your hands.
                               onStrike:
-                                  target.position.distanceTo(
-                                        GeoPoint(
-                                          snapshot.displayFix?.latitude ?? 0,
-                                          snapshot.displayFix?.longitude ?? 0,
-                                        ),
-                                      ) <=
-                                      kMeleeM
+                                  !_inOwnZone() &&
+                                      _loop?.down != DownState.grace &&
+                                      target.position.distanceTo(
+                                            GeoPoint(
+                                              snapshot.displayFix?.latitude ??
+                                                  0,
+                                              snapshot.displayFix?.longitude ??
+                                                  0,
+                                            ),
+                                          ) <=
+                                          kMeleeM
                                   ? () => unawaited(_strike())
                                   : null,
                             ),

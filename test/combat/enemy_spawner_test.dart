@@ -324,4 +324,34 @@ void main() {
       );
     }
   });
+
+  group('one id per body (§6.4)', () {
+    test('a second pass does not reuse an id from the first', () {
+      // ⚠️ Found on a phone as two markers for one Walker. The serial began at
+      // nought on every pass, so the second pass — which starts at slot one,
+      // because slot nought is already filled — handed the new body the id the
+      // old one already had. Everything downstream keys off that id: the dot,
+      // the glyph over it, the body it leaves behind.
+      final origins = [
+        SpawnOrigin.ambient(centre: player, radiusM: 600),
+      ];
+
+      var enemies = <Enemy>[];
+      for (var pass = 0; pass < 6; pass++) {
+        enemies = spawnEnemies(
+          playerAt: player,
+          existing: enemies,
+          origins: origins,
+          seed: 11,
+        ).enemies;
+      }
+
+      final ids = enemies.map((enemy) => enemy.id).toList();
+      expect(
+        ids.toSet(),
+        hasLength(ids.length),
+        reason: 'two enemies sharing an id: $ids',
+      );
+    });
+  });
 }

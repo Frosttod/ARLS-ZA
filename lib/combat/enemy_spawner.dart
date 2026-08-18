@@ -110,7 +110,6 @@ EnemySpawn spawnEnemies({
   final added = <Enemy>[];
 
   final random = Random(seed);
-  var serial = 0;
 
   for (final origin in origins) {
     final fromHere = enemies.where((enemy) => enemy.id.startsWith('${origin.id}.')).length;
@@ -141,7 +140,13 @@ EnemySpawn spawnEnemies({
 
       final kind = origin.kinds[random.nextInt(origin.kinds.length)];
       final enemy = Enemy.spawn(
-        id: '${origin.id}.${seed.toUnsigned(16)}.${serial++}',
+        // ⚠️ The slot index, not a counter that restarts. Found on a phone as
+        // two markers for one Walker: the counter began at nought on every
+        // pass, so the second pass — which starts at slot one because slot
+        // nought is already filled — handed the new body the id the old one
+        // already had. Everything downstream keys off that id: the dot, the
+        // glyph over it, the body it leaves.
+        id: '${origin.id}.${seed.toUnsigned(16)}.$i',
         kind: kind,
         at: at,
         // ⚠️ Where it was made, not the middle of the disc it was made in.

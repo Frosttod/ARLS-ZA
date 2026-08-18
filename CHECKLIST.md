@@ -1,7 +1,7 @@
 # ARLS-ZA — lista kontrolna systemów
 
 Stan na dzień **2026-08-16**. Wygenerowana po przejściu pełnego zestawu
-testów: **1466 testów, `flutter analyze` czysty, schemat bazy v12**.
+testów: **1468 testów, `flutter analyze` czysty, schemat bazy v12**.
 
 Opis wszystkich mechanik z liczbami: [MECHANICS.md](MECHANICS.md).
 
@@ -19,7 +19,7 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 
 | Obszar | Testy | Co jest tam pilnowane |
 | :---- | ----: | :---- |
-| `combat` | 250 | tabela kalibracyjna §5.1.2 wiersz po wierszu, obrażenia §5.1.5, budżet sprintu, maszyna stanów, hałas, spawn, magazynek, dodatki |
+| `combat` | 252 | tabela kalibracyjna §5.1.2 wiersz po wierszu, obrażenia §5.1.5, budżet sprintu, maszyna stanów, hałas, spawn, magazynek, dodatki |
 | `ui` | 288 | HUD, ekwipunek, panele, arkusze, geometria dotknięć i pierścieni |
 | `sim` | 198 | tick, metabolizm, tętno, wchłanianie, sen, nawyk gry |
 | `loot` | 151 | tabele, spawner, przeszukanie, rzeczy na ziemi, przeszkody |
@@ -35,7 +35,7 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 | `core` | 30 | deterministyczny RNG, zegar |
 | `notes` | 14 | notatki §19.1, podstawianie nazw miejsc |
 
-**Razem 1466.**
+**Razem 1468.**
 
 ### Rzeczy, które testy trzymają jako liczby, a nie jako intencje
 

@@ -34,7 +34,12 @@ class Remains {
     this.searched = false,
   });
 
-  /// The enemy's own id, so the same body cannot be added twice.
+  /// The enemy's id and where it fell.
+  ///
+  /// ⚠️ Both, because an id is only unique among the living. A slot freed by
+  /// a death is filled again by the spawner under the same id, and keying a
+  /// body on the id alone let the second death be swallowed as a duplicate of
+  /// the first.
   final String id;
 
   final EnemyKind kind;

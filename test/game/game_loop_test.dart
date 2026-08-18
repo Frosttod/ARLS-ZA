@@ -1299,6 +1299,47 @@ void main() {
       expect(rig.loop.state.zone, MetabolicZone.shelter);
     });
 
+    test('and sleep comes back the moment the meal is over, at night', () async {
+      // Found on a phone: eating at two in the morning stopped the sleep and
+      // it never came back. Night is §2.5.1's own condition and has no ten
+      // minutes attached to it — swallowing should put them straight back.
+      final rig = await buildLoop(
+        initial: SimState.fresh(at: midnight, constants: constants),
+        startAt: midnight,
+      );
+      addTearDown(() async {
+        await rig.loop.dispose();
+        await rig.source.dispose();
+        await rig.session.close();
+      });
+
+      await rig.loop.start();
+      rig.source.jumpTo(52.4064, 16.9252);
+      rig.source.step();
+      await pump();
+      rig.loop.setShelters([
+        Shelter(
+          id: 1,
+          kind: ShelterKind.main,
+          position: const GeoPoint(52.4064, 16.9252),
+          startedAt: midnight.subtract(const Duration(days: 1)),
+          buildTime: kShelterBuildTime,
+          buildLeft: Duration.zero,
+        ),
+      ]);
+      expect(rig.loop.state.zone, MetabolicZone.sleep);
+
+      rig.loop.setActing(acting: true);
+      expect(rig.loop.state.zone, MetabolicZone.shelter);
+
+      rig.loop.setActing(acting: false);
+      expect(
+        rig.loop.state.zone,
+        MetabolicZone.sleep,
+        reason: 'night needs no ten minutes',
+      );
+    });
+
     test('a short action keeps them awake too (§2.1a.2)', () async {
       // Somebody halfway through a bandage is not somebody who has been
       // sitting in a chair doing nothing. Actions live in the interface, so
