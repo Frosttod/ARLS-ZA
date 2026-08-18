@@ -1843,6 +1843,18 @@ abstract class L10n {
   /// **'Fire'**
   String get combatFire;
 
+  /// No description provided for @combatFireAway.
+  ///
+  /// In en, this message translates to:
+  /// **'Fire into the air'**
+  String get combatFireAway;
+
+  /// No description provided for @combatFiredAway.
+  ///
+  /// In en, this message translates to:
+  /// **'A shot into the air. Something will come and look.'**
+  String get combatFiredAway;
+
   /// No description provided for @combatChance.
   ///
   /// In en, this message translates to:

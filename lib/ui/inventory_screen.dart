@@ -373,15 +373,34 @@ class _SlotRow extends StatelessWidget {
                     ? null
                     : () => onDetails!(worn),
                 behavior: HitTestBehavior.opaque,
-                child: Text(
-                  worn == null ? emptyLabel : nameOf(worn.itemId),
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: worn == null ? colours.muted : colours.text,
-                    fontStyle: worn == null
-                        ? FontStyle.italic
-                        : FontStyle.normal,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      worn == null ? emptyLabel : nameOf(worn.itemId),
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: worn == null ? colours.muted : colours.text,
+                        fontStyle: worn == null
+                            ? FontStyle.italic
+                            : FontStyle.normal,
+                      ),
+                    ),
+
+                    // §5.6.3: and what is bolted to it.
+                    //
+                    // ⚠️ The pack row said this and the slot row did not — so
+                    // fitting a sight to the rifle in your hands, the one
+                    // weapon it matters for, was the one case where nothing on
+                    // screen changed.
+                    if (worn != null && worn.attachments.isNotEmpty)
+                      Text(
+                        [for (final id in worn.attachments) nameOf(id)]
+                            .join(' · '),
+                        style: TextStyle(fontSize: 11, color: colours.data),
+                      ),
+                  ],
                 ),
               ),
             ),

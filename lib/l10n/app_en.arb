@@ -398,6 +398,8 @@
   "hitLegs": "leg",
   "enemyBleeding": "bleeding",
   "combatFire": "Fire",
+  "combatFireAway": "Fire into the air",
+  "combatFiredAway": "A shot into the air. Something will come and look.",
   "combatChance": "{percent}% hit",
   "@combatChance": {"placeholders": {"percent": {"type": "int"}}},
   "combatDistance": "{metres} m",

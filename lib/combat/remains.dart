@@ -62,9 +62,22 @@ class Remains {
   bool isGoneAt(DateTime now) => now.difference(diedAt) >= kRemainsLifetime;
 }
 
+/// How close two bodies have to be to be the same body.
+///
+/// ⚠️ Position as well as id, because a kill is noticed from more than one
+/// place — the shot that finished it, the tick that saw it finished, and the
+/// sweep that compares one list against the next. An id catches most of that
+/// and a couple of metres catches the rest, which is what stops one Walker
+/// leaving two skulls.
+const double kSameBodyM = 5;
+
 /// Adds a body, or leaves the list alone if that one is already in it.
 List<Remains> addRemains(List<Remains> remains, Remains body) =>
-    remains.any((other) => other.id == body.id)
+    remains.any(
+      (other) =>
+          other.id == body.id ||
+          other.position.distanceTo(body.position) <= kSameBodyM,
+    )
     ? remains
     : [...remains, body];
 

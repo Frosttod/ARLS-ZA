@@ -320,6 +320,8 @@
   "hitLegs": "noga",
   "enemyBleeding": "krwawi",
   "combatFire": "Ognia",
+  "combatFireAway": "Strzał w powietrze",
+  "combatFiredAway": "Strzał w powietrze. Ktoś przyjdzie sprawdzić.",
   "combatChance": "{percent}% trafienia",
   "@combatChance": {"placeholders": {"percent": {"type": "int"}}},
   "combatDistance": "{metres} m",

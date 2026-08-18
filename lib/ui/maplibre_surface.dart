@@ -542,15 +542,28 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
     // camera move over the platform channel. Dropping the ones that arrive
     // while the last is still travelling keeps the gesture smooth: the finger
     // is still on the screen, so the next frame carries the same intent.
+    // ⚠️ Remembered, not dropped. Found on a phone: the map stopped zooming
+    // while the markers carried on scaling, because a frame that arrived mid
+    // flight was thrown away *after* `_zoom` had already moved — so our own
+    // painters were at one scale and the tiles at another, for good.
+    _wantedZoom = zoom;
     if (_zooming) return;
     _zooming = true;
 
     try {
-      await _applyZoom(controller, zoom);
+      var next = _wantedZoom;
+      while (next != null) {
+        _wantedZoom = null;
+        await _applyZoom(controller, next);
+        next = _wantedZoom;
+      }
     } finally {
       _zooming = false;
     }
   }
+
+  /// The last zoom a gesture asked for, waiting for the camera to catch up.
+  double? _wantedZoom;
 
   Future<void> _applyZoom(MapLibreMapController controller, double zoom) async {
     final clamped = zoom.clamp(
@@ -558,7 +571,6 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
       kClosestZoom,
     );
     if ((clamped - _zoom).abs() < 0.001) return;
-    _zoom = clamped;
 
     final centre = widget.centre;
     final target = centre != null
@@ -566,7 +578,12 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
         : controller.cameraPosition?.target;
     if (target == null) return;
 
+    // ⚠️ The camera first, and only then our own scale. The other order left
+    // the two able to disagree for ever: `_zoom` is what every painter on our
+    // side measures in, so moving it before the tiles move means one failed
+    // channel call and the map is at one zoom and the markers at another.
     await controller.moveCamera(CameraUpdate.newLatLngZoom(target, clamped));
+    _zoom = clamped;
 
     // The overlays drawn on our side — the reach rings and the counts on a
     // stack — are metres measured in pixels, so a zoom moves all of them. The

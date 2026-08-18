@@ -34,6 +34,7 @@ class SearchPanel extends StatelessWidget {
     this.onBreach,
     this.droppedLabel,
     this.onTakeDropped,
+    this.onFireAway,
     super.key,
   });
 
@@ -76,6 +77,14 @@ class SearchPanel extends StatelessWidget {
 
   final VoidCallback? onTakeDropped;
 
+  /// §5.6.2: a round into the air, with nothing in the sights.
+  ///
+  /// Not a wasted bullet — a decision. §5.6.2 sends everything that hears it
+  /// to *where the sound was*, so a shot fired from a corner and then left
+  /// behind is the one tool the player has for moving a street. Null with an
+  /// empty or unloaded weapon.
+  final VoidCallback? onFireAway;
+
   @override
   Widget build(BuildContext context) {
     final l10n = L10n.of(context);
@@ -104,6 +113,7 @@ class SearchPanel extends StatelessWidget {
             onSearchArea: busy ? null : onSearchArea,
             onSearchHere: busy ? null : onSearchHere,
             onTakeDropped: busy ? null : onTakeDropped,
+            onFireAway: busy ? null : onFireAway,
             droppedLabel: droppedLabel,
             colours: colours,
             l10n: l10n,
@@ -211,6 +221,7 @@ class _Actions extends StatelessWidget {
     required this.onSearchArea,
     required this.onSearchHere,
     required this.onTakeDropped,
+    required this.onFireAway,
     required this.droppedLabel,
     required this.colours,
     required this.l10n,
@@ -233,6 +244,9 @@ class _Actions extends StatelessWidget {
 
   /// §4.8: opens the heap at the player's feet. Null when there is none.
   final VoidCallback? onTakeDropped;
+
+  /// §5.6.2: a round into the air, to move a street.
+  final VoidCallback? onFireAway;
 
   /// What is nearest in that heap. Never drawn - the list says it, and saying
   /// it twice cost a line of the map. It names the button for a long press and
@@ -320,6 +334,17 @@ class _Actions extends StatelessWidget {
                       ? () => onSearchHere!(depth)
                       : null,
                 ),
+
+            // §5.6.2: a shot with nothing in the sights. The whole of the
+            // noise system is that they walk to where the sound was, and this
+            // is the only way to use that on purpose.
+            if (onFireAway != null)
+              IconButton(
+                onPressed: onFireAway,
+                icon: const Icon(Icons.campaign_outlined),
+                tooltip: l10n.combatFireAway,
+                color: colours.alert,
+              ),
 
             if (onTakeDropped != null)
               // A hand, because the act is reaching down for something. The

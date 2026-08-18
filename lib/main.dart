@@ -1655,6 +1655,17 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       // §10.3: bodies nobody came back for stop being worth drawing.
       _remains = sweepRemains(_remains, now);
 
+      // ⚠️ The safety net, and it is here because a death can be missed. The
+      // session reports the ones it kills during a tick, and the shot reports
+      // the one under the sights — but a thing can also leave the list because
+      // the tick that killed it ran while the fix was stale, or because two
+      // paths both thought the other had it. Anything that was standing here a
+      // moment ago and is gone now, without having walked out of range, died.
+      final before = {
+        for (final enemy in _combat.enemies)
+          if (!enemy.isDead) enemy.id: enemy,
+      };
+
       // §5.6.2: while anything is actually after the player, the fight is
       // written down — not the fighters, just the fact, the place and the
       // number. Closing the app in the middle of one used to be a perfect
@@ -1696,6 +1707,14 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         // §5.6.1: walls that swallow a shot swallow a silhouette too.
         denseUrban: _world?.denseUrban ?? false,
       );
+
+      final here = GeoPoint(fix.latitude, fix.longitude);
+      for (final gone in before.values) {
+        if (_combat.enemies.any((enemy) => enemy.id == gone.id)) continue;
+        if (gone.position.distanceTo(here) > kActiveRadiusM) continue;
+
+        _remember(gone);
+      }
     });
   }
 
@@ -1893,6 +1912,42 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
             ),
       remember: true,
     );
+  }
+
+  /// §5.6.2: a round into the air, with nothing in the sights.
+  ///
+  /// Not a wasted bullet — the only deliberate use of the noise system the
+  /// player has. Everything that hears it walks to *where the sound was*, so a
+  /// shot fired from a corner and then left behind moves a street off the
+  /// route somebody wants to take. It costs a round and it costs the noise,
+  /// which is exactly the trade §5.6.3 is built around.
+  Future<void> _fireAway() async {
+    final weapon = _weapon;
+    final at = _standingAt.value;
+    if (weapon == null || at == null || _loaded <= 0) return;
+
+    setState(() {
+      _loaded -= 1;
+
+      _combat = _combat.heard(
+        NoiseEvent(
+          at: at,
+          radiusM: noiseRadiusM(
+            FittedWeapon(
+              weapon: weapon,
+              attachments: _attachmentsFor(weapon),
+            ).noiseRangeM,
+            denseUrban: _world?.denseUrban ?? false,
+            night: _snapshot?.isNight ?? false,
+          ),
+          startedAt: DateTime.now().toUtc(),
+        ),
+        playerAt: at,
+      );
+    });
+
+    if (!mounted) return;
+    _say(L10n.of(context).combatFiredAway, remember: true);
   }
 
   /// §5.2, §5.5.3: everything in reach swings, and being surrounded hurts.
@@ -2192,6 +2247,16 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       onTakeDropped: _catalogue == null || _pilesInReach().isEmpty
           ? null
           : _openGround,
+      // §5.6.2: a round into the air. Only with something loaded, never from
+      // inside your own zone (§8.1), and never while flat on your back (§9.2).
+      onFireAway:
+          _weapon == null ||
+              _loaded <= 0 ||
+              _reload != null ||
+              _inOwnZone() ||
+              _loop?.down != DownState.none
+          ? null
+          : () => unawaited(_fireAway()),
       onCancel: _cancelSearch,
     );
   }
@@ -2270,6 +2335,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         _search.value = null;
         _usingLine.value = null;
       });
+
+      _logCombat(
+        '— ${causeName(L10n.of(context), loop.deathCause)} —',
+      );
 
       if (loop.down == DownState.dead) {
         await _factory.recordDeath(
@@ -2753,7 +2822,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
     await _leaveRemainsOf(body);
     if (!mounted) return;
-    _say(L10n.of(context).remainsSearched);
+
+    // The list, not a line of text: what came out of the pockets is a
+    // decision about weight, and a notice that vanishes is no help with it.
+    await _showPileAt(body.position);
   }
 
   /// §4.8, §10.3: what is left where something went down.
@@ -3265,38 +3337,55 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     );
     final drop = table.roll(random, depth: depth, catalogue: catalogue);
 
+    // ⚠️ Onto the floor of the place, not straight into the pack.
+    //
+    // §18.1a's two limits made the old way a mess to be on the wrong side of:
+    // a search either fitted or half-fitted, and the half that did not fit was
+    // announced in a line of text that vanished in four seconds. What a player
+    // wants after three minutes over a shop is to *see what is there* and
+    // decide. So the pass puts it down where it was found and opens the list.
+    //
+    // A note is the exception. Which note it is depends on where it was found
+    // (§19.1) and the ground has nowhere to keep that, so it goes to the pack
+    // as it always did.
     var inventory = _inventory.value;
-    final taken = <String, int>{};
-    var refused = false;
+    final store = DroppedStore(widget.session.db);
+    final found = <String, int>{};
 
     for (final entry in drop.entries) {
-      // §19.1: a note is not a generic item. Which one it is depends on where
-      // it was found, and it is the same one every time — a message that
-      // changed between readings would stop being somebody's message.
-      final note = entry.key == 'lit_note'
-          ? _notes?.forPlace(
-              selectors: [table.match.isEmpty ? table.id : table.match.first],
-              names: _placeNames,
-              seed: character.profile.rngSeed ^ poiId.hashCode,
+      if (entry.key == 'lit_note') {
+        final note = _notes?.forPlace(
+          selectors: [table.match.isEmpty ? table.id : table.match.first],
+          names: _placeNames,
+          seed: character.profile.rngSeed ^ poiId.hashCode,
+        );
+        inventory = inventory
+            .add(
+              entry.key,
+              catalogue,
+              body: character.body,
+              noteId: note?.id,
             )
-          : null;
+            .inventory;
+        found[entry.key] = 1;
+        continue;
+      }
 
-      final result = inventory.add(
-        entry.key,
-        catalogue,
-        body: character.body,
-        count: entry.value,
-        noteId: note?.id,
+      await store.drop(
+        character.profile.id,
+        DroppedItem(
+          id: 0,
+          itemId: entry.key,
+          count: entry.value,
+          position: box.position,
+          droppedAt: now,
+        ),
       );
-      inventory = result.inventory;
-
-      final accepted = result.acceptedCount ?? entry.value;
-      if (accepted > 0) taken[entry.key] = accepted;
-      if (accepted < entry.value) refused = true;
+      found[entry.key] = entry.value;
     }
 
-    // What the pass took out of the place, whether or not everything fitted.
-    // §19.3 spends the time on searching it, not on carrying the result — and
+    // What the pass took out of the place, whether or not the player picks it
+    // up. §19.3 spends the time on searching it, not on carrying the result —
     // shelves that stayed full because a pack was full would be a way to farm
     // one shop.
     final searched = box.searchedAt(depth, now, random);
@@ -3311,32 +3400,17 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
     await LootStore(widget.session.db).saveOne(character.profile.id, searched);
     await _saveInventory();
+    await _reloadDropped();
     if (!mounted) return;
 
-    final l10n = L10n.of(context);
-    if (taken.isEmpty) {
-      _say(l10n.searchFoundNothing);
+    if (found.isEmpty) {
+      _say(L10n.of(context).searchFoundNothing);
       return;
     }
 
-    final language = Localizations.localeOf(context).languageCode;
-    final names = _names ?? ItemNames.empty;
-    final listed = taken.entries
-        .map((entry) {
-          final item = catalogue[entry.key];
-          final name = item == null
-              ? entry.key
-              : item.name.resolve(
-                  language: language,
-                  lookup: names.forLanguage(language),
-                );
-          return entry.value > 1 ? '$name ×${entry.value}' : name;
-        })
-        .join(', ');
-
-    _say(
-      '${l10n.searchFound(listed)}${refused ? ' · ${l10n.searchNoRoom}' : ''}',
-    );
+    // The list itself, rather than a sentence naming what is in it: a line of
+    // text that vanishes in four seconds is not a way to decide anything.
+    await _showPileAt(box.position);
   }
 
   /// One line, at the bottom, gone in a few seconds. The player is walking.
@@ -3642,7 +3716,17 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
                               onReload:
                                   weapon == null ||
                                       round == null ||
-                                      _reload != null
+                                      _reload != null ||
+                                      // Nothing to do: §5.3's seconds are for
+                                      // filling a magazine, and a full one has
+                                      // no room to fill.
+                                      _loaded >=
+                                          magazineSize(
+                                            weapon,
+                                            attachments: _attachmentsFor(
+                                              weapon,
+                                            ),
+                                          )
                                   ? null
                                   : _startReload,
                               onFire:

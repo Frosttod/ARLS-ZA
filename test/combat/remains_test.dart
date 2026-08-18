@@ -33,6 +33,54 @@ void main() {
       expect(twice, hasLength(1));
     });
 
+    test('and a second report of the same fall is not a second body', () {
+      // ⚠️ Found on a phone as two skulls for one Walker. A kill is noticed
+      // from more than one place: the shot that finished it, the tick that saw
+      // it finished, and the sweep that compares one list against the next.
+      final shot = addRemains(const [], body());
+      final tick = addRemains(shot, body(id: 'walker.1'));
+
+      expect(tick, hasLength(1));
+    });
+
+    test('nor is one a few metres away, whatever its id', () {
+      // The same body reported through two paths can arrive with the position
+      // it had a tick apart. Five metres is inside a doorway.
+      final first = addRemains(const [], body());
+      final again = addRemains(
+        first,
+        Remains(
+          id: 'walker.2',
+          kind: EnemyKind.walker,
+          position: const GeoPoint(52.4, 16.9).offsetBy(
+            metres: 3,
+            bearingDeg: 90,
+          ),
+          diedAt: DateTime.utc(2026, 8, 16, 12),
+        ),
+      );
+
+      expect(again, hasLength(1));
+    });
+
+    test('but one across the street is its own', () {
+      final first = addRemains(const [], body());
+      final other = addRemains(
+        first,
+        Remains(
+          id: 'walker.2',
+          kind: EnemyKind.walker,
+          position: const GeoPoint(52.4, 16.9).offsetBy(
+            metres: 40,
+            bearingDeg: 90,
+          ),
+          diedAt: DateTime.utc(2026, 8, 16, 12),
+        ),
+      );
+
+      expect(other, hasLength(2));
+    });
+
     test('and it is not searched until somebody searches it', () {
       expect(body().searched, isFalse);
       expect(body().emptied.searched, isTrue);

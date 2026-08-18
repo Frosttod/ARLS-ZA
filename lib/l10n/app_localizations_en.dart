@@ -1002,6 +1002,13 @@ class L10nEn extends L10n {
   String get combatFire => 'Fire';
 
   @override
+  String get combatFireAway => 'Fire into the air';
+
+  @override
+  String get combatFiredAway =>
+      'A shot into the air. Something will come and look.';
+
+  @override
   String combatChance(int percent) {
     return '$percent% hit';
   }
