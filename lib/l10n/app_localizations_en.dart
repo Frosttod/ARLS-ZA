@@ -1120,6 +1120,12 @@ class L10nEn extends L10n {
   String get combatFireAway => 'Fire into the air';
 
   @override
+  String get fireAwayUnloaded => 'Nothing chambered.';
+
+  @override
+  String get fireAwayInShelter => 'Not from your own ground.';
+
+  @override
   String get combatFiredAway =>
       'A shot into the air. Something will come and look.';
 

@@ -359,6 +359,8 @@
   "enemyBleeding": "krwawi",
   "combatFire": "Ognia",
   "combatFireAway": "Strzał w powietrze",
+  "fireAwayUnloaded": "Nic w komorze.",
+  "fireAwayInShelter": "Nie z własnego terenu.",
   "combatFiredAway": "Strzał w powietrze. Ktoś przyjdzie sprawdzić.",
   "combatChance": "{percent}% trafienia",
   "@combatChance": {"placeholders": {"percent": {"type": "int"}}},

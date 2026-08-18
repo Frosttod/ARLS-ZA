@@ -2065,6 +2065,18 @@ abstract class L10n {
   /// **'Fire into the air'**
   String get combatFireAway;
 
+  /// No description provided for @fireAwayUnloaded.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing chambered.'**
+  String get fireAwayUnloaded;
+
+  /// No description provided for @fireAwayInShelter.
+  ///
+  /// In en, this message translates to:
+  /// **'Not from your own ground.'**
+  String get fireAwayInShelter;
+
   /// No description provided for @combatFiredAway.
   ///
   /// In en, this message translates to:

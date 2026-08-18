@@ -1121,6 +1121,12 @@ class L10nPl extends L10n {
   String get combatFireAway => 'Strzał w powietrze';
 
   @override
+  String get fireAwayUnloaded => 'Nic w komorze.';
+
+  @override
+  String get fireAwayInShelter => 'Nie z własnego terenu.';
+
+  @override
   String get combatFiredAway => 'Strzał w powietrze. Ktoś przyjdzie sprawdzić.';
 
   @override

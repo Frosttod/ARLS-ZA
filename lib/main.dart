@@ -1994,7 +1994,28 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   Future<void> _fireAway() async {
     final weapon = _weapon;
     final at = _standingAt.value;
-    if (weapon == null || at == null || _loaded <= 0) return;
+    if (weapon == null || at == null) return;
+
+    // §9.2: nothing happens while flat on your back, and nothing for the ten
+    // minutes after getting up.
+    if (_loop?.down != DownState.none) return;
+
+    if (_reload != null) {
+      if (mounted) _say(L10n.of(context).combatReloadBroken);
+      return;
+    }
+
+    // §8.1: not from inside your own zone. The one refusal a player is most
+    // likely to meet, and the one they are most likely to think is a bug.
+    if (_inOwnZone()) {
+      if (mounted) _say(L10n.of(context).fireAwayInShelter);
+      return;
+    }
+
+    if (_loaded <= 0) {
+      if (mounted) _say(L10n.of(context).fireAwayUnloaded);
+      return;
+    }
 
     setState(() {
       _loaded -= 1;
@@ -2326,16 +2347,14 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       onTakeDropped: _catalogue == null || _pilesInReach().isEmpty
           ? null
           : _openGround,
-      // §5.6.2: a round into the air. Only with something loaded, never from
-      // inside your own zone (§8.1), and never while flat on your back (§9.2).
-      onFireAway:
-          _weapon == null ||
-              _loaded <= 0 ||
-              _reload != null ||
-              _inOwnZone() ||
-              _loop?.down != DownState.none
-          ? null
-          : () => unawaited(_fireAway()),
+      // §5.6.2: a round into the air.
+      //
+      // ⚠️ Offered whenever anything is in hand, and refused *out loud*. It
+      // used to vanish on any of four conditions, which read on a walk as "the
+      // button does not work" — the commonest cause being an unloaded weapon
+      // after a restart, since §8.4's magazines are not saved yet. A control
+      // that disappears cannot explain itself.
+      onFireAway: _weapon == null ? null : () => unawaited(_fireAway()),
       onCancel: _cancelSearch,
     );
   }
@@ -3364,26 +3383,28 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   }
 
   void _startAreaSearch() {
-    final fix = _snapshot?.displayFix;
-    if (fix == null || _search.value != null) return;
+    // ⚠️ The sticky position, not the snapshot's fix. Fifth time this exact
+    // line has been the bug: in a shelter §2.1a.4 turns the receiver off, so
+    // `displayFix` is null and searching the area silently did nothing — on
+    // the one spot the player is most likely to be standing still.
+    final at = _standingAt.value;
+    if (at == null || _search.value != null) return;
 
     setState(() {
-      _search.value = Search.area(
-        at: GeoPoint(fix.latitude, fix.longitude),
-        now: DateTime.now().toUtc(),
-      );
+      _search.value = Search.area(at: at, now: DateTime.now().toUtc());
     });
     _startSearchTimer();
   }
 
   void _startObjectSearch(SearchDepth depth) {
-    final fix = _snapshot?.displayFix;
+    // Sticky, for the same reason as the area search above.
+    final at = _standingAt.value;
     final box = _boxInReach();
-    if (fix == null || box == null || _search.value != null) return;
+    if (at == null || box == null || _search.value != null) return;
 
     setState(() {
       _search.value = Search.object(
-        at: GeoPoint(fix.latitude, fix.longitude),
+        at: at,
         now: DateTime.now().toUtc(),
         poiId: box.poiId,
         depth: depth,
@@ -4230,7 +4251,16 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         l10n.integritySuspendedVehicle,
       _ => null,
     },
-    ?switch (snapshot.signal) {
+    // ⚠️ Nothing about the signal while the character is under a roof.
+    //
+    // §2.1a.4 switches the receiver off in a shelter on purpose — the
+    // character is not moving, so the position is not needed and the battery
+    // is better spent elsewhere. The watchdog then reports no fixes, which is
+    // true and useless: the game was warning the player about a decision the
+    // game had just made, on the one screen where nothing is wrong.
+    ?switch (snapshot.state.zone.isSheltered
+        ? PositionSignal.good
+        : snapshot.signal) {
       PositionSignal.lost || PositionSignal.unavailable => l10n.hudNoSignal,
       PositionSignal.degraded => l10n.hudWeakSignal,
       // Not a warning. The receiver is doing what a receiver does, and saying

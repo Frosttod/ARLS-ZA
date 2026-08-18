@@ -437,6 +437,8 @@
   "enemyBleeding": "bleeding",
   "combatFire": "Fire",
   "combatFireAway": "Fire into the air",
+  "fireAwayUnloaded": "Nothing chambered.",
+  "fireAwayInShelter": "Not from your own ground.",
   "combatFiredAway": "A shot into the air. Something will come and look.",
   "combatChance": "{percent}% hit",
   "@combatChance": {"placeholders": {"percent": {"type": "int"}}},
