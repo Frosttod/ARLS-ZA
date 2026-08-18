@@ -260,8 +260,14 @@ if bleed_tier = superficial or none
 if bleed_tier = arterial
     then needs_tourniquet := true                // Bandaż nie wystarczy.
 
-if bleed_tier = none and blood_loss_this_tick <= 0
+if bleed_tier = none and blood_loss_this_tick <= 0 and awake
     then blood := blood + 60 ml/h × nourishment  // ⚠️ Odejście od dokumentu: §2.6 nie przewiduje regeneracji. Bez niej przeżycie ciężkiej walki to dożywocie w klasie IV.
+
+if bleed_tier = none and is_sleeping
+    then blood := blood + 150 ml/h × nourishment  // ⚠️ ×2,5 za sen pod dachem. Osiem godzin to 1,2 l — dokładnie tyle, żeby wyprowadzić z klasy III, w której §9.2 zostawia po przebudzeniu. Spokojny sen w bezpiecznym miejscu ma działać cuda i nadal nie czyni bandaża opcjonalnym.
+
+if is_sleeping and nourishment = 0
+    then blood := unchanged                      // Spanie na głodzie nie odbudowuje nic. Odpowiedź na „czemu krew nie wraca” jest na dwóch pozostałych paskach, nie w tajemnicy.
 
 nourishment = min(calorie_fraction, water_fraction), clamped 0..1
                                                  // Gorsza z dwóch wartości, nie średnia: najedzenie nie zastąpi wody. Głodujący nie regeneruje wcale.
@@ -655,6 +661,9 @@ if enemy_distance > 900m
 if enemy_id_prefix_matches_origin
     then next_id := max(existing_ids) + 1        // ⚠️ Nie licznik żywych. Śmierć ze środka listy zmniejszała licznik i następny spawn dostawał numer, którego poprzednik wciąż używał — dwa ciała pod jednym id, sześć zabitych jako dwie czaszki.
 
+if app_closed_longer_than 5min and enemy_was_bleeding and bleeds_out_in <= gap
+    then remains_marker at last_known_position   // ⚠️ Rana to nie spacer. Coś z dziurą i znanym tempem ma dokładnie jedną przyszłość, a wyrzucenie sesji ją kasowało. Trzecia i ostatnia przyczyna brakującej czaszki: strzel, patrz jak ucieka, schowaj telefon, wróć do niczego.
+
 if app_closed_longer_than 5min
     then street := emptied and rebuilt           // §11.1.2. Co robił Szwędacz przez osiem godzin snu, nie jest do odtworzenia — więc się tego nie zgaduje.
 
@@ -669,7 +678,8 @@ if player_engaged_and_app_closed
 
 ```
 if enemy_dies
-    then remains_marker at death_position for 6h // §10.3. Ciało to nie kupka lootu — łup pojawia się dopiero po przeszukaniu z bliska.
+    then remains_marker at death_position for 12h
+                                                 // §10.3. Ciało to nie kupka lootu. ⚠️ Dwanaście godzin, wcześniej sześć: coś ustrzelonego po drodze do pracy ma tam być w drodze powrotnej, inaczej „wrócę po to później” jest obietnicą bez pokrycia.
 
 if remains.id already in list
     then no second body                          // ⚠️ Deduplikacja *wyłącznie po id*. Reguła "bliżej niż 5 m to jedno ciało" zjadała drugie ciało każdej pary, która padła obok siebie — a zabicie wręcz dzieje się na wyciągnięcie ręki.
@@ -779,6 +789,25 @@ if taken_from_shelf
 ```
 if marker_distance <= 300m
     then enemy_drawn                             // §5.5.6. Widok każdego Szwędacza w dzielnicy odpowiadałby na pytanie, po które jest §7 Rozpoznanie.
+
+if marker_position_changed and not economy
+    then glide over 1s from where it is painted  // §3.6. Tik ma 1 Hz, więc każdy ruch przychodzi skokiem. Rysowane jest to, dokąd rzecz zmierza, nie gdzie ostatnio ją zgłoszono. ⚠️ To kłamstwo ograniczone do szyby — nic w grze nie mierzy odległości z tych współrzędnych.
+
+if new_position_arrives_mid_glide
+    then new_leg_starts_from_painted_position    // Nie od ostatnio zgłoszonej: inaczej znacznik cofa się i rusza od nowa, co wygląda gorzej niż brak interpolacji.
+
+if marker_first_seen
+    then no_glide                                // Coś, co się pojawiło, nie ma skąd przyjechać. Wsuwanie go z boku byłoby wymyślaniem podróży.
+
+if nothing_is_gliding
+    then no_per_frame_repaint                    // Pusta ulica nie kosztuje klatek.
+
+if economy
+    then glide := off                            // §3.3. Znacznik, który skacze, wciąż jest we właściwym miejscu.
+
+if map_centre_changes
+    then camera_glide := measured_gap (clamped 0.3s … 6s)
+                                                 // ⚠️ Mierzone, nie wybrane. Fix przychodzi co 1 s w walce i co 5 s w marszu — domyślny przesuw pluginu pokonywał pięć sekund chodnika w mgnieniu i stał. Żadna stała nie obsłuży obu kadencji.
 
 if marker_already_drawn and distance <= 375m
     then stays_drawn                             // ⚠️ Histereza ×1,25. Spawner robi rzeczy do 600 m, mapa rysowała do 300 — ten sam Szwędacz migotał, przechodząc granicę tam i z powrotem.

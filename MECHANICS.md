@@ -767,7 +767,7 @@ W MVP występuje wyłącznie **Szwędacz**. Grupa 2–4 czyni walkę z grupą st
 
 Bez tego zamknięcie aplikacji było doskonałą ucieczką. Ucieczka nadal istnieje — jest spacerem, nie menedżerem zadań.
 
-**Ciała są zapisywane** — 6 h, ze znacznikiem „przeszukane". Łup pojawia się dopiero po przeszukaniu z bliska.
+**Ciała są zapisywane** — **12 h**, ze znacznikiem „przeszukane". Łup pojawia się dopiero po przeszukaniu z bliska.
 
 ---
 
