@@ -11,15 +11,21 @@ Każdy zamknięty etap dostaje sekcję **Dziennik wykonania** z decyzjami podję
 | 0 | Fundament: trwałość zapisu, zegar, konfiguracja buildu | ✅ zamknięty | 2026-08-10 | `ad55d40` |
 | 1 | Tryb deweloperski i symulator GPS | ✅ zamknięty | 2026-08-10 | `df54653` |
 | 2 | Postać i fizjologia | ✅ zamknięty | 2026-08-11 | `f2b1056`, `5555db2`, `2b0a37e`, `d869661` |
-| 3 | Mapa, GPS, bezpieczeństwo gracza | 🟡 13/13 zadań, po pierwszym spacerze | — | `f035626` … `43510ef` (15 commitów) |
-| 4 | Przedmioty, loot, przeszukanie | 🟡 11/11 zadań, przed testem w terenie | — | `2b1cb31` … |
-| 5 | Walka, przeciwnicy, hałas | 🟡 14/14 zadań, przed testem w terenie | — | — |
-| 6 | Ognisko z pełnym cyklem | ⬜ | — | — |
+| 3 | Mapa, GPS, bezpieczeństwo gracza | 🟡 13/13 zadań, po kilku spacerach | — | `f035626` … `43510ef` (15 commitów) |
+| 4 | Przedmioty, loot, przeszukanie | 🟡 11/11 zadań, po testach w terenie | — | `2b1cb31` … `6033aff` |
+| 5 | Walka, przeciwnicy, hałas | 🟡 14/14 zadań, po testach w terenie | — | … `6033aff` |
+| 6 | Ognisko z pełnym cyklem | ⬜ **następny** | — | — |
 | 7 | Audio pozycyjne i haptyka | ⬜ | — | — |
-| 8 | Schron, obóz, pętla dobowa | 🟡 8/9 zadań, przed testem w terenie | — | schemat v17 |
+| 8 | Schron, obóz, pętla dobowa | 🟡 8/9 zadań, po testach w terenie | — | schemat v19 |
 | 9 | Onboarding, dostępność, zgodność | ⬜ | — | — |
+| — | Profil i statystyki postaci (§13.1) | ✅ poza etapami | 2026-08-18 | `8937688` |
+| — | Oprawa: krój, pochylenie mapy, bryły budynków | 🟡 gałąź `visuals/typography-tilt-refresh` | — | `d0d0e51`, `6adce09` |
 
-**Metryki:** 1458 testów · `flutter analyze` czysty · schemat bazy **v18** · release APK 89,5 MB bez devtools
+**Metryki:** 1511 testów · `flutter analyze` czysty · schemat bazy **v19**
+
+### Co zamyka etapy 3–5 i 8
+
+Wszystkie cztery mają komplet zadań i przeszły testy w terenie. Do formalnego zamknięcia brakuje **ognisk (etap 6)**: §6.4 daje dziś wyłącznie ambientową strużkę — maksymalnie dwóch przeciwników na kilometr kwadratowy — więc walka, loot i schron są sprawdzone pojedynczo, ale nigdy pod presją, dla której powstały. Promień spawnu lootu stoi z tego samego powodu na 1200 m zamiast 2000 m.
 
 ### Zablokowane na użytkowniku
 
