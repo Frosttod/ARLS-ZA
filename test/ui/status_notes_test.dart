@@ -70,10 +70,7 @@ void main() {
   group('how bad it is, where the model grades it', () {
     test('shock carries its clinical class', () {
       // The grades start at II — class I is a blood donation.
-      final light = statusNotes(
-        pl,
-        statusOfBody(bloodLossFraction: 0.2),
-      ).first;
+      final light = statusNotes(pl, statusOfBody(bloodLossFraction: 0.2)).first;
       final heavy = statusNotes(
         pl,
         statusOfBody(bloodLossFraction: 0.35),

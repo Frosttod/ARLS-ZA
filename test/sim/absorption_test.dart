@@ -49,8 +49,14 @@ void main() {
     });
 
     test('half a litre of water takes about twenty minutes', () {
-      final part = run(resting(pendingWaterMl: 500), const Duration(minutes: 10));
-      final done = run(resting(pendingWaterMl: 500), const Duration(minutes: 21));
+      final part = run(
+        resting(pendingWaterMl: 500),
+        const Duration(minutes: 10),
+      );
+      final done = run(
+        resting(pendingWaterMl: 500),
+        const Duration(minutes: 21),
+      );
 
       expect(part.pendingWaterMl, closeTo(250, 1));
       expect(done.pendingWaterMl, 0);
@@ -70,9 +76,14 @@ void main() {
       final after = run(before, const Duration(hours: 2));
 
       // Two hours of resting burn, plus everything that was waiting.
-      final burned = before.caloriesKcal - run(resting(), const Duration(hours: 2)).caloriesKcal;
+      final burned =
+          before.caloriesKcal -
+          run(resting(), const Duration(hours: 2)).caloriesKcal;
 
-      expect(after.caloriesKcal, closeTo(before.caloriesKcal - burned + 400, 1));
+      expect(
+        after.caloriesKcal,
+        closeTo(before.caloriesKcal - burned + 400, 1),
+      );
     });
 
     test('water does too', () {
@@ -132,17 +143,24 @@ void main() {
       // Found on a phone: calories sat at a hundred per cent for hours while a
       // hidden surplus drained, which reads as calories that have stopped
       // working.
-      final full = SimState.fresh(at: t0, constants: constants)
-          .copyWith(pendingKcal: 3000);
+      final full = SimState.fresh(
+        at: t0,
+        constants: constants,
+      ).copyWith(pendingKcal: 3000);
 
       final after = run(full, const Duration(hours: 2));
 
-      expect(after.caloriesKcal, lessThanOrEqualTo(constants.caloriesDailyKcal));
+      expect(
+        after.caloriesKcal,
+        lessThanOrEqualTo(constants.caloriesDailyKcal),
+      );
     });
 
     test('nor does drinking past full', () {
-      final full = SimState.fresh(at: t0, constants: constants)
-          .copyWith(pendingWaterMl: 5000);
+      final full = SimState.fresh(
+        at: t0,
+        constants: constants,
+      ).copyWith(pendingWaterMl: 5000);
 
       final after = run(full, const Duration(hours: 1));
 
@@ -158,7 +176,10 @@ void main() {
 
       final after = run(hungry, const Duration(hours: 2));
 
-      expect(after.caloriesKcal, greaterThan(constants.caloriesDailyKcal * 0.4));
+      expect(
+        after.caloriesKcal,
+        greaterThan(constants.caloriesDailyKcal * 0.4),
+      );
     });
   });
 

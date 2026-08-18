@@ -15,10 +15,8 @@ import 'package:test/test.dart';
 void main() {
   const player = GeoPoint(52.4084, 16.9342);
 
-  GeoPoint north(double metres) => GeoPoint(
-    player.latitude + metres / metresPerDegreeLat,
-    player.longitude,
-  );
+  GeoPoint north(double metres) =>
+      GeoPoint(player.latitude + metres / metresPerDegreeLat, player.longitude);
 
   SpawnOrigin hotspot({
     double at = 400,
@@ -154,9 +152,7 @@ void main() {
 
   group('the cap of §5.5.6', () {
     test('eight within three hundred metres, and no more', () {
-      final spawn = run(
-        origins: [hotspot(at: 250, radiusM: 60, capacity: 20)],
-      );
+      final spawn = run(origins: [hotspot(at: 250, radiusM: 60, capacity: 20)]);
 
       final near = spawn.enemies
           .where((e) => e.position.distanceTo(player) <= kActiveRadiusM)
@@ -245,7 +241,10 @@ void main() {
 
     test('and is not refilled while its own are still alive', () {
       final first = run(origins: [hotspot(capacity: 3)]);
-      final second = run(existing: first.enemies, origins: [hotspot(capacity: 3)]);
+      final second = run(
+        existing: first.enemies,
+        origins: [hotspot(capacity: 3)],
+      );
 
       expect(second.added, isEmpty);
       expect(second.enemies, hasLength(3));
@@ -284,10 +283,10 @@ void main() {
         kinds.addAll(spawn.added.map((enemy) => enemy.kind));
       }
 
-      expect(kinds, containsAll(<EnemyKind>[
-        EnemyKind.walker,
-        EnemyKind.leaper,
-      ]));
+      expect(
+        kinds,
+        containsAll(<EnemyKind>[EnemyKind.walker, EnemyKind.leaper]),
+      );
     });
 
     test('the ambient trickle is two a square kilometre at most (§6.4)', () {
@@ -332,9 +331,7 @@ void main() {
       // because slot nought is already filled — handed the new body the id the
       // old one already had. Everything downstream keys off that id: the dot,
       // the glyph over it, the body it leaves behind.
-      final origins = [
-        SpawnOrigin.ambient(centre: player, radiusM: 600),
-      ];
+      final origins = [SpawnOrigin.ambient(centre: player, radiusM: 600)];
 
       var enemies = <Enemy>[];
       for (var pass = 0; pass < 6; pass++) {
@@ -351,6 +348,39 @@ void main() {
         ids.toSet(),
         hasLength(ids.length),
         reason: 'two enemies sharing an id: $ids',
+      );
+    });
+
+    test('nor after a death out of the middle of the list', () {
+      // ⚠️ The second version of the same bug, and the one that cost a walk.
+      // The slot index counts the *living*, so a Walker dying out of the
+      // middle drops the count by one and the next spawn is handed the number
+      // the last one is still using. Six kills came home as two skulls,
+      // because a body is filed under its id and the second death looked like
+      // a repeat of the first.
+      final origins = [SpawnOrigin.ambient(centre: player, radiusM: 600)];
+
+      final first = spawnEnemies(
+        playerAt: player,
+        existing: const [],
+        origins: origins,
+        seed: 11,
+      ).enemies;
+      expect(first.length, greaterThan(1), reason: 'need a middle to remove');
+
+      final survivors = [...first]..removeAt(0);
+      final after = spawnEnemies(
+        playerAt: player,
+        existing: survivors,
+        origins: origins,
+        seed: 11,
+      ).enemies;
+
+      final ids = after.map((enemy) => enemy.id).toList();
+      expect(
+        ids.toSet(),
+        hasLength(ids.length),
+        reason: 'a freed slot handed out an id still in use: $ids',
       );
     });
   });

@@ -71,10 +71,7 @@ void main() {
       // somebody's time on one reading is the kind of unfairness nobody
       // reports — they just stop using the feature.
       var search = run(Search.area(at: here, now: now), seconds: 20);
-      search = search.advance(
-        const Duration(seconds: 1),
-        at: metresNorth(60),
-      );
+      search = search.advance(const Duration(seconds: 1), at: metresNorth(60));
 
       expect(search.state, SearchState.running);
       expect(search.strikes, 1);
@@ -204,7 +201,10 @@ void main() {
           depth: depth,
         );
 
-        expect(run(search, seconds: depth.seconds - 1).state, SearchState.running);
+        expect(
+          run(search, seconds: depth.seconds - 1).state,
+          SearchState.running,
+        );
         expect(run(search, seconds: depth.seconds).state, SearchState.done);
       }
     });
@@ -270,7 +270,10 @@ void main() {
     );
 
     test('the same spot tells you nothing new for ten minutes', () {
-      expect(knowledge.covers(here, now.add(const Duration(minutes: 5))), isTrue);
+      expect(
+        knowledge.covers(here, now.add(const Duration(minutes: 5))),
+        isTrue,
+      );
     });
 
     test('ten minutes later it does', () {

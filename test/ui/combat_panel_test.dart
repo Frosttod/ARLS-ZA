@@ -95,9 +95,7 @@ void main() {
     expect(find.text('TĘTNO'), findsOneWidget);
   });
 
-  testWidgets('nothing in hand refuses the shot, and says why', (
-    tester,
-  ) async {
+  testWidgets('nothing in hand refuses the shot, and says why', (tester) async {
     // A dead button teaches nothing.
     await pump(tester, canFire: false, refusal: 'Nic w ręku.');
 
@@ -233,8 +231,13 @@ void main() {
     testWidgets('an empty weapon offers a reload instead of a shot', (
       tester,
     ) async {
-      await pump(tester, canFire: false, loaded: 0, magazine: 30,
-          onReload: () {});
+      await pump(
+        tester,
+        canFire: false,
+        loaded: 0,
+        magazine: 30,
+        onReload: () {},
+      );
 
       expect(find.text('Przeładuj'), findsOneWidget);
       expect(
@@ -307,8 +310,12 @@ void main() {
     });
 
     testWidgets('what is in your hands is (§5.5.4)', (tester) async {
-      await pump(tester, weaponName: 'Karabinek 5,45', loaded: 12,
-          magazine: 30);
+      await pump(
+        tester,
+        weaponName: 'Karabinek 5,45',
+        loaded: 12,
+        magazine: 30,
+      );
 
       expect(find.textContaining('Karabinek 5,45'), findsOneWidget);
     });

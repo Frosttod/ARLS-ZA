@@ -1880,6 +1880,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
           target.id,
           outcome.bloodLossMl,
           bleeding: outcome.bleedMlPerSecond,
+          // §6.1a: it has been told where the player is, in the most direct
+          // way there is.
+          from: at,
         );
       }
 
@@ -2203,6 +2206,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
             HitLocation.torso => 3,
             _ => 1,
           },
+          from: GeoPoint(fix.latitude, fix.longitude),
         );
       }
 

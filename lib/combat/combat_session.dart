@@ -45,11 +45,7 @@ const Duration kCombatGapForgotten = Duration(minutes: 5);
 const double kAmbientRadiusM = 600;
 
 class CombatSession {
-  const CombatSession({
-    required this.seed,
-    this.enemies = const [],
-    this.open,
-  });
+  const CombatSession({required this.seed, this.enemies = const [], this.open});
 
   /// §11: the same seed gives the same street, whatever the app does in
   /// between.
@@ -160,17 +156,31 @@ class CombatSession {
   }
 
   /// A wound from §5.1.5, landed on one of them.
+  ///
+  /// [from] is where the player was standing when it landed. Given it, the one
+  /// that was hit comes straight for that spot: §6.1a's ways into a chase are
+  /// sight and sound, and being shot is better evidence than either — it does
+  /// not have to work out where the person is, it has just been told. Without
+  /// this a wounded Walker went on searching the place the *noise* came from,
+  /// which made the second round cheaper than the first and read, from the
+  /// player's side, as a thing that did not care it had been hit.
   CombatSession wound(
     String enemyId,
     double bloodLossMl, {
     double bleeding = 0,
+    GeoPoint? from,
   }) => CombatSession(
     seed: seed,
     enemies: [
       for (final enemy in enemies)
-        enemy.id == enemyId
-            ? enemy.hit(bloodLossMl, bleeding: bleeding)
-            : enemy,
+        if (enemy.id != enemyId)
+          enemy
+        else
+          switch (enemy.hit(bloodLossMl, bleeding: bleeding)) {
+            // Nothing chases anything once it is down.
+            final hurt when hurt.isDead || from == null => hurt,
+            final hurt => hurt.hears(from, chasing: true),
+          },
     ],
     open: open,
   );

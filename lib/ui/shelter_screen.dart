@@ -79,10 +79,7 @@ class _ShelterScreenState extends State<ShelterScreen> {
   @override
   void initState() {
     super.initState();
-    _tick = Timer.periodic(
-      const Duration(seconds: 1),
-      (_) => setState(() {}),
-    );
+    _tick = Timer.periodic(const Duration(seconds: 1), (_) => setState(() {}));
   }
 
   @override
@@ -94,17 +91,18 @@ class _ShelterScreenState extends State<ShelterScreen> {
   Shelter? _main(List<Shelter> shelters) =>
       shelters.where((s) => s.kind == ShelterKind.main).firstOrNull;
 
-  List<Shelter> _camps(List<Shelter> shelters) =>
-      [for (final s in shelters) if (s.kind == ShelterKind.camp) s];
+  List<Shelter> _camps(List<Shelter> shelters) => [
+    for (final s in shelters)
+      if (s.kind == ShelterKind.camp) s,
+  ];
 
   @override
   Widget build(BuildContext context) => ValueListenableBuilder<List<Shelter>>(
     valueListenable: widget.shelters,
-    builder: (context, shelters, _) =>
-        ValueListenableBuilder<GeoPoint?>(
-          valueListenable: widget.standingAt,
-          builder: (context, at, _) => _body(context, shelters, at),
-        ),
+    builder: (context, shelters, _) => ValueListenableBuilder<GeoPoint?>(
+      valueListenable: widget.standingAt,
+      builder: (context, at, _) => _body(context, shelters, at),
+    ),
   );
 
   Widget _body(BuildContext context, List<Shelter> shelters, GeoPoint? at) {
@@ -452,7 +450,11 @@ class _ModuleRow extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               moduleWhat(l10n, module),
-              style: TextStyle(fontSize: 12, height: 1.35, color: colours.muted),
+              style: TextStyle(
+                fontSize: 12,
+                height: 1.35,
+                color: colours.muted,
+              ),
             ),
 
             if (underway) ...[

@@ -49,7 +49,10 @@ void main() {
     // the player would select the marker below them.
     final metres = metresPerPixel(16, centre.latitude);
     final found = markerAtOffset(
-      [markerAt('north', north: 60 * metres), markerAt('south', north: -60 * metres)],
+      [
+        markerAt('north', north: 60 * metres),
+        markerAt('south', north: -60 * metres),
+      ],
       Offset(0, -60),
       centre: centre,
       zoom: 16,
@@ -61,7 +64,10 @@ void main() {
   test('east is to the right', () {
     final metres = metresPerPixel(16, centre.latitude);
     final found = markerAtOffset(
-      [markerAt('east', east: 60 * metres), markerAt('west', east: -60 * metres)],
+      [
+        markerAt('east', east: 60 * metres),
+        markerAt('west', east: -60 * metres),
+      ],
       Offset(60, 0),
       centre: centre,
       zoom: 16,
@@ -73,7 +79,10 @@ void main() {
   test('the nearest of two on one corner wins', () {
     final metres = metresPerPixel(16, centre.latitude);
     final found = markerAtOffset(
-      [markerAt('further', north: 18 * metres), markerAt('closer', north: 4 * metres)],
+      [
+        markerAt('further', north: 18 * metres),
+        markerAt('closer', north: 4 * metres),
+      ],
       const Offset(0, -6),
       centre: centre,
       zoom: 16,

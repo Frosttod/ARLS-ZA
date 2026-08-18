@@ -160,8 +160,7 @@ GeoPoint tileLocalToLatLon(
   final worldY = (tileY + local.y / extent) / n;
 
   final longitude = worldX * 360 - 180;
-  final latitude =
-      math.atan(_sinh(math.pi * (1 - 2 * worldY))) * 180 / math.pi;
+  final latitude = math.atan(_sinh(math.pi * (1 - 2 * worldY))) * 180 / math.pi;
 
   return GeoPoint(latitude, longitude);
 }

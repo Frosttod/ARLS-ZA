@@ -62,24 +62,20 @@ class Remains {
   bool isGoneAt(DateTime now) => now.difference(diedAt) >= kRemainsLifetime;
 }
 
-/// How close two bodies have to be to be the same body.
-///
-/// ⚠️ Position as well as id, because a kill is noticed from more than one
-/// place — the shot that finished it, the tick that saw it finished, and the
-/// sweep that compares one list against the next. An id catches most of that
-/// and a couple of metres catches the rest, which is what stops one Walker
-/// leaving two skulls.
-const double kSameBodyM = 5;
-
 /// Adds a body, or leaves the list alone if that one is already in it.
+///
+/// ⚠️ By id and by nothing else, and there was a five-metre rule here for a
+/// day. It was put in to stop one Walker leaving two skulls, which was really
+/// two Walkers sharing an id — fixed where it happened, in the spawner. What
+/// the metres did in the meantime was quietly eat the second body of every
+/// pair that fell near each other, and a melee kill happens at arm's length:
+/// six down on a walk, two skulls on the map, two in the profile.
+///
+/// A kill is noticed from three places — the shot, the tick that finds it
+/// bled out, and the sweep that compares one list against the next — and all
+/// three carry the same id, so the id is enough.
 List<Remains> addRemains(List<Remains> remains, Remains body) =>
-    remains.any(
-      (other) =>
-          other.id == body.id ||
-          other.position.distanceTo(body.position) <= kSameBodyM,
-    )
-    ? remains
-    : [...remains, body];
+    remains.any((other) => other.id == body.id) ? remains : [...remains, body];
 
 /// Drops the ones nobody is coming back for.
 List<Remains> sweepRemains(List<Remains> remains, DateTime now) => [

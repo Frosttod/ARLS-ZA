@@ -39,7 +39,8 @@ class ItemNames {
       for (final entry in raw.entries)
         if (entry.value is Map<String, Object?>)
           entry.key: {
-            for (final byLanguage in (entry.value! as Map<String, Object?>).entries)
+            for (final byLanguage
+                in (entry.value! as Map<String, Object?>).entries)
               if (byLanguage.value is String)
                 byLanguage.key: byLanguage.value! as String,
           },

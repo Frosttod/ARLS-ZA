@@ -105,9 +105,15 @@ void main() {
       await pump(tester, shelters: [built()]);
 
       for (final module in ShelterModule.values) {
-        expect(find.text(moduleName(L10n.of(tester.element(
-          find.byType(ShelterScreen),
-        )), module)), findsOneWidget);
+        expect(
+          find.text(
+            moduleName(
+              L10n.of(tester.element(find.byType(ShelterScreen))),
+              module,
+            ),
+          ),
+          findsOneWidget,
+        );
       }
     });
 
@@ -165,9 +171,9 @@ void main() {
       // mentions the distance too, hence two.
       expect(find.textContaining('800 m'), findsNWidgets(2));
 
-      final camp = tester.widgetList<FilledButton>(
-        find.byType(FilledButton),
-      ).last;
+      final camp = tester
+          .widgetList<FilledButton>(find.byType(FilledButton))
+          .last;
       expect(camp.onPressed, isNull);
     });
   });

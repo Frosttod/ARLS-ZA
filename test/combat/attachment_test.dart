@@ -164,7 +164,11 @@ void main() {
       for (final attachment in catalogue.ofKind(ItemKind.attachment)) {
         final props = attachment.props;
 
-        expect(props['attaches_to'], isA<List<dynamic>>(), reason: attachment.id);
+        expect(
+          props['attaches_to'],
+          isA<List<dynamic>>(),
+          reason: attachment.id,
+        );
         expect(
           props.keys.any(
             (key) => const {
@@ -184,8 +188,11 @@ void main() {
     test('and what it takes to make one (§7)', () {
       // Found, or built by somebody who has spent the skill. Never bought.
       for (final attachment in catalogue.ofKind(ItemKind.attachment)) {
-        expect(attachment.props['craft_skill'], isA<num>(),
-            reason: attachment.id);
+        expect(
+          attachment.props['craft_skill'],
+          isA<num>(),
+          reason: attachment.id,
+        );
         expect(
           (attachment.props['craft_skill'] as num) >= 40,
           isTrue,

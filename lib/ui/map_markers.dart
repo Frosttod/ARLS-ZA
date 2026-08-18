@@ -234,8 +234,7 @@ MapMarker? markerAtOffset(
   // Screen y grows downwards, latitude grows upwards.
   final at = GeoPoint(
     centre.latitude - offset.dy * scale / metresPerDegreeLat,
-    centre.longitude +
-        offset.dx * scale / metresPerDegreeLon(centre.latitude),
+    centre.longitude + offset.dx * scale / metresPerDegreeLon(centre.latitude),
   );
 
   MapMarker? best;

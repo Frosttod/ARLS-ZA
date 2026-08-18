@@ -565,10 +565,7 @@ void main() {
         total: const Duration(seconds: 5),
       );
 
-      expect(
-        (after.position.longitude - home.longitude).abs(),
-        lessThan(1e-6),
-      );
+      expect((after.position.longitude - home.longitude).abs(), lessThan(1e-6));
     });
   });
 
@@ -608,15 +605,45 @@ void main() {
     });
 
     test('and a burned one as empty', () {
-      final spent = spawn(
-        EnemyKind.walker,
-      ).copyWith(sprintLeft: Duration.zero);
+      final spent = spawn(EnemyKind.walker).copyWith(sprintLeft: Duration.zero);
 
       expect(spent.sprintLeftFraction, 0);
     });
   });
 
   group('losing interest after a shot (§5.6.2)', () {
+    test('but a hurt one keeps looking for much longer', () {
+      // §6.1a: something that has been shot has the best evidence in the game
+      // that a person is nearby — a hole in it. Giving up at forty-five
+      // seconds like everything else made the second shot cheaper than the
+      // first, and read as a thing that did not care it had been hit.
+      final hurt = spawn(EnemyKind.walker, at: 200).hit(200);
+      final whole = spawn(EnemyKind.walker, at: 200);
+
+      // Well past the plain window, well inside the wounded one.
+      const waited = Duration(seconds: 70);
+
+      expect(
+        advanceEnemy(
+          whole.copyWith(state: EnemyState.alert, sinceContact: waited),
+          playerAt: north(900),
+          elapsed: const Duration(seconds: 1),
+        ).state,
+        isNot(EnemyState.alert),
+        reason: 'an untouched one goes home',
+      );
+
+      expect(
+        advanceEnemy(
+          hurt.copyWith(state: EnemyState.alert, sinceContact: waited),
+          playerAt: north(900),
+          elapsed: const Duration(seconds: 1),
+        ).state,
+        isNot(EnemyState.returning),
+        reason: 'a wounded one does not',
+      );
+    });
+
     test('it walks to where the sound was and then gives up', () {
       // Zombies are not clever. A shot pulls them to the place it came from,
       // and a player who then keeps quiet is a player they stop looking for.

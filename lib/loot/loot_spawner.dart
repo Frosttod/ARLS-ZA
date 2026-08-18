@@ -28,6 +28,7 @@ import '../map/geometry.dart';
 import '../map/poi_source.dart';
 import '../notes/note.dart';
 import '../safety/spawn_exclusion.dart';
+import 'procedural_points.dart' show kCarSelector, kWasteSelector;
 import 'loot_table.dart';
 
 /// §10: at most this many live at once within [kSpawnRadiusM].
@@ -56,6 +57,22 @@ const double kSpawnRadiusBackupM = 1800;
 /// journey. Six hundred metres is seven minutes' walk.
 const int kNearRing = 5;
 const double kNearRingM = 600;
+
+/// §10.1: how many invented cars and bins a street keeps, whatever else is
+/// on it.
+///
+/// ⚠️ These are not the car parks §10.1 keeps out of a city. That rule counts
+/// *tagged* places — 4165 car parks against 427 grocers within 2 km of the
+/// middle of Poznań — and it is right to keep them from drowning the map. But
+/// a generated car and a generated bin are neither tagged nor numerous: there
+/// are a handful of them, they are the most ordinary things on any street, and
+/// they carry exactly what §18.2 is short of.
+///
+/// Measured on a walk through dense Poznań: the near ring filled with real
+/// shops on the first pass, the fallback pool was never reached, and a city
+/// produced no cars and no bins at all. So they get a small reservation
+/// instead of a place in the queue — out of §10's fifteen, not on top of them.
+const int kFurnitureNearby = 3;
 
 /// How fast the odds fall off with distance beyond the ring. At 400 m a place
 /// is half as likely as one underfoot, at 1200 m a quarter.
@@ -124,8 +141,12 @@ class LootBox {
   ///
   /// It empties when what is left cannot pay for the cheapest look there is —
   /// the shelves are bare rather than the timer being up.
-  LootBox searchedAt(SearchDepth depth, DateTime now, Random random,
-      {bool backup = false}) {
+  LootBox searchedAt(
+    SearchDepth depth,
+    DateTime now,
+    Random random, {
+    bool backup = false,
+  }) {
     final spent = searchUnits + depth.cost;
     final exhausted = kSearchBudget - spent < SearchDepth.shallow.cost;
 
@@ -175,7 +196,9 @@ class LootBox {
       name: name,
       spawnedAt: spawnedAt,
       lootedAt: now,
-      respawnAt: now.add(Duration(minutes: min.inMinutes + random.nextInt(spread))),
+      respawnAt: now.add(
+        Duration(minutes: min.inMinutes + random.nextInt(spread)),
+      ),
       openedAt: openedAt,
       searchUnits: searchUnits,
     );
@@ -348,6 +371,47 @@ class LootSpawner {
         )
         .length;
 
+    // §10.1: the reservation, taken before the ring is filled with shops.
+    //
+    // Nearest first and no weighting: three of them is not enough for a
+    // weighted draw to mean anything, and the nearest bin is the one worth
+    // fifteen seconds on the way past.
+    final furnitureIds = _furnitureTables;
+    final standing = kept
+        .where(
+          (box) =>
+              box.isActiveAt(now) &&
+              furnitureIds.contains(box.tableId) &&
+              box.position.distanceTo(centre) <= kNearRingM,
+        )
+        .length;
+
+    // ⚠️ Chosen by the selector, counted by the table.
+    //
+    // The two tables also match a real, tagged car park, and the reservation
+    // must never hand one of §10.1's 4165 of those a place a shop could have
+    // had — so only invented points are picked. Counting is the other way
+    // round on purpose: a real car park already standing nearby is a car to
+    // search, and inventing another one beside it would be the map repeating
+    // itself.
+    final furniture =
+        nearFallback
+            .where(
+              (c) =>
+                  c.poi.selectors.contains(kCarSelector) ||
+                  c.poi.selectors.contains(kWasteSelector),
+            )
+            .toList()
+          ..sort((a, b) => a.distance.compareTo(b.distance));
+
+    for (var i = standing; i < kFurnitureNearby && room > 0; i++) {
+      if (furniture.isEmpty) break;
+      final pick = furniture.removeAt(0);
+      nearFallback.remove(pick);
+      added.add(_boxAt(pick, now, seed));
+      room--;
+    }
+
     final near = available.where((c) => c.distance <= kNearRingM).toList()
       ..sort((a, b) => a.distance.compareTo(b.distance));
 
@@ -408,6 +472,16 @@ class LootSpawner {
       openedAt: barrier != null && open ? now : null,
     );
   }
+
+  /// The tables a generated car and a generated bin belong to.
+  ///
+  /// Read out of the data rather than named here: the ids live in
+  /// `loot_tables.json` beside everything else, and a second copy of them in
+  /// code is a second thing to keep in step.
+  Set<String> get _furnitureTables => {
+    for (final selector in const [kCarSelector, kWasteSelector])
+      for (final table in tables.forTags([selector])) table.id,
+  };
 
   /// Which table this place belongs to, or null where none wants it.
   ///

@@ -134,11 +134,21 @@ List<ItemStat> statsOf(
     // is fewer minutes of angle.
     ItemKind.attachment => [
       stat('moa', 'moa_delta', 'MOA', higherIsBetter: false, decimals: 1),
-      stat('settle', 'settle_multiplier', '×',
-          higherIsBetter: false, decimals: 2),
+      stat(
+        'settle',
+        'settle_multiplier',
+        '×',
+        higherIsBetter: false,
+        decimals: 2,
+      ),
       stat('magazine', 'magazine_bonus', ''),
-      stat('noise', 'noise_range_multiplier', '×',
-          higherIsBetter: false, decimals: 2),
+      stat(
+        'noise',
+        'noise_range_multiplier',
+        '×',
+        higherIsBetter: false,
+        decimals: 2,
+      ),
       stat('light', 'light_radius_m', 'm'),
       stat('battery', 'battery_hours', 'h'),
       stat('craftSkill', 'craft_skill', '%', higherIsBetter: false),
@@ -156,8 +166,10 @@ List<ItemStat> statsOf(
       ),
       stat('searchBonus', 'search_radius_bonus_m', 'm'),
     ],
-    ItemKind.ammo || ItemKind.crafting || ItemKind.material || ItemKind.misc =>
-      const <ItemStat?>[],
+    ItemKind.ammo ||
+    ItemKind.crafting ||
+    ItemKind.material ||
+    ItemKind.misc => const <ItemStat?>[],
   };
 
   return [

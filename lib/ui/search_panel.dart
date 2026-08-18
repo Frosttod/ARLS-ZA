@@ -151,45 +151,47 @@ class ActionProgress extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.fromLTRB(12, 6, 12, 8),
         child: Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: Text(
-                search.usingLabel ??
-                    (search.isArea ? l10n.searchAreaRunning : l10n.searchHere),
-                style: TextStyle(fontSize: 13, color: colours.text),
-              ),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    search.usingLabel ??
+                        (search.isArea
+                            ? l10n.searchAreaRunning
+                            : l10n.searchHere),
+                    style: TextStyle(fontSize: 13, color: colours.text),
+                  ),
+                ),
+                Text(
+                  '$seconds s',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: colours.data,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                TextButton(onPressed: onCancel, child: Text(l10n.searchCancel)),
+              ],
             ),
+            const SizedBox(height: 4),
+            LinearProgressIndicator(
+              value: search.progress,
+              minHeight: 4,
+              backgroundColor: colours.muted.withValues(alpha: 0.25),
+              color: colours.data,
+            ),
+            const SizedBox(height: 6),
             Text(
-              '$seconds s',
-              style: TextStyle(
-                fontSize: 13,
-                color: colours.data,
-                fontFeatures: const [FontFeature.tabularFigures()],
-              ),
+              // §19.3, §5.6: an object search is heard from eighty metres. Said
+              // plainly, because it is the reason to choose the shorter one.
+              // Eating makes no noise worth mentioning, so it says nothing.
+              search.isArea || search.isUse ? '' : l10n.searchNoise,
+              style: TextStyle(fontSize: 11, color: colours.muted),
             ),
-            const SizedBox(width: 12),
-            TextButton(onPressed: onCancel, child: Text(l10n.searchCancel)),
-          ],
-        ),
-        const SizedBox(height: 4),
-        LinearProgressIndicator(
-          value: search.progress,
-          minHeight: 4,
-          backgroundColor: colours.muted.withValues(alpha: 0.25),
-          color: colours.data,
-        ),
-        const SizedBox(height: 6),
-        Text(
-          // §19.3, §5.6: an object search is heard from eighty metres. Said
-          // plainly, because it is the reason to choose the shorter one.
-          // Eating makes no noise worth mentioning, so it says nothing.
-          search.isArea || search.isUse ? '' : l10n.searchNoise,
-          style: TextStyle(fontSize: 11, color: colours.muted),
-        ),
           ],
         ),
       ),
@@ -325,8 +327,7 @@ class _Actions extends StatelessWidget {
                 _ActionIcon(
                   icon: _depthIcon(depth),
                   caption:
-                      '${(searchTimes[depth] ??
-                          Duration(seconds: depth.seconds)).inSeconds} s',
+                      '${(searchTimes[depth] ?? Duration(seconds: depth.seconds)).inSeconds} s',
                   tooltip: _depthName(l10n, depth),
                   colours: colours,
                   onPressed:

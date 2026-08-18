@@ -18,10 +18,8 @@ void main() {
   const player = GeoPoint(52.4084, 16.9342);
   final now = DateTime.utc(2026, 8, 16, 14);
 
-  GeoPoint north(double metres) => GeoPoint(
-    player.latitude + metres / metresPerDegreeLat,
-    player.longitude,
-  );
+  GeoPoint north(double metres) =>
+      GeoPoint(player.latitude + metres / metresPerDegreeLat, player.longitude);
 
   CombatSession run(
     CombatSession session, {
@@ -205,11 +203,7 @@ void main() {
 
     test('a knife brings nobody (§5.6.3)', () {
       final after = withWalkerAt(300).heard(
-        NoiseEvent(
-          at: player,
-          radiusM: NoiseKind.melee.baseM,
-          startedAt: now,
-        ),
+        NoiseEvent(at: player, radiusM: NoiseKind.melee.baseM, startedAt: now),
         playerAt: player,
       );
 
@@ -249,11 +243,44 @@ void main() {
       );
     });
 
+    test('being hit is the plainest way there is to find the shooter', () {
+      // §6.1a's two ways into a chase are sight and sound, and being shot is
+      // better evidence than either: it does not have to work out where the
+      // person is, it has just been told. Without this a wounded Walker went
+      // on searching the place the *noise* came from, which made the second
+      // round cheaper than the first.
+      final session = run(const CombatSession(seed: 5));
+      final target = session.enemies.first;
+
+      final after = session
+          .wound(target.id, 100, from: player)
+          .enemies
+          .firstWhere((enemy) => enemy.id == target.id);
+
+      expect(after.state, EnemyState.chase);
+      expect(after.heardAt, player);
+    });
+
+    test('but nothing chases anything once it is down', () {
+      final session = run(const CombatSession(seed: 5));
+      final target = session.enemies.first;
+
+      final after = session
+          .wound(target.id, 99999, from: player)
+          .enemies
+          .firstWhere((enemy) => enemy.id == target.id);
+
+      expect(after.isDead, isTrue);
+      expect(after.state, isNot(EnemyState.chase));
+    });
+
     test('a shot at nobody changes nothing', () {
       final session = run(const CombatSession(seed: 5));
 
-      expect(session.wound('nobody', 400).enemies.length,
-          session.enemies.length);
+      expect(
+        session.wound('nobody', 400).enemies.length,
+        session.enemies.length,
+      );
     });
   });
 

@@ -396,8 +396,9 @@ class _SlotRow extends StatelessWidget {
                     // screen changed.
                     if (worn != null && worn.attachments.isNotEmpty)
                       Text(
-                        [for (final id in worn.attachments) nameOf(id)]
-                            .join(' · '),
+                        [
+                          for (final id in worn.attachments) nameOf(id),
+                        ].join(' · '),
                         style: TextStyle(fontSize: 11, color: colours.data),
                       ),
                   ],
@@ -406,8 +407,7 @@ class _SlotRow extends StatelessWidget {
             ),
             if (definition != null)
               Text(
-                '${worn!.massKg(definition, catalogue: catalogue)
-                    .toStringAsFixed(1)} kg',
+                '${worn!.massKg(definition, catalogue: catalogue).toStringAsFixed(1)} kg',
                 style: TextStyle(fontSize: 11, color: colours.data),
               ),
             if (worn != null && onTakeOff != null)
@@ -447,7 +447,8 @@ class _Limits extends StatelessWidget {
       Expanded(
         child: _Gauge(
           label: massLabel,
-          value: '${massKg.toStringAsFixed(1)} / ${maxKg.toStringAsFixed(0)} kg',
+          value:
+              '${massKg.toStringAsFixed(1)} / ${maxKg.toStringAsFixed(0)} kg',
           fraction: maxKg > 0 ? massKg / maxKg : 0,
           markAt: maxKg > 0 ? comfortKg / maxKg : null,
           warning: massKg > comfortKg,

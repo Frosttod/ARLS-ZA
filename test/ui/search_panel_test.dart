@@ -122,10 +122,7 @@ void main() {
       // The glyph is not information on its own, which §12 forbids.
       await pump(tester);
 
-      expect(
-        find.bySemanticsLabel(RegExp('Pobieżnie.*30 s')),
-        findsOneWidget,
-      );
+      expect(find.bySemanticsLabel(RegExp('Pobieżnie.*30 s')), findsOneWidget);
     });
 
     testWidgets('reconnaissance is its own glass, apart from the three', (
@@ -219,14 +216,14 @@ void main() {
       expect(find.byIcon(Icons.search), findsNothing);
     });
 
-    testWidgets('and a barrier out of reach concerns nobody', (
-      tester,
-    ) async {
+    testWidgets('and a barrier out of reach concerns nobody', (tester) async {
       await pump(tester, canSearchHere: false, barrier: Barrier.padlock);
 
       expect(find.byIcon(Icons.vpn_key_outlined), findsNothing);
-      expect(find.text('Brak narzędzia — kłódki nie otworzysz gołymi rękami.'),
-          findsNothing);
+      expect(
+        find.text('Brak narzędzia — kłódki nie otworzysz gołymi rękami.'),
+        findsNothing,
+      );
     });
   });
 
@@ -266,11 +263,7 @@ void main() {
 
     testWidgets('and it does what it says', (tester) async {
       var taken = 0;
-      await pump(
-        tester,
-        droppedLabel: 'Nóż',
-        onTakeDropped: () => taken++,
-      );
+      await pump(tester, droppedLabel: 'Nóż', onTakeDropped: () => taken++);
       await tester.tap(find.byIcon(Icons.back_hand_outlined));
       await tester.pumpAndSettle();
 

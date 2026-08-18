@@ -42,10 +42,7 @@ class DroppedStore {
   }
 
   /// Puts something on the ground where the player is standing.
-  Future<void> drop(
-    int profileId,
-    DroppedItem item,
-  ) => _db.addGroundItem(
+  Future<void> drop(int profileId, DroppedItem item) => _db.addGroundItem(
     GroundItemsCompanion.insert(
       profileId: profileId,
       itemId: item.itemId,

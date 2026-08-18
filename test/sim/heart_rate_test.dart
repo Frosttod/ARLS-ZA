@@ -64,13 +64,15 @@ void main() {
     });
 
     test('and slows as it approaches, because that is what hearts do', () {
-      final fromHard = 160 -
+      final fromHard =
+          160 -
           relaxHeartRate(
             current: 160,
             target: 72,
             elapsed: const Duration(minutes: 1),
           );
-      final fromEasy = 100 -
+      final fromEasy =
+          100 -
           relaxHeartRate(
             current: 100,
             target: 72,

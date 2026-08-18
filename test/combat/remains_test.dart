@@ -12,10 +12,7 @@ import 'package:flutter_test/flutter_test.dart';
 /// map says something died there and says nothing at all about what is in its
 /// pockets — the walk over is the price of that answer.
 void main() {
-  Remains body({
-    String id = 'walker.1',
-    DateTime? diedAt,
-  }) => Remains(
+  Remains body({String id = 'walker.1', DateTime? diedAt}) => Remains(
     id: id,
     kind: EnemyKind.walker,
     position: const GeoPoint(52.4, 16.9),
@@ -43,24 +40,27 @@ void main() {
       expect(tick, hasLength(1));
     });
 
-    test('nor is one a few metres away, whatever its id', () {
-      // The same body reported through two paths can arrive with the position
-      // it had a tick apart. Five metres is inside a doorway.
+    test('but two that fell within arm reach are two bodies', () {
+      // ⚠️ There was a five-metre rule here, and it cost a walk. It was put in
+      // to stop one Walker leaving two skulls — which was really two Walkers
+      // sharing an id, fixed in the spawner. What the metres did meanwhile was
+      // eat the second body of every pair that fell close together, and a
+      // melee kill happens at arm's length: six down, two skulls.
       final first = addRemains(const [], body());
       final again = addRemains(
         first,
         Remains(
           id: 'walker.2',
           kind: EnemyKind.walker,
-          position: const GeoPoint(52.4, 16.9).offsetBy(
-            metres: 3,
-            bearingDeg: 90,
-          ),
+          position: const GeoPoint(
+            52.4,
+            16.9,
+          ).offsetBy(metres: 3, bearingDeg: 90),
           diedAt: DateTime.utc(2026, 8, 16, 12),
         ),
       );
 
-      expect(again, hasLength(1));
+      expect(again, hasLength(2));
     });
 
     test('but one across the street is its own', () {
@@ -70,10 +70,10 @@ void main() {
         Remains(
           id: 'walker.2',
           kind: EnemyKind.walker,
-          position: const GeoPoint(52.4, 16.9).offsetBy(
-            metres: 40,
-            bearingDeg: 90,
-          ),
+          position: const GeoPoint(
+            52.4,
+            16.9,
+          ).offsetBy(metres: 40, bearingDeg: 90),
           diedAt: DateTime.utc(2026, 8, 16, 12),
         ),
       );

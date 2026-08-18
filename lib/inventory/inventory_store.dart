@@ -77,35 +77,32 @@ class InventoryStore {
     );
   }
 
-  Future<void> save(int profileId, Inventory inventory) => db.writeInventory(
-    profileId,
-    [
-      for (final line in inventory.carried)
-        _companion(profileId, line, _slotPack),
-      for (final line in inventory.worn) _companion(profileId, line, _slotWorn),
-      if (inventory.packId != null)
-        InventoryLinesCompanion.insert(
-          profileId: profileId,
-          itemId: inventory.packId!,
-        ).copyWith(slot: Value(_slotBackpack)),
-    ],
-  );
+  Future<void> save(int profileId, Inventory inventory) =>
+      db.writeInventory(profileId, [
+        for (final line in inventory.carried)
+          _companion(profileId, line, _slotPack),
+        for (final line in inventory.worn)
+          _companion(profileId, line, _slotWorn),
+        if (inventory.packId != null)
+          InventoryLinesCompanion.insert(
+            profileId: profileId,
+            itemId: inventory.packId!,
+          ).copyWith(slot: Value(_slotBackpack)),
+      ]);
 
   InventoryLinesCompanion _companion(
     int profileId,
     CarriedItem line,
     String slot,
-  ) => InventoryLinesCompanion.insert(
-    profileId: profileId,
-    itemId: line.itemId,
-  ).copyWith(
-    count: Value(line.count),
-    slot: Value(slot),
-    condition: Value(line.condition),
-    pagesTotal: Value(line.pagesTotal),
-    pagesRead: Value(line.pagesRead),
-    noteId: Value(line.noteId),
-    portion: Value(line.portion),
-    attachments: Value(line.attachments.join(',')),
-  );
+  ) => InventoryLinesCompanion.insert(profileId: profileId, itemId: line.itemId)
+      .copyWith(
+        count: Value(line.count),
+        slot: Value(slot),
+        condition: Value(line.condition),
+        pagesTotal: Value(line.pagesTotal),
+        pagesRead: Value(line.pagesRead),
+        noteId: Value(line.noteId),
+        portion: Value(line.portion),
+        attachments: Value(line.attachments.join(',')),
+      );
 }

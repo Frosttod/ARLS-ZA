@@ -9,7 +9,9 @@ import 'package:test/test.dart';
 /// the software, not a style guide — including the two that exist to protect
 /// somebody walking alone through a real street in the evening.
 void main() {
-  final notes = NoteSet.parse(File('assets/data/notes.json').readAsStringSync());
+  final notes = NoteSet.parse(
+    File('assets/data/notes.json').readAsStringSync(),
+  );
 
   group('the shipped notes', () {
     test('parse without a fault', () {
@@ -31,9 +33,9 @@ void main() {
       // longer is a chapter, and nobody reads a chapter in a street.
       for (final note in notes.notes) {
         for (final body in note.text.values) {
-          final sentences = body.split(RegExp(r'[.!?]')).where(
-            (part) => part.trim().length > 2,
-          );
+          final sentences = body
+              .split(RegExp(r'[.!?]'))
+              .where((part) => part.trim().length > 2);
           expect(sentences.length, inInclusiveRange(3, 8), reason: note.id);
         }
       }
@@ -104,7 +106,8 @@ void main() {
           expect(
             polish.toLowerCase(),
             isNot(contains(' $preposition {')),
-            reason: '${note.id}: "$preposition {…}" would need a case OSM '
+            reason:
+                '${note.id}: "$preposition {…}" would need a case OSM '
                 'does not give us',
           );
         }
@@ -124,9 +127,7 @@ void main() {
     });
 
     test('and a note needing nothing is always tellable', () {
-      final plain = notes.notes.firstWhere(
-        (note) => note.placeholders.isEmpty,
-      );
+      final plain = notes.notes.firstWhere((note) => note.placeholders.isEmpty);
 
       expect(plain.canBeToldWith(PlaceNames.none), isTrue);
     });
@@ -188,16 +189,19 @@ void main() {
       expect(pick()!.id, pick()!.id);
     });
 
-    test('a place with no note at all gets nothing rather than a wrong one', () {
-      expect(
-        notes.forPlace(
-          selectors: const ['poi.subclass=weapons'],
-          names: names,
-          seed: 1,
-        ),
-        isNull,
-      );
-    });
+    test(
+      'a place with no note at all gets nothing rather than a wrong one',
+      () {
+        expect(
+          notes.forPlace(
+            selectors: const ['poi.subclass=weapons'],
+            names: names,
+            seed: 1,
+          ),
+          isNull,
+        );
+      },
+    );
 
     test('and nothing needing a street where the map has no streets', () {
       // Measured: the packs already built carry no transportation_name layer,

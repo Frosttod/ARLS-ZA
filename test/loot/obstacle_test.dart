@@ -162,9 +162,10 @@ void main() {
         bin.searchTime(SearchDepth.deep),
         greaterThan(bin.searchTime(SearchDepth.shallow)),
       );
-      expect(SearchDepth.deep.tiers.length, greaterThan(
-        SearchDepth.shallow.tiers.length,
-      ));
+      expect(
+        SearchDepth.deep.tiers.length,
+        greaterThan(SearchDepth.shallow.tiers.length),
+      );
     });
   });
 

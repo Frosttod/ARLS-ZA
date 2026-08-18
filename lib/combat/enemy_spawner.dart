@@ -104,7 +104,10 @@ EnemySpawn spawnEnemies({
   double sightFactor = 1,
 }) {
   final filter = SpawnFilter(obstacles);
-  final alive = [for (final enemy in existing) if (!enemy.isDead) enemy];
+  final alive = [
+    for (final enemy in existing)
+      if (!enemy.isDead) enemy,
+  ];
 
   final enemies = [...alive];
   final added = <Enemy>[];
@@ -112,7 +115,27 @@ EnemySpawn spawnEnemies({
   final random = Random(seed);
 
   for (final origin in origins) {
-    final fromHere = enemies.where((enemy) => enemy.id.startsWith('${origin.id}.')).length;
+    final prefix = '${origin.id}.${seed.toUnsigned(16)}.';
+    final fromHere = enemies
+        .where((enemy) => enemy.id.startsWith('${origin.id}.'))
+        .length;
+
+    // ⚠️ Past everything this origin has ever made, not past what is alive.
+    //
+    // The slot index was the second version of this bug and not the last one:
+    // it counts the living, so a Walker dying out of the middle of the list
+    // drops the count by one and the next spawn is handed the index — and the
+    // id — that the *last* one is still using. Two bodies, one id, and
+    // everything downstream keys off it: the dot on the map, the glyph over
+    // it, and the body it leaves. The second death was swallowed as a
+    // duplicate of the first, which is why a walk with six kills came home
+    // with two skulls.
+    var serial = 0;
+    for (final enemy in enemies) {
+      if (!enemy.id.startsWith(prefix)) continue;
+      final made = int.tryParse(enemy.id.substring(prefix.length));
+      if (made != null && made >= serial) serial = made + 1;
+    }
 
     for (var i = fromHere; i < origin.capacity; i++) {
       final at = _placeIn(
@@ -131,8 +154,7 @@ EnemySpawn spawnEnemies({
       if (at.distanceTo(playerAt) <= kActiveRadiusM) {
         final near = enemies
             .where(
-              (enemy) =>
-                  enemy.position.distanceTo(playerAt) <= kActiveRadiusM,
+              (enemy) => enemy.position.distanceTo(playerAt) <= kActiveRadiusM,
             )
             .length;
         if (near >= cap) break;
@@ -140,13 +162,7 @@ EnemySpawn spawnEnemies({
 
       final kind = origin.kinds[random.nextInt(origin.kinds.length)];
       final enemy = Enemy.spawn(
-        // ⚠️ The slot index, not a counter that restarts. Found on a phone as
-        // two markers for one Walker: the counter began at nought on every
-        // pass, so the second pass — which starts at slot one because slot
-        // nought is already filled — handed the new body the id the old one
-        // already had. Everything downstream keys off that id: the dot, the
-        // glyph over it, the body it leaves.
-        id: '${origin.id}.${seed.toUnsigned(16)}.$i',
+        id: '$prefix${serial++}',
         kind: kind,
         at: at,
         // ⚠️ Where it was made, not the middle of the disc it was made in.

@@ -100,7 +100,12 @@ Future<List<MapFeature>> _obstaclesNear(
             shape: feature.geometry == MvtGeometry.polygon
                 ? FeatureShape.area
                 : FeatureShape.line,
-            geometry: _toGround(feature.points, tile.x + dx, tile.y + dy, decoded.extent),
+            geometry: _toGround(
+              feature.points,
+              tile.x + dx,
+              tile.y + dy,
+              decoded.extent,
+            ),
           ),
         );
       }
@@ -205,16 +210,20 @@ Future<List<GeneratedArea>> _areasNear(
       for (final feature in decoded.features) {
         if (feature.geometry != MvtGeometry.polygon) continue;
 
-        final selector = selectorsFor(feature).firstWhere(
-          kGeneratedSelectors.containsKey,
-          orElse: () => '',
-        );
+        final selector = selectorsFor(
+          feature,
+        ).firstWhere(kGeneratedSelectors.containsKey, orElse: () => '');
         if (selector.isEmpty) continue;
 
         areas.add(
           GeneratedArea(
             selector: selector,
-            ring: _toGround(feature.points, tile.x + dx, tile.y + dy, decoded.extent),
+            ring: _toGround(
+              feature.points,
+              tile.x + dx,
+              tile.y + dy,
+              decoded.extent,
+            ),
           ),
         );
       }
@@ -231,11 +240,8 @@ List<GeoPoint> _toGround(
   int extent,
 ) => [
   for (final point in points)
-    tileLocalToLatLon(
-      tileX,
-      tileY,
-      kPoiZoom,
-      (x: point.x.toDouble(), y: point.y.toDouble()),
-      extent,
-    ),
+    tileLocalToLatLon(tileX, tileY, kPoiZoom, (
+      x: point.x.toDouble(),
+      y: point.y.toDouble(),
+    ), extent),
 ];

@@ -185,7 +185,11 @@ class InventoryChange {
   const InventoryChange.accepted(this.inventory)
     : refusal = null,
       acceptedCount = null;
-  const InventoryChange.partial(this.inventory, this.acceptedCount, this.refusal);
+  const InventoryChange.partial(
+    this.inventory,
+    this.acceptedCount,
+    this.refusal,
+  );
   const InventoryChange.refused(this.inventory, this.refusal)
     : acceptedCount = 0;
 
@@ -226,11 +230,7 @@ class CarryLimits {
 }
 
 class Inventory {
-  const Inventory({
-    this.carried = const [],
-    this.worn = const [],
-    this.packId,
-  });
+  const Inventory({this.carried = const [], this.worn = const [], this.packId});
 
   /// In the pack. Costs mass and volume.
   final List<CarriedItem> carried;
@@ -431,9 +431,7 @@ class Inventory {
     // `worn`. Found on a phone: fitting anything to the rifle actually being
     // carried did nothing at all, because this only ever looked in `carried` —
     // and the one weapon a player wants a light on is the one they are holding.
-    final fitted = line.copyWith(
-      attachments: [...line.attachments, part.id],
-    );
+    final fitted = line.copyWith(attachments: [...line.attachments, part.id]);
 
     // Off the pack and onto the weapon: it is in one place or the other.
     final without = removeLine(attachment) ?? this;
@@ -443,8 +441,7 @@ class Inventory {
         identical(entry, line) ? fitted : entry,
     ];
     final dressed = [
-      for (final entry in without.worn)
-        identical(entry, line) ? fitted : entry,
+      for (final entry in without.worn) identical(entry, line) ? fitted : entry,
     ];
 
     // Neither list holds this very piece: it came from somewhere that is no
@@ -475,18 +472,19 @@ class Inventory {
     );
 
     final lines = [
-      for (final entry in carried)
-        identical(entry, line) ? stripped : entry,
+      for (final entry in carried) identical(entry, line) ? stripped : entry,
     ];
     final worn = [
-      for (final entry in this.worn)
-        identical(entry, line) ? stripped : entry,
+      for (final entry in this.worn) identical(entry, line) ? stripped : entry,
     ];
 
     // Never destroyed for want of room: §18.1a's overflow is a state, not a
     // reason to lose something.
     return Inventory(
-      carried: [...lines, CarriedItem(itemId: attachmentId)],
+      carried: [
+        ...lines,
+        CarriedItem(itemId: attachmentId),
+      ],
       worn: worn,
       packId: packId,
     );
@@ -662,7 +660,10 @@ class Inventory {
     if (pack == null) return this;
 
     return Inventory(
-      carried: [...carried, CarriedItem(itemId: pack)],
+      carried: [
+        ...carried,
+        CarriedItem(itemId: pack),
+      ],
       worn: worn,
       packId: null,
     );

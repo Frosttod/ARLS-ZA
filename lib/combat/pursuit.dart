@@ -37,11 +37,7 @@ const double kHuntReachM = 500;
 
 /// What was left behind, or nothing at all.
 class Pursuit {
-  const Pursuit({
-    required this.at,
-    required this.until,
-    required this.count,
-  });
+  const Pursuit({required this.at, required this.until, required this.count});
 
   /// Where the player was when they last made themselves the centre of it.
   final GeoPoint at;

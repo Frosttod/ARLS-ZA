@@ -53,12 +53,15 @@ void main() {
   });
 
   group('hands (§5.4)', () {
-    test('a rested novice with an empty pack hits about two swings in three', () {
-      expect(
-        meleeHitChance(skill: 0, carriedKg: 0, maxCarryKg: 36),
-        closeTo(0.65, 0.001),
-      );
-    });
+    test(
+      'a rested novice with an empty pack hits about two swings in three',
+      () {
+        expect(
+          meleeHitChance(skill: 0, carriedKg: 0, maxCarryKg: 36),
+          closeTo(0.65, 0.001),
+        );
+      },
+    );
 
     test('mastery is worth thirty points of it', () {
       expect(

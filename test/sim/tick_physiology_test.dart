@@ -387,9 +387,8 @@ void main() {
     // stayed there. Nothing was bleeding any more, so every bandage in the
     // pack refused — and nothing in the model ever put a millilitre back. The
     // model needs a way out of a bad fight that is not a new character.
-    SimState bled(double fraction) => fresh().copyWith(
-      bloodMl: constants.bloodMaxMl * (1 - fraction),
-    );
+    SimState bled(double fraction) =>
+        fresh().copyWith(bloodMl: constants.bloodMaxMl * (1 - fraction));
 
     test('with a full stomach and nothing open', () {
       final after = advance(
@@ -407,16 +406,17 @@ void main() {
       // meals the character never ate.
       var state = bled(0.40);
       for (var hour = 0; hour < 40; hour++) {
-        state = advanceInChunks(
-          state: state,
-          constants: constants,
-          elapsed: const Duration(hours: 1),
-        ).state.copyWith(
-          // A meal and a bottle each hour: this test is about the blood, and
-          // starving to death on the way would be a different one.
-          caloriesKcal: constants.caloriesDailyKcal,
-          waterMl: constants.waterDailyMl,
-        );
+        state =
+            advanceInChunks(
+              state: state,
+              constants: constants,
+              elapsed: const Duration(hours: 1),
+            ).state.copyWith(
+              // A meal and a bottle each hour: this test is about the blood, and
+              // starving to death on the way would be a different one.
+              caloriesKcal: constants.caloriesDailyKcal,
+              waterMl: constants.waterDailyMl,
+            );
       }
 
       expect(state.bloodMl / constants.bloodMaxMl, greaterThan(0.95));

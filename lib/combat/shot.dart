@@ -76,10 +76,7 @@ ShotError aimError({
 }) {
   // §5.1, §5.6.3: an optic or a grip changes the mechanical figure before
   // anything the body does to it.
-  final mechanical = FittedWeapon(
-    weapon: weapon,
-    attachments: attachments,
-  ).moa;
+  final mechanical = FittedWeapon(weapon: weapon, attachments: attachments).moa;
 
   // §5.5.1: an unsettled sight picture opens every source at once rather than
   // adding one of its own — the shooter is not making a new mistake, they are

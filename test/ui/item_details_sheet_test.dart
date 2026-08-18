@@ -73,21 +73,14 @@ void main() {
   /// Which way the row is marked, read off the row rather than off the screen:
   /// several rows carry an icon and only one of them is this reading's.
   IconData? markOn(WidgetTester tester, String label) {
-    final row = find.ancestor(
-      of: find.text(label),
-      matching: find.byType(Row),
-    );
+    final row = find.ancestor(of: find.text(label), matching: find.byType(Row));
     final icons = find.descendant(of: row.first, matching: find.byType(Icon));
     if (icons.evaluate().isEmpty) return null;
     return tester.widget<Icon>(icons.first).icon;
   }
 
   testWidgets('an item alone is just its own numbers', (tester) async {
-    await open(
-      tester,
-      itemId: 'armor_vest_soft',
-      inventory: const Inventory(),
-    );
+    await open(tester, itemId: 'armor_vest_soft', inventory: const Inventory());
 
     expect(find.text('Ochrona'), findsOneWidget);
     expect(find.text('Pokrycie'), findsOneWidget);
@@ -112,11 +105,7 @@ void main() {
     final wearingSoft = const Inventory().wear('armor_vest_soft');
 
     testWidgets('it says what it is being compared with', (tester) async {
-      await open(
-        tester,
-        itemId: 'armor_vest_plate',
-        inventory: wearingSoft,
-      );
+      await open(tester, itemId: 'armor_vest_plate', inventory: wearingSoft);
 
       expect(find.textContaining('Porównanie z'), findsOneWidget);
       expect(find.textContaining('na sobie'), findsOneWidget);
@@ -258,16 +247,18 @@ void main() {
       expect(markOn(tester, 'Stan'), Icons.add);
     });
 
-    testWidgets('the battered one, held against the good one, reads as a loss',
-        (tester) async {
-      await open(
-        tester,
-        line: battered,
-        inventory: const Inventory(worn: [found], carried: [battered]),
-      );
+    testWidgets(
+      'the battered one, held against the good one, reads as a loss',
+      (tester) async {
+        await open(
+          tester,
+          line: battered,
+          inventory: const Inventory(worn: [found], carried: [battered]),
+        );
 
-      expect(markOn(tester, 'Stan'), Icons.remove);
-    });
+        expect(markOn(tester, 'Stan'), Icons.remove);
+      },
+    );
 
     testWidgets('a copy is never compared with itself', (tester) async {
       await open(
@@ -315,9 +306,11 @@ void main() {
         onAttach: (line, _) => reported = line,
       );
 
-      await tester.tap(find.text(L10n.of(tester.element(find.byType(
-        TextButton,
-      ).first)).attachmentFit));
+      await tester.tap(
+        find.text(
+          L10n.of(tester.element(find.byType(TextButton).first)).attachmentFit,
+        ),
+      );
       await tester.pumpAndSettle();
 
       expect(reported, isNotNull);
@@ -376,8 +369,11 @@ void main() {
       );
 
       expect(
-        find.text(L10n.of(tester.element(find.byType(TextButton).first))
-            .attachmentsNone),
+        find.text(
+          L10n.of(
+            tester.element(find.byType(TextButton).first),
+          ).attachmentsNone,
+        ),
         findsOneWidget,
         reason: 'the one on the ground is bare, whatever the player is holding',
       );
@@ -403,8 +399,11 @@ void main() {
       );
 
       expect(
-        find.text(L10n.of(tester.element(find.byType(TextButton).first))
-            .attachmentsNone),
+        find.text(
+          L10n.of(
+            tester.element(find.byType(TextButton).first),
+          ).attachmentsNone,
+        ),
         findsNothing,
         reason: 'their own rifle is wearing it',
       );

@@ -178,10 +178,16 @@ void main() {
     );
     expect(find.text('Bandaż'), findsOneWidget);
 
-    at.value = GeoPoint(here.latitude + 60 / metresPerDegreeLat, here.longitude);
+    at.value = GeoPoint(
+      here.latitude + 60 / metresPerDegreeLat,
+      here.longitude,
+    );
     await tester.pumpAndSettle();
 
-    expect(find.text('Już nic tu nie ma.'), findsOneWidget);
+    // Closed, rather than standing there to say it is empty. A sheet about a
+    // pile has no reason to outlive the pile.
+    expect(find.text('Bandaż'), findsNothing);
+    expect(find.text('Już nic tu nie ma.'), findsNothing);
   });
 
   testWidgets('and so does taking the last of it', (tester) async {
@@ -191,6 +197,9 @@ void main() {
     dropped.value = const [];
     await tester.pumpAndSettle();
 
-    expect(find.text('Już nic tu nie ma.'), findsOneWidget);
+    // The player has just watched the last item leave. Telling them there is
+    // nothing there is telling them what they did.
+    expect(find.text('Bandaż'), findsNothing);
+    expect(find.text('Już nic tu nie ma.'), findsNothing);
   });
 }

@@ -115,8 +115,8 @@ void main() {
 
     test('a carbine takes about three shots to a Walker (§5.1.5)', () {
       final outcome = fire(roll: 0.3);
-      final shots = walker.bloodMl * walker.kind.deathAtLoss /
-          outcome.bloodLossMl;
+      final shots =
+          walker.bloodMl * walker.kind.deathAtLoss / outcome.bloodLossMl;
 
       expect(shots, closeTo(3.2, 0.4));
     });
@@ -127,8 +127,8 @@ void main() {
         ammo: 'ammo_9x19',
         roll: 0.3,
       );
-      final shots = walker.bloodMl * walker.kind.deathAtLoss /
-          outcome.bloodLossMl;
+      final shots =
+          walker.bloodMl * walker.kind.deathAtLoss / outcome.bloodLossMl;
 
       expect(shots, closeTo(7.2, 0.8));
     });

@@ -56,27 +56,13 @@ Future<void> showGroundItems(
                 ? const <GroundPile>[]
                 : pilesWithin(items, position, reachM: reachM);
 
-            // Everything taken, or walked away from. Either way there is
-            // nothing left to choose between.
-            if (piles.isEmpty) {
-              return Padding(
-                padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        l10n.groundEmpty,
-                        style: TextStyle(fontSize: 13, color: colours.muted),
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: Text(l10n.commonOk),
-                    ),
-                  ],
-                ),
-              );
-            }
+            // ⚠️ Closes itself rather than saying it is empty.
+            //
+            // The last "take" empties the list, and what stood here then was a
+            // sheet reporting that there was nothing there — which the player
+            // had just watched happen. A sheet about a pile has no reason to
+            // outlive the pile.
+            if (piles.isEmpty) return const _Gone();
 
             return Padding(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
@@ -128,6 +114,33 @@ Future<void> showGroundItems(
     );
   },
 );
+
+/// A pile that is not there any more: closes the sheet on the next frame.
+///
+/// A frame of nothing rather than a message about nothing. Popping during a
+/// build is not allowed, so it waits for the frame to finish — which is also
+/// what keeps a tap on a stale marker from opening a sheet that stays open.
+class _Gone extends StatefulWidget {
+  const _Gone();
+
+  @override
+  State<_Gone> createState() => _GoneState();
+}
+
+class _GoneState extends State<_Gone> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final navigator = Navigator.of(context);
+      if (navigator.canPop()) navigator.pop();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) => const SizedBox.shrink();
+}
 
 class _PileRow extends StatelessWidget {
   const _PileRow({

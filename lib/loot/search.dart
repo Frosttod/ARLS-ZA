@@ -167,6 +167,7 @@ class Search {
     required DateTime now,
     required String poiId,
     required SearchDepth depth,
+
     /// §10.3.5: how long this depth takes *here*. A bin is not a supermarket.
     Duration? takes,
   }) => Search(
@@ -204,8 +205,7 @@ class Search {
 
   /// How far this is heard (§5.6.1). Forcing a door carries 150 m; a search
   /// carries 80; standing still and looking around carries nothing at all.
-  double get noiseM =>
-      breach?.noiseM ?? (isArea ? 0 : kSearchNoiseM);
+  double get noiseM => breach?.noiseM ?? (isArea ? 0 : kSearchNoiseM);
 
   /// Consecutive readings that fell outside the circle. Reset by any reading
   /// inside it, so a wander out and back does not accumulate.

@@ -86,10 +86,7 @@ void main() {
     final storage = nextLevelOf(ShelterModule.storage, have: 0)!;
 
     test('a hammer is the baseline', () {
-      expect(
-        moduleWork(storage, hasHammer: true),
-        storage.work,
-      );
+      expect(moduleWork(storage, hasHammer: true), storage.work);
     });
 
     test('a multitool takes half again as long', () {

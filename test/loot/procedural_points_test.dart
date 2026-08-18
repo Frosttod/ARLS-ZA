@@ -19,10 +19,7 @@ void main() {
       shape: FeatureShape.line,
       geometry: [
         GeoPoint(lat, centre.longitude),
-        GeoPoint(
-          lat,
-          centre.longitude + lengthM / metresPerDegreeLon(lat),
-        ),
+        GeoPoint(lat, centre.longitude + lengthM / metresPerDegreeLon(lat)),
       ],
     );
   }
@@ -103,7 +100,11 @@ void main() {
           point.position as GeoPoint,
           road.geometry,
         );
-        expect(distance, greaterThan(15), reason: '§3.5 keeps 15 m from a road');
+        expect(
+          distance,
+          greaterThan(15),
+          reason: '§3.5 keeps 15 m from a road',
+        );
         expect(distance, lessThan(30), reason: 'still beside it, not adrift');
       }
     });
@@ -158,9 +159,8 @@ void main() {
     test('the same seed and map give the same places', () {
       // Otherwise the village rearranges itself every time the app opens, and
       // a player who walked to a barn yesterday finds a field.
-      List<String> run() => generate(wanted: 8)
-          .map((p) => (p.id as String))
-          .toList();
+      List<String> run() =>
+          generate(wanted: 8).map((p) => (p.id as String)).toList();
 
       expect(run(), run());
     });

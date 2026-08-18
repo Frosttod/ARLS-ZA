@@ -281,11 +281,7 @@ class GameLoop {
 
     _inside = fix == null
         ? null
-        : shelterAt(
-            GeoPoint(fix.latitude, fix.longitude),
-            _shelters,
-            now: now,
-          );
+        : shelterAt(GeoPoint(fix.latitude, fix.longitude), _shelters, now: now);
 
     final inside = _inside;
     final night =
@@ -317,8 +313,7 @@ class GameLoop {
     }
 
     final settled =
-        _settledAt != null &&
-        now.difference(_settledAt!) >= kSettleToSleep;
+        _settledAt != null && now.difference(_settledAt!) >= kSettleToSleep;
 
     // Night is the immediate case §2.5.1 describes. The ten minutes are the
     // other half of the same idea: somebody who has been sitting in their own

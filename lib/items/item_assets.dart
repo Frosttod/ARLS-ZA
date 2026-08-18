@@ -42,7 +42,9 @@ Future<ItemCatalogue> loadItemCatalogue({Directory? packDirectory}) async {
 
     for (final pack in packs) {
       try {
-        sources.add(ItemSource(pack.uri.pathSegments.last, pack.readAsStringSync()));
+        sources.add(
+          ItemSource(pack.uri.pathSegments.last, pack.readAsStringSync()),
+        );
       } on FileSystemException {
         // An unreadable pack is not a reason to start without a catalogue. It
         // is reported by its absence from the list the settings screen shows.

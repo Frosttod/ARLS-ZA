@@ -22,7 +22,10 @@ void main() {
     // ring of roughly that many pixels across the radius.
     final pixels = ringPixels(kSearchReachM, 17);
 
-    expect(pixels, closeTo(kSearchReachM / metresPerPixel(17, at.latitude), 0.001));
+    expect(
+      pixels,
+      closeTo(kSearchReachM / metresPerPixel(17, at.latitude), 0.001),
+    );
     expect(pixels, greaterThan(10));
   });
 
@@ -61,7 +64,10 @@ void main() {
       reachM: kSearchReachM,
     );
 
-    expect(place.copyWith(at: const GeoPoint(52.5, 16.9)).reachM, kSearchReachM);
+    expect(
+      place.copyWith(at: const GeoPoint(52.5, 16.9)).reachM,
+      kSearchReachM,
+    );
   });
 
   group('one dot for a heap (§4.8)', () {
@@ -156,7 +162,10 @@ void main() {
 
     test('north is up and east is right', () {
       final metres = metresPerPixel(16, at.latitude);
-      final north = GeoPoint(at.latitude + 50 * metres / metresPerDegreeLat, at.longitude);
+      final north = GeoPoint(
+        at.latitude + 50 * metres / metresPerDegreeLat,
+        at.longitude,
+      );
       final east = GeoPoint(
         at.latitude,
         at.longitude + 50 * metres / metresPerDegreeLon(at.latitude),
@@ -191,9 +200,7 @@ void main() {
         MapMarker(id: id, kind: MarkerKind.loot, at: at, reachM: reachM);
 
     test('one ring per distance, however many markers there are', () {
-      final rings = reachRingsOf([
-        for (var i = 0; i < 40; i++) place('p$i'),
-      ]);
+      final rings = reachRingsOf([for (var i = 0; i < 40; i++) place('p$i')]);
 
       expect(rings, [kSearchReachM]);
     });

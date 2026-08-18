@@ -24,7 +24,9 @@ class _Source extends BasePositionSource {
   bool get isSimulated => false;
 
   @override
-  Future<void> start({PositionCadence cadence = PositionCadence.moving}) async {}
+  Future<void> start({
+    PositionCadence cadence = PositionCadence.moving,
+  }) async {}
 
   @override
   Future<void> stop() async {}

@@ -181,9 +181,8 @@ List<Poi> generateProceduralPoints({
   // in any direction. Sorting by distance fixes that; the separation stops the
   // whole village from landing on one lane.
   candidates.sort(
-    (a, b) => a.position
-        .distanceTo(centre)
-        .compareTo(b.position.distanceTo(centre)),
+    (a, b) =>
+        a.position.distanceTo(centre).compareTo(b.position.distanceTo(centre)),
   );
 
   final chosen = <Poi>[];
@@ -315,8 +314,7 @@ GeoPoint _offsetFrom(
 ) {
   // Perpendicular in the plane: (x, y) becomes (-y, x).
   final dLat = point.bearingX * metres / metresPerDegreeLat;
-  final dLon =
-      -point.bearingY * metres / metresPerDegreeLon(point.at.latitude);
+  final dLon = -point.bearingY * metres / metresPerDegreeLon(point.at.latitude);
 
   return GeoPoint(point.at.latitude + dLat, point.at.longitude + dLon);
 }

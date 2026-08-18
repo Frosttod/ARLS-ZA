@@ -50,28 +50,26 @@ void main() {
     expect(loaded.droppedItemIds, isEmpty);
   });
 
-  test('worn stays worn, so the volume it does not cost stays uncosted', () async {
-    // A coat read back as packed would suddenly fill a third of the rucksack.
-    final inventory = const Inventory()
-        .withPack('pack_trekking')
-        .wear('cloth_winter_jacket');
+  test(
+    'worn stays worn, so the volume it does not cost stays uncosted',
+    () async {
+      // A coat read back as packed would suddenly fill a third of the rucksack.
+      final inventory = const Inventory()
+          .withPack('pack_trekking')
+          .wear('cloth_winter_jacket');
 
-    await store.save(profileId, inventory);
-    final loaded = await store.load(profileId, catalogue);
+      await store.save(profileId, inventory);
+      final loaded = await store.load(profileId, catalogue);
 
-    expect(loaded.inventory.volumeL(catalogue), 0);
-    expect(loaded.inventory.massKg(catalogue), greaterThan(1.2));
-  });
+      expect(loaded.inventory.volumeL(catalogue), 0);
+      expect(loaded.inventory.massKg(catalogue), greaterThan(1.2));
+    },
+  );
 
   test('a book keeps its own page count and progress (§4.6.3)', () async {
     final inventory = const Inventory()
         .withPack('pack_daypack')
-        .add(
-          'lit_textbook_medicine',
-          catalogue,
-          body: _body,
-          pagesTotal: 340,
-        )
+        .add('lit_textbook_medicine', catalogue, body: _body, pagesTotal: 340)
         .inventory;
 
     await store.save(profileId, inventory);
@@ -80,7 +78,9 @@ void main() {
     expect(loaded.inventory.carried.single.pagesTotal, 340);
     // §4.6.4: mass follows the rolled page count, not the catalogue's midpoint.
     expect(
-      loaded.inventory.carried.single.massKg(catalogue['lit_textbook_medicine']!),
+      loaded.inventory.carried.single.massKg(
+        catalogue['lit_textbook_medicine']!,
+      ),
       closeTo((340 * 1.5 + 80) / 1000, 0.001),
     );
   });
@@ -93,7 +93,10 @@ void main() {
     await store.save(profileId, inventory);
     await store.save(profileId, inventory);
 
-    expect((await store.load(profileId, catalogue)).inventory.countOf('mat_metal'), 3);
+    expect(
+      (await store.load(profileId, catalogue)).inventory.countOf('mat_metal'),
+      3,
+    );
   });
 
   test('an item no catalogue defines is dropped and reported', () async {

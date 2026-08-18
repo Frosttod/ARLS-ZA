@@ -73,10 +73,7 @@ void main() {
     });
 
     test('and nothing once it has gone cold', () {
-      expect(
-        hunt().resumedAt(square, t0.add(const Duration(minutes: 20))),
-        0,
-      );
+      expect(hunt().resumedAt(square, t0.add(const Duration(minutes: 20))), 0);
     });
 
     test('or once the player is genuinely somewhere else', () {

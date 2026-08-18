@@ -126,8 +126,7 @@ Duration buildTimeFor(
   double engineering = 0,
 }) {
   final tools = hasTools ? 1 - kToolBuildDiscount : 1.0;
-  final skill =
-      1 - kEngineeringBuildDiscount * engineering.clamp(0.0, 1.0);
+  final skill = 1 - kEngineeringBuildDiscount * engineering.clamp(0.0, 1.0);
 
   return Duration(
     milliseconds: (kind.buildTime.inMilliseconds * tools * skill).round(),
@@ -220,9 +219,7 @@ class Shelter {
     return copyWith(
       workedAt: at,
       // The place first: a module cannot go into a building that is not up.
-      buildLeft: onPlace == null
-          ? null
-          : _down(onPlace, elapsed),
+      buildLeft: onPlace == null ? null : _down(onPlace, elapsed),
       buildingLeft: onModule == null || (onPlace != null && onPlace > elapsed)
           ? onModule
           : _down(onModule, elapsed),

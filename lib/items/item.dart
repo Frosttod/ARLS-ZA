@@ -22,6 +22,7 @@ enum ItemKind {
   firearm,
   melee,
   armor,
+
   /// §4.5. Its own kind rather than a flavour of [armor]: it is the only thing
   /// that changes the two carry limits, and reading that off a coat would be a
   /// mistake waiting to happen.

@@ -20,12 +20,7 @@ void main() {
   // §18.1a's own worked example: 80 kg body, so 24 kg comfortable and 36 kg
   // hard, with a 65 l trekking pack.
   final body = BodyProfile.from(
-    const BodySpec(
-      sex: Sex.male,
-      ageYears: 30,
-      heightCm: 180,
-      weightKg: 80,
-    ),
+    const BodySpec(sex: Sex.male, ageYears: 30, heightCm: 180, weightKg: 80),
   );
 
   Inventory withTrekking() => const Inventory().withPack('pack_trekking');
@@ -47,14 +42,15 @@ void main() {
     });
 
     test('every pack in the catalogue helps more than the last', () {
-      final packs = catalogue.all
-          .where((item) => item.props['capacity_l'] != null)
-          .toList()
-        ..sort(
-          (a, b) => (a.props['capacity_l']! as num).compareTo(
-            b.props['capacity_l']! as num,
-          ),
-        );
+      final packs =
+          catalogue.all
+              .where((item) => item.props['capacity_l'] != null)
+              .toList()
+            ..sort(
+              (a, b) => (a.props['capacity_l']! as num).compareTo(
+                b.props['capacity_l']! as num,
+              ),
+            );
 
       var previous = 0.0;
       for (final pack in packs) {
@@ -175,7 +171,11 @@ void main() {
     });
 
     test('an item the catalogue lost is refused by name', () {
-      final result = const Inventory().add('weapon_railgun', catalogue, body: body);
+      final result = const Inventory().add(
+        'weapon_railgun',
+        catalogue,
+        body: body,
+      );
 
       expect(result.refusal, RefusalReason.unknownItem);
     });
@@ -499,8 +499,10 @@ void main() {
         count: 1,
       );
 
-      expect(const Inventory().wearLine(copy, catalogue).worn.single.condition,
-          62);
+      expect(
+        const Inventory().wearLine(copy, catalogue).worn.single.condition,
+        62,
+      );
     });
 
     test('only one piece of a stack is put on', () {
@@ -509,12 +511,19 @@ void main() {
       expect(const Inventory().wearLine(two, catalogue).worn.single.count, 1);
     });
 
-    test('wearing by id still works, for anything that has no copy in hand', () {
-      expect(
-        const Inventory().wear('armor_vest_soft', catalogue).worn.single.itemId,
-        'armor_vest_soft',
-      );
-    });
+    test(
+      'wearing by id still works, for anything that has no copy in hand',
+      () {
+        expect(
+          const Inventory()
+              .wear('armor_vest_soft', catalogue)
+              .worn
+              .single
+              .itemId,
+          'armor_vest_soft',
+        );
+      },
+    );
 
     test('the displaced piece keeps its own condition too', () {
       const old = CarriedItem(itemId: 'armor_vest_soft', condition: 25);
@@ -580,14 +589,17 @@ void main() {
       );
     });
 
-    test('the first pack of the game comes from nowhere and leaves nothing', () {
-      final after = const Inventory().wearPack(
-        const CarriedItem(itemId: 'pack_school'),
-      );
+    test(
+      'the first pack of the game comes from nowhere and leaves nothing',
+      () {
+        final after = const Inventory().wearPack(
+          const CarriedItem(itemId: 'pack_school'),
+        );
 
-      expect(after.packId, 'pack_school');
-      expect(after.carried, isEmpty);
-    });
+        expect(after.packId, 'pack_school');
+        expect(after.carried, isEmpty);
+      },
+    );
 
     test('a pack put on through wearLine is worn as a pack, not as a coat', () {
       // §4.4: the back slot is read from packId, so a pack that landed in
@@ -685,10 +697,7 @@ void main() {
       final after = inventory.consumePortion(inventory.carried.single, 0.5);
       final pack = catalogue['pack_daypack']!.weightKg;
 
-      expect(
-        after.massKg(catalogue) - pack,
-        closeTo((whole - pack) / 2, 0.01),
-      );
+      expect(after.massKg(catalogue) - pack, closeTo((whole - pack) / 2, 0.01));
     });
 
     test('but takes the same room, the bottle being the same bottle', () {
@@ -734,8 +743,10 @@ void main() {
           .inventory;
 
       // The full ones go together; the half bottle stays its own line.
-      expect(inventory.carried.where((line) => line.portion >= 1).single.count,
-          2);
+      expect(
+        inventory.carried.where((line) => line.portion >= 1).single.count,
+        2,
+      );
       expect(inventory.carried.where((line) => line.portion < 1), hasLength(1));
     });
 
@@ -797,10 +808,7 @@ void main() {
     });
 
     test('the hand is where the figure looks for it', () {
-      expect(
-        wearSlotOf(catalogue['melee_knife']!),
-        BodySlot.hand.wire,
-      );
+      expect(wearSlotOf(catalogue['melee_knife']!), BodySlot.hand.wire);
       expect(wearSlotOf(catalogue['cloth_boots']!), BodySlot.feet.wire);
     });
   });
@@ -849,9 +857,7 @@ void main() {
       final optic = kit.carried.firstWhere((l) => l.itemId == 'att_red_dot');
       kit = kit.attach(held, optic, catalogue);
 
-      final fitted = kit.worn.firstWhere(
-        (l) => l.itemId == 'weapon_rifle_545',
-      );
+      final fitted = kit.worn.firstWhere((l) => l.itemId == 'weapon_rifle_545');
       final after = kit.detach(fitted, 'att_red_dot', catalogue, body: body);
 
       expect(
@@ -860,7 +866,10 @@ void main() {
             .attachments,
         isEmpty,
       );
-      expect(after.carried.where((l) => l.itemId == 'att_red_dot'), hasLength(1));
+      expect(
+        after.carried.where((l) => l.itemId == 'att_red_dot'),
+        hasLength(1),
+      );
     });
 
     test('and a rifle picked up off the pavement keeps its sights', () {
@@ -879,7 +888,8 @@ void main() {
           .inventory;
 
       expect(
-        back.carried.firstWhere((l) => l.itemId == 'weapon_rifle_545')
+        back.carried
+            .firstWhere((l) => l.itemId == 'weapon_rifle_545')
             .attachments,
         ['tool_suppressor', 'att_red_dot'],
       );
@@ -912,16 +922,16 @@ void main() {
       );
       expect(
         fitted.massKg(catalogue['weapon_rifle_545']!, catalogue: catalogue),
-        greaterThan(
-          fitted.massKg(catalogue['weapon_rifle_545']!),
-        ),
+        greaterThan(fitted.massKg(catalogue['weapon_rifle_545']!)),
         reason: 'the rifle itself is heavier for wearing it',
       );
     });
 
     test('an optic goes onto the rifle and out of the pack', () {
       final kit = armed();
-      final rifle = kit.carried.firstWhere((l) => l.itemId == 'weapon_rifle_545');
+      final rifle = kit.carried.firstWhere(
+        (l) => l.itemId == 'weapon_rifle_545',
+      );
       final optic = kit.carried.firstWhere((l) => l.itemId == 'att_red_dot');
 
       final after = kit.attach(rifle, optic, catalogue);
@@ -937,7 +947,9 @@ void main() {
 
     test('and comes off again into the pack', () {
       var kit = armed();
-      final rifle = kit.carried.firstWhere((l) => l.itemId == 'weapon_rifle_545');
+      final rifle = kit.carried.firstWhere(
+        (l) => l.itemId == 'weapon_rifle_545',
+      );
       final optic = kit.carried.firstWhere((l) => l.itemId == 'att_red_dot');
       kit = kit.attach(rifle, optic, catalogue);
 
@@ -967,7 +979,9 @@ void main() {
           .add('att_red_dot', catalogue, body: body)
           .inventory;
 
-      final first = kit.carried.firstWhere((l) => l.itemId == 'weapon_rifle_545');
+      final first = kit.carried.firstWhere(
+        (l) => l.itemId == 'weapon_rifle_545',
+      );
       final optic = kit.carried.firstWhere((l) => l.itemId == 'att_red_dot');
       kit = kit.attach(first, optic, catalogue);
 
@@ -994,16 +1008,23 @@ void main() {
       );
       final can = kit.carried.firstWhere((l) => l.itemId == 'tool_suppressor');
 
-      expect(kit.attach(shotgun, can, catalogue).carried
-          .firstWhere((l) => l.itemId == 'weapon_shotgun_pump')
-          .attachments, isEmpty);
+      expect(
+        kit
+            .attach(shotgun, can, catalogue)
+            .carried
+            .firstWhere((l) => l.itemId == 'weapon_shotgun_pump')
+            .attachments,
+        isEmpty,
+      );
     });
 
     test('a second of the same is refused', () {
       // Two red dots on one rifle is not a thing, and the arithmetic would
       // happily stack it.
       var kit = armed().add('att_red_dot', catalogue, body: body).inventory;
-      final rifle = kit.carried.firstWhere((l) => l.itemId == 'weapon_rifle_545');
+      final rifle = kit.carried.firstWhere(
+        (l) => l.itemId == 'weapon_rifle_545',
+      );
       final optics = kit.carried
           .where((l) => l.itemId == 'att_red_dot')
           .toList();

@@ -272,7 +272,9 @@ class LootTableSet {
     try {
       decoded = jsonDecode(source);
     } on FormatException catch (error) {
-      return LootTableSet(const [], ['$origin: not valid JSON: ${error.message}']);
+      return LootTableSet(const [], [
+        '$origin: not valid JSON: ${error.message}',
+      ]);
     }
     if (decoded is! Map<String, Object?>) {
       return LootTableSet(const [], ['$origin: expected an object']);
@@ -391,14 +393,18 @@ class LootTableSet {
 
         // §10.1, stated as a rule rather than left to whoever edits the file.
         if (item.kind == ItemKind.firearm) {
-          faults.add('${table.id}: procedural points may not hold firearms '
-              '(${entry.itemId})');
+          faults.add(
+            '${table.id}: procedural points may not hold firearms '
+            '(${entry.itemId})',
+          );
         }
         final form = item.props['form'];
         if (item.kind == ItemKind.literature &&
             (form == 'textbook' || form == 'encyclopedia')) {
-          faults.add('${table.id}: procedural points may not hold advanced '
-              'literature (${entry.itemId})');
+          faults.add(
+            '${table.id}: procedural points may not hold advanced '
+            'literature (${entry.itemId})',
+          );
         }
       }
     }

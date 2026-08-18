@@ -586,9 +586,10 @@ void main() {
       // Nobody presses anything. Sleep is the default state of somebody who is
       // in their shelter in the dark with nothing else on — which is exactly
       // what a phone on a bedside table has actually done.
-      final tired = SimState.fresh(at: midnight, constants: constants).copyWith(
-        sleepDebtSeconds: const Duration(hours: 5).inSeconds,
-      );
+      final tired = SimState.fresh(
+        at: midnight,
+        constants: constants,
+      ).copyWith(sleepDebtSeconds: const Duration(hours: 5).inSeconds);
 
       final rig = await buildLoop(initial: tired, startAt: midnight);
       addTearDown(() async {
@@ -624,42 +625,45 @@ void main() {
       );
     });
 
-    test('and reading at midnight is reading, not sleeping (§2.1a.1)', () async {
-      // Something the player deliberately started outranks the default state.
-      final rig = await buildLoop(
-        initial: SimState.fresh(at: midnight, constants: constants),
-        startAt: midnight,
-      );
-      addTearDown(() async {
-        await rig.loop.dispose();
-        await rig.source.dispose();
-        await rig.session.close();
-      });
+    test(
+      'and reading at midnight is reading, not sleeping (§2.1a.1)',
+      () async {
+        // Something the player deliberately started outranks the default state.
+        final rig = await buildLoop(
+          initial: SimState.fresh(at: midnight, constants: constants),
+          startAt: midnight,
+        );
+        addTearDown(() async {
+          await rig.loop.dispose();
+          await rig.source.dispose();
+          await rig.session.close();
+        });
 
-      await rig.loop.start();
-      rig.source.jumpTo(52.4064, 16.9252);
-      rig.source.step();
-      await pump();
+        await rig.loop.start();
+        rig.source.jumpTo(52.4064, 16.9252);
+        rig.source.step();
+        await pump();
 
-      rig.loop.beginOccupation(
-        Occupation(
-          kind: OccupationKind.reading,
-          startedAt: midnight,
-          requiredWork: const Duration(hours: 3),
-        ),
-      );
-      rig.loop.setShelters([
-        Shelter(
-          id: 1,
-          kind: ShelterKind.main,
-          position: const GeoPoint(52.4064, 16.9252),
-          startedAt: midnight.subtract(const Duration(days: 1)),
-          buildTime: kShelterBuildTime,
-        ),
-      ]);
+        rig.loop.beginOccupation(
+          Occupation(
+            kind: OccupationKind.reading,
+            startedAt: midnight,
+            requiredWork: const Duration(hours: 3),
+          ),
+        );
+        rig.loop.setShelters([
+          Shelter(
+            id: 1,
+            kind: ShelterKind.main,
+            position: const GeoPoint(52.4064, 16.9252),
+            startedAt: midnight.subtract(const Duration(days: 1)),
+            buildTime: kShelterBuildTime,
+          ),
+        ]);
 
-      expect(rig.loop.state.zone, MetabolicZone.shelter);
-    });
+        expect(rig.loop.state.zone, MetabolicZone.shelter);
+      },
+    );
 
     test('a half-built shelter keeps nothing out (§8.3)', () async {
       final rig = await buildLoop(
@@ -1093,10 +1097,7 @@ void main() {
       // §9.2: up, and still being taken for dead for another ten minutes.
       expect(rig.loop.down, DownState.grace);
       expect(rig.loop.canAct, isTrue);
-      expect(
-        rig.loop.state.bloodMl / constants.bloodMaxMl,
-        greaterThan(0.2),
-      );
+      expect(rig.loop.state.bloodMl / constants.bloodMaxMl, greaterThan(0.2));
     });
 
     test('nothing dies asleep (§9.1)', () async {
@@ -1248,9 +1249,10 @@ void main() {
     });
 
     test('and it pays the debt down', () async {
-      final tired = SimState.fresh(at: t0, constants: constants).copyWith(
-        sleepDebtSeconds: const Duration(hours: 5).inSeconds,
-      );
+      final tired = SimState.fresh(
+        at: t0,
+        constants: constants,
+      ).copyWith(sleepDebtSeconds: const Duration(hours: 5).inSeconds);
 
       final rig = await buildLoop(initial: tired);
       addTearDown(() async {
@@ -1299,46 +1301,49 @@ void main() {
       expect(rig.loop.state.zone, MetabolicZone.shelter);
     });
 
-    test('and sleep comes back the moment the meal is over, at night', () async {
-      // Found on a phone: eating at two in the morning stopped the sleep and
-      // it never came back. Night is §2.5.1's own condition and has no ten
-      // minutes attached to it — swallowing should put them straight back.
-      final rig = await buildLoop(
-        initial: SimState.fresh(at: midnight, constants: constants),
-        startAt: midnight,
-      );
-      addTearDown(() async {
-        await rig.loop.dispose();
-        await rig.source.dispose();
-        await rig.session.close();
-      });
+    test(
+      'and sleep comes back the moment the meal is over, at night',
+      () async {
+        // Found on a phone: eating at two in the morning stopped the sleep and
+        // it never came back. Night is §2.5.1's own condition and has no ten
+        // minutes attached to it — swallowing should put them straight back.
+        final rig = await buildLoop(
+          initial: SimState.fresh(at: midnight, constants: constants),
+          startAt: midnight,
+        );
+        addTearDown(() async {
+          await rig.loop.dispose();
+          await rig.source.dispose();
+          await rig.session.close();
+        });
 
-      await rig.loop.start();
-      rig.source.jumpTo(52.4064, 16.9252);
-      rig.source.step();
-      await pump();
-      rig.loop.setShelters([
-        Shelter(
-          id: 1,
-          kind: ShelterKind.main,
-          position: const GeoPoint(52.4064, 16.9252),
-          startedAt: midnight.subtract(const Duration(days: 1)),
-          buildTime: kShelterBuildTime,
-          buildLeft: Duration.zero,
-        ),
-      ]);
-      expect(rig.loop.state.zone, MetabolicZone.sleep);
+        await rig.loop.start();
+        rig.source.jumpTo(52.4064, 16.9252);
+        rig.source.step();
+        await pump();
+        rig.loop.setShelters([
+          Shelter(
+            id: 1,
+            kind: ShelterKind.main,
+            position: const GeoPoint(52.4064, 16.9252),
+            startedAt: midnight.subtract(const Duration(days: 1)),
+            buildTime: kShelterBuildTime,
+            buildLeft: Duration.zero,
+          ),
+        ]);
+        expect(rig.loop.state.zone, MetabolicZone.sleep);
 
-      rig.loop.setActing(acting: true);
-      expect(rig.loop.state.zone, MetabolicZone.shelter);
+        rig.loop.setActing(acting: true);
+        expect(rig.loop.state.zone, MetabolicZone.shelter);
 
-      rig.loop.setActing(acting: false);
-      expect(
-        rig.loop.state.zone,
-        MetabolicZone.sleep,
-        reason: 'night needs no ten minutes',
-      );
-    });
+        rig.loop.setActing(acting: false);
+        expect(
+          rig.loop.state.zone,
+          MetabolicZone.sleep,
+          reason: 'night needs no ten minutes',
+        );
+      },
+    );
 
     test('a short action keeps them awake too (§2.1a.2)', () async {
       // Somebody halfway through a bandage is not somebody who has been

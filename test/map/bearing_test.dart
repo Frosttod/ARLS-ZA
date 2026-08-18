@@ -33,10 +33,7 @@ void main() {
   });
 
   test('north-east is forty-five', () {
-    expect(
-      here.bearingTo(offset(north: 100, east: 100)),
-      closeTo(45, 0.5),
-    );
+    expect(here.bearingTo(offset(north: 100, east: 100)), closeTo(45, 0.5));
   });
 
   test('a point on top of itself has no bearing worth arguing about', () {

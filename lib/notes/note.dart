@@ -77,9 +77,7 @@ class Note {
   /// Which placeholders this note needs filled, in the order they appear.
   Set<String> get placeholders => {
     for (final body in text.values)
-      ...RegExp(r'\{(\w+)\}')
-          .allMatches(body)
-          .map((match) => match.group(1)!),
+      ...RegExp(r'\{(\w+)\}').allMatches(body).map((match) => match.group(1)!),
   };
 
   /// Whether [names] can fill every placeholder this note uses (§19.1.1).
@@ -200,8 +198,8 @@ class NoteSet {
     return NoteSet(notes, problems);
   }
 
-  static Map<String, String> _byLanguage(Object? raw) => raw
-          is Map<String, Object?>
+  static Map<String, String> _byLanguage(Object? raw) =>
+      raw is Map<String, Object?>
       ? {
           for (final entry in raw.entries)
             if (entry.value is String && (entry.value! as String).isNotEmpty)

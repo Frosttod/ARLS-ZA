@@ -162,7 +162,9 @@ void main() {
     await pump(tester, inventory);
 
     expect(
-      find.text('Powyżej komfortowego obciążenia — każdy krok kosztuje więcej.'),
+      find.text(
+        'Powyżej komfortowego obciążenia — każdy krok kosztuje więcej.',
+      ),
       findsOneWidget,
     );
   });
@@ -191,12 +193,7 @@ void main() {
   ) async {
     final inventory = const Inventory()
         .withPack('pack_daypack')
-        .add(
-          'lit_guide_survival',
-          catalogue,
-          body: body,
-          pagesTotal: 160,
-        )
+        .add('lit_guide_survival', catalogue, body: body, pagesTotal: 160)
         .inventory;
 
     await pump(tester, inventory);
@@ -291,10 +288,7 @@ void main() {
     });
 
     testWidgets('what is worn shows in its own slot', (tester) async {
-      await pump(
-        tester,
-        const Inventory().wear('armor_vest_soft', catalogue),
-      );
+      await pump(tester, const Inventory().wear('armor_vest_soft', catalogue));
 
       expect(find.text('Kamizelka kuloodporna'), findsOneWidget);
       expect(find.text('puste'), findsNWidgets(10));
@@ -394,11 +388,10 @@ void main() {
           catalogue: catalogue,
           names: names,
           body: body,
-          onDrop: (line, count) =>
-              inventory.value = inventory.value.remove(
-                line.itemId,
-                count: count,
-              )!,
+          onDrop: (line, count) => inventory.value = inventory.value.remove(
+            line.itemId,
+            count: count,
+          )!,
         ),
       ),
     );
@@ -425,8 +418,6 @@ void main() {
     expect(find.text('Plecak jest pusty.'), findsOneWidget);
   });
 
-
-
   group('a running use is drawn under the thing being used', () {
     // Found on a phone: the bar sat at the top of the screen, so drinking from
     // one of three bottles said something was happening without saying what.
@@ -446,11 +437,7 @@ void main() {
     );
 
     testWidgets('the bar is below the item it belongs to', (tester) async {
-      await pump(
-        tester,
-        pack,
-        action: ValueNotifier<Search?>(drinking()),
-      );
+      await pump(tester, pack, action: ValueNotifier<Search?>(drinking()));
 
       await reveal(tester, find.text('Picie'));
 
@@ -562,11 +549,8 @@ void main() {
             catalogue: catalogue,
             names: names,
             body: body,
-            onDrop: (line, count) =>
-                inventory.value = inventory.value.removeLine(
-                  line,
-                  count: count,
-                )!,
+            onDrop: (line, count) => inventory.value = inventory.value
+                .removeLine(line, count: count)!,
           ),
         ),
       );
@@ -626,10 +610,7 @@ void main() {
     // Found on a phone: opening one tin from a stack of four leaves a
     // part-eaten tin beside three whole ones — two rows, one item id — and the
     // bar was drawn under both of them.
-    const partly = CarriedItem(
-      itemId: 'food_canned_meat',
-      portion: 0.67,
-    );
+    const partly = CarriedItem(itemId: 'food_canned_meat', portion: 0.67);
     const whole = CarriedItem(itemId: 'food_canned_meat', count: 3);
 
     final pack = const Inventory(

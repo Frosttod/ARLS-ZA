@@ -16,7 +16,9 @@ void main() {
     ValueNotifier<List<Notice>> notices,
   ) async {
     await tester.pumpWidget(
-      MaterialApp(home: Scaffold(body: NoticeStack(notices: notices))),
+      MaterialApp(
+        home: Scaffold(body: NoticeStack(notices: notices)),
+      ),
     );
     await tester.pumpAndSettle();
   }
@@ -37,9 +39,7 @@ void main() {
     // A fourth line of history is not news.
     await pump(
       tester,
-      ValueNotifier([
-        for (var i = 0; i < 6; i++) Notice('linia $i', now),
-      ]),
+      ValueNotifier([for (var i = 0; i < 6; i++) Notice('linia $i', now)]),
     );
 
     expect(find.text('linia 0'), findsOneWidget);
@@ -63,10 +63,12 @@ void main() {
     await pump(tester, ValueNotifier([Notice('Znaleziono: nóż', now)]));
 
     final ignoring = tester.widget<IgnorePointer>(
-      find.ancestor(
-        of: find.text('Znaleziono: nóż'),
-        matching: find.byType(IgnorePointer),
-      ).first,
+      find
+          .ancestor(
+            of: find.text('Znaleziono: nóż'),
+            matching: find.byType(IgnorePointer),
+          )
+          .first,
     );
 
     expect(ignoring.ignoring, isTrue);

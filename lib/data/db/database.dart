@@ -350,9 +350,8 @@ class SaveDatabase extends _$SaveDatabase {
 
   // --------------------------------------------------------------- loot ---
 
-  Future<List<LootBoxe>> lootBoxesFor(int profileId) => (select(
-    lootBoxes,
-  )..where((t) => t.profileId.equals(profileId))).get();
+  Future<List<LootBoxe>> lootBoxesFor(int profileId) =>
+      (select(lootBoxes)..where((t) => t.profileId.equals(profileId))).get();
 
   /// Writes what the spawner decided.
   ///
@@ -377,9 +376,8 @@ class SaveDatabase extends _$SaveDatabase {
 
   // ------------------------------------------------------------ dropped ---
 
-  Future<List<GroundItem>> groundItemsFor(int profileId) => (select(
-    groundItems,
-  )..where((t) => t.profileId.equals(profileId))).get();
+  Future<List<GroundItem>> groundItemsFor(int profileId) =>
+      (select(groundItems)..where((t) => t.profileId.equals(profileId))).get();
 
   Future<int> addGroundItem(GroundItemsCompanion item) =>
       into(groundItems).insert(item);
@@ -414,8 +412,9 @@ class SaveDatabase extends _$SaveDatabase {
 
   Future<void> markRemainsSearched(int profileId, String enemyId) async {
     await (update(remainsEntries)..where(
-      (t) => t.profileId.equals(profileId) & t.enemyId.equals(enemyId),
-    )).write(const RemainsEntriesCompanion(searched: Value(true)));
+          (t) => t.profileId.equals(profileId) & t.enemyId.equals(enemyId),
+        ))
+        .write(const RemainsEntriesCompanion(searched: Value(true)));
   }
 
   Future<void> removeRemains(List<int> ids) async {
@@ -459,9 +458,8 @@ class SaveDatabase extends _$SaveDatabase {
 
   // ------------------------------------------------------------- shelter ---
 
-  Future<List<ShelterRow>> sheltersFor(int profileId) => (select(
-    shelters,
-  )..where((t) => t.profileId.equals(profileId))).get();
+  Future<List<ShelterRow>> sheltersFor(int profileId) =>
+      (select(shelters)..where((t) => t.profileId.equals(profileId))).get();
 
   Future<int> addShelter(SheltersCompanion shelter) =>
       into(shelters).insert(shelter);

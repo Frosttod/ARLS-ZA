@@ -31,11 +31,7 @@ void main() {
   }
 
   NoiseEvent shot({double radiusM = 700, GeoPoint? at, DateTime? when}) =>
-      NoiseEvent(
-        at: at ?? here,
-        radiusM: radiusM,
-        startedAt: when ?? now,
-      );
+      NoiseEvent(at: at ?? here, radiusM: radiusM, startedAt: when ?? now);
 
   group('§5.6.1, how far it carries', () {
     test('the table, as written', () {
@@ -124,7 +120,10 @@ void main() {
       );
 
       expect(after.single.state, EnemyState.chase);
-      expect(after.single.heardAt!.latitude, closeTo(north(120).latitude, 1e-9));
+      expect(
+        after.single.heardAt!.latitude,
+        closeTo(north(120).latitude, 1e-9),
+      );
     });
 
     test('a second shot pulls them to the second shot', () {
@@ -152,7 +151,8 @@ void main() {
       expect(
         second.single.heardAt!.latitude,
         closeTo(elsewhere.latitude, 1e-9),
-        reason: 'walking towards the last shot while the next one goes off '
+        reason:
+            'walking towards the last shot while the next one goes off '
             'somewhere else is how a thing behaves that cannot hear',
       );
     });
@@ -160,9 +160,7 @@ void main() {
     test('but one already coming for you does not stop to listen', () {
       // §5.6.2: something that has the player does not change target, or a
       // group could be led away by dropping a tin.
-      final chasing = [
-        walkerAt(100).hears(north(120), chasing: true),
-      ];
+      final chasing = [walkerAt(100).hears(north(120), chasing: true)];
 
       final after = respondToNoise(
         chasing,
@@ -280,15 +278,21 @@ void main() {
   });
 
   group('a burst is one sound (§5.6.2)', () {
-    test('a second shot inside thirty seconds does not call a second crowd', () {
-      final first = shot();
-      final second = shot(when: now.add(const Duration(seconds: 5)));
+    test(
+      'a second shot inside thirty seconds does not call a second crowd',
+      () {
+        final first = shot();
+        final second = shot(when: now.add(const Duration(seconds: 5)));
 
-      expect(accumulate(first, second).shots, 2);
-    });
+        expect(accumulate(first, second).shots, 2);
+      },
+    );
 
     test('it makes the one event a little louder', () {
-      final folded = accumulate(shot(), shot(when: now.add(const Duration(seconds: 2))));
+      final folded = accumulate(
+        shot(),
+        shot(when: now.add(const Duration(seconds: 2))),
+      );
 
       expect(folded.radiusM, closeTo(700 * 1.15, 0.5));
     });
@@ -346,26 +350,38 @@ void main() {
       );
     });
 
-    test('they search it for about a minute, then give up (§5.6.2)', () {
+    test('they search it for half a minute, then give up (§5.6.2)', () {
+      // Thirty seconds, down from sixty. Watched from the far end of a street,
+      // a minute of circling one spot stopped reading as a search and started
+      // reading as something stuck.
       final standing = walkerAt(0).hears(here);
 
-      final halfway = run(standing, playerAt: north(900), seconds: 50);
+      final halfway = run(standing, playerAt: north(900), seconds: 20);
       expect(halfway.heardAt, isNotNull, reason: 'still turning it over');
       expect(halfway.state, EnemyState.alert);
 
-      final after = run(standing, playerAt: north(900), seconds: 61);
+      final after = run(standing, playerAt: north(900), seconds: 31);
       expect(after.heardAt, isNull);
       expect(after.state, isNot(EnemyState.alert));
     });
 
-    test('and §6.1a does not cut the search short at forty-five', () {
-      // The two rules contradict each other unless one gives: an enemy sent to
-      // a sound is *supposed* to be somewhere the player is not. The leash
-      // still holds, since that one is about distance from home.
+    test('and §6.1a does not cut the search short', () {
+      // The two rules would contradict each other if the search outlasted the
+      // forty-five seconds §6.1a gives before something goes home: an enemy
+      // sent to a sound is *supposed* to be somewhere the player is not. The
+      // search is now shorter than that window, but the rule that lets it
+      // finish is what keeps the two from ever racing again — so it is still
+      // worth a test. The leash still holds, since that one is about distance
+      // from home.
       final searching = walkerAt(0).hears(here);
-      final after = run(searching, playerAt: north(900), seconds: 46);
 
-      expect(after.state, EnemyState.alert);
+      for (final seconds in [10, 20, 29]) {
+        expect(
+          run(searching, playerAt: north(900), seconds: seconds).state,
+          EnemyState.alert,
+          reason: 'still searching at $seconds s with nobody near',
+        );
+      }
     });
 
     test('a player who walks into them while they search is seen', () {

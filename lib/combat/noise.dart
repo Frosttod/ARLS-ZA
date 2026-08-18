@@ -143,9 +143,7 @@ class NoiseEvent {
 
 /// Folds a new sound into whatever is still ringing (§5.6.2).
 NoiseEvent accumulate(NoiseEvent? open, NoiseEvent fresh) =>
-    open != null && open.isOpenAt(fresh.startedAt)
-    ? open.plus(fresh)
-    : fresh;
+    open != null && open.isOpenAt(fresh.startedAt) ? open.plus(fresh) : fresh;
 
 /// Who turns towards it, and what they do about it (§5.6.2).
 ///
@@ -175,10 +173,8 @@ List<Enemy> respondToNoise(
                     enemy.state == EnemyState.alert),
           )
           .map(
-            (enemy) => (
-              enemy: enemy,
-              distance: enemy.position.distanceTo(event.at),
-            ),
+            (enemy) =>
+                (enemy: enemy, distance: enemy.position.distanceTo(event.at)),
           )
           .where(
             (entry) =>
@@ -191,7 +187,9 @@ List<Enemy> respondToNoise(
 
   return [
     for (final enemy in enemies)
-      switch (answering.where((entry) => identical(entry.enemy, enemy)).firstOrNull) {
+      switch (answering
+          .where((entry) => identical(entry.enemy, enemy))
+          .firstOrNull) {
         null => enemy,
         final entry
             when reactionAt(entry.distance, event.radiusM) ==

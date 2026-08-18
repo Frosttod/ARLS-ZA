@@ -419,6 +419,10 @@ Liczba slotów zależy od broni (rewolwer 1, karabin 3). **Masa dodatków wlicza
 | Zapominanie | 4 000 m |
 | Odnowa skrzyni | **4–8 h** |
 
+**Samochody i śmietniki mają rezerwację: 3 najbliższe, niezależnie od gęstości.** §10.1 trzyma *otagowane* parkingi z dala od miasta (4165 parkingów na 427 sklepów spożywczych w promieniu 2 km od centrum Poznania) i słusznie — ale wymyślony samochód i wymyślony śmietnik to nie to samo: jest ich garść, są najzwyklejszą rzeczą na ulicy i niosą dokładnie to, czego brakuje §18.2. Zmierzone na spacerze: bliski pierścień zapełniał się prawdziwymi sklepami w pierwszym przebiegu, pula zapasowa nigdy nie była ruszana, a miasto nie dawało **ani jednego** samochodu i śmietnika. Rezerwacja idzie z puli 15 miejsc §10, nie ponad nią.
+
+⚠️ Wybierane po **selektorze** (tylko wymyślone punkty), liczone po **tabeli** (prawdziwy parking obok też się liczy — to już jest samochód do przeszukania, a wymyślanie drugiego obok byłoby powtarzaniem mapy).
+
 ⚠️ **1 200 m to figura beta**, poniżej dwóch kilometrów z §10. Powód: 25 minut marszu w jedną stronę po jeden sklep to nie jest zadanie, to szum na mapie — a znacznik, do którego nikt nie pójdzie, uczy gracza, żeby przestał czytać znaczniki. Wraca do 2 km, gdy ogniska (§6.5) dadzą dalekim punktom powód istnienia.
 
 ### 9.2. Skąd biorą się miejsca
@@ -620,7 +624,7 @@ Poniżej 20 m GPS nie ma nic sensownego do powiedzenia o niczyjej pozycji — wa
 | Odległość od źródła | Reakcja |
 | :---- | :---- |
 | < ⅓ promienia | **POŚCIG** — lokalizują gracza |
-| ⅓ – 1 promienia | **CZUJNOŚĆ** — do punktu hałasu, 60 s przeszukiwania |
+| ⅓ – 1 promienia | **CZUJNOŚĆ** — do punktu hałasu, 30 s przeszukiwania |
 | > promienia | brak |
 
 | | |
@@ -669,11 +673,15 @@ W MVP występuje wyłącznie **Szwędacz**. Grupa 2–4 czyni walkę z grupą st
 | | |
 | :---- | :---- |
 | Smycz | 400 m od domu |
-| Utrata kontaktu | 45 s |
+| Utrata kontaktu | 45 s · **×2,5 gdy ranny** |
 | Dystans kontaktu | 150 m |
-| Czas przeszukiwania | 60 s |
+| Czas przeszukiwania | **30 s** |
 | Maks. skręt — marsz | 12°/s |
 | Maks. skręt — pościg | 60°/s |
+
+⚠️ **Trafienie to najprostszy sposób na znalezienie strzelca.** Ranny przechodzi natychmiast w **POŚCIG** do miejsca, z którego padł strzał — §6.1a daje dwie drogi do pościgu, wzrok i słuch, a dziura w ciele jest lepszym dowodem niż obie. Bez tego ranny dalej szukał *miejsca hałasu*, przez co drugi nabój był tańszy od pierwszego.
+
+⚠️ **Ranny nie odpuszcza tak szybko.** Utrata kontaktu rośnie ×2,5 (112 s zamiast 45), bo coś, co zostało postrzelone, ma najlepszy dowód w grze na to, że ktoś jest w pobliżu.
 
 ⚠️ **Nic nie obraca się w miejscu.** Wcześniejszy błąd: przeciwnik, który stracił kontakt, obracał się o 118° w sekundę, co czytało się jak usterka, a nie jak ciało.
 

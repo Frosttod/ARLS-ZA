@@ -38,6 +38,7 @@ Future<void> showItemDetails(
   String? wearLabel,
   void Function(CarriedItem line, CarriedItem attachment)? onAttach,
   void Function(CarriedItem line, String attachmentId)? onDetach,
+
   /// Whether this piece is one the player is carrying.
   ///
   /// False for anything being looked at from outside the pack — a pile on the
@@ -98,88 +99,88 @@ Future<void> showItemDetails(
                 attachments: _partsOf(against, catalogue),
               );
 
-      return SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                nameOf(item),
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: colours.text,
-                ),
-              ),
-              if (against != null) ...[
-                const SizedBox(height: 2),
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                 Text(
-                  '${l10n.itemCompare}: '
-                  '${nameOf(catalogue[against.itemId]!)} '
-                  '(${l10n.itemWorn})',
-                  style: TextStyle(fontSize: 11, color: colours.muted),
-                ),
-              ],
-              // §5.6.3: what is on this weapon, and what is left to put on
-              // it. On the piece rather than on the player: two rifles in one
-              // pack are two rifles.
-              if (item.kind == ItemKind.firearm) ...[
-                const SizedBox(height: 12),
-                _Attachments(
-                  line: current,
-                  weapon: item,
-                  inventory: pack,
-                  catalogue: catalogue,
-                  nameOf: nameOf,
-                  colours: colours,
-                  l10n: l10n,
-                  onAttach: onAttach,
-                  onDetach: onDetach,
-                ),
-              ],
-
-              const SizedBox(height: 14),
-              Flexible(
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      for (final stat in mine)
-                        _StatRow(
-                          label: _statLabel(l10n, stat.key),
-                          mine: stat,
-                          theirs: theirs
-                              .where((other) => other.key == stat.key)
-                              .firstOrNull,
-                          colours: colours,
-                        ),
-                    ],
+                  nameOf(item),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: colours.text,
                   ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  if (onWear != null)
-                    TextButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                        onWear();
-                      },
-                      child: Text(wearLabel ?? ''),
-                    ),
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: Text(l10n.commonOk),
+                if (against != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    '${l10n.itemCompare}: '
+                    '${nameOf(catalogue[against.itemId]!)} '
+                    '(${l10n.itemWorn})',
+                    style: TextStyle(fontSize: 11, color: colours.muted),
                   ),
                 ],
-              ),
-            ],
+                // §5.6.3: what is on this weapon, and what is left to put on
+                // it. On the piece rather than on the player: two rifles in one
+                // pack are two rifles.
+                if (item.kind == ItemKind.firearm) ...[
+                  const SizedBox(height: 12),
+                  _Attachments(
+                    line: current,
+                    weapon: item,
+                    inventory: pack,
+                    catalogue: catalogue,
+                    nameOf: nameOf,
+                    colours: colours,
+                    l10n: l10n,
+                    onAttach: onAttach,
+                    onDetach: onDetach,
+                  ),
+                ],
+
+                const SizedBox(height: 14),
+                Flexible(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        for (final stat in mine)
+                          _StatRow(
+                            label: _statLabel(l10n, stat.key),
+                            mine: stat,
+                            theirs: theirs
+                                .where((other) => other.key == stat.key)
+                                .firstOrNull,
+                            colours: colours,
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    if (onWear != null)
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          onWear();
+                        },
+                        child: Text(wearLabel ?? ''),
+                      ),
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: Text(l10n.commonOk),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
-        ),
-      );
+        );
       },
     ),
   );
@@ -341,6 +342,7 @@ class _Attachments extends StatelessWidget {
   final String Function(ItemDefinition) nameOf;
   final HudColors colours;
   final L10n l10n;
+
   /// Handed the *current* piece as well as the part, because the sheet outlives
   /// the object it was opened with: every fit rebuilds the line, and a callback
   /// holding the old one would be bolting things onto a piece that is no longer

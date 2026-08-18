@@ -114,13 +114,8 @@ void main() {
       final fabric = kg('mat_fabric');
       final component = kg('mat_component');
 
-      double module({
-        int w = 0,
-        int m = 0,
-        int p = 0,
-        int f = 0,
-        int c = 0,
-      }) => w * wood + m * metal + p * plastic + f * fabric + c * component;
+      double module({int w = 0, int m = 0, int p = 0, int f = 0, int c = 0}) =>
+          w * wood + m * metal + p * plastic + f * fabric + c * component;
 
       expect(module(w: 12, m: 4, f: 6), closeTo(31.8, 0.05), reason: 'camp');
       expect(module(w: 20, m: 6), closeTo(49.0, 0.05), reason: 'store L1');
@@ -300,9 +295,9 @@ void main() {
         if (slot == BodySlot.back || slot == BodySlot.hand) continue;
 
         expect(
-          catalogue.ofKind(ItemKind.armor).where(
-            (piece) => piece.props['slot'] == slot.wire,
-          ),
+          catalogue
+              .ofKind(ItemKind.armor)
+              .where((piece) => piece.props['slot'] == slot.wire),
           isNotEmpty,
           reason: 'nothing goes on ${slot.wire}',
         );
@@ -318,8 +313,11 @@ void main() {
       for (final pack in packs) {
         expect(pack.props['slot'], isNull, reason: pack.id);
         expect(pack.props['capacity_l'], isA<num>(), reason: pack.id);
-        expect(pack.props['comfort_carry_bonus_kg'], isA<num>(),
-            reason: pack.id);
+        expect(
+          pack.props['comfort_carry_bonus_kg'],
+          isA<num>(),
+          reason: pack.id,
+        );
       }
     });
 
@@ -348,21 +346,23 @@ void main() {
     test('a backpack that holds more also weighs more', () {
       // A bag is exempt: it holds more than a schoolbag and weighs less,
       // because what it costs is a hand rather than mass (occupies_hands).
-      final packs = catalogue
-          .ofKind(ItemKind.backpack)
-          .where((pack) => pack.props['occupies_hands'] != true)
-          .toList()
-        ..sort(
-          (a, b) => (a.props['capacity_l']! as int).compareTo(
-            b.props['capacity_l']! as int,
-          ),
-        );
+      final packs =
+          catalogue
+              .ofKind(ItemKind.backpack)
+              .where((pack) => pack.props['occupies_hands'] != true)
+              .toList()
+            ..sort(
+              (a, b) => (a.props['capacity_l']! as int).compareTo(
+                b.props['capacity_l']! as int,
+              ),
+            );
 
       for (var i = 1; i < packs.length; i++) {
         expect(
           packs[i].weightKg,
           greaterThan(packs[i - 1].weightKg),
-          reason: '${packs[i].id} holds more than ${packs[i - 1].id} '
+          reason:
+              '${packs[i].id} holds more than ${packs[i - 1].id} '
               'and must not be lighter as well',
         );
       }
@@ -448,8 +448,14 @@ void main() {
     test('an item resolves through the table the way the UI will', () {
       final axe = catalogue['melee_axe']!;
 
-      expect(axe.name.resolve(language: 'pl', lookup: names.forLanguage('pl')), 'Siekiera');
-      expect(axe.name.resolve(language: 'en', lookup: names.forLanguage('en')), 'Axe');
+      expect(
+        axe.name.resolve(language: 'pl', lookup: names.forLanguage('pl')),
+        'Siekiera',
+      );
+      expect(
+        axe.name.resolve(language: 'en', lookup: names.forLanguage('en')),
+        'Axe',
+      );
     });
   });
 

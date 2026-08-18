@@ -139,15 +139,21 @@ void main() {
       expect(comparable(vests[0], vests[1]), isTrue);
     });
 
-    test('but not a vest against a jacket — they do not displace each other', () {
-      expect(
-        comparable(item('armor_vest_soft'), item('cloth_winter_jacket')),
-        isFalse,
-      );
-    });
+    test(
+      'but not a vest against a jacket — they do not displace each other',
+      () {
+        expect(
+          comparable(item('armor_vest_soft'), item('cloth_winter_jacket')),
+          isFalse,
+        );
+      },
+    );
 
     test('nor a rifle against a tin of beans', () {
-      expect(comparable(item('melee_knife'), item('food_canned_meat')), isFalse);
+      expect(
+        comparable(item('melee_knife'), item('food_canned_meat')),
+        isFalse,
+      );
     });
 
     test('two copies of one item compare — 90% against 40% is the whole '
@@ -177,8 +183,10 @@ void main() {
     });
 
     test('it comes first, being what usually differs between two copies', () {
-      expect(statsOf(item('melee_knife'), condition: 80).first.key,
-          'condition');
+      expect(
+        statsOf(item('melee_knife'), condition: 80).first.key,
+        'condition',
+      );
     });
 
     test('an item with no condition of its own shows none', () {
@@ -190,8 +198,10 @@ void main() {
 
   group('how a reading reads', () {
     test('a unit is on it', () {
-      expect(readingOf(item('food_canned_meat'), 'kcal').formatted,
-          endsWith('kcal'));
+      expect(
+        readingOf(item('food_canned_meat'), 'kcal').formatted,
+        endsWith('kcal'),
+      );
     });
 
     test('decimals are where they earn their place', () {

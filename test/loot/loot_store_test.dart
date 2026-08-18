@@ -90,11 +90,7 @@ void main() {
     );
     await store.save(
       profileId,
-      SpawnPlan(
-        boxes: const [],
-        added: const [],
-        forgotten: [boxAt('bliska')],
-      ),
+      SpawnPlan(boxes: const [], added: const [], forgotten: [boxAt('bliska')]),
     );
 
     expect(await store.load(profileId), isEmpty);
@@ -111,22 +107,23 @@ void main() {
     expect(await store.load(profileId), isEmpty);
   });
 
-  test('a half-searched place is still half-searched after a restart', () async {
-    // §10.3.5: a shelf somebody already turned over is still turned over.
-    // Without this, closing the app would be three fresh looks at every shop.
-    final searched = boxAt('apteka').searchedAt(
-      SearchDepth.shallow,
-      now,
-      Random(3),
-    );
-    await store.saveOne(profileId, searched);
+  test(
+    'a half-searched place is still half-searched after a restart',
+    () async {
+      // §10.3.5: a shelf somebody already turned over is still turned over.
+      // Without this, closing the app would be three fresh looks at every shop.
+      final searched = boxAt(
+        'apteka',
+      ).searchedAt(SearchDepth.shallow, now, Random(3));
+      await store.saveOne(profileId, searched);
 
-    final loaded = (await store.load(profileId)).single;
+      final loaded = (await store.load(profileId)).single;
 
-    expect(loaded.searchUnits, SearchDepth.shallow.cost);
-    expect(loaded.canSearchAt(SearchDepth.deep), isFalse);
-    expect(loaded.canSearchAt(SearchDepth.thorough), isTrue);
-  });
+      expect(loaded.searchUnits, SearchDepth.shallow.cost);
+      expect(loaded.canSearchAt(SearchDepth.deep), isFalse);
+      expect(loaded.canSearchAt(SearchDepth.thorough), isTrue);
+    },
+  );
 
   test('an untouched place reads as untouched', () async {
     await store.save(

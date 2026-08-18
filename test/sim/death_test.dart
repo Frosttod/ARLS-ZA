@@ -34,10 +34,7 @@ void main() {
     });
 
     test('past forty per cent of blood, class IV', () {
-      expect(
-        fatalCause(statusWith(bloodFraction: 0.55)),
-        DeathCause.bloodLoss,
-      );
+      expect(fatalCause(statusWith(bloodFraction: 0.55)), DeathCause.bloodLoss);
     });
   });
 
@@ -85,9 +82,10 @@ void main() {
       expect(
         fatalCause(
           statusOf(
-            state: SimState.fresh(at: t0, constants: constants).copyWith(
-              bloodMl: woken.bloodMl,
-            ),
+            state: SimState.fresh(
+              at: t0,
+              constants: constants,
+            ).copyWith(bloodMl: woken.bloodMl),
             constants: constants,
           ),
         ),

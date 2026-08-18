@@ -228,14 +228,16 @@ void main() {
       expect(pistol, closeTo(7.2, 0.3));
     });
 
-    test('the relation is under a root, so small calibres are not written off',
-        () {
-      // Twenty times the energy is about six times the wound, not twenty.
-      final small = bloodLossMl(energyJ: 160, woundFactor: 1);
-      final large = bloodLossMl(energyJ: 3200, woundFactor: 1);
+    test(
+      'the relation is under a root, so small calibres are not written off',
+      () {
+        // Twenty times the energy is about six times the wound, not twenty.
+        final small = bloodLossMl(energyJ: 160, woundFactor: 1);
+        final large = bloodLossMl(energyJ: 3200, woundFactor: 1);
 
-      expect(large / small, closeTo(6.03, 0.1));
-    });
+        expect(large / small, closeTo(6.03, 0.1));
+      },
+    );
 
     test('a head is four times a torso (§2.6)', () {
       expect(
@@ -252,10 +254,7 @@ void main() {
     });
 
     test('and armour that stops it entirely stops it entirely', () {
-      expect(
-        bloodLossMl(energyJ: 3500, woundFactor: 1.35, protection: 1),
-        0,
-      );
+      expect(bloodLossMl(energyJ: 3500, woundFactor: 1.35, protection: 1), 0);
     });
   });
 }

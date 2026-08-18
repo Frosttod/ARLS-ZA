@@ -254,10 +254,7 @@ class CombatPanel extends StatelessWidget {
                       const SizedBox(height: 2),
                       Text(
                         refusal!,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: colours.alert,
-                        ),
+                        style: TextStyle(fontSize: 11, color: colours.alert),
                       ),
                     ],
                   ],
@@ -285,10 +282,7 @@ class CombatPanel extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
               ],
-              FilledButton(
-                onPressed: onFire,
-                child: Text(l10n.combatFire),
-              ),
+              FilledButton(onPressed: onFire, child: Text(l10n.combatFire)),
             ],
           ),
         ),
@@ -320,11 +314,12 @@ String enemyKindName(L10n l10n, EnemyKind kind) => switch (kind) {
 };
 
 /// §5.5.1's estimate, in words.
-String conditionName(L10n l10n, EnemyCondition condition) => switch (condition) {
-  EnemyCondition.healthy => l10n.enemyHealthy,
-  EnemyCondition.wounded => l10n.enemyWounded,
-  EnemyCondition.critical => l10n.enemyCritical,
-};
+String conditionName(L10n l10n, EnemyCondition condition) =>
+    switch (condition) {
+      EnemyCondition.healthy => l10n.enemyHealthy,
+      EnemyCondition.wounded => l10n.enemyWounded,
+      EnemyCondition.critical => l10n.enemyCritical,
+    };
 
 /// §5.1.4's word beside the percentage.
 String errorName(L10n l10n, ErrorSource source) => switch (source) {

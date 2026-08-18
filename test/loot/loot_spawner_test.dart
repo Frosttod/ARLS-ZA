@@ -240,10 +240,7 @@ void main() {
         spawnedAt: now,
       ).lootedAtTime(now, Random(9), backup: true);
 
-      expect(
-        backup.respawnAt!.difference(now),
-        lessThan(kRespawnBackupMax),
-      );
+      expect(backup.respawnAt!.difference(now), lessThan(kRespawnBackupMax));
     });
   });
 
@@ -346,9 +343,41 @@ void main() {
         seed: 6,
       );
 
+      expect(plan.boxes.map((box) => box.tableId), contains('proc_roadside'));
+    });
+
+    test('an invented car survives a street full of real shops', () {
+      // ⚠️ Found on a walk through dense Poznań: the near ring filled with
+      // real shops on the first pass, the fallback pool was never reached, and
+      // a city produced no cars and no bins at all. §10.1's rule about car
+      // parks is about 4165 *tagged* ones drowning the map; a handful of
+      // invented street furniture is not that, and it carries what §18.2 is
+      // short of.
+      final invented = [
+        for (var i = 1; i <= 3; i++)
+          Poi(
+            position: GeoPoint(
+              centre.latitude + (i * 40) / metresPerDegreeLat,
+              centre.longitude + 0.0006,
+            ),
+            selectors: const ['generated.car'],
+            name: null,
+            layer: 'generated',
+          ),
+      ];
+
+      final plan = spawner.plan(
+        centre: centre,
+        candidates: [...spread(20), ...invented],
+        existing: const [],
+        now: now,
+        seed: 9,
+      );
+
       expect(
-        plan.boxes.map((box) => box.tableId),
-        contains('proc_roadside'),
+        plan.boxes.where((box) => box.tableId == 'proc_abandoned_car'),
+        isNotEmpty,
+        reason: 'a city with twenty shops still has cars parked in it',
       );
     });
 
@@ -523,7 +552,11 @@ void main() {
     test('three quick looks and it is bare', () {
       var place = box();
       for (var i = 0; i < 3; i++) {
-        expect(place.canSearchAt(SearchDepth.shallow), isTrue, reason: 'pass $i');
+        expect(
+          place.canSearchAt(SearchDepth.shallow),
+          isTrue,
+          reason: 'pass $i',
+        );
         place = place.searchedAt(SearchDepth.shallow, now, random);
       }
 

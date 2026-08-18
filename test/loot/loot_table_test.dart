@@ -43,8 +43,7 @@ void main() {
       // pavement. Hiding everything invented meant a walk through a city
       // showed no cars and no bins at all — they were there, and nothing said
       // so.
-      LootTable table(String id) =>
-          tables.tables.firstWhere((t) => t.id == id);
+      LootTable table(String id) => tables.tables.firstWhere((t) => t.id == id);
 
       for (final id in const [
         'proc_abandoned_house',
@@ -348,11 +347,8 @@ void main() {
       // §11's determinism clause: a session replays from its seed, and loot is
       // part of the session.
       final table = tables['poi_pharmacy']!;
-      Map<String, int> once() => table.roll(
-        Random(42),
-        depth: SearchDepth.deep,
-        catalogue: catalogue,
-      );
+      Map<String, int> once() =>
+          table.roll(Random(42), depth: SearchDepth.deep, catalogue: catalogue);
 
       expect(once(), once());
     });
@@ -438,7 +434,10 @@ void main() {
       );
 
       expect(result.isClean, isTrue);
-      expect(result.validateAgainst(catalogue).single, contains('no such item'));
+      expect(
+        result.validateAgainst(catalogue).single,
+        contains('no such item'),
+      );
     });
 
     test('a procedural table holding a rifle', () {

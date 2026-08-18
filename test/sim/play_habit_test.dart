@@ -64,10 +64,7 @@ void main() {
 
     test('an hour a day lands near where §6.5.3 already had it', () {
       // The figure the rest of the balance was written against.
-      expect(
-        habit(List.filled(7, 60)).creditedHoursPerDay,
-        closeTo(6, 1),
-      );
+      expect(habit(List.filled(7, 60)).creditedHoursPerDay, closeTo(6, 1));
     });
 
     test('a marathon does not turn it into a different game', () {
@@ -142,9 +139,14 @@ void main() {
     test('the spread across every style stays inside a fortnight', () {
       // ⚠️ The balance question: a hotspot that matures in three days for one
       // player and thirty for another is two different games.
-      final styles = [0, 20, 60, 120, 180, 300]
-          .map((m) => daysToMaxLevel(habit(List.filled(7, m))))
-          .toList();
+      final styles = [
+        0,
+        20,
+        60,
+        120,
+        180,
+        300,
+      ].map((m) => daysToMaxLevel(habit(List.filled(7, m)))).toList();
 
       expect(styles.reduce((a, b) => a > b ? a : b), lessThan(22));
       expect(styles.reduce((a, b) => a < b ? a : b), greaterThan(3));

@@ -27,10 +27,7 @@ void main() {
     test('inside is inside, outside is outside', () {
       expect(inSanctuary(home, const [shelter]), isTrue);
       expect(
-        inSanctuary(
-          home.offsetBy(metres: 80, bearingDeg: 90),
-          const [shelter],
-        ),
+        inSanctuary(home.offsetBy(metres: 80, bearingDeg: 90), const [shelter]),
         isFalse,
       );
     });

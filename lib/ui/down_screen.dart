@@ -54,10 +54,7 @@ class _DownScreenState extends State<DownScreen> {
   @override
   void initState() {
     super.initState();
-    _tick = Timer.periodic(
-      const Duration(seconds: 1),
-      (_) => setState(() {}),
-    );
+    _tick = Timer.periodic(const Duration(seconds: 1), (_) => setState(() {}));
   }
 
   @override
@@ -103,7 +100,11 @@ class _DownScreenState extends State<DownScreen> {
               const SizedBox(height: 20),
               Text(
                 dead ? l10n.deathWhat : l10n.downWhat,
-                style: TextStyle(fontSize: 14, height: 1.5, color: colours.text),
+                style: TextStyle(
+                  fontSize: 14,
+                  height: 1.5,
+                  color: colours.text,
+                ),
               ),
 
               if (!dead) ...[

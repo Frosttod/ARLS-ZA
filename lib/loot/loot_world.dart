@@ -224,10 +224,7 @@ class LootWorld {
     // §10's fifteen slots rather than being extra — the map gets richer
     // without getting more crowded, which is the only way anything new gets
     // onto it at all.
-    candidates = [
-      ...candidates,
-      ...vehiclesBeside(candidates, seed: seed),
-    ];
+    candidates = [...candidates, ...vehiclesBeside(candidates, seed: seed)];
 
     return spawner.plan(
       centre: centre,

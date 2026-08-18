@@ -163,9 +163,6 @@ class ProfileScreen extends StatelessWidget {
                 label: hitLocationName(l10n, where),
                 hits: stats.hitsAt(where),
                 total: stats.hitsCounted,
-                // §2.6's own share, so a player can see whether their own
-                // shooting is drifting from what the model expects.
-                expected: where.share,
                 colours: colours,
               ),
 
@@ -282,19 +279,23 @@ class _AimBudget extends StatelessWidget {
 }
 
 /// Where the player's own rounds have been landing, against §2.6's shares.
+/// ⚠️ No mark on the bar, and there was §2.6's expected share on it for a day.
+///
+/// It was the same mark the HUD uses for water and food, where it means
+/// *something is on its way* — and read as exactly that here, on bars where
+/// nothing is coming at all. A tally of what has already happened has no room
+/// for a promise about what has not.
 class _HitBar extends StatelessWidget {
   const _HitBar({
     required this.label,
     required this.hits,
     required this.total,
-    required this.expected,
     required this.colours,
   });
 
   final String label;
   final int hits;
   final int total;
-  final double expected;
   final HudColors colours;
 
   @override
@@ -315,31 +316,11 @@ class _HitBar extends StatelessWidget {
           Expanded(
             child: ClipRect(
               child: LayoutBuilder(
-                builder: (context, constraints) => Stack(
-                  alignment: Alignment.centerLeft,
-                  children: [
-                    LinearProgressIndicator(
-                      value: share,
-                      minHeight: 5,
-                      backgroundColor: colours.muted.withValues(alpha: 0.3),
-                      valueColor: AlwaysStoppedAnimation(colours.data),
-                    ),
-
-                    // §2.6's expected share, as a tick. Somebody landing far
-                    // more head shots than the model expects has found
-                    // something the model does not know about.
-                    Positioned(
-                      left: (constraints.maxWidth * expected - 1).clamp(
-                        0.0,
-                        constraints.maxWidth - 2,
-                      ),
-                      child: Container(
-                        height: 5,
-                        width: 2,
-                        color: colours.text,
-                      ),
-                    ),
-                  ],
+                builder: (context, _) => LinearProgressIndicator(
+                  value: share,
+                  minHeight: 5,
+                  backgroundColor: colours.muted.withValues(alpha: 0.3),
+                  valueColor: AlwaysStoppedAnimation(colours.data),
                 ),
               ),
             ),

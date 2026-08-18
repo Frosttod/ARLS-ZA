@@ -156,7 +156,21 @@ const double kContactM = 150;
 const double kSpentSpeedFraction = 0.4;
 
 /// §5.6.2: how long an enemy turns over the place a sound came from.
-const Duration kInvestigateFor = Duration(seconds: 60);
+///
+/// A minute read as a bug from the other end of the street: they arrive, and
+/// then they circle one spot for so long that the sound stops looking like
+/// something they are answering and starts looking like something they are
+/// stuck on. Half of that is still long enough for the shot to have cost the
+/// player the ground, which is the whole point of §5.6.3.
+const Duration kInvestigateFor = Duration(seconds: 30);
+
+/// §6.1a: how much longer a hurt one keeps looking.
+///
+/// Something that has been shot does not wander home on the same schedule as
+/// something that heard a bang. It has the best evidence in the game that a
+/// person is nearby — a hole in it — and giving up at forty-five seconds made
+/// the second shot cheaper than the first.
+const double kWoundedContactFactor = 2.5;
 
 /// §6.1a: how far an idle one drifts from where it belongs before turning
 /// back. Small — this is milling about, not patrolling.
@@ -303,7 +317,10 @@ class Enemy {
   /// The tactical fact of a group fight: one that has burned its budget can be
   /// walked away from, and one that has not cannot.
   double get sprintLeftFraction =>
-      (budget.inMilliseconds / kind.sprintBudget.inMilliseconds).clamp(0.0, 1.0);
+      (budget.inMilliseconds / kind.sprintBudget.inMilliseconds).clamp(
+        0.0,
+        1.0,
+      );
 
   /// How fast it is moving right now, in km/h.
   double get speedKmh => switch (state) {
@@ -371,19 +388,16 @@ class Enemy {
   ///
   /// [chasing] for a sound made close enough to place the shooter directly —
   /// inside a third of the radius, where there is nothing left to work out.
-  Enemy hears(
-    GeoPoint at, {
-    bool chasing = false,
-    bool hurrying = false,
-  }) => copyWith(
-    heardAt: at,
-    investigateLeft: kInvestigateFor,
-    hurrying: hurrying,
-    state: chasing && budget > Duration.zero
-        ? EnemyState.chase
-        : EnemyState.alert,
-    sinceContact: Duration.zero,
-  );
+  Enemy hears(GeoPoint at, {bool chasing = false, bool hurrying = false}) =>
+      copyWith(
+        heardAt: at,
+        investigateLeft: kInvestigateFor,
+        hurrying: hurrying,
+        state: chasing && budget > Duration.zero
+            ? EnemyState.chase
+            : EnemyState.alert,
+        sinceContact: Duration.zero,
+      );
 }
 
 /// One step of §6.1a, for one enemy.
@@ -411,12 +425,14 @@ Enemy advanceEnemy(
 
   // §6.1a: contact is the player being near, not the enemy trying.
   final near = distance <= kContactM;
-  final sinceContact = near
-      ? Duration.zero
-      : enemy.sinceContact + elapsed;
+  final sinceContact = near ? Duration.zero : enemy.sinceContact + elapsed;
 
   final beyondLeash = enemy.home.distanceTo(enemy.position) > kLeashM;
-  final lostContact = sinceContact >= kContactLost;
+  final lostContact =
+      sinceContact >=
+      (enemy.bloodLostMl > 0
+          ? kContactLost * kWoundedContactFactor
+          : kContactLost);
 
   var state = _nextState(
     enemy,
@@ -447,8 +463,7 @@ Enemy advanceEnemy(
   // something you heard.
   final noise = enemy.heardAt;
   final seen = distance <= enemy.sightM;
-  final investigating =
-      noise != null && !seen && state != EnemyState.returning;
+  final investigating = noise != null && !seen && state != EnemyState.returning;
 
   var left = enemy.investigateLeft;
   var forget = false;
@@ -513,12 +528,7 @@ Enemy advanceEnemy(
   final step = enemy.speedKmh * seconds / 3.6;
   final target = _step(enemy.position, bearing: steered, metres: step);
 
-  final moved = _towards(
-    enemy.position,
-    target,
-    metres: step,
-    ground: ground,
-  );
+  final moved = _towards(enemy.position, target, metres: step, ground: ground);
 
   return enemy.copyWith(
     position: moved,
@@ -548,7 +558,8 @@ EnemyState _nextState(
   // player is not, and giving up after forty-five seconds would cut every
   // sixty-second search short. The leash still holds — that one is about
   // distance from home, which a sound does not excuse.
-  final searching = enemy.heardAt != null && enemy.investigateLeft > Duration.zero;
+  final searching =
+      enemy.heardAt != null && enemy.investigateLeft > Duration.zero;
 
   // Home first: the two rules that stop a player towing a train of enemies
   // across half a city.

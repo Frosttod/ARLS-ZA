@@ -58,12 +58,8 @@ void main() {
   });
 
   group('the two vehicles worth a table of their own (§10.3.3)', () {
-    Poi anchor(String selector) => Poi(
-      position: centre,
-      selectors: [selector],
-      name: null,
-      layer: 'poi',
-    );
+    Poi anchor(String selector) =>
+        Poi(position: centre, selectors: [selector], name: null, layer: 'poi');
 
     test('an ambulance stands outside a hospital', () {
       final made = vehiclesBeside([anchor('poi.class=hospital')], seed: 7);

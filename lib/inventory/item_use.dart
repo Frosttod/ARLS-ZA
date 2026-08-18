@@ -75,8 +75,7 @@ ItemUse? useOf(ItemDefinition item) {
         duration: Duration(seconds: consumeSeconds.round()),
         kcal: kcal,
         waterMl: water,
-        illnessChance:
-            (item.props['illness_chance'] as num?)?.toDouble() ?? 0,
+        illnessChance: (item.props['illness_chance'] as num?)?.toDouble() ?? 0,
       );
 
     case ItemKind.medical:
@@ -120,11 +119,11 @@ ItemUse? useOf(ItemDefinition item) {
 /// A pressure dressing stops a moderate bleed and does nothing useful against
 /// an arterial one — §2.6 is explicit that only a tourniquet answers 350 ml a
 /// minute, and pretending otherwise would make the tourniquet dead weight.
-BleedTier handledBy(ItemDefinition item) => switch (item
-    .props['stops_bleeding_class']) {
-  'superficial' => BleedTier.superficial,
-  'moderate' => BleedTier.moderate,
-  'strong' => BleedTier.severe,
-  'arterial' => BleedTier.arterial,
-  _ => BleedTier.none,
-};
+BleedTier handledBy(ItemDefinition item) =>
+    switch (item.props['stops_bleeding_class']) {
+      'superficial' => BleedTier.superficial,
+      'moderate' => BleedTier.moderate,
+      'strong' => BleedTier.severe,
+      'arterial' => BleedTier.arterial,
+      _ => BleedTier.none,
+    };

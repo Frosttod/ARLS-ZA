@@ -50,7 +50,11 @@ void main() {
 
     test('a half-full one takes only what fits', () {
       expect(
-        roundsToLoad(weapon: rifle, loaded: magazineSize(rifle) - 3, carried: 60),
+        roundsToLoad(
+          weapon: rifle,
+          loaded: magazineSize(rifle) - 3,
+          carried: 60,
+        ),
         3,
       );
     });
