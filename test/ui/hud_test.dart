@@ -28,12 +28,18 @@ void main() {
     double capacityL = 65,
     Brightness brightness = Brightness.dark,
     BleedTier bleeding = BleedTier.none,
+    Locale locale = const Locale('pl'),
+    Size surface = const Size(800, 600),
     ThreatReading? threat,
   }) async {
+    tester.view.physicalSize = surface;
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
     await tester.pumpWidget(
       MaterialApp(
         theme: ThemeData(brightness: brightness),
-        locale: const Locale('pl'),
+        locale: locale,
         localizationsDelegates: const [
           L10n.delegate,
           GlobalMaterialLocalizations.delegate,
@@ -279,6 +285,41 @@ void main() {
       reason: 'a bleed outweighs regeneration; the bar goes one way only',
     );
     expect(find.byIcon(Icons.add), findsNothing);
+  });
+
+  group('a label is one line, on any phone and in any language (§12)', () {
+    // ⚠️ KALORIE broke onto a second line on a real phone and pushed the bar
+    // out of its row. The label box is fixed so the four bars line up, and the
+    // longest word in either language has to live inside it — narrowed by the
+    // width axis of the face, and scaled down only if that is not enough.
+    for (final locale in [const Locale('pl'), const Locale('en')]) {
+      for (final width in [320.0, 360.0, 411.0]) {
+        testWidgets('${locale.languageCode} on a ${width.round()} px screen', (
+          tester,
+        ) async {
+          // A pump that overflows fails the test on its own: the framework
+          // throws for a RenderFlex that did not fit.
+          await pumpHud(
+            tester,
+            healthy(),
+            locale: locale,
+            surface: Size(width, 720),
+          );
+
+          for (final finder in [find.text('KALORIE'), find.text('CALORIES')]) {
+            if (finder.evaluate().isEmpty) continue;
+
+            final label = tester.widget<Text>(finder);
+            expect(label.maxLines, 1, reason: 'never two lines');
+            expect(
+              tester.getSize(finder).height,
+              lessThan(16),
+              reason: 'one line of nine-point text, not two',
+            );
+          }
+        });
+      }
+    }
   });
 
   testWidgets('a screen reader hears the same thing the eye does', (

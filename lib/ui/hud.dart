@@ -351,14 +351,35 @@ class _ThinBar extends StatelessWidget {
           : '$label $amount, ${(clamped * 100).round()}%',
       child: Row(
         children: [
+          // ⚠️ Condensed, and never wrapped.
+          //
+          // KALORIE is a letter longer than the three labels beside it and
+          // CALORIES is two, and Plex is a wider face than the one this box
+          // was measured against — so the longest label broke onto a second
+          // line and shoved the bar out of its own row. The width axis of the
+          // variable file is exactly what this is for: the same face made
+          // narrower, rather than a smaller size that would not match the
+          // labels above and below it.
+          //
+          // The FittedBox is the guard behind that, not the plan. It catches
+          // a translation longer than either of these and a system text scale
+          // turned up for §12 — cases where the right answer is a slightly
+          // smaller label rather than a broken row.
           SizedBox(
-            width: 52,
-            child: Text(
-              label.toUpperCase(),
-              style: TextStyle(
-                fontSize: 9,
-                letterSpacing: 1.2,
-                color: colours.muted,
+            width: 56,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Text(
+                label.toUpperCase(),
+                maxLines: 1,
+                softWrap: false,
+                style: TextStyle(
+                  fontSize: 9,
+                  letterSpacing: 1.2,
+                  color: colours.muted,
+                  fontVariations: const [FontVariation('wdth', 85)],
+                ),
               ),
             ),
           ),
@@ -751,24 +772,50 @@ class _LimitBar extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // ⚠️ Both halves bend, because on a 320 px phone they do not fit.
+          //
+          // Found by the test written for the labels above rather than on a
+          // phone, and it was there before the face changed — OBJĘTOŚĆ beside
+          // a figure like "18,4 / 27,0 kg" is simply wider than a small screen
+          // in Polish. The label narrows first, since a word can be read
+          // condensed; the figure only shrinks, since §18.1a is the number the
+          // player is deciding on and it must stay a number.
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                label.toUpperCase(),
-                style: TextStyle(
-                  fontSize: 9,
-                  letterSpacing: 1.2,
-                  color: colours.muted,
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    label.toUpperCase(),
+                    maxLines: 1,
+                    softWrap: false,
+                    style: TextStyle(
+                      fontSize: 9,
+                      letterSpacing: 1.2,
+                      color: colours.muted,
+                      fontVariations: const [FontVariation('wdth', 85)],
+                    ),
+                  ),
                 ),
               ),
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: 10,
-                  color: warning || full ? colour : colours.text,
-                  fontFamily: kDataFont,
-                  fontFeatures: const [FontFeature.tabularFigures()],
+              const SizedBox(width: 6),
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    value,
+                    maxLines: 1,
+                    softWrap: false,
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: warning || full ? colour : colours.text,
+                      fontFamily: kDataFont,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
                 ),
               ),
             ],
