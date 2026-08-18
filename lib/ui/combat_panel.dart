@@ -13,6 +13,7 @@ library;
 
 import 'package:flutter/material.dart';
 
+import 'fonts.dart';
 import '../combat/ballistics.dart';
 import '../combat/enemy.dart';
 import '../l10n/app_localizations.dart';
@@ -223,6 +224,7 @@ class CombatPanel extends StatelessWidget {
                             fontSize: 15,
                             fontWeight: FontWeight.bold,
                             color: colour,
+                            fontFamily: kDataFont,
                             fontFeatures: const [FontFeature.tabularFigures()],
                           ),
                         ),

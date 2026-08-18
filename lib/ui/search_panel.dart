@@ -13,6 +13,7 @@ library;
 
 import 'package:flutter/material.dart';
 
+import 'fonts.dart';
 import '../l10n/app_localizations.dart';
 import '../loot/loot_table.dart';
 import '../loot/obstacle.dart';
@@ -170,6 +171,7 @@ class ActionProgress extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 13,
                     color: colours.data,
+                    fontFamily: kDataFont,
                     fontFeatures: const [FontFeature.tabularFigures()],
                   ),
                 ),
@@ -447,6 +449,7 @@ class _ActionIcon extends StatelessWidget {
                     color: off
                         ? colours.muted.withValues(alpha: 0.4)
                         : colours.muted,
+                    fontFamily: kDataFont,
                     fontFeatures: const [FontFeature.tabularFigures()],
                   ),
                 ),

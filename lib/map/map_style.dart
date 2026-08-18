@@ -139,13 +139,49 @@ Map<String, Object?> mapStyle({
         'source-layer': 'waterway',
         'paint': {'line-color': palette.water, 'line-width': 1.5},
       },
+      // §3.6: the city stands up.
+      //
+      // The same layer, extruded rather than filled. `render_height` and
+      // `render_min_height` are two of the three fields the building layer
+      // carries — see [omt_schema.dart], which counted them out of a real
+      // pack — so the heights are the surveyed ones rather than a guess.
+      //
+      // ⚠️ Coalesced to eight metres. A footprint with no height on it is
+      // common in OSM outside city centres, and `['get', ...]` on a missing
+      // field gives null, which extrudes to nothing: a hole in the street
+      // where a house is. Two storeys is the honest default for a building
+      // nobody has measured.
       {
         'id': 'building',
-        'type': 'fill',
+        'type': 'fill-extrusion',
         'source': 'openmaptiles',
         'source-layer': 'building',
-        'minzoom': 13,
-        'paint': {'fill-color': palette.building},
+
+        // A storey of geometry is worth drawing only once it is worth
+        // looking at. Below this the block is a smudge and the extrusion is
+        // paid for in frames for nothing.
+        'minzoom': 14,
+        'paint': {
+          'fill-extrusion-color': palette.building,
+          'fill-extrusion-height': [
+            'coalesce',
+            ['get', 'render_height'],
+            8,
+          ],
+          'fill-extrusion-base': [
+            'coalesce',
+            ['get', 'render_min_height'],
+            0,
+          ],
+
+          // Not quite solid. §3.6 draws the markers on our side of the
+          // platform view, so they are painted *over* the tiles whatever the
+          // geometry does — a wholly opaque block would make a Walker behind
+          // it read as a Walker in front of it. A little translucency is the
+          // cheapest honest answer: the shape still reads, and what is behind
+          // it is not hidden.
+          'fill-extrusion-opacity': 0.85,
+        },
       },
       // Roads are drawn in three passes so the hierarchy survives at a glance:
       // everything, then the ones §3.5 keeps spawns away from, then rails.

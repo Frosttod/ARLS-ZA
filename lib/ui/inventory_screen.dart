@@ -20,6 +20,7 @@ library;
 import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 
+import 'fonts.dart';
 import '../devtools/dev_mode.dart';
 import '../inventory/body_slots.dart';
 import '../inventory/inventory.dart';
@@ -294,6 +295,7 @@ class _Running extends StatelessWidget {
               style: TextStyle(
                 fontSize: 13,
                 color: colours.data,
+                fontFamily: kDataFont,
                 fontFeatures: const [FontFeature.tabularFigures()],
               ),
             ),
@@ -978,6 +980,7 @@ class _Stepper extends StatelessWidget {
           style: TextStyle(
             fontSize: 13,
             color: colours.text,
+            fontFamily: kDataFont,
             fontFeatures: const [FontFeature.tabularFigures()],
           ),
         ),

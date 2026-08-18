@@ -290,6 +290,52 @@ Powód nie jest estetyczny: adnotacje MapLibre kosztują przelot przez platform 
 
 Dziś kropka i palec, który w nią trafia, liczone są **z tej samej arytmetyki**.
 
+### 7.1a. Pochylenie i bryły budynków (§3.6)
+
+Kamera stoi pochylona o **45°, na stałe**. Gest pochylania pozostaje wyłączony: mapa czytana w marszu ma być za każdym razem tą samą mapą, a jeden kąt znaczy, że perspektywa znaczników jest liczona raz i nie może się rozjechać z kafelkami.
+
+Warstwa `building` jest **wytłaczana**, nie wypełniana. Wysokości są zmierzone (`render_height`, `render_min_height` — dwa z trzech pól, jakie ta warstwa niesie; patrz `omt_schema.dart`), a nie zgadywane.
+
+| | |
+| :---- | :---- |
+| Pochylenie | **45°** |
+| Wytłaczanie od zoomu | **14** |
+| Domyślna wysokość bez danych | **8 m** |
+| Krycie bryły | 0,85 |
+
+⚠️ **Domyślne 8 m ma powód.** Obrys bez wysokości jest w OSM poza centrami częsty, a `['get', ...]` na brakującym polu daje null, który wytłacza się do zera — dziura w ulicy tam, gdzie stoi dom. Dwa piętra to uczciwa wartość dla budynku, którego nikt nie zmierzył.
+
+⚠️ **Bryły nie są całkiem kryjące.** Znaczniki maluje Flutter *nad* kafelkami, więc rysują się na wierzchu niezależnie od geometrii. Pełne krycie sprawiłoby, że Szwędacz za budynkiem czytałby się jak Szwędacz przed nim.
+
+**Rzut pochylonej mapy** — jedna para funkcji w `map_markers.dart`, w obie strony:
+
+```
+right   = x
+up      = y · cos θ
+forward = D + y · sin θ
+```
+
+dla punktu `x` na wschód i `y` na północ od środka, odległości kamery `D` i pochylenia `θ`. Dzielenie dwóch pierwszych przez trzecie to całość. Przy θ = 0 człon `forward` to samo `D`, dzielenie się skraca i zostaje stary płaski wzór — co pilnuje, żeby obie wersje nie rozjechały się przy edycji.
+
+`D` to **1,5 wysokości ekranu** — z własnej reguły MapLibre `0.5 / tan(fov/2) × height` przy domyślnym polu widzenia 0,6435 rad.
+
+⚠️ **Tolerancja dotknięcia rośnie z perspektywą.** Palec przy górnej krawędzi pochylonej mapy przykrywa znacznie więcej terenu niż ten sam palec na dole. Bez skalowania dalsza połowa mapy byłaby nieklikalna, a bliższa kradłaby dotknięcia sąsiadom.
+
+### 7.1b. Krój pisma i płynność
+
+| | |
+| :---- | :---- |
+| Interfejs | **IBM Plex Sans** (plik zmienny — wszystkie grubości i szerokości) |
+| Liczby | **IBM Plex Mono** |
+| Licencja | SIL OFL 1.1, `assets/fonts/OFL.txt` |
+| Waga w APK | ~800 kB |
+
+⚠️ **Cyfry obu krojów mają dokładnie 600/1000 em** — zmierzone z plików, nie założone. Liczba złożona jednym krojem ma tę samą szerokość co ta sama liczba złożona drugim, więc mieszanie ich w kolumnie o stałej szerokości nie może rozwalić układu.
+
+⚠️ **IBM Plex Sans nie ma cechy `tnum`**, więc `FontFeature.tabularFigures` nic w nim nie robi — i nie musi. Oba kroje są tabelaryczne **domyślnie**, każda cyfra ma tę samą szerokość. To właśnie było tym, o co te kilkanaście wywołań prosiło.
+
+**Wysokie odświeżanie (90/120 Hz)** włącza się dokładnie wtedy, kiedy §3.3 pozwala na animacje — czyli poza trybem ekonomicznym. Płynność to ten sam rodzaj luksusu co animacja, więc znika w tym samym momencie. Bez drugiego ustawienia i bez drugiego pojęcia dla gracza.
+
 ### 7.2. Zasięgi rysowane wokół gracza
 
 Zasięg jest symetryczny, więc jeden okrąg wokół gracza mówi to samo, co 65 kółek wokół rzeczy.

@@ -12,6 +12,7 @@ library;
 
 import 'package:flutter/material.dart';
 
+import 'fonts.dart';
 import '../combat/ballistics.dart';
 import '../l10n/app_localizations.dart';
 import '../sim/body.dart';
@@ -386,6 +387,7 @@ class _Line extends StatelessWidget {
             fontSize: 13,
             color: colours.text,
             fontWeight: strong ? FontWeight.bold : FontWeight.normal,
+            fontFamily: kDataFont,
             fontFeatures: const [FontFeature.tabularFigures()],
           ),
         ),

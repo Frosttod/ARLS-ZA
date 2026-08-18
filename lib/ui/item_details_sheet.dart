@@ -19,6 +19,7 @@ library;
 import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 
+import 'fonts.dart';
 import '../inventory/inventory.dart';
 import '../items/item.dart';
 import '../combat/attachment.dart';
@@ -243,6 +244,7 @@ class _StatRow extends StatelessWidget {
               style: TextStyle(
                 fontSize: 13,
                 color: colours.text,
+                fontFamily: kDataFont,
                 fontFeatures: const [FontFeature.tabularFigures()],
               ),
             ),
@@ -256,6 +258,7 @@ class _StatRow extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 13,
                   color: colours.muted,
+                  fontFamily: kDataFont,
                   fontFeatures: const [FontFeature.tabularFigures()],
                 ),
               ),

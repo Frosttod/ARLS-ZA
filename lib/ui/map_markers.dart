@@ -9,6 +9,7 @@
 /// the tests that check a marker is not being drawn somewhere §3.5 forbids.
 library;
 
+import 'dart:math' as math;
 import 'dart:ui' show Offset;
 
 import '../map/geometry.dart';
@@ -194,23 +195,96 @@ const Map<MarkerKind, double> kMarkerRadius = {
   MarkerKind.shelter: 9,
 };
 
+/// §3.6: how far the camera leans back from straight down.
+///
+/// Zero is the map every phone draws: a plan, seen from directly above.
+/// Anything above that is a city with height in it — the buildings stand up,
+/// the streets run away towards the top of the screen, and a player can see
+/// the shape of the block they are walking into rather than its footprint.
+///
+/// ⚠️ Everything the game paints on the map — dots, rings, cones, glyphs,
+/// noise waves — is painted by Flutter, not by MapLibre (§3.6). Two projections
+/// that disagree by a few pixels put every marker off its own street, so this
+/// is the one place the perspective is worked out and both directions of it
+/// live side by side.
+class MapTilt {
+  const MapTilt({required this.degrees, required this.viewportHeightPx});
+
+  /// The plan view, and the maths every version of this game had until now.
+  static const flat = MapTilt(degrees: 0, viewportHeightPx: 0);
+
+  final double degrees;
+
+  /// How tall the map is on screen, in logical pixels.
+  ///
+  /// Needed because perspective has a scale: how strongly a tilt foreshortens
+  /// depends on how far the camera stands from the ground, and MapLibre sets
+  /// that from the viewport rather than from a constant.
+  final double viewportHeightPx;
+
+  bool get isFlat => degrees.abs() < 0.01 || viewportHeightPx <= 0;
+
+  double get radians => degrees * math.pi / 180;
+
+  /// How far the camera sits from the point it is looking at, in pixels.
+  ///
+  /// MapLibre's own figure: `0.5 / tan(fov / 2) × height`, with the default
+  /// field of view of 0.6435 rad. That works out at exactly one and a half
+  /// screens, which is the number below — written as the division it comes
+  /// from so it stays true if the field of view is ever changed.
+  double get cameraDistancePx =>
+      0.5 / math.tan(kMapFovRad / 2) * viewportHeightPx;
+}
+
+/// MapLibre's default field of view, in radians.
+const double kMapFovRad = 0.6435011087932844;
+
 /// Where a point sits on screen, in logical pixels from the middle.
 ///
 /// The inverse of [markerAtOffset], and the reason both live here: a badge
 /// drawn a few pixels off the dot it counts is worse than no badge.
+///
+/// With [tilt] flat this is the plain thing it always was — metres east and
+/// north, divided by the scale. With a tilt it is a perspective projection of
+/// the ground plane, derived rather than guessed:
+///
+///     right   = x
+///     up      = y · cos θ
+///     forward = D + y · sin θ
+///
+/// for a ground point `x` east and `y` north of the centre, a camera distance
+/// `D`, and a pitch `θ`. Dividing the first two by the third is the whole of
+/// it. At θ = 0 the forward term is just `D`, the division cancels, and what
+/// is left is the flat formula — which is what keeps the two from drifting
+/// apart as one of them is edited.
 Offset offsetOf(
   GeoPoint point, {
   required GeoPoint centre,
   required double zoom,
+  MapTilt tilt = MapTilt.flat,
 }) {
   final scale = metresPerPixel(zoom, centre.latitude);
 
+  final east =
+      (point.longitude - centre.longitude) *
+      metresPerDegreeLon(centre.latitude) /
+      scale;
+  final north = (point.latitude - centre.latitude) * metresPerDegreeLat / scale;
+
+  // Screen y grows downwards, latitude grows upwards.
+  if (tilt.isFlat) return Offset(east, -north);
+
+  final distance = tilt.cameraDistancePx;
+  final forward = distance + north * math.sin(tilt.radians);
+
+  // Behind the camera, or on the horizon. Nothing sensible can be drawn for
+  // it, so it is sent far enough off screen to be clipped rather than folded
+  // back into view as a ghost on the wrong side of the player.
+  if (forward <= 1) return const Offset(0, -1e6);
+
   return Offset(
-    (point.longitude - centre.longitude) *
-        metresPerDegreeLon(centre.latitude) /
-        scale,
-    // Screen y grows downwards, latitude grows upwards.
-    -(point.latitude - centre.latitude) * metresPerDegreeLat / scale,
+    east * distance / forward,
+    -north * math.cos(tilt.radians) * distance / forward,
   );
 }
 
@@ -227,15 +301,21 @@ MapMarker? markerAtOffset(
   required GeoPoint centre,
   required double zoom,
   double slopPx = 32,
+  MapTilt tilt = MapTilt.flat,
 }) {
   final scale = metresPerPixel(zoom, centre.latitude);
-  final slopM = slopPx * scale;
 
-  // Screen y grows downwards, latitude grows upwards.
-  final at = GeoPoint(
-    centre.latitude - offset.dy * scale / metresPerDegreeLat,
-    centre.longitude + offset.dx * scale / metresPerDegreeLon(centre.latitude),
-  );
+  // ⚠️ The slop is measured on screen and spent on the ground, and under a
+  // tilt those are not the same distance. A finger near the top of a tilted
+  // map covers far more ground than the same finger at the bottom, so the
+  // circle is grown by however much this particular point was shrunk —
+  // otherwise the far half of the map is untappable and the near half has
+  // markers stealing each other's taps.
+  final at = _groundAt(offset, centre: centre, zoom: zoom, tilt: tilt);
+  final spread = tilt.isFlat
+      ? 1.0
+      : _foreshortening(at, centre: centre, zoom: zoom, tilt: tilt);
+  final slopM = slopPx * scale * spread;
 
   MapMarker? best;
   var bestDistance = slopM;
@@ -329,6 +409,65 @@ List<({GeoPoint at, double radiusM})> zonesOf(List<MapMarker> markers) => [
       (at: marker.at, radiusM: marker.reachM!),
 ];
 
+/// The ground point under a screen offset — the inverse of [offsetOf].
+///
+/// Solved rather than searched for. Writing the forward projection out and
+/// rearranging for the northing gives
+///
+///     y = −sy · D / (D · cos θ + sy · sin θ)
+///
+/// and the easting falls out of it, so a tap costs the same as a draw.
+GeoPoint _groundAt(
+  Offset offset, {
+  required GeoPoint centre,
+  required double zoom,
+  required MapTilt tilt,
+}) {
+  final scale = metresPerPixel(zoom, centre.latitude);
+
+  var east = offset.dx;
+  var north = -offset.dy;
+
+  if (!tilt.isFlat) {
+    final distance = tilt.cameraDistancePx;
+    final denominator =
+        distance * math.cos(tilt.radians) + offset.dy * math.sin(tilt.radians);
+
+    // Above the horizon: there is no ground under that pixel at all.
+    if (denominator.abs() < 1) return centre;
+
+    north = -offset.dy * distance / denominator;
+    east = offset.dx * (distance + north * math.sin(tilt.radians)) / distance;
+  }
+
+  // Screen y grows downwards, latitude grows upwards.
+  return GeoPoint(
+    centre.latitude + north * scale / metresPerDegreeLat,
+    centre.longitude + east * scale / metresPerDegreeLon(centre.latitude),
+  );
+}
+
+/// How many metres one screen pixel is worth at [at], as a multiple of what it
+/// is worth at the centre.
+///
+/// One at the middle of the screen, more towards the top, less towards the
+/// bottom — which is what perspective is.
+double _foreshortening(
+  GeoPoint at, {
+  required GeoPoint centre,
+  required double zoom,
+  required MapTilt tilt,
+}) {
+  final scale = metresPerPixel(zoom, centre.latitude);
+  final north = (at.latitude - centre.latitude) * metresPerDegreeLat / scale;
+  final distance = tilt.cameraDistancePx;
+
+  final forward = distance + north * math.sin(tilt.radians);
+  if (forward <= 1) return 1;
+
+  return forward / distance;
+}
+
 /// §12's colours for [MarkerAlert], as ARGB.
 const Map<MarkerAlert, int> kAlertColours = {
   MarkerAlert.calm: 0xFF4E8A4A,
@@ -386,3 +525,14 @@ PlaceIcon placeIconFor(String? tableId) => switch (tableId) {
   'proc_waste' || 'proc_roadside' => PlaceIcon.waste,
   _ => PlaceIcon.home,
 };
+
+/// §3.6: how far the map leans back, everywhere it is drawn.
+///
+/// One number, in one place. The camera is given it, the markers are drawn
+/// with it, and taps are read back through it — three things that have to
+/// agree to the pixel, so none of them gets to hold its own copy.
+const double kMapTiltDeg = 45;
+
+/// The tilt for a map [viewportHeightPx] logical pixels tall.
+MapTilt mapTilt(double viewportHeightPx) =>
+    MapTilt(degrees: kMapTiltDeg, viewportHeightPx: viewportHeightPx);

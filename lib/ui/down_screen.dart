@@ -7,6 +7,7 @@
 /// game does not have.
 library;
 
+import 'fonts.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -114,6 +115,7 @@ class _DownScreenState extends State<DownScreen> {
                   style: TextStyle(
                     fontSize: 28,
                     color: colours.data,
+                    fontFamily: kDataFont,
                     fontFeatures: const [FontFeature.tabularFigures()],
                   ),
                 ),

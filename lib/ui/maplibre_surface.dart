@@ -187,6 +187,14 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
             // as good a guess as any, and the region screen is already open.
             : const LatLng(52.0, 19.0),
         zoom: kStreetZoom,
+
+        // §3.6: leaned back, always by the same amount.
+        //
+        // Fixed rather than a gesture, and the tilt gesture stays off below.
+        // A map read while walking has to be the same map every time it is
+        // glanced at — and one angle means the perspective the markers are
+        // drawn with is worked out once and cannot drift from the tiles.
+        tilt: kMapTiltDeg,
       ),
       onMapCreated: (controller) => _controller = controller,
       onStyleLoadedCallback: () => unawaited(_sync()),
@@ -322,6 +330,12 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
     // stops a dot and the finger that hits it from ever disagreeing.
     return LayoutBuilder(
       builder: (context, constraints) {
+        // §3.6: every overlay is drawn through the same lean as the tiles. The
+        // height comes from the layout rather than a constant because the
+        // strength of a perspective depends on how far the camera stands back,
+        // and MapLibre sets that from the viewport.
+        final overlayTilt = mapTilt(constraints.maxHeight);
+
         return Stack(
           children: [
             Positioned.fill(child: gestures),
@@ -365,6 +379,7 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
                             wave.at,
                             centre: GeoPoint(centre.latitude, centre.longitude),
                             zoom: _zoom,
+                            tilt: overlayTilt,
                           ),
                           radiusPx:
                               wave.radiusM *
@@ -391,6 +406,7 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
                             marker.at,
                             centre: GeoPoint(centre.latitude, centre.longitude),
                             zoom: _zoom,
+                            tilt: overlayTilt,
                           ),
                       ],
                     ),
@@ -414,6 +430,7 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
                                 centre.longitude,
                               ),
                               zoom: _zoom,
+                              tilt: overlayTilt,
                             ),
                             radiusPx:
                                 zone.radiusM /
@@ -460,6 +477,7 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
                                   centre.longitude,
                                 ),
                                 zoom: _zoom,
+                                tilt: overlayTilt,
                               ),
                               alert: marker.alert!,
                             ),
@@ -489,6 +507,7 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
                                 centre.longitude,
                               ),
                               zoom: _zoom,
+                              tilt: overlayTilt,
                             ),
                             headingDeg: marker.headingDeg!,
                             colour: Color(kMarkerColours[marker.kind]!),
@@ -524,6 +543,7 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
       position - Offset(size.width / 2, size.height / 2),
       centre: GeoPoint(centre.latitude, centre.longitude),
       zoom: _zoom,
+      tilt: mapTilt(size.height),
     );
     // A tap on nothing is still an answer: it lets go of whatever was held.
     handler(marker);
@@ -582,7 +602,15 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
     // the two able to disagree for ever: `_zoom` is what every painter on our
     // side measures in, so moving it before the tiles move means one failed
     // channel call and the map is at one zoom and the markers at another.
-    await controller.moveCamera(CameraUpdate.newLatLngZoom(target, clamped));
+    // ⚠️ The whole camera position, not just the target and zoom. A bare
+    // `newLatLngZoom` leaves the tilt to whatever the platform decides to keep,
+    // and a map that flattens itself on the first pinch is worse than a map
+    // that was never tilted.
+    await controller.moveCamera(
+      CameraUpdate.newCameraPosition(
+        CameraPosition(target: target, zoom: clamped, tilt: kMapTiltDeg),
+      ),
+    );
     _zoom = clamped;
 
     // The overlays drawn on our side — the reach rings and the counts on a
@@ -668,7 +696,13 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
     // Never animated. The player did not ask to travel — the map slipped, and
     // gliding it back would draw attention to the slip.
     await controller.moveCamera(
-      CameraUpdate.newLatLng(LatLng(centre.latitude, centre.longitude)),
+      CameraUpdate.newCameraPosition(
+        CameraPosition(
+          target: LatLng(centre.latitude, centre.longitude),
+          zoom: _zoom,
+          tilt: kMapTiltDeg,
+        ),
+      ),
     );
   }
 
@@ -676,8 +710,12 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
     final centre = widget.centre;
     if (centre == null) return;
 
-    final target = CameraUpdate.newLatLng(
-      LatLng(centre.latitude, centre.longitude),
+    final target = CameraUpdate.newCameraPosition(
+      CameraPosition(
+        target: LatLng(centre.latitude, centre.longitude),
+        zoom: _zoom,
+        tilt: kMapTiltDeg,
+      ),
     );
 
     // A glide is nicer and costs frames. §3.3 says a low battery buys none of
@@ -718,7 +756,14 @@ class _MarkerPainter extends CustomPainter {
     final middle = Offset(size.width / 2, size.height / 2);
 
     for (final marker in markers) {
-      final at = middle + offsetOf(marker.at, centre: centre, zoom: zoom);
+      final at =
+          middle +
+          offsetOf(
+            marker.at,
+            centre: centre,
+            zoom: zoom,
+            tilt: mapTilt(size.height),
+          );
 
       // Off screen and not worth a single instruction more.
       if (at.dx < -40 ||

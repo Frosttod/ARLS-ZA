@@ -15,6 +15,8 @@ library;
 
 import 'package:flutter/material.dart';
 
+import 'fonts.dart';
+
 import '../data/db/database.dart';
 
 const String kLocaleSettingKey = 'app.locale';
@@ -136,5 +138,13 @@ ThemeData buildTheme(Brightness brightness) => ThemeData(
   scaffoldBackgroundColor: brightness == Brightness.dark
       ? Colors.black
       : const Color(0xFFF6F4F2),
+
+  // §12: one face for everything that is words.
+  //
+  // Set on the theme rather than on each style, because nearly every
+  // [TextStyle] in this app gives a size and a colour and nothing else — so
+  // they inherit, and the face can be changed in one place instead of four
+  // hundred.
+  fontFamily: kUiFont,
   useMaterial3: true,
 );

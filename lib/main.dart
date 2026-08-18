@@ -56,6 +56,7 @@ import 'ui/shelter_screen.dart';
 import 'ui/item_details_sheet.dart';
 import 'ui/note_sheet.dart';
 import 'ui/notices.dart';
+import 'ui/refresh_rate.dart';
 import 'ui/search_panel.dart';
 import 'game/game_session.dart';
 import 'game/relocation.dart';
@@ -265,6 +266,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
   /// §13.1: what this character has done, counted. Loaded with them.
   PlayerStats _stats = PlayerStats.empty;
+
+  /// §3.3, §3.6: smooth while the battery can afford it.
+  final _refresh = ScreenRefresh();
   GameLoop? _loop;
   GameSnapshot? _snapshot;
   bool _loading = true;
@@ -746,6 +750,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       if (fix != null) {
         _standingAt.value = GeoPoint(fix.latitude, fix.longitude);
       }
+      // §3.3: the same moment animations stop is the moment smoothness does.
+      unawaited(_refresh.want(economy: snapshot.economy));
+
       unawaited(_checkRelocation(snapshot));
       unawaited(_settleShelters(snapshot));
 

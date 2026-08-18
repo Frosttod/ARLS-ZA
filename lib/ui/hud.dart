@@ -11,6 +11,7 @@ library;
 
 import 'package:flutter/material.dart';
 
+import 'fonts.dart';
 import '../inventory/inventory.dart' show kPocketCapacityL;
 import '../l10n/app_localizations.dart';
 import 'status_notes.dart';
@@ -411,6 +412,7 @@ class _ThinBar extends StatelessWidget {
               style: TextStyle(
                 fontSize: 9,
                 color: colours.muted,
+                fontFamily: kDataFont,
                 fontFeatures: const [FontFeature.tabularFigures()],
               ),
             ),
@@ -424,6 +426,7 @@ class _ThinBar extends StatelessWidget {
               style: TextStyle(
                 fontSize: 10,
                 color: colours.text,
+                fontFamily: kDataFont,
                 fontFeatures: [FontFeature.tabularFigures()],
               ),
             ),
@@ -466,6 +469,7 @@ class _HeartRate extends StatelessWidget {
               height: 1.1,
               fontWeight: FontWeight.bold,
               color: colour,
+              fontFamily: kDataFont,
               fontFeatures: const [FontFeature.tabularFigures()],
             ),
           ),
@@ -763,6 +767,7 @@ class _LimitBar extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 10,
                   color: warning || full ? colour : colours.text,
+                  fontFamily: kDataFont,
                   fontFeatures: const [FontFeature.tabularFigures()],
                 ),
               ),
@@ -854,6 +859,7 @@ class _Threat extends StatelessWidget {
             style: TextStyle(
               fontSize: 11,
               color: colour,
+              fontFamily: kDataFont,
               fontFeatures: const [FontFeature.tabularFigures()],
             ),
           ),

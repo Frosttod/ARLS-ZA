@@ -28,6 +28,7 @@ dependencies:
   battery_plus: ^7.1.1
   http: ^1.6.0
   maplibre_gl: ^0.26.2
+  flutter_displaymode: ^0.7.0
 
 dev_dependencies:
   flutter_test:
@@ -51,6 +52,31 @@ flutter_launcher_icons:
 flutter:
   uses-material-design: true
   generate: true
+
+  fonts:
+    # §12: the two faces the game is read in. Bundled, never fetched — the
+    # game is offline-first, and a screen that waits on a font is a screen
+    # that is blank in a field with no signal.
+    #
+    # IBM Plex, SIL Open Font License 1.1 (assets/fonts/OFL.txt). Chosen for
+    # being a measuring instrument rather than a poster: it was drawn for
+    # dashboards and it reads at arm's length in the rain.
+    - family: Plex
+      fonts:
+        # One variable file carries every weight and every width, Condensed
+        # included, for less than the two static faces it replaces.
+        - asset: assets/fonts/IBMPlexSans-Variable.ttf
+
+    # ⚠️ Numbers only. Every figure on the HUD sits in a column that must not
+    # move as it changes — §3.6's bars are read at a glance while walking, and
+    # a digit that shifts the ones beside it is a digit nobody can read. The
+    # code already asks for tabular figures in a dozen places; a monospace is
+    # that promise kept in the face itself.
+    - family: PlexMono
+      fonts:
+        - asset: assets/fonts/IBMPlexMono-Regular.ttf
+        - asset: assets/fonts/IBMPlexMono-SemiBold.ttf
+          weight: 600
 
   assets:
     - assets/icon.png

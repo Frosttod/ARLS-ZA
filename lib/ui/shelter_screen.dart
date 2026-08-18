@@ -7,6 +7,7 @@
 /// planks" is a reason to go out, and a hidden row is nothing at all.
 library;
 
+import 'fonts.dart';
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -730,6 +731,7 @@ class BuildProgress extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 13,
                     color: colours.data,
+                    fontFamily: kDataFont,
                     fontFeatures: const [FontFeature.tabularFigures()],
                   ),
                 ),

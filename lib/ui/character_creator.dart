@@ -13,6 +13,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'fonts.dart';
 import '../l10n/app_localizations.dart';
 import '../sim/body.dart';
 
@@ -397,6 +398,7 @@ class _NumberFieldState extends State<_NumberField> {
                     decimal: true,
                   ),
                   style: theme.textTheme.bodyMedium?.copyWith(
+                    fontFamily: kDataFont,
                     fontFeatures: const [FontFeature.tabularFigures()],
                     fontWeight: FontWeight.bold,
                   ),
@@ -507,6 +509,7 @@ class _Row extends StatelessWidget {
             value,
             style: theme.textTheme.bodyMedium?.copyWith(
               fontWeight: FontWeight.bold,
+              fontFamily: kDataFont,
               fontFeatures: const [FontFeature.tabularFigures()],
             ),
           ),
