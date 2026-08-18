@@ -1201,6 +1201,72 @@ abstract class L10n {
   /// **'SHELTER'**
   String get menuShelter;
 
+  /// No description provided for @stashTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Shelves'**
+  String get stashTitle;
+
+  /// No description provided for @stashOnTheShelves.
+  ///
+  /// In en, this message translates to:
+  /// **'On the shelves'**
+  String get stashOnTheShelves;
+
+  /// No description provided for @stashInThePack.
+  ///
+  /// In en, this message translates to:
+  /// **'In the pack'**
+  String get stashInThePack;
+
+  /// No description provided for @stashEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing here yet.'**
+  String get stashEmpty;
+
+  /// No description provided for @stashPackEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'The pack is empty.'**
+  String get stashPackEmpty;
+
+  /// No description provided for @stashStore.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave'**
+  String get stashStore;
+
+  /// No description provided for @stashTake.
+  ///
+  /// In en, this message translates to:
+  /// **'Take'**
+  String get stashTake;
+
+  /// No description provided for @stashFull.
+  ///
+  /// In en, this message translates to:
+  /// **'No room on the shelves.'**
+  String get stashFull;
+
+  /// No description provided for @stashNoRoomInPack.
+  ///
+  /// In en, this message translates to:
+  /// **'It will not fit in the pack.'**
+  String get stashNoRoomInPack;
+
+  /// No description provided for @shelterShelves.
+  ///
+  /// In en, this message translates to:
+  /// **'Shelves'**
+  String get shelterShelves;
+
+  /// No description provided for @shelterShelvesWhat.
+  ///
+  /// In en, this message translates to:
+  /// **'What is left here stays here. The house holds what it holds; Storage adds fifty kilograms a level.'**
+  String get shelterShelvesWhat;
+
   /// No description provided for @shelterTitle.
   ///
   /// In en, this message translates to:

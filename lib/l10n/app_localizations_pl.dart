@@ -651,6 +651,40 @@ class L10nPl extends L10n {
   String get menuShelter => 'SCHRON';
 
   @override
+  String get stashTitle => 'Półki';
+
+  @override
+  String get stashOnTheShelves => 'Na półkach';
+
+  @override
+  String get stashInThePack => 'W plecaku';
+
+  @override
+  String get stashEmpty => 'Jeszcze nic tu nie ma.';
+
+  @override
+  String get stashPackEmpty => 'Plecak jest pusty.';
+
+  @override
+  String get stashStore => 'Zostaw';
+
+  @override
+  String get stashTake => 'Weź';
+
+  @override
+  String get stashFull => 'Na półkach nie ma miejsca.';
+
+  @override
+  String get stashNoRoomInPack => 'To się nie mieści w plecaku.';
+
+  @override
+  String get shelterShelves => 'Półki';
+
+  @override
+  String get shelterShelvesWhat =>
+      'Co tu zostawisz, to tu zostanie. Dom mieści tyle, ile mieści; Magazyn dokłada pięćdziesiąt kilogramów na poziom.';
+
+  @override
   String get shelterTitle => 'Schron';
 
   @override

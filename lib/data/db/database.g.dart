@@ -7716,6 +7716,651 @@ class ProfileStatsCompanion extends UpdateCompanion<StatsRow> {
   }
 }
 
+class $ShelterItemsTable extends ShelterItems
+    with TableInfo<$ShelterItemsTable, StashRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ShelterItemsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _profileIdMeta = const VerificationMeta(
+    'profileId',
+  );
+  @override
+  late final GeneratedColumn<int> profileId = GeneratedColumn<int>(
+    'profile_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _shelterIdMeta = const VerificationMeta(
+    'shelterId',
+  );
+  @override
+  late final GeneratedColumn<int> shelterId = GeneratedColumn<int>(
+    'shelter_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _itemIdMeta = const VerificationMeta('itemId');
+  @override
+  late final GeneratedColumn<String> itemId = GeneratedColumn<String>(
+    'item_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _countMeta = const VerificationMeta('count');
+  @override
+  late final GeneratedColumn<int> count = GeneratedColumn<int>(
+    'count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _conditionMeta = const VerificationMeta(
+    'condition',
+  );
+  @override
+  late final GeneratedColumn<double> condition = GeneratedColumn<double>(
+    'condition',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _pagesTotalMeta = const VerificationMeta(
+    'pagesTotal',
+  );
+  @override
+  late final GeneratedColumn<int> pagesTotal = GeneratedColumn<int>(
+    'pages_total',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _pagesReadMeta = const VerificationMeta(
+    'pagesRead',
+  );
+  @override
+  late final GeneratedColumn<int> pagesRead = GeneratedColumn<int>(
+    'pages_read',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _noteIdMeta = const VerificationMeta('noteId');
+  @override
+  late final GeneratedColumn<String> noteId = GeneratedColumn<String>(
+    'note_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _portionMeta = const VerificationMeta(
+    'portion',
+  );
+  @override
+  late final GeneratedColumn<double> portion = GeneratedColumn<double>(
+    'portion',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _attachmentsMeta = const VerificationMeta(
+    'attachments',
+  );
+  @override
+  late final GeneratedColumn<String> attachments = GeneratedColumn<String>(
+    'attachments',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    profileId,
+    shelterId,
+    itemId,
+    count,
+    condition,
+    pagesTotal,
+    pagesRead,
+    noteId,
+    portion,
+    attachments,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'shelter_items';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<StashRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('profile_id')) {
+      context.handle(
+        _profileIdMeta,
+        profileId.isAcceptableOrUnknown(data['profile_id']!, _profileIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_profileIdMeta);
+    }
+    if (data.containsKey('shelter_id')) {
+      context.handle(
+        _shelterIdMeta,
+        shelterId.isAcceptableOrUnknown(data['shelter_id']!, _shelterIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_shelterIdMeta);
+    }
+    if (data.containsKey('item_id')) {
+      context.handle(
+        _itemIdMeta,
+        itemId.isAcceptableOrUnknown(data['item_id']!, _itemIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_itemIdMeta);
+    }
+    if (data.containsKey('count')) {
+      context.handle(
+        _countMeta,
+        count.isAcceptableOrUnknown(data['count']!, _countMeta),
+      );
+    }
+    if (data.containsKey('condition')) {
+      context.handle(
+        _conditionMeta,
+        condition.isAcceptableOrUnknown(data['condition']!, _conditionMeta),
+      );
+    }
+    if (data.containsKey('pages_total')) {
+      context.handle(
+        _pagesTotalMeta,
+        pagesTotal.isAcceptableOrUnknown(data['pages_total']!, _pagesTotalMeta),
+      );
+    }
+    if (data.containsKey('pages_read')) {
+      context.handle(
+        _pagesReadMeta,
+        pagesRead.isAcceptableOrUnknown(data['pages_read']!, _pagesReadMeta),
+      );
+    }
+    if (data.containsKey('note_id')) {
+      context.handle(
+        _noteIdMeta,
+        noteId.isAcceptableOrUnknown(data['note_id']!, _noteIdMeta),
+      );
+    }
+    if (data.containsKey('portion')) {
+      context.handle(
+        _portionMeta,
+        portion.isAcceptableOrUnknown(data['portion']!, _portionMeta),
+      );
+    }
+    if (data.containsKey('attachments')) {
+      context.handle(
+        _attachmentsMeta,
+        attachments.isAcceptableOrUnknown(
+          data['attachments']!,
+          _attachmentsMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  StashRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return StashRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      profileId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}profile_id'],
+      )!,
+      shelterId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}shelter_id'],
+      )!,
+      itemId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}item_id'],
+      )!,
+      count: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}count'],
+      )!,
+      condition: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}condition'],
+      ),
+      pagesTotal: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}pages_total'],
+      ),
+      pagesRead: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}pages_read'],
+      )!,
+      noteId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}note_id'],
+      ),
+      portion: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}portion'],
+      )!,
+      attachments: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}attachments'],
+      )!,
+    );
+  }
+
+  @override
+  $ShelterItemsTable createAlias(String alias) {
+    return $ShelterItemsTable(attachedDatabase, alias);
+  }
+}
+
+class StashRow extends DataClass implements Insertable<StashRow> {
+  final int id;
+  final int profileId;
+  final int shelterId;
+
+  /// Catalogue id (§4.1). Not a foreign key, for the reason in
+  /// [InventoryLines]: the catalogue is data files, not tables.
+  final String itemId;
+  final int count;
+  final double? condition;
+  final int? pagesTotal;
+  final int pagesRead;
+  final String? noteId;
+  final double portion;
+  final String attachments;
+  const StashRow({
+    required this.id,
+    required this.profileId,
+    required this.shelterId,
+    required this.itemId,
+    required this.count,
+    this.condition,
+    this.pagesTotal,
+    required this.pagesRead,
+    this.noteId,
+    required this.portion,
+    required this.attachments,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['profile_id'] = Variable<int>(profileId);
+    map['shelter_id'] = Variable<int>(shelterId);
+    map['item_id'] = Variable<String>(itemId);
+    map['count'] = Variable<int>(count);
+    if (!nullToAbsent || condition != null) {
+      map['condition'] = Variable<double>(condition);
+    }
+    if (!nullToAbsent || pagesTotal != null) {
+      map['pages_total'] = Variable<int>(pagesTotal);
+    }
+    map['pages_read'] = Variable<int>(pagesRead);
+    if (!nullToAbsent || noteId != null) {
+      map['note_id'] = Variable<String>(noteId);
+    }
+    map['portion'] = Variable<double>(portion);
+    map['attachments'] = Variable<String>(attachments);
+    return map;
+  }
+
+  ShelterItemsCompanion toCompanion(bool nullToAbsent) {
+    return ShelterItemsCompanion(
+      id: Value(id),
+      profileId: Value(profileId),
+      shelterId: Value(shelterId),
+      itemId: Value(itemId),
+      count: Value(count),
+      condition: condition == null && nullToAbsent
+          ? const Value.absent()
+          : Value(condition),
+      pagesTotal: pagesTotal == null && nullToAbsent
+          ? const Value.absent()
+          : Value(pagesTotal),
+      pagesRead: Value(pagesRead),
+      noteId: noteId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(noteId),
+      portion: Value(portion),
+      attachments: Value(attachments),
+    );
+  }
+
+  factory StashRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return StashRow(
+      id: serializer.fromJson<int>(json['id']),
+      profileId: serializer.fromJson<int>(json['profileId']),
+      shelterId: serializer.fromJson<int>(json['shelterId']),
+      itemId: serializer.fromJson<String>(json['itemId']),
+      count: serializer.fromJson<int>(json['count']),
+      condition: serializer.fromJson<double?>(json['condition']),
+      pagesTotal: serializer.fromJson<int?>(json['pagesTotal']),
+      pagesRead: serializer.fromJson<int>(json['pagesRead']),
+      noteId: serializer.fromJson<String?>(json['noteId']),
+      portion: serializer.fromJson<double>(json['portion']),
+      attachments: serializer.fromJson<String>(json['attachments']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'profileId': serializer.toJson<int>(profileId),
+      'shelterId': serializer.toJson<int>(shelterId),
+      'itemId': serializer.toJson<String>(itemId),
+      'count': serializer.toJson<int>(count),
+      'condition': serializer.toJson<double?>(condition),
+      'pagesTotal': serializer.toJson<int?>(pagesTotal),
+      'pagesRead': serializer.toJson<int>(pagesRead),
+      'noteId': serializer.toJson<String?>(noteId),
+      'portion': serializer.toJson<double>(portion),
+      'attachments': serializer.toJson<String>(attachments),
+    };
+  }
+
+  StashRow copyWith({
+    int? id,
+    int? profileId,
+    int? shelterId,
+    String? itemId,
+    int? count,
+    Value<double?> condition = const Value.absent(),
+    Value<int?> pagesTotal = const Value.absent(),
+    int? pagesRead,
+    Value<String?> noteId = const Value.absent(),
+    double? portion,
+    String? attachments,
+  }) => StashRow(
+    id: id ?? this.id,
+    profileId: profileId ?? this.profileId,
+    shelterId: shelterId ?? this.shelterId,
+    itemId: itemId ?? this.itemId,
+    count: count ?? this.count,
+    condition: condition.present ? condition.value : this.condition,
+    pagesTotal: pagesTotal.present ? pagesTotal.value : this.pagesTotal,
+    pagesRead: pagesRead ?? this.pagesRead,
+    noteId: noteId.present ? noteId.value : this.noteId,
+    portion: portion ?? this.portion,
+    attachments: attachments ?? this.attachments,
+  );
+  StashRow copyWithCompanion(ShelterItemsCompanion data) {
+    return StashRow(
+      id: data.id.present ? data.id.value : this.id,
+      profileId: data.profileId.present ? data.profileId.value : this.profileId,
+      shelterId: data.shelterId.present ? data.shelterId.value : this.shelterId,
+      itemId: data.itemId.present ? data.itemId.value : this.itemId,
+      count: data.count.present ? data.count.value : this.count,
+      condition: data.condition.present ? data.condition.value : this.condition,
+      pagesTotal: data.pagesTotal.present
+          ? data.pagesTotal.value
+          : this.pagesTotal,
+      pagesRead: data.pagesRead.present ? data.pagesRead.value : this.pagesRead,
+      noteId: data.noteId.present ? data.noteId.value : this.noteId,
+      portion: data.portion.present ? data.portion.value : this.portion,
+      attachments: data.attachments.present
+          ? data.attachments.value
+          : this.attachments,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('StashRow(')
+          ..write('id: $id, ')
+          ..write('profileId: $profileId, ')
+          ..write('shelterId: $shelterId, ')
+          ..write('itemId: $itemId, ')
+          ..write('count: $count, ')
+          ..write('condition: $condition, ')
+          ..write('pagesTotal: $pagesTotal, ')
+          ..write('pagesRead: $pagesRead, ')
+          ..write('noteId: $noteId, ')
+          ..write('portion: $portion, ')
+          ..write('attachments: $attachments')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    profileId,
+    shelterId,
+    itemId,
+    count,
+    condition,
+    pagesTotal,
+    pagesRead,
+    noteId,
+    portion,
+    attachments,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is StashRow &&
+          other.id == this.id &&
+          other.profileId == this.profileId &&
+          other.shelterId == this.shelterId &&
+          other.itemId == this.itemId &&
+          other.count == this.count &&
+          other.condition == this.condition &&
+          other.pagesTotal == this.pagesTotal &&
+          other.pagesRead == this.pagesRead &&
+          other.noteId == this.noteId &&
+          other.portion == this.portion &&
+          other.attachments == this.attachments);
+}
+
+class ShelterItemsCompanion extends UpdateCompanion<StashRow> {
+  final Value<int> id;
+  final Value<int> profileId;
+  final Value<int> shelterId;
+  final Value<String> itemId;
+  final Value<int> count;
+  final Value<double?> condition;
+  final Value<int?> pagesTotal;
+  final Value<int> pagesRead;
+  final Value<String?> noteId;
+  final Value<double> portion;
+  final Value<String> attachments;
+  const ShelterItemsCompanion({
+    this.id = const Value.absent(),
+    this.profileId = const Value.absent(),
+    this.shelterId = const Value.absent(),
+    this.itemId = const Value.absent(),
+    this.count = const Value.absent(),
+    this.condition = const Value.absent(),
+    this.pagesTotal = const Value.absent(),
+    this.pagesRead = const Value.absent(),
+    this.noteId = const Value.absent(),
+    this.portion = const Value.absent(),
+    this.attachments = const Value.absent(),
+  });
+  ShelterItemsCompanion.insert({
+    this.id = const Value.absent(),
+    required int profileId,
+    required int shelterId,
+    required String itemId,
+    this.count = const Value.absent(),
+    this.condition = const Value.absent(),
+    this.pagesTotal = const Value.absent(),
+    this.pagesRead = const Value.absent(),
+    this.noteId = const Value.absent(),
+    this.portion = const Value.absent(),
+    this.attachments = const Value.absent(),
+  }) : profileId = Value(profileId),
+       shelterId = Value(shelterId),
+       itemId = Value(itemId);
+  static Insertable<StashRow> custom({
+    Expression<int>? id,
+    Expression<int>? profileId,
+    Expression<int>? shelterId,
+    Expression<String>? itemId,
+    Expression<int>? count,
+    Expression<double>? condition,
+    Expression<int>? pagesTotal,
+    Expression<int>? pagesRead,
+    Expression<String>? noteId,
+    Expression<double>? portion,
+    Expression<String>? attachments,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (profileId != null) 'profile_id': profileId,
+      if (shelterId != null) 'shelter_id': shelterId,
+      if (itemId != null) 'item_id': itemId,
+      if (count != null) 'count': count,
+      if (condition != null) 'condition': condition,
+      if (pagesTotal != null) 'pages_total': pagesTotal,
+      if (pagesRead != null) 'pages_read': pagesRead,
+      if (noteId != null) 'note_id': noteId,
+      if (portion != null) 'portion': portion,
+      if (attachments != null) 'attachments': attachments,
+    });
+  }
+
+  ShelterItemsCompanion copyWith({
+    Value<int>? id,
+    Value<int>? profileId,
+    Value<int>? shelterId,
+    Value<String>? itemId,
+    Value<int>? count,
+    Value<double?>? condition,
+    Value<int?>? pagesTotal,
+    Value<int>? pagesRead,
+    Value<String?>? noteId,
+    Value<double>? portion,
+    Value<String>? attachments,
+  }) {
+    return ShelterItemsCompanion(
+      id: id ?? this.id,
+      profileId: profileId ?? this.profileId,
+      shelterId: shelterId ?? this.shelterId,
+      itemId: itemId ?? this.itemId,
+      count: count ?? this.count,
+      condition: condition ?? this.condition,
+      pagesTotal: pagesTotal ?? this.pagesTotal,
+      pagesRead: pagesRead ?? this.pagesRead,
+      noteId: noteId ?? this.noteId,
+      portion: portion ?? this.portion,
+      attachments: attachments ?? this.attachments,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (profileId.present) {
+      map['profile_id'] = Variable<int>(profileId.value);
+    }
+    if (shelterId.present) {
+      map['shelter_id'] = Variable<int>(shelterId.value);
+    }
+    if (itemId.present) {
+      map['item_id'] = Variable<String>(itemId.value);
+    }
+    if (count.present) {
+      map['count'] = Variable<int>(count.value);
+    }
+    if (condition.present) {
+      map['condition'] = Variable<double>(condition.value);
+    }
+    if (pagesTotal.present) {
+      map['pages_total'] = Variable<int>(pagesTotal.value);
+    }
+    if (pagesRead.present) {
+      map['pages_read'] = Variable<int>(pagesRead.value);
+    }
+    if (noteId.present) {
+      map['note_id'] = Variable<String>(noteId.value);
+    }
+    if (portion.present) {
+      map['portion'] = Variable<double>(portion.value);
+    }
+    if (attachments.present) {
+      map['attachments'] = Variable<String>(attachments.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ShelterItemsCompanion(')
+          ..write('id: $id, ')
+          ..write('profileId: $profileId, ')
+          ..write('shelterId: $shelterId, ')
+          ..write('itemId: $itemId, ')
+          ..write('count: $count, ')
+          ..write('condition: $condition, ')
+          ..write('pagesTotal: $pagesTotal, ')
+          ..write('pagesRead: $pagesRead, ')
+          ..write('noteId: $noteId, ')
+          ..write('portion: $portion, ')
+          ..write('attachments: $attachments')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$SaveDatabase extends GeneratedDatabase {
   _$SaveDatabase(QueryExecutor e) : super(e);
   $SaveDatabaseManager get managers => $SaveDatabaseManager(this);
@@ -7735,6 +8380,7 @@ abstract class _$SaveDatabase extends GeneratedDatabase {
   late final $SheltersTable shelters = $SheltersTable(this);
   late final $RemainsEntriesTable remainsEntries = $RemainsEntriesTable(this);
   late final $ProfileStatsTable profileStats = $ProfileStatsTable(this);
+  late final $ShelterItemsTable shelterItems = $ShelterItemsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -7752,6 +8398,7 @@ abstract class _$SaveDatabase extends GeneratedDatabase {
     shelters,
     remainsEntries,
     profileStats,
+    shelterItems,
   ];
   @override
   DriftDatabaseOptions get options =>
@@ -11383,6 +12030,315 @@ typedef $$ProfileStatsTableProcessedTableManager =
       StatsRow,
       PrefetchHooks Function()
     >;
+typedef $$ShelterItemsTableCreateCompanionBuilder =
+    ShelterItemsCompanion Function({
+      Value<int> id,
+      required int profileId,
+      required int shelterId,
+      required String itemId,
+      Value<int> count,
+      Value<double?> condition,
+      Value<int?> pagesTotal,
+      Value<int> pagesRead,
+      Value<String?> noteId,
+      Value<double> portion,
+      Value<String> attachments,
+    });
+typedef $$ShelterItemsTableUpdateCompanionBuilder =
+    ShelterItemsCompanion Function({
+      Value<int> id,
+      Value<int> profileId,
+      Value<int> shelterId,
+      Value<String> itemId,
+      Value<int> count,
+      Value<double?> condition,
+      Value<int?> pagesTotal,
+      Value<int> pagesRead,
+      Value<String?> noteId,
+      Value<double> portion,
+      Value<String> attachments,
+    });
+
+class $$ShelterItemsTableFilterComposer
+    extends Composer<_$SaveDatabase, $ShelterItemsTable> {
+  $$ShelterItemsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get profileId => $composableBuilder(
+    column: $table.profileId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get shelterId => $composableBuilder(
+    column: $table.shelterId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get itemId => $composableBuilder(
+    column: $table.itemId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get count => $composableBuilder(
+    column: $table.count,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get condition => $composableBuilder(
+    column: $table.condition,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get pagesTotal => $composableBuilder(
+    column: $table.pagesTotal,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get pagesRead => $composableBuilder(
+    column: $table.pagesRead,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get noteId => $composableBuilder(
+    column: $table.noteId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get portion => $composableBuilder(
+    column: $table.portion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get attachments => $composableBuilder(
+    column: $table.attachments,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ShelterItemsTableOrderingComposer
+    extends Composer<_$SaveDatabase, $ShelterItemsTable> {
+  $$ShelterItemsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get profileId => $composableBuilder(
+    column: $table.profileId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get shelterId => $composableBuilder(
+    column: $table.shelterId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get itemId => $composableBuilder(
+    column: $table.itemId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get count => $composableBuilder(
+    column: $table.count,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get condition => $composableBuilder(
+    column: $table.condition,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get pagesTotal => $composableBuilder(
+    column: $table.pagesTotal,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get pagesRead => $composableBuilder(
+    column: $table.pagesRead,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get noteId => $composableBuilder(
+    column: $table.noteId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get portion => $composableBuilder(
+    column: $table.portion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get attachments => $composableBuilder(
+    column: $table.attachments,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ShelterItemsTableAnnotationComposer
+    extends Composer<_$SaveDatabase, $ShelterItemsTable> {
+  $$ShelterItemsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get profileId =>
+      $composableBuilder(column: $table.profileId, builder: (column) => column);
+
+  GeneratedColumn<int> get shelterId =>
+      $composableBuilder(column: $table.shelterId, builder: (column) => column);
+
+  GeneratedColumn<String> get itemId =>
+      $composableBuilder(column: $table.itemId, builder: (column) => column);
+
+  GeneratedColumn<int> get count =>
+      $composableBuilder(column: $table.count, builder: (column) => column);
+
+  GeneratedColumn<double> get condition =>
+      $composableBuilder(column: $table.condition, builder: (column) => column);
+
+  GeneratedColumn<int> get pagesTotal => $composableBuilder(
+    column: $table.pagesTotal,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get pagesRead =>
+      $composableBuilder(column: $table.pagesRead, builder: (column) => column);
+
+  GeneratedColumn<String> get noteId =>
+      $composableBuilder(column: $table.noteId, builder: (column) => column);
+
+  GeneratedColumn<double> get portion =>
+      $composableBuilder(column: $table.portion, builder: (column) => column);
+
+  GeneratedColumn<String> get attachments => $composableBuilder(
+    column: $table.attachments,
+    builder: (column) => column,
+  );
+}
+
+class $$ShelterItemsTableTableManager
+    extends
+        RootTableManager<
+          _$SaveDatabase,
+          $ShelterItemsTable,
+          StashRow,
+          $$ShelterItemsTableFilterComposer,
+          $$ShelterItemsTableOrderingComposer,
+          $$ShelterItemsTableAnnotationComposer,
+          $$ShelterItemsTableCreateCompanionBuilder,
+          $$ShelterItemsTableUpdateCompanionBuilder,
+          (
+            StashRow,
+            BaseReferences<_$SaveDatabase, $ShelterItemsTable, StashRow>,
+          ),
+          StashRow,
+          PrefetchHooks Function()
+        > {
+  $$ShelterItemsTableTableManager(_$SaveDatabase db, $ShelterItemsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ShelterItemsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ShelterItemsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ShelterItemsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> profileId = const Value.absent(),
+                Value<int> shelterId = const Value.absent(),
+                Value<String> itemId = const Value.absent(),
+                Value<int> count = const Value.absent(),
+                Value<double?> condition = const Value.absent(),
+                Value<int?> pagesTotal = const Value.absent(),
+                Value<int> pagesRead = const Value.absent(),
+                Value<String?> noteId = const Value.absent(),
+                Value<double> portion = const Value.absent(),
+                Value<String> attachments = const Value.absent(),
+              }) => ShelterItemsCompanion(
+                id: id,
+                profileId: profileId,
+                shelterId: shelterId,
+                itemId: itemId,
+                count: count,
+                condition: condition,
+                pagesTotal: pagesTotal,
+                pagesRead: pagesRead,
+                noteId: noteId,
+                portion: portion,
+                attachments: attachments,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int profileId,
+                required int shelterId,
+                required String itemId,
+                Value<int> count = const Value.absent(),
+                Value<double?> condition = const Value.absent(),
+                Value<int?> pagesTotal = const Value.absent(),
+                Value<int> pagesRead = const Value.absent(),
+                Value<String?> noteId = const Value.absent(),
+                Value<double> portion = const Value.absent(),
+                Value<String> attachments = const Value.absent(),
+              }) => ShelterItemsCompanion.insert(
+                id: id,
+                profileId: profileId,
+                shelterId: shelterId,
+                itemId: itemId,
+                count: count,
+                condition: condition,
+                pagesTotal: pagesTotal,
+                pagesRead: pagesRead,
+                noteId: noteId,
+                portion: portion,
+                attachments: attachments,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ShelterItemsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$SaveDatabase,
+      $ShelterItemsTable,
+      StashRow,
+      $$ShelterItemsTableFilterComposer,
+      $$ShelterItemsTableOrderingComposer,
+      $$ShelterItemsTableAnnotationComposer,
+      $$ShelterItemsTableCreateCompanionBuilder,
+      $$ShelterItemsTableUpdateCompanionBuilder,
+      (StashRow, BaseReferences<_$SaveDatabase, $ShelterItemsTable, StashRow>),
+      StashRow,
+      PrefetchHooks Function()
+    >;
 
 class $SaveDatabaseManager {
   final _$SaveDatabase _db;
@@ -11411,4 +12367,6 @@ class $SaveDatabaseManager {
       $$RemainsEntriesTableTableManager(_db, _db.remainsEntries);
   $$ProfileStatsTableTableManager get profileStats =>
       $$ProfileStatsTableTableManager(_db, _db.profileStats);
+  $$ShelterItemsTableTableManager get shelterItems =>
+      $$ShelterItemsTableTableManager(_db, _db.shelterItems);
 }

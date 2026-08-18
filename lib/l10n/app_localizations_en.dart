@@ -648,6 +648,40 @@ class L10nEn extends L10n {
   String get menuShelter => 'SHELTER';
 
   @override
+  String get stashTitle => 'Shelves';
+
+  @override
+  String get stashOnTheShelves => 'On the shelves';
+
+  @override
+  String get stashInThePack => 'In the pack';
+
+  @override
+  String get stashEmpty => 'Nothing here yet.';
+
+  @override
+  String get stashPackEmpty => 'The pack is empty.';
+
+  @override
+  String get stashStore => 'Leave';
+
+  @override
+  String get stashTake => 'Take';
+
+  @override
+  String get stashFull => 'No room on the shelves.';
+
+  @override
+  String get stashNoRoomInPack => 'It will not fit in the pack.';
+
+  @override
+  String get shelterShelves => 'Shelves';
+
+  @override
+  String get shelterShelvesWhat =>
+      'What is left here stays here. The house holds what it holds; Storage adds fifty kilograms a level.';
+
+  @override
   String get shelterTitle => 'Shelter';
 
   @override

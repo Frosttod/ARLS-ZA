@@ -31,6 +31,7 @@ class ShelterScreen extends StatefulWidget {
     required this.onBuild,
     required this.onBuildModule,
     required this.onCancelBuild,
+    required this.onShelves,
     this.hotspots = const [],
     super.key,
   });
@@ -63,6 +64,9 @@ class ShelterScreen extends StatefulWidget {
   /// §8.3: gives up on whatever is going up. Asked about first, because the
   /// materials are already in the walls and the work starts again from zero.
   final void Function(Shelter place) onCancelBuild;
+
+  /// §18.2: opening the shelves of a finished place.
+  final void Function(Shelter place) onShelves;
 
   /// §8.5.2: hotspot centres, which a camp may not sit inside.
   final List<GeoPoint> hotspots;
@@ -135,6 +139,21 @@ class _ShelterScreenState extends State<ShelterScreen> {
               colours: colours,
             ),
             const SizedBox(height: 16),
+
+            // §18.2: somewhere to put things down, from the moment the boards
+            // are up. Before any module — a barricaded house holds
+            // twenty-five kilograms on its own, and Storage is what makes
+            // that a hundred and twenty-five. Offered above the modules
+            // because it is the thing a player walks in wanting.
+            if (shelter.isReadyAt(now))
+              _ShelvesRow(
+                shelter: shelter,
+                away: at == null || !shelter.atSite(at),
+                onOpen: () => widget.onShelves(shelter),
+                colours: colours,
+              ),
+
+            const SizedBox(height: 12),
             if (shelter.isReadyAt(now))
               for (final module in ShelterModule.values)
                 _ModuleRow(
@@ -746,6 +765,63 @@ class BuildProgress extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// §18.2: the shelves, and the one reason they might be refused.
+class _ShelvesRow extends StatelessWidget {
+  const _ShelvesRow({
+    required this.shelter,
+    required this.away,
+    required this.onOpen,
+    required this.colours,
+  });
+
+  final Shelter shelter;
+
+  /// §2.1a.3: a shelf is somewhere you have to be standing. Reaching into
+  /// one's own house from the other side of town is not a thing, and it is the
+  /// same refusal the modules already make.
+  final bool away;
+
+  final VoidCallback onOpen;
+  final HudColors colours;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = L10n.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.shelterShelves,
+                  style: TextStyle(fontSize: 14, color: colours.text),
+                ),
+                const SizedBox(height: 2),
+                // ⚠️ Not the capacity again. The card above already says
+                // what this place holds, and a number printed twice on one
+                // screen is a number a reader has to check against itself.
+                // What is worth saying here is what the shelf is *for*.
+                Text(
+                  away ? l10n.shelterNotHere : l10n.shelterShelvesWhat,
+                  style: TextStyle(fontSize: 11, color: colours.muted),
+                ),
+              ],
+            ),
+          ),
+          TextButton(
+            onPressed: away ? null : onOpen,
+            child: Text(l10n.stashTitle),
+          ),
+        ],
       ),
     );
   }

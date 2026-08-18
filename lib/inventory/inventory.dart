@@ -293,7 +293,9 @@ class Inventory {
     int count = 1,
     double? condition,
     int? pagesTotal,
+    int pagesRead = 0,
     String? noteId,
+    double portion = 1,
     List<String> attachments = const [],
   }) {
     final definition = catalogue[itemId];
@@ -306,7 +308,12 @@ class Inventory {
       itemId: itemId,
       condition: condition,
       pagesTotal: pagesTotal,
+      pagesRead: pagesRead,
       noteId: noteId,
+      // ⚠️ §4.7: how much of it is left comes back with it. Without this a
+      // half-drunk bottle put on a shelf and picked up again was full, which
+      // is unlimited water for the price of two taps.
+      portion: portion,
       // §5.6.3: picking a rifle up off the pavement gives it back with what
       // was on it. Putting one down used to strip it.
       attachments: attachments,
@@ -343,7 +350,9 @@ class Inventory {
         count: fits,
         condition: condition,
         pagesTotal: pagesTotal,
+        pagesRead: pagesRead,
         noteId: noteId,
+        portion: portion,
         attachments: attachments,
       ),
     );

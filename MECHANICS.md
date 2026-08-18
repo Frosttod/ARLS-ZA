@@ -835,6 +835,34 @@ Schron główny **nigdy się nie rozpada** — to miejsce, gdzie gracz mieszka.
 
 ---
 
+## 12a. Półka w schronie (§18.2)
+
+§18.1a daje postaci dwa twarde limity i żadnego sposobu, żeby je urosnąć poza lepszym plecakiem. Bez półki każde znalezisko było wyborem „nieść albo zostawić **na ziemi**", gdzie §4.8 daje mu dobę. Półka zmienia to na „nieść albo **zatrzymać**" — a zatrzymywanie rzeczy to większość tego, co robi z bazy bazę.
+
+**Działa od chwili, gdy deski są przybite.** Zabarykadowany dom trzyma 25 kg sam z siebie; moduł Magazyn dokłada 50 kg na poziom.
+
+| Miejsce | Udźwig | Objętość |
+| :---- | ----: | ----: |
+| Schron (dom) | **25 kg** | 75 l |
+| Schron + Magazyn 1/2/3 | 75 / 125 / 175 kg | 225 / 375 / 525 l |
+| Obóz (skrzynia) | **30 kg** | 90 l |
+
+Trzy litry na kilogram — ten sam przelicznik, którym mierzy się plecak.
+
+⚠️ **Trzeba tam stać.** Sięganie do własnego domu z drugiego końca miasta nie jest rzeczą — ta sama odmowa, którą już robią moduły (§2.1a.3).
+
+⚠️ **Obie granice odmawiają.** Półka pełna pustych butelek ma zapas wagi i zero miejsca; półka z amunicją odwrotnie. To jest asymetria, dla której §18.1a w ogóle ma dwie liczby.
+
+⚠️ **Rzecz na półce jest tą samą rzeczą.** Karabin trzyma to, co do niego przykręcone, książka pamięta stronę, a butelka odłożona do połowy wypita jest wciąż do połowy wypita (§4.7). Stosuje się tylko to, czego nie da się odróżnić — karabin z kolimatorem nie wpada do stosu z gołym.
+
+⚠️ **Obóz przepada z zawartością skrzyni** po 21 dniach bez wizyty (§8.5.2). To nie jest kod — to **klucz obcy z kaskadą**. Reguła w schemacie nie może zostać zapomniana przez wołającego.
+
+### Znalezione przy okazji
+
+`Inventory.add` odtwarzało linię z argumentów i **nie miało argumentu na `portion` ani `pagesRead`**. Butelka zdjęta z półki wracała pełna — nieskończona woda za cenę dwóch dotknięć. Naprawione u źródła, więc dotyczy też podnoszenia z ziemi.
+
+---
+
 ## 13. Śmierć
 
 Tryb wybierany raz przy tworzeniu postaci. **Nieodwracalnie.**

@@ -274,6 +274,42 @@ class InventoryLines extends Table {
   ];
 }
 
+/// What has been left in a shelter or a camp (§18.2, §8.5.1).
+///
+/// The same shape as an [InventoryLines] row minus the slot, because a thing
+/// on a shelf is the same thing it was in the pack: a rifle keeps what is
+/// bolted to it, a book keeps how far it has been read, and a half-drunk
+/// bottle stays half drunk.
+///
+/// ⚠️ The foreign key cascades on purpose. §8.5.2 says a camp nobody visits
+/// for three weeks is gone "with whatever was in the chest", and the store
+/// already deletes the row when it reads one that old — so the chest empties
+/// itself, in the schema, without a line of code that could forget to.
+@DataClassName('StashRow')
+class ShelterItems extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get profileId => integer()();
+  IntColumn get shelterId => integer()();
+
+  /// Catalogue id (§4.1). Not a foreign key, for the reason in
+  /// [InventoryLines]: the catalogue is data files, not tables.
+  TextColumn get itemId => text()();
+  IntColumn get count => integer().withDefault(const Constant(1))();
+
+  RealColumn get condition => real().nullable()();
+  IntColumn get pagesTotal => integer().nullable()();
+  IntColumn get pagesRead => integer().withDefault(const Constant(0))();
+  TextColumn get noteId => text().nullable()();
+  RealColumn get portion => real().withDefault(const Constant(1))();
+  TextColumn get attachments => text().withDefault(const Constant(''))();
+
+  @override
+  List<String> get customConstraints => [
+    'FOREIGN KEY (profile_id) REFERENCES profiles (id) ON DELETE CASCADE',
+    'FOREIGN KEY (shelter_id) REFERENCES shelters (id) ON DELETE CASCADE',
+  ];
+}
+
 /// Lootboxes standing on the map (§10).
 ///
 /// One row per place, keyed by the POI it sits on, so "one box per place"

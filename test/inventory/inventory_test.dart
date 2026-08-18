@@ -1049,4 +1049,32 @@ void main() {
       expect(attachmentSlots(catalogue['melee_knife']!), 0);
     });
   });
+  group('what comes back with a thing that was put down (§4.7)', () {
+    test('a half-drunk bottle is still half drunk', () {
+      // ⚠️ Found while wiring the shelter shelves: `add` rebuilt the line from
+      // its arguments and had no argument for how much was left, so a bottle
+      // taken off a shelf was full again. Unlimited water for two taps.
+      final back = withTrekking().add(
+        'drink_water_bottle_500',
+        catalogue,
+        body: body,
+        portion: 0.5,
+      );
+
+      expect(back.isAccepted, isTrue);
+      expect(back.inventory.carried.single.portion, 0.5);
+    });
+
+    test('and a book remembers the page it was left on', () {
+      final back = withTrekking().add(
+        'lit_leaflet_first_aid',
+        catalogue,
+        body: body,
+        pagesTotal: 300,
+        pagesRead: 120,
+      );
+
+      expect(back.inventory.carried.single.pagesRead, 120);
+    });
+  });
 }

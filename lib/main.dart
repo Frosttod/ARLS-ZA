@@ -53,6 +53,9 @@ import 'ui/place_sheet.dart';
 import 'ui/remains_sheet.dart';
 import 'ui/down_screen.dart';
 import 'ui/shelter_screen.dart';
+import 'ui/stash_screen.dart';
+import 'shelter/stash.dart';
+import 'shelter/stash_store.dart';
 import 'ui/item_details_sheet.dart';
 import 'ui/note_sheet.dart';
 import 'ui/notices.dart';
@@ -269,6 +272,16 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
   /// §3.3, §3.6: smooth while the battery can afford it.
   final _refresh = ScreenRefresh();
+
+  /// §18.2: what is on the shelves of the place currently open.
+  ///
+  /// ⚠️ A notifier, and the shelter screen is a pushed route — which is the
+  /// bug class this codebase has found five times. Passing a plain value would
+  /// leave the list on screen showing what the shelves held when it opened.
+  final _stash = ValueNotifier<Stash>(const Stash(capacityKg: 0));
+
+  /// Which shelter [_stash] belongs to, so a save goes to the right shelves.
+  Shelter? _openShelves;
   GameLoop? _loop;
   GameSnapshot? _snapshot;
   bool _loading = true;
@@ -2661,6 +2674,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
           hasMultitool: _carries('tool_multitool'),
           onBuild: (kind) => unawaited(_buildShelter(kind)),
           onBuildModule: (module) => unawaited(_buildModule(module)),
+          onShelves: (place) => unawaited(_openStash(place)),
           onCancelBuild: (place) => unawaited(_cancelBuild(place)),
         ),
       ),
@@ -2841,6 +2855,114 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         );
       }
     }
+  }
+
+  /// §18.2: the shelves of [place], and the pack beside them.
+  Future<void> _openStash(Shelter place) async {
+    final character = _character;
+    final catalogue = _catalogue;
+    if (character == null || catalogue == null) return;
+
+    _openShelves = place;
+    _stash.value = await StashStore(
+      widget.session.db,
+    ).load(character.profile.id, place, catalogue);
+    if (!mounted) return;
+
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => StashScreen(
+          title: L10n.of(context).shelterShelves,
+          stash: _stash,
+          pack: _inventory,
+          catalogue: catalogue,
+          // The catalogue is what the screen has; a name is what a
+          // player can read.
+          nameOf: (itemId) {
+            final item = catalogue[itemId];
+            return item == null ? itemId : _nameOfItem(item);
+          },
+          onStore: (line) => unawaited(_leaveOnShelf(line)),
+          onTake: (index) => unawaited(_takeOffShelf(index)),
+        ),
+      ),
+    );
+
+    _openShelves = null;
+  }
+
+  /// §18.2: out of the pack and onto the shelf.
+  Future<void> _leaveOnShelf(CarriedItem line) async {
+    final catalogue = _catalogue;
+    final place = _openShelves;
+    if (catalogue == null || place == null) return;
+
+    final moved = _stash.value.put(line, catalogue);
+    if (!moved.moved) {
+      if (mounted) _say(L10n.of(context).stashFull);
+      return;
+    }
+
+    // ⚠️ The copy that was pointed at, not any copy with that id — two knives
+    // at different conditions are two different things to own, exactly as
+    // §4.8's dropping already treats them.
+    final left = _inventory.value.removeLine(line, count: line.count);
+    if (left == null) return;
+
+    // ⚠️ Off the shelf only once it is on it. The two lists are one decision,
+    // and a half-applied move is an item that exists twice or not at all.
+    _stash.value = moved.stash;
+    _inventory.value = left;
+
+    await _saveShelf();
+    await _saveInventory();
+  }
+
+  /// §18.2: off the shelf and into the pack, if it will go.
+  Future<void> _takeOffShelf(int index) async {
+    final character = _character;
+    final catalogue = _catalogue;
+    final place = _openShelves;
+    if (character == null || catalogue == null || place == null) return;
+
+    final took = _stash.value.take(index);
+    final line = took.taken;
+    if (line == null) return;
+
+    // §18.1a: the pack has the same two limits the shelf does, and a shelf is
+    // not a way round them.
+    final added = _inventory.value.add(
+      line.itemId,
+      catalogue,
+      body: character.body,
+      count: line.count,
+      condition: line.condition,
+      pagesTotal: line.pagesTotal,
+      pagesRead: line.pagesRead,
+      noteId: line.noteId,
+      portion: line.portion,
+      attachments: line.attachments,
+    );
+    if (!added.isAccepted) {
+      if (mounted) _say(L10n.of(context).stashNoRoomInPack);
+      return;
+    }
+
+    _stash.value = took.stash;
+    _inventory.value = added.inventory;
+
+    await _saveShelf();
+    await _saveInventory();
+  }
+
+  Future<void> _saveShelf() async {
+    final character = _character;
+    final place = _openShelves;
+    if (character == null || place == null) return;
+
+    await StashStore(
+      widget.session.db,
+    ).save(character.profile.id, place.id, _stash.value);
   }
 
   /// §13.1: the character, and what they have done.

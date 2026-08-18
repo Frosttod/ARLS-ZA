@@ -29,7 +29,7 @@ import 'tables.dart';
 part 'database.g.dart';
 
 /// Bumped only alongside a migration step in [_migration]. Never reused.
-const int kSchemaVersion = 19;
+const int kSchemaVersion = 20;
 
 /// Keys used in [MetaEntries].
 abstract final class MetaKeys {
@@ -60,6 +60,7 @@ abstract final class MetaKeys {
     Shelters,
     RemainsEntries,
     ProfileStats,
+    ShelterItems,
   ],
 )
 class SaveDatabase extends _$SaveDatabase {
@@ -72,7 +73,7 @@ class SaveDatabase extends _$SaveDatabase {
   /// follow a constant reference. `schema_test.dart` keeps it in step with
   /// [kSchemaVersion].
   @override
-  int get schemaVersion => 19;
+  int get schemaVersion => 20;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -232,6 +233,13 @@ class SaveDatabase extends _$SaveDatabase {
         // gets a table of its own — vitals is rewritten every minute and a
         // history is not.
         await m.createTable(profileStats);
+      }
+
+      if (from < 20) {
+        // §18.2: somewhere to put things down. The capacity has been computed
+        // since the shelter was built — twenty-five kilograms of barricaded
+        // house — and there was nowhere to put anything in it.
+        await m.createTable(shelterItems);
       }
 
       await _writeSchemaVersion(to);
@@ -431,6 +439,36 @@ class SaveDatabase extends _$SaveDatabase {
   Future<void> writeStats(ProfileStatsCompanion stats) async {
     await into(profileStats).insert(stats, mode: InsertMode.insertOrReplace);
   }
+
+  // --------------------------------------------------------------- stash ---
+
+  /// §18.2: what is on the shelves of one shelter.
+  Future<List<StashRow>> stashFor(int profileId, int shelterId) =>
+      (select(shelterItems)..where(
+            (t) =>
+                t.profileId.equals(profileId) & t.shelterId.equals(shelterId),
+          ))
+          .get();
+
+  /// Replaces the contents of one shelter, in one transaction.
+  ///
+  /// Rewritten whole rather than diffed, exactly as the pack is: a stash is a
+  /// handful of rows, and half-applied contents would be worse than a rewrite
+  /// that costs nothing measurable.
+  Future<void> writeStash(
+    int profileId,
+    int shelterId,
+    List<ShelterItemsCompanion> lines,
+  ) => transaction(() async {
+    await (delete(shelterItems)..where(
+          (t) => t.profileId.equals(profileId) & t.shelterId.equals(shelterId),
+        ))
+        .go();
+
+    for (final line in lines) {
+      await into(shelterItems).insert(line);
+    }
+  });
 
   // --------------------------------------------------------------- death ---
 
