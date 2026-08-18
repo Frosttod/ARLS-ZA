@@ -58,6 +58,9 @@ void main() {
         supportedLocales: L10n.supportedLocales,
         home: InventoryScreen(
           inventory: ValueNotifier(inventory),
+          // Heaviest first, which is the order these tests were written
+          // against — the screen's default is now by kind.
+          order: ValueNotifier(PackOrder.mass),
           catalogue: catalogue,
           names: names,
           body: body,
@@ -385,6 +388,7 @@ void main() {
         supportedLocales: L10n.supportedLocales,
         home: InventoryScreen(
           inventory: inventory,
+          order: ValueNotifier(PackOrder.mass),
           catalogue: catalogue,
           names: names,
           body: body,
@@ -546,6 +550,7 @@ void main() {
           supportedLocales: L10n.supportedLocales,
           home: InventoryScreen(
             inventory: inventory,
+            order: ValueNotifier(PackOrder.mass),
             catalogue: catalogue,
             names: names,
             body: body,

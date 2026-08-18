@@ -34,9 +34,28 @@ import '../loot/search.dart';
 import '../sim/body.dart';
 import 'hud.dart' show HudColors;
 
+/// How the pack is ordered (§4.1, §12).
+///
+/// ⚠️ Three orders rather than one, because the pack answers three different
+/// questions. "Where are my bandages" wants the medical things together;
+/// "what can I put down" wants the heaviest first; "have I got a crowbar"
+/// wants the alphabet. One fixed order answers one of the three and makes the
+/// other two a scroll.
+enum PackOrder {
+  /// Grouped by §4.1's own categories. The default: a pack is read by kind
+  /// far more often than by anything else.
+  kind,
+
+  name,
+
+  /// Heaviest first, which is the order §18.1a's decision is made in.
+  mass,
+}
+
 class InventoryScreen extends StatelessWidget {
   const InventoryScreen({
     required this.inventory,
+    required this.order,
     required this.catalogue,
     required this.names,
     required this.body,
@@ -60,6 +79,10 @@ class InventoryScreen extends StatelessWidget {
   /// changed nothing on screen and the same item could be dropped again and
   /// again against a list that was already out of date.
   final ValueListenable<Inventory> inventory;
+
+  /// §12: how the pack is sorted, held by the caller so the choice outlives
+  /// closing this screen.
+  final ValueNotifier<PackOrder> order;
 
   final ItemCatalogue catalogue;
   final ItemNames names;
@@ -101,8 +124,17 @@ class InventoryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) => ValueListenableBuilder<Inventory>(
     valueListenable: inventory,
-    builder: (context, inventory, _) => _build(context, inventory),
+    builder: (context, inventory, _) => ValueListenableBuilder<PackOrder>(
+      valueListenable: order,
+      // ⚠️ A notifier owned by the caller, not local state. This screen is a
+      // pushed route, and a choice held inside one is a choice forgotten every
+      // time the player closes it — which is the bug class this codebase has
+      // now found six times.
+      builder: (context, _, _) => _build(context, inventory),
+    ),
   );
+
+  PackOrder get _order => order.value;
 
   Widget _build(BuildContext context, Inventory inventory) {
     final l10n = L10n.of(context);
@@ -162,7 +194,32 @@ class InventoryScreen extends StatelessWidget {
             ),
 
           const SizedBox(height: 20),
-          _SectionHeader(label: l10n.inventoryPack, colours: colours),
+          Row(
+            children: [
+              Expanded(
+                child: _SectionHeader(
+                  label: l10n.inventoryPack,
+                  colours: colours,
+                ),
+              ),
+
+              // Cycles rather than opening a menu: three options is one tap
+              // each way, and a menu on a screen read while walking is two
+              // taps and a target the size of a fingernail.
+              TextButton(
+                onPressed: () => order.value = switch (_order) {
+                  PackOrder.kind => PackOrder.name,
+                  PackOrder.name => PackOrder.mass,
+                  PackOrder.mass => PackOrder.kind,
+                },
+                child: Text(switch (_order) {
+                  PackOrder.kind => l10n.packOrderKind,
+                  PackOrder.name => l10n.packOrderName,
+                  PackOrder.mass => l10n.packOrderMass,
+                }, style: const TextStyle(fontSize: 12)),
+              ),
+            ],
+          ),
           if (inventory.carried.isEmpty)
             _Empty(
               title: l10n.inventoryEmpty,
@@ -173,7 +230,10 @@ class InventoryScreen extends StatelessWidget {
             // Keyed by position, not by item id: two knives at different
             // conditions are two rows with one id, and a list cannot hold two
             // children under one key.
-            for (final (index, line) in _sorted(inventory.carried).indexed)
+            for (final (index, line) in _sorted(
+              inventory.carried,
+              language,
+            ).indexed)
               _ItemRow(
                 key: ValueKey('$index.${line.itemId}'),
                 line: line,
@@ -250,14 +310,38 @@ class InventoryScreen extends StatelessWidget {
 
   /// Heaviest first. What a player is looking for when the pack is full is the
   /// thing to leave behind, and that is nearly always the heaviest one.
-  List<CarriedItem> _sorted(List<CarriedItem> lines) {
+  List<CarriedItem> _sorted(List<CarriedItem> lines, String language) {
     final sorted = [...lines];
+
+    // ⚠️ Every order falls back to the name, and the name is the *translated*
+    // one. Sorting a Polish pack by an English item id put Bandaż between
+    // Latarka and Lina, which is nobody's alphabet.
+    int byName(CarriedItem a, CarriedItem b) => _nameOf(
+      a.itemId,
+      language,
+    ).toLowerCase().compareTo(_nameOf(b.itemId, language).toLowerCase());
+
     sorted.sort((a, b) {
-      final byMass = b
-          .massKg(catalogue[b.itemId]!, catalogue: catalogue)
-          .compareTo(a.massKg(catalogue[a.itemId]!, catalogue: catalogue));
-      return byMass != 0 ? byMass : a.itemId.compareTo(b.itemId);
+      switch (_order) {
+        case PackOrder.kind:
+          // §4.1's own categories, in the order the enum declares them, so
+          // the grouping is the same on every run and in every language.
+          final byKind = catalogue[a.itemId]!.kind.index.compareTo(
+            catalogue[b.itemId]!.kind.index,
+          );
+          return byKind != 0 ? byKind : byName(a, b);
+
+        case PackOrder.mass:
+          final byMass = b
+              .massKg(catalogue[b.itemId]!, catalogue: catalogue)
+              .compareTo(a.massKg(catalogue[a.itemId]!, catalogue: catalogue));
+          return byMass != 0 ? byMass : byName(a, b);
+
+        case PackOrder.name:
+          return byName(a, b);
+      }
     });
+
     return sorted;
   }
 }

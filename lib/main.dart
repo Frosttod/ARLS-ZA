@@ -41,6 +41,8 @@ import 'loot/loot_table.dart';
 import 'loot/dropped_items.dart';
 import 'loot/dropped_store.dart';
 import 'loot/loot_world.dart';
+import 'loot/procedural_points.dart' show kCarSelector, kWasteSelector;
+import 'safety/spawn_exclusion.dart';
 import 'loot/obstacle.dart';
 import 'loot/search.dart';
 import 'notes/note.dart';
@@ -272,6 +274,16 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
   /// §3.3, §3.6: smooth while the battery can afford it.
   final _refresh = ScreenRefresh();
+
+  /// §10.2.3: when looking around may next turn something up.
+  ///
+  /// Separate from [_knowledge], which is about what has been *seen*: the ten
+  /// minutes there stop a second look repeating the first, and this stops the
+  /// finding from becoming a tap somebody stands on.
+  DateTime? _scoutedAt;
+
+  /// §12: how the pack is sorted. Outlives the screen it belongs to.
+  final _packOrder = ValueNotifier(PackOrder.kind);
 
   /// §18.2: what is on the shelves of the place currently open.
   ///
@@ -968,6 +980,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       MaterialPageRoute<void>(
         builder: (_) => InventoryScreen(
           inventory: _inventory,
+          order: _packOrder,
           catalogue: catalogue,
           names: _names ?? ItemNames.empty,
           body: character.body,
@@ -3615,6 +3628,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       );
     });
 
+    // §10.2.3: and sometimes a look around finds something worth walking to.
+    final turnedUp = await _scoutForSomething(search.anchor, now);
+
     if (!mounted) return;
     final l10n = L10n.of(context);
     // §10.2.1: looking again at ground already searched is allowed and adds
@@ -3622,10 +3638,74 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     // an empty result as a failed search.
     final knownAlready = previous?.covers(search.anchor, now) ?? false;
     _say(
-      fresh.isNotEmpty && !knownAlready
+      turnedUp != null
+          ? l10n.searchFoundNearby(
+              turnedUp == kCarSelector ? l10n.scoutCar : l10n.scoutWaste,
+            )
+          : fresh.isNotEmpty && !knownAlready
           ? l10n.searchRevealed(fresh.length)
           : l10n.searchNothingNew,
     );
+  }
+
+  /// §10.2.3: three looks in ten turn up something to search within 75 m.
+  ///
+  /// ⚠️ Beta, and not from the design document. §10.1 puts the world on real
+  /// map features, which is right and which leaves a residential estate
+  /// genuinely empty — measured on walks through Poznań. Reconnaissance
+  /// already costs forty-five seconds of standing still and eighty metres of
+  /// noise (§5.6); this is what that buys where there are no shops.
+  ///
+  /// Returns the selector of what was found, or null. Naming is the
+  /// caller's job — this runs across an await and must not hold a context.
+  Future<String?> _scoutForSomething(GeoPoint at, DateTime now) async {
+    final character = _character;
+    final world = _world;
+    if (character == null || world == null) return null;
+
+    // The valve. Without it, one corner and one button is a materials tap.
+    final last = _scoutedAt;
+    if (last != null && now.difference(last) < kScoutCooldown) return null;
+    _scoutedAt = now;
+
+    // §11: seeded from the character and the minute, so the same look at the
+    // same moment gives the same answer however many times it is replayed.
+    final random = Random(
+      character.profile.rngSeed ^ (now.millisecondsSinceEpoch ~/ 60000),
+    );
+    if (random.nextDouble() >= kScoutFindChance) return null;
+
+    // What turns up is street furniture, never a shop: §10.1 decides where
+    // shops are and this must not be a way round it.
+    final selector = random.nextBool() ? kCarSelector : kWasteSelector;
+    final table = world.tables.forTags([selector]).firstOrNull;
+    if (table == null) return null;
+
+    // Somewhere on the ring rather than underfoot — found by looking, so it
+    // has to be a short walk away to have been out of sight.
+    final bearing = random.nextDouble() * 360;
+    final metres = kScoutFindRadiusM * (0.45 + 0.55 * random.nextDouble());
+    final where = at.offsetBy(metres: metres, bearingDeg: bearing);
+
+    // §3.5: not onto a carriageway, a railway or somebody's garden.
+    if (SpawnFilter(_world?.obstacles ?? const []).refuse(where) != null) {
+      return null;
+    }
+
+    final box = LootBox(
+      poiId: 'scout.${now.millisecondsSinceEpoch}',
+      position: where,
+      tableId: table.id,
+      spawnedAt: now,
+    );
+
+    setState(() {
+      _boxes = [..._boxes, box];
+      _revealed.add(box.poiId);
+    });
+
+    await LootStore(widget.session.db).saveOne(character.profile.id, box);
+    return selector;
   }
 
   /// §19.3: the table is rolled, what fits goes in the pack, and the box is

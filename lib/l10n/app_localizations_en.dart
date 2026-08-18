@@ -994,6 +994,17 @@ class L10nEn extends L10n {
   String get searchNothingNew => 'Nothing new here yet.';
 
   @override
+  String searchFoundNearby(String what) {
+    return 'You spot $what nearby.';
+  }
+
+  @override
+  String get scoutCar => 'an abandoned car';
+
+  @override
+  String get scoutWaste => 'a skip';
+
+  @override
   String get placeDistance => 'Distance';
 
   @override
@@ -1475,6 +1486,18 @@ class L10nEn extends L10n {
 
   @override
   String get inventoryPack => 'In the pack';
+
+  @override
+  String get packOrderKind => 'by kind';
+
+  @override
+  String get packOrderName => 'by name';
+
+  @override
+  String get packOrderMass => 'by weight';
+
+  @override
+  String get packOrderWhat => 'Order';
 
   @override
   String get inventoryBackpack => 'Backpack';

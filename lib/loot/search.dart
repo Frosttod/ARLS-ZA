@@ -49,6 +49,35 @@ const Duration kAreaSearchTime = Duration(seconds: 45);
 /// passed. Not a cooldown — the search still runs, it just has nothing to add.
 const Duration kAreaSearchMemory = Duration(minutes: 10);
 
+/// §10.2.3: how often looking around turns up something to search.
+///
+/// ⚠️ Not in the design document, and it is a beta figure. §10.1 places the
+/// world on real map features, which is right and which leaves a residential
+/// estate genuinely short of anything to turn over — measured on walks
+/// through Poznań, where the near ring filled with real shops and an estate
+/// filled with nothing. Reconnaissance already costs forty-five seconds of
+/// standing still and eighty metres of noise; letting it sometimes find a
+/// skip, a car or a crate makes that cost buy something in the places that
+/// have nothing.
+///
+/// Three in ten, so it is a reason to look and never a routine.
+const double kScoutFindChance = 0.30;
+
+/// How close a thing found that way is put.
+///
+/// Inside the reach a player will actually walk (§10.2.2's own ring is 100 m),
+/// and far enough that it is a short walk rather than something that appeared
+/// under their feet.
+const double kScoutFindRadiusM = 75;
+
+/// §10.2.3: how long before looking around can pay again.
+///
+/// ⚠️ The valve on the whole idea. Without it, standing on one corner and
+/// pressing the same button is a materials tap, and every other way of
+/// finding things — walking, §19.3's doors, the bodies of §10.3 — is worse
+/// than doing nothing in a car park.
+const Duration kScoutCooldown = Duration(minutes: 3);
+
 /// §10.2.2, at Reconnaissance 0 with no binoculars in daylight.
 const double kBaseSearchRadiusM = 100;
 

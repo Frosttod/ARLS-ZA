@@ -1837,6 +1837,24 @@ abstract class L10n {
   /// **'Nothing new here yet.'**
   String get searchNothingNew;
 
+  /// No description provided for @searchFoundNearby.
+  ///
+  /// In en, this message translates to:
+  /// **'You spot {what} nearby.'**
+  String searchFoundNearby(String what);
+
+  /// No description provided for @scoutCar.
+  ///
+  /// In en, this message translates to:
+  /// **'an abandoned car'**
+  String get scoutCar;
+
+  /// No description provided for @scoutWaste.
+  ///
+  /// In en, this message translates to:
+  /// **'a skip'**
+  String get scoutWaste;
+
   /// No description provided for @placeDistance.
   ///
   /// In en, this message translates to:
@@ -2730,6 +2748,30 @@ abstract class L10n {
   /// In en, this message translates to:
   /// **'In the pack'**
   String get inventoryPack;
+
+  /// No description provided for @packOrderKind.
+  ///
+  /// In en, this message translates to:
+  /// **'by kind'**
+  String get packOrderKind;
+
+  /// No description provided for @packOrderName.
+  ///
+  /// In en, this message translates to:
+  /// **'by name'**
+  String get packOrderName;
+
+  /// No description provided for @packOrderMass.
+  ///
+  /// In en, this message translates to:
+  /// **'by weight'**
+  String get packOrderMass;
+
+  /// No description provided for @packOrderWhat.
+  ///
+  /// In en, this message translates to:
+  /// **'Order'**
+  String get packOrderWhat;
 
   /// No description provided for @inventoryBackpack.
   ///
