@@ -73,7 +73,7 @@ void main() {
   test('one nobody came back for goes cold (§10.3)', () async {
     await store.add(
       profileId,
-      body(diedAt: t0.subtract(const Duration(hours: 7))),
+      body(diedAt: t0.subtract(const Duration(hours: 13))),
     );
 
     // Swept on read: one that went cold with the app closed went cold all the

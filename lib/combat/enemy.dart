@@ -378,6 +378,22 @@ class Enemy {
     bleedMlPerSecond: bleedMlPerSecond + bleeding,
   );
 
+  /// §2.6: how long until what is already open finishes it, or null if
+  /// nothing is open.
+  ///
+  /// Worth knowing outside the tick because a wound outlives the session that
+  /// made it: something shot and left bleeding goes on bleeding while the
+  /// phone is in a pocket, and whoever throws that session away has to settle
+  /// it rather than let the death evaporate.
+  Duration? get bleedsOutIn {
+    if (isDead || bleedMlPerSecond <= 0) return null;
+
+    final left = bloodMl * kind.deathAtLoss - bloodLostMl;
+    if (left <= 0) return Duration.zero;
+
+    return Duration(milliseconds: (left / bleedMlPerSecond * 1000).ceil());
+  }
+
   /// §2.6: how much blood it has left, 0–1, against what kills it.
   double get bloodLeft =>
       (1 - bloodLostMl / (bloodMl * kind.deathAtLoss)).clamp(0.0, 1.0);

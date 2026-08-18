@@ -19,10 +19,15 @@ import 'enemy.dart';
 
 /// How long a body is worth walking back to.
 ///
-/// §4.8 gives a dropped pile a day; a body gets rather less, because the
-/// decision it creates — take the fight now or come back for the pockets
-/// later — is only interesting while the street is still the same street.
-const Duration kRemainsLifetime = Duration(hours: 6);
+/// §4.8 gives a dropped pile a day; a body gets half of that. The decision it
+/// creates — take the fight now, or come back for the pockets when the street
+/// is quiet — only stays interesting while it is recognisably the same street.
+///
+/// ⚠️ Twelve hours, up from six. Six was chosen against a session; a walk is
+/// not a session. Something shot on the way to work and left there has to
+/// still be there on the way home, or the whole "come back for it later" half
+/// of the decision is a promise the game does not keep.
+const Duration kRemainsLifetime = Duration(hours: 12);
 
 /// Something dead, where it fell.
 class Remains {

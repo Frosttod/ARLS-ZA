@@ -61,6 +61,25 @@ enum MetabolicZone {
 /// food home for, not something that happens while the phone is in a pocket.
 const double kBloodRegenMlPerHour = 60;
 
+/// §2.5, §2.6: what a night under a roof is worth on top of that.
+///
+/// A body rebuilds plasma fastest lying still, warm and doing nothing — which
+/// is precisely the state §2.5.1 already models as sleep, and precisely the
+/// state a player gives up a night of walking to reach.
+///
+/// Two and a half times, so a hundred and fifty millilitres an hour. Eight
+/// hours is 1,2 litres, and the figure that matters is §9.2's: somebody who
+/// wakes from unconsciousness is 35% down, in class III shock, and one full
+/// night here puts them back on their feet. That is the whole intent — a bad
+/// night rather than a dead end — and it is still not enough to make a
+/// bandage optional.
+///
+/// ⚠️ Multiplied by nourishment like the base rate. Blood is made out of what
+/// was eaten and drunk (§2.2, §2.3): sleeping through a famine rebuilds
+/// nothing, which makes "why is my blood not coming back" a question the other
+/// two bars answer rather than a mystery.
+const double kSleepBloodRegenFactor = 2.5;
+
 /// Constants a tick needs that do not change during a session. Derived once
 /// from the character sheet (§1.3) by `BodyProfile.toSimConstants`.
 class SimConstants {
@@ -550,6 +569,7 @@ TickOutcome advance({
   // so the drift is at most one hour of regeneration.
   final regenerated = input.bleedTier == BleedTier.none && bloodLoss <= 0
       ? kBloodRegenMlPerHour *
+            (input.sleeping ? kSleepBloodRegenFactor : 1.0) *
             (seconds / Duration.secondsPerHour) *
             nourishment(state, constants)
       : 0.0;

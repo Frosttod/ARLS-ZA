@@ -31,6 +31,7 @@ import '../map/geometry.dart';
 import '../map/map_source.dart';
 import '../map/map_style.dart';
 import 'map_markers.dart';
+import 'marker_motion.dart';
 
 /// Zoom the map opens at: close enough to see which side of the street the
 /// player is on, wide enough to see the next junction.
@@ -161,6 +162,21 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
     duration: const Duration(milliseconds: 900),
   );
 
+  /// §3.6: where each marker is *on its way to*, so a 1 Hz simulation does not
+  /// have to look like one.
+  final _motion = MarkerMotion();
+
+  /// How long the camera should take to reach a newly reported centre.
+  ///
+  /// ⚠️ Measured rather than chosen. Fixes arrive every second in a fight and
+  /// every five seconds on a walk (§3.3), and a glide shorter than the gap
+  /// spends four of those five seconds perfectly still — which is the
+  /// stuttering, not the moving. Timing the last gap and gliding across the
+  /// next one means the camera arrives exactly as the next fix lands.
+  Duration _cameraGlide = const Duration(milliseconds: 600);
+  DateTime? _lastCentreAt;
+  GeoPoint? _lastCentre;
+
   @override
   Widget build(BuildContext context) {
     final centre = widget.centre;
@@ -255,9 +271,16 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
     ];
     final wave = widget.noise;
     final spreading = wave?.progressAt(DateTime.now());
+    // ⚠️ Positions taken here, in build, rather than in didUpdateWidget: the
+    // zoom and the centre both change without the marker list changing, and a
+    // glide that only started on a new list would freeze mid-step whenever the
+    // player pinched.
+    if (!widget.economy) _motion.update(widget.markers, DateTime.now());
+
     _keepPulse(
       wanted:
           spreading != null ||
+          (!widget.economy && _motion.movingAt(DateTime.now())) ||
           alerted.any((marker) => marker.alert == MarkerAlert.hunting),
     );
 
@@ -452,6 +475,13 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
                       markers: widget.markers,
                       centre: GeoPoint(centre.latitude, centre.longitude),
                       zoom: _zoom,
+                      // Null in economy mode: §3.3 buys no frames, and a
+                      // marker that jumps is still a marker in the right
+                      // place.
+                      motion: widget.economy ? null : _motion,
+                      // Read once per frame rather than per marker, so every
+                      // dot on one frame is drawn at one instant.
+                      now: DateTime.now(),
                     ),
                   ),
                 ),
@@ -673,6 +703,43 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
     if (_gate.leave()) await _sync();
   }
 
+  /// Learns how long the camera should take, from how long the last one took.
+  ///
+  /// ⚠️ Measured, not chosen. A fix arrives every second in a fight and every
+  /// five on a walk (§3.3), and the plugin's default glide is a fraction of a
+  /// second — so the map covered five seconds of pavement in a blink and then
+  /// held perfectly still. That reads as stuttering, and no fixed number fixes
+  /// both cadences. Timing the gap and gliding across the next one of the same
+  /// length means the camera is always moving and always arrives just as the
+  /// next fix lands.
+  ///
+  /// Bounded at both ends: below a third of a second there is nothing to
+  /// smooth, and above six the camera would be visibly somewhere the player is
+  /// not.
+  void _timeTheGap(GeoPoint centre) {
+    final now = DateTime.now();
+    final last = _lastCentre;
+    final at = _lastCentreAt;
+
+    // The same place reported twice is not a gap — it is a rebuild, a zoom, or
+    // a theme change, and timing it would collapse the glide to nothing.
+    if (last != null &&
+        at != null &&
+        (last.latitude - centre.latitude).abs() +
+                (last.longitude - centre.longitude).abs() >
+            1e-7) {
+      final gap = now.difference(at);
+      _cameraGlide = gap < const Duration(milliseconds: 300)
+          ? const Duration(milliseconds: 300)
+          : gap > const Duration(seconds: 6)
+          ? const Duration(seconds: 6)
+          : gap;
+    }
+
+    _lastCentre = centre;
+    _lastCentreAt = now;
+  }
+
   /// Puts the player back under the pin after a zoom.
   ///
   /// Only when the camera has actually drifted: MapLibre reports idle after
@@ -710,6 +777,8 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
     final centre = widget.centre;
     if (centre == null) return;
 
+    _timeTheGap(GeoPoint(centre.latitude, centre.longitude));
+
     final target = CameraUpdate.newCameraPosition(
       CameraPosition(
         target: LatLng(centre.latitude, centre.longitude),
@@ -723,7 +792,7 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
     if (widget.economy) {
       await controller.moveCamera(target);
     } else {
-      await controller.animateCamera(target);
+      await controller.animateCamera(target, duration: _cameraGlide);
     }
   }
 }
@@ -745,11 +814,20 @@ class _MarkerPainter extends CustomPainter {
     required this.markers,
     required this.centre,
     required this.zoom,
+    required this.motion,
+    required this.now,
   });
 
   final List<MapMarker> markers;
   final GeoPoint centre;
   final double zoom;
+
+  /// §3.6: where each marker is on its way to, or null to draw the reported
+  /// position exactly — which is what §3.3's economy mode asks for.
+  final MarkerMotion? motion;
+
+  /// One instant for the whole frame, so every dot is drawn at the same time.
+  final DateTime now;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -759,7 +837,7 @@ class _MarkerPainter extends CustomPainter {
       final at =
           middle +
           offsetOf(
-            marker.at,
+            motion?.positionAt(marker.id, now) ?? marker.at,
             centre: centre,
             zoom: zoom,
             tilt: mapTilt(size.height),
@@ -846,7 +924,9 @@ class _MarkerPainter extends CustomPainter {
       old.zoom != zoom ||
       old.centre != centre ||
       old.markers.length != markers.length ||
-      !identical(old.markers, markers);
+      !identical(old.markers, markers) ||
+      // Gliding: the data has not changed, where it is drawn has.
+      (motion != null && old.now != now);
 }
 
 /// The seven shapes of §3.6, as glyphs.

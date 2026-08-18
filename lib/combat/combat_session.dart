@@ -155,6 +155,26 @@ class CombatSession {
     );
   }
 
+  /// §2.6: everything already bleeding that would not survive [elapsed].
+  ///
+  /// ⚠️ For the moment a session is thrown away rather than advanced. §11.1.2
+  /// is right that what a Walker *did* over eight hours is not knowable, so
+  /// the street is remade — but a wound is not a walk. Something with a hole
+  /// in it and a known rate has exactly one future, and dropping the session
+  /// used to delete it: a player who shot something, watched it run, and put
+  /// the phone away came back to no body and no kill.
+  ///
+  /// The position is the last one seen. It is a guess about where it fell and
+  /// it is the honest one — that is the last place the player saw it, and
+  /// inventing a better answer would mean inventing the path it took.
+  List<Enemy> bledOutOver(Duration elapsed) => [
+    for (final enemy in enemies)
+      if (!enemy.isDead)
+        if ((enemy.bleedsOutIn ?? elapsed + const Duration(seconds: 1)) <=
+            elapsed)
+          enemy,
+  ];
+
   /// A wound from §5.1.5, landed on one of them.
   ///
   /// [from] is where the player was standing when it landed. Given it, the one

@@ -478,4 +478,68 @@ void main() {
       expect(gainedHalf, greaterThan(0));
     });
   });
+  group('a night under a roof rebuilds blood (§2.5, §2.6)', () {
+    SimState after(
+      SimState from, {
+      required bool sleeping,
+      required Duration of,
+    }) => advance(
+      state: from,
+      constants: constants,
+      input: TickInput(sleeping: sleeping),
+      elapsed: of,
+    ).state;
+
+    SimState wounded() => SimState.fresh(
+      at: t0,
+      constants: constants,
+    ).copyWith(bloodMl: constants.bloodMaxMl * 0.65);
+
+    test('two and a half times what being awake is worth', () {
+      final awake = after(
+        wounded(),
+        sleeping: false,
+        of: const Duration(hours: 1),
+      );
+      final asleep = after(
+        wounded(),
+        sleeping: true,
+        of: const Duration(hours: 1),
+      );
+
+      final gainedAwake = awake.bloodMl - wounded().bloodMl;
+      final gainedAsleep = asleep.bloodMl - wounded().bloodMl;
+
+      expect(gainedAsleep / gainedAwake, closeTo(2.5, 0.01));
+    });
+
+    test('a full night takes §9.2 out of class III', () {
+      // ⚠️ The figure this constant was chosen against. §9.2 hands a character
+      // back at 35% lost — decompensated shock, no running, +5 MOA. One night
+      // has to be the difference between a bad morning and a dead end.
+      final morning = after(
+        wounded(),
+        sleeping: true,
+        of: const Duration(hours: 8),
+      );
+
+      final lost = 1 - morning.bloodMl / constants.bloodMaxMl;
+
+      expect(lost, lessThan(0.15), reason: 'out of shock entirely');
+    });
+
+    test('but sleeping through a famine rebuilds nothing', () {
+      // Blood is made out of what was eaten and drunk. A player asking why it
+      // is not coming back should find the answer on the other two bars.
+      final starving = wounded().copyWith(caloriesKcal: 0, waterMl: 0);
+
+      final morning = after(
+        starving,
+        sleeping: true,
+        of: const Duration(hours: 8),
+      );
+
+      expect(morning.bloodMl, lessThanOrEqualTo(starving.bloodMl));
+    });
+  });
 }

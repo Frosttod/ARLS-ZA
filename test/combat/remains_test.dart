@@ -101,11 +101,22 @@ void main() {
       expect(body().isGoneAt(now), isFalse);
     });
 
-    test('gone after six', () {
-      final now = DateTime.utc(2026, 8, 16, 18, 1);
+    test('and gone after twelve', () {
+      // ⚠️ Twelve, up from six. Six was measured against a play session; a
+      // walk is not a session. Something shot on the way to work has to still
+      // be there on the way home, or "come back for it later" is a promise
+      // the game does not keep.
+      final now = DateTime.utc(2026, 8, 17, 0, 1);
 
       expect(sweepRemains([body()], now), isEmpty);
       expect(body().isGoneAt(now), isTrue);
+    });
+
+    test('but still there after eleven', () {
+      final now = DateTime.utc(2026, 8, 16, 23);
+
+      expect(sweepRemains([body()], now), hasLength(1));
+      expect(body().isGoneAt(now), isFalse);
     });
   });
 

@@ -1668,6 +1668,18 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     // emptied and made again rather than guessed at.
     if (elapsed > kCombatGapForgotten) {
       setState(() {
+        // ⚠️ Settle what was already bleeding before throwing the street away.
+        //
+        // §11.1.2 is right that what a Walker *did* over a gap is not
+        // knowable — but a wound is not a walk. Reported three times as "the
+        // skull does not always appear when it bleeds out", and this was the
+        // last of it: shoot something, watch it run, put the phone in a
+        // pocket, and five minutes later the session was discarded with the
+        // death still pending. No body, no kill, no evidence it happened.
+        for (final dying in _combat.bledOutOver(elapsed)) {
+          _remember(dying);
+        }
+
         _combat = CombatSession(seed: character.profile.rngSeed);
         _aim = const Aim();
       });

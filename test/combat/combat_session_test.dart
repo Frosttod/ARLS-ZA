@@ -357,4 +357,57 @@ void main() {
       expect(session.enemies.length, lessThanOrEqualTo(12));
     });
   });
+  group('a wound outlives the session that made it (§2.6, §11.1.2)', () {
+    test('what would bleed out over the gap is reported', () {
+      // ⚠️ Reported from a walk three times as "the skull does not always
+      // appear". §11.1.2 throws the street away after a five-minute gap,
+      // because what a Walker *did* is not knowable — but a wound is not a
+      // walk. Something with a hole in it and a known rate has exactly one
+      // future, and it was being deleted.
+      final session = run(const CombatSession(seed: 5));
+      final target = session.enemies.first;
+
+      // Enough to kill it in about a minute, not instantly.
+      final left = target.bloodMl * target.kind.deathAtLoss;
+      final hit = session.wound(target.id, 0, bleeding: left / 60);
+
+      expect(
+        hit.bledOutOver(const Duration(seconds: 10)),
+        isEmpty,
+        reason: 'ten seconds is not enough to finish it',
+      );
+
+      final dying = hit.bledOutOver(const Duration(minutes: 5));
+
+      expect(dying.map((e) => e.id), contains(target.id));
+    });
+
+    test('something merely wounded is not reported', () {
+      final session = run(const CombatSession(seed: 5));
+      final target = session.enemies.first;
+
+      // A scratch: three millilitres a second against thousands.
+      final hit = session.wound(target.id, 50, bleeding: 3);
+
+      expect(hit.bledOutOver(const Duration(minutes: 5)), isEmpty);
+    });
+
+    test('and nothing that is not bleeding at all', () {
+      final session = run(const CombatSession(seed: 5));
+      final target = session.enemies.first;
+
+      final hit = session.wound(target.id, 400);
+
+      expect(hit.bledOutOver(const Duration(hours: 8)), isEmpty);
+    });
+
+    test('nor anything already down', () {
+      final session = run(const CombatSession(seed: 5));
+      final target = session.enemies.first;
+
+      final killed = session.wound(target.id, 99999, bleeding: 50);
+
+      expect(killed.bledOutOver(const Duration(minutes: 5)), isEmpty);
+    });
+  });
 }
