@@ -106,12 +106,12 @@ void main() {
 
   group('what the modules are worth (§8.4)', () {
     test('storage is the base plus fifty a level', () {
-      expect(built().storageKg, 40);
-      expect(built(modules: {ShelterModule.storage: 3}).storageKg, 190);
+      expect(built().storageKg, 100);
+      expect(built(modules: {ShelterModule.storage: 3}).storageKg, 250);
     });
 
     test('and bulk runs out at three litres to the kilogram (§18.1a)', () {
-      expect(built().storageL, 120);
+      expect(built().storageL, 300);
     });
 
     test('the lounge gives back an hour of the night', () {

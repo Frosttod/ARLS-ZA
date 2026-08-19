@@ -123,4 +123,53 @@ void main() {
       expect(withL3.inMinutes, (bare.inMinutes * 0.7).round());
     });
   });
+  group('the tools §18.3 names really exist (§4.1)', () {
+    // ⚠️ `tool_hammer` and `tool_axe` were checked for months and neither is
+    // in the catalogue: a hammer is `melee_hammer`, because it is also what
+    // you hit a Walker with. Every check was permanently false — the shelter
+    // never got §8.3's tool discount, a module could be raised only with a
+    // multitool, and the requirements row printed the raw id because nothing
+    // in the catalogue answered to it.
+    test('every id the build rules name is a real item', () {
+      for (final id in kBuildingToolIds) {
+        expect(
+          catalogue[id],
+          isNotNull,
+          reason: '$id is checked for and does not exist',
+        );
+      }
+      expect(catalogue[kMultitoolId], isNotNull);
+    });
+
+    test('and each of them is something the game calls a tool', () {
+      // The property, not the name: whatever is added later is a building
+      // tool because the data says so.
+      for (final id in [kHammerId, kAxeId]) {
+        expect(
+          catalogue[id]!.props['doubles_as_tool'],
+          isTrue,
+          reason: '$id is used as a tool and is not marked as one',
+        );
+      }
+    });
+
+    test('a hammer alone raises a module, a multitool alone raises it too', () {
+      final storage = nextLevelOf(ShelterModule.storage, have: 0)!;
+
+      expect(toolsAllow(storage, hasHammer: true, hasMultitool: false), isTrue);
+      expect(toolsAllow(storage, hasHammer: false, hasMultitool: true), isTrue);
+      expect(
+        toolsAllow(storage, hasHammer: false, hasMultitool: false),
+        isFalse,
+        reason: 'bare hands raise nothing',
+      );
+    });
+
+    test('but the workshop past level one wants both (§8.4)', () {
+      final second = nextLevelOf(ShelterModule.workshop, have: 1)!;
+
+      expect(toolsAllow(second, hasHammer: true, hasMultitool: false), isFalse);
+      expect(toolsAllow(second, hasHammer: true, hasMultitool: true), isTrue);
+    });
+  });
 }

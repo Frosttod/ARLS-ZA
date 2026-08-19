@@ -42,12 +42,12 @@ void main() {
       expect(empty().capacityL, 75);
     });
 
-    test('a barricaded house holds forty kilos before any module', () {
+    test('the main shelter holds a hundred kilos before any module', () {
       // ⚠️ Forty, against §18.2's twenty-five. Measured against the pack
       // rather than the document: §18.1a gives an eighty-kilogram character
       // thirty-six kilograms of carry, so twenty-five could not hold what the
       // player walked in with — a place to leave two things, not a base.
-      expect(ShelterKind.main.storageKg, 40);
+      expect(ShelterKind.main.storageKg, 100);
       expect(ShelterKind.camp.storageKg, 30);
     });
 
@@ -61,7 +61,7 @@ void main() {
         modules: const {ShelterModule.storage: 2},
       );
 
-      expect(built.storageKg, 140, reason: '40 + two levels of fifty');
+      expect(built.storageKg, 200, reason: '100 + two levels of fifty');
     });
 
     test('mass refuses first when the thing is dense', () {

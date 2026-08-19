@@ -2744,8 +2744,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
           // §18.3: a tool on the shelf is a tool in the shelter. Making the
           // player pick their own hammer up off their own shelf before the
           // button lights is bookkeeping, not a decision.
-          hasTools: _atHand('tool_hammer') || _atHand('tool_axe'),
-          hasHammer: _atHand('tool_hammer'),
+          hasTools: _atHand(kHammerId) || _atHand(kAxeId),
+          hasHammer: _atHand(kHammerId),
           hasMultitool: _atHand('tool_multitool'),
           onBuild: (kind) => unawaited(_buildShelter(kind)),
           onBuildModule: (module) => unawaited(_buildModule(module)),
@@ -2781,7 +2781,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       now: DateTime.now().toUtc(),
       buildTime: buildTimeFor(
         kind,
-        hasTools: _carries('tool_hammer') || _carries('tool_axe'),
+        hasTools: _atHand(kHammerId) || _atHand(kAxeId),
       ),
     );
 
@@ -2825,10 +2825,18 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final recipe = nextLevelOf(module, have: shelter.levelOf(module));
     if (recipe == null) return;
 
-    final hammer = _carries('tool_hammer');
-    final multitool = _carries('tool_multitool');
+    // ⚠️ At hand, not carried: the shelves count, and [_spendMaterials] takes
+    // from them first. Checking the pack alone lit the button on the screen
+    // and then refused the build, which reads as the button being broken.
+    final hammer = _atHand(kHammerId);
+    final multitool = _atHand(kMultitoolId);
     if (!toolsAllow(recipe, hasHammer: hammer, hasMultitool: multitool)) return;
-    if (missingFor(recipe.materials, _carriedCounts()).isNotEmpty) return;
+
+    final have = {..._carriedCounts()};
+    for (final entry in _shelvedCounts().entries) {
+      have[entry.key] = (have[entry.key] ?? 0) + entry.value;
+    }
+    if (missingFor(recipe.materials, have).isNotEmpty) return;
 
     // §2.1a.3: you have to be standing in it to build onto it.
     final at = _standingAt.value;

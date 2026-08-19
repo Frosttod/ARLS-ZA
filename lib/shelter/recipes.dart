@@ -188,6 +188,24 @@ Duration moduleWork(
   );
 }
 
+/// The item that stands in for "a hammer" in §18.3, and the one that stands
+/// in for a multitool.
+///
+/// ⚠️ These were `tool_hammer` and `tool_axe` for months, and neither exists:
+/// the catalogue calls them `melee_hammer` and `melee_axe`, because a hammer
+/// is also something you hit a Walker with. Every check against them was
+/// therefore permanently false — the shelter never got §8.3's tool discount,
+/// modules could be built only with a multitool, and the requirements row
+/// printed the raw id because the catalogue had nothing under it.
+///
+/// Named here rather than at each call so there is one place to be wrong.
+const String kHammerId = 'melee_hammer';
+const String kAxeId = 'melee_axe';
+const String kMultitoolId = 'tool_multitool';
+
+/// §8.3: what counts as bringing tools to a build.
+const List<String> kBuildingToolIds = [kHammerId, kAxeId, kMultitoolId];
+
 /// §18.3: whether this can be attempted at all with what is carried.
 ///
 /// Workshop level 2 and 3 need a multitool as well as a hammer — there is no

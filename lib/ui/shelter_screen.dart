@@ -556,14 +556,14 @@ class _ModuleRow extends StatelessWidget {
               // started for want of a multitool used to say only "needs a
               // tool", which does not say which.
               _Need(
-                label: itemNameOf('tool_hammer'),
+                label: itemNameOf(kHammerId),
                 have: hasHammer ? 1 : 0,
                 need: 1,
                 colours: colours,
               ),
               if (module == ShelterModule.workshop && next.level >= 2)
                 _Need(
-                  label: itemNameOf('tool_multitool'),
+                  label: itemNameOf(kMultitoolId),
                   have: hasMultitool ? 1 : 0,
                   need: 1,
                   colours: colours,

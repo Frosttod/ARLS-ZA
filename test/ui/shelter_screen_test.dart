@@ -103,7 +103,7 @@ void main() {
       expect(find.text('50 m'), findsOneWidget);
       expect(find.text('100%'), findsOneWidget);
       // The shelves row carries it now, with how much is used.
-      expect(find.textContaining('/ 40 kg'), findsOneWidget);
+      expect(find.textContaining('/ 100 kg'), findsOneWidget);
     });
 
     testWidgets('every module is shown, built or not (§8.4)', (tester) async {
@@ -156,7 +156,7 @@ void main() {
         ],
       );
 
-      expect(find.textContaining('/ 90 kg'), findsOneWidget);
+      expect(find.textContaining('/ 150 kg'), findsOneWidget);
       expect(find.text('115%'), findsOneWidget);
     });
   });

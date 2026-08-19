@@ -57,7 +57,7 @@ enum ShelterKind {
     safeRadiusM: 50,
     buildTime: kShelterBuildTime,
     sleepQuality: 1,
-    storageKg: 40,
+    storageKg: 100,
     modular: true,
   ),
 
@@ -89,11 +89,19 @@ enum ShelterKind {
 
   /// §18.2: what it holds before any module, in kilograms.
   ///
-  /// ⚠️ Forty for a shelter, up from §18.2's twenty-five. Measured against the
-  /// pack rather than against the document: §18.1a gives an eighty-kilogram
-  /// character thirty-six kilograms of carry, so twenty-five was less than a
-  /// full load — the shelf could not even hold what the player walked in
-  /// with, which made it a place to leave two things rather than a base.
+  /// ⚠️ A hundred for the main shelter, against §18.2's twenty-five, and the
+  /// number has moved twice.
+  ///
+  /// Twenty-five was less than one load: §18.1a gives an eighty-kilogram
+  /// character thirty-six kilograms of carry, so the shelf could not hold what
+  /// the player walked in with. Forty fixed that and no more — one trip fitted
+  /// and a second did not.
+  ///
+  /// A hundred is about three loads, which is what makes the main shelter the
+  /// thing §8 keeps calling it: somewhere worth going back to with the
+  /// difficult half of what you found, rather than a slightly larger pocket.
+  /// The camp keeps its thirty — a chest under a tarpaulin is not a fortress,
+  /// and the gap between them is now the reason to build the fortress.
   final double storageKg;
 
   final bool modular;
