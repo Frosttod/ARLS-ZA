@@ -552,20 +552,21 @@ class _ModuleRow extends StatelessWidget {
                   colours: colours,
                 ),
 
-              // §18.3: and the tool, on the same terms. A level that cannot be
-              // started for want of a multitool used to say only "needs a
-              // tool", which does not say which.
-              _Need(
+              // §18.3: and the tool.
+              //
+              // ⚠️ Not as "1/1". A material is spent and a tool is not, and a
+              // count beside a hammer says the hammer is about to be used up —
+              // which sent a player looking for a second one. What matters
+              // about a tool is only whether it is to hand.
+              _Need.tool(
                 label: itemNameOf(kHammerId),
-                have: hasHammer ? 1 : 0,
-                need: 1,
+                held: hasHammer,
                 colours: colours,
               ),
               if (module == ShelterModule.workshop && next.level >= 2)
-                _Need(
+                _Need.tool(
                   label: itemNameOf(kMultitoolId),
-                  have: hasMultitool ? 1 : 0,
-                  need: 1,
+                  held: hasMultitool,
                   colours: colours,
                 ),
               const SizedBox(height: 6),
@@ -911,11 +912,25 @@ class _Need extends StatelessWidget {
     required this.have,
     required this.need,
     required this.colours,
-  });
+  }) : tally = true;
+
+  /// §18.3: something the work needs to hand and gives back.
+  ///
+  /// A hammer is not two planks. It is checked, used and still there
+  /// afterwards, so it gets a tick or a dash rather than a count — "1/1
+  /// młotek" reads as a hammer being consumed by the wall.
+  const _Need.tool({
+    required this.label,
+    required bool held,
+    required this.colours,
+  }) : have = held ? 1 : 0,
+       need = 1,
+       tally = false;
 
   final String label;
   final int have;
   final int need;
+  final bool tally;
   final HudColors colours;
 
   @override
@@ -938,11 +953,11 @@ class _Need extends StatelessWidget {
             ),
           ),
           Text(
-            '$have / $need',
+            tally ? '$have / $need' : (met ? '✓' : '—'),
             style: TextStyle(
               fontSize: 12,
               color: met ? colours.muted : const Color(0xFFE8B33A),
-              fontFamily: kDataFont,
+              fontFamily: tally ? kDataFont : null,
               fontFeatures: const [FontFeature.tabularFigures()],
             ),
           ),

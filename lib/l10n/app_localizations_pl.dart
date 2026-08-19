@@ -1061,6 +1061,12 @@ class L10nPl extends L10n {
   String get searchNothingNew => 'Nic nowego tutaj.';
 
   @override
+  String get searchTooSoon => 'Nie ma tu jeszcze nic nowego do wypatrzenia.';
+
+  @override
+  String get searchTooClose => 'Patrzyłbyś na ten sam teren.';
+
+  @override
   String searchFoundNearby(String what) {
     return 'Zauważasz w pobliżu: $what.';
   }

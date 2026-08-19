@@ -1969,6 +1969,18 @@ abstract class L10n {
   /// **'Nothing new here yet.'**
   String get searchNothingNew;
 
+  /// No description provided for @searchTooSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing new to see yet.'**
+  String get searchTooSoon;
+
+  /// No description provided for @searchTooClose.
+  ///
+  /// In en, this message translates to:
+  /// **'You would be looking at the same ground.'**
+  String get searchTooClose;
+
   /// No description provided for @searchFoundNearby.
   ///
   /// In en, this message translates to:

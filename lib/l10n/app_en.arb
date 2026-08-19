@@ -415,6 +415,8 @@
   "searchRevealed": "Places revealed: {count}",
   "@searchRevealed": {"placeholders": {"count": {"type": "int"}}},
   "searchNothingNew": "Nothing new here yet.",
+  "searchTooSoon": "Nothing new to see yet.",
+  "searchTooClose": "You would be looking at the same ground.",
   "searchFoundNearby": "You spot {what} nearby.",
   "scoutCar": "an abandoned car",
   "scoutWaste": "a skip",

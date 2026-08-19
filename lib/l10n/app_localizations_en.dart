@@ -1060,6 +1060,12 @@ class L10nEn extends L10n {
   String get searchNothingNew => 'Nothing new here yet.';
 
   @override
+  String get searchTooSoon => 'Nothing new to see yet.';
+
+  @override
+  String get searchTooClose => 'You would be looking at the same ground.';
+
+  @override
   String searchFoundNearby(String what) {
     return 'You spot $what nearby.';
   }

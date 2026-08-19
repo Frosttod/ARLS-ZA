@@ -3554,6 +3554,26 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     _searchTickedAt = null;
   }
 
+  /// §10.2.3: whether looking around again is worth the forty-five seconds.
+  ///
+  /// ⚠️ This gates the *search*, not the find. It was only on the find, which
+  /// is not what was asked for and is not what a player sees: the button was
+  /// live the instant the last look finished, so the honest answer to "is
+  /// there a cooldown" was no. Refusing with a reason beats letting somebody
+  /// spend forty-five seconds of standing still on a certainty.
+  String? _scoutRefusal(GeoPoint at, DateTime now) {
+    final last = _scoutedAt;
+    final from = _scoutedFrom;
+
+    if (last != null && now.difference(last) < kScoutCooldown) {
+      return L10n.of(context).searchTooSoon;
+    }
+    if (from != null && from.distanceTo(at) < kScoutMoveM) {
+      return L10n.of(context).searchTooClose;
+    }
+    return null;
+  }
+
   void _startAreaSearch() {
     // ⚠️ The sticky position, not the snapshot's fix. Fifth time this exact
     // line has been the bug: in a shelter §2.1a.4 turns the receiver off, so
@@ -3562,8 +3582,15 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final at = _standingAt.value;
     if (at == null || _search.value != null) return;
 
+    final now = DateTime.now().toUtc();
+    final refusal = _scoutRefusal(at, now);
+    if (refusal != null) {
+      _say(refusal);
+      return;
+    }
+
     setState(() {
-      _search.value = Search.area(at: at, now: DateTime.now().toUtc());
+      _search.value = Search.area(at: at, now: now);
     });
     _startSearchTimer();
   }
@@ -3749,15 +3776,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final world = _world;
     if (character == null || world == null) return null;
 
-    // The valve, and it has two halves. A timer alone is answered by standing
-    // still for three minutes; a distance alone is answered by pacing. Both
-    // together mean the only way to find something is to have gone somewhere.
-    final last = _scoutedAt;
-    final from = _scoutedFrom;
-
-    if (last != null && now.difference(last) < kScoutCooldown) return null;
-    if (from != null && from.distanceTo(at) < kScoutMoveM) return null;
-
+    // The valve is spent by *looking*, not by finding: [_startAreaSearch]
+    // refuses a second look until the clock and the distance are both paid,
+    // and this only has to roll the odds.
     _scoutedAt = now;
     _scoutedFrom = at;
 

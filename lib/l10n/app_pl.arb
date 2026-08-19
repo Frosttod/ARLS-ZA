@@ -337,6 +337,8 @@
   "searchEmpty": "Już przeszukane.",
   "searchRevealed": "Odsłonięte miejsca: {count}",
   "searchNothingNew": "Nic nowego tutaj.",
+  "searchTooSoon": "Nie ma tu jeszcze nic nowego do wypatrzenia.",
+  "searchTooClose": "Patrzyłbyś na ten sam teren.",
   "searchFoundNearby": "Zauważasz w pobliżu: {what}.",
   "scoutCar": "porzucony samochód",
   "scoutWaste": "kontener na śmieci",

@@ -383,4 +383,22 @@ void main() {
       expect(cancelled, isNotNull);
     });
   });
+  group('a tool is kept, a material is spent (§18.3)', () {
+    testWidgets('the hammer is a tick, not a count', (tester) async {
+      // ⚠️ It read "1 / 1 Młotek", which says the hammer is about to be used
+      // up by the wall — and sent a player looking for a second one. A
+      // material is spent and a tool is not; the only thing worth saying
+      // about a tool is whether it is to hand.
+      await pump(tester, shelters: [built()], hasTools: false);
+
+      expect(find.textContaining('1 / 1'), findsNothing);
+      expect(find.text('—'), findsWidgets, reason: 'not held, so a dash');
+    });
+
+    testWidgets('and a tick once it is to hand', (tester) async {
+      await pump(tester, shelters: [built()], hasTools: true);
+
+      expect(find.text('✓'), findsWidgets);
+    });
+  });
 }
