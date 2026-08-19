@@ -404,20 +404,28 @@ class GameLoop {
     final unmeasured = elapsed > kUnmeasuredGap;
     final input = _buildInput(offline: offline || unmeasured);
 
-    // A long gap is replayed in chunks so the model has no chance to
-    // accumulate error, and so a fortnight does not become one arithmetic step.
-    final outcome = elapsed > const Duration(hours: 1)
-        ? advanceInChunks(
-            state: _state,
-            constants: constants,
-            elapsed: elapsed,
-            input: input,
-          )
-        : advance(
-            state: _state,
-            constants: constants,
-            elapsed: elapsed,
-            input: input,
+    // ⚠️ §2.5.1's ten minutes can fall *inside* the span being replayed, and
+    // the input is decided once for the whole of it.
+    //
+    // Found on a walk: sitting in a shelter in the daytime never paid the
+    // sleep debt down at all. The zone flipped to `sleep` on the tick after
+    // the tenth minute, so the HUD said asleep — but by then the whole span
+    // had already been applied with `sleeping: false`, and a four-hour sit
+    // *added* an hour and twenty to the debt. The night case worked, and hid
+    // it: darkness is true from the first instant, so its input is right from
+    // the first instant.
+    //
+    // So the span is split where the character settles, and the two halves are
+    // applied with the input each of them actually had.
+    final awakeFor = _awakeBefore(elapsed, input);
+
+    final outcome = awakeFor == null
+        ? _applySpan(elapsed, input)
+        : _applySpan(
+            elapsed - awakeFor,
+            input.asleep,
+            after: awakeFor,
+            of: input,
           );
 
     _state = outcome.state;
@@ -439,6 +447,88 @@ class GameLoop {
     await _maybeSnapshot(advanceResult.now);
 
     _publish();
+  }
+
+  /// Applies [span], optionally after [after] of [of] first.
+  TickOutcome _applySpan(
+    Duration span,
+    TickInput input, {
+    Duration? after,
+    TickInput? of,
+  }) {
+    var state = _state;
+    var applied = 0;
+    var floored = false;
+    var calories = 0.0;
+    var water = 0.0;
+    var blood = 0.0;
+
+    // The rate the character finished on, not an average of the two halves:
+    // it is read as "what is the body doing now", and now is the end.
+    var met = 0.0;
+
+    for (final (length, using) in [
+      if (after != null && after > Duration.zero) (after, of!),
+      (span, input),
+    ]) {
+      // Over an hour goes through the chunked path, which is what keeps a
+      // fortnight from becoming one arithmetic step (§11.1.2).
+      final outcome = length > const Duration(hours: 1)
+          ? advanceInChunks(
+              state: state,
+              constants: constants,
+              elapsed: length,
+              input: using,
+            )
+          : advance(
+              state: state,
+              constants: constants,
+              elapsed: length,
+              input: using,
+            );
+
+      state = outcome.state;
+      met = outcome.met;
+      applied += outcome.secondsApplied;
+      floored = floored || outcome.floored;
+      calories += outcome.caloriesBurned;
+      water += outcome.waterLostMl;
+      blood += outcome.bloodLostMl;
+    }
+
+    return TickOutcome(
+      state: state,
+      secondsApplied: applied,
+      floored: floored,
+      caloriesBurned: calories,
+      waterLostMl: water,
+      bloodLostMl: blood,
+      met: met,
+    );
+  }
+
+  /// §2.5.1: how much of [elapsed] is spent awake before sleep begins, or null
+  /// if the whole span is one or the other.
+  ///
+  /// Only the settling clock is answered here. Somebody already asleep stays
+  /// asleep; somebody outside, busy, or with no roof over them never starts.
+  Duration? _awakeBefore(Duration elapsed, TickInput input) {
+    if (input.sleeping) return null;
+
+    // Anything the player started outranks sleep (§2.1a.1), and so does not
+    // being under a roof at all.
+    final settledAt = _settledAt;
+    if (_inside == null || settledAt == null) return null;
+
+    final waited = _state.lastUpdate.difference(settledAt);
+    final left = kSettleToSleep - waited;
+
+    // Already past it — then the input was built before the flip and the whole
+    // span is sleep. Not past it by the end of the span — then none of it is.
+    if (left <= Duration.zero) return Duration.zero;
+    if (left >= elapsed) return null;
+
+    return left;
   }
 
   TickInput _buildInput({required bool offline}) {

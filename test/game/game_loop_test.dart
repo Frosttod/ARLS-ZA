@@ -625,6 +625,53 @@ void main() {
       );
     });
 
+    test('and ten quiet minutes in the daytime do the same (§2.5.1)', () async {
+      // The other half of §2.5.1, and the one reported broken from a walk:
+      // somebody sitting in their own shelter at noon with nothing on is not
+      // "awake and idle", they are asleep in a chair.
+      final tired = SimState.fresh(
+        at: t0,
+        constants: constants,
+      ).copyWith(sleepDebtSeconds: const Duration(hours: 5).inSeconds);
+
+      final rig = await buildLoop(initial: tired, startAt: t0);
+      addTearDown(() async {
+        await rig.loop.dispose();
+        await rig.source.dispose();
+        await rig.session.close();
+      });
+
+      await rig.loop.start();
+      rig.source.jumpTo(52.4064, 16.9252);
+      rig.source.step();
+      await pump();
+
+      rig.loop.setShelters([
+        Shelter(
+          id: 1,
+          kind: ShelterKind.main,
+          position: const GeoPoint(52.4064, 16.9252),
+          startedAt: t0.subtract(const Duration(days: 1)),
+          buildTime: kShelterBuildTime,
+        ),
+      ]);
+
+      // Not yet: the ten minutes have not passed.
+      expect(rig.loop.state.zone, MetabolicZone.shelter);
+
+      final before = rig.loop.state.sleepDebt;
+
+      rig.wall.advance(const Duration(hours: 4));
+      await rig.loop.onPaused(rig.wall.nowUtc());
+
+      expect(rig.loop.state.zone, MetabolicZone.sleep);
+      expect(
+        rig.loop.state.sleepDebt,
+        lessThan(before),
+        reason: 'four quiet hours under a roof must pay some of it down',
+      );
+    });
+
     test(
       'and reading at midnight is reading, not sleeping (§2.1a.1)',
       () async {

@@ -162,6 +162,21 @@ class TickInput {
   final bool offline;
 
   static const resting = TickInput();
+
+  /// The same inputs, asleep.
+  ///
+  /// §2.5.1's ten minutes can fall inside a span that is replayed in one go,
+  /// and the half after them has to be applied with this rather than with the
+  /// input the span started under.
+  TickInput get asleep => TickInput(
+    speedKmh: speedKmh,
+    loadKg: loadKg,
+    ambientTempC: ambientTempC,
+    clothingClo: clothingClo,
+    bleedTier: bleedTier,
+    sleeping: true,
+    offline: offline,
+  );
 }
 
 /// How fast what has been eaten becomes usable (§2.2).
