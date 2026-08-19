@@ -625,6 +625,54 @@ void main() {
       );
     });
 
+    test('minute by minute, exactly as the app ticks it', () async {
+      // ⚠️ Reported three times from a walk: sitting in a shelter with the app
+      // open and nothing running, and the sleep bar not moving. The existing
+      // test advances the clock in one jump and passes, so whatever is wrong
+      // is in the stepping rather than in the arithmetic.
+      final tired = SimState.fresh(
+        at: t0,
+        constants: constants,
+      ).copyWith(sleepDebtSeconds: const Duration(hours: 5).inSeconds);
+
+      final rig = await buildLoop(initial: tired, startAt: t0);
+      addTearDown(() async {
+        await rig.loop.dispose();
+        await rig.source.dispose();
+        await rig.session.close();
+      });
+
+      await rig.loop.start();
+      rig.source.jumpTo(52.4064, 16.9252);
+      rig.source.step();
+      await pump();
+
+      rig.loop.setShelters([
+        Shelter(
+          id: 1,
+          kind: ShelterKind.main,
+          position: const GeoPoint(52.4064, 16.9252),
+          startedAt: t0.subtract(const Duration(days: 1)),
+          buildTime: kShelterBuildTime,
+        ),
+      ]);
+      rig.loop.setStandingAt(const GeoPoint(52.4064, 16.9252));
+
+      // Thirty minutes, a minute at a time, with the receiver quiet — which
+      // is what §2.1a.4 does under a roof.
+      for (var i = 0; i < 30; i++) {
+        rig.wall.advance(const Duration(minutes: 1));
+        await rig.loop.onPaused(rig.wall.nowUtc());
+      }
+
+      expect(rig.loop.state.zone, MetabolicZone.sleep);
+      expect(
+        rig.loop.state.sleepDebt,
+        lessThan(const Duration(hours: 5)),
+        reason: 'thirty quiet minutes under a roof must pay something down',
+      );
+    });
+
     test('and ten quiet minutes in the daytime do the same (§2.5.1)', () async {
       // The other half of §2.5.1, and the one reported broken from a walk:
       // somebody sitting in their own shelter at noon with nothing on is not

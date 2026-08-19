@@ -187,7 +187,7 @@ class Hud extends StatelessWidget {
                               1 -
                               state.sleepDebt.inSeconds /
                                   kDailySleepNeed.inSeconds,
-                          amount: _hoursLeft(kDailySleepNeed - state.sleepDebt),
+                          amount: _sleepOwed(state.sleepDebt),
                           incoming: _sleepIncoming(state),
                           warning: status.sleep.extraMoa > 0,
                           critical: status.sleep.microsleeps,
@@ -931,7 +931,19 @@ String _grouped(double value) {
 }
 
 /// §2.5: rest still in the tank, against the eight hours §2.5.3 asks for.
-String _hoursLeft(Duration left) {
-  final hours = left.inMinutes / 60;
-  return '${(hours < 0 ? 0.0 : hours).toStringAsFixed(1)} h';
+/// §2.5: what the sleep bar's figure says.
+///
+/// ⚠️ The debt, not the hours left, and this is the whole of a bug reported
+/// three times as "sleep does not regenerate". The bar is a fraction of one
+/// night, so any debt past eight hours pins it at empty; the figure beside it
+/// said "0.0 h", which reads as *nothing owed*. A character forty hours down
+/// could sleep all night and every pixel on the screen would stay where it
+/// was.
+///
+/// So the number is what is owed, and it moves the moment sleep starts.
+String _sleepOwed(Duration debt) {
+  if (debt <= Duration.zero) return '0.0 h';
+
+  final hours = debt.inMinutes / 60;
+  return '−${hours.toStringAsFixed(1)} h';
 }

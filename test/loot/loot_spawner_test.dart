@@ -181,7 +181,7 @@ void main() {
   });
 
   group('respawn (§10)', () {
-    test('a looted box comes back between four and eight hours later', () {
+    test('a looted box comes back a day or so later', () {
       final box = LootBox(
         poiId: 'x',
         position: centre,
@@ -206,8 +206,12 @@ void main() {
         spawnedAt: now,
       ).lootedAtTime(now, Random(4));
 
-      expect(looted.isActiveAt(now.add(const Duration(hours: 2))), isFalse);
-      expect(looted.isActiveAt(now.add(const Duration(hours: 9))), isTrue);
+      // ⚠️ Hours, not the four §10 asks for. A shop stripped on the way to
+      // work being full again at lunchtime is not a city anybody has looted —
+      // it is a respawning arcade, and it takes away the reason to walk
+      // somewhere new.
+      expect(looted.isActiveAt(now.add(const Duration(hours: 12))), isFalse);
+      expect(looted.isActiveAt(now.add(const Duration(hours: 40))), isTrue);
     });
 
     test('a refill keeps the place and the table', () {
@@ -222,7 +226,7 @@ void main() {
         centre: centre,
         candidates: const [],
         existing: [looted],
-        now: now.add(const Duration(hours: 9)),
+        now: now.add(const Duration(hours: 40)),
         seed: 1,
       );
 

@@ -542,4 +542,52 @@ void main() {
       expect(morning.bloodMl, lessThanOrEqualTo(starving.bloodMl));
     });
   });
+  group('the hole has a bottom (§2.5.4)', () {
+    // ⚠️ Reported three times from a walk as "sleep does not regenerate in the
+    // shelter". It was regenerating perfectly. The debt grows eight hours a
+    // day awake with nothing stopping it, so a character days into a run owed
+    // tens of hours — and the bar is a fraction of one night, so it read empty
+    // whether the debt was eight hours or forty. Nothing anybody could see
+    // moved for a whole night's sleep.
+    test('a week awake owes a day, not a week', () {
+      var state = SimState.fresh(at: t0, constants: constants);
+
+      for (var day = 0; day < 7; day++) {
+        state = advance(
+          state: state,
+          constants: constants,
+          elapsed: const Duration(hours: 24),
+          input: const TickInput(),
+        ).state;
+      }
+
+      expect(state.sleepDebt, kMaxSleepDebt);
+    });
+
+    test('and §2.5.4 has nothing worse to say past a day anyway', () {
+      // Which is why capping costs the model nothing: microsleeps are the
+      // last tier there is, and they start at twenty-four hours.
+      expect(sleepState(kMaxSleepDebt).microsleeps, isTrue);
+      expect(
+        sleepState(kMaxSleepDebt * 2).extraMoa,
+        sleepState(kMaxSleepDebt).extraMoa,
+      );
+    });
+
+    test('a night at the bottom of the hole climbs a third of the way out', () {
+      final owed = SimState.fresh(
+        at: t0,
+        constants: constants,
+      ).copyWith(sleepDebtSeconds: kMaxSleepDebt.inSeconds);
+
+      final morning = advance(
+        state: owed,
+        constants: constants,
+        elapsed: const Duration(hours: 8),
+        input: const TickInput(sleeping: true),
+      ).state;
+
+      expect(morning.sleepDebt, const Duration(hours: 16));
+    });
+  });
 }

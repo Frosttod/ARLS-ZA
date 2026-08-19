@@ -401,6 +401,14 @@ class TickOutcome {
 /// Sleep requirement per day (§2.5.3). Anything short of this accrues debt.
 const Duration kDailySleepNeed = Duration(hours: 8);
 
+/// §2.5.4: the deepest the hole gets.
+///
+/// The last tier of §2.5.4 is "twenty-four hours or more", and there is
+/// nothing past it — microsleeps are the worst it does. So a debt beyond a day
+/// costs nothing extra and only lengthens the climb out, which is a punishment
+/// the document never asked for and one the interface cannot draw.
+const Duration kMaxSleepDebt = Duration(hours: 24);
+
 /// §2.5.1: how long under a roof with nothing on before the character sleeps.
 ///
 /// §2.5.1 makes sleep a state rather than an action, and names night as the
@@ -529,7 +537,21 @@ TickOutcome advance({
   final debtChange = input.sleeping
       ? -seconds
       : (kDailySleepNeed.inSeconds * seconds / Duration.secondsPerDay).round();
-  final sleepDebt = math.max(0, state.sleepDebtSeconds + debtChange);
+  // ⚠️ Capped, and §2.5 gives no cap.
+  //
+  // The debt grows eight hours a day awake and nothing stops it, so a
+  // character three days into a run owes a day of sleep and a week in owes
+  // two. §2.5.4's own tiers stop at twenty-four hours — past that there is no
+  // further penalty — so everything beyond the cap is a hole to climb out of
+  // that models nothing and cannot be shown: the bar is a fraction of one
+  // night and reads empty either way.
+  //
+  // Found from a walk reported as "sleep does not regenerate in the shelter".
+  // It was regenerating perfectly; the debt was tens of hours deep, and a
+  // night of it moved nothing anybody could see.
+  final sleepDebt = math
+      .max(0, state.sleepDebtSeconds + debtChange)
+      .clamp(0, kMaxSleepDebt.inSeconds);
 
   // ---- absorption (§2.2, §2.3) -------------------------------------------
   //

@@ -78,11 +78,29 @@ const int kFurnitureNearby = 3;
 /// is half as likely as one underfoot, at 1200 m a quarter.
 const double kFalloffM = 400;
 
-/// §10: four to eight hours, and §10.1's three to five where the map is thin.
-const Duration kRespawnMin = Duration(hours: 4);
-const Duration kRespawnMax = Duration(hours: 8);
-const Duration kRespawnBackupMin = Duration(hours: 3);
-const Duration kRespawnBackupMax = Duration(hours: 5);
+/// How long an emptied place takes to be worth returning to.
+///
+/// ⚠️ Eighteen to thirty-six hours, against §10's four to eight — and this is
+/// a departure the walking made obvious. Four hours means a shop stripped on
+/// the way to work is full again at lunchtime, which is not a city anybody has
+/// been looting: it is a respawning arcade, and it removes the only reason to
+/// walk somewhere new.
+///
+/// A day or so instead. The place is there tomorrow, not this afternoon — so
+/// the loop of the game becomes covering ground rather than circling three
+/// shops, and §10.2.1's grey dots are worth reading because they stay true for
+/// a walk rather than for an hour.
+///
+/// Not a flat day, because a player who learns one interval times the whole
+/// city by it. The spread is rolled per place, at the moment it is emptied.
+const Duration kRespawnMin = Duration(hours: 18);
+const Duration kRespawnMax = Duration(hours: 36);
+
+/// §10.1: faster where the map is thin, for the same reason the radius is
+/// wider there — a village has fewer places, so each has to come back sooner
+/// or there is no game in it at all.
+const Duration kRespawnBackupMin = Duration(hours: 10);
+const Duration kRespawnBackupMax = Duration(hours: 20);
 
 /// §10.2.1: how long a place the player emptied stays on their map.
 ///

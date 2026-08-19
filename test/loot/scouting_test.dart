@@ -51,4 +51,15 @@ void main() {
     // allowed sooner than it pays.
     expect(kScoutCooldown, lessThan(kAreaSearchMemory));
   });
+  test('and a cooldown alone is answered by standing still', () {
+    // ⚠️ Three minutes is waited out on one corner, which is exactly the
+    // behaviour the cooldown exists to prevent. The find is for covering
+    // ground where §10.1 has nothing to give, so it asks for ground covered.
+    expect(kScoutMoveM, 300);
+    expect(
+      kScoutMoveM,
+      greaterThan(kBaseSearchRadiusM),
+      reason: 'further than one look reaches, or it is no move at all',
+    );
+  });
 }

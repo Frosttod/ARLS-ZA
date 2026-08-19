@@ -539,4 +539,49 @@ void main() {
     expect(find.text('SEN'), findsOneWidget);
     expect(find.text('50%'), findsOneWidget);
   });
+  group('the sleep figure is the debt, not the hours left (§2.5)', () {
+    // ⚠️ The whole of a bug reported three times as "sleep does not
+    // regenerate". The bar is a fraction of one night, so any debt past eight
+    // hours pins it at empty — and the figure beside it read "0.0 h", which
+    // says *nothing owed*. A character a day down could sleep all night and
+    // every pixel would stay where it was.
+    testWidgets('a rested character owes nothing', (tester) async {
+      await pumpHud(tester, healthy());
+
+      expect(find.text('0.0 h'), findsOneWidget);
+    });
+
+    testWidgets('and a tired one is told how much', (tester) async {
+      await pumpHud(
+        tester,
+        healthy().copyWith(
+          sleepDebtSeconds: const Duration(hours: 5).inSeconds,
+        ),
+      );
+
+      expect(find.text('−5.0 h'), findsOneWidget);
+    });
+
+    testWidgets('past a night the number still moves, though the bar cannot', (
+      tester,
+    ) async {
+      // The bar is pinned at empty in both of these. The figure is the only
+      // thing that can say a night of sleep did anything at all.
+      await pumpHud(
+        tester,
+        healthy().copyWith(
+          sleepDebtSeconds: const Duration(hours: 20).inSeconds,
+        ),
+      );
+      expect(find.text('−20.0 h'), findsOneWidget);
+
+      await pumpHud(
+        tester,
+        healthy().copyWith(
+          sleepDebtSeconds: const Duration(hours: 12).inSeconds,
+        ),
+      );
+      expect(find.text('−12.0 h'), findsOneWidget);
+    });
+  });
 }

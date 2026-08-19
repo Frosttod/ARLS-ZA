@@ -78,6 +78,14 @@ const double kScoutFindRadiusM = 75;
 /// than doing nothing in a car park.
 const Duration kScoutCooldown = Duration(minutes: 3);
 
+/// §10.2.3: and how far the player has to have moved since the last one.
+///
+/// ⚠️ A timer alone is answered by standing still for three minutes, which is
+/// exactly the behaviour this was meant to prevent — the whole point of the
+/// find is to reward covering ground where §10.1 has nothing to give. Three
+/// hundred metres is a few minutes' walk and cannot be waited out.
+const double kScoutMoveM = 300;
+
 /// §10.2.2, at Reconnaissance 0 with no binoculars in daylight.
 const double kBaseSearchRadiusM = 100;
 

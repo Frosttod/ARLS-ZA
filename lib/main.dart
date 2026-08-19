@@ -282,6 +282,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// finding from becoming a tap somebody stands on.
   DateTime? _scoutedAt;
 
+  /// §10.2.3: and where that was, so the next one has to be somewhere else.
+  GeoPoint? _scoutedFrom;
+
   /// §12: how the pack is sorted. Outlives the screen it belongs to.
   final _packOrder = ValueNotifier(PackOrder.kind);
 
@@ -3746,10 +3749,17 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final world = _world;
     if (character == null || world == null) return null;
 
-    // The valve. Without it, one corner and one button is a materials tap.
+    // The valve, and it has two halves. A timer alone is answered by standing
+    // still for three minutes; a distance alone is answered by pacing. Both
+    // together mean the only way to find something is to have gone somewhere.
     final last = _scoutedAt;
+    final from = _scoutedFrom;
+
     if (last != null && now.difference(last) < kScoutCooldown) return null;
+    if (from != null && from.distanceTo(at) < kScoutMoveM) return null;
+
     _scoutedAt = now;
+    _scoutedFrom = at;
 
     // §11: seeded from the character and the minute, so the same look at the
     // same moment gives the same answer however many times it is replayed.
