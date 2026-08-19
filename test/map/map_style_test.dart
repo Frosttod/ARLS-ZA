@@ -147,19 +147,32 @@ void main() {
       );
     });
 
-    test('roads carry the contrast in both, in opposite directions', () {
+    test('roads carry more contrast than anything else on the map', () {
       // The one thing that has to be legible at arm's length while walking is
-      // where the streets go. On a dark map they are the light thing; on a
-      // light map they are the dark one.
-      final darkRoad = luminance(
-        colourOf('road-major', MapPalette.dark, 'line-color'),
-      );
-      final lightRoad = luminance(
-        colourOf('road-major', MapPalette.light, 'line-color'),
-      );
+      // where the streets go — so whatever else is on the map, the roads stand
+      // furthest from the ground.
+      //
+      // ⚠️ This used to say *which direction*: light roads on the dark map,
+      // dark roads on the light one. That was true of the old light palette
+      // and is false of this one. Voyager puts **white streets on a warm
+      // ground**, which is the whole reason it reads as a street plan at any
+      // size, and the direction was never the rule — the ranking is.
+      for (final palette in [MapPalette.dark, MapPalette.light]) {
+        final ground = luminance(palette.background);
+        final road = luminance(colourOf('road-major', palette, 'line-color'));
 
-      expect(darkRoad, greaterThan(luminance(MapPalette.dark.background)));
-      expect(lightRoad, lessThan(luminance(MapPalette.light.background)));
+        // ⚠️ Against what a street runs *between*, not against water. A blue
+        // area is nobody's idea of a street, so it is free to carry real
+        // colour — in this palette it carries more than the roads do, and
+        // that is right rather than a fault.
+        for (final other in [palette.building, palette.green]) {
+          expect(
+            (road - ground).abs(),
+            greaterThan((luminance(other) - ground).abs()),
+            reason: 'roads must read before $other does, in $palette',
+          );
+        }
+      }
     });
 
     test('major roads outrank minor ones in both', () {

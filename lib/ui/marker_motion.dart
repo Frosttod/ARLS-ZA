@@ -30,6 +30,16 @@ import 'map_markers.dart';
 /// catches up.
 const Duration kMarkerGlide = Duration(seconds: 1);
 
+/// How often the marker layer is redrawn while anything is moving.
+///
+/// ⚠️ Thirty, not the display rate. The ticker driving this runs at 90 or 120
+/// Hz on the phones §3.3's high-refresh mode asks for, and repainting
+/// sixty-five markers that often was most of what made the map stutter under a
+/// thumb. At walking pace half of thirty of a second is under a metre — no eye
+/// on a phone at arm's length can tell — and the frames go to the tiles, which
+/// is what the player is actually reading.
+const int kMarkerFps = 30;
+
 class _Leg {
   const _Leg({required this.from, required this.to, required this.startedAt});
 

@@ -531,7 +531,14 @@ PlaceIcon placeIconFor(String? tableId) => switch (tableId) {
 /// One number, in one place. The camera is given it, the markers are drawn
 /// with it, and taps are read back through it — three things that have to
 /// agree to the pixel, so none of them gets to hold its own copy.
-const double kMapTiltDeg = 45;
+///
+/// ⚠️ Zero, and it was forty-five for two days. A tilted map over extruded
+/// buildings stuttered on a phone, and the map is this game's whole
+/// interface — it is held in one hand while walking, and smooth matters more
+/// than tall. [MapTilt] and its arithmetic stay: they are tested, they cost
+/// nothing at zero (the perspective terms cancel and the flat formula is what
+/// is left), and this is one number away from coming back.
+const double kMapTiltDeg = 0;
 
 /// The tilt for a map [viewportHeightPx] logical pixels tall.
 MapTilt mapTilt(double viewportHeightPx) =>

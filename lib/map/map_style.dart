@@ -65,18 +65,34 @@ class MapPalette {
     boundary: '#232a2e',
   );
 
-  /// Daylight. Not the dark palette inverted: paper-white ground would glare,
-  /// so the background is warm off-white and the greens and blues keep enough
-  /// saturation to be told apart from it in sunlight.
+  /// Daylight, after CARTO's Voyager.
+  ///
+  /// ⚠️ The one inversion worth knowing: on this palette the **roads are the
+  /// light thing** and the ground is the tint, which is the opposite of the
+  /// dark map and the opposite of what the class comment above describes for
+  /// a light one. Voyager works because white streets on a warm ground read
+  /// as a street plan at any size, and because everything else can then be
+  /// pale without competing.
+  ///
+  /// Not a copy — the layer set here is a tenth of Voyager's — but the same
+  /// four decisions: warm off-white ground, white roads, desaturated blue
+  /// water, and buildings barely separated from the ground so a block does
+  /// not read as a wall.
+  /// ⚠️ The ground is a shade deeper than Voyager's, and the trunk roads are
+  /// pure white rather than its cream. Voyager separates a trunk road from a
+  /// service road with **width and a casing**, at a desk; this style has
+  /// neither layer, and a phone held at arm's length in the rain has contrast
+  /// and nothing else. So the ground is dropped far enough to leave the white
+  /// somewhere to stand.
   static const MapPalette light = MapPalette(
-    background: '#F2EFEA',
-    water: '#BBD4E4',
-    green: '#DCE6D4',
-    building: '#E2DDD6',
-    minorRoad: '#B4ADA3',
-    majorRoad: '#8C837A',
-    railway: '#A99B8E',
-    boundary: '#C6BEB4',
+    background: '#F2EDE6',
+    water: '#A5CBE0',
+    green: '#D7E4C4',
+    building: '#E7E0D5',
+    minorRoad: '#FDFBF7',
+    majorRoad: '#FFFFFF',
+    railway: '#CFC7BB',
+    boundary: '#DED6CA',
   );
 
   /// Which palette belongs with a screen is a widget's question, and this file
@@ -139,49 +155,26 @@ Map<String, Object?> mapStyle({
         'source-layer': 'waterway',
         'paint': {'line-color': palette.water, 'line-width': 1.5},
       },
-      // §3.6: the city stands up.
+      // ⚠️ Flat, and it was extruded for two days.
       //
-      // The same layer, extruded rather than filled. `render_height` and
-      // `render_min_height` are two of the three fields the building layer
-      // carries — see [omt_schema.dart], which counted them out of a real
-      // pack — so the heights are the surveyed ones rather than a guess.
+      // The 3D city read well and cost too much: measured on a phone, panning
+      // and pinching a block of extruded buildings dropped frames badly enough
+      // that the map stuttered under a thumb — on a game whose whole interface
+      // is that map, held while walking. §3.6 asks for a map that can be read
+      // at arm's length in the rain, and a smooth flat one does that better
+      // than a stuttering tall one.
       //
-      // ⚠️ Coalesced to eight metres. A footprint with no height on it is
-      // common in OSM outside city centres, and `['get', ...]` on a missing
-      // field gives null, which extrudes to nothing: a hole in the street
-      // where a house is. Two storeys is the honest default for a building
-      // nobody has measured.
+      // Everything needed to bring it back is still in the tiles:
+      // `render_height` and `render_min_height` are two of the three fields
+      // the building layer carries (see [omt_schema.dart]). It is a paint
+      // block away if the frames are ever there.
       {
         'id': 'building',
-        'type': 'fill-extrusion',
+        'type': 'fill',
         'source': 'openmaptiles',
         'source-layer': 'building',
-
-        // A storey of geometry is worth drawing only once it is worth
-        // looking at. Below this the block is a smudge and the extrusion is
-        // paid for in frames for nothing.
         'minzoom': 14,
-        'paint': {
-          'fill-extrusion-color': palette.building,
-          'fill-extrusion-height': [
-            'coalesce',
-            ['get', 'render_height'],
-            8,
-          ],
-          'fill-extrusion-base': [
-            'coalesce',
-            ['get', 'render_min_height'],
-            0,
-          ],
-
-          // Not quite solid. §3.6 draws the markers on our side of the
-          // platform view, so they are painted *over* the tiles whatever the
-          // geometry does — a wholly opaque block would make a Walker behind
-          // it read as a Walker in front of it. A little translucency is the
-          // cheapest honest answer: the shape still reads, and what is behind
-          // it is not hidden.
-          'fill-extrusion-opacity': 0.85,
-        },
+        'paint': {'fill-color': palette.building},
       },
       // Roads are drawn in three passes so the hierarchy survives at a glance:
       // everything, then the ones §3.5 keeps spawns away from, then rails.

@@ -30,14 +30,25 @@ void main() {
   //   mat_metal   1,5 kg · 0,6 l   — mass runs out first
   //   mat_wood    2,0 kg · 4,0 l   — bulk runs out first
 
-  // A barricaded house before any module: §8.5.1's twenty-five kilograms, and
-  // §18.1a's three litres to the kilogram.
+  // ⚠️ An arbitrary shelf, not the game's own figure. The tests below are
+  // about what a shelf does with what is put on it; twenty-five is simply a
+  // round number that makes the arithmetic readable. What a *shelter* holds is
+  // asserted against [ShelterKind] instead, just underneath.
   Stash empty() => const Stash(capacityKg: 25);
 
   group('what a shelf will take', () {
-    test('the house holds twenty-five kilos and seventy-five litres', () {
+    test('a shelf is three litres to the kilogram (§18.1a)', () {
       expect(empty().capacityKg, 25);
       expect(empty().capacityL, 75);
+    });
+
+    test('a barricaded house holds forty kilos before any module', () {
+      // ⚠️ Forty, against §18.2's twenty-five. Measured against the pack
+      // rather than the document: §18.1a gives an eighty-kilogram character
+      // thirty-six kilograms of carry, so twenty-five could not hold what the
+      // player walked in with — a place to leave two things, not a base.
+      expect(ShelterKind.main.storageKg, 40);
+      expect(ShelterKind.camp.storageKg, 30);
     });
 
     test('and a level of Storage adds fifty (§8.4)', () {
@@ -50,7 +61,7 @@ void main() {
         modules: const {ShelterModule.storage: 2},
       );
 
-      expect(built.storageKg, 125);
+      expect(built.storageKg, 140, reason: '40 + two levels of fifty');
     });
 
     test('mass refuses first when the thing is dense', () {
@@ -259,7 +270,7 @@ void main() {
       final back = await store.load(profileId, house, catalogue);
 
       expect(back.lines, hasLength(2));
-      expect(back.capacityKg, 25);
+      expect(back.capacityKg, ShelterKind.main.storageKg);
 
       final rifle = back.lines.firstWhere(
         (l) => l.itemId == 'weapon_rifle_545',

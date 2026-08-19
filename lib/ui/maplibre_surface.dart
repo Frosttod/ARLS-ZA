@@ -166,6 +166,20 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
   /// have to look like one.
   final _motion = MarkerMotion();
 
+  /// §3.6: the drawing clock, rounded down to [kMarkerFps].
+  ///
+  /// Quantising here rather than throttling the ticker keeps the pulse and the
+  /// glide on one clock: two layers advancing on different rounding is two
+  /// layers that disagree about where the same Walker is.
+  DateTime _frameClock() {
+    final now = DateTime.now();
+    const step = 1000 ~/ kMarkerFps;
+
+    return now.subtract(
+      Duration(milliseconds: now.millisecondsSinceEpoch % step),
+    );
+  }
+
   /// How long the camera should take to reach a newly reported centre.
   ///
   /// ⚠️ Measured rather than chosen. Fixes arrive every second in a fight and
@@ -479,9 +493,17 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
                       // marker that jumps is still a marker in the right
                       // place.
                       motion: widget.economy ? null : _motion,
-                      // Read once per frame rather than per marker, so every
-                      // dot on one frame is drawn at one instant.
-                      now: DateTime.now(),
+                      // ⚠️ Quantised to 30 fps, and read once for the whole
+                      // layer so every dot on one frame is drawn at one
+                      // instant.
+                      //
+                      // The ticker runs at the display rate — 90 or 120 Hz on
+                      // the phones §3.3's high-refresh mode asks for — and
+                      // repainting sixty-five markers that often is most of
+                      // what made the map stutter. Half of thirty is a metre
+                      // of walking; nobody can see the difference, and the
+                      // frames go to the tiles instead.
+                      now: _frameClock(),
                     ),
                   ),
                 ),

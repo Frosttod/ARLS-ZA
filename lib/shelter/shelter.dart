@@ -57,7 +57,7 @@ enum ShelterKind {
     safeRadiusM: 50,
     buildTime: kShelterBuildTime,
     sleepQuality: 1,
-    storageKg: 25,
+    storageKg: 40,
     modular: true,
   ),
 
@@ -88,6 +88,12 @@ enum ShelterKind {
   final double sleepQuality;
 
   /// §18.2: what it holds before any module, in kilograms.
+  ///
+  /// ⚠️ Forty for a shelter, up from §18.2's twenty-five. Measured against the
+  /// pack rather than against the document: §18.1a gives an eighty-kilogram
+  /// character thirty-six kilograms of carry, so twenty-five was less than a
+  /// full load — the shelf could not even hold what the player walked in
+  /// with, which made it a place to leave two things rather than a base.
   final double storageKg;
 
   final bool modular;
