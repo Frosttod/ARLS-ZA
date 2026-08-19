@@ -26,6 +26,8 @@ import 'combat/ballistics.dart';
 import 'combat/combat_session.dart';
 import 'combat/engagement.dart';
 import 'combat/magazine.dart';
+import 'combat/magazine_item.dart';
+import 'combat/weapon_load.dart';
 import 'combat/enemy.dart';
 import 'combat/noise.dart';
 import 'combat/enemy_spawner.dart';
@@ -406,6 +408,43 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// §5.4: when the player last swung. A blade has a swing time and swinging
   /// faster than the blade allows is not a thing a person can do.
   DateTime? _lastSwing;
+
+  /// §4.2: thumbs loose rounds into a magazine.
+  ///
+  /// ⚠️ An action with a clock on it, not a button that changes a number.
+  /// About a second a round is half a minute for a rifle magazine, and that is
+  /// the whole reason a second full magazine is worth its two hundred grams —
+  /// filling one is a thing done somewhere quiet, ahead of time.
+  Future<void> _fillMagazine(CarriedItem line) async {
+    final catalogue = _catalogue;
+    if (catalogue == null || _search.value != null) return;
+
+    final item = catalogue[line.itemId];
+    if (item == null) return;
+
+    final magazine = Magazine.of(item, rounds: line.rounds ?? 0);
+    if (magazine == null) return;
+
+    // Asked before the time is spent, so an empty pack is a sentence rather
+    // than half a minute of standing still.
+    final dry = fillMagazine(_inventory.value, line, catalogue);
+    if (!dry.isDone) {
+      _say(_loadRefusal(dry.refusal!));
+      return;
+    }
+
+    _usingLine.value = line;
+    setState(() {
+      _search.value = Search.using(
+        at: _standingAt.value ?? const GeoPoint(0, 0),
+        now: DateTime.now().toUtc(),
+        itemId: line.itemId,
+        duration: fillTime(dry.moved),
+        label: L10n.of(context).magazineFill,
+      );
+    });
+    _startSearchTimer();
+  }
 
   /// §5.3: what is in the weapon, as opposed to in the pack.
   ///
@@ -1040,6 +1079,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
           onWear: (line) => unawaited(_wear(line)),
           onTakeOff: (line) => unawaited(_takeOff(line)),
           onUse: (line) => unawaited(_use(line)),
+          onFill: (line) => unawaited(_fillMagazine(line)),
           onRead: _readNote,
           onDetails: (line) => unawaited(_showItemDetails(line)),
           action: _search,
@@ -1311,6 +1351,23 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final loop = _loop;
     final itemId = action.usingItemId;
     if (catalogue == null || loop == null || itemId == null) return;
+
+    // §4.2: a magazine being filled is an action with a clock, not a use —
+    // nothing is swallowed and §2.2's absorption has no opinion about it.
+    final filling = _usingLine.value;
+    if (filling != null && Magazine.of(catalogue[itemId]!) != null) {
+      _usingLine.value = null;
+
+      final out = fillMagazine(_inventory.value, filling, catalogue);
+      if (!out.isDone) {
+        if (mounted) _say(_loadRefusal(out.refusal!));
+        return;
+      }
+
+      _inventory.value = out.inventory;
+      await _saveInventory();
+      return;
+    }
 
     final definition = catalogue[itemId];
     final use = definition == null ? null : useOf(definition);
@@ -2232,29 +2289,27 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
     if (!reload.isDoneAt(DateTime.now())) return;
 
-    final rounds = roundsToLoad(
-      weapon: weapon,
-      attachments: _attachmentsFor(weapon),
-      loaded: _loaded,
-      carried: _roundsCarried(weapon),
-    );
-    if (rounds <= 0) {
+    final line = _weaponLine;
+    if (line == null) {
       setState(() => _reload = null);
       return;
     }
 
-    // The rounds leave the pack as they go into the weapon, so a magazine is
-    // never both in the rifle and in the bag.
-    var inventory = _inventory.value;
-    for (var i = 0; i < rounds; i++) {
-      final line = _roundFor(weapon);
-      if (line == null) break;
-      inventory = inventory.removeLine(line) ?? inventory;
+    // §4.2: a magazine is swapped as a unit, and a revolver is fed a round at
+    // a time. Both are the same three and a half seconds to the player and
+    // completely different bookkeeping underneath.
+    final outcome = Feed.of(weapon) == Feed.magazine
+        ? swapMagazine(_inventory.value, line, catalogue)
+        : loadLoose(_inventory.value, line, catalogue);
+
+    if (!outcome.isDone) {
+      setState(() => _reload = null);
+      _say(_loadRefusal(outcome.refusal!));
+      return;
     }
 
     setState(() {
-      _inventory.value = inventory;
-      _setLoaded(_loaded + rounds);
+      _inventory.value = outcome.inventory;
       _reload = null;
     });
   }
@@ -2262,8 +2317,26 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// Starts a magazine change (§5.3).
   void _startReload() {
     final weapon = _weapon;
-    if (weapon == null || _reload != null) return;
-    if (_roundsCarried(weapon) <= 0) return;
+    final line = _weaponLine;
+    final catalogue = _catalogue;
+    if (weapon == null || line == null || catalogue == null) return;
+    if (_reload != null) return;
+
+    // ⚠️ Asked before the seconds are spent, not after.
+    //
+    // §5.5.4's three and a half seconds are the most expensive thing in a
+    // fight, and standing through them to be told there was nothing to load is
+    // the worst outcome the interface can produce. So the same function that
+    // will do the work is asked whether it can, and its refusal is said out
+    // loud now.
+    final dry = Feed.of(weapon) == Feed.magazine
+        ? swapMagazine(_inventory.value, line, catalogue)
+        : loadLoose(_inventory.value, line, catalogue);
+
+    if (!dry.isDone) {
+      _say(_loadRefusal(dry.refusal!));
+      return;
+    }
 
     setState(() {
       _reload = Reload(
@@ -2275,20 +2348,16 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     });
   }
 
-  /// How many rounds of the right calibre are in the pack (§10.3.3).
-  int _roundsCarried(ItemDefinition weapon) {
-    final catalogue = _catalogue;
-    final calibre = weapon.props['caliber'];
-    if (catalogue == null || calibre == null) return 0;
-
-    var rounds = 0;
-    for (final line in _inventory.value.carried) {
-      final item = catalogue[line.itemId];
-      if (item?.kind == ItemKind.ammo && item?.props['caliber'] == calibre) {
-        rounds += line.count;
-      }
-    }
-    return rounds;
+  /// What to say when a weapon will not take anything (§4.2, §5.5.4).
+  String _loadRefusal(LoadRefusal refusal) {
+    final l10n = L10n.of(context);
+    return switch (refusal) {
+      LoadRefusal.noMagazine => l10n.reloadNoMagazine,
+      LoadRefusal.nothingFuller => l10n.reloadNothingFuller,
+      LoadRefusal.noRounds => l10n.combatNoAmmo,
+      LoadRefusal.full => l10n.reloadAlreadyFull,
+      LoadRefusal.notAWeapon => l10n.combatNoAmmo,
+    };
   }
 
   /// §5.4: hands, or whatever is in them.

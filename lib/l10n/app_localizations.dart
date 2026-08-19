@@ -2269,6 +2269,36 @@ abstract class L10n {
   /// **'No rounds for this.'**
   String get combatNoAmmo;
 
+  /// No description provided for @reloadNoMagazine.
+  ///
+  /// In en, this message translates to:
+  /// **'No magazine that fits.'**
+  String get reloadNoMagazine;
+
+  /// No description provided for @reloadNothingFuller.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing fuller to swap in.'**
+  String get reloadNothingFuller;
+
+  /// No description provided for @reloadAlreadyFull.
+  ///
+  /// In en, this message translates to:
+  /// **'Already loaded.'**
+  String get reloadAlreadyFull;
+
+  /// No description provided for @magazineFill.
+  ///
+  /// In en, this message translates to:
+  /// **'Fill'**
+  String get magazineFill;
+
+  /// No description provided for @magazineRounds.
+  ///
+  /// In en, this message translates to:
+  /// **'{rounds} / {capacity}'**
+  String magazineRounds(int rounds, int capacity);
+
   /// No description provided for @combatHit.
   ///
   /// In en, this message translates to:

@@ -55,19 +55,6 @@
       "props": {"attaches_to": ["any"], "light_radius_m": 20, "battery_hours": 5, "visible_to_enemies": true, "craft_skill": 45}
     },
     {
-      "id": "att_extended_mag",
-      "type": "attachment",
-      "name_key": "item.att_extended_mag.name",
-      "weight_kg": 0.25,
-      "volume_l": 0.3,
-      "stackable": false,
-      "condition": 100,
-      "condition_decay_per_use": 0.04,
-      "rarity": "very_rare",
-      "loot_tags": ["military", "police"],
-      "props": {"attaches_to": ["9x19", "5.45x39", "7.62x39"], "magazine_bonus": 10, "reload_seconds_delta": 0.5, "craft_skill": 60}
-    },
-    {
       "id": "att_foregrip",
       "type": "attachment",
       "name_key": "item.att_foregrip.name",

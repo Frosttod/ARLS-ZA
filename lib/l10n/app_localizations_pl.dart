@@ -1229,6 +1229,23 @@ class L10nPl extends L10n {
   String get combatNoAmmo => 'Brak amunicji do tego.';
 
   @override
+  String get reloadNoMagazine => 'Brak pasującego magazynka.';
+
+  @override
+  String get reloadNothingFuller => 'Nie ma pełniejszego do wymiany.';
+
+  @override
+  String get reloadAlreadyFull => 'Już załadowana.';
+
+  @override
+  String get magazineFill => 'Napełnij';
+
+  @override
+  String magazineRounds(int rounds, int capacity) {
+    return '$rounds / $capacity';
+  }
+
+  @override
   String combatHit(int millilitres) {
     return 'Trafienie — $millilitres ml';
   }

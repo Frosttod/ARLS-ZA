@@ -27,6 +27,7 @@ import '../inventory/inventory.dart';
 import '../inventory/item_use.dart';
 import '../combat/attachment.dart';
 import '../items/item.dart';
+import '../combat/magazine_item.dart';
 import '../items/item_catalogue.dart';
 import '../items/item_names.dart';
 import '../l10n/app_localizations.dart';
@@ -64,6 +65,7 @@ class InventoryScreen extends StatelessWidget {
     this.onTakeOff,
     this.onUse,
     this.onRead,
+    this.onFill,
     this.onDetails,
     this.usingLine,
     this.onDevFill,
@@ -100,6 +102,9 @@ class InventoryScreen extends StatelessWidget {
 
   /// Eats, drinks or dresses a wound (§4.7), for as long as the data says.
   final void Function(CarriedItem line)? onUse;
+
+  /// §4.2: filling a magazine from loose rounds.
+  final void Function(CarriedItem line)? onFill;
 
   /// §19.1: opens a note somebody left. Null for anything that is not one.
   final void Function(CarriedItem line)? onRead;
@@ -246,6 +251,7 @@ class InventoryScreen extends StatelessWidget {
                 onWear: onWear,
                 onUse: onUse,
                 onRead: onRead,
+                onFill: onFill,
                 onDetails: onDetails,
                 // The progress bar belongs under the thing it belongs to, not
                 // at the top of the screen: a player who taps "use" looks at
@@ -674,6 +680,7 @@ class _ItemRow extends StatefulWidget {
     this.onWear,
     this.onUse,
     this.onRead,
+    this.onFill,
     this.onDetails,
     this.action,
     this.usingLine,
@@ -698,6 +705,9 @@ class _ItemRow extends StatefulWidget {
   final void Function(CarriedItem, int)? onDrop;
   final void Function(CarriedItem)? onWear;
   final void Function(CarriedItem)? onUse;
+
+  /// §4.2: filling a magazine from loose rounds.
+  final void Function(CarriedItem)? onFill;
   final void Function(CarriedItem)? onRead;
   final void Function(CarriedItem)? onDetails;
 
@@ -831,6 +841,23 @@ class _ItemRowState extends State<_ItemRow> {
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      // §4.2: thumbing loose rounds into a magazine. Its own
+                      // action, not a reload — it is half a minute of standing
+                      // still, which is why it belongs on this screen rather
+                      // than on the one the fight is on.
+                      if (widget.onFill != null &&
+                          Magazine.of(
+                                widget.definition,
+                                rounds: line.rounds ?? 0,
+                              )?.isFull ==
+                              false)
+                        _RowAction(
+                          icon: Icons.download,
+                          tooltip: l10n.magazineFill,
+                          onPressed: () => widget.onFill!(line),
+                          colours: colours,
+                        ),
+
                       if (usable && widget.onUse != null)
                         _RowAction(
                           icon: Icons.restaurant,
@@ -979,6 +1006,19 @@ class _ItemRowState extends State<_ItemRow> {
     final portion = widget.line.portion;
     if (portion < 1) {
       parts.add(widget.l10n.inventoryPortion((portion * 100).round()));
+    }
+
+    // §5.3: and what is in a magazine, or in the gun. The one number that
+    // decides whether a rifle in the pack is a weapon or a stick — and until
+    // now the pack said nothing about it at all.
+    final rounds = widget.line.rounds;
+    if (rounds != null) {
+      final magazine = Magazine.of(widget.definition, rounds: rounds);
+      parts.add(
+        magazine == null
+            ? '$rounds'
+            : widget.l10n.magazineRounds(rounds, magazine.capacity),
+      );
     }
 
     return parts.join(' · ');

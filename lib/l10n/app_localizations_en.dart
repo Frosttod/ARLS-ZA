@@ -1229,6 +1229,23 @@ class L10nEn extends L10n {
   String get combatNoAmmo => 'No rounds for this.';
 
   @override
+  String get reloadNoMagazine => 'No magazine that fits.';
+
+  @override
+  String get reloadNothingFuller => 'Nothing fuller to swap in.';
+
+  @override
+  String get reloadAlreadyFull => 'Already loaded.';
+
+  @override
+  String get magazineFill => 'Fill';
+
+  @override
+  String magazineRounds(int rounds, int capacity) {
+    return '$rounds / $capacity';
+  }
+
+  @override
   String combatHit(int millilitres) {
     return 'Hit — $millilitres ml';
   }

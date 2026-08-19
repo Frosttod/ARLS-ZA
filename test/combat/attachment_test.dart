@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:arls_za/combat/magazine_item.dart';
 import 'package:arls_za/combat/attachment.dart';
 import 'package:arls_za/items/item.dart';
 import 'package:arls_za/items/item_catalogue.dart';
@@ -86,23 +87,25 @@ void main() {
       );
     });
 
-    test('an extended magazine holds ten more and seats slower', () {
-      final long = fitted(['att_extended_mag']);
+    test('an extended magazine is a magazine, not a bonus (§4.2)', () {
+      // ⚠️ There used to be an `att_extended_mag` here that added ten rounds
+      // to whatever it was clamped to. Once magazines became items with their
+      // own capacity there were two ways to say the same thing, and the
+      // attachment was the worse one: it could not be filled, could not be
+      // swapped, and held rounds nobody could count. The extended magazine is
+      // `mag_pistol_9mm_ext` now — twenty-five rounds against the standard
+      // fifteen, which is the same idea done where it can be used.
+      final standard = Magazine.of(catalogue['mag_pistol_9mm']!)!;
+      final extended = Magazine.of(catalogue['mag_pistol_9mm_ext']!)!;
 
-      expect(long.magazine, fitted(const []).magazine + 10);
-      expect(long.reloadTime, greaterThan(fitted(const []).reloadTime));
+      expect(extended.capacity, greaterThan(standard.capacity));
+      expect(extended.caliber, standard.caliber);
     });
 
     test('they stack, each doing its own job', () {
-      final full = fitted([
-        'att_red_dot',
-        'att_foregrip',
-        'tool_suppressor',
-        'att_extended_mag',
-      ]);
+      final full = fitted(['att_red_dot', 'att_foregrip', 'tool_suppressor']);
 
       expect(full.moa, lessThan(fitted(const []).moa));
-      expect(full.magazine, fitted(const []).magazine + 10);
       expect(full.noiseRangeM, lessThan(fitted(const []).noiseRangeM));
       expect(full.settleMultiplier, lessThan(1));
     });
@@ -142,7 +145,9 @@ void main() {
     test('and what does not fit is left in it', () {
       final fitted = FittedWeapon.from(
         weapon: shotgun,
-        carried: [item('tool_suppressor'), item('att_extended_mag')],
+        // Neither fits a pump: the suppressor is not made in 12 ga, and a
+        // rifle magazine has nowhere to go on a weapon §4.2 feeds by hand.
+        carried: [item('tool_suppressor'), item('mag_rifle_545')],
       );
 
       expect(fitted.attachments, isEmpty);
