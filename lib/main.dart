@@ -1148,18 +1148,22 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// answered by throwing it away, and nobody deliberates over that.
   Future<void> _drop(CarriedItem line, int count) async {
     final character = _character;
-    final fix = _snapshot?.displayFix;
+    // ⚠️ Sticky, and the order matters more than the source did.
+    //
+    // This took the line out of the pack, saved, and *then* returned without
+    // putting anything on the ground when there was no position — so dropping
+    // something in a shelter destroyed it. Nothing leaves the pack now until
+    // there is somewhere for it to land.
+    final at = _standingAt.value;
+    if (character == null || at == null) return;
+
     // The copy that was pointed at, not any copy with that id: two knives at
     // different conditions are two different things to own.
     final next = _inventory.value.removeLine(line, count: count);
-    if (character == null || next == null) return;
+    if (next == null) return;
 
     _inventory.value = next;
     await _saveInventory();
-
-    // No position, nowhere to put it. Better than inventing a place: a marker
-    // where the player never stood is a walk taken for nothing.
-    if (fix == null) return;
 
     final store = DroppedStore(widget.session.db);
     await store.drop(
@@ -1173,7 +1177,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         pagesRead: line.pagesRead,
         // §5.6.3: the sights go down with the rifle, and come back up with it.
         attachments: line.attachments,
-        position: GeoPoint(fix.latitude, fix.longitude),
+        position: at,
         droppedAt: DateTime.now().toUtc(),
       ),
     );
@@ -1238,7 +1242,12 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       }
     }
 
-    final fix = _snapshot?.displayFix;
+    // ⚠️ Sticky, and never the null island. A meal begun with no position
+    // anchored itself at 0°N 0°E, which is several thousand kilometres from
+    // wherever the player is standing — so the stillness test saw them move
+    // that far on the next fix and cancelled the meal.
+    final at = _standingAt.value;
+
     // Half a bottle takes half as long to finish, which is what makes putting
     // it down and coming back to it a real option rather than a punishment.
     final seconds = (use.duration.inSeconds * line.portion).round();
@@ -1246,9 +1255,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     _usingLine.value = line;
     setState(() {
       _search.value = Search.using(
-        at: fix == null
-            ? const GeoPoint(0, 0)
-            : GeoPoint(fix.latitude, fix.longitude),
+        at: at ?? const GeoPoint(0, 0),
         now: DateTime.now().toUtc(),
         itemId: line.itemId,
         duration: Duration(seconds: seconds < 1 ? 1 : seconds),
@@ -1366,9 +1373,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// same walk, which makes none of them a decision.
   void _showMarker(MapMarker? marker) {
     final catalogue = _catalogue;
-    final fix = _snapshot?.displayFix;
-    if (catalogue == null || fix == null) return;
-    final at = GeoPoint(fix.latitude, fix.longitude);
+    // Sticky: tapping a dot from indoors did nothing at all.
+    final at = _standingAt.value;
+    if (catalogue == null || at == null) return;
 
     // §5.5.1: a tap on empty street lets the target go. Aiming is where the
     // player's attention is, and pointing somewhere else is how a person says
@@ -3437,18 +3444,29 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     _searchTickedAt = now;
 
     final snapshot = _snapshot;
-    // The smoothed position, not the raw one: the raw fix jumps around by
-    // metres between buildings and the player has not moved (§3.2).
-    final fix = snapshot?.displayFix;
+
+    // ⚠️ The sticky position, and this is the seventh time this line has been
+    // the bug. Reported from a shelter as "Przeszukanie przerwane: brak
+    // pewnej pozycji" — the search started (that was the last fix) and was
+    // then cancelled a second later by this.
+    final at = _standingAt.value;
+
+    // §2.1a.4 switches the receiver off under a roof, which reports as
+    // `unavailable` — the same value as a refused permission. Both halves of
+    // the old test therefore failed in a shelter and nowhere else.
+    final sheltered = snapshot?.state.zone.isSheltered ?? false;
 
     final next = search.advance(
       delta,
-      at: fix == null ? null : GeoPoint(fix.latitude, fix.longitude),
-      // §2.1a: a search counts only while the game can still see where the
-      // player is. A position it has stopped trusting cannot answer the one
-      // question a search asks — did they stand still?
+      at: at,
+      // §2.1a: a search counts only while the game can still say where the
+      // player is — that is the one question a search asks, did they stand
+      // still. Being under a roof answers it better than a fix does: the
+      // receiver is off *because* the character is somewhere known and not
+      // moving, so silence there is the game working, not the game blind.
       present:
-          snapshot != null && snapshot.signal != PositionSignal.unavailable,
+          at != null &&
+          (sheltered || snapshot?.signal != PositionSignal.unavailable),
     );
 
     if (next.isRunning) {
@@ -3545,13 +3563,16 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   };
 
   void _startBreach(BarrierBreach breach) {
-    final fix = _snapshot?.displayFix;
+    // ⚠️ Sticky. The car outside the shelter has a door on it, so opening it
+    // goes through here rather than through the search — which is why "I
+    // cannot search the car from my shelter" survived a fix to the search.
+    final at = _standingAt.value;
     final box = _boxInReach();
-    if (fix == null || box == null || _search.value != null) return;
+    if (at == null || box == null || _search.value != null) return;
 
     setState(() {
       _search.value = Search.breach(
-        at: GeoPoint(fix.latitude, fix.longitude),
+        at: at,
         now: DateTime.now().toUtc(),
         poiId: box.poiId,
         breach: breach,
