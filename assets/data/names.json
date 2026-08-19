@@ -485,6 +485,13 @@
     "item.tool_bolt_cutters.name": {
       "pl": "Nożyce do kłódek",
       "en": "Bolt cutters"
-    }
+    },
+    "item.mag_pistol_9mm.name": {"pl": "Magazynek pistoletowy 9x19 (15)", "en": "Pistol magazine 9x19 (15)"},
+    "item.mag_pistol_9mm_ext.name": {"pl": "Magazynek przedłużony 9x19 (25)", "en": "Extended magazine 9x19 (25)"},
+    "item.mag_smg_9mm.name": {"pl": "Magazynek do PM 9x19 (30)", "en": "SMG magazine 9x19 (30)"},
+    "item.mag_rifle_22lr.name": {"pl": "Magazynek karabinkowy .22 LR (10)", "en": "Rifle magazine .22 LR (10)"},
+    "item.mag_rifle_545.name": {"pl": "Magazynek karabinkowy 5,45x39 (30)", "en": "Rifle magazine 5.45x39 (30)"},
+    "item.mag_rifle_545_drum.name": {"pl": "Magazynek bębnowy 5,45x39 (60)", "en": "Drum magazine 5.45x39 (60)"},
+    "item.mag_rifle_762x39.name": {"pl": "Magazynek karabinkowy 7,62x39 (30)", "en": "Rifle magazine 7.62x39 (30)"}
   }
 }

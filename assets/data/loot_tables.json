@@ -589,6 +589,11 @@
           "min": 1,
           "max": 1
         }
+      ,
+        {"item": "mag_pistol_9mm", "weight": 14, "min": 1, "max": 2},
+        {"item": "mag_pistol_9mm_ext", "weight": 5, "min": 1, "max": 1},
+        {"item": "mag_smg_9mm", "weight": 6, "min": 1, "max": 1},
+        {"item": "mag_rifle_22lr", "weight": 12, "min": 1, "max": 2}
       ],
       "barrier": "door"
     },
@@ -1023,6 +1028,11 @@
           "min": 1,
           "max": 1
         }
+      ,
+        {"item": "mag_rifle_545", "weight": 14, "min": 1, "max": 3},
+        {"item": "mag_rifle_545_drum", "weight": 3, "min": 1, "max": 1},
+        {"item": "mag_rifle_762x39", "weight": 12, "min": 1, "max": 3},
+        {"item": "mag_smg_9mm", "weight": 8, "min": 1, "max": 2}
       ],
       "barrier": "padlock"
     },
@@ -1938,6 +1948,8 @@
           "min": 1,
           "max": 4
         }
+      ,
+        {"item": "mag_pistol_9mm", "weight": 10, "min": 1, "max": 1}
       ],
       "generated": true,
       "osm": [
