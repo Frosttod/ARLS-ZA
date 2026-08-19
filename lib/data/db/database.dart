@@ -29,7 +29,7 @@ import 'tables.dart';
 part 'database.g.dart';
 
 /// Bumped only alongside a migration step in [_migration]. Never reused.
-const int kSchemaVersion = 20;
+const int kSchemaVersion = 21;
 
 /// Keys used in [MetaEntries].
 abstract final class MetaKeys {
@@ -73,7 +73,7 @@ class SaveDatabase extends _$SaveDatabase {
   /// follow a constant reference. `schema_test.dart` keeps it in step with
   /// [kSchemaVersion].
   @override
-  int get schemaVersion => 20;
+  int get schemaVersion => 21;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -240,6 +240,30 @@ class SaveDatabase extends _$SaveDatabase {
         // since the shelter was built — twenty-five kilograms of barricaded
         // house — and there was nowhere to put anything in it.
         await m.createTable(shelterItems);
+      }
+
+      // §5.3: rounds live on the item now. They were one integer in the
+      // interface and nothing wrote it down, so reloading took thirty rounds
+      // out of the pack and closing the app destroyed them. Nullable, so an
+      // existing row reads as "not a thing that holds rounds".
+      //
+      // ⚠️ Three guarded steps, same shape as v5's, and the guard is the whole
+      // point: `createTable` builds a table from *today's* definition, so a
+      // save old enough to have the table created during its own migration
+      // already has the column. Adding it again is a duplicate-column error,
+      // which is exactly what the migration test caught.
+      if (from >= 3 && from < 21) {
+        await m.addColumn(inventoryLines, inventoryLines.rounds);
+      }
+
+      // Same shape as v5's: ground_items was created in v7.
+      if (from >= 7 && from < 21) {
+        await m.addColumn(groundItems, groundItems.rounds);
+      }
+
+      // Same shape as v5's: shelter_items was created in v20.
+      if (from >= 20 && from < 21) {
+        await m.addColumn(shelterItems, shelterItems.rounds);
       }
 
       await _writeSchemaVersion(to);

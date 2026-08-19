@@ -32,6 +32,7 @@ class DroppedStore {
           attachments: row.attachments.isEmpty
               ? const []
               : row.attachments.split(','),
+          rounds: row.rounds,
           position: GeoPoint(row.latitude, row.longitude),
           droppedAt: row.droppedAt,
         ),
@@ -55,6 +56,7 @@ class DroppedStore {
       pagesTotal: Value(item.pagesTotal),
       pagesRead: Value(item.pagesRead),
       attachments: Value(item.attachments.join(',')),
+      rounds: Value(item.rounds),
     ),
   );
 

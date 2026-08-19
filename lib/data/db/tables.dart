@@ -268,6 +268,16 @@ class InventoryLines extends Table {
   /// its own. Empty for everything that is not a weapon with something on it.
   TextColumn get attachments => text().withDefault(const Constant(''))();
 
+  /// §5.3: how many rounds are in this piece.
+  ///
+  /// ⚠️ On the item because that is where they are. It was one integer in the
+  /// interface — what is in the gun — and nothing wrote it down: reloading
+  /// took thirty rounds out of the pack, put them in a field in memory, and
+  /// closing the app destroyed them. A player lost a magazine every restart.
+  ///
+  /// Null for everything that cannot hold rounds, which is nearly everything.
+  IntColumn get rounds => integer().nullable()();
+
   @override
   List<String> get customConstraints => [
     'FOREIGN KEY (profile_id) REFERENCES profiles (id) ON DELETE CASCADE',
@@ -302,6 +312,16 @@ class ShelterItems extends Table {
   TextColumn get noteId => text().nullable()();
   RealColumn get portion => real().withDefault(const Constant(1))();
   TextColumn get attachments => text().withDefault(const Constant(''))();
+
+  /// §5.3: how many rounds are in this piece.
+  ///
+  /// ⚠️ On the item because that is where they are. It was one integer in the
+  /// interface — what is in the gun — and nothing wrote it down: reloading
+  /// took thirty rounds out of the pack, put them in a field in memory, and
+  /// closing the app destroyed them. A player lost a magazine every restart.
+  ///
+  /// Null for everything that cannot hold rounds, which is nearly everything.
+  IntColumn get rounds => integer().nullable()();
 
   @override
   List<String> get customConstraints => [
@@ -394,6 +414,10 @@ class GroundItems extends Table {
   /// (§5.6.3), evaporating on the pavement because the row they were written
   /// to had nowhere to put them.
   TextColumn get attachments => text().withDefault(const Constant(''))();
+
+  /// §5.3: how many rounds are in this piece. A loaded rifle put down on the
+  /// pavement is still loaded when it is picked up.
+  IntColumn get rounds => integer().nullable()();
 
   RealColumn get latitude => real()();
   RealColumn get longitude => real()();

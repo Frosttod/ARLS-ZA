@@ -36,6 +36,7 @@ class DroppedItem {
     this.pagesTotal,
     this.pagesRead = 0,
     this.attachments = const [],
+    this.rounds,
   });
 
   /// Row id, or zero for one that has not been written yet.
@@ -54,6 +55,10 @@ class DroppedItem {
   /// §5.6.3: what is bolted to it, by item id. Putting a rifle down is not a
   /// way to lose its sights.
   final List<String> attachments;
+
+  /// §5.3: how many rounds are in this piece. A loaded rifle put down on the
+  /// pavement is still loaded when it is picked up.
+  final int? rounds;
 
   final GeoPoint position;
   final DateTime droppedAt;

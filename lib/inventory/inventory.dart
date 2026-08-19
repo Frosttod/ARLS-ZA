@@ -68,6 +68,7 @@ class CarriedItem {
     this.noteId,
     this.portion = 1,
     this.attachments = const [],
+    this.rounds,
   });
 
   final String itemId;
@@ -91,6 +92,20 @@ class CarriedItem {
   /// a town, and the other is the one to leave.
   final List<String> attachments;
 
+  /// §5.3: how many rounds are in this piece, or null for anything that does
+  /// not hold any.
+  ///
+  /// ⚠️ On the piece, because that is where they are. It was one integer in
+  /// the interface — what is in the gun — and nothing ever wrote it down:
+  /// reloading took thirty rounds out of the pack, put them in a field in
+  /// memory, and closing the app destroyed them. A player lost a magazine
+  /// every restart.
+  ///
+  /// It also means a loaded rifle stays loaded through being put on a shelf,
+  /// dropped on the pavement and picked up again, because all three carry the
+  /// line rather than the id.
+  final int? rounds;
+
   /// How much of this piece is left, 0–1 (§4.7).
   ///
   /// A bottle put down half way through is half a bottle, not a wasted one and
@@ -105,6 +120,7 @@ class CarriedItem {
     int? pagesRead,
     double? portion,
     List<String>? attachments,
+    int? rounds,
   }) => CarriedItem(
     itemId: itemId,
     count: count ?? this.count,
@@ -114,6 +130,7 @@ class CarriedItem {
     noteId: noteId,
     portion: portion ?? this.portion,
     attachments: attachments ?? this.attachments,
+    rounds: rounds ?? this.rounds,
   );
 
   /// Mass of this line, using the rolled page count where there is one.
@@ -424,6 +441,18 @@ class Inventory {
   /// Refused where it does not fit the weapon, where there is no rail left, or
   /// where one of the same is already on — a second red dot on one rifle is
   /// not a thing, and the arithmetic would happily stack it.
+  /// Replaces [line] with [next], wherever it is.
+  ///
+  /// ⚠️ Both lists, because the one weapon whose state changes most is the one
+  /// in the hand, and the hand is `worn`. The same trap [attach] documents.
+  Inventory withLine(CarriedItem line, CarriedItem next) => Inventory(
+    carried: [
+      for (final entry in carried) identical(entry, line) ? next : entry,
+    ],
+    worn: [for (final entry in worn) identical(entry, line) ? next : entry],
+    packId: packId,
+  );
+
   Inventory attach(
     CarriedItem line,
     CarriedItem attachment,

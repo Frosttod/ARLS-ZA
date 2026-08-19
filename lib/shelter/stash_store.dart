@@ -47,6 +47,7 @@ class StashStore {
               attachments: row.attachments.isEmpty
                   ? const []
                   : row.attachments.split(','),
+              rounds: row.rounds,
             ),
       ],
     );
@@ -66,6 +67,7 @@ class StashStore {
             noteId: Value(line.noteId),
             portion: Value(line.portion),
             attachments: Value(line.attachments.join(',')),
+            rounds: Value(line.rounds),
           ),
       ]);
 }

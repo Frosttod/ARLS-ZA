@@ -408,7 +408,44 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   DateTime? _lastSwing;
 
   /// §5.3: what is in the weapon, as opposed to in the pack.
-  int _loaded = 0;
+  ///
+  /// ⚠️ Read off the weapon rather than held here, and it was a plain field
+  /// for months. Nothing wrote it down: reloading took thirty rounds out of
+  /// the pack, put them in this integer, and closing the app destroyed them.
+  /// A player lost a magazine on every restart, which is the worst kind of
+  /// bug — it costs them something real and it looks like nothing happened.
+  int get _loaded => _weaponLine?.rounds ?? 0;
+
+  /// The line the weapon in hand is, so its rounds can be written back.
+  ///
+  /// §5.6.3 already made this distinction for attachments: the weapon in the
+  /// hand is a *line* in `worn`, not an id, because two rifles are two rifles.
+  /// What is in one of them belongs to the same place.
+  CarriedItem? get _weaponLine {
+    final catalogue = _catalogue;
+    if (catalogue == null) return null;
+
+    for (final line in _inventory.value.worn) {
+      final item = catalogue[line.itemId];
+      if (item != null && item.kind == ItemKind.firearm) return line;
+    }
+    return null;
+  }
+
+  /// Puts [rounds] in the weapon in hand and writes it down.
+  ///
+  /// Every path that changes what is in the gun goes through here, so there is
+  /// one place that can forget to save and it does not.
+  void _setLoaded(int rounds) {
+    final line = _weaponLine;
+    if (line == null) return;
+
+    _inventory.value = _inventory.value.withLine(
+      line,
+      line.copyWith(rounds: rounds < 0 ? 0 : rounds),
+    );
+    unawaited(_saveInventory());
+  }
 
   /// §5.5.4: a magazine change in progress, and the thing that can end it.
   Reload? _reload;
@@ -1515,7 +1552,32 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   List<GroundPile> _pilesInReach() {
     final at = _standingAt.value;
     if (at == null) return const [];
-    return pilesWithin(_dropped.value, at, reachM: kStillnessM);
+
+    // ⚠️ A pile is picked up from as far as its *place* is searched from.
+    //
+    // §10.2 gives a shop fifty metres because its door is not where the map
+    // puts its dot — and a search drops what it found at that dot. With one
+    // fifteen-metre rule for picking up, a player could turn a shop over from
+    // the pavement and then not be able to reach what they had just found.
+    //
+    // What the player dropped themselves, and what a body left, keep the
+    // arm's length of §4.8: those really are at their feet.
+    final reach = _reachForPilesAt(at);
+    return pilesWithin(_dropped.value, at, reachM: reach);
+  }
+
+  /// The widest reach any place near [at] grants, or §4.8's arm's length.
+  double _reachForPilesAt(GeoPoint at) {
+    var reach = kStillnessM;
+
+    for (final box in _boxes) {
+      final size = _world?.tables[box.tableId]?.size ?? PlaceSize.normal;
+      final placeReach = searchReachFor(size);
+      if (box.position.distanceTo(at) > placeReach) continue;
+      if (placeReach > reach) reach = placeReach;
+    }
+
+    return reach;
   }
 
   /// Opens the heap at the player's feet.
@@ -1936,7 +1998,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     );
 
     // The round is gone whatever happened to the shot.
-    setState(() => _loaded -= 1);
+    setState(() => _setLoaded(_loaded - 1));
     if (!mounted) return;
 
     final l10n = L10n.of(context);
@@ -2053,7 +2115,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     }
 
     setState(() {
-      _loaded -= 1;
+      _setLoaded(_loaded - 1);
 
       _combat = _combat.heard(
         NoiseEvent(
@@ -2192,10 +2254,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
     setState(() {
       _inventory.value = inventory;
-      _loaded += rounds;
+      _setLoaded(_loaded + rounds);
       _reload = null;
     });
-    unawaited(_saveInventory());
   }
 
   /// Starts a magazine change (§5.3).

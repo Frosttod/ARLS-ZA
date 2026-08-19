@@ -3657,6 +3657,15 @@ class $InventoryLinesTable extends InventoryLines
     requiredDuringInsert: false,
     defaultValue: const Constant(''),
   );
+  static const VerificationMeta _roundsMeta = const VerificationMeta('rounds');
+  @override
+  late final GeneratedColumn<int> rounds = GeneratedColumn<int>(
+    'rounds',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -3670,6 +3679,7 @@ class $InventoryLinesTable extends InventoryLines
     noteId,
     portion,
     attachments,
+    rounds,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -3753,6 +3763,12 @@ class $InventoryLinesTable extends InventoryLines
         ),
       );
     }
+    if (data.containsKey('rounds')) {
+      context.handle(
+        _roundsMeta,
+        rounds.isAcceptableOrUnknown(data['rounds']!, _roundsMeta),
+      );
+    }
     return context;
   }
 
@@ -3806,6 +3822,10 @@ class $InventoryLinesTable extends InventoryLines
         DriftSqlType.string,
         data['${effectivePrefix}attachments'],
       )!,
+      rounds: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}rounds'],
+      ),
     );
   }
 
@@ -3853,6 +3873,16 @@ class InventoryLine extends DataClass implements Insertable<InventoryLine> {
   /// correct and would also mean a join for something that is never queried on
   /// its own. Empty for everything that is not a weapon with something on it.
   final String attachments;
+
+  /// §5.3: how many rounds are in this piece.
+  ///
+  /// ⚠️ On the item because that is where they are. It was one integer in the
+  /// interface — what is in the gun — and nothing wrote it down: reloading
+  /// took thirty rounds out of the pack, put them in a field in memory, and
+  /// closing the app destroyed them. A player lost a magazine every restart.
+  ///
+  /// Null for everything that cannot hold rounds, which is nearly everything.
+  final int? rounds;
   const InventoryLine({
     required this.id,
     required this.profileId,
@@ -3865,6 +3895,7 @@ class InventoryLine extends DataClass implements Insertable<InventoryLine> {
     this.noteId,
     required this.portion,
     required this.attachments,
+    this.rounds,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -3886,6 +3917,9 @@ class InventoryLine extends DataClass implements Insertable<InventoryLine> {
     }
     map['portion'] = Variable<double>(portion);
     map['attachments'] = Variable<String>(attachments);
+    if (!nullToAbsent || rounds != null) {
+      map['rounds'] = Variable<int>(rounds);
+    }
     return map;
   }
 
@@ -3908,6 +3942,9 @@ class InventoryLine extends DataClass implements Insertable<InventoryLine> {
           : Value(noteId),
       portion: Value(portion),
       attachments: Value(attachments),
+      rounds: rounds == null && nullToAbsent
+          ? const Value.absent()
+          : Value(rounds),
     );
   }
 
@@ -3928,6 +3965,7 @@ class InventoryLine extends DataClass implements Insertable<InventoryLine> {
       noteId: serializer.fromJson<String?>(json['noteId']),
       portion: serializer.fromJson<double>(json['portion']),
       attachments: serializer.fromJson<String>(json['attachments']),
+      rounds: serializer.fromJson<int?>(json['rounds']),
     );
   }
   @override
@@ -3945,6 +3983,7 @@ class InventoryLine extends DataClass implements Insertable<InventoryLine> {
       'noteId': serializer.toJson<String?>(noteId),
       'portion': serializer.toJson<double>(portion),
       'attachments': serializer.toJson<String>(attachments),
+      'rounds': serializer.toJson<int?>(rounds),
     };
   }
 
@@ -3960,6 +3999,7 @@ class InventoryLine extends DataClass implements Insertable<InventoryLine> {
     Value<String?> noteId = const Value.absent(),
     double? portion,
     String? attachments,
+    Value<int?> rounds = const Value.absent(),
   }) => InventoryLine(
     id: id ?? this.id,
     profileId: profileId ?? this.profileId,
@@ -3972,6 +4012,7 @@ class InventoryLine extends DataClass implements Insertable<InventoryLine> {
     noteId: noteId.present ? noteId.value : this.noteId,
     portion: portion ?? this.portion,
     attachments: attachments ?? this.attachments,
+    rounds: rounds.present ? rounds.value : this.rounds,
   );
   InventoryLine copyWithCompanion(InventoryLinesCompanion data) {
     return InventoryLine(
@@ -3990,6 +4031,7 @@ class InventoryLine extends DataClass implements Insertable<InventoryLine> {
       attachments: data.attachments.present
           ? data.attachments.value
           : this.attachments,
+      rounds: data.rounds.present ? data.rounds.value : this.rounds,
     );
   }
 
@@ -4006,7 +4048,8 @@ class InventoryLine extends DataClass implements Insertable<InventoryLine> {
           ..write('pagesRead: $pagesRead, ')
           ..write('noteId: $noteId, ')
           ..write('portion: $portion, ')
-          ..write('attachments: $attachments')
+          ..write('attachments: $attachments, ')
+          ..write('rounds: $rounds')
           ..write(')'))
         .toString();
   }
@@ -4024,6 +4067,7 @@ class InventoryLine extends DataClass implements Insertable<InventoryLine> {
     noteId,
     portion,
     attachments,
+    rounds,
   );
   @override
   bool operator ==(Object other) =>
@@ -4039,7 +4083,8 @@ class InventoryLine extends DataClass implements Insertable<InventoryLine> {
           other.pagesRead == this.pagesRead &&
           other.noteId == this.noteId &&
           other.portion == this.portion &&
-          other.attachments == this.attachments);
+          other.attachments == this.attachments &&
+          other.rounds == this.rounds);
 }
 
 class InventoryLinesCompanion extends UpdateCompanion<InventoryLine> {
@@ -4054,6 +4099,7 @@ class InventoryLinesCompanion extends UpdateCompanion<InventoryLine> {
   final Value<String?> noteId;
   final Value<double> portion;
   final Value<String> attachments;
+  final Value<int?> rounds;
   const InventoryLinesCompanion({
     this.id = const Value.absent(),
     this.profileId = const Value.absent(),
@@ -4066,6 +4112,7 @@ class InventoryLinesCompanion extends UpdateCompanion<InventoryLine> {
     this.noteId = const Value.absent(),
     this.portion = const Value.absent(),
     this.attachments = const Value.absent(),
+    this.rounds = const Value.absent(),
   });
   InventoryLinesCompanion.insert({
     this.id = const Value.absent(),
@@ -4079,6 +4126,7 @@ class InventoryLinesCompanion extends UpdateCompanion<InventoryLine> {
     this.noteId = const Value.absent(),
     this.portion = const Value.absent(),
     this.attachments = const Value.absent(),
+    this.rounds = const Value.absent(),
   }) : profileId = Value(profileId),
        itemId = Value(itemId);
   static Insertable<InventoryLine> custom({
@@ -4093,6 +4141,7 @@ class InventoryLinesCompanion extends UpdateCompanion<InventoryLine> {
     Expression<String>? noteId,
     Expression<double>? portion,
     Expression<String>? attachments,
+    Expression<int>? rounds,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -4106,6 +4155,7 @@ class InventoryLinesCompanion extends UpdateCompanion<InventoryLine> {
       if (noteId != null) 'note_id': noteId,
       if (portion != null) 'portion': portion,
       if (attachments != null) 'attachments': attachments,
+      if (rounds != null) 'rounds': rounds,
     });
   }
 
@@ -4121,6 +4171,7 @@ class InventoryLinesCompanion extends UpdateCompanion<InventoryLine> {
     Value<String?>? noteId,
     Value<double>? portion,
     Value<String>? attachments,
+    Value<int?>? rounds,
   }) {
     return InventoryLinesCompanion(
       id: id ?? this.id,
@@ -4134,6 +4185,7 @@ class InventoryLinesCompanion extends UpdateCompanion<InventoryLine> {
       noteId: noteId ?? this.noteId,
       portion: portion ?? this.portion,
       attachments: attachments ?? this.attachments,
+      rounds: rounds ?? this.rounds,
     );
   }
 
@@ -4173,6 +4225,9 @@ class InventoryLinesCompanion extends UpdateCompanion<InventoryLine> {
     if (attachments.present) {
       map['attachments'] = Variable<String>(attachments.value);
     }
+    if (rounds.present) {
+      map['rounds'] = Variable<int>(rounds.value);
+    }
     return map;
   }
 
@@ -4189,7 +4244,8 @@ class InventoryLinesCompanion extends UpdateCompanion<InventoryLine> {
           ..write('pagesRead: $pagesRead, ')
           ..write('noteId: $noteId, ')
           ..write('portion: $portion, ')
-          ..write('attachments: $attachments')
+          ..write('attachments: $attachments, ')
+          ..write('rounds: $rounds')
           ..write(')'))
         .toString();
   }
@@ -5008,6 +5064,15 @@ class $GroundItemsTable extends GroundItems
     requiredDuringInsert: false,
     defaultValue: const Constant(''),
   );
+  static const VerificationMeta _roundsMeta = const VerificationMeta('rounds');
+  @override
+  late final GeneratedColumn<int> rounds = GeneratedColumn<int>(
+    'rounds',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _latitudeMeta = const VerificationMeta(
     'latitude',
   );
@@ -5051,6 +5116,7 @@ class $GroundItemsTable extends GroundItems
     pagesTotal,
     pagesRead,
     attachments,
+    rounds,
     latitude,
     longitude,
     droppedAt,
@@ -5119,6 +5185,12 @@ class $GroundItemsTable extends GroundItems
         ),
       );
     }
+    if (data.containsKey('rounds')) {
+      context.handle(
+        _roundsMeta,
+        rounds.isAcceptableOrUnknown(data['rounds']!, _roundsMeta),
+      );
+    }
     if (data.containsKey('latitude')) {
       context.handle(
         _latitudeMeta,
@@ -5184,6 +5256,10 @@ class $GroundItemsTable extends GroundItems
         DriftSqlType.string,
         data['${effectivePrefix}attachments'],
       )!,
+      rounds: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}rounds'],
+      ),
       latitude: attachedDatabase.typeMapping.read(
         DriftSqlType.double,
         data['${effectivePrefix}latitude'],
@@ -5225,6 +5301,10 @@ class GroundItem extends DataClass implements Insertable<GroundItem> {
   /// (§5.6.3), evaporating on the pavement because the row they were written
   /// to had nowhere to put them.
   final String attachments;
+
+  /// §5.3: how many rounds are in this piece. A loaded rifle put down on the
+  /// pavement is still loaded when it is picked up.
+  final int? rounds;
   final double latitude;
   final double longitude;
   final DateTime droppedAt;
@@ -5237,6 +5317,7 @@ class GroundItem extends DataClass implements Insertable<GroundItem> {
     this.pagesTotal,
     required this.pagesRead,
     required this.attachments,
+    this.rounds,
     required this.latitude,
     required this.longitude,
     required this.droppedAt,
@@ -5256,6 +5337,9 @@ class GroundItem extends DataClass implements Insertable<GroundItem> {
     }
     map['pages_read'] = Variable<int>(pagesRead);
     map['attachments'] = Variable<String>(attachments);
+    if (!nullToAbsent || rounds != null) {
+      map['rounds'] = Variable<int>(rounds);
+    }
     map['latitude'] = Variable<double>(latitude);
     map['longitude'] = Variable<double>(longitude);
     map['dropped_at'] = Variable<DateTime>(droppedAt);
@@ -5276,6 +5360,9 @@ class GroundItem extends DataClass implements Insertable<GroundItem> {
           : Value(pagesTotal),
       pagesRead: Value(pagesRead),
       attachments: Value(attachments),
+      rounds: rounds == null && nullToAbsent
+          ? const Value.absent()
+          : Value(rounds),
       latitude: Value(latitude),
       longitude: Value(longitude),
       droppedAt: Value(droppedAt),
@@ -5296,6 +5383,7 @@ class GroundItem extends DataClass implements Insertable<GroundItem> {
       pagesTotal: serializer.fromJson<int?>(json['pagesTotal']),
       pagesRead: serializer.fromJson<int>(json['pagesRead']),
       attachments: serializer.fromJson<String>(json['attachments']),
+      rounds: serializer.fromJson<int?>(json['rounds']),
       latitude: serializer.fromJson<double>(json['latitude']),
       longitude: serializer.fromJson<double>(json['longitude']),
       droppedAt: serializer.fromJson<DateTime>(json['droppedAt']),
@@ -5313,6 +5401,7 @@ class GroundItem extends DataClass implements Insertable<GroundItem> {
       'pagesTotal': serializer.toJson<int?>(pagesTotal),
       'pagesRead': serializer.toJson<int>(pagesRead),
       'attachments': serializer.toJson<String>(attachments),
+      'rounds': serializer.toJson<int?>(rounds),
       'latitude': serializer.toJson<double>(latitude),
       'longitude': serializer.toJson<double>(longitude),
       'droppedAt': serializer.toJson<DateTime>(droppedAt),
@@ -5328,6 +5417,7 @@ class GroundItem extends DataClass implements Insertable<GroundItem> {
     Value<int?> pagesTotal = const Value.absent(),
     int? pagesRead,
     String? attachments,
+    Value<int?> rounds = const Value.absent(),
     double? latitude,
     double? longitude,
     DateTime? droppedAt,
@@ -5340,6 +5430,7 @@ class GroundItem extends DataClass implements Insertable<GroundItem> {
     pagesTotal: pagesTotal.present ? pagesTotal.value : this.pagesTotal,
     pagesRead: pagesRead ?? this.pagesRead,
     attachments: attachments ?? this.attachments,
+    rounds: rounds.present ? rounds.value : this.rounds,
     latitude: latitude ?? this.latitude,
     longitude: longitude ?? this.longitude,
     droppedAt: droppedAt ?? this.droppedAt,
@@ -5358,6 +5449,7 @@ class GroundItem extends DataClass implements Insertable<GroundItem> {
       attachments: data.attachments.present
           ? data.attachments.value
           : this.attachments,
+      rounds: data.rounds.present ? data.rounds.value : this.rounds,
       latitude: data.latitude.present ? data.latitude.value : this.latitude,
       longitude: data.longitude.present ? data.longitude.value : this.longitude,
       droppedAt: data.droppedAt.present ? data.droppedAt.value : this.droppedAt,
@@ -5375,6 +5467,7 @@ class GroundItem extends DataClass implements Insertable<GroundItem> {
           ..write('pagesTotal: $pagesTotal, ')
           ..write('pagesRead: $pagesRead, ')
           ..write('attachments: $attachments, ')
+          ..write('rounds: $rounds, ')
           ..write('latitude: $latitude, ')
           ..write('longitude: $longitude, ')
           ..write('droppedAt: $droppedAt')
@@ -5392,6 +5485,7 @@ class GroundItem extends DataClass implements Insertable<GroundItem> {
     pagesTotal,
     pagesRead,
     attachments,
+    rounds,
     latitude,
     longitude,
     droppedAt,
@@ -5408,6 +5502,7 @@ class GroundItem extends DataClass implements Insertable<GroundItem> {
           other.pagesTotal == this.pagesTotal &&
           other.pagesRead == this.pagesRead &&
           other.attachments == this.attachments &&
+          other.rounds == this.rounds &&
           other.latitude == this.latitude &&
           other.longitude == this.longitude &&
           other.droppedAt == this.droppedAt);
@@ -5422,6 +5517,7 @@ class GroundItemsCompanion extends UpdateCompanion<GroundItem> {
   final Value<int?> pagesTotal;
   final Value<int> pagesRead;
   final Value<String> attachments;
+  final Value<int?> rounds;
   final Value<double> latitude;
   final Value<double> longitude;
   final Value<DateTime> droppedAt;
@@ -5434,6 +5530,7 @@ class GroundItemsCompanion extends UpdateCompanion<GroundItem> {
     this.pagesTotal = const Value.absent(),
     this.pagesRead = const Value.absent(),
     this.attachments = const Value.absent(),
+    this.rounds = const Value.absent(),
     this.latitude = const Value.absent(),
     this.longitude = const Value.absent(),
     this.droppedAt = const Value.absent(),
@@ -5447,6 +5544,7 @@ class GroundItemsCompanion extends UpdateCompanion<GroundItem> {
     this.pagesTotal = const Value.absent(),
     this.pagesRead = const Value.absent(),
     this.attachments = const Value.absent(),
+    this.rounds = const Value.absent(),
     required double latitude,
     required double longitude,
     required DateTime droppedAt,
@@ -5464,6 +5562,7 @@ class GroundItemsCompanion extends UpdateCompanion<GroundItem> {
     Expression<int>? pagesTotal,
     Expression<int>? pagesRead,
     Expression<String>? attachments,
+    Expression<int>? rounds,
     Expression<double>? latitude,
     Expression<double>? longitude,
     Expression<DateTime>? droppedAt,
@@ -5477,6 +5576,7 @@ class GroundItemsCompanion extends UpdateCompanion<GroundItem> {
       if (pagesTotal != null) 'pages_total': pagesTotal,
       if (pagesRead != null) 'pages_read': pagesRead,
       if (attachments != null) 'attachments': attachments,
+      if (rounds != null) 'rounds': rounds,
       if (latitude != null) 'latitude': latitude,
       if (longitude != null) 'longitude': longitude,
       if (droppedAt != null) 'dropped_at': droppedAt,
@@ -5492,6 +5592,7 @@ class GroundItemsCompanion extends UpdateCompanion<GroundItem> {
     Value<int?>? pagesTotal,
     Value<int>? pagesRead,
     Value<String>? attachments,
+    Value<int?>? rounds,
     Value<double>? latitude,
     Value<double>? longitude,
     Value<DateTime>? droppedAt,
@@ -5505,6 +5606,7 @@ class GroundItemsCompanion extends UpdateCompanion<GroundItem> {
       pagesTotal: pagesTotal ?? this.pagesTotal,
       pagesRead: pagesRead ?? this.pagesRead,
       attachments: attachments ?? this.attachments,
+      rounds: rounds ?? this.rounds,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
       droppedAt: droppedAt ?? this.droppedAt,
@@ -5538,6 +5640,9 @@ class GroundItemsCompanion extends UpdateCompanion<GroundItem> {
     if (attachments.present) {
       map['attachments'] = Variable<String>(attachments.value);
     }
+    if (rounds.present) {
+      map['rounds'] = Variable<int>(rounds.value);
+    }
     if (latitude.present) {
       map['latitude'] = Variable<double>(latitude.value);
     }
@@ -5561,6 +5666,7 @@ class GroundItemsCompanion extends UpdateCompanion<GroundItem> {
           ..write('pagesTotal: $pagesTotal, ')
           ..write('pagesRead: $pagesRead, ')
           ..write('attachments: $attachments, ')
+          ..write('rounds: $rounds, ')
           ..write('latitude: $latitude, ')
           ..write('longitude: $longitude, ')
           ..write('droppedAt: $droppedAt')
@@ -7843,6 +7949,15 @@ class $ShelterItemsTable extends ShelterItems
     requiredDuringInsert: false,
     defaultValue: const Constant(''),
   );
+  static const VerificationMeta _roundsMeta = const VerificationMeta('rounds');
+  @override
+  late final GeneratedColumn<int> rounds = GeneratedColumn<int>(
+    'rounds',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -7856,6 +7971,7 @@ class $ShelterItemsTable extends ShelterItems
     noteId,
     portion,
     attachments,
+    rounds,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -7941,6 +8057,12 @@ class $ShelterItemsTable extends ShelterItems
         ),
       );
     }
+    if (data.containsKey('rounds')) {
+      context.handle(
+        _roundsMeta,
+        rounds.isAcceptableOrUnknown(data['rounds']!, _roundsMeta),
+      );
+    }
     return context;
   }
 
@@ -7994,6 +8116,10 @@ class $ShelterItemsTable extends ShelterItems
         DriftSqlType.string,
         data['${effectivePrefix}attachments'],
       )!,
+      rounds: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}rounds'],
+      ),
     );
   }
 
@@ -8018,6 +8144,16 @@ class StashRow extends DataClass implements Insertable<StashRow> {
   final String? noteId;
   final double portion;
   final String attachments;
+
+  /// §5.3: how many rounds are in this piece.
+  ///
+  /// ⚠️ On the item because that is where they are. It was one integer in the
+  /// interface — what is in the gun — and nothing wrote it down: reloading
+  /// took thirty rounds out of the pack, put them in a field in memory, and
+  /// closing the app destroyed them. A player lost a magazine every restart.
+  ///
+  /// Null for everything that cannot hold rounds, which is nearly everything.
+  final int? rounds;
   const StashRow({
     required this.id,
     required this.profileId,
@@ -8030,6 +8166,7 @@ class StashRow extends DataClass implements Insertable<StashRow> {
     this.noteId,
     required this.portion,
     required this.attachments,
+    this.rounds,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -8051,6 +8188,9 @@ class StashRow extends DataClass implements Insertable<StashRow> {
     }
     map['portion'] = Variable<double>(portion);
     map['attachments'] = Variable<String>(attachments);
+    if (!nullToAbsent || rounds != null) {
+      map['rounds'] = Variable<int>(rounds);
+    }
     return map;
   }
 
@@ -8073,6 +8213,9 @@ class StashRow extends DataClass implements Insertable<StashRow> {
           : Value(noteId),
       portion: Value(portion),
       attachments: Value(attachments),
+      rounds: rounds == null && nullToAbsent
+          ? const Value.absent()
+          : Value(rounds),
     );
   }
 
@@ -8093,6 +8236,7 @@ class StashRow extends DataClass implements Insertable<StashRow> {
       noteId: serializer.fromJson<String?>(json['noteId']),
       portion: serializer.fromJson<double>(json['portion']),
       attachments: serializer.fromJson<String>(json['attachments']),
+      rounds: serializer.fromJson<int?>(json['rounds']),
     );
   }
   @override
@@ -8110,6 +8254,7 @@ class StashRow extends DataClass implements Insertable<StashRow> {
       'noteId': serializer.toJson<String?>(noteId),
       'portion': serializer.toJson<double>(portion),
       'attachments': serializer.toJson<String>(attachments),
+      'rounds': serializer.toJson<int?>(rounds),
     };
   }
 
@@ -8125,6 +8270,7 @@ class StashRow extends DataClass implements Insertable<StashRow> {
     Value<String?> noteId = const Value.absent(),
     double? portion,
     String? attachments,
+    Value<int?> rounds = const Value.absent(),
   }) => StashRow(
     id: id ?? this.id,
     profileId: profileId ?? this.profileId,
@@ -8137,6 +8283,7 @@ class StashRow extends DataClass implements Insertable<StashRow> {
     noteId: noteId.present ? noteId.value : this.noteId,
     portion: portion ?? this.portion,
     attachments: attachments ?? this.attachments,
+    rounds: rounds.present ? rounds.value : this.rounds,
   );
   StashRow copyWithCompanion(ShelterItemsCompanion data) {
     return StashRow(
@@ -8155,6 +8302,7 @@ class StashRow extends DataClass implements Insertable<StashRow> {
       attachments: data.attachments.present
           ? data.attachments.value
           : this.attachments,
+      rounds: data.rounds.present ? data.rounds.value : this.rounds,
     );
   }
 
@@ -8171,7 +8319,8 @@ class StashRow extends DataClass implements Insertable<StashRow> {
           ..write('pagesRead: $pagesRead, ')
           ..write('noteId: $noteId, ')
           ..write('portion: $portion, ')
-          ..write('attachments: $attachments')
+          ..write('attachments: $attachments, ')
+          ..write('rounds: $rounds')
           ..write(')'))
         .toString();
   }
@@ -8189,6 +8338,7 @@ class StashRow extends DataClass implements Insertable<StashRow> {
     noteId,
     portion,
     attachments,
+    rounds,
   );
   @override
   bool operator ==(Object other) =>
@@ -8204,7 +8354,8 @@ class StashRow extends DataClass implements Insertable<StashRow> {
           other.pagesRead == this.pagesRead &&
           other.noteId == this.noteId &&
           other.portion == this.portion &&
-          other.attachments == this.attachments);
+          other.attachments == this.attachments &&
+          other.rounds == this.rounds);
 }
 
 class ShelterItemsCompanion extends UpdateCompanion<StashRow> {
@@ -8219,6 +8370,7 @@ class ShelterItemsCompanion extends UpdateCompanion<StashRow> {
   final Value<String?> noteId;
   final Value<double> portion;
   final Value<String> attachments;
+  final Value<int?> rounds;
   const ShelterItemsCompanion({
     this.id = const Value.absent(),
     this.profileId = const Value.absent(),
@@ -8231,6 +8383,7 @@ class ShelterItemsCompanion extends UpdateCompanion<StashRow> {
     this.noteId = const Value.absent(),
     this.portion = const Value.absent(),
     this.attachments = const Value.absent(),
+    this.rounds = const Value.absent(),
   });
   ShelterItemsCompanion.insert({
     this.id = const Value.absent(),
@@ -8244,6 +8397,7 @@ class ShelterItemsCompanion extends UpdateCompanion<StashRow> {
     this.noteId = const Value.absent(),
     this.portion = const Value.absent(),
     this.attachments = const Value.absent(),
+    this.rounds = const Value.absent(),
   }) : profileId = Value(profileId),
        shelterId = Value(shelterId),
        itemId = Value(itemId);
@@ -8259,6 +8413,7 @@ class ShelterItemsCompanion extends UpdateCompanion<StashRow> {
     Expression<String>? noteId,
     Expression<double>? portion,
     Expression<String>? attachments,
+    Expression<int>? rounds,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -8272,6 +8427,7 @@ class ShelterItemsCompanion extends UpdateCompanion<StashRow> {
       if (noteId != null) 'note_id': noteId,
       if (portion != null) 'portion': portion,
       if (attachments != null) 'attachments': attachments,
+      if (rounds != null) 'rounds': rounds,
     });
   }
 
@@ -8287,6 +8443,7 @@ class ShelterItemsCompanion extends UpdateCompanion<StashRow> {
     Value<String?>? noteId,
     Value<double>? portion,
     Value<String>? attachments,
+    Value<int?>? rounds,
   }) {
     return ShelterItemsCompanion(
       id: id ?? this.id,
@@ -8300,6 +8457,7 @@ class ShelterItemsCompanion extends UpdateCompanion<StashRow> {
       noteId: noteId ?? this.noteId,
       portion: portion ?? this.portion,
       attachments: attachments ?? this.attachments,
+      rounds: rounds ?? this.rounds,
     );
   }
 
@@ -8339,6 +8497,9 @@ class ShelterItemsCompanion extends UpdateCompanion<StashRow> {
     if (attachments.present) {
       map['attachments'] = Variable<String>(attachments.value);
     }
+    if (rounds.present) {
+      map['rounds'] = Variable<int>(rounds.value);
+    }
     return map;
   }
 
@@ -8355,7 +8516,8 @@ class ShelterItemsCompanion extends UpdateCompanion<StashRow> {
           ..write('pagesRead: $pagesRead, ')
           ..write('noteId: $noteId, ')
           ..write('portion: $portion, ')
-          ..write('attachments: $attachments')
+          ..write('attachments: $attachments, ')
+          ..write('rounds: $rounds')
           ..write(')'))
         .toString();
   }
@@ -10103,6 +10265,7 @@ typedef $$InventoryLinesTableCreateCompanionBuilder =
       Value<String?> noteId,
       Value<double> portion,
       Value<String> attachments,
+      Value<int?> rounds,
     });
 typedef $$InventoryLinesTableUpdateCompanionBuilder =
     InventoryLinesCompanion Function({
@@ -10117,6 +10280,7 @@ typedef $$InventoryLinesTableUpdateCompanionBuilder =
       Value<String?> noteId,
       Value<double> portion,
       Value<String> attachments,
+      Value<int?> rounds,
     });
 
 class $$InventoryLinesTableFilterComposer
@@ -10180,6 +10344,11 @@ class $$InventoryLinesTableFilterComposer
 
   ColumnFilters<String> get attachments => $composableBuilder(
     column: $table.attachments,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get rounds => $composableBuilder(
+    column: $table.rounds,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -10247,6 +10416,11 @@ class $$InventoryLinesTableOrderingComposer
     column: $table.attachments,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<int> get rounds => $composableBuilder(
+    column: $table.rounds,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$InventoryLinesTableAnnotationComposer
@@ -10294,6 +10468,9 @@ class $$InventoryLinesTableAnnotationComposer
     column: $table.attachments,
     builder: (column) => column,
   );
+
+  GeneratedColumn<int> get rounds =>
+      $composableBuilder(column: $table.rounds, builder: (column) => column);
 }
 
 class $$InventoryLinesTableTableManager
@@ -10340,6 +10517,7 @@ class $$InventoryLinesTableTableManager
                 Value<String?> noteId = const Value.absent(),
                 Value<double> portion = const Value.absent(),
                 Value<String> attachments = const Value.absent(),
+                Value<int?> rounds = const Value.absent(),
               }) => InventoryLinesCompanion(
                 id: id,
                 profileId: profileId,
@@ -10352,6 +10530,7 @@ class $$InventoryLinesTableTableManager
                 noteId: noteId,
                 portion: portion,
                 attachments: attachments,
+                rounds: rounds,
               ),
           createCompanionCallback:
               ({
@@ -10366,6 +10545,7 @@ class $$InventoryLinesTableTableManager
                 Value<String?> noteId = const Value.absent(),
                 Value<double> portion = const Value.absent(),
                 Value<String> attachments = const Value.absent(),
+                Value<int?> rounds = const Value.absent(),
               }) => InventoryLinesCompanion.insert(
                 id: id,
                 profileId: profileId,
@@ -10378,6 +10558,7 @@ class $$InventoryLinesTableTableManager
                 noteId: noteId,
                 portion: portion,
                 attachments: attachments,
+                rounds: rounds,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
@@ -10737,6 +10918,7 @@ typedef $$GroundItemsTableCreateCompanionBuilder =
       Value<int?> pagesTotal,
       Value<int> pagesRead,
       Value<String> attachments,
+      Value<int?> rounds,
       required double latitude,
       required double longitude,
       required DateTime droppedAt,
@@ -10751,6 +10933,7 @@ typedef $$GroundItemsTableUpdateCompanionBuilder =
       Value<int?> pagesTotal,
       Value<int> pagesRead,
       Value<String> attachments,
+      Value<int?> rounds,
       Value<double> latitude,
       Value<double> longitude,
       Value<DateTime> droppedAt,
@@ -10802,6 +10985,11 @@ class $$GroundItemsTableFilterComposer
 
   ColumnFilters<String> get attachments => $composableBuilder(
     column: $table.attachments,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get rounds => $composableBuilder(
+    column: $table.rounds,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -10870,6 +11058,11 @@ class $$GroundItemsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get rounds => $composableBuilder(
+    column: $table.rounds,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<double> get latitude => $composableBuilder(
     column: $table.latitude,
     builder: (column) => ColumnOrderings(column),
@@ -10923,6 +11116,9 @@ class $$GroundItemsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<int> get rounds =>
+      $composableBuilder(column: $table.rounds, builder: (column) => column);
+
   GeneratedColumn<double> get latitude =>
       $composableBuilder(column: $table.latitude, builder: (column) => column);
 
@@ -10972,6 +11168,7 @@ class $$GroundItemsTableTableManager
                 Value<int?> pagesTotal = const Value.absent(),
                 Value<int> pagesRead = const Value.absent(),
                 Value<String> attachments = const Value.absent(),
+                Value<int?> rounds = const Value.absent(),
                 Value<double> latitude = const Value.absent(),
                 Value<double> longitude = const Value.absent(),
                 Value<DateTime> droppedAt = const Value.absent(),
@@ -10984,6 +11181,7 @@ class $$GroundItemsTableTableManager
                 pagesTotal: pagesTotal,
                 pagesRead: pagesRead,
                 attachments: attachments,
+                rounds: rounds,
                 latitude: latitude,
                 longitude: longitude,
                 droppedAt: droppedAt,
@@ -10998,6 +11196,7 @@ class $$GroundItemsTableTableManager
                 Value<int?> pagesTotal = const Value.absent(),
                 Value<int> pagesRead = const Value.absent(),
                 Value<String> attachments = const Value.absent(),
+                Value<int?> rounds = const Value.absent(),
                 required double latitude,
                 required double longitude,
                 required DateTime droppedAt,
@@ -11010,6 +11209,7 @@ class $$GroundItemsTableTableManager
                 pagesTotal: pagesTotal,
                 pagesRead: pagesRead,
                 attachments: attachments,
+                rounds: rounds,
                 latitude: latitude,
                 longitude: longitude,
                 droppedAt: droppedAt,
@@ -12043,6 +12243,7 @@ typedef $$ShelterItemsTableCreateCompanionBuilder =
       Value<String?> noteId,
       Value<double> portion,
       Value<String> attachments,
+      Value<int?> rounds,
     });
 typedef $$ShelterItemsTableUpdateCompanionBuilder =
     ShelterItemsCompanion Function({
@@ -12057,6 +12258,7 @@ typedef $$ShelterItemsTableUpdateCompanionBuilder =
       Value<String?> noteId,
       Value<double> portion,
       Value<String> attachments,
+      Value<int?> rounds,
     });
 
 class $$ShelterItemsTableFilterComposer
@@ -12120,6 +12322,11 @@ class $$ShelterItemsTableFilterComposer
 
   ColumnFilters<String> get attachments => $composableBuilder(
     column: $table.attachments,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get rounds => $composableBuilder(
+    column: $table.rounds,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -12187,6 +12394,11 @@ class $$ShelterItemsTableOrderingComposer
     column: $table.attachments,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<int> get rounds => $composableBuilder(
+    column: $table.rounds,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$ShelterItemsTableAnnotationComposer
@@ -12234,6 +12446,9 @@ class $$ShelterItemsTableAnnotationComposer
     column: $table.attachments,
     builder: (column) => column,
   );
+
+  GeneratedColumn<int> get rounds =>
+      $composableBuilder(column: $table.rounds, builder: (column) => column);
 }
 
 class $$ShelterItemsTableTableManager
@@ -12278,6 +12493,7 @@ class $$ShelterItemsTableTableManager
                 Value<String?> noteId = const Value.absent(),
                 Value<double> portion = const Value.absent(),
                 Value<String> attachments = const Value.absent(),
+                Value<int?> rounds = const Value.absent(),
               }) => ShelterItemsCompanion(
                 id: id,
                 profileId: profileId,
@@ -12290,6 +12506,7 @@ class $$ShelterItemsTableTableManager
                 noteId: noteId,
                 portion: portion,
                 attachments: attachments,
+                rounds: rounds,
               ),
           createCompanionCallback:
               ({
@@ -12304,6 +12521,7 @@ class $$ShelterItemsTableTableManager
                 Value<String?> noteId = const Value.absent(),
                 Value<double> portion = const Value.absent(),
                 Value<String> attachments = const Value.absent(),
+                Value<int?> rounds = const Value.absent(),
               }) => ShelterItemsCompanion.insert(
                 id: id,
                 profileId: profileId,
@@ -12316,6 +12534,7 @@ class $$ShelterItemsTableTableManager
                 noteId: noteId,
                 portion: portion,
                 attachments: attachments,
+                rounds: rounds,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
