@@ -12,6 +12,7 @@ library;
 import 'dart:math' as math;
 import 'dart:ui' show Offset;
 
+import '../l10n/app_localizations.dart';
 import '../map/geometry.dart';
 
 /// The kinds of thing §3.6 puts on the map.
@@ -509,6 +510,46 @@ class NoiseWave {
 /// Read off the table id rather than the OSM tag, because the table is what
 /// actually decides what is inside — and what is inside is the whole reason
 /// anybody walks there.
+/// What a place is called, when OpenStreetMap did not name it (§3.6).
+///
+/// ⚠️ Every loot place used to read "Skrzynia" — one word for a pharmacy, a
+/// wheelie bin and an abandoned car alike. Reported from a walk, and it was
+/// worse than untidy: the whole point of §3.6's icons is that a player decides
+/// which errand is worth the walk, and a panel that says "crate" while the map
+/// shows a car takes that decision back off them.
+///
+/// Named tables keep OSM's own name where there is one; this is the fallback,
+/// which for the generated places of §10.1 is the only name they will ever
+/// have.
+String placeName(L10n l10n, String? tableId) => switch (tableId) {
+  'poi_pharmacy' => l10n.placePharmacy,
+  'poi_hardware' => l10n.placeHardware,
+  'poi_grocery' => l10n.placeGrocery,
+  'poi_sports' => l10n.placeSports,
+  'poi_weapons' => l10n.placeWeapons,
+  'poi_library' => l10n.placeLibrary,
+  'poi_industrial' => l10n.placeIndustrial,
+  'poi_hospital' => l10n.placeHospital,
+  'poi_military' => l10n.placeMilitary,
+  'poi_school' => l10n.placeSchool,
+  'poi_warehouse' => l10n.placeWarehouse,
+  'proc_abandoned_car' => l10n.placeCar,
+  'proc_abandoned_house' => l10n.placeHouse,
+  'proc_barn' => l10n.placeBarn,
+  'proc_garage' => l10n.placeGarage,
+  'proc_waste' => l10n.placeWaste,
+  'proc_shelter' => l10n.placePicnic,
+  'proc_hunting_stand' => l10n.placeHuntingStand,
+  'proc_water_point' => l10n.placeWaterPoint,
+  'proc_roadside' => l10n.placeRoadside,
+  'proc_ambulance' => l10n.placeAmbulance,
+  'proc_police_car' => l10n.placePoliceCar,
+
+  // A crate is what is left when nothing else fits, which is the one place
+  // the old word was ever right.
+  _ => l10n.mapMarkerLoot,
+};
+
 PlaceIcon placeIconFor(String? tableId) => switch (tableId) {
   'poi_pharmacy' || 'poi_hospital' => PlaceIcon.medical,
   'poi_military' => PlaceIcon.guarded,

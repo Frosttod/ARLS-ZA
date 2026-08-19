@@ -1,5 +1,11 @@
+import 'dart:io';
+
+import 'package:arls_za/l10n/app_localizations.dart';
+import 'package:arls_za/loot/loot_table.dart';
 import 'package:arls_za/map/geometry.dart';
 import 'package:arls_za/ui/map_markers.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// IKONY MIEJSC (§3.6, §10).
@@ -111,6 +117,63 @@ void main() {
       expect(zones.map((zone) => zone.radiusM), containsAll([50.0, 25.0]));
       for (final zone in zones) {
         expect(zone.at, shelter.at, reason: 'drawn on the place, not the feet');
+      }
+    });
+  });
+  group('a place says what it is (§3.6)', () {
+    // ⚠️ Every loot place read "Skrzynia" — one word for a pharmacy, a wheelie
+    // bin and an abandoned car alike. Reported from a walk, and worse than
+    // untidy: §3.6 gives places different icons precisely so a player can
+    // decide which errand is worth the walk, and a panel saying "crate" while
+    // the map shows a car takes that decision back off them.
+    testWidgets('the generated places are named, not called crates', (
+      tester,
+    ) async {
+      late L10n l10n;
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: const Locale('pl'),
+          localizationsDelegates: const [
+            L10n.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: L10n.supportedLocales,
+          home: Builder(
+            builder: (context) {
+              l10n = L10n.of(context);
+              return const SizedBox.shrink();
+            },
+          ),
+        ),
+      );
+
+      expect(placeName(l10n, 'proc_abandoned_car'), 'Samochód');
+      expect(placeName(l10n, 'proc_waste'), 'Śmietnik');
+      expect(placeName(l10n, 'proc_police_car'), 'Radiowóz');
+      expect(placeName(l10n, 'poi_pharmacy'), 'Apteka');
+
+      // And a crate is what is left when nothing else fits — the one place
+      // the old word was ever right.
+      expect(placeName(l10n, 'something_new'), 'Skrzynia');
+      expect(placeName(l10n, null), 'Skrzynia');
+    });
+
+    test('every table in the shipped data has a name of its own', () {
+      // A table added without a name would silently read "Skrzynia" again,
+      // which is exactly how this started.
+      final tables = LootTableSet.parse(
+        File('assets/data/loot_tables.json').readAsStringSync(),
+      );
+
+      final source = File('lib/ui/map_markers.dart').readAsStringSync();
+      for (final table in tables.tables) {
+        expect(
+          source,
+          contains("'${table.id}' =>"),
+          reason: '${table.id} would fall back to "crate"',
+        );
       }
     });
   });

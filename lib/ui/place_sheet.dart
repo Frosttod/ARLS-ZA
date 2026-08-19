@@ -18,6 +18,7 @@ import '../items/item_catalogue.dart';
 import '../l10n/app_localizations.dart';
 import '../loot/loot_spawner.dart';
 import '../loot/loot_table.dart';
+import 'map_markers.dart';
 import '../loot/obstacle.dart';
 import 'hud.dart' show HudColors;
 import 'inventory_screen.dart' show kindName;
@@ -46,7 +47,7 @@ Future<void> showPlaceDetails(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              box.name ?? l10n.mapMarkerLoot,
+              box.name ?? placeName(l10n, box.tableId),
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,

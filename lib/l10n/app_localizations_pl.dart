@@ -835,6 +835,72 @@ class L10nPl extends L10n {
   String get mapMarkerLoot => 'Skrzynia';
 
   @override
+  String get placePharmacy => 'Apteka';
+
+  @override
+  String get placeHardware => 'Sklep budowlany';
+
+  @override
+  String get placeGrocery => 'Sklep spożywczy';
+
+  @override
+  String get placeSports => 'Sklep sportowy';
+
+  @override
+  String get placeWeapons => 'Sklep z bronią';
+
+  @override
+  String get placeLibrary => 'Biblioteka';
+
+  @override
+  String get placeIndustrial => 'Teren przemysłowy';
+
+  @override
+  String get placeHospital => 'Szpital';
+
+  @override
+  String get placeMilitary => 'Teren wojskowy';
+
+  @override
+  String get placeSchool => 'Szkoła';
+
+  @override
+  String get placeWarehouse => 'Magazyn';
+
+  @override
+  String get placeCar => 'Samochód';
+
+  @override
+  String get placeHouse => 'Opuszczony dom';
+
+  @override
+  String get placeBarn => 'Stodoła';
+
+  @override
+  String get placeGarage => 'Warsztat';
+
+  @override
+  String get placeWaste => 'Śmietnik';
+
+  @override
+  String get placePicnic => 'Wiata';
+
+  @override
+  String get placeHuntingStand => 'Ambona';
+
+  @override
+  String get placeWaterPoint => 'Ujęcie wody';
+
+  @override
+  String get placeRoadside => 'Pobocze';
+
+  @override
+  String get placeAmbulance => 'Ambulans';
+
+  @override
+  String get placePoliceCar => 'Radiowóz';
+
+  @override
   String get mapMarkerDropped => 'Porzucony przedmiot';
 
   @override

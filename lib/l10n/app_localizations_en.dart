@@ -833,6 +833,72 @@ class L10nEn extends L10n {
   String get mapMarkerLoot => 'Loot box';
 
   @override
+  String get placePharmacy => 'Pharmacy';
+
+  @override
+  String get placeHardware => 'Hardware shop';
+
+  @override
+  String get placeGrocery => 'Grocery';
+
+  @override
+  String get placeSports => 'Sports shop';
+
+  @override
+  String get placeWeapons => 'Gun shop';
+
+  @override
+  String get placeLibrary => 'Library';
+
+  @override
+  String get placeIndustrial => 'Industrial site';
+
+  @override
+  String get placeHospital => 'Hospital';
+
+  @override
+  String get placeMilitary => 'Military site';
+
+  @override
+  String get placeSchool => 'School';
+
+  @override
+  String get placeWarehouse => 'Warehouse';
+
+  @override
+  String get placeCar => 'Abandoned car';
+
+  @override
+  String get placeHouse => 'Abandoned house';
+
+  @override
+  String get placeBarn => 'Barn';
+
+  @override
+  String get placeGarage => 'Garage';
+
+  @override
+  String get placeWaste => 'Bins';
+
+  @override
+  String get placePicnic => 'Shelter hut';
+
+  @override
+  String get placeHuntingStand => 'Hunting stand';
+
+  @override
+  String get placeWaterPoint => 'Water point';
+
+  @override
+  String get placeRoadside => 'Roadside';
+
+  @override
+  String get placeAmbulance => 'Ambulance';
+
+  @override
+  String get placePoliceCar => 'Police car';
+
+  @override
   String get mapMarkerDropped => 'Dropped item';
 
   @override

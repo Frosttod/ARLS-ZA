@@ -1531,6 +1531,138 @@ abstract class L10n {
   /// **'Loot box'**
   String get mapMarkerLoot;
 
+  /// No description provided for @placePharmacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Pharmacy'**
+  String get placePharmacy;
+
+  /// No description provided for @placeHardware.
+  ///
+  /// In en, this message translates to:
+  /// **'Hardware shop'**
+  String get placeHardware;
+
+  /// No description provided for @placeGrocery.
+  ///
+  /// In en, this message translates to:
+  /// **'Grocery'**
+  String get placeGrocery;
+
+  /// No description provided for @placeSports.
+  ///
+  /// In en, this message translates to:
+  /// **'Sports shop'**
+  String get placeSports;
+
+  /// No description provided for @placeWeapons.
+  ///
+  /// In en, this message translates to:
+  /// **'Gun shop'**
+  String get placeWeapons;
+
+  /// No description provided for @placeLibrary.
+  ///
+  /// In en, this message translates to:
+  /// **'Library'**
+  String get placeLibrary;
+
+  /// No description provided for @placeIndustrial.
+  ///
+  /// In en, this message translates to:
+  /// **'Industrial site'**
+  String get placeIndustrial;
+
+  /// No description provided for @placeHospital.
+  ///
+  /// In en, this message translates to:
+  /// **'Hospital'**
+  String get placeHospital;
+
+  /// No description provided for @placeMilitary.
+  ///
+  /// In en, this message translates to:
+  /// **'Military site'**
+  String get placeMilitary;
+
+  /// No description provided for @placeSchool.
+  ///
+  /// In en, this message translates to:
+  /// **'School'**
+  String get placeSchool;
+
+  /// No description provided for @placeWarehouse.
+  ///
+  /// In en, this message translates to:
+  /// **'Warehouse'**
+  String get placeWarehouse;
+
+  /// No description provided for @placeCar.
+  ///
+  /// In en, this message translates to:
+  /// **'Abandoned car'**
+  String get placeCar;
+
+  /// No description provided for @placeHouse.
+  ///
+  /// In en, this message translates to:
+  /// **'Abandoned house'**
+  String get placeHouse;
+
+  /// No description provided for @placeBarn.
+  ///
+  /// In en, this message translates to:
+  /// **'Barn'**
+  String get placeBarn;
+
+  /// No description provided for @placeGarage.
+  ///
+  /// In en, this message translates to:
+  /// **'Garage'**
+  String get placeGarage;
+
+  /// No description provided for @placeWaste.
+  ///
+  /// In en, this message translates to:
+  /// **'Bins'**
+  String get placeWaste;
+
+  /// No description provided for @placePicnic.
+  ///
+  /// In en, this message translates to:
+  /// **'Shelter hut'**
+  String get placePicnic;
+
+  /// No description provided for @placeHuntingStand.
+  ///
+  /// In en, this message translates to:
+  /// **'Hunting stand'**
+  String get placeHuntingStand;
+
+  /// No description provided for @placeWaterPoint.
+  ///
+  /// In en, this message translates to:
+  /// **'Water point'**
+  String get placeWaterPoint;
+
+  /// No description provided for @placeRoadside.
+  ///
+  /// In en, this message translates to:
+  /// **'Roadside'**
+  String get placeRoadside;
+
+  /// No description provided for @placeAmbulance.
+  ///
+  /// In en, this message translates to:
+  /// **'Ambulance'**
+  String get placeAmbulance;
+
+  /// No description provided for @placePoliceCar.
+  ///
+  /// In en, this message translates to:
+  /// **'Police car'**
+  String get placePoliceCar;
+
   /// No description provided for @mapMarkerDropped.
   ///
   /// In en, this message translates to:
