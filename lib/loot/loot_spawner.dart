@@ -84,6 +84,18 @@ const Duration kRespawnMax = Duration(hours: 8);
 const Duration kRespawnBackupMin = Duration(hours: 3);
 const Duration kRespawnBackupMax = Duration(hours: 5);
 
+/// §10.2.1: how long a place the player emptied stays on their map.
+///
+/// ⚠️ Memory, not state. The place itself refills in four to eight hours and
+/// the dot goes back to colour then — this is only the outer bound on
+/// remembering having been somewhere, for the case where the player does not
+/// come back and it never refills under their eye.
+///
+/// A week, because that is roughly how long "I did that street on Tuesday" is
+/// worth anything. Longer and the map fills with a fortnight of grey nobody
+/// reads; shorter and it forgets faster than a player does.
+const Duration kSearchedMemory = Duration(days: 7);
+
 /// Beyond this a box is forgotten rather than kept. Without it a player who
 /// walks across a country accumulates every box they ever passed.
 const double kForgetRadiusM = 4000;
@@ -183,6 +195,22 @@ class LootBox {
     final at = respawnAt;
     return at != null && !now.isBefore(at);
   }
+
+  /// §10.2.1: whether this is still worth a grey dot.
+  ///
+  /// A place the player emptied stays on the map, in grey, saying "you have
+  /// been here" rather than "there is something here". It goes back to colour
+  /// the moment it refills — the memory and the contents are two different
+  /// facts, and the dot carries both.
+  bool isRememberedAt(DateTime now) {
+    final at = lootedAt;
+    if (at == null) return false;
+    return now.difference(at) < kSearchedMemory;
+  }
+
+  /// Worth drawing at all: either it holds something, or the player emptied it
+  /// recently enough to be worth remembering.
+  bool isKnownAt(DateTime now) => isActiveAt(now) || isRememberedAt(now);
 
   LootBox lootedAtTime(DateTime now, Random random, {bool backup = false}) {
     final min = backup ? kRespawnBackupMin : kRespawnMin;

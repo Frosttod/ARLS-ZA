@@ -48,11 +48,25 @@ void main() {
     respawnAt: respawn,
   );
 
+  /// Where the player is standing, as a notifier — the sheet reads the
+  /// distance live rather than being handed a number taken when it opened.
+  late ValueNotifier<GeoPoint?> standingAt;
+
   Future<void> open(
     WidgetTester tester, {
     required LootBox box,
     double distanceM = 240,
   }) async {
+    // The box sits at [centre]; the player is put that many metres south of
+    // it, so the sheet has a real distance to work out.
+    standingAt = ValueNotifier(
+      GeoPoint(
+        centre.latitude - distanceM / metresPerDegreeLat,
+        centre.longitude,
+      ),
+    );
+    addTearDown(standingAt.dispose);
+
     await tester.pumpWidget(
       MaterialApp(
         locale: const Locale('pl'),
@@ -69,7 +83,7 @@ void main() {
               context,
               box: box,
               table: tables[box.tableId],
-              distanceM: distanceM,
+              standingAt: standingAt,
               catalogue: catalogue,
               now: now,
             ),
@@ -86,6 +100,23 @@ void main() {
     await open(tester, box: boxAt(), distanceM: 310);
 
     expect(find.text('310 m'), findsOneWidget);
+  });
+
+  testWidgets('and keeps saying it while the player walks', (tester) async {
+    // ⚠️ The one number on this sheet that changes while it is being looked
+    // at. A reading frozen at the moment it opened says the player is not
+    // getting any closer, which is worse than showing nothing.
+    await open(tester, box: boxAt(), distanceM: 310);
+    expect(find.text('310 m'), findsOneWidget);
+
+    standingAt.value = GeoPoint(
+      centre.latitude - 120 / metresPerDegreeLat,
+      centre.longitude,
+    );
+    await tester.pump();
+
+    expect(find.text('120 m'), findsOneWidget);
+    expect(find.text('310 m'), findsNothing);
   });
 
   testWidgets('and what is in the way', (tester) async {

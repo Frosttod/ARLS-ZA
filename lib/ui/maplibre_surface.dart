@@ -879,7 +879,9 @@ class _MarkerPainter extends CustomPainter {
       if (marker.kind == MarkerKind.remains) continue;
 
       final radius = kMarkerRadius[marker.kind]!;
-      final colour = Color(kMarkerColours[marker.kind]!);
+      final colour = Color(
+        marker.spent ? kSpentColour : kMarkerColours[marker.kind]!,
+      );
 
       // A dark rim, because §12 will not let a dot be legible only by its
       // colour and a pale one on a pale street is no dot at all.

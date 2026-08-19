@@ -102,6 +102,7 @@ class MapMarker {
     this.headingDeg,
     this.alert,
     this.icon,
+    this.spent = false,
   });
 
   /// Stable across frames, so the renderer can move a marker instead of
@@ -148,6 +149,14 @@ class MapMarker {
   /// "am I close enough yet" from a guess into something to walk into.
   final double? reachM;
 
+  /// §10.2.1: turned over already, and drawn in grey.
+  ///
+  /// The dot stays because "I have been here" is worth knowing — it is the
+  /// difference between a street the player has worked and one they have not.
+  /// It is not a place to search: [spent] is what keeps the search panel from
+  /// offering an empty shop, and what takes the colour off the icon.
+  final bool spent;
+
   MapMarker copyWith({
     GeoPoint? at,
     String? label,
@@ -155,6 +164,7 @@ class MapMarker {
     int? count,
     double? headingDeg,
     MarkerAlert? alert,
+    bool? spent,
   }) => MapMarker(
     id: id,
     kind: kind,
@@ -165,6 +175,7 @@ class MapMarker {
     headingDeg: headingDeg ?? this.headingDeg,
     alert: alert ?? this.alert,
     icon: icon,
+    spent: spent ?? this.spent,
   );
 }
 
@@ -172,6 +183,14 @@ class MapMarker {
 ///
 /// Kept out of the widget so a test can assert the code rather than a shade of
 /// paint chosen in a layout file.
+/// §10.2.1, §12: what a place the player has already emptied is drawn in.
+///
+/// Grey and nothing else — not a faded version of the kind's own colour,
+/// because a dimmer red is still red and §3.6's hues each mean something. A
+/// place with nothing in it belongs to no category; it is a note the player
+/// left themselves.
+const int kSpentColour = 0xFF6B726E;
+
 const Map<MarkerKind, int> kMarkerColours = {
   MarkerKind.enemy: 0xFFD93A2B,
   MarkerKind.loot: 0xFFE8B33A,

@@ -11,11 +11,13 @@
 /// walk into a shopping trip.
 library;
 
+import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 
 import '../items/item.dart';
 import '../items/item_catalogue.dart';
 import '../l10n/app_localizations.dart';
+import '../map/geometry.dart';
 import '../loot/loot_spawner.dart';
 import '../loot/loot_table.dart';
 import 'map_markers.dart';
@@ -27,7 +29,7 @@ Future<void> showPlaceDetails(
   BuildContext context, {
   required LootBox box,
   required LootTable? table,
-  required double distanceM,
+  required ValueListenable<GeoPoint?> standingAt,
   required ItemCatalogue catalogue,
   required DateTime now,
 }) => showModalBottomSheet<void>(
@@ -56,10 +58,20 @@ Future<void> showPlaceDetails(
             ),
             const SizedBox(height: 12),
 
-            _Line(
-              label: l10n.placeDistance,
-              value: '${distanceM.round()} m',
-              colours: colours,
+            // ⚠️ Live, not a reading taken when the sheet opened. This is the
+            // one number on here that changes while it is being looked at —
+            // the player walks towards the place with the sheet still up, and
+            // a frozen distance is worse than none: it says they are not
+            // getting any closer.
+            ValueListenableBuilder<GeoPoint?>(
+              valueListenable: standingAt,
+              builder: (context, at, _) => _Line(
+                label: l10n.placeDistance,
+                value: at == null
+                    ? '—'
+                    : '${box.position.distanceTo(at).round()} m',
+                colours: colours,
+              ),
             ),
             _Line(
               label: l10n.placeWayIn,
