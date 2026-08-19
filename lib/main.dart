@@ -526,6 +526,17 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     if (mounted) setState(() {});
   }
 
+  /// §8, §2.5.1: the loop measures the zone from the same position as the map.
+  ///
+  /// ⚠️ Two answers to "where am I" is the failure this codebase keeps
+  /// finding. The loop kept its own last *gated* reading, and §2.1a.4 turns
+  /// the receiver off under a roof — so the zone could say open while the map,
+  /// the search and the no-fire rule all said shelter, and sleep never began.
+  void _tellLoopWhereWeAre() {
+    final at = _standingAt.value;
+    if (at != null) _loop?.setStandingAt(at);
+  }
+
   void _tellLoopWhatWeAreDoing() {
     final action = _search.value;
     _loop?.setActing(acting: action != null && action.isRunning);
@@ -788,6 +799,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       // The loop keeps ticking in the background; this rides on it.
       unawaited(_advanceSearch());
       _tellLoopWhatWeAreDoing();
+      _tellLoopWhereWeAre();
       unawaited(_settleDown(snapshot));
       unawaited(_spawnLoot(snapshot));
       _advanceCombat(snapshot);
@@ -3252,9 +3264,12 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
             kind: MarkerKind.loot,
             at: box.position,
             label: box.name,
-            // §10.2: how close is close enough to search it. Judging
-            // twenty-five metres by eye on a map that zooms is guesswork.
-            reachM: kSearchReachM,
+            // §10.2: how close is close enough to search *this* place.
+            // Judging thirty or fifty metres by eye on a map that zooms is
+            // guesswork, and the two are now different numbers.
+            reachM: searchReachFor(
+              _world?.tables[box.tableId]?.size ?? PlaceSize.normal,
+            ),
             // §3.6: what kind of place it is. A dot that only says "something
             // to search" sends a player three hundred metres to a florist —
             // the decision they are making is which errand is worth the walk.
@@ -3378,20 +3393,28 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
   /// The box the player is standing at, if any (§19.3).
   LootBox? _boxInReach() {
-    // The smoothed position, as the search itself uses: whether a place is
-    // within reach should not flicker with the scatter between two buildings.
-    final fix = _snapshot?.displayFix;
-    if (fix == null) return null;
+    // ⚠️ The sticky position, and this line has now been the bug six times.
+    // §2.1a.4 switches the receiver off under a roof, so `displayFix` is null
+    // in a shelter — which left the search button dead there. Fixing the
+    // handler was not enough: nothing ever reached it, because this is what
+    // decides whether the button is offered at all.
+    final at = _standingAt.value;
+    if (at == null) return null;
 
-    final at = GeoPoint(fix.latitude, fix.longitude);
     final now = _snapshot?.state.lastUpdate ?? DateTime.now().toUtc();
 
     LootBox? best;
-    var bestDistance = kSearchReachM;
+    var bestDistance = double.infinity;
     for (final box in _boxes) {
       if (!box.isActiveAt(now) || !_isVisible(box)) continue;
+
+      // §10.2: a bin is reached by hand and a supermarket has its door round
+      // the back. One radius made the second unreachable rather than awkward.
+      final reach = searchReachFor(
+        _world?.tables[box.tableId]?.size ?? PlaceSize.normal,
+      );
       final distance = box.position.distanceTo(at);
-      if (distance > bestDistance) continue;
+      if (distance > reach || distance > bestDistance) continue;
       best = box;
       bestDistance = distance;
     }

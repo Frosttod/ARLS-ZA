@@ -94,19 +94,24 @@ void main() {
       reachM: 25,
     );
 
-    test('reach is drawn around the player, and a shelter is not reach', () {
+    test('nothing at all is drawn around the player', () {
       // ⚠️ Found on a phone: starting a shelter put a fifty-metre circle on
       // the player's feet that walked down the street with them, which says
-      // the exact opposite of what §8.1 means.
-      expect(reachRingsOf(const [shelter, shop]), [25]);
+      // the exact opposite of what §8.1 means. The answer then was to keep
+      // shelters out of the player's rings; the answer now is that there are
+      // no rings on the player — §10.2 gives places different reaches, and a
+      // circle underfoot cannot say which place it stands for.
+      expect(reachRingsOf(const [shelter, shop]), isEmpty);
     });
 
-    test('the shelter gets a circle of its own, where it stands', () {
+    test('both get a circle of their own, where they stand', () {
       final zones = zonesOf(const [shelter, shop]);
 
-      expect(zones, hasLength(1));
-      expect(zones.single.radiusM, 50);
-      expect(zones.single.at, shelter.at);
+      expect(zones, hasLength(2));
+      expect(zones.map((zone) => zone.radiusM), containsAll([50.0, 25.0]));
+      for (final zone in zones) {
+        expect(zone.at, shelter.at, reason: 'drawn on the place, not the feet');
+      }
     });
   });
 }

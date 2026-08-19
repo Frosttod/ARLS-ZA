@@ -384,19 +384,19 @@ List<MapMarker> clusterMarkers(
 /// every frame of a pinch stopped the game answering.
 ///
 /// Widest first, so a tight ring is drawn over a loose one rather than under.
-List<double> reachRingsOf(List<MapMarker> markers) {
-  final rings = <double>{
-    for (final marker in markers)
-      // ⚠️ Never a shelter. Reach is symmetric — being within twenty-five
-      // metres of a shop is the shop being within twenty-five metres of you —
-      // but a *safe zone* is not reach. It is a piece of ground around a
-      // building, and drawing it round the player instead put a fifty-metre
-      // circle on their feet that walked about with them. See [zonesOf].
-      if (marker.kind != MarkerKind.shelter) ?marker.reachM,
-  }.toList()..sort((a, b) => b.compareTo(a));
-
-  return rings;
-}
+/// ⚠️ Empty, and it used to be the whole story.
+///
+/// The argument for rings around the player was symmetry: being within
+/// twenty-five metres of a shop is the shop being within twenty-five metres of
+/// you, so one ring said what sixty-five said and cost a fraction. That held
+/// exactly as long as every place had the *same* reach.
+///
+/// §10.2 now gives a bin thirty metres and a supermarket fifty, because a
+/// building's door is not where the map puts its dot and a shop behind a fence
+/// was unreachable rather than awkward. With two radii a ring on the player's
+/// feet cannot say which place it belongs to — so the circles moved to the
+/// places, where they answer "can I open *that* one" instead. See [zonesOf].
+List<double> reachRingsOf(List<MapMarker> markers) => const [];
 
 /// The circles that belong to a place rather than to the player (§8.1).
 ///
@@ -405,8 +405,7 @@ List<double> reachRingsOf(List<MapMarker> markers) {
 /// It has to be drawn where it is.
 List<({GeoPoint at, double radiusM})> zonesOf(List<MapMarker> markers) => [
   for (final marker in markers)
-    if (marker.kind == MarkerKind.shelter && marker.reachM != null)
-      (at: marker.at, radiusM: marker.reachM!),
+    if (marker.reachM != null) (at: marker.at, radiusM: marker.reachM!),
 ];
 
 /// The ground point under a screen offset — the inverse of [offsetOf].

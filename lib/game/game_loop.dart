@@ -213,6 +213,26 @@ class GameLoop {
   PositionFix? _lastFix;
   double _speedKmh = 0;
 
+  /// §3.2: where the interface believes the player is standing.
+  ///
+  /// ⚠️ Told, not worked out. The loop keeps [_lastFix], which is the last
+  /// reading that *passed the accuracy gate* — and §2.1a.4 switches the
+  /// receiver off entirely under a roof, so inside a shelter that reading is
+  /// however old the doorway was. Everything else in the game measures from
+  /// the interface's sticky position instead, and two answers to "where am I"
+  /// is the bug this codebase has now found six times: the zone said open
+  /// while the map, the search and the no-fire rule all said shelter.
+  GeoPoint? _standingAt;
+
+  /// §8: where the interface has the player standing, for the zone.
+  void setStandingAt(GeoPoint at) {
+    final before = _state.zone;
+    _standingAt = at;
+
+    _applyShelter();
+    if (_state.zone != before) _publish();
+  }
+
   /// Raw fixes are never used directly: everything the simulation sees has been
   /// through the accuracy gate, the Kalman filter and the stationary test
   /// (§3.2).
@@ -279,17 +299,23 @@ class GameLoop {
     final fix = _lastFix ?? _displayFix;
     final now = _state.lastUpdate;
 
-    _inside = fix == null
-        ? null
-        : shelterAt(GeoPoint(fix.latitude, fix.longitude), _shelters, now: now);
+    // ⚠️ What the interface says first, the last gated reading second. Under a
+    // roof §2.1a.4 turns the receiver off, so `_lastFix` is the doorway and
+    // may be older than the walls; the sticky position is what every other
+    // part of the game already measures from.
+    final at =
+        _standingAt ??
+        (fix == null ? null : GeoPoint(fix.latitude, fix.longitude));
+
+    _inside = at == null ? null : shelterAt(at, _shelters, now: now);
 
     final inside = _inside;
     final night =
-        fix != null &&
+        at != null &&
         isNightAt(
           momentUtc: now,
-          latitude: fix.latitude,
-          longitude: fix.longitude,
+          latitude: at.latitude,
+          longitude: at.longitude,
         );
 
     // §2.1a.1, §2.1a.2: anything the player deliberately started outranks

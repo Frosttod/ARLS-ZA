@@ -1,3 +1,4 @@
+import 'package:arls_za/loot/loot_table.dart';
 import 'package:arls_za/loot/search.dart';
 import 'package:arls_za/map/geometry.dart';
 import 'package:arls_za/ui/map_markers.dart';
@@ -190,60 +191,57 @@ void main() {
     });
   });
 
-  group('one ring round the player, not sixty-five round the markers', () {
-    // Found on a phone: a ring per marker meant sixty-five circles rewritten
-    // through the platform channel on every frame of a pinch, and the game
-    // stopped answering. Reach is symmetric — being within twenty-five metres
-    // of a shop is the shop being within twenty-five metres of you — so one
-    // ring says exactly the same thing.
-    MapMarker place(String id, {double? reachM = kSearchReachM}) =>
-        MapMarker(id: id, kind: MarkerKind.loot, at: at, reachM: reachM);
+  group('the circle belongs to the place, not to the player (§10.2)', () {
+    // ⚠️ It was one ring round the player for months, and the argument was
+    // symmetry: being within twenty-five metres of a shop is the shop being
+    // within twenty-five metres of you, so one ring said what sixty-five said
+    // and cost a fraction — which mattered, because a ring per marker meant
+    // sixty-five circles through the platform channel on every frame of a
+    // pinch and the game stopped answering.
+    //
+    // That held exactly as long as every place had the same reach. §10.2 now
+    // gives a bin thirty metres and a supermarket fifty, and a ring on the
+    // player's feet cannot say which of the two it belongs to.
+    MapMarker place(String id, double reach) =>
+        MapMarker(id: id, kind: MarkerKind.loot, at: at, reachM: reach);
 
-    test('one ring per distance, however many markers there are', () {
-      final rings = reachRingsOf([for (var i = 0; i < 40; i++) place('p$i')]);
-
-      expect(rings, [kSearchReachM]);
+    test('nothing is drawn around the player any more', () {
+      expect(reachRingsOf([place('p', kBuildingReachM)]), isEmpty);
     });
 
-    test('two distances are two rings', () {
-      final rings = reachRingsOf([
-        place('p'),
-        MapMarker(
-          id: 'd',
-          kind: MarkerKind.dropped,
-          at: at,
-          reachM: kStillnessM,
-        ),
+    test('every marker that can be reached carries its own circle', () {
+      final zones = zonesOf([
+        place('bin', kNearReachM),
+        place('shop', kBuildingReachM),
       ]);
 
-      expect(rings, [kSearchReachM, kStillnessM]);
+      expect(zones, hasLength(2));
+      expect(
+        zones.map((zone) => zone.radiusM),
+        containsAll([kNearReachM, kBuildingReachM]),
+      );
     });
 
-    test('widest first, so the tight one is drawn over it', () {
-      final rings = reachRingsOf([
-        MapMarker(
-          id: 'd',
-          kind: MarkerKind.dropped,
-          at: at,
-          reachM: kStillnessM,
-        ),
-        place('p'),
-      ]);
+    test('and it is drawn where the place is', () {
+      final zones = zonesOf([place('shop', kBuildingReachM)]);
 
-      expect(rings.first, greaterThan(rings.last));
+      expect(zones.single.at.latitude, at.latitude);
+      expect(zones.single.at.longitude, at.longitude);
     });
 
-    test('markers with nothing to reach draw nothing', () {
-      final rings = reachRingsOf([
-        MapMarker(id: 'e', kind: MarkerKind.enemy, at: at),
-        place('p', reachM: null),
-      ]);
+    test('a marker with nothing to reach gets none', () {
+      const enemy = MapMarker(id: 'e', kind: MarkerKind.enemy, at: at);
 
-      expect(rings, isEmpty);
+      expect(zonesOf([enemy]), isEmpty);
     });
 
-    test('an empty map draws nothing', () {
-      expect(reachRingsOf(const []), isEmpty);
+    test('a bin is a tighter circle than a shop', () {
+      // The whole reason there are two numbers: a building's door is not
+      // where the map puts its dot, and a wheelie bin is reached by hand.
+      expect(kNearReachM, lessThan(kBuildingReachM));
+      expect(searchReachFor(PlaceSize.tiny), kNearReachM);
+      expect(searchReachFor(PlaceSize.small), kNearReachM);
+      expect(searchReachFor(PlaceSize.normal), kBuildingReachM);
     });
   });
 

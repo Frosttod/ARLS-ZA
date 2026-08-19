@@ -91,6 +91,28 @@ const double kSearchNoiseM = 80;
 /// "at" a supermarket mean what a player thinks it means.
 const double kSearchReachM = 25;
 
+/// §10.2: how close a place has to be before it can be turned over.
+///
+/// ⚠️ Two figures rather than one, and both larger than the twenty-five this
+/// replaces. Reported from a walk: a shop can sit behind a fence, in a
+/// courtyard, or up a drive with no way in from the pavement — and a single
+/// tight radius made those places unreachable rather than awkward. A building
+/// is a big thing and its door is not where the map puts its dot.
+///
+/// A bin is not a building. Something you could put your hand into keeps a
+/// short reach, because standing thirty metres from a wheelie bin and going
+/// through it is not a thing.
+double searchReachFor(PlaceSize size) => switch (size) {
+  PlaceSize.tiny || PlaceSize.small => kNearReachM,
+  PlaceSize.normal => kBuildingReachM,
+};
+
+/// A bin, a car, a crate: things reached by hand.
+const double kNearReachM = 30;
+
+/// A shop, a library, a warehouse: things with a door somewhere else.
+const double kBuildingReachM = 50;
+
 /// The radius reconnaissance covers (§10.2.2).
 ///
 /// Written as the doc writes it, factor by factor, because each one is somebody
