@@ -3270,6 +3270,18 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// stopped and searched the area.
   List<MapMarker> _lootMarkers() {
     final now = _snapshot?.state.lastUpdate ?? DateTime.now().toUtc();
+    final here = _standingAt.value;
+
+    /// §10.2: the reach ring, but only once the place is nearly underfoot.
+    ///
+    /// A circle per place is honest and, at any distance, a smear — fifteen
+    /// of them overlapping say nothing. The question a ring answers is "can I
+    /// open *this* one", and that is only asked about somewhere the player is
+    /// nearly at.
+    double? ringFor(GeoPoint at, double radiusM, double visibleWithinM) {
+      if (here == null) return null;
+      return at.distanceTo(here) <= visibleWithinM ? radiusM : null;
+    }
 
     return [
       // §10.2.1: what is there, and what was there. A place the player
@@ -3291,8 +3303,12 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
             // §10.2: how close is close enough to search *this* place.
             // Judging thirty or fifty metres by eye on a map that zooms is
             // guesswork, and the two are now different numbers.
-            reachM: searchReachFor(
-              _world?.tables[box.tableId]?.size ?? PlaceSize.normal,
+            reachM: ringFor(
+              box.position,
+              searchReachFor(
+                _world?.tables[box.tableId]?.size ?? PlaceSize.normal,
+              ),
+              kReachRingVisibleM,
             ),
             // §3.6: what kind of place it is. A dot that only says "something
             // to search" sends a player three hundred metres to a florist —
@@ -3315,6 +3331,11 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
           // them a radius and nothing directional — but knowing that one of
           // them has turned towards you is the whole of the warning.
           headingDeg: enemy.headingDeg,
+          // §6.2: what it can see, drawn only once it is near enough for that
+          // to be a decision. The question is how close a player can get
+          // before it notices, and it is answered well before they are on
+          // top of it — so this ring shows twice as far out as a reach ring.
+          reachM: ringFor(enemy.position, enemy.sightM, kSightRingVisibleM),
           alert: switch (enemy.state) {
             EnemyState.chase || EnemyState.spent => MarkerAlert.hunting,
             EnemyState.alert => MarkerAlert.searching,

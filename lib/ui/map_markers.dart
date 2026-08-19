@@ -418,14 +418,42 @@ List<MapMarker> clusterMarkers(
 /// places, where they answer "can I open *that* one" instead. See [zonesOf].
 List<double> reachRingsOf(List<MapMarker> markers) => const [];
 
+/// §10.2: how near a place has to be before its reach is worth drawing.
+///
+/// ⚠️ A circle per place is honest and, at any distance, a smear. Fifteen
+/// active boxes each with a ring turns a zoomed-out map into overlapping
+/// bubbles that say nothing — the question a reach ring answers is "can I open
+/// *this* one", and that is only ever asked about somewhere the player is
+/// nearly at. Beyond this the dot alone is the answer.
+const double kReachRingVisibleM = 75;
+
+/// §6.2: and how near something has to be before its eyes are worth drawing.
+///
+/// Twice the reach ring, because this one is a warning rather than an
+/// invitation: what a player wants to know is how close they can get before it
+/// notices, and that decision is made well before they are on top of it.
+const double kSightRingVisibleM = 150;
+
 /// The circles that belong to a place rather than to the player (§8.1).
 ///
 /// A shelter's fifty metres is ground: the dead do not walk into it and the
 /// player does not shoot out of it, whether or not anybody is standing there.
 /// It has to be drawn where it is.
-List<({GeoPoint at, double radiusM})> zonesOf(List<MapMarker> markers) => [
+/// ⚠️ Each circle says which kind it is, because they mean opposite things.
+/// A reach ring is an invitation — step inside and you can open this. An
+/// enemy's sight is the reverse: step inside and it can see you. Drawn in one
+/// colour, the second reads as the first, which is the worst possible way to
+/// be wrong about a Walker.
+List<({GeoPoint at, double radiusM, bool danger})> zonesOf(
+  List<MapMarker> markers,
+) => [
   for (final marker in markers)
-    if (marker.reachM != null) (at: marker.at, radiusM: marker.reachM!),
+    if (marker.reachM != null)
+      (
+        at: marker.at,
+        radiusM: marker.reachM!,
+        danger: marker.kind == MarkerKind.enemy,
+      ),
 ];
 
 /// The ground point under a screen offset — the inverse of [offsetOf].

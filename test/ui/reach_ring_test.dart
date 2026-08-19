@@ -277,4 +277,51 @@ void main() {
       expect(wave.radiusM, 700);
     });
   });
+  group('a circle only when it is a question worth asking', () {
+    // ⚠️ A ring per place is honest and, at any distance, a smear: fifteen
+    // active boxes each with one turns a zoomed-out map into overlapping
+    // bubbles that say nothing. The question a reach ring answers is "can I
+    // open *this* one", and that is only ever asked about somewhere the
+    // player is nearly at.
+    test('the reach ring appears inside seventy-five metres', () {
+      expect(kReachRingVisibleM, 75);
+    });
+
+    test('and an enemy shows its eyes twice as far out', () {
+      // A warning rather than an invitation: how close can I get before it
+      // notices is decided well before being on top of it.
+      expect(kSightRingVisibleM, 150);
+      expect(kSightRingVisibleM, greaterThan(kReachRingVisibleM));
+    });
+
+    test('an enemy circle is marked dangerous, a place is not', () {
+      // ⚠️ They are the same shape and mean opposite things. A reach ring
+      // says step inside and you may open this; an enemy's sight says step
+      // inside and it can see you. One colour for both would read the second
+      // as the first, which is the worst way to be wrong about a Walker.
+      final zones = zonesOf([
+        MapMarker(
+          id: 'shop',
+          kind: MarkerKind.loot,
+          at: at,
+          reachM: kBuildingReachM,
+        ),
+        MapMarker(id: 'walker', kind: MarkerKind.enemy, at: at, reachM: 80),
+      ]);
+
+      final place = zones.firstWhere((zone) => zone.radiusM == kBuildingReachM);
+      final walker = zones.firstWhere((zone) => zone.radiusM == 80);
+
+      expect(place.danger, isFalse);
+      expect(walker.danger, isTrue);
+    });
+
+    test('and a marker with no ring draws none at all', () {
+      // Which is how the distance gate is expressed: too far away is a
+      // marker whose reach was never set.
+      const far = MapMarker(id: 'shop', kind: MarkerKind.loot, at: at);
+
+      expect(zonesOf(const [far]), isEmpty);
+    });
+  });
 }

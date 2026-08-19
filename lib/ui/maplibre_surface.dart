@@ -472,6 +472,7 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
                             radiusPx:
                                 zone.radiusM /
                                 metresPerPixel(_zoom, centre.latitude),
+                            danger: zone.danger,
                           ),
                       ],
                     ),
@@ -1011,7 +1012,7 @@ class SyncGate {
 class _ZonePainter extends CustomPainter {
   const _ZonePainter({required this.zones});
 
-  final List<({Offset at, double radiusPx})> zones;
+  final List<({Offset at, double radiusPx, bool danger})> zones;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -1021,19 +1022,26 @@ class _ZonePainter extends CustomPainter {
       if (zone.radiusPx < 4 || zone.radiusPx > size.longestSide) continue;
 
       final at = middle + zone.at;
+
+      // §12: never colour alone — but here the shape is identical and only the
+      // meaning differs, so colour is carrying it. The dot at the centre is
+      // what says which it is: a red ring is always around a red dot.
+      final fill = zone.danger
+          ? const Color(0x14A82D17)
+          : const Color(0x143A7BD9);
+      final edge = zone.danger
+          ? const Color(0x80A82D17)
+          : const Color(0x803A7BD9);
+
       canvas
-        ..drawCircle(
-          at,
-          zone.radiusPx,
-          Paint()..color = const Color(0x143A7BD9),
-        )
+        ..drawCircle(at, zone.radiusPx, Paint()..color = fill)
         ..drawCircle(
           at,
           zone.radiusPx,
           Paint()
             ..style = PaintingStyle.stroke
             ..strokeWidth = 1.5
-            ..color = const Color(0x803A7BD9),
+            ..color = edge,
         );
     }
   }
