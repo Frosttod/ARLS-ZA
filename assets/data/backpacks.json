@@ -12,11 +12,19 @@
       "condition": 100,
       "condition_decay_per_use": 0.3,
       "rarity": "common",
-      "loot_tags": ["residential", "school", "shop"],
+      "loot_tags": [
+        "residential",
+        "school",
+        "shop"
+      ],
       "props": {
         "capacity_l": 22,
         "comfort_carry_bonus_kg": 3,
-        "max_carry_bonus_kg": 3
+        "max_carry_bonus_kg": 3,
+        "salvage": {
+          "mat_fabric": 1.7,
+          "mat_metal": 0.06
+        }
       }
     },
     {
@@ -29,13 +37,19 @@
       "condition": 100,
       "condition_decay_per_use": 1.5,
       "rarity": "common",
-      "loot_tags": ["residential", "shop"],
+      "loot_tags": [
+        "residential",
+        "shop"
+      ],
       "props": {
         "capacity_l": 30,
         "comfort_carry_bonus_kg": 4,
         "max_carry_bonus_kg": 4,
         "occupies_hands": true,
-        "note": "§18.1a's bag. Holds as much as a daypack's worth of bulk but hangs off one arm, so it is carried instead of a weapon."
+        "note": "§18.1a's bag. Holds as much as a daypack's worth of bulk but hangs off one arm, so it is carried instead of a weapon.",
+        "salvage": {
+          "mat_fabric": 0.85
+        }
       }
     },
     {
@@ -48,11 +62,19 @@
       "condition": 100,
       "condition_decay_per_use": 0.2,
       "rarity": "common",
-      "loot_tags": ["residential", "shop", "sport"],
+      "loot_tags": [
+        "residential",
+        "shop",
+        "sport"
+      ],
       "props": {
         "capacity_l": 45,
         "comfort_carry_bonus_kg": 8,
-        "max_carry_bonus_kg": 8
+        "max_carry_bonus_kg": 8,
+        "salvage": {
+          "mat_fabric": 2.55,
+          "mat_metal": 0.09
+        }
       }
     },
     {
@@ -65,11 +87,19 @@
       "condition": 100,
       "condition_decay_per_use": 0.15,
       "rarity": "rare",
-      "loot_tags": ["military", "police", "sport"],
+      "loot_tags": [
+        "military",
+        "police",
+        "sport"
+      ],
       "props": {
         "capacity_l": 55,
         "comfort_carry_bonus_kg": 10,
-        "max_carry_bonus_kg": 10
+        "max_carry_bonus_kg": 10,
+        "salvage": {
+          "mat_fabric": 3.97,
+          "mat_metal": 0.14
+        }
       }
     },
     {
@@ -82,13 +112,21 @@
       "condition": 100,
       "condition_decay_per_use": 0.12,
       "rarity": "very_rare",
-      "loot_tags": ["sport", "shop", "residential"],
+      "loot_tags": [
+        "sport",
+        "shop",
+        "residential"
+      ],
       "props": {
         "capacity_l": 65,
         "comfort_carry_bonus_kg": 12,
         "max_carry_bonus_kg": 12,
         "hip_belt": true,
-        "note": "§10.3.4: comfort carry 24 -> 36 kg, a third fewer trips to the shelter."
+        "note": "§10.3.4: comfort carry 24 -> 36 kg, a third fewer trips to the shelter.",
+        "salvage": {
+          "mat_fabric": 5.1,
+          "mat_metal": 0.18
+        }
       }
     },
     {
@@ -101,12 +139,39 @@
       "condition": 100,
       "condition_decay_per_use": 0.1,
       "rarity": "very_rare",
-      "loot_tags": ["military"],
+      "loot_tags": [
+        "military"
+      ],
       "props": {
         "capacity_l": 90,
         "comfort_carry_bonus_kg": 16,
         "max_carry_bonus_kg": 16,
-        "hip_belt": true
+        "hip_belt": true,
+        "salvage": {
+          "mat_fabric": 7.37,
+          "mat_metal": 0.26
+        }
+      }
+    },
+    {
+      "id": "pack_improvised",
+      "type": "backpack",
+      "name_key": "item.pack_improvised.name",
+      "weight_kg": 0.7,
+      "volume_l": 3.0,
+      "stackable": false,
+      "rarity": "common",
+      "loot_tags": [],
+      "props": {
+        "capacity_l": 30,
+        "comfort_carry_bonus_kg": 8,
+        "max_carry_bonus_kg": 8,
+        "craft_only": true,
+        "note": "§18.4: eight of fabric and two of metal. Not as good as a daypack and available on a night when there is no daypack.",
+        "salvage": {
+          "mat_fabric": 1.98,
+          "mat_metal": 0.07
+        }
       }
     }
   ]

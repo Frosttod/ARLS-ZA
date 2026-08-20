@@ -961,6 +961,48 @@ telemetry := never leaves the device             // §16.5 dopuszcza zagregowan�
 
 ---
 
+## Wytwarzanie i rozbiórka (§18.3, §18.4, §18.6)
+
+```
+if recipe_workshop_level > shelter_workshop_level
+    then craft := unavailable                    // §18.4. Warsztat to dostęp do możliwości, nie procent czasu (§8.4).
+
+if recipe_tools_any_of not empty and none_carried
+    then craft := refused                        // §18.4 pisze "nóż **lub** multitool" i tak to znaczy. Jedno id po cichu zrobiłoby z jednego narzędzia jedyną odpowiedź — tak było w schronie przez miesiące.
+
+if recipe_tools_any_of empty
+    then craft := allowed_anywhere               // Opatrunek robi się na krawężniku, kiedy się krwawi. To jest cały sens medycznych wierszy §18.4.
+
+craft_time = base × (1 − 0.30 × inżynieria) × warsztat(L1 0.90 / L2 0.80 / L3 0.70)
+                                                 // §18.3. Ten sam wzór co budowa modułów, celowo.
+
+salvage_content = recipe_materials, or props.salvage
+                                                 // §18.6. Gdzie jest receptura, ona **jest** wartością materiałową. Gdzie jej nie ma — masa przedmiotu rozłożona na to, z czego naprawdę jest, podzielona przez masy jednostkowe z crafting.json.
+
+salvage_budget = round(suma_jednostek × udział × kondycja/100)
+                                                 // ⚠️ §18.6 nie domyka się arytmetycznie. 40% karabinka to 0,88 jednostki metalu; w dół, per materiał — zero. Siekiera zero, włócznia zero, kamizelka zero. Jeden budżet na cały przedmiot, zaokrąglany raz, rozdzielany metodą największych reszt.
+
+if salvage_budget = 0
+    then dismantle := refused                    // Karabinek daje jeden kawałek złomu. Pistolet nie daje nic — i tak ma być. Odmowa **przed** wydaniem minut, nie po.
+
+salvage_share = 0.40 + 0.15 × inżynieria (+0.10 przy warsztacie L2+)
+                                                 // §18.6. Maksimum 65%. Recykling nigdy się nie opłaca jako źródło surowca — opłaca się wyłącznie jako sposób na pozbycie się balastu bez całkowitej straty.
+
+if item_condition < 100
+    then salvage_budget ×= condition/100        // §18.6 nalega. Bez tego najtańszym metalem w grze byłyby zniszczone bronie zbierane po to, żeby je rozebrać.
+
+if item has no recipe and no props.salvage
+    then dismantle := unavailable                // §18.6: nie rozbierzesz czegoś, czego receptury nie znasz. Od drugiej strony: jedzenia i książek nie ma jak rozebrać, bo nie ma czego z nich wyjąć.
+
+dismantle_time = 3 min + 12 min × min(1, jednostki/10)
+                                                 // §18.6. Mierzone zawartością, nie recepturą — większość tego, co się rozbiera, nigdy nie została przez nikogo zrobiona.
+
+if not carrying multitool
+    then dismantle := refused                    // §18.6 mówi "narzędzie odpowiednie do materiału". Multitool obejmuje każdy; jedno wymaganie to jedna reguła do zapamiętania.
+```
+
+---
+
 ## Czego tu nie ma
 
 | Mechanika | Powód |

@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:arls_za/items/item.dart';
+import 'package:arls_za/craft/item_recipe.dart';
 import 'package:arls_za/items/item_catalogue.dart';
 import 'package:arls_za/loot/loot_table.dart';
 import 'package:test/test.dart';
@@ -161,16 +162,22 @@ void main() {
       );
     });
 
-    test('nothing in the catalogue exists that can never be found', () {
+    test('nothing in the catalogue exists that can never be had', () {
+      // ⚠️ Found **or** made. §18.4's improvised things are deliberately not
+      // in any loot table — nobody scavenges a spear somebody else whittled.
+      // Before this rule counted recipes, adding a craftable item failed here,
+      // and the only way to pass was to scatter it through the city.
       final produced = {
         for (final table in tables.tables)
           for (final entry in table.entries) entry.itemId,
       };
+      final book = RecipeBook.parse(File(kRecipesAsset).readAsStringSync());
+
       final unreachable = catalogue.all
           .map((item) => item.id)
-          .where((id) => !produced.contains(id));
+          .where((id) => !produced.contains(id) && book.making(id) == null);
 
-      expect(unreachable, isEmpty, reason: 'defined but never dropped');
+      expect(unreachable, isEmpty, reason: 'neither dropped nor made');
     });
   });
 

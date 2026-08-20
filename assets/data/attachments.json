@@ -26,7 +26,12 @@
         "noise_range_multiplier": 0.29,
         "moa_delta": 0.3,
         "craft_skill": 85,
-        "mount": "barrel"
+        "mount": "barrel",
+        "salvage": {
+          "mat_component": 0.28,
+          "mat_metal": 0.09,
+          "mat_plastic": 0.1
+        }
       }
     },
     {
@@ -51,7 +56,10 @@
         "moa_delta": -1.2,
         "settle_multiplier": 0.85,
         "craft_skill": 70,
-        "mount": "optic"
+        "mount": "optic",
+        "salvage": {
+          "mat_component": 0.1
+        }
       }
     },
     {
@@ -76,7 +84,10 @@
         "battery_hours": 20,
         "visible_to_enemies": true,
         "craft_skill": 75,
-        "mount": "rail"
+        "mount": "rail",
+        "salvage": {
+          "mat_component": 0.07
+        }
       }
     },
     {
@@ -102,7 +113,12 @@
         "battery_hours": 5,
         "visible_to_enemies": true,
         "craft_skill": 45,
-        "mount": "rail"
+        "mount": "rail",
+        "salvage": {
+          "mat_component": 0.14,
+          "mat_metal": 0.05,
+          "mat_plastic": 0.05
+        }
       }
     },
     {
@@ -129,7 +145,10 @@
         "moa_delta": -0.5,
         "settle_multiplier": 0.8,
         "craft_skill": 40,
-        "mount": "grip"
+        "mount": "grip",
+        "salvage": {
+          "mat_component": 0.12
+        }
       }
     },
     {
@@ -151,7 +170,11 @@
         ],
         "capacity": 15,
         "caliber": "9x19",
-        "mount": "magazine"
+        "mount": "magazine",
+        "salvage": {
+          "mat_metal": 0.06,
+          "mat_plastic": 0.07
+        }
       }
     },
     {
@@ -172,7 +195,11 @@
         ],
         "capacity": 25,
         "caliber": "9x19",
-        "mount": "magazine"
+        "mount": "magazine",
+        "salvage": {
+          "mat_metal": 0.09,
+          "mat_plastic": 0.11
+        }
       }
     },
     {
@@ -193,7 +220,11 @@
         ],
         "capacity": 30,
         "caliber": "9x19",
-        "mount": "magazine"
+        "mount": "magazine",
+        "salvage": {
+          "mat_metal": 0.11,
+          "mat_plastic": 0.14
+        }
       }
     },
     {
@@ -215,7 +246,11 @@
         ],
         "capacity": 10,
         "caliber": "22lr",
-        "mount": "magazine"
+        "mount": "magazine",
+        "salvage": {
+          "mat_metal": 0.05,
+          "mat_plastic": 0.06
+        }
       }
     },
     {
@@ -235,7 +270,11 @@
         ],
         "capacity": 30,
         "caliber": "5.45x39",
-        "mount": "magazine"
+        "mount": "magazine",
+        "salvage": {
+          "mat_metal": 0.12,
+          "mat_plastic": 0.14
+        }
       }
     },
     {
@@ -255,7 +294,11 @@
         ],
         "capacity": 60,
         "caliber": "5.45x39",
-        "mount": "magazine"
+        "mount": "magazine",
+        "salvage": {
+          "mat_metal": 0.33,
+          "mat_plastic": 0.41
+        }
       }
     },
     {
@@ -276,7 +319,11 @@
         ],
         "capacity": 30,
         "caliber": "7.62x39",
-        "mount": "magazine"
+        "mount": "magazine",
+        "salvage": {
+          "mat_metal": 0.17,
+          "mat_plastic": 0.21
+        }
       }
     }
   ]

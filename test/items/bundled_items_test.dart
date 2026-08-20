@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:arls_za/craft/item_recipe.dart';
 import 'package:arls_za/inventory/body_slots.dart';
 import 'package:arls_za/inventory/inventory.dart';
 import 'package:arls_za/inventory/item_use.dart';
@@ -57,13 +58,29 @@ void main() {
     });
 
     test('everything can be produced by somewhere', () {
-      final orphans = catalogue.all.where((item) => item.lootTags.isEmpty);
+      // ⚠️ Found **or** made. §18.4 adds things nobody scavenges — a spear, a
+      // dressing torn from a shirt — and they have no loot tags on purpose:
+      // they exist because somebody built them. A recipe is the other way an
+      // item can reach a player's hands, and it counts.
+      final book = RecipeBook.parse(File(kRecipesAsset).readAsStringSync());
+      final orphans = catalogue.all.where(
+        (item) => item.lootTags.isEmpty && book.making(item.id) == null,
+      );
 
       expect(
         orphans.map((item) => item.id),
         isEmpty,
-        reason: 'no loot tag means the item exists but never appears',
+        reason: 'neither found nor made: the item exists and never appears',
       );
+    });
+
+    test('and every recipe names things the catalogue knows', () {
+      final book = checkedAgainst(
+        RecipeBook.parse(File(kRecipesAsset).readAsStringSync()),
+        catalogue,
+      );
+
+      expect(book.problems, isEmpty, reason: book.problems.join('|'));
     });
   });
 

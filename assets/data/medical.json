@@ -10,7 +10,12 @@
       "volume_l": 0.1,
       "stackable": true,
       "rarity": "common",
-      "loot_tags": ["pharmacy", "residential", "hospital", "vehicle"],
+      "loot_tags": [
+        "pharmacy",
+        "residential",
+        "hospital",
+        "vehicle"
+      ],
       "props": {
         "use_seconds": 45,
         "stops_bleeding_class": "superficial",
@@ -25,7 +30,12 @@
       "volume_l": 0.25,
       "stackable": true,
       "rarity": "uncommon",
-      "loot_tags": ["pharmacy", "hospital", "military", "police"],
+      "loot_tags": [
+        "pharmacy",
+        "hospital",
+        "military",
+        "police"
+      ],
       "props": {
         "use_seconds": 90,
         "stops_bleeding_class": "moderate",
@@ -42,7 +52,12 @@
       "condition": 100,
       "condition_decay_per_use": 20,
       "rarity": "rare",
-      "loot_tags": ["military", "police", "hospital", "ambulance"],
+      "loot_tags": [
+        "military",
+        "police",
+        "hospital",
+        "ambulance"
+      ],
       "props": {
         "use_seconds": 45,
         "stops_bleeding_class": "arterial",
@@ -61,10 +76,17 @@
       "condition": 100,
       "condition_decay_per_use": 25,
       "rarity": "rare",
-      "loot_tags": ["hospital", "pharmacy", "veterinary"],
+      "loot_tags": [
+        "hospital",
+        "pharmacy",
+        "veterinary"
+      ],
       "props": {
         "use_seconds": 960,
-        "use_seconds_range": [720, 1200],
+        "use_seconds_range": [
+          720,
+          1200
+        ],
         "stops_bleeding_class": "strong",
         "requires_stationary": true,
         "infection_risk_reduction": 0.5
@@ -80,7 +102,12 @@
       "condition": 100,
       "condition_decay_per_use": 25,
       "rarity": "uncommon",
-      "loot_tags": ["pharmacy", "hospital", "vehicle", "residential"],
+      "loot_tags": [
+        "pharmacy",
+        "hospital",
+        "vehicle",
+        "residential"
+      ],
       "props": {
         "use_seconds": 120,
         "stops_bleeding_class": "moderate",
@@ -97,7 +124,11 @@
       "volume_l": 0.05,
       "stackable": true,
       "rarity": "common",
-      "loot_tags": ["pharmacy", "residential", "shop"],
+      "loot_tags": [
+        "pharmacy",
+        "residential",
+        "shop"
+      ],
       "props": {
         "use_seconds": 20,
         "stops_bleeding_class": null,
@@ -113,7 +144,11 @@
       "volume_l": 0.06,
       "stackable": true,
       "rarity": "rare",
-      "loot_tags": ["pharmacy", "hospital", "veterinary"],
+      "loot_tags": [
+        "pharmacy",
+        "hospital",
+        "veterinary"
+      ],
       "props": {
         "use_seconds": 20,
         "stops_bleeding_class": null,
@@ -131,7 +166,11 @@
       "condition": 100,
       "condition_decay_per_use": 20,
       "rarity": "common",
-      "loot_tags": ["pharmacy", "residential", "hospital"],
+      "loot_tags": [
+        "pharmacy",
+        "residential",
+        "hospital"
+      ],
       "props": {
         "use_seconds": 30,
         "stops_bleeding_class": null,
@@ -148,7 +187,11 @@
       "condition": 100,
       "condition_decay_per_use": 50,
       "rarity": "uncommon",
-      "loot_tags": ["hospital", "ambulance", "sport"],
+      "loot_tags": [
+        "hospital",
+        "ambulance",
+        "sport"
+      ],
       "props": {
         "use_seconds": 180,
         "stops_bleeding_class": null,
@@ -164,13 +207,83 @@
       "volume_l": 0.6,
       "stackable": true,
       "rarity": "very_rare",
-      "loot_tags": ["hospital", "ambulance"],
+      "loot_tags": [
+        "hospital",
+        "ambulance"
+      ],
       "props": {
         "use_seconds": 600,
         "stops_bleeding_class": null,
         "restores_blood_ml": 500,
         "requires_stationary": true,
         "note": "The only thing that puts volume back. Ten minutes on a drip, which is why it is used in a shelter and not in a street."
+      }
+    },
+    {
+      "id": "med_bandage_improvised",
+      "type": "medical",
+      "name_key": "item.med_bandage_improvised.name",
+      "weight_kg": 0.05,
+      "volume_l": 0.12,
+      "stackable": true,
+      "rarity": "common",
+      "loot_tags": [],
+      "props": {
+        "use_seconds": 60,
+        "stops_bleeding_class": "superficial",
+        "infection_risk_reduction": 0.1,
+        "craft_only": true
+      }
+    },
+    {
+      "id": "med_pressure_improvised",
+      "type": "medical",
+      "name_key": "item.med_pressure_improvised.name",
+      "weight_kg": 0.1,
+      "volume_l": 0.2,
+      "stackable": true,
+      "rarity": "common",
+      "loot_tags": [],
+      "props": {
+        "use_seconds": 120,
+        "stops_bleeding_class": "moderate",
+        "infection_risk_reduction": 0.15,
+        "craft_only": true
+      }
+    },
+    {
+      "id": "med_tourniquet_improvised",
+      "type": "medical",
+      "name_key": "item.med_tourniquet_improvised.name",
+      "weight_kg": 0.14,
+      "volume_l": 0.25,
+      "stackable": true,
+      "rarity": "common",
+      "loot_tags": [],
+      "props": {
+        "use_seconds": 75,
+        "stops_bleeding_class": "arterial",
+        "limbs_only": true,
+        "reusable": false,
+        "craft_only": true,
+        "note": "A stick and a strip of cloth. It works once, and taking it off is the part nobody rehearses."
+      }
+    },
+    {
+      "id": "med_splint_improvised",
+      "type": "medical",
+      "name_key": "item.med_splint_improvised.name",
+      "weight_kg": 0.4,
+      "volume_l": 1.0,
+      "stackable": false,
+      "rarity": "common",
+      "loot_tags": [],
+      "props": {
+        "use_seconds": 240,
+        "stops_bleeding_class": null,
+        "treats_fracture": true,
+        "requires_stationary": true,
+        "craft_only": true
       }
     }
   ]

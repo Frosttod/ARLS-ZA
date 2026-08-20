@@ -12,7 +12,12 @@
       "condition": 100,
       "condition_decay_per_use": 0.15,
       "rarity": "common",
-      "loot_tags": ["residential", "shop", "military", "rural"],
+      "loot_tags": [
+        "residential",
+        "shop",
+        "military",
+        "rural"
+      ],
       "props": {
         "blood_ml_per_hit": 180,
         "swing_seconds": 0.9,
@@ -20,7 +25,10 @@
         "reach_m": 0.4,
         "strength_required": 10,
         "noise_range_m": 25,
-        "doubles_as_tool": true
+        "doubles_as_tool": true,
+        "salvage": {
+          "mat_metal": 0.07
+        }
       }
     },
     {
@@ -33,14 +41,22 @@
       "condition": 100,
       "condition_decay_per_use": 0.12,
       "rarity": "uncommon",
-      "loot_tags": ["rural", "shop", "garden"],
+      "loot_tags": [
+        "rural",
+        "shop",
+        "garden"
+      ],
       "props": {
         "blood_ml_per_hit": 310,
         "swing_seconds": 1.3,
         "damage_type": "cutting",
         "reach_m": 0.7,
         "strength_required": 25,
-        "noise_range_m": 28
+        "noise_range_m": 28,
+        "salvage": {
+          "mat_metal": 0.28,
+          "mat_wood": 0.09
+        }
       }
     },
     {
@@ -53,7 +69,11 @@
       "condition": 100,
       "condition_decay_per_use": 0.1,
       "rarity": "common",
-      "loot_tags": ["rural", "garden", "industrial"],
+      "loot_tags": [
+        "rural",
+        "garden",
+        "industrial"
+      ],
       "props": {
         "blood_ml_per_hit": 430,
         "swing_seconds": 1.9,
@@ -61,7 +81,11 @@
         "reach_m": 0.8,
         "strength_required": 40,
         "noise_range_m": 30,
-        "doubles_as_tool": true
+        "doubles_as_tool": true,
+        "salvage": {
+          "mat_metal": 0.65,
+          "mat_wood": 0.21
+        }
       }
     },
     {
@@ -74,7 +98,11 @@
       "condition": 100,
       "condition_decay_per_use": 0.05,
       "rarity": "common",
-      "loot_tags": ["industrial", "garage", "shop"],
+      "loot_tags": [
+        "industrial",
+        "garage",
+        "shop"
+      ],
       "props": {
         "blood_ml_per_hit": 330,
         "swing_seconds": 1.7,
@@ -82,7 +110,11 @@
         "reach_m": 0.7,
         "strength_required": 35,
         "noise_range_m": 30,
-        "doubles_as_tool": true
+        "doubles_as_tool": true,
+        "salvage": {
+          "mat_metal": 0.75,
+          "mat_wood": 0.24
+        }
       }
     },
     {
@@ -95,7 +127,11 @@
       "condition": 100,
       "condition_decay_per_use": 0.08,
       "rarity": "common",
-      "loot_tags": ["residential", "garage", "industrial"],
+      "loot_tags": [
+        "residential",
+        "garage",
+        "industrial"
+      ],
       "props": {
         "blood_ml_per_hit": 240,
         "swing_seconds": 1.2,
@@ -103,7 +139,11 @@
         "reach_m": 0.4,
         "strength_required": 20,
         "noise_range_m": 26,
-        "doubles_as_tool": true
+        "doubles_as_tool": true,
+        "salvage": {
+          "mat_metal": 0.33,
+          "mat_wood": 0.1
+        }
       }
     },
     {
@@ -116,14 +156,21 @@
       "condition": 100,
       "condition_decay_per_use": 0.1,
       "rarity": "uncommon",
-      "loot_tags": ["residential", "shop", "school"],
+      "loot_tags": [
+        "residential",
+        "shop",
+        "school"
+      ],
       "props": {
         "blood_ml_per_hit": 260,
         "swing_seconds": 1.5,
         "damage_type": "blunt",
         "reach_m": 0.9,
         "strength_required": 25,
-        "noise_range_m": 28
+        "noise_range_m": 28,
+        "salvage": {
+          "mat_wood": 0.45
+        }
       }
     },
     {
@@ -136,7 +183,11 @@
       "condition": 100,
       "condition_decay_per_use": 0.08,
       "rarity": "common",
-      "loot_tags": ["rural", "garden", "industrial"],
+      "loot_tags": [
+        "rural",
+        "garden",
+        "industrial"
+      ],
       "props": {
         "blood_ml_per_hit": 300,
         "swing_seconds": 2.1,
@@ -144,7 +195,11 @@
         "reach_m": 1.1,
         "strength_required": 40,
         "noise_range_m": 30,
-        "doubles_as_tool": true
+        "doubles_as_tool": true,
+        "salvage": {
+          "mat_metal": 0.76,
+          "mat_wood": 0.38
+        }
       }
     },
     {
@@ -157,7 +212,11 @@
       "condition": 100,
       "condition_decay_per_use": 0.2,
       "rarity": "common",
-      "loot_tags": ["residential", "garage", "industrial"],
+      "loot_tags": [
+        "residential",
+        "garage",
+        "industrial"
+      ],
       "props": {
         "blood_ml_per_hit": 120,
         "swing_seconds": 0.9,
@@ -165,7 +224,84 @@
         "reach_m": 0.3,
         "strength_required": 10,
         "noise_range_m": 22,
-        "doubles_as_tool": true
+        "doubles_as_tool": true,
+        "salvage": {
+          "mat_metal": 0.06
+        }
+      }
+    },
+    {
+      "id": "melee_spike",
+      "type": "melee",
+      "name_key": "item.melee_spike.name",
+      "weight_kg": 0.8,
+      "volume_l": 2.4,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 0.9,
+      "rarity": "common",
+      "loot_tags": [],
+      "props": {
+        "blood_ml_per_hit": 150,
+        "swing_seconds": 1.4,
+        "damage_type": "piercing",
+        "reach_m": 1.2,
+        "strength_required": 15,
+        "noise_range_m": 22,
+        "craft_only": true,
+        "salvage": {
+          "mat_wood": 0.4
+        }
+      }
+    },
+    {
+      "id": "melee_spear",
+      "type": "melee",
+      "name_key": "item.melee_spear.name",
+      "weight_kg": 1.3,
+      "volume_l": 3.2,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 0.15,
+      "rarity": "common",
+      "loot_tags": [],
+      "props": {
+        "blood_ml_per_hit": 290,
+        "swing_seconds": 1.6,
+        "damage_type": "piercing",
+        "reach_m": 1.8,
+        "strength_required": 30,
+        "noise_range_m": 26,
+        "craft_only": true,
+        "salvage": {
+          "mat_wood": 0.39,
+          "mat_metal": 0.35
+        }
+      }
+    },
+    {
+      "id": "melee_club_studded",
+      "type": "melee",
+      "name_key": "item.melee_club_studded.name",
+      "weight_kg": 1.7,
+      "volume_l": 2.8,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 0.1,
+      "rarity": "common",
+      "loot_tags": [],
+      "props": {
+        "blood_ml_per_hit": 380,
+        "swing_seconds": 1.8,
+        "damage_type": "blunt",
+        "reach_m": 0.9,
+        "strength_required": 40,
+        "noise_range_m": 30,
+        "craft_only": true,
+        "salvage": {
+          "mat_wood": 0.34,
+          "mat_metal": 0.68
+        }
       }
     }
   ]

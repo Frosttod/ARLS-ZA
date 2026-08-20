@@ -12,7 +12,11 @@
       "condition": 100,
       "condition_decay_per_use": 0.02,
       "rarity": "common",
-      "loot_tags": ["hunting", "rural", "residential"],
+      "loot_tags": [
+        "hunting",
+        "rural",
+        "residential"
+      ],
       "props": {
         "caliber": "22lr",
         "muzzle_energy_j": 160,
@@ -20,11 +24,19 @@
         "recoil_moa": 0.4,
         "magazine": 10,
         "feed": "magazine",
-        "fire_modes": ["single"],
+        "fire_modes": [
+          "single"
+        ],
         "reload_seconds": 3.5,
         "effective_range_m": 90,
-        "noise_range_m": 250
-      , "attachment_slots": 2}
+        "noise_range_m": 250,
+        "attachment_slots": 2,
+        "salvage": {
+          "mat_metal": 1.33,
+          "mat_component": 0.47,
+          "mat_plastic": 0.31
+        }
+      }
     },
     {
       "id": "weapon_revolver_38",
@@ -36,7 +48,10 @@
       "condition": 100,
       "condition_decay_per_use": 0.02,
       "rarity": "uncommon",
-      "loot_tags": ["police", "residential"],
+      "loot_tags": [
+        "police",
+        "residential"
+      ],
       "props": {
         "caliber": "38special",
         "muzzle_energy_j": 420,
@@ -44,12 +59,20 @@
         "recoil_moa": 1.6,
         "magazine": 6,
         "feed": "loose",
-        "fire_modes": ["single"],
+        "fire_modes": [
+          "single"
+        ],
         "reload_seconds": 15.0,
         "reload_note": "loose rounds, 2.5 s each (§4.2)",
         "effective_range_m": 35,
-        "noise_range_m": 600
-      , "attachment_slots": 1}
+        "noise_range_m": 600,
+        "attachment_slots": 1,
+        "salvage": {
+          "mat_metal": 0.48,
+          "mat_component": 0.17,
+          "mat_plastic": 0.11
+        }
+      }
     },
     {
       "id": "weapon_pistol_9mm",
@@ -61,7 +84,11 @@
       "condition": 100,
       "condition_decay_per_use": 0.02,
       "rarity": "uncommon",
-      "loot_tags": ["police", "military", "residential"],
+      "loot_tags": [
+        "police",
+        "military",
+        "residential"
+      ],
       "props": {
         "caliber": "9x19",
         "muzzle_energy_j": 500,
@@ -69,11 +96,19 @@
         "recoil_moa": 1.2,
         "magazine": 15,
         "feed": "magazine",
-        "fire_modes": ["single"],
+        "fire_modes": [
+          "single"
+        ],
         "reload_seconds": 3.0,
         "effective_range_m": 40,
-        "noise_range_m": 600
-      , "attachment_slots": 2}
+        "noise_range_m": 600,
+        "attachment_slots": 2,
+        "salvage": {
+          "mat_metal": 0.37,
+          "mat_component": 0.13,
+          "mat_plastic": 0.09
+        }
+      }
     },
     {
       "id": "weapon_smg_9mm",
@@ -85,7 +120,10 @@
       "condition": 100,
       "condition_decay_per_use": 0.03,
       "rarity": "rare",
-      "loot_tags": ["police", "military"],
+      "loot_tags": [
+        "police",
+        "military"
+      ],
       "props": {
         "caliber": "9x19",
         "muzzle_energy_j": 560,
@@ -93,11 +131,20 @@
         "recoil_moa": 2.2,
         "magazine": 30,
         "feed": "magazine",
-        "fire_modes": ["single", "auto"],
+        "fire_modes": [
+          "single",
+          "auto"
+        ],
         "reload_seconds": 3.5,
         "effective_range_m": 100,
-        "noise_range_m": 650
-      , "attachment_slots": 3}
+        "noise_range_m": 650,
+        "attachment_slots": 3,
+        "salvage": {
+          "mat_metal": 1.55,
+          "mat_component": 0.54,
+          "mat_plastic": 0.36
+        }
+      }
     },
     {
       "id": "weapon_rifle_545",
@@ -109,7 +156,9 @@
       "condition": 100,
       "condition_decay_per_use": 0.03,
       "rarity": "rare",
-      "loot_tags": ["military"],
+      "loot_tags": [
+        "military"
+      ],
       "props": {
         "caliber": "5.45x39",
         "muzzle_energy_j": 1350,
@@ -117,11 +166,20 @@
         "recoil_moa": 1.8,
         "magazine": 30,
         "feed": "magazine",
-        "fire_modes": ["single", "auto"],
+        "fire_modes": [
+          "single",
+          "auto"
+        ],
         "reload_seconds": 3.5,
         "effective_range_m": 300,
-        "noise_range_m": 700
-      , "attachment_slots": 3}
+        "noise_range_m": 700,
+        "attachment_slots": 3,
+        "salvage": {
+          "mat_metal": 1.76,
+          "mat_component": 0.62,
+          "mat_plastic": 0.41
+        }
+      }
     },
     {
       "id": "weapon_rifle_762x39",
@@ -133,7 +191,10 @@
       "condition": 100,
       "condition_decay_per_use": 0.03,
       "rarity": "rare",
-      "loot_tags": ["military", "hunting"],
+      "loot_tags": [
+        "military",
+        "hunting"
+      ],
       "props": {
         "caliber": "7.62x39",
         "muzzle_energy_j": 2000,
@@ -141,11 +202,20 @@
         "recoil_moa": 2.6,
         "magazine": 30,
         "feed": "magazine",
-        "fire_modes": ["single", "auto"],
+        "fire_modes": [
+          "single",
+          "auto"
+        ],
         "reload_seconds": 3.5,
         "effective_range_m": 300,
-        "noise_range_m": 720
-      , "attachment_slots": 3}
+        "noise_range_m": 720,
+        "attachment_slots": 3,
+        "salvage": {
+          "mat_metal": 1.92,
+          "mat_component": 0.68,
+          "mat_plastic": 0.45
+        }
+      }
     },
     {
       "id": "weapon_shotgun_pump",
@@ -157,7 +227,11 @@
       "condition": 100,
       "condition_decay_per_use": 0.03,
       "rarity": "uncommon",
-      "loot_tags": ["hunting", "police", "rural"],
+      "loot_tags": [
+        "hunting",
+        "police",
+        "rural"
+      ],
       "props": {
         "caliber": "12ga",
         "muzzle_energy_j": 2400,
@@ -166,12 +240,20 @@
         "recoil_moa": 3.5,
         "magazine": 5,
         "feed": "loose",
-        "fire_modes": ["single"],
+        "fire_modes": [
+          "single"
+        ],
         "reload_seconds": 6.0,
         "reload_note": "1.2 s per shell, pump (§4.2)",
         "effective_range_m": 40,
-        "noise_range_m": 800
-      , "attachment_slots": 2}
+        "noise_range_m": 800,
+        "attachment_slots": 2,
+        "salvage": {
+          "mat_metal": 1.71,
+          "mat_component": 0.6,
+          "mat_plastic": 0.4
+        }
+      }
     },
     {
       "id": "weapon_rifle_mosin",
@@ -183,7 +265,11 @@
       "condition": 100,
       "condition_decay_per_use": 0.02,
       "rarity": "uncommon",
-      "loot_tags": ["hunting", "rural", "military"],
+      "loot_tags": [
+        "hunting",
+        "rural",
+        "military"
+      ],
       "props": {
         "caliber": "7.62x54r",
         "muzzle_energy_j": 3600,
@@ -191,12 +277,20 @@
         "recoil_moa": 3.0,
         "magazine": 5,
         "feed": "loose",
-        "fire_modes": ["single"],
+        "fire_modes": [
+          "single"
+        ],
         "reload_seconds": 12.5,
         "reload_note": "loose rounds, 2.5 s each (§4.2)",
         "effective_range_m": 500,
-        "noise_range_m": 900
-      , "attachment_slots": 2}
+        "noise_range_m": 900,
+        "attachment_slots": 2,
+        "salvage": {
+          "mat_metal": 2.13,
+          "mat_component": 0.75,
+          "mat_plastic": 0.5
+        }
+      }
     }
   ]
 }

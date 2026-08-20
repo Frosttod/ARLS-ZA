@@ -1,0 +1,77 @@
+{
+  "note": "§18.4, §18.5 — item recipes. Shelter modules live in lib/shelter/recipes.dart because they are levels of a structure rather than things you carry. `work_minutes` is §18.3's base, before Engineering, tools and the workshop. `tools_any_of` is a list of item ids of which any one will do; an empty list means bare hands are enough. `workshop_level` is the minimum the shelter must have, 0 for anywhere.",
+  "recipes": [
+    {
+      "id": "craft_bandage_improvised",
+      "output": "med_bandage_improvised",
+      "count": 1,
+      "materials": { "mat_fabric": 3 },
+      "work_minutes": 4,
+      "workshop_level": 0,
+      "tools_any_of": []
+    },
+    {
+      "id": "craft_pressure_improvised",
+      "output": "med_pressure_improvised",
+      "count": 1,
+      "materials": { "mat_fabric": 4, "mat_plastic": 1 },
+      "work_minutes": 7,
+      "workshop_level": 0,
+      "tools_any_of": []
+    },
+    {
+      "id": "craft_tourniquet_improvised",
+      "output": "med_tourniquet_improvised",
+      "count": 1,
+      "materials": { "mat_fabric": 2, "mat_wood": 1 },
+      "work_minutes": 5,
+      "workshop_level": 0,
+      "tools_any_of": []
+    },
+    {
+      "id": "craft_splint_improvised",
+      "output": "med_splint_improvised",
+      "count": 1,
+      "materials": { "mat_wood": 2, "mat_fabric": 3 },
+      "work_minutes": 12,
+      "workshop_level": 0,
+      "tools_any_of": []
+    },
+    {
+      "id": "craft_spike",
+      "output": "melee_spike",
+      "count": 1,
+      "materials": { "mat_wood": 1 },
+      "work_minutes": 8,
+      "workshop_level": 0,
+      "tools_any_of": ["melee_knife", "tool_multitool"]
+    },
+    {
+      "id": "craft_spear",
+      "output": "melee_spear",
+      "count": 1,
+      "materials": { "mat_wood": 2, "mat_metal": 1, "mat_fabric": 1 },
+      "work_minutes": 25,
+      "workshop_level": 1,
+      "tools_any_of": ["melee_hammer", "tool_multitool"]
+    },
+    {
+      "id": "craft_club_studded",
+      "output": "melee_club_studded",
+      "count": 1,
+      "materials": { "mat_wood": 1, "mat_metal": 3 },
+      "work_minutes": 35,
+      "workshop_level": 1,
+      "tools_any_of": ["melee_hammer"]
+    },
+    {
+      "id": "craft_pack_improvised",
+      "output": "pack_improvised",
+      "count": 1,
+      "materials": { "mat_fabric": 8, "mat_metal": 2 },
+      "work_minutes": 45,
+      "workshop_level": 1,
+      "tools_any_of": ["tool_sewing_kit", "tool_multitool"]
+    }
+  ]
+}

@@ -12,12 +12,18 @@
       "condition": 100,
       "condition_decay_per_use": 0.05,
       "rarity": "common",
-      "loot_tags": ["residential", "shop"],
+      "loot_tags": [
+        "residential",
+        "shop"
+      ],
       "props": {
         "slot": "torso_base",
         "insulation_clo": 0.1,
         "protection_level": 0,
-        "coverage_pct": 0
+        "coverage_pct": 0,
+        "salvage": {
+          "mat_fabric": 0.4
+        }
       }
     },
     {
@@ -30,12 +36,20 @@
       "condition": 100,
       "condition_decay_per_use": 0.05,
       "rarity": "uncommon",
-      "loot_tags": ["residential", "shop", "sport"],
+      "loot_tags": [
+        "residential",
+        "shop",
+        "sport"
+      ],
       "props": {
         "slot": "torso_base",
         "insulation_clo": 0.8,
         "protection_level": 0,
-        "coverage_pct": 0
+        "coverage_pct": 0,
+        "salvage": {
+          "mat_fabric": 0.93,
+          "mat_metal": 0.05
+        }
       }
     },
     {
@@ -48,12 +62,20 @@
       "condition": 100,
       "condition_decay_per_use": 0.05,
       "rarity": "common",
-      "loot_tags": ["residential", "shop", "sport"],
+      "loot_tags": [
+        "residential",
+        "shop",
+        "sport"
+      ],
       "props": {
         "slot": "torso_mid",
         "insulation_clo": 1.0,
         "protection_level": 0,
-        "coverage_pct": 0
+        "coverage_pct": 0,
+        "salvage": {
+          "mat_fabric": 1.2,
+          "mat_metal": 0.06
+        }
       }
     },
     {
@@ -66,13 +88,20 @@
       "condition": 100,
       "condition_decay_per_use": 0.04,
       "rarity": "common",
-      "loot_tags": ["residential", "shop"],
+      "loot_tags": [
+        "residential",
+        "shop"
+      ],
       "props": {
         "slot": "torso_outer",
         "insulation_clo": 2.2,
         "windproof": true,
         "protection_level": 0,
-        "coverage_pct": 0
+        "coverage_pct": 0,
+        "salvage": {
+          "mat_fabric": 3.2,
+          "mat_metal": 0.16
+        }
       }
     },
     {
@@ -85,14 +114,22 @@
       "condition": 100,
       "condition_decay_per_use": 0.05,
       "rarity": "uncommon",
-      "loot_tags": ["residential", "shop", "sport"],
+      "loot_tags": [
+        "residential",
+        "shop",
+        "sport"
+      ],
       "props": {
         "slot": "torso_outer",
         "insulation_clo": 0.4,
         "waterproof": true,
         "windproof": true,
         "protection_level": 0,
-        "coverage_pct": 0
+        "coverage_pct": 0,
+        "salvage": {
+          "mat_fabric": 1.07,
+          "mat_metal": 0.05
+        }
       }
     },
     {
@@ -105,12 +142,19 @@
       "condition": 100,
       "condition_decay_per_use": 0.05,
       "rarity": "common",
-      "loot_tags": ["residential", "shop"],
+      "loot_tags": [
+        "residential",
+        "shop"
+      ],
       "props": {
         "slot": "legs",
         "insulation_clo": 0.5,
         "protection_level": 0,
-        "coverage_pct": 0
+        "coverage_pct": 0,
+        "salvage": {
+          "mat_fabric": 1.33,
+          "mat_metal": 0.07
+        }
       }
     },
     {
@@ -123,13 +167,21 @@
       "condition": 100,
       "condition_decay_per_use": 0.04,
       "rarity": "uncommon",
-      "loot_tags": ["residential", "shop", "sport"],
+      "loot_tags": [
+        "residential",
+        "shop",
+        "sport"
+      ],
       "props": {
         "slot": "legs",
         "insulation_clo": 1.3,
         "windproof": true,
         "protection_level": 0,
-        "coverage_pct": 0
+        "coverage_pct": 0,
+        "salvage": {
+          "mat_fabric": 2.13,
+          "mat_metal": 0.11
+        }
       }
     },
     {
@@ -142,14 +194,22 @@
       "condition": 100,
       "condition_decay_per_use": 0.03,
       "rarity": "common",
-      "loot_tags": ["residential", "shop", "military"],
+      "loot_tags": [
+        "residential",
+        "shop",
+        "military"
+      ],
       "props": {
         "slot": "feet",
         "insulation_clo": 0.35,
         "waterproof": true,
         "protection_level": 0,
         "coverage_pct": 0,
-        "injury_risk_modifier": -0.2
+        "injury_risk_modifier": -0.2,
+        "salvage": {
+          "mat_leather": 1.28,
+          "mat_fabric": 1.1
+        }
       }
     },
     {
@@ -162,12 +222,19 @@
       "condition": 100,
       "condition_decay_per_use": 0.06,
       "rarity": "common",
-      "loot_tags": ["residential", "shop", "industrial"],
+      "loot_tags": [
+        "residential",
+        "shop",
+        "industrial"
+      ],
       "props": {
         "slot": "hands",
         "insulation_clo": 0.2,
         "protection_level": 0,
-        "coverage_pct": 0
+        "coverage_pct": 0,
+        "salvage": {
+          "mat_fabric": 0.27
+        }
       }
     },
     {
@@ -180,12 +247,18 @@
       "condition": 100,
       "condition_decay_per_use": 0.05,
       "rarity": "common",
-      "loot_tags": ["residential", "shop"],
+      "loot_tags": [
+        "residential",
+        "shop"
+      ],
       "props": {
         "slot": "head",
         "insulation_clo": 0.3,
         "protection_level": 0,
-        "coverage_pct": 0
+        "coverage_pct": 0,
+        "salvage": {
+          "mat_fabric": 0.21
+        }
       }
     },
     {
@@ -198,13 +271,20 @@
       "condition": 100,
       "condition_decay_per_use": 0.5,
       "rarity": "rare",
-      "loot_tags": ["military", "police"],
+      "loot_tags": [
+        "military",
+        "police"
+      ],
       "props": {
         "slot": "head",
         "insulation_clo": 0.15,
         "protection_level": 2,
         "coverage_pct": 12,
-        "blunt_bypass_pct": 50
+        "blunt_bypass_pct": 50,
+        "salvage": {
+          "mat_plastic": 1.93,
+          "mat_fabric": 2.1
+        }
       }
     },
     {
@@ -217,13 +297,20 @@
       "condition": 100,
       "condition_decay_per_use": 0.5,
       "rarity": "rare",
-      "loot_tags": ["police", "military"],
+      "loot_tags": [
+        "police",
+        "military"
+      ],
       "props": {
         "slot": "torso_armor",
         "insulation_clo": 0.3,
         "protection_level": 2,
         "coverage_pct": 55,
-        "blunt_bypass_pct": 50
+        "blunt_bypass_pct": 50,
+        "salvage": {
+          "mat_fabric": 7.37,
+          "mat_plastic": 0.97
+        }
       }
     },
     {
@@ -236,14 +323,20 @@
       "condition": 100,
       "condition_decay_per_use": 0.4,
       "rarity": "very_rare",
-      "loot_tags": ["military"],
+      "loot_tags": [
+        "military"
+      ],
       "props": {
         "slot": "torso_armor",
         "insulation_clo": 0.3,
         "protection_level": 4,
         "coverage_pct": 40,
         "coverage_note": "plates cover less than soft armour, and stop far more",
-        "blunt_bypass_pct": 50
+        "blunt_bypass_pct": 50,
+        "salvage": {
+          "mat_metal": 4.25,
+          "mat_fabric": 7.08
+        }
       }
     },
     {
@@ -256,13 +349,21 @@
       "condition": 100,
       "condition_decay_per_use": 1.0,
       "rarity": "uncommon",
-      "loot_tags": ["industrial", "garden", "veterinary"],
+      "loot_tags": [
+        "industrial",
+        "garden",
+        "veterinary"
+      ],
       "props": {
         "slot": "arms",
         "insulation_clo": 0.25,
         "protection_level": 1,
         "coverage_pct": 18,
-        "bite_protection": true
+        "bite_protection": true,
+        "salvage": {
+          "mat_leather": 0.6,
+          "mat_fabric": 0.8
+        }
       }
     }
   ]

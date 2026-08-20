@@ -25,7 +25,12 @@
           "craft_traps",
           "salvage_metal"
         ],
-        "opens_cans": true
+        "opens_cans": true,
+        "salvage": {
+          "mat_metal": 0.1,
+          "mat_component": 0.09,
+          "mat_plastic": 0.06
+        }
       }
     },
     {
@@ -67,7 +72,12 @@
         "light_radius_m": 25,
         "battery_hours": 6,
         "visible_to_enemies": true,
-        "note": "Light works both ways: it is seen further than it reaches."
+        "note": "Light works both ways: it is seen further than it reaches.",
+        "salvage": {
+          "mat_component": 0.11,
+          "mat_plastic": 0.17,
+          "mat_wire": 0.1
+        }
       }
     },
     {
@@ -89,7 +99,12 @@
         "light_radius_m": 18,
         "battery_hours": 8,
         "visible_to_enemies": true,
-        "hands_free": true
+        "hands_free": true,
+        "salvage": {
+          "mat_component": 0.07,
+          "mat_plastic": 0.1,
+          "mat_wire": 0.06
+        }
       }
     },
     {
@@ -109,7 +124,12 @@
       ],
       "props": {
         "search_radius_bonus_m": 60,
-        "spot_enemy_bonus": 0.25
+        "spot_enemy_bonus": 0.25,
+        "salvage": {
+          "mat_component": 0.48,
+          "mat_plastic": 0.52,
+          "mat_metal": 0.07
+        }
       }
     },
     {
@@ -179,7 +199,12 @@
         "required_for": [
           "cut_timber",
           "build_palisade"
-        ]
+        ],
+        "salvage": {
+          "mat_metal": 0.4,
+          "mat_component": 0.37,
+          "mat_plastic": 0.25
+        }
       }
     },
     {
@@ -203,7 +228,12 @@
           "repair_generator",
           "salvage_vehicle",
           "build_workbench"
-        ]
+        ],
+        "salvage": {
+          "mat_metal": 0.72,
+          "mat_component": 0.68,
+          "mat_plastic": 0.45
+        }
       }
     },
     {
@@ -226,7 +256,11 @@
         "use_seconds": 120,
         "required_for": [
           "purify_water"
-        ]
+        ],
+        "salvage": {
+          "mat_plastic": 0.45,
+          "mat_component": 0.15
+        }
       }
     },
     {
@@ -246,7 +280,12 @@
       ],
       "props": {
         "needs_no_battery": true,
-        "receives_broadcasts": true
+        "receives_broadcasts": true,
+        "salvage": {
+          "mat_component": 0.31,
+          "mat_plastic": 0.37,
+          "mat_wire": 0.25
+        }
       }
     },
     {
@@ -311,7 +350,12 @@
         "required_for": [
           "repair_firearm"
         ],
-        "use_seconds": 300
+        "use_seconds": 300,
+        "salvage": {
+          "mat_metal": 0.14,
+          "mat_component": 0.13,
+          "mat_plastic": 0.09
+        }
       }
     },
     {
@@ -334,7 +378,12 @@
         "cuts_locks": true,
         "use_seconds": 10,
         "quiet": false,
-        "note": "The loud answer to a padlock, and the fast one. Lockpicks take forty-five seconds and are heard from twenty metres; these take ten and are heard from sixty. Two kilograms of single-purpose steel is the price, which is the decision."
+        "note": "The loud answer to a padlock, and the fast one. Lockpicks take forty-five seconds and are heard from twenty metres; these take ten and are heard from sixty. Two kilograms of single-purpose steel is the price, which is the decision.",
+        "salvage": {
+          "mat_metal": 0.76,
+          "mat_component": 0.71,
+          "mat_plastic": 0.47
+        }
       }
     }
   ]
