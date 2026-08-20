@@ -14,14 +14,17 @@ Każdy zamknięty etap dostaje sekcję **Dziennik wykonania** z decyzjami podję
 | 3 | Mapa, GPS, bezpieczeństwo gracza | 🟡 13/13 zadań, po kilku spacerach | — | `f035626` … `43510ef` (15 commitów) |
 | 4 | Przedmioty, loot, przeszukanie | 🟡 11/11 zadań, po testach w terenie | — | `2b1cb31` … `6033aff` |
 | 5 | Walka, przeciwnicy, hałas | 🟡 14/14 zadań, po testach w terenie | — | … `6033aff` |
-| 6 | Ognisko z pełnym cyklem | ⬜ **następny** | — | — |
+| 6 | Ognisko z pełnym cyklem | 🟡 **w toku** | — | — |
 | 7 | Audio pozycyjne i haptyka | ⬜ | — | — |
-| 8 | Schron, obóz, pętla dobowa | 🟡 8/9 zadań, po testach w terenie | — | schemat v19 |
-| 9 | Onboarding, dostępność, zgodność | ⬜ | — | — |
+| 8 | Schron, obóz, pętla dobowa | 🟡 8/9 zadań, po testach w terenie | — | schemat v21 |
 | — | Profil i statystyki postaci (§13.1) | ✅ poza etapami | 2026-08-18 | `8937688` |
-| — | Oprawa: krój, pochylenie mapy, bryły budynków | 🟡 gałąź `visuals/typography-tilt-refresh` | — | `d0d0e51`, `6adce09` |
+| — | Oprawa: krój pisma, odświeżanie, mapa Voyager, płynność 30 fps | ✅ scalone do `main` | 2026-08-20 | `d0d0e51` … `89bce39` |
+| — | Półki w schronie, pamięć przeszukanych miejsc, zasięgi per miejsce | ✅ poza etapami | 2026-08-20 | schemat v20 |
+| — | Broń: magazynki, gniazda dodatków, ładowanie po naboju | ✅ poza etapami | 2026-08-20 | schemat v21 |
 
-**Metryki:** 1511 testów · `flutter analyze` czysty · schemat bazy **v19**
+**Metryki:** 1652 testy · `flutter analyze` czysty · schemat bazy **v21**
+
+⚠️ **`main` jest 100 commitów przed `origin/main`.** Nic z tego nie było wypchnięte — cała gra istnieje na jednym dysku. To jest dziś największe ryzyko projektu i jedyne, którego nie da się naprawić kodem.
 
 ### Co zamyka etapy 3–5 i 8
 
