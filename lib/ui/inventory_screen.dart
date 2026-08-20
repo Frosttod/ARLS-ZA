@@ -45,6 +45,12 @@ import 'hud.dart' show HudColors;
 /// "what can I put down" wants the heaviest first; "have I got a crowbar"
 /// wants the alphabet. One fixed order answers one of the three and makes the
 /// other two a scroll.
+/// The things a row can offer to do (§12).
+///
+/// Named so that the screen can ask one question about all of them: *would
+/// this work right now, and if not, why not*.
+enum PackAction { use, wear, read, fill, empty, dismantle, stash }
+
 enum PackOrder {
   /// Grouped by §4.1's own categories. The default: a pack is read by kind
   /// far more often than by anything else.
@@ -74,6 +80,7 @@ class InventoryScreen extends StatelessWidget {
     this.canDismantle,
     this.onStash,
     this.onStopDismantle,
+    this.refusalOf,
     this.craftJob,
     this.craftLine,
     this.onDetails,
@@ -130,6 +137,21 @@ class InventoryScreen extends StatelessWidget {
 
   /// §18.6: stops the job half way, keeping the work already done.
   final VoidCallback? onStopDismantle;
+
+  /// Why this action would not work on this piece **right now**, or null.
+  ///
+  /// ⚠️ Two different kinds of "no", and they get two different answers.
+  ///
+  /// An action that does not apply to the thing at all — dismantling a tin of
+  /// beans, reloading a crowbar — shows no button, and this is never asked
+  /// about it. An action that applies but cannot happen *yet* — the shelves
+  /// are full, something else is on the bench — shows the button greyed, and
+  /// says why under the row when it is pressed.
+  ///
+  /// The difference matters because the second kind is something the player
+  /// can go and fix. Hiding it would leave them looking for a control that was
+  /// there a minute ago; a dead button with no explanation reads as broken.
+  final String? Function(CarriedItem line, PackAction action)? refusalOf;
 
   /// §18.6, §2.1a.3: the job on the bench, and which piece it is holding.
   final ValueListenable<CraftJob?>? craftJob;
@@ -289,6 +311,7 @@ class InventoryScreen extends StatelessWidget {
                 canDismantle: canDismantle,
                 onStash: onStash,
                 onStopDismantle: onStopDismantle,
+                refusalOf: refusalOf,
                 craftJob: craftJob,
                 craftLine: craftLine,
                 onDetails: onDetails,
@@ -725,6 +748,7 @@ class _ItemRow extends StatefulWidget {
     this.canDismantle,
     this.onStash,
     this.onStopDismantle,
+    this.refusalOf,
     this.craftJob,
     this.craftLine,
     this.onDetails,
@@ -760,6 +784,7 @@ class _ItemRow extends StatefulWidget {
   final bool Function(CarriedItem)? canDismantle;
   final void Function(CarriedItem)? onStash;
   final VoidCallback? onStopDismantle;
+  final String? Function(CarriedItem line, PackAction action)? refusalOf;
   final ValueListenable<CraftJob?>? craftJob;
   final ValueListenable<CarriedItem?>? craftLine;
 
@@ -778,6 +803,33 @@ class _ItemRow extends StatefulWidget {
 
 class _ItemRowState extends State<_ItemRow> {
   int _toDrop = 1;
+
+  /// The last reason this row gave for not doing something.
+  ///
+  /// Held per row rather than shouted at the top of the screen, because the
+  /// answer belongs where the question was asked — four rows all saying "the
+  /// shelves are full" at once is a wall, and one row saying it under the
+  /// glyph that was pressed is an answer.
+  String? _refused;
+
+  String? _no(PackAction action) => widget.refusalOf?.call(widget.line, action);
+
+  void _sayNo(String reason) => setState(() => _refused = reason);
+
+  @override
+  void didUpdateWidget(_ItemRow old) {
+    super.didUpdateWidget(old);
+
+    // ⚠️ The reason goes as soon as it stops being true. Left behind, a row
+    // would go on saying the shelves are full long after they were emptied —
+    // the same lie a dead button tells, only in words.
+    if (_refused == null) return;
+
+    final stillTrue = PackAction.values.any(
+      (action) => widget.refusalOf?.call(widget.line, action) == _refused,
+    );
+    if (!stillTrue) _refused = null;
+  }
 
   /// §18.6: whether this very piece is the one on the bench.
   bool get _busy =>
@@ -925,6 +977,8 @@ class _ItemRowState extends State<_ItemRow> {
                             tooltip: l10n.craftTakeApart,
                             onPressed: () => widget.onDismantle!(line),
                             colours: colours,
+                            refusal: _no(PackAction.dismantle),
+                            onRefused: _sayNo,
                           ),
                       ],
                     )
@@ -947,6 +1001,8 @@ class _ItemRowState extends State<_ItemRow> {
                             tooltip: l10n.magazineFill,
                             onPressed: () => widget.onFill!(line),
                             colours: colours,
+                            refusal: _no(PackAction.fill),
+                            onRefused: _sayNo,
                           ),
 
                         // §4.2: and tipping them back out. A magazine is emptied
@@ -963,6 +1019,8 @@ class _ItemRowState extends State<_ItemRow> {
                             tooltip: l10n.magazineEmpty,
                             onPressed: () => widget.onEmpty!(line),
                             colours: colours,
+                            refusal: _no(PackAction.empty),
+                            onRefused: _sayNo,
                           ),
 
                         // §18.2: onto the shelf, one tap, without going
@@ -975,6 +1033,8 @@ class _ItemRowState extends State<_ItemRow> {
                             tooltip: l10n.stashStore,
                             onPressed: () => widget.onStash!(line),
                             colours: colours,
+                            refusal: _no(PackAction.stash),
+                            onRefused: _sayNo,
                           ),
 
                         // §18.6: taking it apart for what is in it. Last in
@@ -987,6 +1047,8 @@ class _ItemRowState extends State<_ItemRow> {
                             tooltip: l10n.craftTakeApart,
                             onPressed: () => widget.onDismantle!(line),
                             colours: colours,
+                            refusal: _no(PackAction.dismantle),
+                            onRefused: _sayNo,
                           ),
 
                         if (usable && widget.onUse != null)
@@ -995,6 +1057,8 @@ class _ItemRowState extends State<_ItemRow> {
                             tooltip: l10n.inventoryUse,
                             onPressed: () => widget.onUse!(line),
                             colours: colours,
+                            refusal: _no(PackAction.use),
+                            onRefused: _sayNo,
                           ),
                         if (wearable && widget.onWear != null)
                           _RowAction(
@@ -1002,6 +1066,8 @@ class _ItemRowState extends State<_ItemRow> {
                             tooltip: l10n.inventoryWear,
                             onPressed: () => widget.onWear!(line),
                             colours: colours,
+                            refusal: _no(PackAction.wear),
+                            onRefused: _sayNo,
                           ),
                         if (line.noteId != null && widget.onRead != null)
                           _RowAction(
@@ -1009,6 +1075,8 @@ class _ItemRowState extends State<_ItemRow> {
                             tooltip: l10n.noteRead,
                             onPressed: () => widget.onRead!(line),
                             colours: colours,
+                            refusal: _no(PackAction.read),
+                            onRefused: _sayNo,
                           ),
                         if (widget.onDrop != null) ...[
                           // Only where there is a choice to make. A stepper
@@ -1041,6 +1109,28 @@ class _ItemRowState extends State<_ItemRow> {
           // \u26a0\ufe0f The piece, not the item id. Found on a phone: a tin opened
           // out of a stack of four leaves a part-eaten one beside three whole
           // ones, and matching by id drew the same bar under both rows.
+          // The last thing this row would not do, and why (§12).
+          //
+          // ⚠️ Under the row rather than shouted at the top of the screen.
+          // Four rows all saying "the shelves are full" at once is a wall;
+          // one row saying it under the glyph that was pressed is an answer.
+          if (_refused case final reason?)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Row(
+                children: [
+                  Icon(Icons.block, size: 12, color: colours.alert),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      reason,
+                      style: TextStyle(fontSize: 11, color: colours.alert),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
           // §18.6, §2.1a.3: the multitool, under the thing it is opening.
           //
           // ⚠️ The bar belongs here rather than on the bench screen, because
@@ -1212,6 +1302,8 @@ class _RowAction extends StatelessWidget {
     required this.tooltip,
     required this.onPressed,
     required this.colours,
+    this.refusal,
+    this.onRefused,
   });
 
   final IconData icon;
@@ -1219,16 +1311,30 @@ class _RowAction extends StatelessWidget {
   final VoidCallback onPressed;
   final HudColors colours;
 
+  /// Why this cannot happen right now, or null.
+  final String? refusal;
+
+  /// What to do when somebody presses it anyway: say the reason under the row.
+  ///
+  /// ⚠️ Still pressable. A greyed control that swallows the tap teaches
+  /// nothing — the player presses it twice, decides the game is broken and
+  /// writes that down. This one answers.
+  final void Function(String reason)? onRefused;
+
   @override
-  Widget build(BuildContext context) => IconButton(
-    onPressed: onPressed,
-    icon: Icon(icon, size: 20),
-    tooltip: tooltip,
-    color: colours.text,
-    visualDensity: VisualDensity.compact,
-    constraints: const BoxConstraints(),
-    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-  );
+  Widget build(BuildContext context) {
+    final no = refusal;
+
+    return IconButton(
+      onPressed: no == null ? onPressed : () => onRefused?.call(no),
+      icon: Icon(icon, size: 20),
+      tooltip: no ?? tooltip,
+      color: no == null ? colours.text : colours.muted.withValues(alpha: 0.55),
+      visualDensity: VisualDensity.compact,
+      constraints: const BoxConstraints(),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+    );
+  }
 }
 
 /// How many of a stack to put down.

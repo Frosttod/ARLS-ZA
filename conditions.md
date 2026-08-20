@@ -978,6 +978,19 @@ actions in strip: przeszukanie · użycie przedmiotu · przeładowanie · magazy
 
 if action not applicable to item
     then no button at all                        // ⚠️ Nieobecny, nie wyszarzony. Martwy przycisk czyta się jako zepsuty — i tak było czytane trzy razy: wymagania schronu (szare = wyłączone), ikona rozbiórki na siekierze, ikona przeładowania bez magazynka. Pytanie brzmi zawsze "czy to teraz zadziała", zadane tą samą funkcją, która ma to zrobić.
+
+if action applies but cannot happen now
+    then button greyed, reason under the item on press
+                                                 // ⚠️ Dwa różne "nie" i dwie różne odpowiedzi. Rozbiórka puszki fasoli nie dotyczy przedmiotu — przycisku nie ma. Pełne półki dotyczą chwili — przycisk szarzeje i mówi dlaczego. Drugie jest czymś, co gracz może pójść i naprawić; ukrycie zostawiłoby go w poszukiwaniu kontrolki, która była tam minutę temu.
+
+if greyed button pressed
+    then reason shown under that row             // Wciąż klikalny. Szary przycisk, który połyka tapnięcie, niczego nie uczy — gracz klika drugi raz, uznaje grę za zepsutą i to zapisuje.
+
+if reason no longer true
+    then reason cleared                          // Nieaktualna odpowiedź jest gorsza niż żadna: wiersz mówiłby "półki pełne" długo po ich opróżnieniu.
+
+reason shown under the row, not at the top       // Cztery wiersze mówiące naraz "półki pełne" to ściana. Jeden wiersz pod ikoną, którą naciśnięto, to odpowiedź.
+
 ```
 
 ---

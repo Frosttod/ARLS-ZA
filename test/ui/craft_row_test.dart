@@ -34,6 +34,7 @@ void main() {
     CarriedItem? busy,
     void Function(CarriedItem)? onStash,
     VoidCallback? onStop,
+    String? Function(CarriedItem, PackAction)? refusalOf,
   }) async {
     await tester.pumpWidget(
       MaterialApp(
@@ -52,6 +53,7 @@ void main() {
           canDismantle: (_) => true,
           onStash: onStash,
           onStopDismantle: onStop,
+          refusalOf: refusalOf,
           onDrop: (_, _) {},
         ),
       ),
@@ -221,5 +223,70 @@ void main() {
 
     await tester.tap(find.byIcon(Icons.stop_circle_outlined));
     expect(stopped, isTrue);
+  });
+
+  group('an action that cannot happen yet (§12)', () {
+    testWidgets('greys rather than vanishes, and says why when pressed', (
+      tester,
+    ) async {
+      // ⚠️ The second kind of "no". "The shelves are full" is something the
+      // player can go and answer; hiding the glyph would leave them hunting
+      // for a control that was there a minute ago.
+      final pack = Inventory(
+        carried: const [CarriedItem(itemId: 'weapon_rifle_545')],
+      );
+
+      await open(
+        tester,
+        pack: pack,
+        onStash: (_) {},
+        refusalOf: (_, action) =>
+            action == PackAction.stash ? 'Na półkach nie ma miejsca.' : null,
+      );
+
+      // Still there, and still pressable.
+      expect(find.byIcon(Icons.inventory_2), findsOneWidget);
+      expect(find.textContaining('nie ma miejsca'), findsNothing);
+
+      await tester.tap(find.byIcon(Icons.inventory_2));
+      await tester.pump();
+
+      expect(find.textContaining('nie ma miejsca'), findsOneWidget);
+    });
+
+    testWidgets('and a refused tap does not do the thing', (tester) async {
+      final pack = Inventory(
+        carried: const [CarriedItem(itemId: 'weapon_rifle_545')],
+      );
+
+      var shelved = false;
+      await open(
+        tester,
+        pack: pack,
+        onStash: (_) => shelved = true,
+        refusalOf: (_, action) =>
+            action == PackAction.stash ? 'Na półkach nie ma miejsca.' : null,
+      );
+
+      await tester.tap(find.byIcon(Icons.inventory_2));
+      await tester.pump();
+
+      expect(shelved, isFalse);
+    });
+
+    testWidgets('an action with nothing against it stays live', (tester) async {
+      final pack = Inventory(
+        carried: const [CarriedItem(itemId: 'weapon_rifle_545')],
+      );
+
+      var shelved = false;
+      await open(tester, pack: pack, onStash: (_) => shelved = true);
+
+      await tester.tap(find.byIcon(Icons.inventory_2));
+      await tester.pump();
+
+      expect(shelved, isTrue);
+      expect(find.byIcon(Icons.block), findsNothing);
+    });
   });
 }

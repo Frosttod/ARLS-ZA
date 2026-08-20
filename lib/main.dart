@@ -1307,6 +1307,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
           onEmpty: (line) => unawaited(_emptyMagazine(line)),
           onDismantle: (line) => unawaited(_dismantle(line)),
           onStopDismantle: () => unawaited(_pauseDismantle()),
+          refusalOf: _packRefusal,
           onStash: _shelvesInReach()
               ? (line) => unawaited(_quickShelve(line))
               : null,
@@ -3381,6 +3382,61 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       ),
     );
     await _reloadCraftJob();
+  }
+
+  /// §12: why one action would not work on one piece **right now**.
+  ///
+  /// ⚠️ Only for the second kind of "no". An action that does not apply to the
+  /// thing at all — dismantling a tin, reloading a crowbar — shows no button,
+  /// and is never asked about here. This answers for the ones that apply and
+  /// cannot happen yet: the shelves are full, something is already on the
+  /// bench, a search is running. Those are things a player can go and fix, and
+  /// hiding them would leave somebody hunting for a control that was there a
+  /// minute ago.
+  ///
+  /// Asked with the same figures that would do the work, never a proxy for
+  /// them — the dismantle glyph spent a day lit on axes because it asked what
+  /// a thing was made of instead of what would come out of it.
+  String? _packRefusal(CarriedItem line, PackAction action) {
+    final l10n = L10n.of(context);
+    final catalogue = _catalogue;
+    if (catalogue == null) return null;
+
+    // Anything with a clock rules out starting another one, and §4.7's own
+    // rule is that a use in progress is the only use in progress.
+    final busySearching = _search.value != null;
+
+    switch (action) {
+      case PackAction.use:
+      case PackAction.read:
+        return busySearching ? l10n.craftBenchBusy : null;
+
+      case PackAction.fill:
+      case PackAction.empty:
+        return busySearching ? l10n.craftBenchBusy : null;
+
+      case PackAction.wear:
+        return null;
+
+      case PackAction.stash:
+        // §18.2: the one the player asked about. The shelves fill up, and
+        // "full" is something they can answer by taking something off them.
+        return _stash.value.fits(line, catalogue) ? null : l10n.stashFull;
+
+      case PackAction.dismantle:
+        final refusal = salvageRefusalFor(
+          line.itemId,
+          _bench(),
+          catalogue: catalogue,
+          book: _recipes,
+          condition: line.condition ?? 100,
+        );
+        // `nothingBack` is the first kind of no: that glyph is not drawn at
+        // all, so it never reaches here. Anything else is worth saying.
+        return refusal == null || refusal == CraftRefusal.nothingBack
+            ? null
+            : _craftRefusal(refusal);
+    }
   }
 
   /// §2.1a, §12: everything with a clock on it, in the one strip under the
