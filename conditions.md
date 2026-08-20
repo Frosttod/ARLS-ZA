@@ -530,6 +530,19 @@ if reload_running and enemy_within 5m
 if magazine_full
     then reload := unavailable                   // Prośba z testów: przycisk nieaktywny, zamiast marnować akcję.
 
+if magazine_fill_running or magazine_empty_running
+    then magazine_rounds := round(from + (to − from) × progress)
+                                                 // §4.2. Naboje idą pojedynczo, wraz z paskiem — nie hurtem na końcu. Liczone z ułamka, nie doliczane co tyk, więc tyk spóźniony albo podwójny niczego nie psuje.
+
+if magazine_empty_running and rounds_leave_magazine
+    then loose_ammo := existing_stack + 1        // Do stosu, który już leży w plecaku. Trzydzieści osobnych linii po jednym naboju to nie ekwipunek, to lista.
+
+if magazine_fill_interrupted or magazine_empty_interrupted
+    then moved_rounds := kept                    // §4.2. To, co już przeszło, przeszło. Naboje są tam, gdzie są — przerwanie nie cofa czasu.
+
+if magazine_rounds > 0 and player_in_inventory
+    then unload_button := shown                  // Magazynek opróżnia się, żeby napełnić inny albo żeby zostawić ciężar. Ten sam pół minuty, tylko w drugą stronę.
+
 if player_inside_own_shelter_zone
     then fire := refused                         // §8.1. Nie strzela się z własnej strefy bezpiecznej. Czytane z pozycji lepkiej, nie ze snapshotu — inaczej wystarczyło poczekać na utratę sygnału w budynku.
 
@@ -916,7 +929,6 @@ telemetry := never leaves the device             // §16.5 dopuszcza zagregowan�
 | Ogniska (§6.5) | etap 6, niezbudowane — dziś świat ma wyłącznie strużkę ambientową |
 | Umiejętności (§7) | niezbudowane — każdy strzela jak nowicjusz na 25 MOA |
 | Crafting i ulepszanie (§18.2) | do analizy |
-| Magazynki jako przedmioty | stan magazynka nie jest zapisywany |
 | Pancerz per lokalizacja | trafienia mają lokalizacje, pancerz liczy jeden próg torsa |
 | Budynki jako przeszkody | warstwa w paczkach nie niesie typu (`omt_schema.dart`) |
 | Dźwięk i haptyka (etap 7) | ~55 plików, licencje |

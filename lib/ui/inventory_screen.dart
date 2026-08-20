@@ -66,6 +66,7 @@ class InventoryScreen extends StatelessWidget {
     this.onUse,
     this.onRead,
     this.onFill,
+    this.onEmpty,
     this.onDetails,
     this.usingLine,
     this.onDevFill,
@@ -105,6 +106,9 @@ class InventoryScreen extends StatelessWidget {
 
   /// §4.2: filling a magazine from loose rounds.
   final void Function(CarriedItem line)? onFill;
+
+  /// §4.2: tipping them back out again.
+  final void Function(CarriedItem line)? onEmpty;
 
   /// §19.1: opens a note somebody left. Null for anything that is not one.
   final void Function(CarriedItem line)? onRead;
@@ -252,6 +256,7 @@ class InventoryScreen extends StatelessWidget {
                 onUse: onUse,
                 onRead: onRead,
                 onFill: onFill,
+                onEmpty: onEmpty,
                 onDetails: onDetails,
                 // The progress bar belongs under the thing it belongs to, not
                 // at the top of the screen: a player who taps "use" looks at
@@ -681,6 +686,7 @@ class _ItemRow extends StatefulWidget {
     this.onUse,
     this.onRead,
     this.onFill,
+    this.onEmpty,
     this.onDetails,
     this.action,
     this.usingLine,
@@ -708,6 +714,9 @@ class _ItemRow extends StatefulWidget {
 
   /// §4.2: filling a magazine from loose rounds.
   final void Function(CarriedItem)? onFill;
+
+  /// §4.2: tipping them back out again.
+  final void Function(CarriedItem)? onEmpty;
   final void Function(CarriedItem)? onRead;
   final void Function(CarriedItem)? onDetails;
 
@@ -855,6 +864,22 @@ class _ItemRowState extends State<_ItemRow> {
                           icon: Icons.download,
                           tooltip: l10n.magazineFill,
                           onPressed: () => widget.onFill!(line),
+                          colours: colours,
+                        ),
+
+                      // §4.2: and tipping them back out. A magazine is emptied
+                      // to fill a different one, or to leave the weight behind
+                      // — the same half minute, in the other direction.
+                      if (widget.onEmpty != null &&
+                          Magazine.of(
+                                widget.definition,
+                                rounds: line.rounds ?? 0,
+                              )?.isEmpty ==
+                              false)
+                        _RowAction(
+                          icon: Icons.upload,
+                          tooltip: l10n.magazineEmpty,
+                          onPressed: () => widget.onEmpty!(line),
                           colours: colours,
                         ),
 

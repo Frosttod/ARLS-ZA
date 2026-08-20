@@ -248,4 +248,129 @@ void main() {
       );
     });
   });
+
+  group('emptying one (§4.2)', () {
+    test('the rounds come back out and go loose', () {
+      final pack = Inventory(
+        carried: const [CarriedItem(itemId: 'mag_rifle_545', rounds: 30)],
+      );
+
+      final out = emptyMagazine(pack, pack.carried.first, catalogue);
+
+      expect(out.moved, 30);
+      expect(out.inventory.carried.first.rounds, 0);
+      expect(
+        out.inventory.carried
+            .firstWhere((l) => l.itemId == 'ammo_545x39')
+            .count,
+        30,
+      );
+    });
+
+    test('and land on the stack that is already there, not beside it', () {
+      // ⚠️ The reason this is a test: emptying is called once per round while
+      // the bar crosses, so appending would leave thirty rows of one round.
+      final pack = Inventory(
+        carried: const [
+          CarriedItem(itemId: 'mag_rifle_545', rounds: 30),
+          CarriedItem(itemId: 'ammo_545x39', count: 5),
+        ],
+      );
+
+      final out = emptyMagazine(pack, pack.carried.first, catalogue);
+      final loose = out.inventory.carried
+          .where((l) => l.itemId == 'ammo_545x39')
+          .toList();
+
+      expect(loose, hasLength(1));
+      expect(loose.single.count, 35);
+    });
+
+    test('an empty one is refused', () {
+      final pack = Inventory(
+        carried: const [CarriedItem(itemId: 'mag_rifle_545', rounds: 0)],
+      );
+
+      expect(
+        emptyMagazine(pack, pack.carried.first, catalogue).refusal,
+        LoadRefusal.noRounds,
+      );
+    });
+  });
+
+  group('a round at a time (§4.2)', () {
+    // What the bar is for. The count has to move while it crosses, which means
+    // the same call has to work thirty times with a limit of one rather than
+    // once with a limit of thirty.
+    test('thirty single-round fills reach exactly a full magazine', () {
+      var pack = Inventory(
+        carried: const [
+          CarriedItem(itemId: 'mag_rifle_545', rounds: 0),
+          CarriedItem(itemId: 'ammo_545x39', count: 40),
+        ],
+      );
+      var line = pack.carried.first;
+
+      for (var i = 0; i < 30; i++) {
+        final out = fillMagazine(pack, line, catalogue, limit: 1);
+        expect(out.moved, 1, reason: 'round ${i + 1}');
+        pack = out.inventory;
+        line = out.line!;
+        expect(line.rounds, i + 1);
+      }
+
+      expect(line.rounds, 30);
+      expect(
+        pack.carried.firstWhere((l) => l.itemId == 'ammo_545x39').count,
+        10,
+        reason: 'nothing was created or destroyed on the way',
+      );
+      expect(
+        fillMagazine(pack, line, catalogue, limit: 1).refusal,
+        LoadRefusal.full,
+      );
+    });
+
+    test('and emptying one at a time gives every round back', () {
+      var pack = Inventory(
+        carried: const [CarriedItem(itemId: 'mag_rifle_545', rounds: 12)],
+      );
+      var line = pack.carried.first;
+
+      for (var i = 0; i < 12; i++) {
+        final out = emptyMagazine(pack, line, catalogue, limit: 1);
+        pack = out.inventory;
+        line = out.line!;
+        expect(line.rounds, 11 - i);
+      }
+
+      expect(
+        pack.carried.firstWhere((l) => l.itemId == 'ammo_545x39').count,
+        12,
+      );
+      expect(
+        pack.carried.where((l) => l.itemId == 'ammo_545x39'),
+        hasLength(1),
+      );
+    });
+
+    test('the line comes back so a second magazine is never touched', () {
+      // ⚠️ The bug this exists to stop: finding "the magazine" by item id
+      // between rounds picks whichever comes first, and a player who owns two
+      // watches the wrong one fill.
+      final pack = Inventory(
+        carried: const [
+          CarriedItem(itemId: 'mag_rifle_545', rounds: 30),
+          CarriedItem(itemId: 'mag_rifle_545', rounds: 0),
+          CarriedItem(itemId: 'ammo_545x39', count: 10),
+        ],
+      );
+
+      final out = fillMagazine(pack, pack.carried[1], catalogue, limit: 1);
+
+      expect(out.line!.rounds, 1);
+      expect(out.inventory.carried[0].rounds, 30, reason: 'untouched');
+      expect(out.inventory.carried[1].rounds, 1);
+    });
+  });
 }

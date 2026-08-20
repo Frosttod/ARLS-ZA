@@ -1241,6 +1241,9 @@ class L10nEn extends L10n {
   String get magazineFill => 'Fill';
 
   @override
+  String get magazineEmpty => 'Unload';
+
+  @override
   String magazineRounds(int rounds, int capacity) {
     return '$rounds / $capacity';
   }

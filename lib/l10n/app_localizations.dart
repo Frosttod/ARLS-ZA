@@ -2293,6 +2293,12 @@ abstract class L10n {
   /// **'Fill'**
   String get magazineFill;
 
+  /// No description provided for @magazineEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Unload'**
+  String get magazineEmpty;
+
   /// No description provided for @magazineRounds.
   ///
   /// In en, this message translates to:

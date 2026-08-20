@@ -95,16 +95,26 @@ class LoadOutcome {
   const LoadOutcome({
     required this.inventory,
     required this.moved,
+    this.line,
     this.refusal,
   });
 
   const LoadOutcome.refused(this.inventory, LoadRefusal this.refusal)
-    : moved = 0;
+    : moved = 0,
+      line = null;
 
   final Inventory inventory;
 
   /// How many rounds actually moved. Zero on a refusal.
   final int moved;
+
+  /// The line as it now is, for whoever is going to move more rounds into it.
+  ///
+  /// ⚠️ Handed back rather than looked up again. A fill happens a round at a
+  /// time (§4.2), and finding "the magazine" by item id between rounds picks
+  /// the wrong one as soon as a player owns two — they are separate lines
+  /// precisely so a half-full one stays half full.
+  final CarriedItem? line;
 
   final LoadRefusal? refusal;
 
@@ -207,11 +217,14 @@ LoadOutcome swapMagazine(
 }
 
 /// §4.2: thumbs loose rounds into a magazine in the pack.
+/// [limit] caps how many rounds move, for §4.2's thumb: a fill is applied a
+/// round at a time while the bar crosses, not in one lump at the end.
 LoadOutcome fillMagazine(
   Inventory pack,
   CarriedItem magazineLine,
-  ItemCatalogue catalogue,
-) {
+  ItemCatalogue catalogue, {
+  int? limit,
+}) {
   final item = catalogue[magazineLine.itemId];
   if (item == null) return LoadOutcome.refused(pack, LoadRefusal.notAWeapon);
 
@@ -221,19 +234,24 @@ LoadOutcome fillMagazine(
   }
   if (magazine.isFull) return LoadOutcome.refused(pack, LoadRefusal.full);
 
-  final rounds = _looseRounds(pack, magazine.caliber, catalogue);
-  if (rounds == 0) return LoadOutcome.refused(pack, LoadRefusal.noRounds);
+  final loose = _looseRounds(pack, magazine.caliber, catalogue);
+  if (loose == 0) return LoadOutcome.refused(pack, LoadRefusal.noRounds);
 
+  final rounds = limit == null || limit >= loose ? loose : limit;
   final filled = magazine.fill(rounds);
   if (filled.took <= 0) return LoadOutcome.refused(pack, LoadRefusal.full);
 
+  final fuller = magazineLine.copyWith(rounds: filled.magazine.rounds);
+
   return LoadOutcome(
-    inventory: _spendRounds(pack, magazine.caliber, filled.took, catalogue)
-        .withLine(
-          magazineLine,
-          magazineLine.copyWith(rounds: filled.magazine.rounds),
-        ),
+    inventory: _spendRounds(
+      pack,
+      magazine.caliber,
+      filled.took,
+      catalogue,
+    ).withLine(magazineLine, fuller),
     moved: filled.took,
+    line: fuller,
   );
 }
 
@@ -304,4 +322,65 @@ Inventory _spendRounds(
   }
 
   return next;
+}
+
+/// §4.2: tips the rounds out of a magazine and back into the pack.
+///
+/// The mirror of [fillMagazine], and the reason both exist: a magazine is
+/// emptied to put its rounds into a different one, or to leave the weight
+/// behind. Same clock, same thumb.
+LoadOutcome emptyMagazine(
+  Inventory pack,
+  CarriedItem magazineLine,
+  ItemCatalogue catalogue, {
+  int? limit,
+}) {
+  final item = catalogue[magazineLine.itemId];
+  if (item == null) return LoadOutcome.refused(pack, LoadRefusal.notAWeapon);
+
+  final magazine = Magazine.of(item, rounds: magazineLine.rounds ?? 0);
+  if (magazine == null) {
+    return LoadOutcome.refused(pack, LoadRefusal.notAWeapon);
+  }
+  if (magazine.isEmpty) return LoadOutcome.refused(pack, LoadRefusal.noRounds);
+
+  final rounds = limit == null || limit >= magazine.rounds
+      ? magazine.rounds
+      : limit;
+  if (rounds <= 0) return LoadOutcome.refused(pack, LoadRefusal.noRounds);
+
+  // What the rounds become again: the catalogue decides which, because a
+  // calibre can have more than one (§10.3.3 gives 12 ga two).
+  final ammo = ammoFor(magazine.caliber, catalogue).firstOrNull;
+  if (ammo == null) return LoadOutcome.refused(pack, LoadRefusal.noRounds);
+
+  final emptied = magazineLine.copyWith(rounds: magazine.rounds - rounds);
+
+  // ⚠️ Into the stack that is already there, not a new line each time.
+  //
+  // This is called once per round while the bar crosses (§4.2), so appending
+  // would turn one magazine into thirty rows of a single round — which is
+  // both wrong and unreadable. Loose ammunition stacks; that is what makes it
+  // loose.
+  var merged = false;
+  final lines = <CarriedItem>[
+    for (final line in pack.carried)
+      if (identical(line, magazineLine))
+        emptied
+      else if (!merged && line.itemId == ammo.id && line.rounds == null) ...[
+        () {
+          merged = true;
+          return line.copyWith(count: line.count + rounds);
+        }(),
+      ] else
+        line,
+  ];
+
+  if (!merged) lines.add(CarriedItem(itemId: ammo.id, count: rounds));
+
+  return LoadOutcome(
+    inventory: Inventory(carried: lines, worn: pack.worn, packId: pack.packId),
+    moved: rounds,
+    line: emptied,
+  );
 }

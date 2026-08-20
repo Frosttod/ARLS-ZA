@@ -424,6 +424,14 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     return load.needsMagazine ? null : load.capacity;
   }
 
+  /// §4.2: a filling or emptying under way, a round at a time.
+  ///
+  /// ⚠️ The rounds move *while the bar moves*, not in one lump at the end.
+  /// Half a minute of a bar creeping across with nothing changing anywhere
+  /// else reads as the game having stopped — and the one thing a player is
+  /// watching during it is the number this action exists to change.
+  _FillPlan? _filling;
+
   /// §4.2: thumbs loose rounds into a magazine.
   ///
   /// ⚠️ An action with a clock on it, not a button that changes a number.
@@ -449,6 +457,12 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     }
 
     _usingLine.value = line;
+    _filling = _FillPlan(
+      itemId: line.itemId,
+      from: magazine.rounds,
+      to: magazine.rounds + dry.moved,
+    );
+
     setState(() {
       _search.value = Search.using(
         at: _standingAt.value ?? const GeoPoint(0, 0),
@@ -459,6 +473,71 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       );
     });
     _startSearchTimer();
+  }
+
+  /// §4.2: tips the rounds out of a magazine and back into the pack.
+  ///
+  /// The same clock as filling. A magazine is emptied to put its rounds into a
+  /// different one, or to leave the weight behind — and both are decisions
+  /// somebody makes standing still, which is what the seconds are for.
+  Future<void> _emptyMagazine(CarriedItem line) async {
+    final catalogue = _catalogue;
+    if (catalogue == null || _search.value != null) return;
+
+    final item = catalogue[line.itemId];
+    if (item == null) return;
+
+    final magazine = Magazine.of(item, rounds: line.rounds ?? 0);
+    if (magazine == null || magazine.isEmpty) return;
+
+    _usingLine.value = line;
+    _filling = _FillPlan(itemId: line.itemId, from: magazine.rounds, to: 0);
+
+    setState(() {
+      _search.value = Search.using(
+        at: _standingAt.value ?? const GeoPoint(0, 0),
+        now: DateTime.now().toUtc(),
+        itemId: line.itemId,
+        duration: fillTime(magazine.rounds),
+        label: L10n.of(context).magazineEmpty,
+      );
+    });
+    _startSearchTimer();
+  }
+
+  /// §4.2: moves the rounds the bar has already earned.
+  ///
+  /// Called on every tick of a fill or an empty. Idempotent by construction:
+  /// it works out where the magazine *should* be at this fraction and moves it
+  /// there, so a tick that arrives late or twice cannot double-count.
+  void _advanceFilling(Search running) =>
+      _moveRoundsTo(_filling?.roundsAt(running.progress));
+
+  /// §4.2: moves the magazine to [wanted] rounds, however many that takes.
+  ///
+  /// Idempotent by construction: it is told where the magazine *should* be and
+  /// moves it there, rather than counting ticks. A tick that arrives late, or
+  /// twice in one frame, cannot double-count.
+  void _moveRoundsTo(int? wanted) {
+    final line = _usingLine.value;
+    final catalogue = _catalogue;
+    if (wanted == null || line == null || catalogue == null) return;
+
+    final now = line.rounds ?? 0;
+    if (wanted == now) return;
+
+    final out = wanted > now
+        ? fillMagazine(_inventory.value, line, catalogue, limit: wanted - now)
+        : emptyMagazine(_inventory.value, line, catalogue, limit: now - wanted);
+    if (!out.isDone) return;
+
+    _inventory.value = out.inventory;
+
+    // ⚠️ The handle is replaced along with the line, and it comes back from
+    // the move rather than being looked up by item id — two magazines are two
+    // lines, and looking one up finds whichever comes first. Without this the
+    // rounds stop moving half way, or move in the wrong magazine.
+    _usingLine.value = out.line;
   }
 
   /// §5.3: what is in the weapon, as opposed to in the pack.
@@ -1109,6 +1188,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
           onTakeOff: (line) => unawaited(_takeOff(line)),
           onUse: (line) => unawaited(_use(line)),
           onFill: (line) => unawaited(_fillMagazine(line)),
+          onEmpty: (line) => unawaited(_emptyMagazine(line)),
           onRead: _readNote,
           onDetails: (line) => unawaited(_showItemDetails(line)),
           action: _search,
@@ -1394,17 +1474,18 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
     // §4.2: a magazine being filled is an action with a clock, not a use —
     // nothing is swallowed and §2.2's absorption has no opinion about it.
+    final plan = _filling;
     final filling = _usingLine.value;
-    if (filling != null && Magazine.of(catalogue[itemId]!) != null) {
+    if (plan != null && filling != null) {
+      // ⚠️ To where the plan was going, not to the brim.
+      //
+      // The rounds have been moving all the way across the bar, so almost all
+      // of them are already where they belong; this only settles the rounding.
+      // Topping the magazine up here instead would undo an emptying entirely —
+      // it would fill the magazine the player asked to unload.
+      _moveRoundsTo(plan.to);
+      _filling = null;
       _usingLine.value = null;
-
-      final out = fillMagazine(_inventory.value, filling, catalogue);
-      if (!out.isDone) {
-        if (mounted) _say(_loadRefusal(out.refusal!));
-        return;
-      }
-
-      _inventory.value = out.inventory;
       await _saveInventory();
       return;
     }
@@ -2647,6 +2728,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         _aim = _aim.released;
         _search.value = null;
         _usingLine.value = null;
+        _filling = null;
       });
 
       _logCombat('— ${causeName(L10n.of(context), loop.deathCause)} —');
@@ -3691,6 +3773,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
     if (next.isRunning) {
       _search.value = next;
+      if (_filling != null) setState(() => _advanceFilling(next));
       return;
     }
 
@@ -3865,10 +3948,20 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// might have to run round; getting it all back for free would make the
   /// time it takes meaningless.
   Future<void> _interruptUse(Search action) async {
+    // §4.2: a fill stopped part way keeps the rounds it already moved — they
+    // are in the magazine, and that is where they are.
+    final interrupted = _filling != null;
+    _filling = null;
+
     final line = _usingLine.value;
     final loop = _loop;
     final catalogue = _catalogue;
     _usingLine.value = null;
+
+    if (interrupted) {
+      await _saveInventory();
+      return;
+    }
 
     if (line == null || loop == null || catalogue == null || !action.isUse) {
       return;
@@ -4798,4 +4891,21 @@ class _Notice extends StatelessWidget {
       ),
     );
   }
+}
+
+/// §4.2: a magazine being filled or emptied, and how far along it is.
+///
+/// Held so the rounds can move *while the bar moves*: the plan says where the
+/// magazine started and where it is going, and the fraction says where it
+/// should be now. Working it out from the fraction rather than counting ticks
+/// is what makes a late tick — or two in one frame — harmless.
+class _FillPlan {
+  const _FillPlan({required this.itemId, required this.from, required this.to});
+
+  final String itemId;
+  final int from;
+  final int to;
+
+  int roundsAt(double progress) =>
+      (from + (to - from) * progress.clamp(0.0, 1.0)).round();
 }
