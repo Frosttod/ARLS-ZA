@@ -14,11 +14,12 @@ import '../data/db/database.dart';
 import '../data/persistence/save_bootstrap.dart';
 import '../devtools/dev_mode.dart';
 import '../devtools/dev_session.dart';
+import '../map/geometry.dart';
+import '../shelter/shelter.dart';
 import '../location/device_position_source.dart';
 import '../location/position_source.dart';
 import '../location/power_source.dart';
 import '../combat/pursuit.dart';
-import '../map/geometry.dart';
 import '../sim/body.dart';
 import '../sim/physiology.dart';
 import '../sim/tick.dart';
@@ -206,11 +207,23 @@ class GameSessionFactory {
   }
 
   /// Starts the loop for [character] over [source].
+  /// ⚠️ [shelters] and [standingAt] are given *before* the loop starts, and
+  /// that ordering is the whole reason they are parameters.
+  ///
+  /// [GameLoop.start] replays everything that passed while the app was gone
+  /// (§11.1.2). A night is one span, and what it is credited as depends
+  /// entirely on where the loop believes the character was standing. Told
+  /// afterwards — which is what the interface used to do, two awaits later —
+  /// the loop replayed the whole night as somebody stood outdoors and awake:
+  /// the sleep debt *grew* by a third of the night instead of falling, and the
+  /// night cost open-ground food and water instead of §2.1's fifth.
   Future<GameLoop> startLoop({
     required ActiveCharacter character,
     required PositionSource source,
     GameClock? clock,
     PowerSource? power,
+    List<Shelter> shelters = const [],
+    GeoPoint? standingAt,
   }) async {
     final loop = GameLoop(
       session: session,
@@ -227,6 +240,10 @@ class GameSessionFactory {
       clock: clock,
       power: power,
     );
+    // Before start(), never after: see the note on this method.
+    if (shelters.isNotEmpty) loop.setShelters(shelters);
+    if (standingAt != null) loop.setStandingAt(standingAt);
+
     await loop.start();
     return loop;
   }

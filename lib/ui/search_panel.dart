@@ -36,8 +36,23 @@ class SearchPanel extends StatelessWidget {
     this.droppedLabel,
     this.onTakeDropped,
     this.onFireAway,
+    this.weapon,
+    this.rounds,
+    this.capacity,
+    this.onReload,
     super.key,
   });
+
+  /// §5.3: what is in hand, or null with empty hands.
+  final String? weapon;
+
+  /// What is in it, and what it would hold with the magazine currently fitted.
+  /// Null capacity means a magazine-fed weapon with no magazine in it.
+  final int? rounds;
+  final int? capacity;
+
+  /// §5.5.4: swapping a magazine, or feeding a revolver.
+  final VoidCallback? onReload;
 
   /// The search in progress, or null when the player is free.
   final Search? search;
@@ -103,21 +118,43 @@ class SearchPanel extends StatelessWidget {
         top: false,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(12, 10, 12, 6),
-          child: _Actions(
-            targetName: targetName,
-            canSearchHere: canSearchHere,
-            searchUnitsLeft: searchUnitsLeft,
-            barrier: canSearchHere ? barrier : null,
-            searchTimes: searchTimes,
-            carried: carried,
-            onBreach: busy ? null : onBreach,
-            onSearchArea: busy ? null : onSearchArea,
-            onSearchHere: busy ? null : onSearchHere,
-            onTakeDropped: busy ? null : onTakeDropped,
-            onFireAway: busy ? null : onFireAway,
-            droppedLabel: droppedLabel,
-            colours: colours,
-            l10n: l10n,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // ⚠️ §5.3's state, on the screen that is always there.
+              //
+              // The weapon used to appear only beside a target, so there was
+              // nowhere to see what was in it and nowhere to reload — and
+              // §4.2's whole point is that a magazine is filled and swapped
+              // *before* anything is in front of you. A panel that only exists
+              // during a fight is a panel that arrives too late to prepare on.
+              if (weapon != null)
+                _WeaponRow(
+                  name: weapon!,
+                  rounds: rounds,
+                  capacity: capacity,
+                  onReload: busy ? null : onReload,
+                  colours: colours,
+                  l10n: l10n,
+                ),
+
+              _Actions(
+                targetName: targetName,
+                canSearchHere: canSearchHere,
+                searchUnitsLeft: searchUnitsLeft,
+                barrier: canSearchHere ? barrier : null,
+                searchTimes: searchTimes,
+                carried: carried,
+                onBreach: busy ? null : onBreach,
+                onSearchArea: busy ? null : onSearchArea,
+                onSearchHere: busy ? null : onSearchHere,
+                onTakeDropped: busy ? null : onTakeDropped,
+                onFireAway: busy ? null : onFireAway,
+                droppedLabel: droppedLabel,
+                colours: colours,
+                l10n: l10n,
+              ),
+            ],
           ),
         ),
       ),
@@ -475,3 +512,91 @@ String _depthName(L10n l10n, SearchDepth depth) => switch (depth) {
   SearchDepth.thorough => l10n.searchThorough,
   SearchDepth.deep => l10n.searchDeep,
 };
+
+/// §5.3: the weapon in hand, and what is in it.
+///
+/// One line, because it is a readout rather than a screen: the name, the
+/// rounds, and the one button that changes them.
+class _WeaponRow extends StatelessWidget {
+  const _WeaponRow({
+    required this.name,
+    required this.rounds,
+    required this.capacity,
+    required this.onReload,
+    required this.colours,
+    required this.l10n,
+  });
+
+  final String name;
+  final int? rounds;
+  final int? capacity;
+  final VoidCallback? onReload;
+  final HudColors colours;
+  final L10n l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    // ⚠️ No capacity means no magazine, which is a different sentence from
+    // "nought rounds" and the one a player needs: a rifle with nothing in it
+    // is waiting for a magazine, not broken.
+    final empty = (rounds ?? 0) <= 0;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        children: [
+          Icon(
+            Icons.gps_fixed,
+            size: 14,
+            color: empty ? colours.alert : colours.data,
+          ),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 12, color: colours.text),
+            ),
+          ),
+          Text(
+            capacity == null
+                ? l10n.reloadNoMagazine
+                : '${rounds ?? 0} / $capacity',
+            style: TextStyle(
+              fontSize: 12,
+              color: empty ? colours.alert : colours.muted,
+              fontFamily: capacity == null ? null : kDataFont,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+          if (onReload != null)
+            _RowReload(onPressed: onReload!, colours: colours, l10n: l10n),
+        ],
+      ),
+    );
+  }
+}
+
+class _RowReload extends StatelessWidget {
+  const _RowReload({
+    required this.onPressed,
+    required this.colours,
+    required this.l10n,
+  });
+
+  final VoidCallback onPressed;
+  final HudColors colours;
+  final L10n l10n;
+
+  @override
+  Widget build(BuildContext context) => IconButton(
+    onPressed: onPressed,
+    icon: const Icon(Icons.autorenew, size: 18),
+    tooltip: l10n.combatReload,
+    color: colours.data,
+    visualDensity: VisualDensity.compact,
+    constraints: const BoxConstraints(),
+    padding: const EdgeInsets.symmetric(horizontal: 6),
+  );
+}

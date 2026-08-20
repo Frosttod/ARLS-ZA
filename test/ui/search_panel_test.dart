@@ -29,6 +29,9 @@ void main() {
     String? droppedLabel,
     VoidCallback? onTakeDropped,
     Search? search,
+    String? weapon,
+    int? rounds,
+    int? capacity,
   }) async {
     await tester.pumpWidget(
       MaterialApp(
@@ -54,6 +57,10 @@ void main() {
             onCancel: () {},
             droppedLabel: droppedLabel,
             onTakeDropped: onTakeDropped,
+            weapon: weapon,
+            rounds: rounds,
+            capacity: capacity,
+            onReload: weapon == null ? null : () {},
           ),
         ),
       ),
@@ -358,6 +365,35 @@ void main() {
 
       await tester.tap(find.byType(TextButton));
       expect(cancelled, isTrue);
+    });
+  });
+  group('the weapon in hand (§5.3, §4.2)', () {
+    // ⚠️ The weapon used to appear only beside a target, so there was nowhere
+    // to see what was in it and nowhere to reload — and §4.2's whole point is
+    // that a magazine is filled and swapped *before* anything is in front of
+    // you. A panel that only exists during a fight arrives too late.
+    testWidgets('says what is in it, with nothing in front of you', (
+      tester,
+    ) async {
+      await pump(tester, weapon: 'Karabinek 5,45 mm', rounds: 12, capacity: 30);
+
+      expect(find.text('Karabinek 5,45 mm'), findsOneWidget);
+      expect(find.text('12 / 30'), findsOneWidget);
+    });
+
+    testWidgets('and says "no magazine" rather than "nought"', (tester) async {
+      // Two different sentences, and the first is the one that tells a player
+      // what to go and find.
+      await pump(tester, weapon: 'Karabinek 5,45 mm', rounds: 0);
+
+      expect(find.text('0 / 30'), findsNothing);
+      expect(find.textContaining('magazynka'), findsOneWidget);
+    });
+
+    testWidgets('with empty hands it says nothing at all', (tester) async {
+      await pump(tester);
+
+      expect(find.byIcon(Icons.gps_fixed), findsNothing);
     });
   });
 }

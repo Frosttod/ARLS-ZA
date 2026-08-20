@@ -409,6 +409,21 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// faster than the blade allows is not a thing a person can do.
   DateTime? _lastSwing;
 
+  /// §5.3: what the weapon in hand would hold, or null with no magazine in it.
+  int? get _weaponCapacity {
+    final line = _weaponLine;
+    final catalogue = _catalogue;
+    if (line == null || catalogue == null) return null;
+
+    final load = WeaponLoad.of(line, catalogue);
+    if (load == null) return null;
+
+    // ⚠️ Null rather than nought for a magazine-fed weapon with no magazine.
+    // "No magazine" and "no rounds" are different sentences, and the first is
+    // the one that tells a player what to go and find.
+    return load.needsMagazine ? null : load.capacity;
+  }
+
   /// §4.2: thumbs loose rounds into a magazine.
   ///
   /// ⚠️ An action with a clock on it, not a button that changes a number.
@@ -845,11 +860,25 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       }
     }
 
+    // ⚠️ Read before the loop starts, and handed to it.
+    //
+    // start() replays the whole gap since the save was written (§11.1.2), and
+    // what a night in a shelter is credited as depends on the loop knowing
+    // there is a shelter and where the character is standing. This used to
+    // happen two awaits later, and a night indoors came back as a night
+    // outdoors: the sleep debt grew instead of falling.
+    final built = await ShelterStore(
+      widget.session.db,
+    ).load(character.profile.id, DateTime.now().toUtc());
+    if (!mounted) return;
+
     final loop = await _factory.startLoop(
       character: character,
       source: source,
       clock: _dev?.gameClock,
       power: DevicePowerSource(),
+      shelters: built,
+      standingAt: _standingAt.value ?? _lastKnown,
     );
     loop.snapshots.listen((snapshot) {
       if (!mounted) return;
@@ -2520,6 +2549,14 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       // after a restart, since §8.4's magazines are not saved yet. A control
       // that disappears cannot explain itself.
       onFireAway: _weapon == null ? null : () => unawaited(_fireAway()),
+
+      // §5.3, §4.2: what is in hand and what is in it, on the panel that is
+      // always there. Preparing a weapon is something done before anything is
+      // in front of you, and until now there was nowhere to do it.
+      weapon: _weapon == null ? null : _nameOfItem(_weapon!),
+      rounds: _loaded,
+      capacity: _weaponCapacity,
+      onReload: _weapon == null ? null : _startReload,
       onCancel: _cancelSearch,
     );
   }

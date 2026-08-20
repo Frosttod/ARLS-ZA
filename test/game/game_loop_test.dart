@@ -625,6 +625,53 @@ void main() {
       );
     });
 
+    test(
+      'a night replayed on waking is a night asleep, not a night out',
+      () async {
+        // ⚠️ Reported from a walk: "after a night in the shelter the sleep debt
+        // grew to over thirteen hours instead of falling". It did. start()
+        // replays the whole gap since the save was written (§11.1.2), and the
+        // interface told the loop about the shelter two awaits *later* — so the
+        // night was replayed by a loop that believed the character was standing
+        // outdoors, awake.
+        final tired = SimState.fresh(
+          at: midnight,
+          constants: constants,
+        ).copyWith(sleepDebtSeconds: const Duration(hours: 9).inSeconds);
+
+        final rig = await buildLoop(initial: tired, startAt: midnight);
+        addTearDown(() async {
+          await rig.loop.dispose();
+          await rig.source.dispose();
+          await rig.session.close();
+        });
+
+        // Everything the loop needs, before the replay — which is the fix.
+        rig.loop.setShelters([
+          Shelter(
+            id: 1,
+            kind: ShelterKind.main,
+            position: const GeoPoint(52.4064, 16.9252),
+            startedAt: midnight.subtract(const Duration(days: 1)),
+            buildTime: kShelterBuildTime,
+          ),
+        ]);
+        rig.loop.setStandingAt(const GeoPoint(52.4064, 16.9252));
+
+        await rig.loop.start();
+
+        // Eight hours with the app shut, exactly as a night is.
+        rig.wall.advance(const Duration(hours: 8));
+        await rig.loop.onPaused(rig.wall.nowUtc());
+
+        expect(
+          rig.loop.state.sleepDebt,
+          lessThan(const Duration(hours: 9)),
+          reason: 'a night under a roof pays the debt down, it does not add',
+        );
+      },
+    );
+
     test('minute by minute, exactly as the app ticks it', () async {
       // ⚠️ Reported three times from a walk: sitting in a shelter with the app
       // open and nothing running, and the sleep bar not moving. The existing
