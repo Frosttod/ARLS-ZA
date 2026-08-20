@@ -244,4 +244,43 @@ void main() {
       );
     });
   });
+
+  group('the rule stands on its own (§5.6.3)', () {
+    // The shelves ask the same question the pack does, so the answer lives
+    // outside the inventory: a rifle kept on a shelf takes a scope out of the
+    // pack without either of them moving anywhere.
+    test('a part that fits comes back as a fitted line', () {
+      const rifle = CarriedItem(itemId: 'weapon_rifle_545');
+      const optic = CarriedItem(itemId: 'att_red_dot');
+
+      final fitted = fittedWith(rifle, optic, catalogue)!;
+
+      expect(fitted.attachments, ['att_red_dot']);
+      expect(rifle.attachments, isEmpty, reason: 'the original is untouched');
+    });
+
+    test('and one that does not comes back as nothing', () {
+      const rifle = CarriedItem(itemId: 'weapon_rifle_545');
+      const wrong = CarriedItem(itemId: 'mag_pistol_9mm');
+
+      expect(fittedWith(rifle, wrong, catalogue), isNull);
+    });
+
+    test('a magazine still brings its rounds', () {
+      const rifle = CarriedItem(itemId: 'weapon_rifle_545');
+      const full = CarriedItem(itemId: 'mag_rifle_545', rounds: 30);
+
+      expect(fittedWith(rifle, full, catalogue)!.rounds, 30);
+    });
+
+    test('and the place is still one thing at a time', () {
+      const rifle = CarriedItem(
+        itemId: 'weapon_rifle_545',
+        attachments: ['att_laser'],
+      );
+      const light = CarriedItem(itemId: 'att_weapon_light');
+
+      expect(fittedWith(rifle, light, catalogue), isNull);
+    });
+  });
 }

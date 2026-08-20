@@ -4261,16 +4261,103 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
   /// §5.6.3: the numbers for a piece on a shelf, with its slots.
   ///
-  /// ⚠️ It comes into the pack first, like every other shelf action. The
-  /// attachment rows fit parts *out of the pack*, and a sheet opened over a
-  /// shelf line would offer slots on something the pack does not hold — which
-  /// is exactly how a rifle on the pavement once ended up wearing the sights
-  /// off the one in the player's hands.
+  /// ⚠️ **Looking at something does not move it.** This used to pick the piece
+  /// up first — the same motion every other shelf action makes — and tapping
+  /// the information glyph therefore dragged whatever it was into the pack.
+  /// Reported from a shelter in one sentence. Reaching for a thing is an
+  /// action; reading its weight is not.
+  ///
+  /// Parts still come out of the pack, and the weapon still stays where it is:
+  /// nothing moves but the scope.
   Future<void> _shelfDetails(int index) async {
-    final line = await _takeOffShelf(index);
-    if (line == null || !mounted) return;
+    final catalogue = _catalogue;
+    final line = _stash.value.lines.elementAtOrNull(index);
+    if (catalogue == null || line == null) return;
 
-    await _showItemDetails(line);
+    await showItemDetails(
+      context,
+      line: line,
+      inventory: _inventory,
+      catalogue: catalogue,
+      names: _names ?? ItemNames.empty,
+      // ⚠️ Not from the pack. The sheet looks for the piece's counterpart in
+      // the inventory to compare against, and a shelf line has none — the same
+      // rule a pile on the pavement obeys, and for the same reason: it once
+      // found the player's own rifle and pointed every control at it.
+      fromPack: false,
+      onAttach: (current, part) =>
+          unawaited(_attachOnShelf(index, current, part)),
+      onDetach: (current, id) => unawaited(_detachOnShelf(index, current, id)),
+    );
+  }
+
+  /// §5.6.3: bolts something from the pack onto a weapon on a shelf.
+  ///
+  /// The part leaves the pack, the weapon stays on the shelf. Both lists are
+  /// written together, because a half-applied move is a scope that exists
+  /// twice or not at all.
+  Future<void> _attachOnShelf(
+    int index,
+    CarriedItem line,
+    CarriedItem part,
+  ) async {
+    final catalogue = _catalogue;
+    final shelved = _stash.value.lines.elementAtOrNull(index);
+    if (catalogue == null || shelved == null) return;
+
+    final fitted = fittedWith(shelved, part, catalogue);
+    if (fitted == null) {
+      _say(L10n.of(context).attachmentRefused);
+      return;
+    }
+
+    final without = _inventory.value.removeLine(part);
+    if (without == null) return;
+
+    _inventory.value = without;
+    _stash.value = _stash.value.replace(index, fitted);
+
+    await _saveShelf();
+    await _saveInventory();
+  }
+
+  /// §5.6.3: takes one off a weapon on a shelf, back into the pack.
+  Future<void> _detachOnShelf(int index, CarriedItem line, String id) async {
+    final character = _character;
+    final catalogue = _catalogue;
+    final shelved = _stash.value.lines.elementAtOrNull(index);
+    if (character == null || catalogue == null || shelved == null) return;
+    if (!shelved.attachments.contains(id)) return;
+
+    final part = catalogue[id];
+    final magazine = part == null ? null : Magazine.of(part);
+
+    // §5.3: what was in it goes with it, exactly as [Inventory.detach] does.
+    final added = _inventory.value.add(
+      id,
+      catalogue,
+      body: character.body,
+      rounds: magazine == null ? null : (shelved.rounds ?? 0),
+    );
+    if (!added.isAccepted) {
+      _say(L10n.of(context).stashNoRoomInPack);
+      return;
+    }
+
+    _inventory.value = added.inventory;
+    _stash.value = _stash.value.replace(
+      index,
+      shelved.copyWith(
+        attachments: [
+          for (final other in shelved.attachments)
+            if (other != id) other,
+        ],
+        rounds: magazine == null ? null : 0,
+      ),
+    );
+
+    await _saveShelf();
+    await _saveInventory();
   }
 
   /// §12: why a shelf action would not work right now.

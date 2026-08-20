@@ -127,6 +127,19 @@ class Stash {
     );
   }
 
+  /// §5.6.3: swaps the piece at [index] for [next], in place.
+  ///
+  /// For a weapon that gains or loses a part without leaving the shelf. The
+  /// mass and bulk are recomputed by the gauges from the lines themselves, so
+  /// nothing else has to be told.
+  Stash replace(int index, CarriedItem next) {
+    if (index < 0 || index >= lines.length) return this;
+
+    final updated = [...lines];
+    updated[index] = next;
+    return _with(updated);
+  }
+
   Stash _with(List<CarriedItem> next) =>
       Stash._(lines: next, capacityKg: capacityKg, capacityL: capacityL);
 

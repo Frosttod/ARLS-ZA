@@ -991,9 +991,15 @@ if reason no longer true
 
 reason shown under the row, not at the top       // Cztery wiersze mówiące naraz "półki pełne" to ściana. Jeden wiersz pod ikoną, którą naciśnięto, to odpowiedź.
 
-if item on shelf and action is use/wear/dismantle/details
+if item on shelf and action is use/wear/dismantle
     then item taken into pack first, then acted on
                                                  // §18.2. Jedzenie z półki i jedzenie z plecaka to w świecie ten sam ruch — sięgasz po to. Jeden ruch w kodzie znaczy, że wszystkie reguły dalej obowiązują: limity udźwigu, blokada rozbiórki, gniazda dodatków.
+
+if item on shelf and action is details
+    then nothing moves                           // ⚠️ Patrzenie na coś nie przesuwa tego. Wcześniej szczegóły też brały rzecz do plecaka — tapnięcie ikony informacji wciągało do plecaka cokolwiek to było. Sięgnięcie po rzecz to akcja; przeczytanie jej wagi nie.
+
+if attachment fitted to weapon on shelf
+    then part leaves pack, weapon stays on shelf // §5.6.3. Rusza się tylko celownik. Reguły montowania żyją poza Inventory (`fittedWith`), żeby półka i plecak pytały o to samo jedną funkcją.
 
 if pack has no room
     then shelf action := refused (szary + powód)  // §18.1a. Jedyna odmowa, którą dokłada wzięcie do ręki.

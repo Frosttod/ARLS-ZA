@@ -487,47 +487,17 @@ class Inventory {
     CarriedItem attachment,
     ItemCatalogue catalogue,
   ) {
-    final weapon = catalogue[line.itemId];
-    final part = catalogue[attachment.itemId];
-    if (weapon == null || part == null) return this;
-    if (!partFitsWeapon(part, weapon)) return this;
-    if (line.attachments.contains(part.id)) return this;
-    final used = slotsUsedBy([
-      for (final id in line.attachments) ?catalogue[id],
-    ]);
-    if (slotOf(part) != AttachmentSlot.magazine &&
-        used >= attachmentSlots(weapon)) {
-      return this;
-    }
-
-    // §5.6.3: one thing per place. A second optic does not go on top of the
-    // first, and the interface says so by offering the place rather than the
-    // part — fitting one where something already sits is a swap, and a swap
-    // is the caller's decision to make, not a silent one to make here.
-    final place = slotOf(part);
-    if (place != null) {
-      for (final id in line.attachments) {
-        final fittedPart = catalogue[id];
-        if (fittedPart != null && slotOf(fittedPart) == place) return this;
-      }
-    }
+    // ⚠️ The rule itself lives outside this class now, because the shelves
+    // need it too: a rifle kept on a shelf takes a scope out of the pack
+    // without either of them moving anywhere. One copy of §5.6.3's rules, two
+    // places that ask about them.
+    final fitted = fittedWith(line, attachment, catalogue);
+    if (fitted == null) return this;
 
     // ⚠️ The weapon may be in the pack **or** in the hand, and the hand is
     // `worn`. Found on a phone: fitting anything to the rifle actually being
     // carried did nothing at all, because this only ever looked in `carried` —
     // and the one weapon a player wants a light on is the one they are holding.
-    // ⚠️ §5.3: a magazine brings its rounds with it.
-    //
-    // Everywhere else an attachment is a name on a list. A magazine is a name
-    // on a list *and* a number, and the number lives on whatever is holding it
-    // — so seating one has to carry the rounds across, and taking one off has
-    // to carry them back. Without this, fitting a full magazine gave a rifle
-    // with nothing in it and threw thirty rounds away.
-    final magazine = Magazine.of(part);
-    final fitted = line.copyWith(
-      attachments: [...line.attachments, part.id],
-      rounds: magazine == null ? null : (attachment.rounds ?? 0),
-    );
 
     // Off the pack and onto the weapon: it is in one place or the other.
     final without = removeLine(attachment) ?? this;
@@ -824,4 +794,57 @@ class StoreLimits {
   final double capacityKg;
 
   double get capacityL => capacityKg * kStoreLitresPerKg;
+}
+
+/// §5.6.3: [line] with [attachment] on it, or null where it will not go.
+///
+/// Every rule that decides whether a part goes on a weapon, in one place and
+/// with no inventory around it. [Inventory.attach] uses it for a weapon in the
+/// pack or in the hand; the shelves use it for one that never leaves the shelf.
+///
+/// Refused where the part does not fit the calibre, where one of the same is
+/// already on — a second red dot on one rifle is not a thing, and the
+/// arithmetic would happily stack it — where the place is taken, and where
+/// there is no rail left.
+CarriedItem? fittedWith(
+  CarriedItem line,
+  CarriedItem attachment,
+  ItemCatalogue catalogue,
+) {
+  final weapon = catalogue[line.itemId];
+  final part = catalogue[attachment.itemId];
+  if (weapon == null || part == null) return null;
+  if (!partFitsWeapon(part, weapon)) return null;
+  if (line.attachments.contains(part.id)) return null;
+
+  final used = slotsUsedBy([for (final id in line.attachments) ?catalogue[id]]);
+  final place = slotOf(part);
+
+  if (place != AttachmentSlot.magazine && used >= attachmentSlots(weapon)) {
+    return null;
+  }
+
+  // §5.6.3: one thing per place. Fitting one where something already sits is
+  // a swap, and a swap is the caller's decision to make, not a silent one to
+  // make here.
+  if (place != null) {
+    for (final id in line.attachments) {
+      final fittedPart = catalogue[id];
+      if (fittedPart != null && slotOf(fittedPart) == place) return null;
+    }
+  }
+
+  // ⚠️ §5.3: a magazine brings its rounds with it.
+  //
+  // Everywhere else an attachment is a name on a list. A magazine is a name on
+  // a list *and* a number, and the number lives on whatever is holding it — so
+  // seating one has to carry the rounds across, and taking one off has to carry
+  // them back. Without this, fitting a full magazine gave a rifle with nothing
+  // in it and threw thirty rounds away.
+  final magazine = Magazine.of(part);
+
+  return line.copyWith(
+    attachments: [...line.attachments, part.id],
+    rounds: magazine == null ? null : (attachment.rounds ?? 0),
+  );
 }

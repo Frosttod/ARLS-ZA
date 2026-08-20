@@ -225,4 +225,42 @@ void main() {
       expect(taken, 2);
     });
   });
+
+  testWidgets('looking at something does not move it', (tester) async {
+    // ⚠️ Reported from a shelter in one sentence: tapping the information
+    // glyph dragged whatever it was into the pack. It did — the sheet needed
+    // the piece in the pack for its attachment rows, so the details action
+    // picked it up first like every other shelf action.
+    //
+    // Reaching for a thing is an action. Reading its weight is not.
+    final shelf = shelfOf(const [CarriedItem(itemId: 'weapon_rifle_545')]);
+    var taken = -1;
+    var opened = -1;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        localizationsDelegates: L10n.localizationsDelegates,
+        supportedLocales: L10n.supportedLocales,
+        locale: const Locale('pl'),
+        home: StashScreen(
+          title: 'Półki',
+          stash: ValueNotifier(shelf),
+          pack: ValueNotifier(const Inventory()),
+          catalogue: catalogue,
+          nameOf: nameOf,
+          onStore: (_) {},
+          onTake: (index) => taken = index,
+          order: ValueNotifier(PackOrder.name),
+          onDetails: (index) => opened = index,
+        ),
+      ),
+    );
+    await tester.pump();
+
+    await tester.tap(find.byIcon(Icons.info_outline));
+    await tester.pump();
+
+    expect(opened, 0, reason: 'the sheet was asked for');
+    expect(taken, -1, reason: 'and nothing was taken off the shelf');
+  });
 }
