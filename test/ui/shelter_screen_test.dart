@@ -4,6 +4,8 @@ import 'package:arls_za/shelter/shelter.dart';
 import 'package:arls_za/ui/shelter_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:arls_za/craft/craft_job.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// EKRAN SCHRONU (§8, §18.2).
@@ -49,6 +51,8 @@ void main() {
           onBuild: (_) {},
           onBuildModule: (_) {},
           onShelves: (_) {},
+          onCraft: () {},
+          craftJob: const _NoJob(),
           shelved: const {},
           shelvedMassKg: 0,
           shelvedVolumeL: 0,
@@ -177,7 +181,15 @@ void main() {
       // ⚠️ Scrolled to first. The screen is a ListView and a ListView builds
       // what it can see; the camps live below a shelter with its shelves and
       // three modules on it, which is off the bottom of a test surface.
-      await tester.scrollUntilVisible(find.textContaining('800 m').first, 200);
+      // ⚠️ Dragged by hand rather than with scrollUntilVisible, which cannot
+      // do this at all: `.first` on the target throws "No element" while
+      // nothing matches yet, and a bare finder throws "Too many elements" the
+      // moment both matches appear. Two of them is the thing being asserted.
+      for (var i = 0; i < 12; i++) {
+        if (find.textContaining('800 m').evaluate().isNotEmpty) break;
+        await tester.drag(find.byType(ListView), const Offset(0, -200));
+        await tester.pump();
+      }
 
       expect(find.textContaining('800 m'), findsNWidgets(2));
 
@@ -223,6 +235,8 @@ void main() {
             onBuild: (_) {},
             onBuildModule: (_) {},
             onShelves: (_) {},
+            onCraft: () {},
+            craftJob: const _NoJob(),
             shelved: const {},
             shelvedMassKg: 0,
             shelvedVolumeL: 0,
@@ -355,6 +369,8 @@ void main() {
             onBuild: (_) {},
             onBuildModule: (_) {},
             onShelves: (_) {},
+            onCraft: () {},
+            craftJob: const _NoJob(),
             shelved: const {},
             shelvedMassKg: 0,
             shelvedVolumeL: 0,
@@ -429,4 +445,18 @@ void main() {
       expect(find.text('0 / 20'), findsWidgets);
     });
   });
+}
+
+/// A bench with nothing on it, for every test that predates §18.4.
+class _NoJob implements ValueListenable<CraftJob?> {
+  const _NoJob();
+
+  @override
+  CraftJob? get value => null;
+
+  @override
+  void addListener(VoidCallback listener) {}
+
+  @override
+  void removeListener(VoidCallback listener) {}
 }

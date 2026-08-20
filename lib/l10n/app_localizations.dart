@@ -2335,6 +2335,108 @@ abstract class L10n {
   /// **'empty'**
   String get slotEmpty;
 
+  /// No description provided for @craftTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Making'**
+  String get craftTitle;
+
+  /// No description provided for @craftBenchFree.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing on it'**
+  String get craftBenchFree;
+
+  /// No description provided for @craftTakeApart.
+  ///
+  /// In en, this message translates to:
+  /// **'Take apart'**
+  String get craftTakeApart;
+
+  /// No description provided for @craftDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Finished on the bench.'**
+  String get craftDone;
+
+  /// No description provided for @craftDismantleWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'It will not come back. You get: {gives}. {minutes} minutes.'**
+  String craftDismantleWarning(String gives, int minutes);
+
+  /// No description provided for @craftMake.
+  ///
+  /// In en, this message translates to:
+  /// **'Make'**
+  String get craftMake;
+
+  /// No description provided for @craftCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Give up'**
+  String get craftCancel;
+
+  /// No description provided for @craftCancelWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'The materials are gone. They went into it.'**
+  String get craftCancelWarning;
+
+  /// No description provided for @craftNeedsTool.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs'**
+  String get craftNeedsTool;
+
+  /// No description provided for @craftNoTool.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing here would do the job.'**
+  String get craftNoTool;
+
+  /// No description provided for @craftNoMaterials.
+  ///
+  /// In en, this message translates to:
+  /// **'Not enough of something.'**
+  String get craftNoMaterials;
+
+  /// No description provided for @craftBenchBusy.
+  ///
+  /// In en, this message translates to:
+  /// **'Something is already on the bench.'**
+  String get craftBenchBusy;
+
+  /// No description provided for @craftNotAtShelter.
+  ///
+  /// In en, this message translates to:
+  /// **'Not here — at the shelter.'**
+  String get craftNotAtShelter;
+
+  /// No description provided for @craftNothingBack.
+  ///
+  /// In en, this message translates to:
+  /// **'There is nothing in it worth getting back.'**
+  String get craftNothingBack;
+
+  /// No description provided for @craftNeedsWorkshop.
+  ///
+  /// In en, this message translates to:
+  /// **'Workshop L{level}'**
+  String craftNeedsWorkshop(int level);
+
+  /// No description provided for @craftMaking.
+  ///
+  /// In en, this message translates to:
+  /// **'Making: {item}'**
+  String craftMaking(String item);
+
+  /// No description provided for @craftTakingApart.
+  ///
+  /// In en, this message translates to:
+  /// **'Taking apart: {item}'**
+  String craftTakingApart(String item);
+
   /// No description provided for @attachmentChoose.
   ///
   /// In en, this message translates to:

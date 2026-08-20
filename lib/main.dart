@@ -26,6 +26,10 @@ import 'combat/ballistics.dart';
 import 'combat/combat_session.dart';
 import 'combat/engagement.dart';
 import 'combat/magazine.dart';
+import 'craft/craft_job.dart';
+import 'craft/craft_store.dart';
+import 'craft/item_recipe.dart';
+import 'ui/craft_screen.dart';
 import 'combat/magazine_item.dart';
 import 'combat/weapon_load.dart';
 import 'combat/enemy.dart';
@@ -651,6 +655,12 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   }
 
   /// §5.5.4: a magazine change in progress, and the thing that can end it.
+  /// §18.4, §18.6: everything that can be made, as shipped.
+  RecipeBook _recipes = RecipeBook.empty;
+
+  /// §2.1a.3: what is on the bench, or null. Reloaded whenever the shelter is.
+  final ValueNotifier<CraftJob?> _craftJob = ValueNotifier(null);
+
   Reload? _reload;
 
   /// ⚠️ A reload has its own clock.
@@ -830,6 +840,14 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     // overlay and the game runs on whatever parsed (§4.1).
     _catalogue = await loadItemCatalogue();
     _names = await loadItemNames();
+
+    // §18.4: what this player can make. Checked against the catalogue at load
+    // rather than at every tap — a recipe naming an item a removed content
+    // pack took with it should cost that recipe and nothing else.
+    _recipes = checkedAgainst(
+      RecipeBook.parse(await rootBundle.loadString(kRecipesAsset)),
+      _catalogue!,
+    );
     _notes = NoteSet.parse(
       await rootBundle.loadString('assets/data/notes.json'),
     );
@@ -1094,6 +1112,12 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     }
 
     await _reloadShelters();
+
+    // §2.1a.3: a job that finished while the app was closed is paid out on
+    // the way in. It is the whole reason making runs on a clock rather than a
+    // bar — a forty-five minute pack is something to come back to.
+    await _reloadCraftJob();
+
     await _reloadRemains();
     _resumeHunt(character);
     await _resolveMap();
@@ -1267,6 +1291,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
           onUse: (line) => unawaited(_use(line)),
           onFill: (line) => unawaited(_fillMagazine(line)),
           onEmpty: (line) => unawaited(_emptyMagazine(line)),
+          onDismantle: (line) => unawaited(_dismantle(line)),
+          canDismantle: (line) =>
+              _catalogue != null &&
+              materialContent(_catalogue![line.itemId]!, _recipes).isNotEmpty,
           onRead: _readNote,
           onDetails: (line) => unawaited(_showItemDetails(line)),
           action: _search,
@@ -3128,6 +3156,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
           onBuild: (kind) => unawaited(_buildShelter(kind)),
           onBuildModule: (module) => unawaited(_buildModule(module)),
           onShelves: (place) => unawaited(_openStash(place)),
+          onCraft: () => unawaited(_openCraft()),
+          craftJob: _craftJob,
           onCancelBuild: (place) => unawaited(_cancelBuild(place)),
         ),
       ),
@@ -3242,6 +3272,331 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     await _reloadShelters();
     if (!mounted) return;
     _say(L10n.of(context).shelterBuildStarted);
+  }
+
+  /// §18.4: opens the bench.
+  Future<void> _openCraft() async {
+    final catalogue = _catalogue;
+    if (catalogue == null) return;
+
+    await _reloadCraftJob();
+    if (!mounted) return;
+
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => ValueListenableBuilder<CraftJob?>(
+          // ⚠️ The notifier, not a copy. The bench is a pushed route, and
+          // this is the sixth time in this file that reading state into a
+          // pushed screen once has meant the screen never changed again.
+          valueListenable: _craftJob,
+          builder: (_, job, _) => CraftScreen(
+            book: _recipes,
+            catalogue: catalogue,
+            bench: _bench(),
+            job: job,
+            itemNameOf: _nameOfId,
+            onCraft: (recipe) => unawaited(_craft(recipe)),
+            onCancel: () => unawaited(_cancelCraft()),
+          ),
+        ),
+      ),
+    );
+    await _reloadCraftJob();
+  }
+
+  /// §18.4: gives up on whatever is on the bench.
+  ///
+  /// Nothing comes back. §18 has no rule returning materials from abandoned
+  /// work, and inventing one would make starting a job free — the shelter's
+  /// own cancel says the same thing in the same words.
+  Future<void> _cancelCraft() async {
+    final character = _character;
+    if (character == null) return;
+
+    await CraftStore(widget.session.db).clear(character.profile.id);
+    _craftJob.value = null;
+    if (!mounted) return;
+    _say(L10n.of(context).shelterCancelled);
+  }
+
+  /// §18.4, §18.6: what the bench knows about the player right now.
+  ///
+  /// ⚠️ Materials counted from the pack **and** the shelves, like §18.2's
+  /// builds. Anything on a shelf is already where the work is happening, and
+  /// making somebody pick their own wood up off their own shelf before the
+  /// button lights is bookkeeping rather than a decision.
+  CraftBench _bench() {
+    final main = _shelters.value
+        .where((place) => place.kind == ShelterKind.main)
+        .firstOrNull;
+    final at = _standingAt.value;
+
+    final counts = {..._carriedCounts()};
+    for (final entry in _shelvedCounts().entries) {
+      counts[entry.key] = (counts[entry.key] ?? 0) + entry.value;
+    }
+
+    return CraftBench(
+      // §2.1a: any shelter or camp will do. Making is something you do where
+      // you keep your things, and a camp is one of those places (§8.5).
+      atShelter:
+          at != null &&
+          _shelters.value.any(
+            (place) => place.coversAt(at, DateTime.now().toUtc()),
+          ),
+      workshopLevel: main?.levelOf(ShelterModule.workshop) ?? 0,
+      atHand: counts.keys.toSet(),
+      materials: counts,
+      busy: _craftJob.value != null,
+      // §7 is not built. Everybody is a beginner, and the discount is nought
+      // until skills exist — wired here so that turning them on is one line.
+      engineering: 0,
+    );
+  }
+
+  /// §18.4: puts one thing on the bench.
+  Future<void> _craft(ItemRecipe recipe) async {
+    final character = _character;
+    if (character == null) return;
+
+    final bench = _bench();
+    final refusal = refusalFor(recipe, bench);
+    if (refusal != null) {
+      _say(_craftRefusal(refusal));
+      return;
+    }
+
+    // ⚠️ Paid now, not at the end. Charging on completion would let somebody
+    // start a spear, spend the wood on a splint, and collect both.
+    await _spendMaterials(recipe.materials);
+
+    await CraftStore(widget.session.db).beginCraft(
+      character.profile.id,
+      recipeId: recipe.id,
+      now: DateTime.now().toUtc(),
+      work: craftWork(
+        recipe,
+        engineering: bench.engineering,
+        workshopLevel: bench.workshopLevel,
+      ),
+    );
+
+    await _reloadCraftJob();
+    if (!mounted) return;
+    _say(L10n.of(context).shelterBuildStarted);
+  }
+
+  /// §18.6: takes something apart for what is in it.
+  ///
+  /// The item leaves the pack now, with the work. Leaving it there until the
+  /// job finished would let a player dismantle a rifle and shoot it for the
+  /// next quarter of an hour.
+  Future<void> _dismantle(CarriedItem line) async {
+    final character = _character;
+    final catalogue = _catalogue;
+    if (character == null || catalogue == null) return;
+
+    final bench = _bench();
+    final condition = line.condition ?? 100;
+    final refusal = salvageRefusalFor(
+      line.itemId,
+      bench,
+      catalogue: catalogue,
+      book: _recipes,
+      condition: condition,
+    );
+    if (refusal != null) {
+      _say(_craftRefusal(refusal));
+      return;
+    }
+
+    final back = salvagePreview(
+      line.itemId,
+      bench,
+      catalogue: catalogue,
+      book: _recipes,
+      condition: condition,
+    );
+
+    final work = salvageTime(
+      materialContent(catalogue[line.itemId]!, _recipes),
+    );
+
+    // ⚠️ Asked, because nothing here comes back. §18.6 destroys the item and
+    // returns a fraction, and a player is entitled to read the price before
+    // paying it rather than after.
+    final go = await _confirmDismantle(line, back, work);
+    if (!go || !mounted) return;
+
+    final without = _inventory.value.removeLine(line);
+    if (without == null) return;
+
+    _inventory.value = without;
+    await _saveInventory();
+
+    await CraftStore(widget.session.db).beginSalvage(
+      character.profile.id,
+      itemId: line.itemId,
+      condition: condition,
+      now: DateTime.now().toUtc(),
+      work: work,
+    );
+
+    await _reloadCraftJob();
+  }
+
+  Future<bool> _confirmDismantle(
+    CarriedItem line,
+    Map<String, int> back,
+    Duration work,
+  ) async {
+    final catalogue = _catalogue;
+    if (catalogue == null) return false;
+
+    final l10n = L10n.of(context);
+    final name = _nameOfItem(catalogue[line.itemId]!);
+    final gives = back.entries
+        .map((entry) => '${_nameOfId(entry.key)} ×${entry.value}')
+        .join(', ');
+
+    final answer = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.craftTakingApart(name)),
+        content: Text(l10n.craftDismantleWarning(gives, work.inMinutes)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.shelterCancelKeep),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(l10n.craftMake),
+          ),
+        ],
+      ),
+    );
+
+    return answer ?? false;
+  }
+
+  String _nameOfId(String itemId) {
+    final definition = _catalogue?[itemId];
+    return definition == null ? itemId : _nameOfItem(definition);
+  }
+
+  String _craftRefusal(CraftRefusal refusal) {
+    final l10n = L10n.of(context);
+    return switch (refusal) {
+      CraftRefusal.busy => l10n.craftBenchBusy,
+      CraftRefusal.noWorkshop => l10n.craftNoTool,
+      CraftRefusal.noTool => l10n.craftNoTool,
+      CraftRefusal.noMaterials => l10n.craftNoMaterials,
+      CraftRefusal.nothingBack => l10n.craftNothingBack,
+      CraftRefusal.notAtShelter => l10n.craftNotAtShelter,
+    };
+  }
+
+  /// §2.1a.3: reads the bench, and pays out anything that finished while the
+  /// app was closed.
+  Future<void> _reloadCraftJob() async {
+    final character = _character;
+    if (character == null) return;
+
+    final store = CraftStore(widget.session.db);
+    final job = await store.load(character.profile.id);
+
+    if (job == null || !job.isDoneAt(DateTime.now().toUtc())) {
+      _craftJob.value = job;
+      return;
+    }
+
+    await _finishCraftJob(job);
+    _craftJob.value = null;
+  }
+
+  /// What a finished job hands over (§18.4, §18.6).
+  Future<void> _finishCraftJob(CraftJob job) async {
+    final character = _character;
+    final catalogue = _catalogue;
+    if (character == null || catalogue == null) return;
+
+    await CraftStore(widget.session.db).clear(character.profile.id);
+
+    final made = <String, int>{};
+
+    if (job.isSalvage) {
+      made.addAll(
+        salvagePreview(
+          job.salvageItemId!,
+          _bench(),
+          catalogue: catalogue,
+          book: _recipes,
+          condition: job.salvageCondition ?? 100,
+        ),
+      );
+    } else {
+      final recipe = _recipes.recipes
+          .where((entry) => entry.id == job.recipeId)
+          .firstOrNull;
+      if (recipe != null) made[recipe.output] = recipe.count;
+    }
+
+    // ⚠️ Onto the shelves when the pack will not take it, never nowhere.
+    //
+    // §18.1a's overflow is a state, not a reason to destroy something: a
+    // forty-five minute pack that vanishes because the bag was full is the
+    // worst possible reading of a carry limit.
+    var pack = _inventory.value;
+    final overflow = <String, int>{};
+
+    for (final entry in made.entries) {
+      final change = pack.add(
+        entry.key,
+        catalogue,
+        body: character.body,
+        count: entry.value,
+      );
+      pack = change.inventory;
+
+      final took =
+          change.acceptedCount ?? (change.isAccepted ? entry.value : 0);
+      if (took < entry.value) overflow[entry.key] = entry.value - took;
+    }
+
+    _inventory.value = pack;
+    await _saveInventory();
+
+    if (overflow.isNotEmpty) await _shelveSpill(overflow);
+
+    if (!mounted) return;
+    _say(L10n.of(context).craftDone);
+  }
+
+  /// Puts what would not fit onto the shelves of the main shelter.
+  Future<void> _shelveSpill(Map<String, int> spill) async {
+    final character = _character;
+    final catalogue = _catalogue;
+    final main = _shelters.value
+        .where((place) => place.kind == ShelterKind.main)
+        .firstOrNull;
+    if (character == null || catalogue == null || main == null) return;
+
+    var shelf = _stash.value;
+    for (final entry in spill.entries) {
+      // One at a time: the shelves refuse a line that will not fit, and a
+      // stack of five refused whole would lose five rather than one.
+      for (var i = 0; i < entry.value; i++) {
+        final put = shelf.put(CarriedItem(itemId: entry.key), catalogue);
+        if (!put.moved) break;
+        shelf = put.stash;
+      }
+    }
+
+    _stash.value = shelf;
+    await StashStore(
+      widget.session.db,
+    ).save(character.profile.id, main.id, shelf);
   }
 
   /// Takes what a build costs out of the pack (§18.2).
@@ -4437,6 +4792,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     _dropped.dispose();
     _standingAt.dispose();
     _reloadTimer?.cancel();
+    _craftJob.dispose();
     _usingLine.dispose();
     _shelters.dispose();
     _notices.dispose();

@@ -997,6 +997,25 @@ if item has no recipe and no props.salvage
 dismantle_time = 3 min + 12 min × min(1, jednostki/10)
                                                  // §18.6. Mierzone zawartością, nie recepturą — większość tego, co się rozbiera, nigdy nie została przez nikogo zrobiona.
 
+if craft_started
+    then materials spent immediately             // ⚠️ §18.4. Płaci się na starcie, nie na końcu. Inaczej można zacząć włócznię, wydać to samo drewno na szynę i odebrać oba.
+
+if dismantle_started
+    then item removed from pack immediately      // ⚠️ §18.6. Przedmiot znika w chwili startu. Zostawiony w plecaku pozwalałby strzelać z karabinka przez ten kwadrans, który zajmuje jego rozebranie.
+
+if craft_job_running and player_leaves_shelter
+    then job continues                           // §2.1a.3. Zegar ścienny, nie pasek. 45-minutowy plecak to coś, po co się wraca — i dlatego jest wiersz w bazie, a nie pole w pamięci.
+
+if craft_job_done and app_reopened
+    then output added to pack, overflow to shelves
+                                                 // §18.1a. Przepełnienie to stan, nie powód do zniszczenia rzeczy. Plecak, który znika, bo torba była pełna, to najgorsze możliwe czytanie limitu udźwigu.
+
+if craft_job_cancelled
+    then materials lost                          // §18 nie ma reguły zwracającej cokolwiek z porzuconej roboty. Wymyślenie jej zrobiłoby ze startu zadania rzecz darmową. Napisane przy przycisku, nie po kliknięciu.
+
+if craft_jobs_running >= 1
+    then new_job := refused                      // Jedna para rąk. §18 nigdzie nie prosi o kolejkę, a kolejka potrzebowałaby porządku, którego nikt nie określił.
+
 if not carrying multitool
     then dismantle := refused                    // §18.6 mówi "narzędzie odpowiednie do materiału". Multitool obejmuje każdy; jedno wymaganie to jedna reguła do zapamiętania.
 ```

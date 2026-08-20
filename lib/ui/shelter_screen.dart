@@ -17,6 +17,7 @@ import '../map/geometry.dart';
 import '../shelter/recipes.dart';
 import '../shelter/shelter.dart';
 import 'fonts.dart';
+import '../craft/craft_job.dart';
 import 'hud.dart' show HudColors;
 
 class ShelterScreen extends StatefulWidget {
@@ -32,6 +33,8 @@ class ShelterScreen extends StatefulWidget {
     required this.onBuildModule,
     required this.onCancelBuild,
     required this.onShelves,
+    required this.onCraft,
+    required this.craftJob,
     required this.shelved,
     required this.shelvedMassKg,
     required this.shelvedVolumeL,
@@ -70,6 +73,12 @@ class ShelterScreen extends StatefulWidget {
 
   /// §18.2: opening the shelves of a finished place.
   final void Function(Shelter place) onShelves;
+
+  /// §18.4: the way to the bench.
+  final VoidCallback onCraft;
+
+  /// What is on it, so the row can say so without opening it.
+  final ValueListenable<CraftJob?> craftJob;
 
   /// §18.2: what is on the shelves of the main shelter, by item id.
   ///
@@ -167,6 +176,21 @@ class _ShelterScreenState extends State<ShelterScreen> {
                 volumeL: widget.shelvedVolumeL,
                 onOpen: () => widget.onShelves(shelter),
                 colours: colours,
+              ),
+
+            // §18.4: the bench. Beside the shelves rather than under the
+            // modules, because making something is what a player walks in to
+            // do — the modules are what they walk in to plan.
+            if (shelter.isReadyAt(now))
+              ValueListenableBuilder<CraftJob?>(
+                valueListenable: widget.craftJob,
+                builder: (_, job, _) => _CraftRow(
+                  away: at == null || !shelter.atSite(at),
+                  job: job,
+                  onOpen: widget.onCraft,
+                  colours: colours,
+                  l10n: l10n,
+                ),
               ),
 
             const SizedBox(height: 12),
@@ -975,6 +999,50 @@ class _Need extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// §18.4: the way to the bench, and what is on it.
+class _CraftRow extends StatelessWidget {
+  const _CraftRow({
+    required this.away,
+    required this.job,
+    required this.onOpen,
+    required this.colours,
+    required this.l10n,
+  });
+
+  final bool away;
+  final CraftJob? job;
+  final VoidCallback onOpen;
+  final HudColors colours;
+  final L10n l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    final running = job;
+
+    return Card(
+      color: colours.panel,
+      margin: const EdgeInsets.only(top: 8),
+      child: ListTile(
+        leading: Icon(Icons.handyman, color: colours.data),
+        title: Text(
+          l10n.craftTitle,
+          style: TextStyle(fontSize: 15, color: colours.text),
+        ),
+        subtitle: Text(
+          running == null
+              ? l10n.craftBenchFree
+              : '${(running.progressAt(DateTime.now().toUtc()) * 100).round()}%',
+          style: TextStyle(fontSize: 12, color: colours.muted),
+        ),
+        // ⚠️ Standing on the site, not merely inside the zone. The same rule
+        // the shelves keep, and for the same reason: the bench is a place.
+        onTap: away ? null : onOpen,
+        enabled: !away,
       ),
     );
   }

@@ -574,3 +574,40 @@ class ProfileStats extends Table {
     'FOREIGN KEY (profile_id) REFERENCES profiles (id) ON DELETE CASCADE',
   ];
 }
+
+/// §18.4, §18.6, §2.1a: one thing being made or taken apart, against the clock.
+///
+/// ⚠️ On a row rather than in memory, and for the reason the shelter's own
+/// build column exists: §2.1a.3 says a shelter activity ticks with the app
+/// closed. A forty-five minute pack is not something anybody sits and watches,
+/// and neither is a quarter of an hour with a multitool.
+///
+/// One job at a time per profile. Two would need a queue, a queue would need
+/// an order, and §18 never asks for either — a person has one pair of hands.
+@DataClassName('CraftJobRow')
+class CraftJobs extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get profileId => integer()();
+
+  /// The recipe being made (§18.4), or null when this is a dismantling.
+  TextColumn get recipeId => text().nullable()();
+
+  /// What is being taken apart (§18.6), or null when this is a making.
+  ///
+  /// Exactly one of the two is set. The item is **already gone from the pack**
+  /// when the job starts: leaving it there until the job finished would let a
+  /// player dismantle a rifle and shoot it for the next quarter of an hour.
+  TextColumn get salvageItemId => text().nullable()();
+
+  /// §18.6: how worn it was, because the return is scaled by it and the item
+  /// itself is no longer around to ask.
+  RealColumn get salvageCondition => real().nullable()();
+
+  DateTimeColumn get startedAt => dateTime()();
+  DateTimeColumn get readyAt => dateTime()();
+
+  @override
+  List<String> get customConstraints => [
+    'FOREIGN KEY (profile_id) REFERENCES profiles (id) ON DELETE CASCADE',
+  ];
+}

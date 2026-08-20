@@ -43,8 +43,8 @@ void main() {
     );
 
     test('the medical rows need no workshop and no tools', () {
-      // §18.4 puts them under "available without a workshop", and that is the
-      // point of them: a dressing is something you make on a kerb, bleeding.
+      // §18.4 puts them under "available without a workshop": a dressing can
+      // be made before there is a workshop module to make it in.
       for (final id in [
         'med_bandage_improvised',
         'med_pressure_improvised',
@@ -62,15 +62,15 @@ void main() {
       // months and quietly made one tool the only answer.
       final stake = book.making('melee_spike')!;
 
-      expect(toolsAllow(stake, const ['melee_knife']), isTrue);
-      expect(toolsAllow(stake, const ['tool_multitool']), isTrue);
-      expect(toolsAllow(stake, const ['melee_hammer']), isFalse);
-      expect(toolsAllow(stake, const []), isFalse);
+      expect(craftToolsAllow(stake, const ['melee_knife']), isTrue);
+      expect(craftToolsAllow(stake, const ['tool_multitool']), isTrue);
+      expect(craftToolsAllow(stake, const ['melee_hammer']), isFalse);
+      expect(craftToolsAllow(stake, const []), isFalse);
     });
 
     test('and a dressing takes nothing at all', () {
       expect(
-        toolsAllow(book.making('med_bandage_improvised')!, const []),
+        craftToolsAllow(book.making('med_bandage_improvised')!, const []),
         isTrue,
       );
     });

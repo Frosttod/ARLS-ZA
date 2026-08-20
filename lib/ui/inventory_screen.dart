@@ -67,6 +67,8 @@ class InventoryScreen extends StatelessWidget {
     this.onRead,
     this.onFill,
     this.onEmpty,
+    this.onDismantle,
+    this.canDismantle,
     this.onDetails,
     this.usingLine,
     this.onDevFill,
@@ -106,6 +108,14 @@ class InventoryScreen extends StatelessWidget {
 
   /// §4.2: filling a magazine from loose rounds.
   final void Function(CarriedItem line)? onFill;
+
+  /// §18.6: taking something apart for what is in it.
+  final void Function(CarriedItem line)? onDismantle;
+
+  /// Whether there is anything in it worth getting back. The button is absent
+  /// rather than dead for a tin of beans — a control that cannot be used is
+  /// worse than no control at all.
+  final bool Function(CarriedItem line)? canDismantle;
 
   /// §4.2: tipping them back out again.
   final void Function(CarriedItem line)? onEmpty;
@@ -257,6 +267,8 @@ class InventoryScreen extends StatelessWidget {
                 onRead: onRead,
                 onFill: onFill,
                 onEmpty: onEmpty,
+                onDismantle: onDismantle,
+                canDismantle: canDismantle,
                 onDetails: onDetails,
                 // The progress bar belongs under the thing it belongs to, not
                 // at the top of the screen: a player who taps "use" looks at
@@ -687,6 +699,8 @@ class _ItemRow extends StatefulWidget {
     this.onRead,
     this.onFill,
     this.onEmpty,
+    this.onDismantle,
+    this.canDismantle,
     this.onDetails,
     this.action,
     this.usingLine,
@@ -714,6 +728,10 @@ class _ItemRow extends StatefulWidget {
 
   /// §4.2: filling a magazine from loose rounds.
   final void Function(CarriedItem)? onFill;
+
+  /// §18.6: taking something apart for what is in it.
+  final void Function(CarriedItem)? onDismantle;
+  final bool Function(CarriedItem)? canDismantle;
 
   /// §4.2: tipping them back out again.
   final void Function(CarriedItem)? onEmpty;
@@ -880,6 +898,18 @@ class _ItemRowState extends State<_ItemRow> {
                           icon: Icons.upload,
                           tooltip: l10n.magazineEmpty,
                           onPressed: () => widget.onEmpty!(line),
+                          colours: colours,
+                        ),
+
+                      // §18.6: taking it apart for what is in it. Last in
+                      // the row, because nothing else here destroys the thing
+                      // it acts on.
+                      if (widget.onDismantle != null &&
+                          (widget.canDismantle?.call(line) ?? false))
+                        _RowAction(
+                          icon: Icons.handyman,
+                          tooltip: l10n.craftTakeApart,
+                          onPressed: () => widget.onDismantle!(line),
                           colours: colours,
                         ),
 

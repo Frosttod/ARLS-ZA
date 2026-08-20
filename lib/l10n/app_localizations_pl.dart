@@ -1262,6 +1262,65 @@ class L10nPl extends L10n {
   String get slotEmpty => 'puste';
 
   @override
+  String get craftTitle => 'Wytwarzanie';
+
+  @override
+  String get craftBenchFree => 'Nic w robocie';
+
+  @override
+  String get craftTakeApart => 'Rozbierz';
+
+  @override
+  String get craftDone => 'Gotowe.';
+
+  @override
+  String craftDismantleWarning(String gives, int minutes) {
+    return 'Nie wróci. Zostanie: $gives. $minutes minut.';
+  }
+
+  @override
+  String get craftMake => 'Wytwórz';
+
+  @override
+  String get craftCancel => 'Przerwij';
+
+  @override
+  String get craftCancelWarning => 'Materiały przepadają. Poszły w to.';
+
+  @override
+  String get craftNeedsTool => 'Wymaga';
+
+  @override
+  String get craftNoTool => 'Nie ma czym.';
+
+  @override
+  String get craftNoMaterials => 'Brakuje materiału.';
+
+  @override
+  String get craftBenchBusy => 'Coś już jest w robocie.';
+
+  @override
+  String get craftNotAtShelter => 'Nie tutaj — w schronie.';
+
+  @override
+  String get craftNothingBack => 'Nie ma z tego czego odzyskać.';
+
+  @override
+  String craftNeedsWorkshop(int level) {
+    return 'Warsztat L$level';
+  }
+
+  @override
+  String craftMaking(String item) {
+    return 'Wytwarzanie: $item';
+  }
+
+  @override
+  String craftTakingApart(String item) {
+    return 'Rozbiórka: $item';
+  }
+
+  @override
   String attachmentChoose(int count) {
     return 'Do wyboru: $count';
   }

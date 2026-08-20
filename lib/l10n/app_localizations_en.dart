@@ -1262,6 +1262,65 @@ class L10nEn extends L10n {
   String get slotEmpty => 'empty';
 
   @override
+  String get craftTitle => 'Making';
+
+  @override
+  String get craftBenchFree => 'Nothing on it';
+
+  @override
+  String get craftTakeApart => 'Take apart';
+
+  @override
+  String get craftDone => 'Finished on the bench.';
+
+  @override
+  String craftDismantleWarning(String gives, int minutes) {
+    return 'It will not come back. You get: $gives. $minutes minutes.';
+  }
+
+  @override
+  String get craftMake => 'Make';
+
+  @override
+  String get craftCancel => 'Give up';
+
+  @override
+  String get craftCancelWarning => 'The materials are gone. They went into it.';
+
+  @override
+  String get craftNeedsTool => 'Needs';
+
+  @override
+  String get craftNoTool => 'Nothing here would do the job.';
+
+  @override
+  String get craftNoMaterials => 'Not enough of something.';
+
+  @override
+  String get craftBenchBusy => 'Something is already on the bench.';
+
+  @override
+  String get craftNotAtShelter => 'Not here — at the shelter.';
+
+  @override
+  String get craftNothingBack => 'There is nothing in it worth getting back.';
+
+  @override
+  String craftNeedsWorkshop(int level) {
+    return 'Workshop L$level';
+  }
+
+  @override
+  String craftMaking(String item) {
+    return 'Making: $item';
+  }
+
+  @override
+  String craftTakingApart(String item) {
+    return 'Taking apart: $item';
+  }
+
+  @override
   String attachmentChoose(int count) {
     return '$count to choose from';
   }

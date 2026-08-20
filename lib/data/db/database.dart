@@ -29,7 +29,7 @@ import 'tables.dart';
 part 'database.g.dart';
 
 /// Bumped only alongside a migration step in [_migration]. Never reused.
-const int kSchemaVersion = 21;
+const int kSchemaVersion = 22;
 
 /// Keys used in [MetaEntries].
 abstract final class MetaKeys {
@@ -61,6 +61,7 @@ abstract final class MetaKeys {
     RemainsEntries,
     ProfileStats,
     ShelterItems,
+    CraftJobs,
   ],
 )
 class SaveDatabase extends _$SaveDatabase {
@@ -73,7 +74,7 @@ class SaveDatabase extends _$SaveDatabase {
   /// follow a constant reference. `schema_test.dart` keeps it in step with
   /// [kSchemaVersion].
   @override
-  int get schemaVersion => 21;
+  int get schemaVersion => 22;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -265,6 +266,13 @@ class SaveDatabase extends _$SaveDatabase {
       if (from >= 20 && from < 21) {
         await m.addColumn(shelterItems, shelterItems.rounds);
       }
+
+      // §18.4, §18.6: making and unmaking are activities with a clock, so
+      // they live on a row like the shelter's own build does. A new table
+      // rather than columns on Shelters: a job belongs to the player, not to
+      // the building, and dismantling happens with a multitool wherever they
+      // keep their things.
+      if (from < 22) await m.createTable(craftJobs);
 
       await _writeSchemaVersion(to);
     },
@@ -517,6 +525,28 @@ class SaveDatabase extends _$SaveDatabase {
   Future<List<ChronicleEntry>> chronicleFor(int profileId) => (select(
     chronicleEntries,
   )..where((t) => t.profileId.equals(profileId))).get();
+
+  // ---------------------------------------------------------------- craft ---
+
+  /// §18.4, §18.6: the job this profile has on the bench, or null.
+  Future<CraftJobRow?> craftJobFor(int profileId) => (select(
+    craftJobs,
+  )..where((t) => t.profileId.equals(profileId))).getSingleOrNull();
+
+  /// Puts one on the bench, replacing whatever was there.
+  ///
+  /// ⚠️ Replacing rather than refusing, because the caller has already asked
+  /// whether the bench is free — and a stale row surviving a crash would
+  /// otherwise block every future job with no way to clear it.
+  Future<void> beginCraftJob(CraftJobsCompanion job) => transaction(() async {
+    await (delete(
+      craftJobs,
+    )..where((t) => t.profileId.equals(job.profileId.value))).go();
+    await into(craftJobs).insert(job);
+  });
+
+  Future<void> clearCraftJob(int profileId) =>
+      (delete(craftJobs)..where((t) => t.profileId.equals(profileId))).go();
 
   // ------------------------------------------------------------- shelter ---
 

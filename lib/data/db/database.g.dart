@@ -8523,6 +8523,488 @@ class ShelterItemsCompanion extends UpdateCompanion<StashRow> {
   }
 }
 
+class $CraftJobsTable extends CraftJobs
+    with TableInfo<$CraftJobsTable, CraftJobRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CraftJobsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _profileIdMeta = const VerificationMeta(
+    'profileId',
+  );
+  @override
+  late final GeneratedColumn<int> profileId = GeneratedColumn<int>(
+    'profile_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _recipeIdMeta = const VerificationMeta(
+    'recipeId',
+  );
+  @override
+  late final GeneratedColumn<String> recipeId = GeneratedColumn<String>(
+    'recipe_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _salvageItemIdMeta = const VerificationMeta(
+    'salvageItemId',
+  );
+  @override
+  late final GeneratedColumn<String> salvageItemId = GeneratedColumn<String>(
+    'salvage_item_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _salvageConditionMeta = const VerificationMeta(
+    'salvageCondition',
+  );
+  @override
+  late final GeneratedColumn<double> salvageCondition = GeneratedColumn<double>(
+    'salvage_condition',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _startedAtMeta = const VerificationMeta(
+    'startedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> startedAt = GeneratedColumn<DateTime>(
+    'started_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _readyAtMeta = const VerificationMeta(
+    'readyAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> readyAt = GeneratedColumn<DateTime>(
+    'ready_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    profileId,
+    recipeId,
+    salvageItemId,
+    salvageCondition,
+    startedAt,
+    readyAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'craft_jobs';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<CraftJobRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('profile_id')) {
+      context.handle(
+        _profileIdMeta,
+        profileId.isAcceptableOrUnknown(data['profile_id']!, _profileIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_profileIdMeta);
+    }
+    if (data.containsKey('recipe_id')) {
+      context.handle(
+        _recipeIdMeta,
+        recipeId.isAcceptableOrUnknown(data['recipe_id']!, _recipeIdMeta),
+      );
+    }
+    if (data.containsKey('salvage_item_id')) {
+      context.handle(
+        _salvageItemIdMeta,
+        salvageItemId.isAcceptableOrUnknown(
+          data['salvage_item_id']!,
+          _salvageItemIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('salvage_condition')) {
+      context.handle(
+        _salvageConditionMeta,
+        salvageCondition.isAcceptableOrUnknown(
+          data['salvage_condition']!,
+          _salvageConditionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('started_at')) {
+      context.handle(
+        _startedAtMeta,
+        startedAt.isAcceptableOrUnknown(data['started_at']!, _startedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_startedAtMeta);
+    }
+    if (data.containsKey('ready_at')) {
+      context.handle(
+        _readyAtMeta,
+        readyAt.isAcceptableOrUnknown(data['ready_at']!, _readyAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_readyAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  CraftJobRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CraftJobRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      profileId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}profile_id'],
+      )!,
+      recipeId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}recipe_id'],
+      ),
+      salvageItemId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}salvage_item_id'],
+      ),
+      salvageCondition: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}salvage_condition'],
+      ),
+      startedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}started_at'],
+      )!,
+      readyAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}ready_at'],
+      )!,
+    );
+  }
+
+  @override
+  $CraftJobsTable createAlias(String alias) {
+    return $CraftJobsTable(attachedDatabase, alias);
+  }
+}
+
+class CraftJobRow extends DataClass implements Insertable<CraftJobRow> {
+  final int id;
+  final int profileId;
+
+  /// The recipe being made (§18.4), or null when this is a dismantling.
+  final String? recipeId;
+
+  /// What is being taken apart (§18.6), or null when this is a making.
+  ///
+  /// Exactly one of the two is set. The item is **already gone from the pack**
+  /// when the job starts: leaving it there until the job finished would let a
+  /// player dismantle a rifle and shoot it for the next quarter of an hour.
+  final String? salvageItemId;
+
+  /// §18.6: how worn it was, because the return is scaled by it and the item
+  /// itself is no longer around to ask.
+  final double? salvageCondition;
+  final DateTime startedAt;
+  final DateTime readyAt;
+  const CraftJobRow({
+    required this.id,
+    required this.profileId,
+    this.recipeId,
+    this.salvageItemId,
+    this.salvageCondition,
+    required this.startedAt,
+    required this.readyAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['profile_id'] = Variable<int>(profileId);
+    if (!nullToAbsent || recipeId != null) {
+      map['recipe_id'] = Variable<String>(recipeId);
+    }
+    if (!nullToAbsent || salvageItemId != null) {
+      map['salvage_item_id'] = Variable<String>(salvageItemId);
+    }
+    if (!nullToAbsent || salvageCondition != null) {
+      map['salvage_condition'] = Variable<double>(salvageCondition);
+    }
+    map['started_at'] = Variable<DateTime>(startedAt);
+    map['ready_at'] = Variable<DateTime>(readyAt);
+    return map;
+  }
+
+  CraftJobsCompanion toCompanion(bool nullToAbsent) {
+    return CraftJobsCompanion(
+      id: Value(id),
+      profileId: Value(profileId),
+      recipeId: recipeId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(recipeId),
+      salvageItemId: salvageItemId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(salvageItemId),
+      salvageCondition: salvageCondition == null && nullToAbsent
+          ? const Value.absent()
+          : Value(salvageCondition),
+      startedAt: Value(startedAt),
+      readyAt: Value(readyAt),
+    );
+  }
+
+  factory CraftJobRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CraftJobRow(
+      id: serializer.fromJson<int>(json['id']),
+      profileId: serializer.fromJson<int>(json['profileId']),
+      recipeId: serializer.fromJson<String?>(json['recipeId']),
+      salvageItemId: serializer.fromJson<String?>(json['salvageItemId']),
+      salvageCondition: serializer.fromJson<double?>(json['salvageCondition']),
+      startedAt: serializer.fromJson<DateTime>(json['startedAt']),
+      readyAt: serializer.fromJson<DateTime>(json['readyAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'profileId': serializer.toJson<int>(profileId),
+      'recipeId': serializer.toJson<String?>(recipeId),
+      'salvageItemId': serializer.toJson<String?>(salvageItemId),
+      'salvageCondition': serializer.toJson<double?>(salvageCondition),
+      'startedAt': serializer.toJson<DateTime>(startedAt),
+      'readyAt': serializer.toJson<DateTime>(readyAt),
+    };
+  }
+
+  CraftJobRow copyWith({
+    int? id,
+    int? profileId,
+    Value<String?> recipeId = const Value.absent(),
+    Value<String?> salvageItemId = const Value.absent(),
+    Value<double?> salvageCondition = const Value.absent(),
+    DateTime? startedAt,
+    DateTime? readyAt,
+  }) => CraftJobRow(
+    id: id ?? this.id,
+    profileId: profileId ?? this.profileId,
+    recipeId: recipeId.present ? recipeId.value : this.recipeId,
+    salvageItemId: salvageItemId.present
+        ? salvageItemId.value
+        : this.salvageItemId,
+    salvageCondition: salvageCondition.present
+        ? salvageCondition.value
+        : this.salvageCondition,
+    startedAt: startedAt ?? this.startedAt,
+    readyAt: readyAt ?? this.readyAt,
+  );
+  CraftJobRow copyWithCompanion(CraftJobsCompanion data) {
+    return CraftJobRow(
+      id: data.id.present ? data.id.value : this.id,
+      profileId: data.profileId.present ? data.profileId.value : this.profileId,
+      recipeId: data.recipeId.present ? data.recipeId.value : this.recipeId,
+      salvageItemId: data.salvageItemId.present
+          ? data.salvageItemId.value
+          : this.salvageItemId,
+      salvageCondition: data.salvageCondition.present
+          ? data.salvageCondition.value
+          : this.salvageCondition,
+      startedAt: data.startedAt.present ? data.startedAt.value : this.startedAt,
+      readyAt: data.readyAt.present ? data.readyAt.value : this.readyAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CraftJobRow(')
+          ..write('id: $id, ')
+          ..write('profileId: $profileId, ')
+          ..write('recipeId: $recipeId, ')
+          ..write('salvageItemId: $salvageItemId, ')
+          ..write('salvageCondition: $salvageCondition, ')
+          ..write('startedAt: $startedAt, ')
+          ..write('readyAt: $readyAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    profileId,
+    recipeId,
+    salvageItemId,
+    salvageCondition,
+    startedAt,
+    readyAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CraftJobRow &&
+          other.id == this.id &&
+          other.profileId == this.profileId &&
+          other.recipeId == this.recipeId &&
+          other.salvageItemId == this.salvageItemId &&
+          other.salvageCondition == this.salvageCondition &&
+          other.startedAt == this.startedAt &&
+          other.readyAt == this.readyAt);
+}
+
+class CraftJobsCompanion extends UpdateCompanion<CraftJobRow> {
+  final Value<int> id;
+  final Value<int> profileId;
+  final Value<String?> recipeId;
+  final Value<String?> salvageItemId;
+  final Value<double?> salvageCondition;
+  final Value<DateTime> startedAt;
+  final Value<DateTime> readyAt;
+  const CraftJobsCompanion({
+    this.id = const Value.absent(),
+    this.profileId = const Value.absent(),
+    this.recipeId = const Value.absent(),
+    this.salvageItemId = const Value.absent(),
+    this.salvageCondition = const Value.absent(),
+    this.startedAt = const Value.absent(),
+    this.readyAt = const Value.absent(),
+  });
+  CraftJobsCompanion.insert({
+    this.id = const Value.absent(),
+    required int profileId,
+    this.recipeId = const Value.absent(),
+    this.salvageItemId = const Value.absent(),
+    this.salvageCondition = const Value.absent(),
+    required DateTime startedAt,
+    required DateTime readyAt,
+  }) : profileId = Value(profileId),
+       startedAt = Value(startedAt),
+       readyAt = Value(readyAt);
+  static Insertable<CraftJobRow> custom({
+    Expression<int>? id,
+    Expression<int>? profileId,
+    Expression<String>? recipeId,
+    Expression<String>? salvageItemId,
+    Expression<double>? salvageCondition,
+    Expression<DateTime>? startedAt,
+    Expression<DateTime>? readyAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (profileId != null) 'profile_id': profileId,
+      if (recipeId != null) 'recipe_id': recipeId,
+      if (salvageItemId != null) 'salvage_item_id': salvageItemId,
+      if (salvageCondition != null) 'salvage_condition': salvageCondition,
+      if (startedAt != null) 'started_at': startedAt,
+      if (readyAt != null) 'ready_at': readyAt,
+    });
+  }
+
+  CraftJobsCompanion copyWith({
+    Value<int>? id,
+    Value<int>? profileId,
+    Value<String?>? recipeId,
+    Value<String?>? salvageItemId,
+    Value<double?>? salvageCondition,
+    Value<DateTime>? startedAt,
+    Value<DateTime>? readyAt,
+  }) {
+    return CraftJobsCompanion(
+      id: id ?? this.id,
+      profileId: profileId ?? this.profileId,
+      recipeId: recipeId ?? this.recipeId,
+      salvageItemId: salvageItemId ?? this.salvageItemId,
+      salvageCondition: salvageCondition ?? this.salvageCondition,
+      startedAt: startedAt ?? this.startedAt,
+      readyAt: readyAt ?? this.readyAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (profileId.present) {
+      map['profile_id'] = Variable<int>(profileId.value);
+    }
+    if (recipeId.present) {
+      map['recipe_id'] = Variable<String>(recipeId.value);
+    }
+    if (salvageItemId.present) {
+      map['salvage_item_id'] = Variable<String>(salvageItemId.value);
+    }
+    if (salvageCondition.present) {
+      map['salvage_condition'] = Variable<double>(salvageCondition.value);
+    }
+    if (startedAt.present) {
+      map['started_at'] = Variable<DateTime>(startedAt.value);
+    }
+    if (readyAt.present) {
+      map['ready_at'] = Variable<DateTime>(readyAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CraftJobsCompanion(')
+          ..write('id: $id, ')
+          ..write('profileId: $profileId, ')
+          ..write('recipeId: $recipeId, ')
+          ..write('salvageItemId: $salvageItemId, ')
+          ..write('salvageCondition: $salvageCondition, ')
+          ..write('startedAt: $startedAt, ')
+          ..write('readyAt: $readyAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$SaveDatabase extends GeneratedDatabase {
   _$SaveDatabase(QueryExecutor e) : super(e);
   $SaveDatabaseManager get managers => $SaveDatabaseManager(this);
@@ -8543,6 +9025,7 @@ abstract class _$SaveDatabase extends GeneratedDatabase {
   late final $RemainsEntriesTable remainsEntries = $RemainsEntriesTable(this);
   late final $ProfileStatsTable profileStats = $ProfileStatsTable(this);
   late final $ShelterItemsTable shelterItems = $ShelterItemsTable(this);
+  late final $CraftJobsTable craftJobs = $CraftJobsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -8561,6 +9044,7 @@ abstract class _$SaveDatabase extends GeneratedDatabase {
     remainsEntries,
     profileStats,
     shelterItems,
+    craftJobs,
   ];
   @override
   DriftDatabaseOptions get options =>
@@ -12558,6 +13042,242 @@ typedef $$ShelterItemsTableProcessedTableManager =
       StashRow,
       PrefetchHooks Function()
     >;
+typedef $$CraftJobsTableCreateCompanionBuilder =
+    CraftJobsCompanion Function({
+      Value<int> id,
+      required int profileId,
+      Value<String?> recipeId,
+      Value<String?> salvageItemId,
+      Value<double?> salvageCondition,
+      required DateTime startedAt,
+      required DateTime readyAt,
+    });
+typedef $$CraftJobsTableUpdateCompanionBuilder =
+    CraftJobsCompanion Function({
+      Value<int> id,
+      Value<int> profileId,
+      Value<String?> recipeId,
+      Value<String?> salvageItemId,
+      Value<double?> salvageCondition,
+      Value<DateTime> startedAt,
+      Value<DateTime> readyAt,
+    });
+
+class $$CraftJobsTableFilterComposer
+    extends Composer<_$SaveDatabase, $CraftJobsTable> {
+  $$CraftJobsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get profileId => $composableBuilder(
+    column: $table.profileId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get recipeId => $composableBuilder(
+    column: $table.recipeId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get salvageItemId => $composableBuilder(
+    column: $table.salvageItemId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get salvageCondition => $composableBuilder(
+    column: $table.salvageCondition,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get startedAt => $composableBuilder(
+    column: $table.startedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get readyAt => $composableBuilder(
+    column: $table.readyAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$CraftJobsTableOrderingComposer
+    extends Composer<_$SaveDatabase, $CraftJobsTable> {
+  $$CraftJobsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get profileId => $composableBuilder(
+    column: $table.profileId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get recipeId => $composableBuilder(
+    column: $table.recipeId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get salvageItemId => $composableBuilder(
+    column: $table.salvageItemId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get salvageCondition => $composableBuilder(
+    column: $table.salvageCondition,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get startedAt => $composableBuilder(
+    column: $table.startedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get readyAt => $composableBuilder(
+    column: $table.readyAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$CraftJobsTableAnnotationComposer
+    extends Composer<_$SaveDatabase, $CraftJobsTable> {
+  $$CraftJobsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get profileId =>
+      $composableBuilder(column: $table.profileId, builder: (column) => column);
+
+  GeneratedColumn<String> get recipeId =>
+      $composableBuilder(column: $table.recipeId, builder: (column) => column);
+
+  GeneratedColumn<String> get salvageItemId => $composableBuilder(
+    column: $table.salvageItemId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get salvageCondition => $composableBuilder(
+    column: $table.salvageCondition,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get startedAt =>
+      $composableBuilder(column: $table.startedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get readyAt =>
+      $composableBuilder(column: $table.readyAt, builder: (column) => column);
+}
+
+class $$CraftJobsTableTableManager
+    extends
+        RootTableManager<
+          _$SaveDatabase,
+          $CraftJobsTable,
+          CraftJobRow,
+          $$CraftJobsTableFilterComposer,
+          $$CraftJobsTableOrderingComposer,
+          $$CraftJobsTableAnnotationComposer,
+          $$CraftJobsTableCreateCompanionBuilder,
+          $$CraftJobsTableUpdateCompanionBuilder,
+          (
+            CraftJobRow,
+            BaseReferences<_$SaveDatabase, $CraftJobsTable, CraftJobRow>,
+          ),
+          CraftJobRow,
+          PrefetchHooks Function()
+        > {
+  $$CraftJobsTableTableManager(_$SaveDatabase db, $CraftJobsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CraftJobsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CraftJobsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CraftJobsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> profileId = const Value.absent(),
+                Value<String?> recipeId = const Value.absent(),
+                Value<String?> salvageItemId = const Value.absent(),
+                Value<double?> salvageCondition = const Value.absent(),
+                Value<DateTime> startedAt = const Value.absent(),
+                Value<DateTime> readyAt = const Value.absent(),
+              }) => CraftJobsCompanion(
+                id: id,
+                profileId: profileId,
+                recipeId: recipeId,
+                salvageItemId: salvageItemId,
+                salvageCondition: salvageCondition,
+                startedAt: startedAt,
+                readyAt: readyAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int profileId,
+                Value<String?> recipeId = const Value.absent(),
+                Value<String?> salvageItemId = const Value.absent(),
+                Value<double?> salvageCondition = const Value.absent(),
+                required DateTime startedAt,
+                required DateTime readyAt,
+              }) => CraftJobsCompanion.insert(
+                id: id,
+                profileId: profileId,
+                recipeId: recipeId,
+                salvageItemId: salvageItemId,
+                salvageCondition: salvageCondition,
+                startedAt: startedAt,
+                readyAt: readyAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$CraftJobsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$SaveDatabase,
+      $CraftJobsTable,
+      CraftJobRow,
+      $$CraftJobsTableFilterComposer,
+      $$CraftJobsTableOrderingComposer,
+      $$CraftJobsTableAnnotationComposer,
+      $$CraftJobsTableCreateCompanionBuilder,
+      $$CraftJobsTableUpdateCompanionBuilder,
+      (
+        CraftJobRow,
+        BaseReferences<_$SaveDatabase, $CraftJobsTable, CraftJobRow>,
+      ),
+      CraftJobRow,
+      PrefetchHooks Function()
+    >;
 
 class $SaveDatabaseManager {
   final _$SaveDatabase _db;
@@ -12588,4 +13308,6 @@ class $SaveDatabaseManager {
       $$ProfileStatsTableTableManager(_db, _db.profileStats);
   $$ShelterItemsTableTableManager get shelterItems =>
       $$ShelterItemsTableTableManager(_db, _db.shelterItems);
+  $$CraftJobsTableTableManager get craftJobs =>
+      $$CraftJobsTableTableManager(_db, _db.craftJobs);
 }

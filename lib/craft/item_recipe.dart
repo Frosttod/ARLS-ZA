@@ -67,9 +67,13 @@ class ItemRecipe {
   /// §18.3's base time, before Engineering, tools and the workshop.
   final Duration work;
 
-  /// The workshop level the shelter must have. Nought means anywhere — the
-  /// medical rows of §18.4 are made sitting on a kerb, which is the point of
-  /// them.
+  /// The workshop level the shelter must have.
+  ///
+  /// Nought means no workshop module, not "anywhere": §18.4 frees the medical
+  /// rows from the *workshop*, and §2.1a keeps every kind of making a shelter
+  /// activity — something that ticks with the app closed because the character
+  /// is standing where they keep their things. So a dressing can be made
+  /// before a workshop exists, and still not on a pavement.
   final int workshopLevel;
 
   /// Any one of these will do. Empty means bare hands are enough.
@@ -316,11 +320,13 @@ Duration salvageTime(Map<String, double> content) {
   return Duration(seconds: fastest.inSeconds + (span * share).round());
 }
 
-/// §18.4: whether this can be attempted with what is carried.
+/// §18.4: whether this can be attempted with what is at hand.
 ///
-/// A recipe listing no tools can be done with hands, which is what makes the
-/// medical rows of §18.4 something you do on a kerb rather than at home.
-bool toolsAllow(ItemRecipe recipe, Iterable<String> carriedIds) {
+/// ⚠️ Named apart from the shelter's own `toolsAllow`, which asks the same
+/// question about a module and takes different arguments. Two functions of one
+/// name in two libraries is an ambiguous import the day somebody needs both,
+/// and this file and that one are needed together on the crafting screen.
+bool craftToolsAllow(ItemRecipe recipe, Iterable<String> carriedIds) {
   if (recipe.toolsAnyOf.isEmpty) return true;
 
   for (final id in carriedIds) {
