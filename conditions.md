@@ -991,6 +991,19 @@ if reason no longer true
 
 reason shown under the row, not at the top       // Cztery wiersze mówiące naraz "półki pełne" to ściana. Jeden wiersz pod ikoną, którą naciśnięto, to odpowiedź.
 
+if item on shelf and action is use/wear/dismantle/details
+    then item taken into pack first, then acted on
+                                                 // §18.2. Jedzenie z półki i jedzenie z plecaka to w świecie ten sam ruch — sięgasz po to. Jeden ruch w kodzie znaczy, że wszystkie reguły dalej obowiązują: limity udźwigu, blokada rozbiórki, gniazda dodatków.
+
+if pack has no room
+    then shelf action := refused (szary + powód)  // §18.1a. Jedyna odmowa, którą dokłada wzięcie do ręki.
+
+if shelf list sorted
+    then take acts on stored index, not screen position
+                                                 // ⚠️ Wiersz na ekranie to nie wiersz w magazynie. Podanie pozycji ekranowej zdejmowałoby z półki nie to, w co się kliknęło, w chwili gdy sortowanie jest inne niż kolejność zapisu.
+
+pack order shared between pack and shelves       // Jeden wybór widziany na dwóch ekranach. Wybór trzymany w środku ekranu ściąganego z góry to wybór zapominany przy każdym zamknięciu — ta klasa błędu wyszła tu już sześć razy.
+
 ```
 
 ---

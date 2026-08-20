@@ -10,7 +10,11 @@ library;
 import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 
+import '../inventory/body_slots.dart';
 import '../inventory/inventory.dart';
+import '../inventory/item_use.dart';
+import '../items/item.dart';
+import 'inventory_screen.dart' show PackAction, PackOrder;
 import '../items/item_catalogue.dart';
 import '../shelter/stash.dart';
 import 'fonts.dart';
@@ -26,6 +30,11 @@ class StashScreen extends StatelessWidget {
     required this.nameOf,
     required this.onStore,
     required this.onTake,
+    required this.order,
+    this.onAct,
+    this.onDetails,
+    this.canDismantle,
+    this.refusalOf,
     super.key,
   });
 
@@ -44,6 +53,30 @@ class StashScreen extends StatelessWidget {
   final void Function(CarriedItem line) onStore;
   final void Function(int index) onTake;
 
+  /// ⚠️ Shared with the pack screen, and owned by the caller.
+  ///
+  /// One order for both screens, because they are one decision seen twice —
+  /// and a choice held inside a pushed route is a choice forgotten every time
+  /// the player closes it, which is the bug class this codebase has now found
+  /// six times.
+  final ValueNotifier<PackOrder> order;
+
+  /// §18.2: doing something to a piece **on a shelf**, by its index.
+  ///
+  /// The index rather than the line, because the caller picks it up first and
+  /// needs to know which one to take. Everything a player does to something on
+  /// a shelf is the same motion in the world — reaching for it.
+  final void Function(int index, PackAction action)? onAct;
+
+  /// §5.6.3: the numbers, and the attachment slots with them.
+  final void Function(int index)? onDetails;
+
+  /// §18.6: whether anything would come out of this piece.
+  final bool Function(CarriedItem line)? canDismantle;
+
+  /// §12: why an action would not work right now, or null.
+  final String? Function(CarriedItem line, PackAction action)? refusalOf;
+
   @override
   Widget build(BuildContext context) {
     final l10n = L10n.of(context);
@@ -55,50 +88,125 @@ class StashScreen extends StatelessWidget {
         valueListenable: stash,
         builder: (context, shelves, _) => ValueListenableBuilder<Inventory>(
           valueListenable: pack,
-          builder: (context, carried, _) => ListView(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
-            children: [
-              _Gauges(stash: shelves, catalogue: catalogue, colours: colours),
-              const SizedBox(height: 18),
+          builder: (context, carried, _) => ValueListenableBuilder<PackOrder>(
+            valueListenable: order,
+            builder: (context, _, _) => ListView(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+              children: [
+                _Gauges(stash: shelves, catalogue: catalogue, colours: colours),
+                const SizedBox(height: 18),
 
-              _Heading(label: l10n.stashOnTheShelves, colours: colours),
-              if (shelves.lines.isEmpty)
-                _Nothing(text: l10n.stashEmpty, colours: colours)
-              else
-                for (var i = 0; i < shelves.lines.length; i++)
-                  _Line(
-                    line: shelves.lines[i],
-                    name: nameOf(shelves.lines[i].itemId),
-                    catalogue: catalogue,
-                    colours: colours,
-                    action: l10n.stashTake,
-                    nameOf: nameOf,
-                    onTap: () => onTake(i),
-                  ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _Heading(
+                        label: l10n.stashOnTheShelves,
+                        colours: colours,
+                      ),
+                    ),
+                    // The same cycling control the pack has, on the same
+                    // notifier: two screens, one decision, one order.
+                    TextButton(
+                      onPressed: () => order.value = switch (order.value) {
+                        PackOrder.kind => PackOrder.name,
+                        PackOrder.name => PackOrder.mass,
+                        PackOrder.mass => PackOrder.kind,
+                      },
+                      child: Text(switch (order.value) {
+                        PackOrder.kind => l10n.packOrderKind,
+                        PackOrder.name => l10n.packOrderName,
+                        PackOrder.mass => l10n.packOrderMass,
+                      }, style: const TextStyle(fontSize: 12)),
+                    ),
+                  ],
+                ),
 
-              const SizedBox(height: 24),
-              _Heading(label: l10n.stashInThePack, colours: colours),
-              if (carried.carried.isEmpty)
-                _Nothing(text: l10n.stashPackEmpty, colours: colours)
-              else
-                for (final line in carried.carried)
-                  _Line(
-                    line: line,
-                    name: nameOf(line.itemId),
-                    catalogue: catalogue,
-                    colours: colours,
-                    action: l10n.stashStore,
-                    nameOf: nameOf,
-                    // §18.2: the shelf refuses what will not fit, and says so
-                    // rather than silently keeping it in the pack.
-                    enabled: shelves.fits(line.copyWith(count: 1), catalogue),
-                    onTap: () => onStore(line.copyWith(count: 1)),
-                  ),
-            ],
+                if (shelves.lines.isEmpty)
+                  _Nothing(text: l10n.stashEmpty, colours: colours)
+                else
+                  // ⚠️ Sorted for reading, acted on by original index. The
+                  // shelf is a list the caller indexes into, and handing it
+                  // the position on screen would take the wrong thing off it
+                  // the moment the order is anything but the stored one.
+                  for (final (index, line) in _sorted(shelves.lines).indexed)
+                    _Line(
+                      key: ValueKey('shelf.$index.${line.itemId}'),
+                      line: line,
+                      name: nameOf(line.itemId),
+                      catalogue: catalogue,
+                      colours: colours,
+                      action: l10n.stashTake,
+                      nameOf: nameOf,
+                      onTap: () => onTake(shelves.lines.indexOf(line)),
+                      onDetails: onDetails == null
+                          ? null
+                          : () => onDetails!(shelves.lines.indexOf(line)),
+                      onAct: onAct == null
+                          ? null
+                          : (action) =>
+                                onAct!(shelves.lines.indexOf(line), action),
+                      canDismantle: canDismantle?.call(line) ?? false,
+                      refusalOf: refusalOf,
+                      l10n: l10n,
+                    ),
+
+                const SizedBox(height: 24),
+                _Heading(label: l10n.stashInThePack, colours: colours),
+                if (carried.carried.isEmpty)
+                  _Nothing(text: l10n.stashPackEmpty, colours: colours)
+                else
+                  for (final line in _sorted(carried.carried))
+                    _Line(
+                      line: line,
+                      name: nameOf(line.itemId),
+                      catalogue: catalogue,
+                      colours: colours,
+                      action: l10n.stashStore,
+                      nameOf: nameOf,
+                      // §18.2: the shelf refuses what will not fit, and says
+                      // so rather than silently keeping it in the pack.
+                      enabled: shelves.fits(line.copyWith(count: 1), catalogue),
+                      onTap: () => onStore(line.copyWith(count: 1)),
+                      l10n: l10n,
+                    ),
+              ],
+            ),
           ),
         ),
       ),
     );
+  }
+
+  /// The same three orders the pack offers, over whichever list (§18.1a).
+  List<CarriedItem> _sorted(List<CarriedItem> lines) {
+    final sorted = [...lines];
+
+    int byName(CarriedItem a, CarriedItem b) => nameOf(
+      a.itemId,
+    ).toLowerCase().compareTo(nameOf(b.itemId).toLowerCase());
+
+    sorted.sort((a, b) {
+      final left = catalogue[a.itemId];
+      final right = catalogue[b.itemId];
+      if (left == null || right == null) return 0;
+
+      switch (order.value) {
+        case PackOrder.kind:
+          final byKind = left.kind.index.compareTo(right.kind.index);
+          return byKind != 0 ? byKind : byName(a, b);
+
+        case PackOrder.mass:
+          final byMass = b
+              .massKg(right, catalogue: catalogue)
+              .compareTo(a.massKg(left, catalogue: catalogue));
+          return byMass != 0 ? byMass : byName(a, b);
+
+        case PackOrder.name:
+          return byName(a, b);
+      }
+    });
+
+    return sorted;
   }
 }
 
@@ -178,7 +286,7 @@ class _Gauge extends StatelessWidget {
   }
 }
 
-class _Line extends StatelessWidget {
+class _Line extends StatefulWidget {
   const _Line({
     required this.line,
     required this.name,
@@ -187,7 +295,13 @@ class _Line extends StatelessWidget {
     required this.action,
     required this.onTap,
     required this.nameOf,
+    required this.l10n,
     this.enabled = true,
+    this.onAct,
+    this.onDetails,
+    this.canDismantle = false,
+    this.refusalOf,
+    super.key,
   });
 
   final CarriedItem line;
@@ -200,9 +314,32 @@ class _Line extends StatelessWidget {
   final String action;
   final VoidCallback onTap;
   final bool enabled;
+  final L10n l10n;
+
+  /// §18.2: eating, wearing or taking apart something that is on a shelf.
+  final void Function(PackAction action)? onAct;
+  final VoidCallback? onDetails;
+  final bool canDismantle;
+  final String? Function(CarriedItem line, PackAction action)? refusalOf;
+
+  @override
+  State<_Line> createState() => _LineState();
+}
+
+class _LineState extends State<_Line> {
+  /// The last thing this row would not do, and why (§12).
+  String? _refused;
 
   @override
   Widget build(BuildContext context) {
+    final line = widget.line;
+    final catalogue = widget.catalogue;
+    final colours = widget.colours;
+    final nameOf = widget.nameOf;
+    final name = widget.name;
+    final enabled = widget.enabled;
+    final l10n = widget.l10n;
+
     final definition = catalogue[line.itemId];
     if (definition == null) return const SizedBox.shrink();
 
@@ -243,12 +380,119 @@ class _Line extends StatelessWidget {
                     fontFeatures: const [FontFeature.tabularFigures()],
                   ),
                 ),
+
+                // §12: the last thing this row would not do, under the row
+                // that would not do it.
+                if (_refused case final reason?) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    reason,
+                    style: TextStyle(fontSize: 11, color: colours.alert),
+                  ),
+                ],
               ],
             ),
           ),
-          TextButton(onPressed: enabled ? onTap : null, child: Text(action)),
+          // §18.2: what can be done with it without moving it first.
+          //
+          // ⚠️ The same glyphs the pack row uses, in the same order, and each
+          // of them picks the piece up before doing anything. Eating off a
+          // shelf and eating out of a bag are the same motion in the world;
+          // making them the same motion here means the carry limits, the
+          // dismantling lock and the attachment slots all go on applying.
+          if (widget.onAct != null) ...[
+            if (useOf(definition) != null)
+              _ShelfAction(
+                icon: Icons.restaurant,
+                tooltip: l10n.inventoryUse,
+                action: PackAction.use,
+                line: line,
+                onAct: widget.onAct!,
+                refusalOf: widget.refusalOf,
+                onRefused: _sayNo,
+                colours: colours,
+              ),
+            if (BodySlot.fromWire(wearSlotOf(definition)) != null ||
+                definition.kind == ItemKind.backpack)
+              _ShelfAction(
+                icon: Icons.checkroom,
+                tooltip: l10n.inventoryWear,
+                action: PackAction.wear,
+                line: line,
+                onAct: widget.onAct!,
+                refusalOf: widget.refusalOf,
+                onRefused: _sayNo,
+                colours: colours,
+              ),
+            if (widget.canDismantle)
+              _ShelfAction(
+                icon: Icons.handyman,
+                tooltip: l10n.craftTakeApart,
+                action: PackAction.dismantle,
+                line: line,
+                onAct: widget.onAct!,
+                refusalOf: widget.refusalOf,
+                onRefused: _sayNo,
+                colours: colours,
+              ),
+          ],
+          if (widget.onDetails != null)
+            IconButton(
+              onPressed: widget.onDetails,
+              icon: const Icon(Icons.info_outline, size: 18),
+              tooltip: l10n.itemDetails,
+              color: colours.muted,
+              visualDensity: VisualDensity.compact,
+              constraints: const BoxConstraints(),
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+            ),
+
+          TextButton(
+            onPressed: enabled ? widget.onTap : null,
+            child: Text(widget.action),
+          ),
         ],
       ),
+    );
+  }
+
+  void _sayNo(String reason) => setState(() => _refused = reason);
+}
+
+/// One thing that can be done to a piece on a shelf (§18.2, §12).
+class _ShelfAction extends StatelessWidget {
+  const _ShelfAction({
+    required this.icon,
+    required this.tooltip,
+    required this.action,
+    required this.line,
+    required this.onAct,
+    required this.onRefused,
+    required this.colours,
+    this.refusalOf,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final PackAction action;
+  final CarriedItem line;
+  final void Function(PackAction action) onAct;
+  final void Function(String reason) onRefused;
+  final String? Function(CarriedItem line, PackAction action)? refusalOf;
+  final HudColors colours;
+
+  @override
+  Widget build(BuildContext context) {
+    final no = refusalOf?.call(line, action);
+
+    return IconButton(
+      onPressed: no == null ? () => onAct(action) : () => onRefused(no),
+      icon: Icon(icon, size: 18),
+      tooltip: no ?? tooltip,
+      color: no == null ? colours.text : colours.muted.withValues(alpha: 0.55),
+      visualDensity: VisualDensity.compact,
+      constraints: const BoxConstraints(),
+      padding: const EdgeInsets.symmetric(horizontal: 4),
     );
   }
 }

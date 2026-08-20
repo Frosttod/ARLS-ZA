@@ -4106,6 +4106,22 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
           },
           onStore: (line) => unawaited(_leaveOnShelf(line)),
           onTake: (index) => unawaited(_takeOffShelf(index)),
+          // One order for the pack and the shelves: they are one decision
+          // seen twice.
+          order: _packOrder,
+          onAct: (index, action) => unawaited(_shelfAct(index, action)),
+          onDetails: (index) => unawaited(_shelfDetails(index)),
+          canDismantle: (line) =>
+              _catalogue != null &&
+              (line.isPartlyDismantled ||
+                  salvagePreview(
+                    line.itemId,
+                    _bench(),
+                    catalogue: _catalogue!,
+                    book: _recipes,
+                    condition: line.condition ?? 100,
+                  ).isNotEmpty),
+          refusalOf: _shelfRefusal,
         ),
       ),
     );
@@ -4190,15 +4206,15 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   }
 
   /// §18.2: off the shelf and into the pack, if it will go.
-  Future<void> _takeOffShelf(int index) async {
+  Future<CarriedItem?> _takeOffShelf(int index) async {
     final character = _character;
     final catalogue = _catalogue;
     final place = _openShelves;
-    if (character == null || catalogue == null || place == null) return;
+    if (character == null || catalogue == null || place == null) return null;
 
     final took = _stash.value.take(index);
     final line = took.taken;
-    if (line == null) return;
+    if (line == null) return null;
 
     // §18.1a: the pack has the same two limits the shelf does, and a shelf is
     // not a way round them.
@@ -4216,14 +4232,99 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     );
     if (!added.isAccepted) {
       if (mounted) _say(L10n.of(context).stashNoRoomInPack);
-      return;
+      return null;
     }
+
+    // ⚠️ Which piece it became, found before either list is replaced.
+    //
+    // Everything a player does to something on a shelf is done by picking it
+    // up first, so the caller needs a handle on the very line that arrived —
+    // and `add` builds a new one, or merges into a stack that was already
+    // there. Identity against the old list answers both cases.
+    final before = _inventory.value.carried;
+    final arrived =
+        added.inventory.carried
+            .where((entry) => !before.any((old) => identical(old, entry)))
+            .firstOrNull ??
+        added.inventory.carried
+            .where((entry) => entry.itemId == line.itemId)
+            .firstOrNull;
 
     _stash.value = took.stash;
     _inventory.value = added.inventory;
 
     await _saveShelf();
     await _saveInventory();
+
+    return arrived;
+  }
+
+  /// §5.6.3: the numbers for a piece on a shelf, with its slots.
+  ///
+  /// ⚠️ It comes into the pack first, like every other shelf action. The
+  /// attachment rows fit parts *out of the pack*, and a sheet opened over a
+  /// shelf line would offer slots on something the pack does not hold — which
+  /// is exactly how a rifle on the pavement once ended up wearing the sights
+  /// off the one in the player's hands.
+  Future<void> _shelfDetails(int index) async {
+    final line = await _takeOffShelf(index);
+    if (line == null || !mounted) return;
+
+    await _showItemDetails(line);
+  }
+
+  /// §12: why a shelf action would not work right now.
+  ///
+  /// Everything here needs the piece in hand first, so §18.1a's two limits are
+  /// the first question — and after that it is the same set of answers the
+  /// pack gives, asked about the same piece.
+  String? _shelfRefusal(CarriedItem line, PackAction action) {
+    final character = _character;
+    final catalogue = _catalogue;
+    if (character == null || catalogue == null) return null;
+
+    final room = _inventory.value.add(
+      line.itemId,
+      catalogue,
+      body: character.body,
+      count: 1,
+      condition: line.condition,
+      attachments: line.attachments,
+      rounds: line.rounds,
+      salvageSeconds: line.salvageSeconds,
+    );
+    if (!room.isAccepted) return L10n.of(context).stashNoRoomInPack;
+
+    return _packRefusal(line, action);
+  }
+
+  /// §18.2: does something to a piece that is on a shelf.
+  ///
+  /// ⚠️ By picking it up first, always. Eating off a shelf, putting on a coat
+  /// that is on a shelf and taking a rifle apart on a shelf are all the same
+  /// motion in the world — you reach for it — and making them one motion in
+  /// the code means every rule they already obey goes on being obeyed: the
+  /// carry limits, the dismantling lock, the attachment slots.
+  ///
+  /// The one refusal it adds is §18.1a's: a pack with no room in it cannot
+  /// pick anything up, and that is said rather than swallowed.
+  Future<void> _shelfAct(int index, PackAction action) async {
+    final line = await _takeOffShelf(index);
+    if (line == null || !mounted) return;
+
+    switch (action) {
+      case PackAction.use:
+      case PackAction.read:
+        await _use(line);
+      case PackAction.wear:
+        await _wear(line);
+      case PackAction.dismantle:
+        await _dismantle(line);
+      case PackAction.stash:
+      case PackAction.fill:
+      case PackAction.empty:
+        break;
+    }
   }
 
   Future<void> _saveShelf() async {
