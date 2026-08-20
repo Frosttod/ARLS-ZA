@@ -373,4 +373,69 @@ void main() {
       expect(out.inventory.carried[1].rounds, 1);
     });
   });
+
+  group('a handle that went stale (§11.1)', () {
+    // ⚠️ The quiet way rounds went missing between a walk and a restart.
+    //
+    // Everything here finds its line by identity, and `withLine` returns an
+    // unchanged copy when it finds nothing. Handed a line captured before
+    // something else rebuilt the pack, a fill took the loose rounds out and
+    // put them nowhere: they left the bag, never reached the magazine, and
+    // were gone by the next save. Refused now, out loud.
+    test('filling a magazine that is not in this pack moves nothing', () {
+      // ⚠️ copyWith, not a const: Dart hands out one instance for identical
+      // const objects, so a const "stale" copy would be the very line in the
+      // pack and prove nothing. This is what a rebuilt pack really gives you
+      // — the same values, a different object.
+      final stale = const CarriedItem(
+        itemId: 'mag_rifle_545',
+      ).copyWith(rounds: 0);
+      final pack = Inventory(
+        carried: const [
+          CarriedItem(itemId: 'mag_rifle_545', rounds: 0),
+          CarriedItem(itemId: 'ammo_545x39', count: 40),
+        ],
+      );
+
+      final out = fillMagazine(pack, stale, catalogue);
+
+      expect(out.refusal, LoadRefusal.gone);
+      expect(
+        out.inventory.carried
+            .firstWhere((l) => l.itemId == 'ammo_545x39')
+            .count,
+        40,
+        reason: 'not one round left the bag',
+      );
+    });
+
+    test('and neither does emptying one', () {
+      final stale = const CarriedItem(
+        itemId: 'mag_rifle_545',
+      ).copyWith(rounds: 30);
+      final pack = Inventory(
+        carried: const [CarriedItem(itemId: 'mag_rifle_545', rounds: 30)],
+      );
+
+      final out = emptyMagazine(pack, stale, catalogue);
+
+      expect(out.refusal, LoadRefusal.gone);
+      expect(out.inventory.carried.single.rounds, 30);
+      expect(out.inventory.carried, hasLength(1), reason: 'nothing appeared');
+    });
+
+    test('nor swapping into a weapon nobody is holding', () {
+      final stale = const CarriedItem(
+        itemId: 'weapon_rifle_545',
+      ).copyWith(count: 1);
+      final pack = Inventory(
+        carried: const [CarriedItem(itemId: 'mag_rifle_545', rounds: 30)],
+      );
+
+      final out = swapMagazine(pack, stale, catalogue);
+
+      expect(out.refusal, LoadRefusal.gone);
+      expect(out.inventory.carried.single.rounds, 30);
+    });
+  });
 }

@@ -55,10 +55,8 @@ Future<void> main(List<String> args) async {
     byTable.update(box.tableId, (v) => v + 1, ifAbsent: () => 1);
   }
 
-  final distances = plan.boxes
-      .map((box) => box.position.distanceTo(centre))
-      .toList()
-    ..sort();
+  final distances =
+      plan.boxes.map((box) => box.position.distanceTo(centre)).toList()..sort();
 
   print('\ntable                 count');
   for (final row in byTable.entries) {
@@ -66,9 +64,11 @@ Future<void> main(List<String> args) async {
   }
 
   if (distances.isEmpty) return;
-  print('\nnearest ${distances.first.round()} m, '
-      'median ${distances[distances.length ~/ 2].round()} m, '
-      'furthest ${distances.last.round()} m');
+  print(
+    '\nnearest ${distances.first.round()} m, '
+    'median ${distances[distances.length ~/ 2].round()} m, '
+    'furthest ${distances.last.round()} m',
+  );
   print('${distances.where((d) => d <= 600).length} within 600 m');
 
   await world.dispose();

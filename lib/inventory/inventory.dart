@@ -465,6 +465,18 @@ class Inventory {
     if (line.attachments.contains(part.id)) return this;
     if (line.attachments.length >= attachmentSlots(weapon)) return this;
 
+    // §5.6.3: one thing per place. A second optic does not go on top of the
+    // first, and the interface says so by offering the place rather than the
+    // part — fitting one where something already sits is a swap, and a swap
+    // is the caller's decision to make, not a silent one to make here.
+    final place = slotOf(part);
+    if (place != null) {
+      for (final id in line.attachments) {
+        final fittedPart = catalogue[id];
+        if (fittedPart != null && slotOf(fittedPart) == place) return this;
+      }
+    }
+
     // ⚠️ The weapon may be in the pack **or** in the hand, and the hand is
     // `worn`. Found on a phone: fitting anything to the rifle actually being
     // carried did nothing at all, because this only ever looked in `carried` —

@@ -34,8 +34,10 @@ Future<void> main(List<String> args) async {
   final pois = await source.near(centre, radiusM: radius);
   final elapsed = DateTime.now().difference(started);
 
-  print('${pois.length} places within ${radius.round()} m, read in '
-      '${elapsed.inMilliseconds} ms');
+  print(
+    '${pois.length} places within ${radius.round()} m, read in '
+    '${elapsed.inMilliseconds} ms',
+  );
 
   final byTable = <String, List<double>>{};
   for (final poi in pois) {
@@ -53,9 +55,11 @@ Future<void> main(List<String> args) async {
   for (final row in rows) {
     final distances = row.value..sort();
     final median = distances[distances.length ~/ 2];
-    print('${row.key.padRight(20)} ${row.value.length.toString().padLeft(6)}  '
-        '${distances.first.round().toString().padLeft(6)} m '
-        '${median.round().toString().padLeft(7)} m');
+    print(
+      '${row.key.padRight(20)} ${row.value.length.toString().padLeft(6)}  '
+      '${distances.first.round().toString().padLeft(6)} m '
+      '${median.round().toString().padLeft(7)} m',
+    );
   }
 
   final matched = byTable.values.fold(0, (sum, list) => sum + list.length);
@@ -63,10 +67,7 @@ Future<void> main(List<String> args) async {
 
   // What the player would actually see: the cap of §10 against the ring the
   // spawner guarantees.
-  final near = byTable.values
-      .expand((d) => d)
-      .where((d) => d <= 600)
-      .length;
+  final near = byTable.values.expand((d) => d).where((d) => d <= 600).length;
   print('$near of them are within 600 m');
 
   await archive.close();

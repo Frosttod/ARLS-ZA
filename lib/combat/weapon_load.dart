@@ -121,6 +121,23 @@ class LoadOutcome {
   bool get isDone => refusal == null;
 }
 
+/// True when [line] is one of the pieces [pack] actually holds.
+///
+/// ⚠️ Everything here finds its line by identity, and [Inventory.withLine]
+/// quietly returns an unchanged copy when it finds nothing. Handed a stale
+/// handle — one captured before something else rebuilt the pack — a fill spent
+/// the loose rounds and put them nowhere: they left the pack, never reached the
+/// magazine, and were gone by the next save. Asked first, and refused out loud.
+bool _holds(Inventory pack, CarriedItem line) {
+  for (final entry in pack.carried) {
+    if (identical(entry, line)) return true;
+  }
+  for (final entry in pack.worn) {
+    if (identical(entry, line)) return true;
+  }
+  return false;
+}
+
 /// Why nothing happened, so the interface can say it out loud rather than
 /// leaving a dead button.
 enum LoadRefusal {
@@ -138,6 +155,13 @@ enum LoadRefusal {
 
   /// It is already full.
   full,
+
+  /// The very piece is not in this pack any more — a handle went stale.
+  ///
+  /// Not a sentence a player should ever read: it means something moved under
+  /// the action, and the right answer is to do nothing rather than to spend
+  /// rounds into thin air.
+  gone,
 }
 
 /// §5.5.4: takes the magazine out and puts the fullest fitting one in.
@@ -152,6 +176,9 @@ LoadOutcome swapMagazine(
   CarriedItem weaponLine,
   ItemCatalogue catalogue,
 ) {
+  if (!_holds(pack, weaponLine)) {
+    return LoadOutcome.refused(pack, LoadRefusal.gone);
+  }
   final load = WeaponLoad.of(weaponLine, catalogue);
   if (load == null) return LoadOutcome.refused(pack, LoadRefusal.notAWeapon);
   if (load.feed == Feed.loose) {
@@ -225,6 +252,9 @@ LoadOutcome fillMagazine(
   ItemCatalogue catalogue, {
   int? limit,
 }) {
+  if (!_holds(pack, magazineLine)) {
+    return LoadOutcome.refused(pack, LoadRefusal.gone);
+  }
   final item = catalogue[magazineLine.itemId];
   if (item == null) return LoadOutcome.refused(pack, LoadRefusal.notAWeapon);
 
@@ -261,6 +291,9 @@ LoadOutcome loadLoose(
   CarriedItem weaponLine,
   ItemCatalogue catalogue,
 ) {
+  if (!_holds(pack, weaponLine)) {
+    return LoadOutcome.refused(pack, LoadRefusal.gone);
+  }
   final load = WeaponLoad.of(weaponLine, catalogue);
   if (load == null) return LoadOutcome.refused(pack, LoadRefusal.notAWeapon);
   if (load.isFull) return LoadOutcome.refused(pack, LoadRefusal.full);
@@ -335,6 +368,9 @@ LoadOutcome emptyMagazine(
   ItemCatalogue catalogue, {
   int? limit,
 }) {
+  if (!_holds(pack, magazineLine)) {
+    return LoadOutcome.refused(pack, LoadRefusal.gone);
+  }
   final item = catalogue[magazineLine.itemId];
   if (item == null) return LoadOutcome.refused(pack, LoadRefusal.notAWeapon);
 

@@ -40,6 +40,8 @@ class SearchPanel extends StatelessWidget {
     this.rounds,
     this.capacity,
     this.onReload,
+    this.fittings = const [],
+    this.reload,
     super.key,
   });
 
@@ -53,6 +55,12 @@ class SearchPanel extends StatelessWidget {
 
   /// §5.5.4: swapping a magazine, or feeding a revolver.
   final VoidCallback? onReload;
+
+  /// §5.6.3: what is on the weapon, one line per place.
+  final List<WeaponFitting> fittings;
+
+  /// A magazine change under way, for the bar. Null when nothing is running.
+  final ReloadProgress? reload;
 
   /// The search in progress, or null when the player is free.
   final Search? search;
@@ -134,6 +142,8 @@ class SearchPanel extends StatelessWidget {
                   rounds: rounds,
                   capacity: capacity,
                   onReload: busy ? null : onReload,
+                  fittings: fittings,
+                  reload: reload,
                   colours: colours,
                   l10n: l10n,
                 ),
@@ -517,12 +527,36 @@ String _depthName(L10n l10n, SearchDepth depth) => switch (depth) {
 ///
 /// One line, because it is a readout rather than a screen: the name, the
 /// rounds, and the one button that changes them.
+/// One part on the weapon, as the HUD says it (§5.6.3).
+///
+/// The place comes first because that is what a player is choosing between:
+/// there is one barrel and one rail, and knowing what is on each is the whole
+/// question. The effect is in the part's own units — minutes of angle,
+/// decibels, metres — so a line reads without a legend.
+class WeaponFitting {
+  const WeaponFitting({required this.place, required this.name, this.effect});
+
+  final String place;
+  final String name;
+  final String? effect;
+}
+
+/// A magazine change under way (§5.5.4).
+class ReloadProgress {
+  const ReloadProgress({required this.label, required this.value});
+
+  final String label;
+  final double value;
+}
+
 class _WeaponRow extends StatelessWidget {
   const _WeaponRow({
     required this.name,
     required this.rounds,
     required this.capacity,
     required this.onReload,
+    required this.fittings,
+    required this.reload,
     required this.colours,
     required this.l10n,
   });
@@ -531,6 +565,8 @@ class _WeaponRow extends StatelessWidget {
   final int? rounds;
   final int? capacity;
   final VoidCallback? onReload;
+  final List<WeaponFitting> fittings;
+  final ReloadProgress? reload;
   final HudColors colours;
   final L10n l10n;
 
@@ -541,37 +577,108 @@ class _WeaponRow extends StatelessWidget {
     // is waiting for a magazine, not broken.
     final empty = (rounds ?? 0) <= 0;
 
+    final running = reload;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            Icons.gps_fixed,
-            size: 14,
-            color: empty ? colours.alert : colours.data,
+          Row(
+            children: [
+              Icon(
+                Icons.gps_fixed,
+                size: 14,
+                color: empty ? colours.alert : colours.data,
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 12, color: colours.text),
+                ),
+              ),
+              Text(
+                capacity == null
+                    ? l10n.reloadNoMagazine
+                    : '${rounds ?? 0} / $capacity',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: empty ? colours.alert : colours.muted,
+                  fontFamily: capacity == null ? null : kDataFont,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+              if (onReload != null && running == null)
+                _RowReload(onPressed: onReload!, colours: colours, l10n: l10n),
+            ],
           ),
-          const SizedBox(width: 6),
-          Expanded(
-            child: Text(
-              name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 12, color: colours.text),
+
+          // ⚠️ The bar for §5.5.4's seconds, on the screen the player is
+          // actually looking at. Pressing reload used to change nothing
+          // visible at all: the only sign it had worked was the count moving
+          // three and a half seconds later, and indoors it never did.
+          if (running != null) ...[
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    running.label,
+                    style: TextStyle(fontSize: 11, color: colours.muted),
+                  ),
+                ),
+              ],
             ),
-          ),
-          Text(
-            capacity == null
-                ? l10n.reloadNoMagazine
-                : '${rounds ?? 0} / $capacity',
-            style: TextStyle(
-              fontSize: 12,
-              color: empty ? colours.alert : colours.muted,
-              fontFamily: capacity == null ? null : kDataFont,
-              fontFeatures: const [FontFeature.tabularFigures()],
+            const SizedBox(height: 3),
+            LinearProgressIndicator(
+              value: running.value,
+              minHeight: 3,
+              backgroundColor: colours.muted.withValues(alpha: 0.25),
+              color: colours.data,
             ),
-          ),
-          if (onReload != null)
-            _RowReload(onPressed: onReload!, colours: colours, l10n: l10n),
+          ],
+
+          // §5.6.3: one line per place, so what is bolted on is readable
+          // without opening anything. A part that changes nothing a player can
+          // feel says only its name.
+          for (final fitting in fittings) ...[
+            const SizedBox(height: 3),
+            Row(
+              children: [
+                const SizedBox(width: 20),
+                Text(
+                  fitting.place.toUpperCase(),
+                  style: TextStyle(
+                    fontSize: 9,
+                    letterSpacing: 1.1,
+                    color: colours.muted,
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    fitting.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 11, color: colours.text),
+                  ),
+                ),
+                if (fitting.effect != null)
+                  Text(
+                    fitting.effect!,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: colours.data,
+                      fontFamily: kDataFont,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
+              ],
+            ),
+          ],
         ],
       ),
     );

@@ -110,6 +110,7 @@ void main() {
       final reload = Reload(
         weaponId: 'weapon_rifle_545',
         readyAt: now.add(const Duration(seconds: 3)),
+        total: const Duration(seconds: 3),
       );
 
       expect(reload.isDoneAt(now), isFalse);
@@ -118,13 +119,25 @@ void main() {
 
     test('and reads as a bar on the way there', () {
       const total = Duration(seconds: 4);
-      final reload = Reload(weaponId: 'w', readyAt: now.add(total));
+      final reload = Reload(
+        weaponId: 'w',
+        readyAt: now.add(total),
+        total: total,
+      );
 
       expect(reload.progressAt(now, total: total), closeTo(0, 0.01));
       expect(
         reload.progressAt(now.add(const Duration(seconds: 2)), total: total),
         closeTo(0.5, 0.01),
       );
+      // The reload carries its own denominator, so a bar can be drawn without
+      // asking the weapon how long it takes — which matters because the weapon
+      // can change under a running reload.
+      expect(
+        reload.progress(now.add(const Duration(seconds: 2))),
+        closeTo(0.5, 0.01),
+      );
+
       expect(
         reload.progressAt(now.add(const Duration(seconds: 9)), total: total),
         1,

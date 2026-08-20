@@ -21,6 +21,8 @@
 /// suppressor was the only attachment in it.
 library;
 
+import 'dart:math' as math;
+
 import '../items/item.dart';
 
 /// Whether [attachment] goes on [weapon] (§10.3.3's calibre string, again).
@@ -37,6 +39,49 @@ bool fitsWeapon(ItemDefinition attachment, ItemDefinition weapon) {
 
   return accepts.contains(weapon.props['caliber']);
 }
+
+/// Where on the weapon a part goes (§5.6.3).
+///
+/// A weapon is not a bag with a number of pockets. It has a barrel, a rail, a
+/// grip and a magazine well, and each of them holds one thing — which is why
+/// the interface offers a button per place rather than a list of everything
+/// that fits. A player fitting an optic is choosing what goes *on the rail*,
+/// not spending an abstract slot.
+enum AttachmentSlot {
+  /// The magazine well. Not a rail, but the same rule: one at a time.
+  magazine,
+
+  /// On top. Optics.
+  optic,
+
+  /// The muzzle. A suppressor and nothing else.
+  barrel,
+
+  /// Under the handguard.
+  grip,
+
+  /// The side rail: a laser or a light, and only one of them.
+  ///
+  /// ⚠️ Real rifles carry both. This game gives one, deliberately: both run
+  /// on batteries and both are seen by things that should not see you
+  /// (§6.2), so choosing which is a decision worth having.
+  rail,
+}
+
+/// Which place [item] goes in, or null for anything that is not a part.
+///
+/// ⚠️ The property is `mount`, not `slot`. `slot` was taken: it is where a
+/// garment sits on the *body* (§4.4), and naming this one the same made every
+/// attachment look like a piece of clothing for a body part that does not
+/// exist.
+AttachmentSlot? slotOf(ItemDefinition item) => switch (item.props['mount']) {
+  'magazine' => AttachmentSlot.magazine,
+  'optic' => AttachmentSlot.optic,
+  'barrel' => AttachmentSlot.barrel,
+  'grip' => AttachmentSlot.grip,
+  'rail' => AttachmentSlot.rail,
+  _ => null,
+};
 
 /// §5.6.3: how many things this weapon can carry at once.
 ///
@@ -126,4 +171,45 @@ class FittedWeapon {
     }
     return best;
   }
+}
+
+/// What one part does, in the units it is measured in (§5.1, §5.6.1).
+///
+/// One short string per place on the weapon, so the HUD can say `Kolimator
+/// −1.2 MOA` rather than making a player open a sheet to find out whether the
+/// thing bolted to their rifle is doing anything.
+///
+/// ⚠️ The suppressor is given in decibels because that is how anybody talks
+/// about one, but the number is **derived from the range multiplier in the
+/// data**, not typed in beside it: sound falls off with distance, so cutting
+/// the range something is heard from to 0.29 of it is about eleven decibels,
+/// not the thirty-five a catalogue would claim. One number, one source. If the
+/// suppression should be stronger, the multiplier is the thing to change.
+String? attachmentEffect(ItemDefinition part, {int? rounds, int? capacity}) {
+  final parts = <String>[];
+
+  if (capacity != null) parts.add('${rounds ?? 0} / $capacity');
+
+  final moa = (part.props['moa_delta'] as num?)?.toDouble();
+  if (moa != null && moa != 0) {
+    parts.add('${moa < 0 ? '−' : '+'}${moa.abs().toStringAsFixed(1)} MOA');
+  }
+
+  final noise = (part.props['noise_range_multiplier'] as num?)?.toDouble();
+  if (noise != null && noise > 0 && noise != 1) {
+    // Range to decibels: intensity goes with the square of distance, so a
+    // range ratio r is 20·log₁₀(r) decibels.
+    final db = 20 * (math.log(noise) / math.ln10);
+    parts.add('${db < 0 ? '−' : '+'}${db.abs().round()} dB');
+  }
+
+  final settle = (part.props['settle_multiplier'] as num?)?.toDouble();
+  if (settle != null && settle != 1) {
+    parts.add('−${((1 - settle) * 100).round()}% s');
+  }
+
+  final light = (part.props['light_radius_m'] as num?)?.toDouble();
+  if (light != null && light > 0) parts.add('${light.round()} m');
+
+  return parts.isEmpty ? null : parts.join(' · ');
 }

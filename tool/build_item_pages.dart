@@ -172,8 +172,10 @@ String _page(
 
   for (final kind in _kinds) {
     final rows = items.where((item) => item['type'] == kind.type).toList()
-      ..sort((a, b) => _name(a, names, language)
-          .compareTo(_name(b, names, language)));
+      ..sort(
+        (a, b) =>
+            _name(a, names, language).compareTo(_name(b, names, language)),
+      );
     if (rows.isEmpty) continue;
 
     buffer.writeln('<section class="sec" id="${kind.type}">');
@@ -182,9 +184,7 @@ String _page(
       '    <span class="sec__no">${_escape(kind.title(pl))}</span>',
     );
     buffer.writeln('    <h2>${_escape(kind.heading(pl))}</h2>');
-    buffer.writeln(
-      '    <p class="sec__lede">${_escape(kind.lede(pl))}</p>',
-    );
+    buffer.writeln('    <p class="sec__lede">${_escape(kind.lede(pl))}</p>');
     buffer.writeln('  </div>');
     buffer.writeln('  <div class="scroller">');
     buffer.writeln('    <table class="tbl">');
@@ -192,7 +192,9 @@ String _page(
     buffer.write('      <thead><tr>');
     buffer.write('<th scope="col">${pl ? 'Przedmiot' : 'Item'}</th>');
     for (final column in kind.columns) {
-      buffer.write('<th scope="col" class="n">${_escape(column.title(pl))}</th>');
+      buffer.write(
+        '<th scope="col" class="n">${_escape(column.title(pl))}</th>',
+      );
     }
     buffer.write(
       '<th scope="col" class="n">${pl ? 'Masa' : 'Mass'}</th>'
@@ -209,7 +211,9 @@ String _page(
         '<th scope="row">${_escape(_name(item, names, language))}</th>',
       );
       for (final column in kind.columns) {
-        buffer.write('<td class="n">${_escape(column.read(item, props, pl))}</td>');
+        buffer.write(
+          '<td class="n">${_escape(column.read(item, props, pl))}</td>',
+        );
       }
       buffer.write(
         '<td class="n">${_mass(item)}</td>'
@@ -308,14 +312,23 @@ final List<_Kind> _kinds = [
         'nigdy nie jest bezwartościowy. Druga połowa ceny to hałas.',
     columns: [
       _Column('Calibre', 'Kaliber', (i, p, pl) => '${p['caliber'] ?? '—'}'),
-      _Column('Energy', 'Energia',
-          (i, p, pl) => _num(p['muzzle_energy_j'], unit: 'J')),
+      _Column(
+        'Energy',
+        'Energia',
+        (i, p, pl) => _num(p['muzzle_energy_j'], unit: 'J'),
+      ),
       _Column('MOA', 'MOA', (i, p, pl) => _num(p['moa'], decimals: 1)),
       _Column('Magazine', 'Magazynek', (i, p, pl) => _num(p['magazine'])),
-      _Column('Range', 'Zasięg',
-          (i, p, pl) => _num(p['effective_range_m'], unit: 'm')),
-      _Column('Heard', 'Słychać z',
-          (i, p, pl) => _num(p['noise_range_m'], unit: 'm')),
+      _Column(
+        'Range',
+        'Zasięg',
+        (i, p, pl) => _num(p['effective_range_m'], unit: 'm'),
+      ),
+      _Column(
+        'Heard',
+        'Słychać z',
+        (i, p, pl) => _num(p['noise_range_m'], unit: 'm'),
+      ),
     ],
   ),
   _Kind(
@@ -347,14 +360,26 @@ final List<_Kind> _kinds = [
         'Dwadzieścia pięć metrów hałasu wobec siedmiuset karabinu — za cenę '
         'bycia na wyciągnięcie ręki od tego czegoś.',
     columns: [
-      _Column('Blood/hit', 'Krew na cios',
-          (i, p, pl) => _num(p['blood_ml_per_hit'], unit: 'ml')),
-      _Column('Swing', 'Zamach',
-          (i, p, pl) => _num(p['swing_seconds'], decimals: 1, unit: 's')),
-      _Column('Reach', 'Zasięg',
-          (i, p, pl) => _num(p['reach_m'], decimals: 1, unit: 'm')),
-      _Column('Heard', 'Słychać z',
-          (i, p, pl) => _num(p['noise_range_m'], unit: 'm')),
+      _Column(
+        'Blood/hit',
+        'Krew na cios',
+        (i, p, pl) => _num(p['blood_ml_per_hit'], unit: 'ml'),
+      ),
+      _Column(
+        'Swing',
+        'Zamach',
+        (i, p, pl) => _num(p['swing_seconds'], decimals: 1, unit: 's'),
+      ),
+      _Column(
+        'Reach',
+        'Zasięg',
+        (i, p, pl) => _num(p['reach_m'], decimals: 1, unit: 'm'),
+      ),
+      _Column(
+        'Heard',
+        'Słychać z',
+        (i, p, pl) => _num(p['noise_range_m'], unit: 'm'),
+      ),
     ],
   ),
   _Kind(
@@ -371,12 +396,21 @@ final List<_Kind> _kinds = [
         'obrażenia tylko dla trafionej lokalizacji.',
     columns: [
       _Column('Slot', 'Slot', (i, p, pl) => '${p['slot'] ?? '—'}'),
-      _Column('Insulation', 'Izolacja',
-          (i, p, pl) => _num(p['insulation_clo'], decimals: 2, unit: 'clo')),
-      _Column('Protection', 'Ochrona',
-          (i, p, pl) => _num(p['protection_level'])),
-      _Column('Coverage', 'Pokrycie',
-          (i, p, pl) => _num(p['coverage_pct'], unit: '%')),
+      _Column(
+        'Insulation',
+        'Izolacja',
+        (i, p, pl) => _num(p['insulation_clo'], decimals: 2, unit: 'clo'),
+      ),
+      _Column(
+        'Protection',
+        'Ochrona',
+        (i, p, pl) => _num(p['protection_level']),
+      ),
+      _Column(
+        'Coverage',
+        'Pokrycie',
+        (i, p, pl) => _num(p['coverage_pct'], unit: '%'),
+      ),
     ],
   ),
   _Kind(
@@ -393,10 +427,16 @@ final List<_Kind> _kinds = [
         'Plecak podnosi udźwig i pojemność naraz, a sam też waży. Zamiana na '
         'mniejszy zostawia nadmiar, a nie zabiera tego, co się nie zmieściło.',
     columns: [
-      _Column('Capacity', 'Pojemność',
-          (i, p, pl) => _num(p['capacity_l'], unit: 'l')),
-      _Column('Carry', 'Udźwig',
-          (i, p, pl) => '+${_num(p['comfort_carry_bonus_kg'], unit: 'kg')}'),
+      _Column(
+        'Capacity',
+        'Pojemność',
+        (i, p, pl) => _num(p['capacity_l'], unit: 'l'),
+      ),
+      _Column(
+        'Carry',
+        'Udźwig',
+        (i, p, pl) => '+${_num(p['comfort_carry_bonus_kg'], unit: 'kg')}',
+      ),
     ],
   ),
   _Kind(
@@ -413,10 +453,17 @@ final List<_Kind> _kinds = [
         'Jedzenie napełnia żołądek, nie pasek: do ciała trafia około 8 kcal i '
         '25 ml na minutę, więc jedzenie nosi się i je, zanim będzie trzeba.',
     columns: [
-      _Column('Calories', 'Kalorie', (i, p, pl) => _num(p['kcal'], unit: 'kcal')),
+      _Column(
+        'Calories',
+        'Kalorie',
+        (i, p, pl) => _num(p['kcal'], unit: 'kcal'),
+      ),
       _Column('Water', 'Woda', (i, p, pl) => _num(p['water_ml'], unit: 'ml')),
-      _Column('Time', 'Czas',
-          (i, p, pl) => _num(p['consume_seconds'], unit: 's')),
+      _Column(
+        'Time',
+        'Czas',
+        (i, p, pl) => _num(p['consume_seconds'], unit: 's'),
+      ),
     ],
   ),
   _Kind(
@@ -434,8 +481,11 @@ final List<_Kind> _kinds = [
         'gorszym: krwawienie tętnicze zatrzymuje wyłącznie staza — dlatego '
         'nie jest martwym ciężarem.',
     columns: [
-      _Column('Stops', 'Zatrzymuje',
-          (i, p, pl) => '${p['stops_bleeding_class'] ?? '—'}'),
+      _Column(
+        'Stops',
+        'Zatrzymuje',
+        (i, p, pl) => '${p['stops_bleeding_class'] ?? '—'}',
+      ),
       _Column('Uses', 'Użycia', (i, p, pl) => _num(p['uses'])),
       _Column('Time', 'Czas', (i, p, pl) => _num(p['use_seconds'], unit: 's')),
     ],
@@ -456,8 +506,11 @@ final List<_Kind> _kinds = [
         'mogą różnić się o kilogram.',
     columns: [
       _Column('Form', 'Forma', (i, p, pl) => '${p['form'] ?? '—'}'),
-      _Column('Pages', 'Stron',
-          (i, p, pl) => '${_num(p['pages_min'])}–${_num(p['pages_max'])}'),
+      _Column(
+        'Pages',
+        'Stron',
+        (i, p, pl) => '${_num(p['pages_min'])}–${_num(p['pages_max'])}',
+      ),
       _Column('XP/page', 'XP/stronę', (i, p, pl) => _num(p['xp_per_page'])),
     ],
   ),
@@ -474,17 +527,29 @@ final List<_Kind> _kinds = [
         'Łom nie jest składnikiem receptury — jest różnicą między sklepem, do '
         'którego wejdziesz, a takim, do którego nie.',
     columns: [
-      _Column('Light', 'Światło',
-          (i, p, pl) => _num(p['light_radius_m'], unit: 'm')),
-      _Column('Battery', 'Bateria',
-          (i, p, pl) => _num(p['battery_hours'], unit: 'h')),
-      _Column('Crafting', 'Wytwarzanie',
-          (i, p, pl) => p['craft_time_modifier'] is num
-              ? '${(p['craft_time_modifier'] as num) > 0 ? '+' : ''}'
-                    '${((p['craft_time_modifier'] as num) * 100).round()} %'
-              : '—'),
-      _Column('Search', 'Przeszukanie',
-          (i, p, pl) => _num(p['search_radius_bonus_m'], unit: 'm')),
+      _Column(
+        'Light',
+        'Światło',
+        (i, p, pl) => _num(p['light_radius_m'], unit: 'm'),
+      ),
+      _Column(
+        'Battery',
+        'Bateria',
+        (i, p, pl) => _num(p['battery_hours'], unit: 'h'),
+      ),
+      _Column(
+        'Crafting',
+        'Wytwarzanie',
+        (i, p, pl) => p['craft_time_modifier'] is num
+            ? '${(p['craft_time_modifier'] as num) > 0 ? '+' : ''}'
+                  '${((p['craft_time_modifier'] as num) * 100).round()} %'
+            : '—',
+      ),
+      _Column(
+        'Search',
+        'Przeszukanie',
+        (i, p, pl) => _num(p['search_radius_bonus_m'], unit: 'm'),
+      ),
     ],
   ),
   _Kind(
@@ -501,18 +566,29 @@ final List<_Kind> _kinds = [
         'Każdy przesuwa liczbę, którą model walki i tak już czyta. Tłumik nie '
         'jest procentem - jest zmianą sposobu grania, i tak samo reszta.',
     columns: [
-      _Column('Fits', 'Pasuje do',
-          (i, p, pl) => (p['attaches_to'] as List<dynamic>? ?? const []).join(', ')),
-      _Column('MOA', 'MOA',
-          (i, p, pl) => _num(p['moa_delta'], decimals: 1)),
-      _Column('Settling', 'Stabilizacja',
-          (i, p, pl) => _num(p['settle_multiplier'], decimals: 2)),
-      _Column('Magazine', 'Magazynek',
-          (i, p, pl) => _num(p['magazine_bonus'])),
-      _Column('Noise', 'Hałas',
-          (i, p, pl) => _num(p['noise_range_multiplier'], decimals: 2)),
-      _Column('Craft skill', 'Wprawa',
-          (i, p, pl) => _num(p['craft_skill'], unit: '%')),
+      _Column(
+        'Fits',
+        'Pasuje do',
+        (i, p, pl) =>
+            (p['attaches_to'] as List<dynamic>? ?? const []).join(', '),
+      ),
+      _Column('MOA', 'MOA', (i, p, pl) => _num(p['moa_delta'], decimals: 1)),
+      _Column(
+        'Settling',
+        'Stabilizacja',
+        (i, p, pl) => _num(p['settle_multiplier'], decimals: 2),
+      ),
+      _Column('Magazine', 'Magazynek', (i, p, pl) => _num(p['magazine_bonus'])),
+      _Column(
+        'Noise',
+        'Hałas',
+        (i, p, pl) => _num(p['noise_range_multiplier'], decimals: 2),
+      ),
+      _Column(
+        'Craft skill',
+        'Wprawa',
+        (i, p, pl) => _num(p['craft_skill'], unit: '%'),
+      ),
     ],
   ),
   _Kind(
@@ -528,8 +604,11 @@ final List<_Kind> _kinds = [
         'Metal to problem masy, plastik i materiał zapychają objętość, a '
         'drewno uwiera na obu osiach naraz.',
     columns: [
-      _Column('Build material', 'Materiał budowlany',
-          (i, p, pl) => p['build_material'] == true ? (pl ? 'tak' : 'yes') : '—'),
+      _Column(
+        'Build material',
+        'Materiał budowlany',
+        (i, p, pl) => p['build_material'] == true ? (pl ? 'tak' : 'yes') : '—',
+      ),
     ],
   ),
 ];

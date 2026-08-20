@@ -32,14 +32,28 @@ int magazineSize(
 
 /// A reload in progress, or the absence of one.
 class Reload {
-  const Reload({required this.weaponId, required this.readyAt});
+  const Reload({
+    required this.weaponId,
+    required this.readyAt,
+    required this.total,
+  });
 
   final String weaponId;
 
   /// When the magazine is in. §5.5.4 is about this moment never arriving.
   final DateTime readyAt;
 
+  /// How long the whole thing takes.
+  ///
+  /// Carried here rather than recomputed by whoever draws the bar: the weapon
+  /// can change under a running reload, and a bar whose denominator moves is
+  /// worse than no bar.
+  final Duration total;
+
   bool isDoneAt(DateTime now) => !now.isBefore(readyAt);
+
+  /// 0–1, against the duration this reload was started with.
+  double progress(DateTime now) => progressAt(now, total: total);
 
   /// How far through it is, 0–1, for a bar that means something.
   double progressAt(DateTime now, {required Duration total}) {

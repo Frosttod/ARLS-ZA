@@ -1244,6 +1244,33 @@ class L10nPl extends L10n {
   String get magazineEmpty => 'Rozładuj';
 
   @override
+  String get slotMagazine => 'Magazynek';
+
+  @override
+  String get slotOptic => 'Celownik';
+
+  @override
+  String get slotBarrel => 'Lufa';
+
+  @override
+  String get slotGrip => 'Chwyt';
+
+  @override
+  String get slotRail => 'Szyna';
+
+  @override
+  String get slotEmpty => 'puste';
+
+  @override
+  String get reloadFitting => 'Montowanie magazynka';
+
+  @override
+  String get reloadSwapping => 'Wymiana magazynka';
+
+  @override
+  String get reloadFeeding => 'Ładowanie naboi';
+
+  @override
   String magazineRounds(int rounds, int capacity) {
     return '$rounds / $capacity';
   }

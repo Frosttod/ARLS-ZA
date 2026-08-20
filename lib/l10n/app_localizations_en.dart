@@ -1244,6 +1244,33 @@ class L10nEn extends L10n {
   String get magazineEmpty => 'Unload';
 
   @override
+  String get slotMagazine => 'Magazine';
+
+  @override
+  String get slotOptic => 'Optic';
+
+  @override
+  String get slotBarrel => 'Barrel';
+
+  @override
+  String get slotGrip => 'Grip';
+
+  @override
+  String get slotRail => 'Rail';
+
+  @override
+  String get slotEmpty => 'empty';
+
+  @override
+  String get reloadFitting => 'Fitting magazine';
+
+  @override
+  String get reloadSwapping => 'Changing magazine';
+
+  @override
+  String get reloadFeeding => 'Loading rounds';
+
+  @override
   String magazineRounds(int rounds, int capacity) {
     return '$rounds / $capacity';
   }

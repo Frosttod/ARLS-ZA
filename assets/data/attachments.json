@@ -12,8 +12,22 @@
       "condition": 100,
       "condition_decay_per_use": 0.05,
       "rarity": "very_rare",
-      "loot_tags": ["military", "police"],
-      "props": {"attaches_to": ["9x19", "5.45x39", "7.62x39", "22lr"], "noise_range_multiplier": 0.29, "moa_delta": 0.3, "craft_skill": 85}
+      "loot_tags": [
+        "military",
+        "police"
+      ],
+      "props": {
+        "attaches_to": [
+          "9x19",
+          "5.45x39",
+          "7.62x39",
+          "22lr"
+        ],
+        "noise_range_multiplier": 0.29,
+        "moa_delta": 0.3,
+        "craft_skill": 85,
+        "mount": "barrel"
+      }
     },
     {
       "id": "att_red_dot",
@@ -25,8 +39,20 @@
       "condition": 100,
       "condition_decay_per_use": 0.02,
       "rarity": "very_rare",
-      "loot_tags": ["military", "police", "hunting"],
-      "props": {"attaches_to": ["any"], "moa_delta": -1.2, "settle_multiplier": 0.85, "craft_skill": 70}
+      "loot_tags": [
+        "military",
+        "police",
+        "hunting"
+      ],
+      "props": {
+        "attaches_to": [
+          "any"
+        ],
+        "moa_delta": -1.2,
+        "settle_multiplier": 0.85,
+        "craft_skill": 70,
+        "mount": "optic"
+      }
     },
     {
       "id": "att_laser",
@@ -38,8 +64,20 @@
       "condition": 100,
       "condition_decay_per_use": 0.03,
       "rarity": "very_rare",
-      "loot_tags": ["military", "police"],
-      "props": {"attaches_to": ["any"], "settle_multiplier": 0.6, "battery_hours": 20, "visible_to_enemies": true, "craft_skill": 75}
+      "loot_tags": [
+        "military",
+        "police"
+      ],
+      "props": {
+        "attaches_to": [
+          "any"
+        ],
+        "settle_multiplier": 0.6,
+        "battery_hours": 20,
+        "visible_to_enemies": true,
+        "craft_skill": 75,
+        "mount": "rail"
+      }
     },
     {
       "id": "att_weapon_light",
@@ -51,8 +89,21 @@
       "condition": 100,
       "condition_decay_per_use": 0.03,
       "rarity": "rare",
-      "loot_tags": ["military", "police", "sport"],
-      "props": {"attaches_to": ["any"], "light_radius_m": 20, "battery_hours": 5, "visible_to_enemies": true, "craft_skill": 45}
+      "loot_tags": [
+        "military",
+        "police",
+        "sport"
+      ],
+      "props": {
+        "attaches_to": [
+          "any"
+        ],
+        "light_radius_m": 20,
+        "battery_hours": 5,
+        "visible_to_enemies": true,
+        "craft_skill": 45,
+        "mount": "rail"
+      }
     },
     {
       "id": "att_foregrip",
@@ -64,8 +115,22 @@
       "condition": 100,
       "condition_decay_per_use": 0.02,
       "rarity": "rare",
-      "loot_tags": ["military", "sport"],
-      "props": {"attaches_to": ["9x19", "5.45x39", "7.62x39", "12ga"], "moa_delta": -0.5, "settle_multiplier": 0.8, "craft_skill": 40}
+      "loot_tags": [
+        "military",
+        "sport"
+      ],
+      "props": {
+        "attaches_to": [
+          "9x19",
+          "5.45x39",
+          "7.62x39",
+          "12ga"
+        ],
+        "moa_delta": -0.5,
+        "settle_multiplier": 0.8,
+        "craft_skill": 40,
+        "mount": "grip"
+      }
     },
     {
       "id": "mag_pistol_9mm",
@@ -75,8 +140,19 @@
       "volume_l": 0.15,
       "stackable": false,
       "rarity": "uncommon",
-      "loot_tags": ["police", "military", "residential"],
-      "props": {"attaches_to": ["9x19"], "capacity": 15, "caliber": "9x19"}
+      "loot_tags": [
+        "police",
+        "military",
+        "residential"
+      ],
+      "props": {
+        "attaches_to": [
+          "9x19"
+        ],
+        "capacity": 15,
+        "caliber": "9x19",
+        "mount": "magazine"
+      }
     },
     {
       "id": "mag_pistol_9mm_ext",
@@ -86,8 +162,18 @@
       "volume_l": 0.22,
       "stackable": false,
       "rarity": "rare",
-      "loot_tags": ["police", "military"],
-      "props": {"attaches_to": ["9x19"], "capacity": 25, "caliber": "9x19"}
+      "loot_tags": [
+        "police",
+        "military"
+      ],
+      "props": {
+        "attaches_to": [
+          "9x19"
+        ],
+        "capacity": 25,
+        "caliber": "9x19",
+        "mount": "magazine"
+      }
     },
     {
       "id": "mag_smg_9mm",
@@ -97,8 +183,18 @@
       "volume_l": 0.3,
       "stackable": false,
       "rarity": "rare",
-      "loot_tags": ["police", "military"],
-      "props": {"attaches_to": ["9x19"], "capacity": 30, "caliber": "9x19"}
+      "loot_tags": [
+        "police",
+        "military"
+      ],
+      "props": {
+        "attaches_to": [
+          "9x19"
+        ],
+        "capacity": 30,
+        "caliber": "9x19",
+        "mount": "magazine"
+      }
     },
     {
       "id": "mag_rifle_22lr",
@@ -108,8 +204,19 @@
       "volume_l": 0.12,
       "stackable": false,
       "rarity": "common",
-      "loot_tags": ["hunting", "rural", "residential"],
-      "props": {"attaches_to": ["22lr"], "capacity": 10, "caliber": "22lr"}
+      "loot_tags": [
+        "hunting",
+        "rural",
+        "residential"
+      ],
+      "props": {
+        "attaches_to": [
+          "22lr"
+        ],
+        "capacity": 10,
+        "caliber": "22lr",
+        "mount": "magazine"
+      }
     },
     {
       "id": "mag_rifle_545",
@@ -119,8 +226,17 @@
       "volume_l": 0.35,
       "stackable": false,
       "rarity": "rare",
-      "loot_tags": ["military"],
-      "props": {"attaches_to": ["5.45x39"], "capacity": 30, "caliber": "5.45x39"}
+      "loot_tags": [
+        "military"
+      ],
+      "props": {
+        "attaches_to": [
+          "5.45x39"
+        ],
+        "capacity": 30,
+        "caliber": "5.45x39",
+        "mount": "magazine"
+      }
     },
     {
       "id": "mag_rifle_545_drum",
@@ -130,8 +246,17 @@
       "volume_l": 0.8,
       "stackable": false,
       "rarity": "rare",
-      "loot_tags": ["military"],
-      "props": {"attaches_to": ["5.45x39"], "capacity": 60, "caliber": "5.45x39"}
+      "loot_tags": [
+        "military"
+      ],
+      "props": {
+        "attaches_to": [
+          "5.45x39"
+        ],
+        "capacity": 60,
+        "caliber": "5.45x39",
+        "mount": "magazine"
+      }
     },
     {
       "id": "mag_rifle_762x39",
@@ -141,8 +266,18 @@
       "volume_l": 0.4,
       "stackable": false,
       "rarity": "rare",
-      "loot_tags": ["military", "hunting"],
-      "props": {"attaches_to": ["7.62x39"], "capacity": 30, "caliber": "7.62x39"}
+      "loot_tags": [
+        "military",
+        "hunting"
+      ],
+      "props": {
+        "attaches_to": [
+          "7.62x39"
+        ],
+        "capacity": 30,
+        "caliber": "7.62x39",
+        "mount": "magazine"
+      }
     }
   ]
 }

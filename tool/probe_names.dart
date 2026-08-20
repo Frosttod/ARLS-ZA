@@ -28,10 +28,12 @@ Future<void> main(List<String> args) async {
     );
     final names = ground.names;
 
-    print('${spot.$3.padRight(18)} '
-        'street=${names.street ?? "-"}  '
-        'district=${names.district ?? "-"}  '
-        'city=${names.city ?? "-"}');
+    print(
+      '${spot.$3.padRight(18)} '
+      'street=${names.street ?? "-"}  '
+      'district=${names.district ?? "-"}  '
+      'city=${names.city ?? "-"}',
+    );
 
     if (args.length > 1) break;
   }

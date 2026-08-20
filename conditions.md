@@ -527,6 +527,19 @@ if magazine_empty
 if reload_running and enemy_within 5m
     then reload := broken                        // §5.5.4. Ręce stają, kiedy ciało jest tak blisko. Gra nie dyskutuje o intencji.
 
+if reload_running
+    then reload_progress := elapsed / total, ticked 10×/s
+                                                 // §5.5.4. Przeładowanie ma własny zegar. Wcześniej szło do przodu tylko przy nowym odczycie GPS — w schronie, w budynku, wszędzie gdzie sygnał znika, sekundy nie mijały wcale: magazynek nigdy nie wchodził, żaden pasek się nie ruszał, a przycisk wyglądał na martwy.
+
+if reload_running and weapon_has_no_magazine
+    then label := "Montowanie magazynka"        // Trzy różne rzeczy noszą te same 3,5 s. Kto nacisnął przycisk, ma prawo wiedzieć, którą zaczął.
+
+if reload_running and weapon_has_magazine
+    then label := "Wymiana magazynka"
+
+if reload_running and feed = loose
+    then label := "Ładowanie naboi"
+
 if magazine_full
     then reload := unavailable                   // Prośba z testów: przycisk nieaktywny, zamiast marnować akcję.
 
@@ -539,6 +552,12 @@ if magazine_empty_running and rounds_leave_magazine
 
 if magazine_fill_interrupted or magazine_empty_interrupted
     then moved_rounds := kept                    // §4.2. To, co już przeszło, przeszło. Naboje są tam, gdzie są — przerwanie nie cofa czasu.
+
+if attachment_slot_taken
+    then attach := refused                       // §5.6.3. Jedno miejsce, jedna rzecz. Drugi kolimator nie wchodzi na pierwszy; laser i latarka dzielą szynę — jedno albo drugie, bo oba jedzą baterie i oba widzą przeciwnicy (§6.2).
+
+if attach_target_line not in inventory
+    then load := refused (gone)                  // §11.1. Uchwyt do linii zwietrzał — coś przebudowało plecak pod akcją. Cicha wersja gubiła naboje: wychodziły z torby, nie docierały do magazynka i znikały przy zapisie.
 
 if magazine_rounds > 0 and player_in_inventory
     then unload_button := shown                  // Magazynek opróżnia się, żeby napełnić inny albo żeby zostawić ciężar. Ten sam pół minuty, tylko w drugą stronę.

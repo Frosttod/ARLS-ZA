@@ -23,6 +23,7 @@ import 'fonts.dart';
 import '../inventory/inventory.dart';
 import '../items/item.dart';
 import '../combat/attachment.dart';
+import '../combat/magazine_item.dart';
 import '../items/item_catalogue.dart';
 import '../items/item_names.dart';
 import '../items/item_stats.dart';
@@ -360,13 +361,35 @@ class _Attachments extends StatelessWidget {
 
     final free = slots - line.attachments.length;
 
-    // What is in the pack that would go on this, and is not already on it.
-    final candidates = [
-      for (final carried in inventory.carried)
-        if (catalogue[carried.itemId] != null &&
-            fitsWeapon(catalogue[carried.itemId]!, weapon) &&
-            !line.attachments.contains(carried.itemId))
-          carried,
+    // §5.6.3: grouped by place, because the place is the choice.
+    //
+    // ⚠️ It used to be one flat list — everything fitted, then everything in
+    // the pack that would go on, each with a button saying "fit". Nothing said
+    // where any of it went, so two optics looked like two upgrades rather than
+    // one decision, and nothing told a player what a button was about to
+    // replace. A weapon has one barrel and one rail. The interface offers the
+    // place, and the parts under it.
+    final fittedBy = <AttachmentSlot, ItemDefinition>{};
+    for (final id in line.attachments) {
+      final part = catalogue[id];
+      if (part == null) continue;
+      fittedBy[slotOf(part) ?? AttachmentSlot.rail] = part;
+    }
+
+    final offers = <AttachmentSlot, List<CarriedItem>>{};
+    for (final carried in inventory.carried) {
+      final part = catalogue[carried.itemId];
+      if (part == null || !fitsWeapon(part, weapon)) continue;
+      if (line.attachments.contains(carried.itemId)) continue;
+
+      offers
+          .putIfAbsent(slotOf(part) ?? AttachmentSlot.rail, () => [])
+          .add(carried);
+    }
+
+    final places = [
+      for (final place in AttachmentSlot.values)
+        if (fittedBy.containsKey(place) || offers.containsKey(place)) place,
     ];
 
     return Column(
@@ -380,52 +403,127 @@ class _Attachments extends StatelessWidget {
             color: colours.muted,
           ),
         ),
-        const SizedBox(height: 4),
 
-        if (line.attachments.isEmpty)
+        if (places.isEmpty) ...[
+          const SizedBox(height: 4),
           Text(
             l10n.attachmentsNone,
             style: TextStyle(fontSize: 12, color: colours.muted),
-          )
-        else
-          for (final id in line.attachments)
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    catalogue[id] == null ? id : nameOf(catalogue[id]!),
-                    style: TextStyle(fontSize: 13, color: colours.text),
-                  ),
-                ),
-                if (onDetach != null)
-                  TextButton(
-                    onPressed: () => onDetach!(line, id),
-                    child: Text(l10n.attachmentRemove),
-                  ),
-              ],
+          ),
+        ],
+
+        for (final place in places) ...[
+          const SizedBox(height: 6),
+          Text(
+            _placeName(place).toUpperCase(),
+            style: TextStyle(
+              fontSize: 9,
+              letterSpacing: 1.2,
+              color: colours.muted,
+            ),
+          ),
+
+          if (fittedBy[place] case final part?)
+            _PartRow(
+              name: nameOf(part),
+              effect: attachmentEffect(
+                part,
+                rounds: Magazine.of(part) == null ? null : (line.rounds ?? 0),
+                capacity: Magazine.of(part)?.capacity,
+              ),
+              action: onDetach == null ? null : l10n.attachmentRemove,
+              onPressed: onDetach == null
+                  ? null
+                  : () => onDetach!(line, part.id),
+              fitted: true,
+              colours: colours,
+            )
+          else
+            Text(
+              l10n.slotEmpty,
+              style: TextStyle(fontSize: 12, color: colours.muted),
             ),
 
-        // Only where there is a rail left: an offer that would be refused is
-        // worse than no offer.
-        if (free > 0 && onAttach != null)
-          for (final candidate in candidates)
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    nameOf(catalogue[candidate.itemId]!),
-                    style: TextStyle(fontSize: 13, color: colours.muted),
-                  ),
+          // Only where the place is free, and only while there is a slot left:
+          // an offer that would be refused is worse than no offer. Taking the
+          // old part off first is one tap, and it is the tap that says what is
+          // being given up.
+          if (fittedBy[place] == null && free > 0 && onAttach != null)
+            for (final candidate in offers[place] ?? const <CarriedItem>[])
+              _PartRow(
+                name: nameOf(catalogue[candidate.itemId]!),
+                effect: attachmentEffect(
+                  catalogue[candidate.itemId]!,
+                  rounds: candidate.rounds,
+                  capacity: Magazine.of(catalogue[candidate.itemId]!)?.capacity,
                 ),
-                TextButton(
-                  onPressed: () => onAttach!(line, candidate),
-                  child: Text(l10n.attachmentFit),
-                ),
-              ],
-            ),
+                action: l10n.attachmentFit,
+                onPressed: () => onAttach!(line, candidate),
+                fitted: false,
+                colours: colours,
+              ),
+        ],
       ],
     );
   }
+
+  String _placeName(AttachmentSlot place) => switch (place) {
+    AttachmentSlot.magazine => l10n.slotMagazine,
+    AttachmentSlot.optic => l10n.slotOptic,
+    AttachmentSlot.barrel => l10n.slotBarrel,
+    AttachmentSlot.grip => l10n.slotGrip,
+    AttachmentSlot.rail => l10n.slotRail,
+  };
+}
+
+/// One part, fitted or on offer, with what it does to the weapon.
+class _PartRow extends StatelessWidget {
+  const _PartRow({
+    required this.name,
+    required this.effect,
+    required this.action,
+    required this.onPressed,
+    required this.fitted,
+    required this.colours,
+  });
+
+  final String name;
+  final String? effect;
+  final String? action;
+  final VoidCallback? onPressed;
+  final bool fitted;
+  final HudColors colours;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    children: [
+      Expanded(
+        child: Text(
+          name,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: 13,
+            color: fitted ? colours.text : colours.muted,
+          ),
+        ),
+      ),
+      if (effect != null) ...[
+        Text(
+          effect!,
+          style: TextStyle(
+            fontSize: 11,
+            color: fitted ? colours.data : colours.muted,
+            fontFamily: kDataFont,
+            fontFeatures: const [FontFeature.tabularFigures()],
+          ),
+        ),
+        const SizedBox(width: 8),
+      ],
+      if (action != null)
+        TextButton(onPressed: onPressed, child: Text(action!)),
+    ],
+  );
 }
 
 /// The piece as the pack has it now, matched by identity first and by id after.

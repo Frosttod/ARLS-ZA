@@ -409,6 +409,76 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// faster than the blade allows is not a thing a person can do.
   DateTime? _lastSwing;
 
+  /// §5.6.3: what is on the weapon, one line per place.
+  ///
+  /// Sorted by place rather than by the order things were fitted, so the list
+  /// does not reshuffle when a player swaps a magazine — the rifle's lines sit
+  /// where they sat.
+  List<WeaponFitting> _weaponFittings() {
+    final line = _weaponLine;
+    final catalogue = _catalogue;
+    if (line == null || catalogue == null) return const [];
+
+    final l10n = L10n.of(context);
+    final fitted = <(AttachmentSlot, WeaponFitting)>[];
+
+    for (final id in line.attachments) {
+      final part = catalogue[id];
+      if (part == null) continue;
+
+      final place = slotOf(part) ?? AttachmentSlot.rail;
+      final magazine = Magazine.of(part);
+
+      fitted.add((
+        place,
+        WeaponFitting(
+          place: _placeName(l10n, place),
+          name: _nameOfItem(part),
+          // §5.3: the magazine says what is in it, because that is the one
+          // number worth a glance before walking round a corner.
+          effect: attachmentEffect(
+            part,
+            rounds: magazine == null ? null : (line.rounds ?? 0),
+            capacity: magazine?.capacity,
+          ),
+        ),
+      ));
+    }
+
+    fitted.sort((a, b) => a.$1.index.compareTo(b.$1.index));
+    return [for (final entry in fitted) entry.$2];
+  }
+
+  String _placeName(L10n l10n, AttachmentSlot place) => switch (place) {
+    AttachmentSlot.magazine => l10n.slotMagazine,
+    AttachmentSlot.optic => l10n.slotOptic,
+    AttachmentSlot.barrel => l10n.slotBarrel,
+    AttachmentSlot.grip => l10n.slotGrip,
+    AttachmentSlot.rail => l10n.slotRail,
+  };
+
+  /// §5.5.4's seconds, as something to watch.
+  ReloadProgress? _reloadProgress() {
+    final running = _reload;
+    final weapon = _weapon;
+    if (running == null || weapon == null) return null;
+
+    final l10n = L10n.of(context);
+
+    // Three different things wearing the same three and a half seconds. A
+    // player who pressed a button deserves to read which one they started.
+    final label = Feed.of(weapon) != Feed.magazine
+        ? l10n.reloadFeeding
+        : _weaponCapacity == null
+        ? l10n.reloadFitting
+        : l10n.reloadSwapping;
+
+    return ReloadProgress(
+      label: label,
+      value: running.progress(DateTime.now()),
+    );
+  }
+
   /// §5.3: what the weapon in hand would hold, or null with no magazine in it.
   int? get _weaponCapacity {
     final line = _weaponLine;
@@ -582,6 +652,14 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
   /// §5.5.4: a magazine change in progress, and the thing that can end it.
   Reload? _reload;
+
+  /// ⚠️ A reload has its own clock.
+  ///
+  /// It used to be advanced only when a GPS fix arrived. Indoors, in a shelter,
+  /// or anywhere the signal had gone — which is most of where a player stops
+  /// to reload — the seconds never passed: the magazine was never seated, no
+  /// bar moved, and pressing the button appeared to do nothing at all.
+  Timer? _reloadTimer;
 
   /// What the last reconnaissance revealed, for §10.2.1's ten minutes.
   AreaKnowledge? _knowledge;
@@ -2403,7 +2481,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     ]);
 
     if (tooClose) {
-      setState(() => _reload = null);
+      _endReload();
       _say(L10n.of(context).combatReloadBroken, remember: true);
       return;
     }
@@ -2412,7 +2490,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
     final line = _weaponLine;
     if (line == null) {
-      setState(() => _reload = null);
+      _endReload();
       return;
     }
 
@@ -2424,15 +2502,24 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         : loadLoose(_inventory.value, line, catalogue);
 
     if (!outcome.isDone) {
-      setState(() => _reload = null);
+      _endReload();
       _say(_loadRefusal(outcome.refusal!));
       return;
     }
 
-    setState(() {
-      _inventory.value = outcome.inventory;
+    setState(() => _inventory.value = outcome.inventory);
+    _endReload();
+    unawaited(_saveInventory());
+  }
+
+  /// Puts the reload down, whichever way it ended.
+  void _endReload() {
+    _stopReloadTimer();
+    if (mounted) {
+      setState(() => _reload = null);
+    } else {
       _reload = null;
-    });
+    }
   }
 
   /// Starts a magazine change (§5.3).
@@ -2459,14 +2546,37 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       return;
     }
 
+    final total = reloadTime(weapon, attachments: _attachmentsFor(weapon));
+
     setState(() {
       _reload = Reload(
         weaponId: weapon.id,
-        readyAt: DateTime.now().add(
-          reloadTime(weapon, attachments: _attachmentsFor(weapon)),
-        ),
+        readyAt: DateTime.now().add(total),
+        total: total,
       );
     });
+    _startReloadTimer();
+  }
+
+  /// Ten ticks a second, so the bar moves and the seconds pass indoors.
+  void _startReloadTimer() {
+    _reloadTimer?.cancel();
+    _reloadTimer = Timer.periodic(const Duration(milliseconds: 100), (_) {
+      if (_reload == null) {
+        _stopReloadTimer();
+        return;
+      }
+
+      // ⚠️ Not inside setState: this can finish the reload, and finishing it
+      // calls setState itself. The repaint the bar needs comes after.
+      _advanceReload(_standingAt.value ?? const GeoPoint(0, 0));
+      if (mounted && _reload != null) setState(() {});
+    });
+  }
+
+  void _stopReloadTimer() {
+    _reloadTimer?.cancel();
+    _reloadTimer = null;
   }
 
   /// What to say when a weapon will not take anything (§4.2, §5.5.4).
@@ -2478,6 +2588,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       LoadRefusal.noRounds => l10n.combatNoAmmo,
       LoadRefusal.full => l10n.reloadAlreadyFull,
       LoadRefusal.notAWeapon => l10n.combatNoAmmo,
+      // Nothing a player did. Something moved under the action, and the
+      // honest thing to say is that it did not happen.
+      LoadRefusal.gone => l10n.combatReloadBroken,
     };
   }
 
@@ -2649,6 +2762,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       rounds: _loaded,
       capacity: _weaponCapacity,
       onReload: _weapon == null ? null : _startReload,
+      fittings: _weaponFittings(),
+      reload: _reloadProgress(),
       onCancel: _cancelSearch,
     );
   }
@@ -4321,6 +4436,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     _search.dispose();
     _dropped.dispose();
     _standingAt.dispose();
+    _reloadTimer?.cancel();
     _usingLine.dispose();
     _shelters.dispose();
     _notices.dispose();

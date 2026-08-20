@@ -2299,6 +2299,60 @@ abstract class L10n {
   /// **'Unload'**
   String get magazineEmpty;
 
+  /// No description provided for @slotMagazine.
+  ///
+  /// In en, this message translates to:
+  /// **'Magazine'**
+  String get slotMagazine;
+
+  /// No description provided for @slotOptic.
+  ///
+  /// In en, this message translates to:
+  /// **'Optic'**
+  String get slotOptic;
+
+  /// No description provided for @slotBarrel.
+  ///
+  /// In en, this message translates to:
+  /// **'Barrel'**
+  String get slotBarrel;
+
+  /// No description provided for @slotGrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Grip'**
+  String get slotGrip;
+
+  /// No description provided for @slotRail.
+  ///
+  /// In en, this message translates to:
+  /// **'Rail'**
+  String get slotRail;
+
+  /// No description provided for @slotEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'empty'**
+  String get slotEmpty;
+
+  /// No description provided for @reloadFitting.
+  ///
+  /// In en, this message translates to:
+  /// **'Fitting magazine'**
+  String get reloadFitting;
+
+  /// No description provided for @reloadSwapping.
+  ///
+  /// In en, this message translates to:
+  /// **'Changing magazine'**
+  String get reloadSwapping;
+
+  /// No description provided for @reloadFeeding.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading rounds'**
+  String get reloadFeeding;
+
   /// No description provided for @magazineRounds.
   ///
   /// In en, this message translates to:

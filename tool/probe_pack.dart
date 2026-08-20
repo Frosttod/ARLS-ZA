@@ -50,13 +50,10 @@ Future<void> main(List<String> args) async {
       if (bytes == null) continue;
       tiles++;
 
-      final tile = decodeMvt(bytes, layers: {
-        'poi',
-        'landuse',
-        'building',
-        'landcover',
-        'transportation',
-      });
+      final tile = decodeMvt(
+        bytes,
+        layers: {'poi', 'landuse', 'building', 'landcover', 'transportation'},
+      );
       for (final feature in tile.layer('poi')) {
         poi++;
         final subclass = feature.properties['subclass'];
