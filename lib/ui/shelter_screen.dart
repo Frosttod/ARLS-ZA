@@ -952,6 +952,19 @@ class _Need extends StatelessWidget {
               ),
             ),
           ),
+          // ⚠️ A tick beside a met requirement, and it is not decoration.
+          //
+          // Reported from a screenshot: with fourteen scrap on the shelf, one
+          // module read "14 / 6" in grey and another "14 / 20" in amber, and
+          // the player took the grey one for an error. The arithmetic was
+          // right — different modules want different amounts — but grey alone
+          // reads as *disabled*, not as *satisfied*, and nothing on the row
+          // said which. §12 asks for the same thing for a different reason:
+          // never colour alone.
+          if (met && tally) ...[
+            Text('✓', style: TextStyle(fontSize: 12, color: colours.data)),
+            const SizedBox(width: 6),
+          ],
           Text(
             tally ? '$have / $need' : (met ? '✓' : '—'),
             style: TextStyle(

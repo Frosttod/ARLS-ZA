@@ -401,4 +401,32 @@ void main() {
       expect(find.text('✓'), findsWidgets);
     });
   });
+  group('a met requirement says it is met (§12)', () {
+    // ⚠️ Reported from a screenshot: with fourteen scrap on the shelf, one
+    // module read "14 / 6" in grey and another "14 / 20" in amber, and the
+    // grey one was taken for an error. The arithmetic was right — different
+    // modules want different amounts — but grey alone reads as *disabled*
+    // rather than *satisfied*, and nothing on the row said which.
+    testWidgets('enough of something is ticked, not just dimmed', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        shelters: [built()],
+        carried: const {'mat_wood': 999, 'mat_metal': 999},
+        hasTools: true,
+      );
+
+      // Every material on every module is covered by that, so every row is a
+      // tick — and the amber shortfall figure appears nowhere.
+      expect(find.text('✓'), findsWidgets);
+    });
+
+    testWidgets('and what is short still shows how short', (tester) async {
+      await pump(tester, shelters: [built()], carried: const {});
+
+      // The storage module wants twenty planks; nothing is carried.
+      expect(find.text('0 / 20'), findsWidgets);
+    });
+  });
 }

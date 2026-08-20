@@ -1226,6 +1226,17 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       ('weapon_rifle_545', 1),
       ('ammo_545x39', 60),
       ('att_red_dot', 1),
+
+      // §4.2: and something to put the rounds in. A magazine-fed rifle with
+      // no magazine cannot be fired at all, and §10 only drops these on
+      // military ground — which is not somewhere every tester has to hand.
+      ('mag_rifle_545', 2),
+
+      // §18.3: the tool every shelter module asks for. Same reason: a walk
+      // that has to find a hammer before any of §8.4 can be looked at is a
+      // walk, not a test.
+      ('melee_hammer', 1),
+      ('tool_multitool', 1),
       ('food_canned_meat', 2),
       ('drink_water_bottle_500', 2),
       ('med_bandage', 3),
