@@ -359,7 +359,9 @@ class _Attachments extends StatelessWidget {
     final slots = attachmentSlots(weapon);
     if (slots <= 0) return const SizedBox.shrink();
 
-    final free = slots - line.attachments.length;
+    final free =
+        slots -
+        slotsUsedBy([for (final id in line.attachments) ?catalogue[id]]);
 
     // §5.6.3: grouped by place, because the place is the choice.
     //
@@ -379,7 +381,7 @@ class _Attachments extends StatelessWidget {
     final offers = <AttachmentSlot, List<CarriedItem>>{};
     for (final carried in inventory.carried) {
       final part = catalogue[carried.itemId];
-      if (part == null || !fitsWeapon(part, weapon)) continue;
+      if (part == null || !partFitsWeapon(part, weapon)) continue;
       if (line.attachments.contains(carried.itemId)) continue;
 
       offers
@@ -387,9 +389,18 @@ class _Attachments extends StatelessWidget {
           .add(carried);
     }
 
+    // ⚠️ The magazine well is always shown on a weapon that has one, even
+    // with nothing to put in it. A rifle with no magazine is the single most
+    // important thing this sheet can say, and hiding the row for want of a
+    // candidate said nothing at all — the well simply was not there.
+    final needsWell = Feed.of(weapon) == Feed.magazine;
+
     final places = [
       for (final place in AttachmentSlot.values)
-        if (fittedBy.containsKey(place) || offers.containsKey(place)) place,
+        if (fittedBy.containsKey(place) ||
+            offers.containsKey(place) ||
+            (place == AttachmentSlot.magazine && needsWell))
+          place,
     ];
 
     return Column(
@@ -448,20 +459,17 @@ class _Attachments extends StatelessWidget {
           // an offer that would be refused is worse than no offer. Taking the
           // old part off first is one tap, and it is the tap that says what is
           // being given up.
-          if (fittedBy[place] == null && free > 0 && onAttach != null)
-            for (final candidate in offers[place] ?? const <CarriedItem>[])
-              _PartRow(
-                name: nameOf(catalogue[candidate.itemId]!),
-                effect: attachmentEffect(
-                  catalogue[candidate.itemId]!,
-                  rounds: candidate.rounds,
-                  capacity: Magazine.of(catalogue[candidate.itemId]!)?.capacity,
-                ),
-                action: l10n.attachmentFit,
-                onPressed: () => onAttach!(line, candidate),
-                fitted: false,
-                colours: colours,
-              ),
+          if (fittedBy[place] == null &&
+              (free > 0 || place == AttachmentSlot.magazine) &&
+              onAttach != null)
+            _Offers(
+              candidates: offers[place] ?? const [],
+              catalogue: catalogue,
+              nameOf: nameOf,
+              onPick: (candidate) => onAttach!(line, candidate),
+              colours: colours,
+              l10n: l10n,
+            ),
         ],
       ],
     );
@@ -474,6 +482,113 @@ class _Attachments extends StatelessWidget {
     AttachmentSlot.grip => l10n.slotGrip,
     AttachmentSlot.rail => l10n.slotRail,
   };
+}
+
+/// What could go in this place, and what is in each of them (§4.2).
+///
+/// One button with a menu rather than a row per candidate. Magazines are the
+/// reason: a player carrying five of them wants to pick *the full one*, and
+/// five rows of the same name with different numbers is a worse way to ask
+/// that question than one list showing the numbers side by side. With a single
+/// candidate there is nothing to choose, so it stays a plain button.
+class _Offers extends StatelessWidget {
+  const _Offers({
+    required this.candidates,
+    required this.catalogue,
+    required this.nameOf,
+    required this.onPick,
+    required this.colours,
+    required this.l10n,
+  });
+
+  final List<CarriedItem> candidates;
+  final ItemCatalogue catalogue;
+  final String Function(ItemDefinition) nameOf;
+  final void Function(CarriedItem) onPick;
+  final HudColors colours;
+  final L10n l10n;
+
+  String? _effect(CarriedItem candidate) {
+    final part = catalogue[candidate.itemId]!;
+    return attachmentEffect(
+      part,
+      rounds: candidate.rounds,
+      capacity: Magazine.of(part)?.capacity,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (candidates.isEmpty) return const SizedBox.shrink();
+
+    if (candidates.length == 1) {
+      final only = candidates.single;
+      return _PartRow(
+        name: nameOf(catalogue[only.itemId]!),
+        effect: _effect(only),
+        action: l10n.attachmentFit,
+        onPressed: () => onPick(only),
+        fitted: false,
+        colours: colours,
+      );
+    }
+
+    // Fullest first: it is what somebody reaching for a magazine wants, and
+    // sorting by it means the top of the list is almost always the answer.
+    final sorted = [...candidates]
+      ..sort((a, b) => (b.rounds ?? -1).compareTo(a.rounds ?? -1));
+
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            l10n.attachmentChoose(sorted.length),
+            style: TextStyle(fontSize: 13, color: colours.muted),
+          ),
+        ),
+        PopupMenuButton<CarriedItem>(
+          onSelected: onPick,
+          tooltip: l10n.attachmentFit,
+          itemBuilder: (context) => [
+            for (final candidate in sorted)
+              PopupMenuItem(
+                value: candidate,
+                child: Row(
+                  children: [
+                    Expanded(child: Text(nameOf(catalogue[candidate.itemId]!))),
+                    if (_effect(candidate) case final said?) ...[
+                      const SizedBox(width: 12),
+                      Text(
+                        said,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: colours.data,
+                          fontFamily: kDataFont,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+          ],
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  l10n.attachmentFit,
+                  style: TextStyle(fontSize: 14, color: colours.alert),
+                ),
+                Icon(Icons.arrow_drop_down, size: 18, color: colours.alert),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 /// One part, fitted or on offer, with what it does to the weapon.

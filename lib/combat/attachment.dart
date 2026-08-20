@@ -24,6 +24,7 @@ library;
 import 'dart:math' as math;
 
 import '../items/item.dart';
+import 'magazine_item.dart';
 
 /// Whether [attachment] goes on [weapon] (§10.3.3's calibre string, again).
 ///
@@ -83,12 +84,43 @@ AttachmentSlot? slotOf(ItemDefinition item) => switch (item.props['mount']) {
   _ => null,
 };
 
+/// Whether [part] goes on [weapon] at all — magazines included.
+///
+/// ⚠️ [fitsWeapon] asks for [ItemKind.attachment], and a magazine is not one:
+/// the catalogue calls its type `magazine`, which no kind matches, so every
+/// magazine in the game is an [ItemKind.misc]. The weapon sheet asked
+/// [fitsWeapon] and was told no, every time — so the magazine well never
+/// appeared, and the only way to seat a magazine was the reload button.
+///
+/// Kept separate from [fitsWeapon] deliberately. That one also decides what
+/// counts as *fitted* for the interim rule above, and a bag of spare magazines
+/// is not a rifle with five magazines in it.
+bool partFitsWeapon(ItemDefinition part, ItemDefinition weapon) {
+  if (fitsWeapon(part, weapon)) return true;
+
+  final magazine = Magazine.of(part);
+  return magazine != null && magazine.fits(weapon);
+}
+
 /// §5.6.3: how many things this weapon can carry at once.
 ///
 /// Rails, a barrel thread, a magazine well — a revolver has less to bolt
 /// anything to than a carbine, and the data says which is which.
 int attachmentSlots(ItemDefinition weapon) =>
     (weapon.props['attachment_slots'] as num?)?.toInt() ?? 0;
+
+/// How many of [attachments] count against those slots.
+///
+/// ⚠️ The magazine well is not a rail. Counting the magazine as a slot meant
+/// seating one cost an optic, which is nonsense on a rifle that cannot fire
+/// without it — the well is part of the weapon, not something bolted to it.
+int slotsUsedBy(Iterable<ItemDefinition> attachments) {
+  var used = 0;
+  for (final part in attachments) {
+    if (slotOf(part) != AttachmentSlot.magazine) used++;
+  }
+  return used;
+}
 
 /// A weapon with whatever is on it, as one set of numbers to shoot with.
 class FittedWeapon {

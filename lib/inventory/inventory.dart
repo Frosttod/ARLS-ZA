@@ -19,6 +19,7 @@ library;
 import '../items/item.dart';
 import '../items/item_catalogue.dart';
 import '../combat/attachment.dart';
+import '../combat/magazine_item.dart';
 import 'body_slots.dart';
 import '../sim/body.dart';
 
@@ -461,9 +462,15 @@ class Inventory {
     final weapon = catalogue[line.itemId];
     final part = catalogue[attachment.itemId];
     if (weapon == null || part == null) return this;
-    if (!fitsWeapon(part, weapon)) return this;
+    if (!partFitsWeapon(part, weapon)) return this;
     if (line.attachments.contains(part.id)) return this;
-    if (line.attachments.length >= attachmentSlots(weapon)) return this;
+    final used = slotsUsedBy([
+      for (final id in line.attachments) ?catalogue[id],
+    ]);
+    if (slotOf(part) != AttachmentSlot.magazine &&
+        used >= attachmentSlots(weapon)) {
+      return this;
+    }
 
     // §5.6.3: one thing per place. A second optic does not go on top of the
     // first, and the interface says so by offering the place rather than the
@@ -481,7 +488,18 @@ class Inventory {
     // `worn`. Found on a phone: fitting anything to the rifle actually being
     // carried did nothing at all, because this only ever looked in `carried` —
     // and the one weapon a player wants a light on is the one they are holding.
-    final fitted = line.copyWith(attachments: [...line.attachments, part.id]);
+    // ⚠️ §5.3: a magazine brings its rounds with it.
+    //
+    // Everywhere else an attachment is a name on a list. A magazine is a name
+    // on a list *and* a number, and the number lives on whatever is holding it
+    // — so seating one has to carry the rounds across, and taking one off has
+    // to carry them back. Without this, fitting a full magazine gave a rifle
+    // with nothing in it and threw thirty rounds away.
+    final magazine = Magazine.of(part);
+    final fitted = line.copyWith(
+      attachments: [...line.attachments, part.id],
+      rounds: magazine == null ? null : (attachment.rounds ?? 0),
+    );
 
     // Off the pack and onto the weapon: it is in one place or the other.
     final without = removeLine(attachment) ?? this;
@@ -514,11 +532,15 @@ class Inventory {
   }) {
     if (!line.attachments.contains(attachmentId)) return this;
 
+    // §5.3: what was in it goes with it.
+    final part = catalogue[attachmentId];
+    final magazine = part == null ? null : Magazine.of(part);
     final stripped = line.copyWith(
       attachments: [
         for (final id in line.attachments)
           if (id != attachmentId) id,
       ],
+      rounds: magazine == null ? null : 0,
     );
 
     final lines = [
@@ -533,7 +555,10 @@ class Inventory {
     return Inventory(
       carried: [
         ...lines,
-        CarriedItem(itemId: attachmentId),
+        CarriedItem(
+          itemId: attachmentId,
+          rounds: magazine == null ? null : (line.rounds ?? 0),
+        ),
       ],
       worn: worn,
       packId: packId,

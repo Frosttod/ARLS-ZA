@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:arls_za/combat/attachment.dart';
 import 'package:arls_za/inventory/inventory.dart';
 import 'package:arls_za/items/item_catalogue.dart';
+import 'package:arls_za/sim/body.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// MIEJSCA NA BRONI (§5.6.3).
@@ -146,6 +147,101 @@ void main() {
       // Not every part moves a number. A row with an empty right-hand column
       // is honest; an invented one is not.
       expect(attachmentEffect(catalogue['weapon_rifle_545']!), isNull);
+    });
+  });
+
+  group('a magazine is a part like any other (§4.2, §5.3)', () {
+    // ⚠️ It was not. The catalogue calls a magazine's type `magazine`, no
+    // ItemKind matches that word, so every magazine in the game is an
+    // ItemKind.misc — and fitsWeapon asks for ItemKind.attachment. The weapon
+    // sheet asked, was told no, and never drew a magazine well at all: the
+    // only way to seat one was the reload button.
+    test('the old predicate does not see one, which is the bug', () {
+      expect(
+        fitsWeapon(catalogue['mag_rifle_545']!, catalogue['weapon_rifle_545']!),
+        isFalse,
+      );
+    });
+
+    test('the one the interface uses does', () {
+      expect(
+        partFitsWeapon(
+          catalogue['mag_rifle_545']!,
+          catalogue['weapon_rifle_545']!,
+        ),
+        isTrue,
+      );
+    });
+
+    test('and still refuses the wrong calibre', () {
+      expect(
+        partFitsWeapon(
+          catalogue['mag_pistol_9mm']!,
+          catalogue['weapon_rifle_545']!,
+        ),
+        isFalse,
+      );
+    });
+
+    test('seating one brings its rounds with it', () {
+      // Without this, fitting a full magazine gave a rifle with nothing in it
+      // and threw thirty rounds away.
+      final pack = Inventory(
+        worn: const [CarriedItem(itemId: 'weapon_rifle_545')],
+        carried: const [CarriedItem(itemId: 'mag_rifle_545', rounds: 23)],
+      );
+
+      final after = pack.attach(
+        pack.worn.single,
+        pack.carried.single,
+        catalogue,
+      );
+
+      expect(after.worn.single.attachments, ['mag_rifle_545']);
+      expect(after.worn.single.rounds, 23);
+      expect(after.carried, isEmpty, reason: 'it is in the gun, not the bag');
+    });
+
+    test('and taking it off carries them back', () {
+      final pack = Inventory(
+        worn: const [
+          CarriedItem(
+            itemId: 'weapon_rifle_545',
+            rounds: 11,
+            attachments: ['mag_rifle_545'],
+          ),
+        ],
+      );
+
+      final after = pack.detach(
+        pack.worn.single,
+        'mag_rifle_545',
+        catalogue,
+        body: BodyProfile.from(
+          const BodySpec(
+            sex: Sex.male,
+            ageYears: 30,
+            heightCm: 180,
+            weightKg: 80,
+          ),
+        ),
+      );
+
+      expect(after.worn.single.rounds, 0);
+      expect(
+        after.carried.single,
+        isA<CarriedItem>()
+            .having((l) => l.itemId, 'itemId', 'mag_rifle_545')
+            .having((l) => l.rounds, 'rounds', 11),
+      );
+    });
+
+    test('the magazine well is not a rail, so it costs no slot', () {
+      // A rifle cannot fire without one. Charging an optic for it is nonsense.
+      expect(
+        slotsUsedBy([catalogue['mag_rifle_545']!, catalogue['att_red_dot']!]),
+        1,
+      );
     });
   });
 }

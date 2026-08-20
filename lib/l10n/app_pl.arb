@@ -407,6 +407,8 @@
   "slotGrip": "Chwyt",
   "slotRail": "Szyna",
   "slotEmpty": "puste",
+  "attachmentChoose": "Do wyboru: {count}",
+  "@attachmentChoose": { "placeholders": { "count": { "type": "int" } } },
   "reloadFitting": "Montowanie magazynka",
   "reloadSwapping": "Wymiana magazynka",
   "reloadFeeding": "Ładowanie naboi",

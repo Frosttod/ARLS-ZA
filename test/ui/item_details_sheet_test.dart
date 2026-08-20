@@ -368,13 +368,12 @@ void main() {
         fromPack: false,
       );
 
+      // The magazine well is on every magazine-fed weapon whether or not
+      // anything is in it — a rifle with no magazine is the most important
+      // thing this sheet can say. What must be absent is the *player's* optic.
       expect(
-        find.text(
-          L10n.of(
-            tester.element(find.byType(TextButton).first),
-          ).attachmentsNone,
-        ),
-        findsOneWidget,
+        find.text(names.lookup('item.att_red_dot.name', language: 'pl')!),
+        findsNothing,
         reason: 'the one on the ground is bare, whatever the player is holding',
       );
     });

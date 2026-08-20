@@ -2335,6 +2335,12 @@ abstract class L10n {
   /// **'empty'**
   String get slotEmpty;
 
+  /// No description provided for @attachmentChoose.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} to choose from'**
+  String attachmentChoose(int count);
+
   /// No description provided for @reloadFitting.
   ///
   /// In en, this message translates to:

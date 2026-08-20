@@ -553,6 +553,26 @@ if magazine_empty_running and rounds_leave_magazine
 if magazine_fill_interrupted or magazine_empty_interrupted
     then moved_rounds := kept                    // §4.2. To, co już przeszło, przeszło. Naboje są tam, gdzie są — przerwanie nie cofa czasu.
 
+if part_is_magazine and caliber_matches
+    then attachable := true                      // §4.2. Magazynek to część jak każda inna. Katalog nazywa jego typ `magazine`, żaden ItemKind tego słowa nie zna, więc każdy magazynek w grze jest `misc` — a stary warunek pytał o `attachment`. Karta broni pytała, dostawała "nie" i nigdy nie rysowała gniazda: jedyną drogą było przeładowanie.
+
+if magazine_mounted
+    then weapon_rounds := magazine_rounds        // §5.3. Naboje jadą razem z magazynkiem. Bez tego wpięcie pełnego magazynka dawało pusty karabinek i kasowało trzydzieści naboi.
+
+if magazine_removed
+    then magazine_rounds := weapon_rounds, weapon_rounds := 0
+                                                 // I z powrotem. To, co było w środku, idzie ze środkiem.
+
+if part_is_magazine
+    then slots_used += 0                         // §5.6.3. Gniazdo magazynka to nie szyna. Liczenie go jako slotu znaczyło, że wpięcie magazynka kosztuje kolimator — bez sensu w broni, która bez niego nie strzela.
+
+if weapon_feed = magazine
+    then magazine_slot := always_shown           // Nawet pusty. "Karabinek bez magazynka" to najważniejsze zdanie, jakie ta karta może powiedzieć; ukrywanie wiersza z braku kandydata nie mówiło nic.
+
+if magazine_candidates > 1
+    then picker := dropdown sorted by rounds desc
+                                                 // Kto sięga po magazynek, chce ten pełny. Pięć wierszy o tej samej nazwie z różnymi liczbami to gorszy sposób zadania tego pytania niż jedna lista z liczbami obok siebie.
+
 if attachment_slot_taken
     then attach := refused                       // §5.6.3. Jedno miejsce, jedna rzecz. Drugi kolimator nie wchodzi na pierwszy; laser i latarka dzielą szynę — jedno albo drugie, bo oba jedzą baterie i oba widzą przeciwnicy (§6.2).
 

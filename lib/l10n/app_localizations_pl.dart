@@ -1262,6 +1262,11 @@ class L10nPl extends L10n {
   String get slotEmpty => 'puste';
 
   @override
+  String attachmentChoose(int count) {
+    return 'Do wyboru: $count';
+  }
+
+  @override
   String get reloadFitting => 'Montowanie magazynka';
 
   @override

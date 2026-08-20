@@ -485,6 +485,8 @@
   "slotGrip": "Grip",
   "slotRail": "Rail",
   "slotEmpty": "empty",
+  "attachmentChoose": "{count} to choose from",
+  "@attachmentChoose": { "placeholders": { "count": { "type": "int" } } },
   "reloadFitting": "Fitting magazine",
   "reloadSwapping": "Changing magazine",
   "reloadFeeding": "Loading rounds",

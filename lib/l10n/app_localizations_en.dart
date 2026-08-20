@@ -1262,6 +1262,11 @@ class L10nEn extends L10n {
   String get slotEmpty => 'empty';
 
   @override
+  String attachmentChoose(int count) {
+    return '$count to choose from';
+  }
+
+  @override
   String get reloadFitting => 'Fitting magazine';
 
   @override
