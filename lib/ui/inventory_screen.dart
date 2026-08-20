@@ -73,6 +73,7 @@ class InventoryScreen extends StatelessWidget {
     this.onDismantle,
     this.canDismantle,
     this.onStash,
+    this.onStopDismantle,
     this.craftJob,
     this.craftLine,
     this.onDetails,
@@ -126,6 +127,9 @@ class InventoryScreen extends StatelessWidget {
   /// §18.2: straight onto the shelf, without opening the shelves first.
   /// Null when they are not within arm's reach.
   final void Function(CarriedItem line)? onStash;
+
+  /// §18.6: stops the job half way, keeping the work already done.
+  final VoidCallback? onStopDismantle;
 
   /// §18.6, §2.1a.3: the job on the bench, and which piece it is holding.
   final ValueListenable<CraftJob?>? craftJob;
@@ -284,6 +288,7 @@ class InventoryScreen extends StatelessWidget {
                 onDismantle: onDismantle,
                 canDismantle: canDismantle,
                 onStash: onStash,
+                onStopDismantle: onStopDismantle,
                 craftJob: craftJob,
                 craftLine: craftLine,
                 onDetails: onDetails,
@@ -719,6 +724,7 @@ class _ItemRow extends StatefulWidget {
     this.onDismantle,
     this.canDismantle,
     this.onStash,
+    this.onStopDismantle,
     this.craftJob,
     this.craftLine,
     this.onDetails,
@@ -753,6 +759,7 @@ class _ItemRow extends StatefulWidget {
   final void Function(CarriedItem)? onDismantle;
   final bool Function(CarriedItem)? canDismantle;
   final void Function(CarriedItem)? onStash;
+  final VoidCallback? onStopDismantle;
   final ValueListenable<CraftJob?>? craftJob;
   final ValueListenable<CarriedItem?>? craftLine;
 
@@ -900,8 +907,27 @@ class _ItemRowState extends State<_ItemRow> {
                   // player can spend twice, and the rifle case is the loud
                   // one: it would go on being fired for the quarter of an
                   // hour it takes to open it up.
+                  // ⚠️ And nothing on a piece somebody has already opened up
+                  // (§18.6). Half a rifle is not a rifle and half a coat does
+                  // not keep the rain off — which is what makes stopping half
+                  // way a decision rather than a free look inside. What is
+                  // left to do with it is finish it, and that is the one glyph
+                  // [_ItemRow] still draws below.
                   if (_busy)
                     const SizedBox.shrink()
+                  else if (line.isPartlyDismantled)
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (widget.onDismantle != null)
+                          _RowAction(
+                            icon: Icons.handyman,
+                            tooltip: l10n.craftTakeApart,
+                            onPressed: () => widget.onDismantle!(line),
+                            colours: colours,
+                          ),
+                      ],
+                    )
                   else
                     Row(
                       mainAxisSize: MainAxisSize.min,
@@ -1029,7 +1055,11 @@ class _ItemRowState extends State<_ItemRow> {
                 builder: (context, job, _) =>
                     job == null || piece == null || !identical(piece, line)
                     ? const SizedBox.shrink()
-                    : _CraftRunning(job: job, colours: colours),
+                    : _CraftRunning(
+                        job: job,
+                        onStop: widget.onStopDismantle,
+                        colours: colours,
+                      ),
               ),
             ),
 
@@ -1129,6 +1159,13 @@ class _ItemRowState extends State<_ItemRow> {
     final portion = widget.line.portion;
     if (portion < 1) {
       parts.add(widget.l10n.inventoryPortion((portion * 100).round()));
+    }
+
+    // §18.6: and whether somebody has already been at it with a multitool.
+    // Said first among the qualifiers, because it is the one that decides
+    // whether the thing works at all.
+    if (widget.line.isPartlyDismantled) {
+      parts.add(widget.l10n.craftPartlyApart);
     }
 
     // §5.3: and what is in a magazine, or in the gun. The one number that
@@ -1295,9 +1332,17 @@ class _Empty extends StatelessWidget {
 /// drawn from it would sit perfectly still for a quarter of an hour and read
 /// as broken.
 class _CraftRunning extends StatefulWidget {
-  const _CraftRunning({required this.job, required this.colours});
+  const _CraftRunning({
+    required this.job,
+    required this.onStop,
+    required this.colours,
+  });
 
   final CraftJob job;
+
+  /// §18.6: stopping keeps the work. It does not give the piece back.
+  final VoidCallback? onStop;
+
   final HudColors colours;
 
   @override
@@ -1353,6 +1398,16 @@ class _CraftRunningState extends State<_CraftRunning> {
                   fontFeatures: const [FontFeature.tabularFigures()],
                 ),
               ),
+              if (widget.onStop != null)
+                IconButton(
+                  onPressed: widget.onStop,
+                  icon: const Icon(Icons.stop_circle_outlined, size: 16),
+                  tooltip: l10n.craftStop,
+                  color: widget.colours.muted,
+                  visualDensity: VisualDensity.compact,
+                  constraints: const BoxConstraints(),
+                  padding: const EdgeInsets.only(left: 6),
+                ),
             ],
           ),
           const SizedBox(height: 3),

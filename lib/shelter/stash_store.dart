@@ -48,6 +48,7 @@ class StashStore {
                   ? const []
                   : row.attachments.split(','),
               rounds: row.rounds,
+              salvageSeconds: row.salvageSeconds,
             ),
       ],
     );
@@ -68,6 +69,7 @@ class StashStore {
             portion: Value(line.portion),
             attachments: Value(line.attachments.join(',')),
             rounds: Value(line.rounds),
+            salvageSeconds: Value(line.salvageSeconds),
           ),
       ]);
 }

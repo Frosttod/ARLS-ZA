@@ -29,7 +29,7 @@ import 'tables.dart';
 part 'database.g.dart';
 
 /// Bumped only alongside a migration step in [_migration]. Never reused.
-const int kSchemaVersion = 22;
+const int kSchemaVersion = 23;
 
 /// Keys used in [MetaEntries].
 abstract final class MetaKeys {
@@ -74,7 +74,7 @@ class SaveDatabase extends _$SaveDatabase {
   /// follow a constant reference. `schema_test.dart` keeps it in step with
   /// [kSchemaVersion].
   @override
-  int get schemaVersion => 22;
+  int get schemaVersion => 23;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -273,6 +273,21 @@ class SaveDatabase extends _$SaveDatabase {
       // the building, and dismantling happens with a multitool wherever they
       // keep their things.
       if (from < 22) await m.createTable(craftJobs);
+
+      // §18.6: a dismantling can be stopped and gone back to, so how far it
+      // got lives on the piece. Same three guarded steps as v21's `rounds`,
+      // and the guard is the same point: createTable builds from today's
+      // definition, so a table created during this very migration already has
+      // the column.
+      if (from >= 3 && from < 23) {
+        await m.addColumn(inventoryLines, inventoryLines.salvageSeconds);
+      }
+      if (from >= 7 && from < 23) {
+        await m.addColumn(groundItems, groundItems.salvageSeconds);
+      }
+      if (from >= 20 && from < 23) {
+        await m.addColumn(shelterItems, shelterItems.salvageSeconds);
+      }
 
       await _writeSchemaVersion(to);
     },

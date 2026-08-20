@@ -33,6 +33,7 @@ void main() {
     CraftJob? job,
     CarriedItem? busy,
     void Function(CarriedItem)? onStash,
+    VoidCallback? onStop,
   }) async {
     await tester.pumpWidget(
       MaterialApp(
@@ -50,6 +51,7 @@ void main() {
           onDismantle: (_) {},
           canDismantle: (_) => true,
           onStash: onStash,
+          onStopDismantle: onStop,
           onDrop: (_, _) {},
         ),
       ),
@@ -171,5 +173,53 @@ void main() {
     final away = find.byType(IconButton).evaluate().length;
 
     expect(away, near - 1);
+  });
+
+  testWidgets('a piece already opened offers only finishing it', (
+    tester,
+  ) async {
+    // §18.6: half a rifle is not a rifle. Everything else that could be done
+    // with it is gone; going back to the multitool is the one thing left.
+    final whole = Inventory(
+      carried: const [CarriedItem(itemId: 'weapon_rifle_545')],
+    );
+    await open(tester, pack: whole, onStash: (_) {});
+    final before = find.byType(IconButton).evaluate().length;
+
+    final opened = Inventory(
+      carried: [
+        const CarriedItem(
+          itemId: 'weapon_rifle_545',
+        ).copyWith(salvageSeconds: 90),
+      ],
+    );
+    await open(tester, pack: opened, onStash: (_) {});
+    final after = find.byType(IconButton).evaluate().length;
+
+    expect(after, lessThan(before));
+    expect(find.textContaining('częściowo rozebrany'), findsOneWidget);
+  });
+
+  testWidgets('and the running bar offers a way to stop', (tester) async {
+    final pack = Inventory(
+      carried: const [CarriedItem(itemId: 'weapon_rifle_545')],
+    );
+
+    var stopped = false;
+    await open(
+      tester,
+      pack: pack,
+      busy: pack.carried.single,
+      onStop: () => stopped = true,
+      job: CraftJob(
+        salvageItemId: 'weapon_rifle_545',
+        salvageCondition: 100,
+        startedAt: now,
+        readyAt: now.add(const Duration(minutes: 6)),
+      ),
+    );
+
+    await tester.tap(find.byIcon(Icons.stop_circle_outlined));
+    expect(stopped, isTrue);
   });
 }

@@ -70,6 +70,7 @@ class CarriedItem {
     this.portion = 1,
     this.attachments = const [],
     this.rounds,
+    this.salvageSeconds,
   });
 
   final String itemId;
@@ -107,6 +108,21 @@ class CarriedItem {
   /// line rather than the id.
   final int? rounds;
 
+  /// §18.6: how many seconds of taking-apart this piece has already had.
+  ///
+  /// ⚠️ Null means untouched. **Anything else means opened up, and a thing
+  /// that has been opened up does not work any more** — half a rifle is not a
+  /// rifle, and half a coat does not keep the rain off. That is what makes
+  /// stopping half way a real decision rather than a free look inside.
+  ///
+  /// On the piece rather than on the job, so the bench is free while a
+  /// half-finished rifle sits in the pack waiting to be gone back to. A job is
+  /// one pair of hands; this is a thing on a shelf.
+  final int? salvageSeconds;
+
+  /// §18.6: whether this piece has been opened up and not finished.
+  bool get isPartlyDismantled => (salvageSeconds ?? 0) > 0;
+
   /// How much of this piece is left, 0–1 (§4.7).
   ///
   /// A bottle put down half way through is half a bottle, not a wasted one and
@@ -122,6 +138,7 @@ class CarriedItem {
     double? portion,
     List<String>? attachments,
     int? rounds,
+    int? salvageSeconds,
   }) => CarriedItem(
     itemId: itemId,
     count: count ?? this.count,
@@ -132,6 +149,7 @@ class CarriedItem {
     portion: portion ?? this.portion,
     attachments: attachments ?? this.attachments,
     rounds: rounds ?? this.rounds,
+    salvageSeconds: salvageSeconds ?? this.salvageSeconds,
   );
 
   /// Mass of this line, using the rolled page count where there is one.
@@ -315,6 +333,8 @@ class Inventory {
     String? noteId,
     double portion = 1,
     List<String> attachments = const [],
+    int? rounds,
+    int? salvageSeconds,
   }) {
     final definition = catalogue[itemId];
     if (definition == null) {
@@ -335,6 +355,12 @@ class Inventory {
       // §5.6.3: picking a rifle up off the pavement gives it back with what
       // was on it. Putting one down used to strip it.
       attachments: attachments,
+      // ⚠️ §5.3, §18.6: and with what is in it, and how far somebody got
+      // taking it apart. Both were silently dropped here, so a loaded rifle
+      // put on the pavement came back empty — the same thirty rounds that
+      // went missing across a restart, going missing a different way.
+      rounds: rounds,
+      salvageSeconds: salvageSeconds,
     );
     final massEach = one.massKg(definition, catalogue: catalogue);
     final volumeEach = one.volumeL(definition, catalogue: catalogue);
@@ -372,6 +398,8 @@ class Inventory {
         noteId: noteId,
         portion: portion,
         attachments: attachments,
+        rounds: rounds,
+        salvageSeconds: salvageSeconds,
       ),
     );
 

@@ -4,6 +4,8 @@ import 'package:arls_za/craft/craft_job.dart';
 import 'package:arls_za/craft/craft_store.dart';
 import 'package:arls_za/craft/item_recipe.dart';
 import 'package:arls_za/data/db/database.dart';
+import 'package:arls_za/inventory/inventory.dart';
+import 'package:arls_za/inventory/inventory_store.dart';
 import 'package:arls_za/items/item_catalogue.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -273,6 +275,101 @@ void main() {
       await store.clear(profileId);
 
       expect(await store.load(profileId), isNull);
+    });
+  });
+
+  group('stopping half way (§18.6)', () {
+    test('a job resumed keeps the work already done', () {
+      // ⚠️ The bar picks up where it was left. Starting the job in the past by
+      // however long it has already had is what does it, and it means a
+      // dismantling somebody comes back to three times still takes exactly
+      // the minutes §18.6 asked for.
+      const whole = Duration(minutes: 12);
+      const done = Duration(minutes: 5);
+
+      final resumed = CraftJob(
+        salvageItemId: 'weapon_rifle_545',
+        salvageCondition: 100,
+        startedAt: now.subtract(done),
+        readyAt: now.subtract(done).add(whole),
+      );
+
+      expect(resumed.progressAt(now), closeTo(5 / 12, 0.001));
+      expect(resumed.remainingAt(now), const Duration(minutes: 7));
+    });
+
+    test('and the whole thing still takes the same time', () {
+      const whole = Duration(minutes: 12);
+      var done = Duration.zero;
+
+      // Three sittings of two minutes, then whatever is left.
+      for (var i = 0; i < 3; i++) {
+        final job = CraftJob(
+          salvageItemId: 'weapon_rifle_545',
+          startedAt: now.subtract(done),
+          readyAt: now.subtract(done).add(whole),
+        );
+        expect(job.isDoneAt(now), isFalse);
+        done += const Duration(minutes: 2);
+      }
+
+      final last = CraftJob(
+        salvageItemId: 'weapon_rifle_545',
+        startedAt: now.subtract(done),
+        readyAt: now.subtract(done).add(whole),
+      );
+
+      expect(last.remainingAt(now), const Duration(minutes: 6));
+      expect(last.isDoneAt(now.add(const Duration(minutes: 6))), isTrue);
+    });
+
+    test('a piece opened at all is a piece that no longer works', () {
+      // The rule that makes stopping a decision rather than a free look
+      // inside. Half a rifle is not a rifle.
+      const untouched = CarriedItem(itemId: 'weapon_rifle_545');
+      final opened = untouched.copyWith(salvageSeconds: 1);
+
+      expect(untouched.isPartlyDismantled, isFalse);
+      expect(opened.isPartlyDismantled, isTrue);
+    });
+
+    test('and one second counts, because nought would read as untouched', () {
+      final barely = const CarriedItem(
+        itemId: 'weapon_rifle_545',
+      ).copyWith(salvageSeconds: 1);
+
+      expect(barely.isPartlyDismantled, isTrue);
+    });
+  });
+
+  group('it survives the pack being put down (§4.8, §18.2)', () {
+    late SaveDatabase db;
+    late int profileId;
+
+    setUp(() async {
+      db = SaveDatabase.memory();
+      profileId = await insertProfile(db);
+    });
+
+    tearDown(() => db.close());
+
+    test('a half-dismantled rifle is still half-dismantled tomorrow', () async {
+      final store = InventoryStore(db);
+      await store.save(
+        profileId,
+        Inventory(
+          carried: [
+            const CarriedItem(
+              itemId: 'weapon_rifle_545',
+            ).copyWith(salvageSeconds: 200, rounds: 12),
+          ],
+        ),
+      );
+
+      final back = (await store.load(profileId, catalogue)).inventory;
+
+      expect(back.carried.single.salvageSeconds, 200);
+      expect(back.carried.single.rounds, 12, reason: 'and still loaded');
     });
   });
 }

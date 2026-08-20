@@ -278,6 +278,12 @@ class InventoryLines extends Table {
   /// Null for everything that cannot hold rounds, which is nearly everything.
   IntColumn get rounds => integer().nullable()();
 
+  /// §18.6: seconds of taking-apart already spent on this piece.
+  ///
+  /// Null for everything nobody has started on, which is nearly everything.
+  /// Anything else means it has been opened up and no longer works.
+  IntColumn get salvageSeconds => integer().nullable()();
+
   @override
   List<String> get customConstraints => [
     'FOREIGN KEY (profile_id) REFERENCES profiles (id) ON DELETE CASCADE',
@@ -322,6 +328,12 @@ class ShelterItems extends Table {
   ///
   /// Null for everything that cannot hold rounds, which is nearly everything.
   IntColumn get rounds => integer().nullable()();
+
+  /// §18.6: seconds of taking-apart already spent on this piece.
+  ///
+  /// Null for everything nobody has started on, which is nearly everything.
+  /// Anything else means it has been opened up and no longer works.
+  IntColumn get salvageSeconds => integer().nullable()();
 
   @override
   List<String> get customConstraints => [
@@ -423,6 +435,12 @@ class GroundItems extends Table {
   RealColumn get longitude => real()();
 
   DateTimeColumn get droppedAt => dateTime()();
+
+  /// §18.6: seconds of taking-apart already spent on this piece.
+  ///
+  /// Null for everything nobody has started on, which is nearly everything.
+  /// Anything else means it has been opened up and no longer works.
+  IntColumn get salvageSeconds => integer().nullable()();
 
   @override
   List<String> get customConstraints => [

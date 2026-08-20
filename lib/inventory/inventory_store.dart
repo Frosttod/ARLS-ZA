@@ -68,6 +68,7 @@ class InventoryStore {
             ? const []
             : row.attachments.split(','),
         rounds: row.rounds,
+        salvageSeconds: row.salvageSeconds,
       );
       (row.slot == _slotWorn ? worn : carried).add(line);
     }
@@ -106,5 +107,6 @@ class InventoryStore {
         portion: Value(line.portion),
         attachments: Value(line.attachments.join(',')),
         rounds: Value(line.rounds),
+        salvageSeconds: Value(line.salvageSeconds),
       );
 }

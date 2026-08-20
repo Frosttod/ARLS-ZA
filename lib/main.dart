@@ -1299,14 +1299,29 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
           onFill: (line) => unawaited(_fillMagazine(line)),
           onEmpty: (line) => unawaited(_emptyMagazine(line)),
           onDismantle: (line) => unawaited(_dismantle(line)),
+          onStopDismantle: () => unawaited(_pauseDismantle()),
           onStash: _shelvesInReach()
               ? (line) => unawaited(_quickShelve(line))
               : null,
           craftJob: _craftJob,
           craftLine: _dismantling,
+          // ⚠️ What actually comes out, not what the thing is made of.
+          //
+          // Two different questions, and the difference is most of the
+          // catalogue: an axe holds 0.86 units of metal and wood, which at
+          // §18.6's forty per cent rounds to nothing. Lighting the glyph on
+          // everything with a material content lit it on axes, knives and
+          // magazines and then refused every one of them on the tap.
           canDismantle: (line) =>
               _catalogue != null &&
-              materialContent(_catalogue![line.itemId]!, _recipes).isNotEmpty,
+              (line.isPartlyDismantled ||
+                  salvagePreview(
+                    line.itemId,
+                    _bench(),
+                    catalogue: _catalogue!,
+                    book: _recipes,
+                    condition: line.condition ?? 100,
+                  ).isNotEmpty),
           onRead: _readNote,
           onDetails: (line) => unawaited(_showItemDetails(line)),
           action: _search,
@@ -1343,7 +1358,12 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       inventory: _inventory,
       catalogue: catalogue,
       names: _names ?? ItemNames.empty,
-      onWear: wearable && !worn ? () => unawaited(_wear(line)) : null,
+      // §18.6: nothing that has been opened up goes on. Half a coat does not
+      // keep the rain off, and the row hides the glyph for the same reason —
+      // this is the sheet saying the same thing.
+      onWear: wearable && !worn && !line.isPartlyDismantled
+          ? () => unawaited(_wear(line))
+          : null,
       wearLabel: L10n.of(context).inventoryWear,
       // The piece the sheet is showing now, not the one it was opened with:
       // each fit rebuilds the line, and the sheet stays open across them.
@@ -1512,6 +1532,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         pagesRead: line.pagesRead,
         // §5.6.3: the sights go down with the rifle, and come back up with it.
         attachments: line.attachments,
+        // §5.3, §18.6: so does what is in it, and how far it has been opened.
+        rounds: line.rounds,
+        salvageSeconds: line.salvageSeconds,
         position: at,
         droppedAt: DateTime.now().toUtc(),
       ),
@@ -1527,6 +1550,15 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   Future<void> _wear(CarriedItem line) async {
     final catalogue = _catalogue;
     if (catalogue == null) return;
+
+    // ⚠️ §18.6: a piece somebody has already opened up does not work any
+    // more. The row and the sheet both hide the control, and this is the
+    // floor under both of them — the one place a stale handle or an old save
+    // cannot get round.
+    if (line.isPartlyDismantled) {
+      _say(L10n.of(context).craftPartlyApart);
+      return;
+    }
 
     final definition = catalogue[line.itemId];
     if (definition == null) return;
@@ -1555,6 +1587,15 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final loop = _loop;
     if (catalogue == null || character == null || loop == null) return;
     if (_search.value != null) return;
+
+    // ⚠️ §18.6: a piece somebody has already opened up does not work any
+    // more. The row and the sheet both hide the control, and this is the
+    // floor under both of them — the one place a stale handle or an old save
+    // cannot get round.
+    if (line.isPartlyDismantled) {
+      _say(L10n.of(context).craftPartlyApart);
+      return;
+    }
 
     final definition = catalogue[line.itemId];
     final use = definition == null ? null : useOf(definition);
@@ -1961,6 +2002,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       condition: item.condition,
       pagesTotal: item.pagesTotal,
       attachments: item.attachments,
+      rounds: item.rounds,
+      salvageSeconds: item.salvageSeconds,
     );
     if (!result.isAccepted && (result.acceptedCount ?? 0) == 0) {
       if (mounted) _say(L10n.of(context).droppedNoRoom);
@@ -3333,6 +3376,40 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     await _reloadCraftJob();
   }
 
+  /// §18.6: stops taking something apart, and remembers how far it got.
+  ///
+  /// ⚠️ The piece does **not** come back whole. It has been opened up, and
+  /// that is the point: §18.6 is something you do to a thing you have already
+  /// decided against, and half a rifle is not a rifle. What is kept is the
+  /// work, so going back to it later is not starting again.
+  Future<void> _pauseDismantle() async {
+    final character = _character;
+    final job = _craftJob.value;
+    final line = _dismantling.value;
+    if (character == null || job == null || !job.isSalvage) return;
+
+    final done = DateTime.now().toUtc().difference(job.startedAt);
+    final total = job.readyAt.difference(job.startedAt);
+    final kept = done > total ? total : done;
+
+    if (line != null) {
+      _inventory.value = _inventory.value.withLine(
+        line,
+        // Never nought: a piece that has been opened at all is a piece that
+        // no longer works, and a zero here would read as untouched.
+        line.copyWith(salvageSeconds: kept.inSeconds < 1 ? 1 : kept.inSeconds),
+      );
+      await _saveInventory();
+    }
+
+    await CraftStore(widget.session.db).clear(character.profile.id);
+    _craftJob.value = null;
+    _dismantling.value = null;
+
+    if (!mounted) return;
+    _say(L10n.of(context).craftStopped);
+  }
+
   /// §18.4: gives up on whatever is on the bench.
   ///
   /// Nothing comes back. §18 has no rule returning materials from abandoned
@@ -3341,6 +3418,13 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   Future<void> _cancelCraft() async {
     final character = _character;
     if (character == null) return;
+
+    // A dismantling is stopped, not abandoned: §18.6 lets somebody come back
+    // to it, and the work already done is the thing worth keeping.
+    if (_craftJob.value?.isSalvage ?? false) {
+      await _pauseDismantle();
+      return;
+    }
 
     await CraftStore(widget.session.db).clear(character.profile.id);
     _craftJob.value = null;
@@ -3459,14 +3543,21 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       condition: condition,
     );
 
-    final work = salvageTime(
+    final whole = salvageTime(
       materialContent(catalogue[line.itemId]!, _recipes),
     );
+
+    // §18.6: what is left of it, for a piece somebody already started on.
+    final done = Duration(seconds: line.salvageSeconds ?? 0);
+    final work = whole - done;
 
     // ⚠️ Asked, because nothing here comes back. §18.6 destroys the item and
     // returns a fraction, and a player is entitled to read the price before
     // paying it rather than after.
-    final go = await _confirmDismantle(line, back, work);
+    // Nothing to ask a second time: the piece is already ruined, and going
+    // back to it is the only thing left to do with it.
+    final go =
+        line.isPartlyDismantled || await _confirmDismantle(line, back, work);
     if (!go || !mounted) return;
 
     // ⚠️ It stays in the pack, locked, rather than vanishing for a quarter of
@@ -3477,12 +3568,15 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     // taken apart still cannot be fired.
     _dismantling.value = line;
 
+    // ⚠️ Started in the past by however long it has already had, so the bar
+    // picks up where it was left rather than beginning again at nothing.
+    final now = DateTime.now().toUtc();
     await CraftStore(widget.session.db).beginSalvage(
       character.profile.id,
       itemId: line.itemId,
       condition: condition,
-      now: DateTime.now().toUtc(),
-      work: work,
+      now: now.subtract(done),
+      work: whole,
     );
 
     await _reloadCraftJob();

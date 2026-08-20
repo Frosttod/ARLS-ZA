@@ -1006,6 +1006,24 @@ if dismantle_started
 if dismantle_running
     then item stays in pack, locked              // ⚠️ Zmiana wobec pierwszej wersji: przedmiot nie znika na starcie, tylko zostaje zablokowany. Pasek musi być pod czymś, a rzecz, która znika na kwadrans, nie zostawia gdzie go narysować. Blokada załatwia drugą połowę: zablokowanego nie da się założyć, zjeść, wyrzucić ani odłożyć na półkę — więc karabinek w rozbiórce nie strzela.
 
+if dismantle_stopped
+    then item.salvage_seconds := elapsed         // §18.6. Przerwane rozkładanie **nie oddaje przedmiotu w całości**. Zostaje praca, nie rzecz. Wrócenie do niej później to nie zaczynanie od nowa.
+
+if item.salvage_seconds > 0
+    then item unusable                           // ⚠️ Rozpoczęte = zepsute. Pół karabinka to nie karabinek, pół kurtki nie chroni przed deszczem. To jest to, co robi z przerwania decyzję, a nie darmowe zajrzenie do środka. Blokada w wierszu, w karcie przedmiotu i w samych _use/_wear — trzy piętra, bo stary zapis albo zwietrzały uchwyt obchodzi dwa pierwsze.
+
+if item.salvage_seconds > 0
+    then only remaining action is finishing it   // Jedyne, co z tym zostało do zrobienia.
+
+if dismantle_resumed
+    then job.started_at := now − salvage_seconds // Pasek podejmuje tam, gdzie skończył. Całość nadal zajmuje dokładnie tyle minut, ile §18.6 kazało — trzy posiedzenia po dwie minuty to sześć minut, nie trzy razy dwanaście.
+
+if salvage_yield is empty
+    then dismantle glyph hidden                  // ⚠️ To, co **wypada**, nie to, z czego rzecz jest. Siekiera to 0,86 jednostki metalu i drewna — przy 40% zero. Zapalanie ikony na wszystkim, co ma zawartość materiałową, zapalało ją na siekierach, nożach i magazynkach i odmawiało przy każdym tapnięciu.
+
+if item dropped or shelved
+    then rounds and salvage_seconds travel       // §5.3, §18.6. `_drop` gubiło `rounds` — ten sam wyciek trzydziestu naboi, tylko trzecią drogą: przez ziemię.
+
 if dismantle_target is worn
     then dismantle := refused                    // Rozbiera się z plecaka, nigdy z ciała. Broń w rękach to dokładnie ten przypadek, który blokada ma zamknąć.
 
