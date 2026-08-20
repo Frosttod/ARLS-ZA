@@ -661,6 +661,13 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// §2.1a.3: what is on the bench, or null. Reloaded whenever the shelter is.
   final ValueNotifier<CraftJob?> _craftJob = ValueNotifier(null);
 
+  /// §18.6: which piece is currently under the multitool.
+  ///
+  /// ⚠️ The line, not the item id. Two rifles in one pack are two rifles, and
+  /// the bar belongs under the one being taken apart — the same rule §4.7's
+  /// half-eaten tin already lives by.
+  final ValueNotifier<CarriedItem?> _dismantling = ValueNotifier(null);
+
   Reload? _reload;
 
   /// ⚠️ A reload has its own clock.
@@ -1292,6 +1299,11 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
           onFill: (line) => unawaited(_fillMagazine(line)),
           onEmpty: (line) => unawaited(_emptyMagazine(line)),
           onDismantle: (line) => unawaited(_dismantle(line)),
+          onStash: _shelvesInReach()
+              ? (line) => unawaited(_quickShelve(line))
+              : null,
+          craftJob: _craftJob,
+          craftLine: _dismantling,
           canDismantle: (line) =>
               _catalogue != null &&
               materialContent(_catalogue![line.itemId]!, _recipes).isNotEmpty,
@@ -1337,6 +1349,23 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       // each fit rebuilds the line, and the sheet stays open across them.
       onAttach: (current, part) => unawaited(_attach(current, part)),
       onDetach: (current, id) => unawaited(_detach(current, id)),
+
+      // §18.6, §18.2, §4.8: the three decisions this sheet exists to
+      // inform, offered where the reading is. Only for a piece in the pack:
+      // something on the pavement or in a body's pockets is not the player's
+      // to take apart or shelve, and ⚠️ nothing that is worn is offered
+      // either — a rifle in the hands is the one that must not be dismantled
+      // while it can still be fired.
+      onDismantle:
+          !worn &&
+              _recipes.recipes.isNotEmpty &&
+              materialContent(item, _recipes).isNotEmpty
+          ? (current) => unawaited(_dismantle(current))
+          : null,
+      onStash: !worn && _shelvesInReach()
+          ? (current) => unawaited(_quickShelve(current))
+          : null,
+      onDrop: worn ? null : (current) => unawaited(_drop(current, 1)),
     );
   }
 
@@ -3315,6 +3344,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
     await CraftStore(widget.session.db).clear(character.profile.id);
     _craftJob.value = null;
+
+    // §18.6: giving up hands the piece back whole. Nothing was taken out of
+    // it — the minutes were the cost, and they are gone.
+    _dismantling.value = null;
     if (!mounted) return;
     _say(L10n.of(context).shelterCancelled);
   }
@@ -3396,6 +3429,14 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final catalogue = _catalogue;
     if (character == null || catalogue == null) return;
 
+    // ⚠️ Out of the pack, never off the body. The piece stays where it is
+    // while the work runs (that is what the bar is under), so a weapon still
+    // in the hands would go on being fired through its own dismantling.
+    if (!_inventory.value.carried.any((entry) => identical(entry, line))) {
+      _say(L10n.of(context).craftNotAtShelter);
+      return;
+    }
+
     final bench = _bench();
     final condition = line.condition ?? 100;
     final refusal = salvageRefusalFor(
@@ -3428,11 +3469,13 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final go = await _confirmDismantle(line, back, work);
     if (!go || !mounted) return;
 
-    final without = _inventory.value.removeLine(line);
-    if (without == null) return;
-
-    _inventory.value = without;
-    await _saveInventory();
+    // ⚠️ It stays in the pack, locked, rather than vanishing for a quarter of
+    // an hour. A bar has to be under something, and an item that disappears
+    // the moment the work starts leaves nowhere to put it. Locked is what
+    // stops the other half of the problem: while this row is under the
+    // multitool it cannot be worn, used, dropped or shelved, so a rifle being
+    // taken apart still cannot be fired.
+    _dismantling.value = line;
 
     await CraftStore(widget.session.db).beginSalvage(
       character.profile.id,
@@ -3480,6 +3523,11 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     return answer ?? false;
   }
 
+  /// The first piece of [itemId] in the pack, or null.
+  CarriedItem? _firstCarried(String itemId) => _inventory.value.carried
+      .where((line) => line.itemId == itemId)
+      .firstOrNull;
+
   String _nameOfId(String itemId) {
     final definition = _catalogue?[itemId];
     return definition == null ? itemId : _nameOfItem(definition);
@@ -3508,6 +3556,14 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
     if (job == null || !job.isDoneAt(DateTime.now().toUtc())) {
       _craftJob.value = job;
+
+      // ⚠️ Found again by id after a restart, because identity does not
+      // survive the process. First match, which is the honest answer when
+      // somebody owns two of a thing: they are interchangeable until one of
+      // them is worn differently, and a worn one cannot be dismantled at all.
+      _dismantling.value = job != null && job.isSalvage
+          ? _firstCarried(job.salvageItemId!)
+          : null;
       return;
     }
 
@@ -3535,6 +3591,14 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
           condition: job.salvageCondition ?? 100,
         ),
       );
+
+      // Now it goes. Whatever is left of it is what came out of it.
+      final piece = _dismantling.value ?? _firstCarried(job.salvageItemId!);
+      if (piece != null) {
+        final without = _inventory.value.removeLine(piece);
+        if (without != null) _inventory.value = without;
+      }
+      _dismantling.value = null;
     } else {
       final recipe = _recipes.recipes
           .where((entry) => entry.id == job.recipeId)
@@ -3769,6 +3833,55 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     );
 
     _openShelves = null;
+  }
+
+  /// §18.2: onto the shelf without opening it first.
+  ///
+  /// The same move [_leaveOnShelf] makes, from the pack screen. Walking into
+  /// the shelter to put four things away meant four trips through the shelves
+  /// screen, and the shelves screen exists to *take things out*.
+  Future<void> _quickShelve(CarriedItem line) async {
+    final character = _character;
+    final catalogue = _catalogue;
+    final main = _shelters.value
+        .where((place) => place.kind == ShelterKind.main)
+        .firstOrNull;
+    if (character == null || catalogue == null || main == null) return;
+
+    final at = _standingAt.value;
+    if (at == null || !main.atSite(at)) {
+      _say(L10n.of(context).shelterNotHere);
+      return;
+    }
+
+    final moved = _stash.value.put(line, catalogue);
+    if (!moved.moved) {
+      _say(L10n.of(context).stashFull);
+      return;
+    }
+
+    final left = _inventory.value.removeLine(line, count: line.count);
+    if (left == null) return;
+
+    // Off the pack only once it is on the shelf: a half-applied move is an
+    // item that exists twice or not at all.
+    _stash.value = moved.stash;
+    _inventory.value = left;
+
+    await StashStore(
+      widget.session.db,
+    ).save(character.profile.id, main.id, _stash.value);
+    await _saveInventory();
+  }
+
+  /// Whether the shelves are within arm's reach right now (§18.2).
+  bool _shelvesInReach() {
+    final at = _standingAt.value;
+    if (at == null) return false;
+
+    return _shelters.value.any(
+      (place) => place.kind == ShelterKind.main && place.atSite(at),
+    );
   }
 
   /// §18.2: out of the pack and onto the shelf.
@@ -4793,6 +4906,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     _standingAt.dispose();
     _reloadTimer?.cancel();
     _craftJob.dispose();
+    _dismantling.dispose();
     _usingLine.dispose();
     _shelters.dispose();
     _notices.dispose();

@@ -1271,6 +1271,9 @@ class L10nPl extends L10n {
   String get craftTakeApart => 'Rozbierz';
 
   @override
+  String get craftTakeApartRunning => 'Rozbiórka w toku';
+
+  @override
   String get craftDone => 'Gotowe.';
 
   @override

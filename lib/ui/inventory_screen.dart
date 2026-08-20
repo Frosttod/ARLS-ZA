@@ -17,9 +17,12 @@
 /// unlabelled tiles would not be (§12).
 library;
 
+import 'dart:async';
+
 import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 
+import '../craft/craft_job.dart';
 import 'fonts.dart';
 import '../devtools/dev_mode.dart';
 import '../inventory/body_slots.dart';
@@ -69,6 +72,9 @@ class InventoryScreen extends StatelessWidget {
     this.onEmpty,
     this.onDismantle,
     this.canDismantle,
+    this.onStash,
+    this.craftJob,
+    this.craftLine,
     this.onDetails,
     this.usingLine,
     this.onDevFill,
@@ -116,6 +122,14 @@ class InventoryScreen extends StatelessWidget {
   /// rather than dead for a tin of beans — a control that cannot be used is
   /// worse than no control at all.
   final bool Function(CarriedItem line)? canDismantle;
+
+  /// §18.2: straight onto the shelf, without opening the shelves first.
+  /// Null when they are not within arm's reach.
+  final void Function(CarriedItem line)? onStash;
+
+  /// §18.6, §2.1a.3: the job on the bench, and which piece it is holding.
+  final ValueListenable<CraftJob?>? craftJob;
+  final ValueListenable<CarriedItem?>? craftLine;
 
   /// §4.2: tipping them back out again.
   final void Function(CarriedItem line)? onEmpty;
@@ -269,6 +283,9 @@ class InventoryScreen extends StatelessWidget {
                 onEmpty: onEmpty,
                 onDismantle: onDismantle,
                 canDismantle: canDismantle,
+                onStash: onStash,
+                craftJob: craftJob,
+                craftLine: craftLine,
                 onDetails: onDetails,
                 // The progress bar belongs under the thing it belongs to, not
                 // at the top of the screen: a player who taps "use" looks at
@@ -701,6 +718,9 @@ class _ItemRow extends StatefulWidget {
     this.onEmpty,
     this.onDismantle,
     this.canDismantle,
+    this.onStash,
+    this.craftJob,
+    this.craftLine,
     this.onDetails,
     this.action,
     this.usingLine,
@@ -732,6 +752,9 @@ class _ItemRow extends StatefulWidget {
   /// §18.6: taking something apart for what is in it.
   final void Function(CarriedItem)? onDismantle;
   final bool Function(CarriedItem)? canDismantle;
+  final void Function(CarriedItem)? onStash;
+  final ValueListenable<CraftJob?>? craftJob;
+  final ValueListenable<CarriedItem?>? craftLine;
 
   /// §4.2: tipping them back out again.
   final void Function(CarriedItem)? onEmpty;
@@ -748,6 +771,12 @@ class _ItemRow extends StatefulWidget {
 
 class _ItemRowState extends State<_ItemRow> {
   int _toDrop = 1;
+
+  /// §18.6: whether this very piece is the one on the bench.
+  bool get _busy =>
+      widget.craftLine?.value != null &&
+      identical(widget.craftLine!.value, widget.line) &&
+      widget.craftJob?.value != null;
 
   @override
   Widget build(BuildContext context) {
@@ -865,96 +894,117 @@ class _ItemRowState extends State<_ItemRow> {
                     style: TextStyle(fontSize: 11, color: colours.data),
                   ),
                   const SizedBox(height: 2),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // §4.2: thumbing loose rounds into a magazine. Its own
-                      // action, not a reload — it is half a minute of standing
-                      // still, which is why it belongs on this screen rather
-                      // than on the one the fight is on.
-                      if (widget.onFill != null &&
-                          Magazine.of(
-                                widget.definition,
-                                rounds: line.rounds ?? 0,
-                              )?.isFull ==
-                              false)
-                        _RowAction(
-                          icon: Icons.download,
-                          tooltip: l10n.magazineFill,
-                          onPressed: () => widget.onFill!(line),
-                          colours: colours,
-                        ),
-
-                      // §4.2: and tipping them back out. A magazine is emptied
-                      // to fill a different one, or to leave the weight behind
-                      // — the same half minute, in the other direction.
-                      if (widget.onEmpty != null &&
-                          Magazine.of(
-                                widget.definition,
-                                rounds: line.rounds ?? 0,
-                              )?.isEmpty ==
-                              false)
-                        _RowAction(
-                          icon: Icons.upload,
-                          tooltip: l10n.magazineEmpty,
-                          onPressed: () => widget.onEmpty!(line),
-                          colours: colours,
-                        ),
-
-                      // §18.6: taking it apart for what is in it. Last in
-                      // the row, because nothing else here destroys the thing
-                      // it acts on.
-                      if (widget.onDismantle != null &&
-                          (widget.canDismantle?.call(line) ?? false))
-                        _RowAction(
-                          icon: Icons.handyman,
-                          tooltip: l10n.craftTakeApart,
-                          onPressed: () => widget.onDismantle!(line),
-                          colours: colours,
-                        ),
-
-                      if (usable && widget.onUse != null)
-                        _RowAction(
-                          icon: Icons.restaurant,
-                          tooltip: l10n.inventoryUse,
-                          onPressed: () => widget.onUse!(line),
-                          colours: colours,
-                        ),
-                      if (wearable && widget.onWear != null)
-                        _RowAction(
-                          icon: Icons.checkroom,
-                          tooltip: l10n.inventoryWear,
-                          onPressed: () => widget.onWear!(line),
-                          colours: colours,
-                        ),
-                      if (line.noteId != null && widget.onRead != null)
-                        _RowAction(
-                          icon: Icons.description_outlined,
-                          tooltip: l10n.noteRead,
-                          onPressed: () => widget.onRead!(line),
-                          colours: colours,
-                        ),
-                      if (widget.onDrop != null) ...[
-                        // Only where there is a choice to make. A stepper
-                        // beside a single bandage is a control with one
-                        // setting.
-                        if (count > 1)
-                          _Stepper(
-                            value: toDrop,
-                            max: count,
-                            onChanged: (value) =>
-                                setState(() => _toDrop = value),
+                  // ⚠️ Nothing at all while it is on the bench (§18.6). Not
+                  // greyed — absent. A piece being taken apart that could
+                  // still be worn, eaten, dropped or shelved is a piece the
+                  // player can spend twice, and the rifle case is the loud
+                  // one: it would go on being fired for the quarter of an
+                  // hour it takes to open it up.
+                  if (_busy)
+                    const SizedBox.shrink()
+                  else
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // §4.2: thumbing loose rounds into a magazine. Its own
+                        // action, not a reload — it is half a minute of standing
+                        // still, which is why it belongs on this screen rather
+                        // than on the one the fight is on.
+                        if (widget.onFill != null &&
+                            Magazine.of(
+                                  widget.definition,
+                                  rounds: line.rounds ?? 0,
+                                )?.isFull ==
+                                false)
+                          _RowAction(
+                            icon: Icons.download,
+                            tooltip: l10n.magazineFill,
+                            onPressed: () => widget.onFill!(line),
                             colours: colours,
                           ),
-                        _RowAction(
-                          icon: Icons.delete_outline,
-                          tooltip: l10n.inventoryDrop,
-                          onPressed: () => widget.onDrop!(line, toDrop),
-                          colours: colours,
-                        ),
+
+                        // §4.2: and tipping them back out. A magazine is emptied
+                        // to fill a different one, or to leave the weight behind
+                        // — the same half minute, in the other direction.
+                        if (widget.onEmpty != null &&
+                            Magazine.of(
+                                  widget.definition,
+                                  rounds: line.rounds ?? 0,
+                                )?.isEmpty ==
+                                false)
+                          _RowAction(
+                            icon: Icons.upload,
+                            tooltip: l10n.magazineEmpty,
+                            onPressed: () => widget.onEmpty!(line),
+                            colours: colours,
+                          ),
+
+                        // §18.2: onto the shelf, one tap, without going
+                        // through the shelves screen — that screen is for
+                        // taking things *out*, and putting four things away
+                        // through it was four trips.
+                        if (widget.onStash != null)
+                          _RowAction(
+                            icon: Icons.inventory_2,
+                            tooltip: l10n.stashStore,
+                            onPressed: () => widget.onStash!(line),
+                            colours: colours,
+                          ),
+
+                        // §18.6: taking it apart for what is in it. Last in
+                        // the row, because nothing else here destroys the thing
+                        // it acts on.
+                        if (widget.onDismantle != null &&
+                            (widget.canDismantle?.call(line) ?? false))
+                          _RowAction(
+                            icon: Icons.handyman,
+                            tooltip: l10n.craftTakeApart,
+                            onPressed: () => widget.onDismantle!(line),
+                            colours: colours,
+                          ),
+
+                        if (usable && widget.onUse != null)
+                          _RowAction(
+                            icon: Icons.restaurant,
+                            tooltip: l10n.inventoryUse,
+                            onPressed: () => widget.onUse!(line),
+                            colours: colours,
+                          ),
+                        if (wearable && widget.onWear != null)
+                          _RowAction(
+                            icon: Icons.checkroom,
+                            tooltip: l10n.inventoryWear,
+                            onPressed: () => widget.onWear!(line),
+                            colours: colours,
+                          ),
+                        if (line.noteId != null && widget.onRead != null)
+                          _RowAction(
+                            icon: Icons.description_outlined,
+                            tooltip: l10n.noteRead,
+                            onPressed: () => widget.onRead!(line),
+                            colours: colours,
+                          ),
+                        if (widget.onDrop != null) ...[
+                          // Only where there is a choice to make. A stepper
+                          // beside a single bandage is a control with one
+                          // setting.
+                          if (count > 1)
+                            _Stepper(
+                              value: toDrop,
+                              max: count,
+                              onChanged: (value) =>
+                                  setState(() => _toDrop = value),
+                              colours: colours,
+                            ),
+                          _RowAction(
+                            icon: Icons.delete_outline,
+                            tooltip: l10n.inventoryDrop,
+                            onPressed: () => widget.onDrop!(line, toDrop),
+                            colours: colours,
+                          ),
+                        ],
                       ],
-                    ],
-                  ),
+                    ),
                 ],
               ),
             ],
@@ -965,6 +1015,24 @@ class _ItemRowState extends State<_ItemRow> {
           // \u26a0\ufe0f The piece, not the item id. Found on a phone: a tin opened
           // out of a stack of four leaves a part-eaten one beside three whole
           // ones, and matching by id drew the same bar under both rows.
+          // §18.6, §2.1a.3: the multitool, under the thing it is opening.
+          //
+          // ⚠️ The bar belongs here rather than on the bench screen, because
+          // this is where the player is looking: they tapped a row, and the
+          // row is what has to answer. The same piece is locked while it runs,
+          // so a rifle being taken apart cannot be worn and fired.
+          if (widget.craftJob != null)
+            ValueListenableBuilder<CarriedItem?>(
+              valueListenable: widget.craftLine ?? const _NoLine(),
+              builder: (context, piece, _) => ValueListenableBuilder<CraftJob?>(
+                valueListenable: widget.craftJob!,
+                builder: (context, job, _) =>
+                    job == null || piece == null || !identical(piece, line)
+                    ? const SizedBox.shrink()
+                    : _CraftRunning(job: job, colours: colours),
+              ),
+            ),
+
           if (widget.action != null)
             ValueListenableBuilder<CarriedItem?>(
               // Listened to as well as read: which piece is in hand changes
@@ -1218,4 +1286,84 @@ class _Empty extends StatelessWidget {
       ],
     ),
   );
+}
+
+/// §18.6, §2.1a.3: the bench, under the row it is holding.
+///
+/// ⚠️ Its own clock. The job is a row in a database with a deadline on it,
+/// not a ticking notifier — nothing pushes an update every second, so a bar
+/// drawn from it would sit perfectly still for a quarter of an hour and read
+/// as broken.
+class _CraftRunning extends StatefulWidget {
+  const _CraftRunning({required this.job, required this.colours});
+
+  final CraftJob job;
+  final HudColors colours;
+
+  @override
+  State<_CraftRunning> createState() => _CraftRunningState();
+}
+
+class _CraftRunningState extends State<_CraftRunning> {
+  Timer? _tick;
+
+  @override
+  void initState() {
+    super.initState();
+    _tick = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _tick?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final now = DateTime.now().toUtc();
+    final left = widget.job.remainingAt(now);
+    final l10n = L10n.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 6),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.handyman, size: 13, color: widget.colours.data),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  l10n.craftTakeApartRunning,
+                  style: TextStyle(fontSize: 11, color: widget.colours.muted),
+                ),
+              ),
+              Text(
+                left.inMinutes >= 1
+                    ? '${left.inMinutes}′ ${left.inSeconds % 60} s'
+                    : '${left.inSeconds} s',
+                style: TextStyle(
+                  fontSize: 11,
+                  color: widget.colours.data,
+                  fontFamily: kDataFont,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 3),
+          LinearProgressIndicator(
+            value: widget.job.progressAt(now),
+            minHeight: 3,
+            backgroundColor: widget.colours.muted.withValues(alpha: 0.25),
+            color: widget.colours.data,
+          ),
+        ],
+      ),
+    );
+  }
 }

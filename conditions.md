@@ -1003,6 +1003,24 @@ if craft_started
 if dismantle_started
     then item removed from pack immediately      // ⚠️ §18.6. Przedmiot znika w chwili startu. Zostawiony w plecaku pozwalałby strzelać z karabinka przez ten kwadrans, który zajmuje jego rozebranie.
 
+if dismantle_running
+    then item stays in pack, locked              // ⚠️ Zmiana wobec pierwszej wersji: przedmiot nie znika na starcie, tylko zostaje zablokowany. Pasek musi być pod czymś, a rzecz, która znika na kwadrans, nie zostawia gdzie go narysować. Blokada załatwia drugą połowę: zablokowanego nie da się założyć, zjeść, wyrzucić ani odłożyć na półkę — więc karabinek w rozbiórce nie strzela.
+
+if dismantle_target is worn
+    then dismantle := refused                    // Rozbiera się z plecaka, nigdy z ciała. Broń w rękach to dokładnie ten przypadek, który blokada ma zamknąć.
+
+if dismantle_running
+    then progress bar drawn under that row       // Pod wierszem, który gracz kliknął, nie na ekranie wytwarzania. Tam patrzy.
+
+if two identical items and one on bench
+    then bar under that piece only               // §4.7. Ta sztuka, nie to id. Dwa karabinki w plecaku to dwa karabinki — ten sam błąd, który raz już narysował pasek pod nadgryzioną i pełną puszką naraz.
+
+if player at main shelter site
+    then shelf glyph shown in pack               // §18.2. Jedno tapnięcie zamiast wejścia w półki — ekran półek służy do *wyjmowania*, a odłożenie czterech rzeczy przez niego to cztery kursy.
+
+if player away from shelter
+    then shelf glyph absent                      // Nieobecny, nie wyszarzony. Półki albo są w zasięgu ręki, albo są zupełnie gdzie indziej.
+
 if craft_job_running and player_leaves_shelter
     then job continues                           // §2.1a.3. Zegar ścienny, nie pasek. 45-minutowy plecak to coś, po co się wraca — i dlatego jest wiersz w bazie, a nie pole w pamięci.
 

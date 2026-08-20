@@ -488,6 +488,7 @@
   "craftTitle": "Making",
   "craftBenchFree": "Nothing on it",
   "craftTakeApart": "Take apart",
+  "craftTakeApartRunning": "Taking it apart",
   "craftDone": "Finished on the bench.",
   "craftDismantleWarning": "It will not come back. You get: {gives}. {minutes} minutes.",
   "@craftDismantleWarning": { "placeholders": { "gives": { "type": "String" }, "minutes": { "type": "int" } } },

@@ -410,6 +410,7 @@
   "craftTitle": "Wytwarzanie",
   "craftBenchFree": "Nic w robocie",
   "craftTakeApart": "Rozbierz",
+  "craftTakeApartRunning": "Rozbiórka w toku",
   "craftDone": "Gotowe.",
   "craftDismantleWarning": "Nie wróci. Zostanie: {gives}. {minutes} minut.",
   "@craftDismantleWarning": { "placeholders": { "gives": { "type": "String" }, "minutes": { "type": "int" } } },

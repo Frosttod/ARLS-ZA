@@ -1271,6 +1271,9 @@ class L10nEn extends L10n {
   String get craftTakeApart => 'Take apart';
 
   @override
+  String get craftTakeApartRunning => 'Taking it apart';
+
+  @override
   String get craftDone => 'Finished on the bench.';
 
   @override

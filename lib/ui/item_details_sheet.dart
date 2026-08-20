@@ -41,6 +41,17 @@ Future<void> showItemDetails(
   void Function(CarriedItem line, CarriedItem attachment)? onAttach,
   void Function(CarriedItem line, String attachmentId)? onDetach,
 
+  /// §18.6, §18.2, §4.8: the three things somebody decides here.
+  ///
+  /// The sheet is where a player works out whether a thing is worth its
+  /// weight. Deciding it is not and then having to close the sheet, find the
+  /// row again and hunt for the right glyph is the answer arriving three taps
+  /// after the question. Null for anything not offered — an absent control
+  /// beats a dead one.
+  void Function(CarriedItem line)? onDismantle,
+  void Function(CarriedItem line)? onStash,
+  void Function(CarriedItem line)? onDrop,
+
   /// Whether this piece is one the player is carrying.
   ///
   /// False for anything being looked at from outside the pack — a pile on the
@@ -162,6 +173,47 @@ Future<void> showItemDetails(
                   ),
                 ),
                 const SizedBox(height: 8),
+
+                // ⚠️ Away from the others, on the left, with the harmless
+                // buttons on the right. Two of these three destroy or give
+                // away the thing being looked at, and a thumb that has just
+                // read a number should not find them where "OK" was a moment
+                // ago on the previous sheet.
+                Row(
+                  children: [
+                    if (onDismantle != null)
+                      _QuickAction(
+                        icon: Icons.handyman,
+                        tooltip: l10n.craftTakeApart,
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          onDismantle(line);
+                        },
+                        colours: colours,
+                      ),
+                    if (onStash != null)
+                      _QuickAction(
+                        icon: Icons.inventory_2,
+                        tooltip: l10n.stashStore,
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          onStash(line);
+                        },
+                        colours: colours,
+                      ),
+                    if (onDrop != null)
+                      _QuickAction(
+                        icon: Icons.file_download,
+                        tooltip: l10n.inventoryDrop,
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          onDrop(line);
+                        },
+                        colours: colours,
+                      ),
+                  ],
+                ),
+
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
@@ -675,3 +727,28 @@ List<ItemDefinition> _partsOf(CarriedItem line, ItemCatalogue catalogue) => [
   for (final id in line.attachments)
     if (catalogue[id] != null) catalogue[id]!,
 ];
+
+/// One of the three decisions the sheet lets somebody act on (§18.6, §18.2,
+/// §4.8).
+class _QuickAction extends StatelessWidget {
+  const _QuickAction({
+    required this.icon,
+    required this.tooltip,
+    required this.onPressed,
+    required this.colours,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onPressed;
+  final HudColors colours;
+
+  @override
+  Widget build(BuildContext context) => IconButton(
+    onPressed: onPressed,
+    icon: Icon(icon, size: 20),
+    tooltip: tooltip,
+    color: colours.muted,
+    visualDensity: VisualDensity.compact,
+  );
+}

@@ -2353,6 +2353,12 @@ abstract class L10n {
   /// **'Take apart'**
   String get craftTakeApart;
 
+  /// No description provided for @craftTakeApartRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Taking it apart'**
+  String get craftTakeApartRunning;
+
   /// No description provided for @craftDone.
   ///
   /// In en, this message translates to:
