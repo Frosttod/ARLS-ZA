@@ -29,6 +29,7 @@ import 'combat/magazine.dart';
 import 'craft/craft_job.dart';
 import 'craft/craft_store.dart';
 import 'craft/item_recipe.dart';
+import 'ui/action_strip.dart';
 import 'ui/craft_screen.dart';
 import 'combat/magazine_item.dart';
 import 'combat/weapon_load.dart';
@@ -776,6 +777,12 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+
+    // ⚠️ The strip under the stats reads the bench, and the bench is written
+    // from outside setState — by a job finishing on the way into the app, by a
+    // stop, by a pause. Without this the bar for a dismantling appeared only
+    // when something else happened to rebuild the tree.
+    _craftJob.addListener(_onBenchChanged);
     // The HUD bars and the search panel read the inventory too, so this tree
     // follows the same notifier the screen does.
     _inventory.addListener(_onInventoryChanged);
@@ -3376,6 +3383,127 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     await _reloadCraftJob();
   }
 
+  /// §2.1a, §12: everything with a clock on it, in the one strip under the
+  /// stats — and every line of it stoppable.
+  ///
+  /// Ordered by how urgent it is to the person holding the phone: a search or
+  /// a reload is happening to them now, a bench job is happening to their
+  /// afternoon.
+  Widget? _running() {
+    final search = _search.value;
+    final reload = _reload;
+    final job = _craftJob.value;
+    final l10n = L10n.of(context);
+
+    final lines = <RunningAction>[
+      if (reload != null)
+        RunningAction(
+          icon: Icons.autorenew,
+          label: _reloadProgress()?.label ?? l10n.combatReload,
+          startedAt: reload.readyAt.subtract(reload.total),
+          readyAt: reload.readyAt,
+          // §5.5.4 already lets a body within five metres break a reload.
+          // Somebody choosing to break their own is the same thing, and the
+          // rounds have not moved yet — nothing is lost by stopping.
+          onStop: _endReload,
+        ),
+      if (job != null)
+        RunningAction(
+          icon: Icons.handyman,
+          label: _jobLabel(job),
+          startedAt: job.startedAt,
+          readyAt: job.readyAt,
+          onStop: () => unawaited(_cancelCraft()),
+          note: job.isSalvage
+              ? l10n.craftStopKeepsWork
+              : l10n.craftCancelWarning,
+        ),
+    ];
+
+    final build = BuildProgress.of(
+      _shelters.value,
+      _standingAt.value,
+      DateTime.now().toUtc(),
+      onStop: (place) => unawaited(_confirmCancelBuild(place)),
+    );
+
+    if (search == null || !search.isRunning) {
+      if (lines.isEmpty && build == null) return null;
+
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (lines.isNotEmpty) ActionStrip(actions: lines),
+          ?build,
+        ],
+      );
+    }
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ActionProgress(search: search, onCancel: _cancelSearch),
+        if (lines.isNotEmpty) ActionStrip(actions: lines),
+        ?build,
+      ],
+    );
+  }
+
+  void _onBenchChanged() {
+    if (mounted) setState(() {});
+  }
+
+  /// §18.2: gives up on a build, having said what that costs.
+  ///
+  /// The same question the shelter screen asks, asked from the map — because
+  /// the map is where the bar is, and a bar with a stop on it that quietly
+  /// destroyed three hours of work and a pack of timber would be worse than
+  /// no stop at all.
+  Future<void> _confirmCancelBuild(Shelter place) async {
+    final l10n = L10n.of(context);
+
+    final sure = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.shelterCancelTitle),
+        content: Text(
+          place.building != null
+              ? l10n.shelterCancelModuleWhat
+              : place.kind == ShelterKind.main
+              ? l10n.shelterCancelShelterWhat
+              : l10n.shelterCancelCampWhat,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.shelterCancelKeep),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(l10n.shelterCancelConfirm),
+          ),
+        ],
+      ),
+    );
+
+    if (sure ?? false) await _cancelBuild(place);
+  }
+
+  /// What the bench is doing, in the player's words.
+  String _jobLabel(CraftJob job) {
+    final l10n = L10n.of(context);
+    if (job.isSalvage) {
+      return l10n.craftTakingApart(_nameOfId(job.salvageItemId!));
+    }
+
+    final recipe = _recipes.recipes
+        .where((entry) => entry.id == job.recipeId)
+        .firstOrNull;
+    return recipe == null
+        ? l10n.craftTitle
+        : l10n.craftMaking(_nameOfId(recipe.output));
+  }
+
   /// §18.6: stops taking something apart, and remembers how far it got.
   ///
   /// ⚠️ The piece does **not** come back whole. It has been opened up, and
@@ -4999,6 +5127,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     _dropped.dispose();
     _standingAt.dispose();
     _reloadTimer?.cancel();
+    _craftJob.removeListener(_onBenchChanged);
     _craftJob.dispose();
     _dismantling.dispose();
     _usingLine.dispose();
@@ -5085,16 +5214,15 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
             // §4.6, §10.2, §8.3: the bar for whatever is running, at the top.
             // Eating and building are the same thing from the player's side —
             // something they are waiting on — so they share the one slot.
-            progress: _search.value != null && _search.value!.isRunning
-                ? ActionProgress(
-                    search: _search.value!,
-                    onCancel: _cancelSearch,
-                  )
-                : BuildProgress.of(
-                    _shelters.value,
-                    _standingAt.value,
-                    DateTime.now().toUtc(),
-                  ),
+            // ⚠️ Everything running, stacked, and every line with a way out.
+            //
+            // It used to be one slot showing whichever of two things it liked
+            // best. A magazine change had its bar at the bottom of the screen
+            // and a dismantling had one on a screen the player was not looking
+            // at — which is the same failure three field reports have already
+            // described as "it does not work": it was working, and there was
+            // no way to tell.
+            progress: _running(),
             searchPanel: snapshot == null
                 ? null
                 : Builder(

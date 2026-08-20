@@ -1277,6 +1277,10 @@ class L10nPl extends L10n {
   String get craftStop => 'Przerwij';
 
   @override
+  String get craftStopKeepsWork =>
+      'Przerwanie zachowuje pracę. Przedmiot zostaje rozebrany.';
+
+  @override
   String get craftStopped => 'Przerwane. To, co zrobione, zostaje.';
 
   @override

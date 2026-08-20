@@ -2365,6 +2365,12 @@ abstract class L10n {
   /// **'Stop'**
   String get craftStop;
 
+  /// No description provided for @craftStopKeepsWork.
+  ///
+  /// In en, this message translates to:
+  /// **'Stopping keeps the work. The piece stays open.'**
+  String get craftStopKeepsWork;
+
   /// No description provided for @craftStopped.
   ///
   /// In en, this message translates to:

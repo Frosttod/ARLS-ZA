@@ -1277,6 +1277,10 @@ class L10nEn extends L10n {
   String get craftStop => 'Stop';
 
   @override
+  String get craftStopKeepsWork =>
+      'Stopping keeps the work. The piece stays open.';
+
+  @override
   String get craftStopped => 'Stopped. What was done is done.';
 
   @override

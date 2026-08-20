@@ -412,6 +412,7 @@
   "craftTakeApart": "Rozbierz",
   "craftPartlyApart": "częściowo rozebrany",
   "craftStop": "Przerwij",
+  "craftStopKeepsWork": "Przerwanie zachowuje pracę. Przedmiot zostaje rozebrany.",
   "craftStopped": "Przerwane. To, co zrobione, zostaje.",
   "craftTakeApartRunning": "Rozbiórka w toku",
   "craftDone": "Gotowe.",

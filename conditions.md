@@ -961,6 +961,27 @@ telemetry := never leaves the device             // §16.5 dopuszcza zagregowan�
 
 ---
 
+## Akcje w toku (§2.1a, §12)
+
+```
+if any_action_running
+    then shown in one strip under the stats GUI  // ⚠️ Reguła bezwzględna. Gracz idzie z telefonem w ręku. Akcja, której jedynym śladem jest ekran, na który trzeba wejść — warsztat, schron, plecak — to akcja, której nie widać w trakcie gry i z której nie da się wyjść, kiedy coś wychodzi zza rogu.
+
+if any_action_running
+    then it can be stopped from that strip       // Bez wyjątków. Jeśli czegoś nie da się przerwać, to nie powinno tam być.
+
+if two actions running
+    then both lines drawn                        // Wcześniej było jedno miejsce pokazujące to, co samo wybrało. Przeładowanie i rozbiórka mogą iść naraz, a mówiła o sobie tylko jedna.
+
+actions in strip: przeszukanie · użycie przedmiotu · przeładowanie · magazynek · wytwarzanie · rozbiórka · budowa
+                                                 // Dodanie nowej akcji z zegarem znaczy dodanie jej tutaj, w tym samym commicie.
+
+if action not applicable to item
+    then no button at all                        // ⚠️ Nieobecny, nie wyszarzony. Martwy przycisk czyta się jako zepsuty — i tak było czytane trzy razy: wymagania schronu (szare = wyłączone), ikona rozbiórki na siekierze, ikona przeładowania bez magazynka. Pytanie brzmi zawsze "czy to teraz zadziała", zadane tą samą funkcją, która ma to zrobić.
+```
+
+---
+
 ## Wytwarzanie i rozbiórka (§18.3, §18.4, §18.6)
 
 ```

@@ -771,19 +771,35 @@ String _short(Duration time) {
 /// the work is not happening, and a bar that crept along in a bus would be a
 /// lie about the one rule this system has.
 class BuildProgress extends StatelessWidget {
-  const BuildProgress({required this.shelter, required this.now, super.key});
+  const BuildProgress({
+    required this.shelter,
+    required this.now,
+    this.onStop,
+    super.key,
+  });
 
   final Shelter shelter;
   final DateTime now;
 
+  /// §12: a way out, from the screen the player is on.
+  ///
+  /// Not a quiet one — the caller asks first, because §18.2's materials are
+  /// already in the frame and nothing gives them back.
+  final void Function(Shelter place)? onStop;
+
   /// The bar worth drawing here, or null when nothing is going up.
-  static BuildProgress? of(List<Shelter> shelters, GeoPoint? at, DateTime now) {
+  static BuildProgress? of(
+    List<Shelter> shelters,
+    GeoPoint? at,
+    DateTime now, {
+    void Function(Shelter place)? onStop,
+  }) {
     if (at == null) return null;
 
     for (final place in shelters) {
       if (!place.atSite(at)) continue;
       if (!place.isReadyAt(now) || place.building != null) {
-        return BuildProgress(shelter: place, now: now);
+        return BuildProgress(shelter: place, now: now, onStop: onStop);
       }
     }
     return null;
@@ -836,6 +852,17 @@ class BuildProgress extends StatelessWidget {
                     fontFeatures: const [FontFeature.tabularFigures()],
                   ),
                 ),
+                // §12: a way out of this, from the screen the player is on.
+                if (onStop != null)
+                  IconButton(
+                    onPressed: () => onStop!(shelter),
+                    icon: const Icon(Icons.stop_circle_outlined, size: 18),
+                    tooltip: l10n.shelterCancel,
+                    color: colours.muted,
+                    visualDensity: VisualDensity.compact,
+                    constraints: const BoxConstraints(),
+                    padding: const EdgeInsets.only(left: 8),
+                  ),
               ],
             ),
             const SizedBox(height: 4),
