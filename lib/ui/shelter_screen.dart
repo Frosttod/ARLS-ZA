@@ -19,6 +19,7 @@ import '../shelter/shelter.dart';
 import 'fonts.dart';
 import '../craft/craft_job.dart';
 import 'hud.dart' show HudColors;
+import 'units.dart';
 
 class ShelterScreen extends StatefulWidget {
   const ShelterScreen({
@@ -754,14 +755,8 @@ String moduleWhat(L10n l10n, ShelterModule module) => switch (module) {
 /// A counter reading "12 min" for sixty seconds at a stretch looks stopped,
 /// and this screen is watched precisely when somebody is wondering whether it
 /// is running at all.
-String _short(Duration time) {
-  final hours = time.inHours;
-  final minutes = time.inMinutes % 60;
-  final seconds = time.inSeconds % 60;
-
-  if (hours > 0) return '$hours h $minutes min';
-  return '$minutes:${seconds.toString().padLeft(2, '0')}';
-}
+/// §12: a clock, like every other span in the game.
+String _short(Duration time) => remaining(time);
 
 /// What is going up right now, under the stats bar on the map (§8.3).
 ///
@@ -928,11 +923,9 @@ class _ShelvesRow extends StatelessWidget {
                 Text(
                   away
                       ? l10n.shelterNotHere
-                      : '${massKg.toStringAsFixed(1)} / '
-                            '${shelter.storageKg.toStringAsFixed(0)} kg'
+                      : '${outOfKg(massKg, shelter.storageKg)}'
                             '   ·   '
-                            '${volumeL.toStringAsFixed(0)} / '
-                            '${shelter.storageL.toStringAsFixed(0)} l',
+                            '${outOfL(volumeL, shelter.storageL)}',
                   style: TextStyle(
                     fontSize: 11,
                     color: colours.muted,

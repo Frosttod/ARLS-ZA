@@ -19,6 +19,7 @@ import '../items/item.dart';
 import '../items/item_catalogue.dart';
 import '../l10n/app_localizations.dart';
 import 'fonts.dart';
+import 'units.dart';
 import 'hud.dart' show HudColors;
 
 class CraftScreen extends StatelessWidget {
@@ -182,11 +183,7 @@ class _Running extends StatelessWidget {
     );
   }
 
-  String _saidAs(Duration left) {
-    if (left.inHours >= 1) return '${left.inHours} h ${left.inMinutes % 60}′';
-    if (left.inMinutes >= 1) return '${left.inMinutes}′';
-    return '${left.inSeconds} s';
-  }
+  String _saidAs(Duration left) => remaining(left);
 }
 
 class _RecipeRow extends StatelessWidget {
@@ -237,7 +234,7 @@ class _RecipeRow extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  '${work.inMinutes}′',
+                  remaining(work),
                   style: TextStyle(
                     fontSize: 13,
                     color: colours.muted,

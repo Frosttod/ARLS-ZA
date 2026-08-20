@@ -13,6 +13,7 @@ library;
 import 'package:flutter/material.dart';
 
 import 'fonts.dart';
+import 'units.dart';
 import '../combat/ballistics.dart';
 import '../l10n/app_localizations.dart';
 import '../sim/body.dart';
@@ -74,9 +75,7 @@ class ProfileScreen extends StatelessWidget {
           ),
           _Line(
             label: l10n.profileCarry,
-            value:
-                '${body.carryComfortKg.toStringAsFixed(1)} / '
-                '${body.carryMaxKg.toStringAsFixed(1)} kg',
+            value: outOfKg(body.carryComfortKg, body.carryMaxKg),
             colours: colours,
           ),
           _Line(

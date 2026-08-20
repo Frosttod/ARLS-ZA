@@ -961,6 +961,30 @@ telemetry := never leaves the device             // §16.5 dopuszcza zagregowan�
 
 ---
 
+## Liczby i czas na ekranie (§12)
+
+```
+every measurement := X.XX + jednostka                // ⚠️ Jedno miejsce (`lib/ui/units.dart`), bo grę czytaną w marszu czyta się rzutem oka. Wcześniej każdy ekran decydował sam: plecak pisał `0.15 kg` obok `1.4 kg`, półki `12 l` obok `1.35 l` i nic się nie zgadzało w kolumnie.
+
+every span := zegar, nigdy ułamek godziny        // ⚠️ "11.8 h długu" to liczba, na której nie da się nic zrobić — jedenaście godzin i ile minut? Siedziało to na ekranie tygodniami. `11:45` to ten sam fakt w formie, którą czyta każdy.
+
+if span > 24h
+    then hours keep counting                     // Dług 31 godzin to `31:20`, nie `7:20`. Zawinięcie na dobie mówiłoby coś odwrotnego niż prawda.
+
+if countdown < 1h
+    then MM:SS else H:MM                         // Pod godziną sekundy są sensem rzeczy — przeładowanie trwa trzy. Powyżej są szumem na pasku sprawdzanym dwa razy na godzinę.
+
+time of day := HH:MM, zegar 24h, lokalny          // Gracz czyta to naprzeciw własnego okna.
+
+running action label := czasownik + nazwa przedmiotu
+                                                 // §12. "jedzenie" mówi, jakiego rodzaju rzecz się dzieje. "Jesz: Kanapka" mówi, co się kliknęło i ile to kosztuje — a o to pyta ktoś, kto zerka na telefon w marszu.
+
+if craft_job_running and player opens shelves
+    then job shown there too                     // Półki to miejsce, w którym się stoi, czekając na warsztat — weszło się odłożyć rzeczy *dlatego*, że włócznia się robi.
+```
+
+---
+
 ## Akcje w toku (§2.1a, §12)
 
 ```

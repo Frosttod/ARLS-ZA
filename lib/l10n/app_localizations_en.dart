@@ -1265,6 +1265,31 @@ class L10nEn extends L10n {
   String get craftTitle => 'Making';
 
   @override
+  String actionEating(String item) {
+    return 'Eating: $item';
+  }
+
+  @override
+  String actionDrinking(String item) {
+    return 'Drinking: $item';
+  }
+
+  @override
+  String actionUsing(String item) {
+    return 'Using: $item';
+  }
+
+  @override
+  String actionLoading(String item) {
+    return 'Loading: $item';
+  }
+
+  @override
+  String actionUnloading(String item) {
+    return 'Unloading: $item';
+  }
+
+  @override
   String get craftBenchFree => 'Nothing on it';
 
   @override

@@ -122,8 +122,8 @@ void main() {
     await pump(tester, inventory);
 
     // 4 x 2.0 kg plus the 0.9 kg pack, against 44 kg of limit; 16 l of 45.
-    expect(find.text('8.9 / 44 kg'), findsOneWidget);
-    expect(find.text('16.0 / 45 l'), findsOneWidget);
+    expect(find.text('8.90 / 44.00 kg'), findsOneWidget);
+    expect(find.text('16.00 / 45.00 l'), findsOneWidget);
   });
 
   testWidgets('every line carries its own mass and bulk', (tester) async {
@@ -151,7 +151,7 @@ void main() {
     expect(find.text('NA SOBIE'), findsOneWidget);
     expect(find.text('Kurtka zimowa'), findsOneWidget);
     // Worn, so it is not in the pack and the bulk gauge stays at zero.
-    expect(find.text('0.0 / 45 l'), findsOneWidget);
+    expect(find.text('0.00 / 45.00 l'), findsOneWidget);
   });
 
   testWidgets('an overloaded pack says what it costs, not just in colour', (

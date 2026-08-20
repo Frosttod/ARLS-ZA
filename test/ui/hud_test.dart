@@ -105,7 +105,9 @@ void main() {
 
     expect(find.textContaining('ml'), findsNWidgets(2));
     expect(find.textContaining('kcal'), findsOneWidget);
-    expect(find.textContaining('h'), findsWidgets);
+    // §12: sleep is a clock, not a decimal. "11.8 h" is a figure nobody can
+    // act on — eleven hours and how many minutes? — so the debt reads 11:45.
+    expect(find.textContaining(':'), findsWidgets);
   });
 
   testWidgets('shock raises a named status, not just a colour (§12)', (
@@ -344,7 +346,7 @@ void main() {
       // up. The comfortable load is a mark on it, not its end.
       await pumpHud(tester, healthy(), carriedKg: 18);
 
-      expect(find.text('18.0 / 36 kg'), findsOneWidget);
+      expect(find.text('18.00 / 36.00 kg'), findsOneWidget);
     });
 
     testWidgets('bulk is shown beside it, because neither predicts the other', (
@@ -352,7 +354,7 @@ void main() {
     ) async {
       await pumpHud(tester, healthy(), carriedVolumeL: 40, capacityL: 65);
 
-      expect(find.text('40 / 65 l'), findsOneWidget);
+      expect(find.text('40.00 / 65.00 l'), findsOneWidget);
     });
 
     testWidgets('shock lowers the carry limit it displays (§2.6)', (
@@ -364,8 +366,10 @@ void main() {
         carriedKg: 18,
       );
 
-      // Class II costs a tenth of the carry load: 36 kg becomes 32.4 kg.
-      expect(find.text('18.0 / 32 kg'), findsOneWidget);
+      // Class II costs a tenth of the carry load: 36 kg becomes 32.4 kg — and
+      // §12's two decimals are what let a player see the 0.4 at all. The old
+      // whole-kilogram limit rounded it away and read as 32.
+      expect(find.text('18.00 / 32.40 kg'), findsOneWidget);
     });
 
     testWidgets('a pack with no room is legible without reading the colour', (
@@ -374,8 +378,8 @@ void main() {
       // §12: colour never carries information on its own.
       await pumpHud(tester, healthy(), carriedVolumeL: 65, capacityL: 65);
 
-      expect(find.text('65 / 65 l'), findsOneWidget);
-      expect(find.bySemanticsLabel(RegExp('65 of 65 litres')), findsOneWidget);
+      expect(find.text('65.00 / 65.00 l'), findsOneWidget);
+      expect(find.bySemanticsLabel(RegExp('65.00 of 65.00 litres')), findsOneWidget);
     });
   });
 
@@ -548,7 +552,7 @@ void main() {
     testWidgets('a rested character owes nothing', (tester) async {
       await pumpHud(tester, healthy());
 
-      expect(find.text('0.0 h'), findsOneWidget);
+      expect(find.text('0:00'), findsOneWidget);
     });
 
     testWidgets('and a tired one is told how much', (tester) async {
@@ -559,7 +563,7 @@ void main() {
         ),
       );
 
-      expect(find.text('−5.0 h'), findsOneWidget);
+      expect(find.text('−5:00'), findsOneWidget);
     });
 
     testWidgets('past a night the number still moves, though the bar cannot', (
@@ -573,7 +577,7 @@ void main() {
           sleepDebtSeconds: const Duration(hours: 20).inSeconds,
         ),
       );
-      expect(find.text('−20.0 h'), findsOneWidget);
+      expect(find.text('−20:00'), findsOneWidget);
 
       await pumpHud(
         tester,
@@ -581,7 +585,7 @@ void main() {
           sleepDebtSeconds: const Duration(hours: 12).inSeconds,
         ),
       );
-      expect(find.text('−12.0 h'), findsOneWidget);
+      expect(find.text('−12:00'), findsOneWidget);
     });
   });
 }

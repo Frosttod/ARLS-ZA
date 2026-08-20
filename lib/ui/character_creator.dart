@@ -14,6 +14,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'fonts.dart';
+import 'units.dart';
 import '../l10n/app_localizations.dart';
 import '../sim/body.dart';
 
@@ -472,11 +473,11 @@ class _ComputedSummary extends StatelessWidget {
             ),
             _Row(
               label: l10n.carryComfort,
-              value: l10n.unitKg(profile.carryComfortKg.toStringAsFixed(1)),
+              value: l10n.unitKg(amount(profile.carryComfortKg)),
             ),
             _Row(
               label: l10n.carryMax,
-              value: l10n.unitKg(profile.carryMaxKg.toStringAsFixed(1)),
+              value: l10n.unitKg(amount(profile.carryMaxKg)),
             ),
             _Row(
               label: l10n.maxHeartRate,

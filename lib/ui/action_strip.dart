@@ -18,6 +18,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'fonts.dart';
+import 'units.dart';
 import 'hud.dart' show HudColors;
 
 /// One thing under way.
@@ -189,12 +190,6 @@ class _ActionLine extends StatelessWidget {
     );
   }
 
-  /// Hours where there are hours, and seconds where the difference matters.
-  static String _said(Duration left) {
-    if (left.inHours >= 1) return '${left.inHours} h ${left.inMinutes % 60}′';
-    if (left.inMinutes >= 1) {
-      return '${left.inMinutes}′ ${(left.inSeconds % 60).toString().padLeft(2, '0')}';
-    }
-    return '${left.inSeconds} s';
-  }
+  /// A clock, like everything else that measures a span (§12).
+  static String _said(Duration left) => remaining(left);
 }

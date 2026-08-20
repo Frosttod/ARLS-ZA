@@ -81,7 +81,7 @@ void main() {
       await pump(tester);
 
       // With a hammer: three hours less thirty-five per cent.
-      expect(find.textContaining('1 h 57 min'), findsOneWidget);
+      expect(find.textContaining('1:57'), findsOneWidget);
     });
 
     testWidgets('and nothing can be started without a position', (
@@ -107,7 +107,7 @@ void main() {
       expect(find.text('50 m'), findsOneWidget);
       expect(find.text('100%'), findsOneWidget);
       // The shelves row carries it now, with how much is used.
-      expect(find.textContaining('/ 100 kg'), findsOneWidget);
+      expect(find.textContaining('/ 100.00 kg'), findsOneWidget);
     });
 
     testWidgets('every module is shown, built or not (§8.4)', (tester) async {
@@ -160,7 +160,7 @@ void main() {
         ],
       );
 
-      expect(find.textContaining('/ 150 kg'), findsOneWidget);
+      expect(find.textContaining('/ 150.00 kg'), findsOneWidget);
       expect(find.text('115%'), findsOneWidget);
     });
   });

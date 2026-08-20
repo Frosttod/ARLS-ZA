@@ -24,6 +24,7 @@ import 'package:flutter/material.dart';
 
 import '../craft/craft_job.dart';
 import 'fonts.dart';
+import 'units.dart';
 import '../devtools/dev_mode.dart';
 import '../inventory/body_slots.dart';
 import '../inventory/inventory.dart';
@@ -561,7 +562,7 @@ class _SlotRow extends StatelessWidget {
             ),
             if (definition != null)
               Text(
-                '${worn!.massKg(definition, catalogue: catalogue).toStringAsFixed(1)} kg',
+                kilograms(worn!.massKg(definition, catalogue: catalogue)),
                 style: TextStyle(fontSize: 11, color: colours.data),
               ),
             if (worn != null && onTakeOff != null)
@@ -601,8 +602,7 @@ class _Limits extends StatelessWidget {
       Expanded(
         child: _Gauge(
           label: massLabel,
-          value:
-              '${massKg.toStringAsFixed(1)} / ${maxKg.toStringAsFixed(0)} kg',
+          value: outOfKg(massKg, maxKg),
           fraction: maxKg > 0 ? massKg / maxKg : 0,
           markAt: maxKg > 0 ? comfortKg / maxKg : null,
           warning: massKg > comfortKg,
@@ -612,8 +612,7 @@ class _Limits extends StatelessWidget {
       Expanded(
         child: _Gauge(
           label: bulkLabel,
-          value:
-              '${volumeL.toStringAsFixed(1)} / ${capacityL.toStringAsFixed(0)} l',
+          value: outOfL(volumeL, capacityL),
           fraction: capacityL > 0 ? volumeL / capacityL : 0,
           warning: capacityL > 0 && volumeL > capacityL * 0.9,
         ),
@@ -948,8 +947,7 @@ class _ItemRowState extends State<_ItemRow> {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    '${mass.toStringAsFixed(mass < 1 ? 2 : 1)} kg  \u00b7  '
-                    '${volume.toStringAsFixed(volume < 1 ? 2 : 1)} l',
+                    '${kilograms(mass)}  ·  ${litres(volume)}',
                     style: TextStyle(fontSize: 11, color: colours.data),
                   ),
                   const SizedBox(height: 2),
@@ -1494,9 +1492,7 @@ class _CraftRunningState extends State<_CraftRunning> {
                 ),
               ),
               Text(
-                left.inMinutes >= 1
-                    ? '${left.inMinutes}′ ${left.inSeconds % 60} s'
-                    : '${left.inSeconds} s',
+                remaining(left),
                 style: TextStyle(
                   fontSize: 11,
                   color: widget.colours.data,

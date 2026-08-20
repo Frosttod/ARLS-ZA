@@ -19,6 +19,7 @@ import '../l10n/app_localizations.dart';
 import '../loot/dropped_items.dart';
 import '../map/geometry.dart';
 import 'hud.dart' show HudColors;
+import 'units.dart';
 
 Future<void> showGroundItems(
   BuildContext context, {
@@ -193,7 +194,7 @@ class _PileRow extends StatelessWidget {
             ),
           ),
           Text(
-            '${mass.toStringAsFixed(mass < 1 ? 2 : 1)} kg',
+            kilograms(mass),
             style: TextStyle(fontSize: 11, color: colours.data),
           ),
           TextButton(onPressed: onTake, child: Text(takeLabel)),

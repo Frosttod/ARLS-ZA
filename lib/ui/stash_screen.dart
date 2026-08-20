@@ -14,10 +14,13 @@ import '../inventory/body_slots.dart';
 import '../inventory/inventory.dart';
 import '../inventory/item_use.dart';
 import '../items/item.dart';
+import '../craft/craft_job.dart';
+import 'action_strip.dart';
 import 'inventory_screen.dart' show PackAction, PackOrder;
 import '../items/item_catalogue.dart';
 import '../shelter/stash.dart';
 import 'fonts.dart';
+import 'units.dart';
 import 'hud.dart' show HudColors;
 import '../l10n/app_localizations.dart';
 
@@ -31,6 +34,9 @@ class StashScreen extends StatelessWidget {
     required this.onStore,
     required this.onTake,
     required this.order,
+    this.job,
+    this.jobLabel,
+    this.onStopJob,
     this.onAct,
     this.onDetails,
     this.canDismantle,
@@ -77,6 +83,16 @@ class StashScreen extends StatelessWidget {
   /// §12: why an action would not work right now, or null.
   final String? Function(CarriedItem line, PackAction action)? refusalOf;
 
+  /// §18.4, §12: what the bench is doing, said here too.
+  ///
+  /// ⚠️ The shelves are where somebody stands while they are waiting on the
+  /// bench — they came in to put things away *because* a spear is being made —
+  /// so this screen answers the question rather than sending them back out to
+  /// the map to read the strip.
+  final ValueListenable<CraftJob?>? job;
+  final String Function(CraftJob job)? jobLabel;
+  final VoidCallback? onStopJob;
+
   @override
   Widget build(BuildContext context) {
     final l10n = L10n.of(context);
@@ -94,6 +110,30 @@ class StashScreen extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
               children: [
                 _Gauges(stash: shelves, catalogue: catalogue, colours: colours),
+
+                if (job != null)
+                  ValueListenableBuilder<CraftJob?>(
+                    valueListenable: job!,
+                    builder: (context, running, _) => running == null
+                        ? const SizedBox.shrink()
+                        : Padding(
+                            padding: const EdgeInsets.only(top: 12),
+                            child: ActionStrip(
+                              actions: [
+                                RunningAction(
+                                  icon: Icons.handyman,
+                                  label:
+                                      jobLabel?.call(running) ??
+                                      l10n.craftTitle,
+                                  startedAt: running.startedAt,
+                                  readyAt: running.readyAt,
+                                  onStop: onStopJob,
+                                ),
+                              ],
+                            ),
+                          ),
+                  ),
+
                 const SizedBox(height: 18),
 
                 Row(
@@ -227,17 +267,13 @@ class _Gauges extends StatelessWidget {
     children: [
       _Gauge(
         share: stash.massShare(catalogue),
-        value:
-            '${stash.massKg(catalogue).toStringAsFixed(1)} / '
-            '${stash.capacityKg.toStringAsFixed(0)} kg',
+        value: outOfKg(stash.massKg(catalogue), stash.capacityKg),
         colours: colours,
       ),
       const SizedBox(height: 6),
       _Gauge(
         share: stash.volumeShare(catalogue),
-        value:
-            '${stash.volumeL(catalogue).toStringAsFixed(1)} / '
-            '${stash.capacityL.toStringAsFixed(0)} l',
+        value: outOfL(stash.volumeL(catalogue), stash.capacityL),
         colours: colours,
       ),
     ],
@@ -371,8 +407,7 @@ class _LineState extends State<_Line> {
                   ),
                 const SizedBox(height: 2),
                 Text(
-                  '${mass.toStringAsFixed(mass < 1 ? 2 : 1)} kg  ·  '
-                  '${volume.toStringAsFixed(volume < 1 ? 2 : 1)} l',
+                  '${kilograms(mass)}  ·  ${litres(volume)}',
                   style: TextStyle(
                     fontSize: 11,
                     color: colours.muted,

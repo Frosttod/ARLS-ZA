@@ -119,7 +119,7 @@ void main() {
     );
 
     expect(bar.value, 1);
-    expect(find.text('0 s'), findsOneWidget);
+    expect(find.text('00:00'), findsOneWidget);
   });
 
   group('the rule holds in the source', () {

@@ -2341,6 +2341,36 @@ abstract class L10n {
   /// **'Making'**
   String get craftTitle;
 
+  /// No description provided for @actionEating.
+  ///
+  /// In en, this message translates to:
+  /// **'Eating: {item}'**
+  String actionEating(String item);
+
+  /// No description provided for @actionDrinking.
+  ///
+  /// In en, this message translates to:
+  /// **'Drinking: {item}'**
+  String actionDrinking(String item);
+
+  /// No description provided for @actionUsing.
+  ///
+  /// In en, this message translates to:
+  /// **'Using: {item}'**
+  String actionUsing(String item);
+
+  /// No description provided for @actionLoading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading: {item}'**
+  String actionLoading(String item);
+
+  /// No description provided for @actionUnloading.
+  ///
+  /// In en, this message translates to:
+  /// **'Unloading: {item}'**
+  String actionUnloading(String item);
+
   /// No description provided for @craftBenchFree.
   ///
   /// In en, this message translates to:

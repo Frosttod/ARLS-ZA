@@ -1265,6 +1265,31 @@ class L10nPl extends L10n {
   String get craftTitle => 'Wytwarzanie';
 
   @override
+  String actionEating(String item) {
+    return 'Jesz: $item';
+  }
+
+  @override
+  String actionDrinking(String item) {
+    return 'Pijesz: $item';
+  }
+
+  @override
+  String actionUsing(String item) {
+    return 'Używasz: $item';
+  }
+
+  @override
+  String actionLoading(String item) {
+    return 'Ładujesz: $item';
+  }
+
+  @override
+  String actionUnloading(String item) {
+    return 'Rozładowujesz: $item';
+  }
+
+  @override
   String get craftBenchFree => 'Nic w robocie';
 
   @override

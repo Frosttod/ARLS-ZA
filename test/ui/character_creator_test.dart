@@ -63,8 +63,8 @@ void main() {
     expect(find.text('5319 ml'), findsOneWidget);
     expect(find.textContaining('2800 ml'), findsOneWidget);
     expect(find.text('187 bpm'), findsOneWidget);
-    expect(find.text('24.0 kg'), findsOneWidget);
-    expect(find.text('36.0 kg'), findsOneWidget);
+    expect(find.text('24.00 kg'), findsOneWidget);
+    expect(find.text('36.00 kg'), findsOneWidget);
   });
 
   testWidgets('states that the data stays on the device (§1.2)', (

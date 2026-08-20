@@ -12,6 +12,7 @@ library;
 import 'package:flutter/material.dart';
 
 import 'fonts.dart';
+import 'units.dart';
 import '../inventory/inventory.dart' show kPocketCapacityL;
 import '../l10n/app_localizations.dart';
 import 'status_notes.dart';
@@ -703,31 +704,27 @@ class _CarryReadout extends StatelessWidget {
         Expanded(
           child: _LimitBar(
             label: massLabel,
-            value:
-                '${carriedKg.toStringAsFixed(1)} / '
-                '${maxKg.toStringAsFixed(0)} kg',
+            value: outOfKg(carriedKg, maxKg),
             fraction: maxKg > 0 ? carriedKg / maxKg : 0,
             // Where the load stops being free. Drawn rather than described,
             // because the number moves with the pack and with blood loss.
             markAt: maxKg > 0 ? comfortKg / maxKg : null,
             warning: overComfort,
             semantics:
-                '$massLabel ${carriedKg.toStringAsFixed(1)} of '
-                '${maxKg.toStringAsFixed(0)} kilograms',
+                '$massLabel ${amount(carriedKg)} of '
+                '${amount(maxKg)} kilograms',
           ),
         ),
         const SizedBox(width: 12),
         Expanded(
           child: _LimitBar(
             label: bulkLabel,
-            value:
-                '${volumeL.toStringAsFixed(0)} / '
-                '${capacityL.toStringAsFixed(0)} l',
+            value: outOfL(volumeL, capacityL),
             fraction: capacityL > 0 ? volumeL / capacityL : 0,
             warning: capacityL > 0 && volumeL > capacityL * 0.9,
             semantics:
-                '$bulkLabel ${volumeL.toStringAsFixed(0)} of '
-                '${capacityL.toStringAsFixed(0)} litres',
+                '$bulkLabel ${amount(volumeL)} of '
+                '${amount(capacityL)} litres',
           ),
         ),
       ],
@@ -941,9 +938,6 @@ String _grouped(double value) {
 /// was.
 ///
 /// So the number is what is owed, and it moves the moment sleep starts.
-String _sleepOwed(Duration debt) {
-  if (debt <= Duration.zero) return '0.0 h';
-
-  final hours = debt.inMinutes / 60;
-  return '−${hours.toStringAsFixed(1)} h';
-}
+/// ⚠️ A clock, not a decimal. "11.8 h" is a figure nobody can act on —
+/// eleven hours and how many minutes? — and it sat on the screen for weeks.
+String _sleepOwed(Duration debt) => owed(debt);

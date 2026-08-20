@@ -89,6 +89,7 @@ import 'safety/player_safety.dart';
 import 'sim/body.dart';
 import 'sim/death.dart';
 import 'sim/physiology.dart';
+import 'sim/occupation.dart';
 import 'sim/player_stats.dart';
 import 'sim/player_stats_store.dart';
 import 'ui/profile_screen.dart';
@@ -544,7 +545,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         now: DateTime.now().toUtc(),
         itemId: line.itemId,
         duration: fillTime(dry.moved),
-        label: L10n.of(context).magazineFill,
+        label: L10n.of(context).actionLoading(_nameOfId(line.itemId)),
       );
     });
     _startSearchTimer();
@@ -574,7 +575,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         now: DateTime.now().toUtc(),
         itemId: line.itemId,
         duration: fillTime(magazine.rounds),
-        label: L10n.of(context).magazineEmpty,
+        label: L10n.of(context).actionUnloading(_nameOfId(line.itemId)),
       );
     });
     _startSearchTimer();
@@ -1643,10 +1644,31 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         now: DateTime.now().toUtc(),
         itemId: line.itemId,
         duration: Duration(seconds: seconds < 1 ? 1 : seconds),
-        label: use.action.label,
+        // §12: what is being swallowed, by name. "Jedzenie" says what kind
+        // of action it is; "Jesz: Kanapka" says what the player is doing with
+        // the thing they just tapped, which is the question the strip exists
+        // to answer.
+        label: _useLabel(use.action, catalogue[line.itemId]),
       );
     });
     _startSearchTimer();
+  }
+
+  /// §12: the action and the thing it is being done to, in one line.
+  ///
+  /// ⚠️ The item's name, not the kind of action. A strip that says "jedzenie"
+  /// tells a player what sort of thing is happening; one that says "Jesz:
+  /// Kanapka" tells them what they tapped and what it will cost — which is
+  /// what somebody glancing at a phone while walking actually needs.
+  String _useLabel(ActionKind kind, ItemDefinition? item) {
+    final l10n = L10n.of(context);
+    final name = item == null ? '' : _nameOfItem(item);
+
+    return switch (kind) {
+      ActionKind.eating => l10n.actionEating(name),
+      ActionKind.drinking => l10n.actionDrinking(name),
+      _ => l10n.actionUsing(name),
+    };
   }
 
   /// The action finished: the item is gone and the body has it.
@@ -4122,6 +4144,11 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
                     condition: line.condition ?? 100,
                   ).isNotEmpty),
           refusalOf: _shelfRefusal,
+          // §18.4: what the bench is doing, said where the player is standing.
+          // They came in to put things away while a spear is being made.
+          job: _craftJob,
+          jobLabel: _jobLabel,
+          onStopJob: () => unawaited(_cancelCraft()),
         ),
       ),
     );
