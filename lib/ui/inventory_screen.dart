@@ -846,7 +846,7 @@ class _ItemRowState extends State<_ItemRow> {
   /// §18.6: whether this very piece is the one on the bench.
   bool get _busy =>
       widget.craftLine?.value != null &&
-      identical(widget.craftLine!.value, widget.line) &&
+      widget.line.isSame(widget.craftLine!.value) &&
       widget.craftJob?.value != null;
 
   @override
@@ -1173,9 +1173,7 @@ class _ItemRowState extends State<_ItemRow> {
                       ValueListenableBuilder<CraftJob?>(
                         valueListenable: widget.craftJob!,
                         builder: (context, job, _) =>
-                            job == null ||
-                                piece == null ||
-                                !identical(piece, line)
+                            job == null || piece == null || !line.isSame(piece)
                             ? const SizedBox.shrink()
                             : _CraftRunning(
                                 job: job,
@@ -1220,7 +1218,7 @@ class _ItemRowState extends State<_ItemRow> {
   /// id only as a fallback — which is right for a caller that has no way to
   /// say, and wrong the moment two rows share an id.
   bool _isMine(Search running, CarriedItem? using) {
-    if (using != null) return identical(using, widget.line);
+    if (using != null) return widget.line.isSame(using);
     if (widget.usingLine != null) return false;
     return running.usingItemId == widget.line.itemId;
   }

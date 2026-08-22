@@ -123,6 +123,12 @@ class LoadOutcome {
 
 /// True when [line] is one of the pieces [pack] actually holds.
 ///
+/// ⚠️ Kept after §11.1's line names arrived, and deliberately. A name makes a
+/// *rebuilt* copy findable again — which is what it was for — but it does not
+/// make a piece that has been dropped, shelved or eaten reappear. This still
+/// answers the question that matters here: is the thing about to be spent
+/// still in the bag.
+///
 /// ⚠️ Everything here finds its line by identity, and [Inventory.withLine]
 /// quietly returns an unchanged copy when it finds nothing. Handed a stale
 /// handle — one captured before something else rebuilt the pack — a fill spent
@@ -130,10 +136,10 @@ class LoadOutcome {
 /// magazine, and were gone by the next save. Asked first, and refused out loud.
 bool _holds(Inventory pack, CarriedItem line) {
   for (final entry in pack.carried) {
-    if (identical(entry, line)) return true;
+    if (entry.isSame(line)) return true;
   }
   for (final entry in pack.worn) {
-    if (identical(entry, line)) return true;
+    if (entry.isSame(line)) return true;
   }
   return false;
 }
@@ -401,7 +407,7 @@ LoadOutcome emptyMagazine(
   var merged = false;
   final lines = <CarriedItem>[
     for (final line in pack.carried)
-      if (identical(line, magazineLine))
+      if (line.isSame(magazineLine))
         emptied
       else if (!merged && line.itemId == ammo.id && line.rounds == null) ...[
         () {

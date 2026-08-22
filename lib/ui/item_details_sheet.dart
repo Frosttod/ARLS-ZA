@@ -92,7 +92,7 @@ Future<void> showItemDetails(
         // is actually asking is "is this better than mine" — comparing two
         // things in the same pack answers a question nobody has, and comparing
         // the worn one against another worn one answers it twice.
-        final onBody = pack.worn.any((other) => identical(other, current));
+        final onBody = pack.worn.any((other) => other.isSame(current));
         final against = onBody
             ? null
             : _rival(current, item, pack.worn, catalogue);
@@ -253,7 +253,7 @@ CarriedItem? _rival(
   ItemCatalogue catalogue,
 ) {
   for (final other in among) {
-    if (identical(other, line)) continue;
+    if (other.isSame(line)) continue;
     final definition = catalogue[other.itemId];
     if (definition != null && comparable(item, definition)) return other;
   }
@@ -711,7 +711,7 @@ CarriedItem _liveLine(Inventory pack, CarriedItem line, {required bool mine}) {
   final everything = [...pack.worn, ...pack.carried];
 
   for (final entry in everything) {
-    if (identical(entry, line)) return entry;
+    if (entry.isSame(line)) return entry;
   }
 
   // By id only as a fallback, and only for a piece known to be in the pack:

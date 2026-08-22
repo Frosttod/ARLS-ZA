@@ -124,11 +124,8 @@ double searchReachFor(PlaceSize size) => size.reachM;
 /// §10.2 makes the two radii equal, so one function covers both. Call with
 /// `radius: box.reachM` (or `searchReachFor(box.size)`) from the interaction
 /// layer.
-bool isPlayerWithinRadius(
-  GeoPoint playerPos,
-  GeoPoint centre,
-  double radius,
-) => playerPos.distanceTo(centre) <= radius;
+bool isPlayerWithinRadius(GeoPoint playerPos, GeoPoint centre, double radius) =>
+    playerPos.distanceTo(centre) <= radius;
 
 /// A bin, a car, a crate: things reached by hand.
 ///

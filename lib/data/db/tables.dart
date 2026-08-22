@@ -284,6 +284,16 @@ class InventoryLines extends Table {
   /// Anything else means it has been opened up and no longer works.
   IntColumn get salvageSeconds => integer().nullable()();
 
+  /// Which piece this is, across a save (§11.1).
+  ///
+  /// ⚠️ Object identity does not survive a load, and every edit rebuilds the
+  /// line anyway — so without this the only way to ask "is this the same
+  /// rifle" was to ask "is this the same object", which is a different
+  /// question that happens to agree until an await lands in between.
+  ///
+  /// Null on a row written before this existed; the loader gives it one.
+  TextColumn get uid => text().nullable()();
+
   @override
   List<String> get customConstraints => [
     'FOREIGN KEY (profile_id) REFERENCES profiles (id) ON DELETE CASCADE',
@@ -334,6 +344,16 @@ class ShelterItems extends Table {
   /// Null for everything nobody has started on, which is nearly everything.
   /// Anything else means it has been opened up and no longer works.
   IntColumn get salvageSeconds => integer().nullable()();
+
+  /// Which piece this is, across a save (§11.1).
+  ///
+  /// ⚠️ Object identity does not survive a load, and every edit rebuilds the
+  /// line anyway — so without this the only way to ask "is this the same
+  /// rifle" was to ask "is this the same object", which is a different
+  /// question that happens to agree until an await lands in between.
+  ///
+  /// Null on a row written before this existed; the loader gives it one.
+  TextColumn get uid => text().nullable()();
 
   @override
   List<String> get customConstraints => [
@@ -441,6 +461,16 @@ class GroundItems extends Table {
   /// Null for everything nobody has started on, which is nearly everything.
   /// Anything else means it has been opened up and no longer works.
   IntColumn get salvageSeconds => integer().nullable()();
+
+  /// Which piece this is, across a save (§11.1).
+  ///
+  /// ⚠️ Object identity does not survive a load, and every edit rebuilds the
+  /// line anyway — so without this the only way to ask "is this the same
+  /// rifle" was to ask "is this the same object", which is a different
+  /// question that happens to agree until an await lands in between.
+  ///
+  /// Null on a row written before this existed; the loader gives it one.
+  TextColumn get uid => text().nullable()();
 
   @override
   List<String> get customConstraints => [

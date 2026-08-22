@@ -961,6 +961,29 @@ telemetry := never leaves the device             // §16.5 dopuszcza zagregowan�
 
 ---
 
+## Który to jest egzemplarz (§11.1)
+
+```
+line identity := uid, nie referencja obiektu    // ⚠️ Tożsamość obiektu to nie tożsamość. Każda edycja przebudowuje linię, każdy zapis przebudowuje wszystkie — więc `identical` odpowiada na "czy to ten sam obiekt, który mi podano", a to inne pytanie niż "czy to ten sam karabinek". Zgadzają się dokładnie do chwili, gdy między złapaniem uchwytu a jego użyciem wypadnie `await` na bazie.
+
+if both lines have uid
+    then same := uid equal
+    else same := identical                       // Linia, której nikt nie zapisał, nie ma historii, z którą można by ją pomylić.
+
+never value equality                             // Dwie pełne butelki to dwie butelki. Stan per egzemplarz istnieje po to, żeby mogły się różnić.
+
+if item created by world
+    then uid assigned immediately                // Następne tapnięcie po podniesieniu to już kontrolka trzymająca uchwyt.
+
+if item dropped or shelved
+    then uid travels with it                     // Rzecz położona na chodniku i podniesiona to ta sama rzecz.
+
+if row written before v24
+    then loader assigns uid                      // Inaczej stara linia na zawsze zostałaby przy tożsamości obiektu — czyli w stanie, który to zastępuje.
+```
+
+---
+
 ## Liczby i czas na ekranie (§12)
 
 ```

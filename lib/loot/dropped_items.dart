@@ -38,6 +38,7 @@ class DroppedItem {
     this.attachments = const [],
     this.rounds,
     this.salvageSeconds,
+    this.uid,
   });
 
   /// Row id, or zero for one that has not been written yet.
@@ -59,6 +60,10 @@ class DroppedItem {
 
   /// §18.6: how far somebody got taking it apart before they stopped.
   final int? salvageSeconds;
+
+  /// §11.1: which piece this is, so putting it down and picking it up again
+  /// gives back the same rifle rather than one that merely looks like it.
+  final String? uid;
 
   /// §5.3: how many rounds are in this piece. A loaded rifle put down on the
   /// pavement is still loaded when it is picked up.

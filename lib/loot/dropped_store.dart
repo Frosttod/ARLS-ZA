@@ -1,6 +1,7 @@
 /// Reading and writing what is on the ground (§4.8, §11.1).
 library;
 
+import '../inventory/inventory.dart';
 import 'package:drift/drift.dart' show Value;
 
 import '../data/db/database.dart';
@@ -34,6 +35,7 @@ class DroppedStore {
               : row.attachments.split(','),
           rounds: row.rounds,
           salvageSeconds: row.salvageSeconds,
+          uid: row.uid ?? newLineId(),
           position: GeoPoint(row.latitude, row.longitude),
           droppedAt: row.droppedAt,
         ),
@@ -59,6 +61,7 @@ class DroppedStore {
       attachments: Value(item.attachments.join(',')),
       rounds: Value(item.rounds),
       salvageSeconds: Value(item.salvageSeconds),
+      uid: Value(item.uid ?? newLineId()),
     ),
   );
 

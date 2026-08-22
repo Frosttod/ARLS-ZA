@@ -69,6 +69,10 @@ class InventoryStore {
             : row.attachments.split(','),
         rounds: row.rounds,
         salvageSeconds: row.salvageSeconds,
+        // ⚠️ A name for a row that never had one. Given here rather than
+        // left null so that the very first edit after an upgrade already
+        // has something stable to point at; the next save writes it down.
+        uid: row.uid ?? newLineId(),
       );
       (row.slot == _slotWorn ? worn : carried).add(line);
     }
@@ -108,5 +112,6 @@ class InventoryStore {
         attachments: Value(line.attachments.join(',')),
         rounds: Value(line.rounds),
         salvageSeconds: Value(line.salvageSeconds),
+        uid: Value(line.uid ?? newLineId()),
       );
 }

@@ -338,7 +338,8 @@ class GameLoop {
       }
     }
 
-    final busy = _acting || (_occupation != null && !_occupation!.kind.isDefault);
+    final busy =
+        _acting || (_occupation != null && !_occupation!.kind.isDefault);
 
     // How long they have been under this roof with nothing on. Reset by
     // leaving and by starting anything — those are the two ways a person stops
@@ -349,7 +350,9 @@ class GameLoop {
       _settledAt ??= now;
     }
 
-    if (inside != null && _suspendedByShelterExit != null && _occupation == null) {
+    if (inside != null &&
+        _suspendedByShelterExit != null &&
+        _occupation == null) {
       _occupation = _suspendedByShelterExit;
       _suspendedByShelterExit = null;
     }
@@ -739,7 +742,8 @@ class GameLoop {
 
     if (progress.endReason == OccupationEndReason.zoneSuspended) {
       _suspendedByShelterExit = current;
-    } else if (progress.endReason != null && progress.endReason != OccupationEndReason.completed) {
+    } else if (progress.endReason != null &&
+        progress.endReason != OccupationEndReason.completed) {
       _suspendedByShelterExit = null;
     }
 
@@ -784,9 +788,14 @@ class GameLoop {
     final fix = _lastFix;
     final settledAt = _settledAt;
     Duration? countdown;
-    if (settledAt != null && !isNightAt(momentUtc: _state.lastUpdate, latitude: fix?.latitude ?? 0, longitude: fix?.longitude ?? 0)) {
-       final left = kSettleToSleep - _state.lastUpdate.difference(settledAt);
-       countdown = left.isNegative ? Duration.zero : left;
+    if (settledAt != null &&
+        !isNightAt(
+          momentUtc: _state.lastUpdate,
+          latitude: fix?.latitude ?? 0,
+          longitude: fix?.longitude ?? 0,
+        )) {
+      final left = kSettleToSleep - _state.lastUpdate.difference(settledAt);
+      countdown = left.isNegative ? Duration.zero : left;
     }
 
     _snapshots.add(

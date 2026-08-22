@@ -1381,7 +1381,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         item.kind == ItemKind.backpack;
     // This copy, not any copy with that id: the one already on the body is not
     // put on again, but its twin in the pack still can be.
-    final worn = _inventory.value.worn.any((other) => identical(other, line));
+    final worn = _inventory.value.worn.any((other) => other.isSame(line));
 
     await showItemDetails(
       context,
@@ -1566,6 +1566,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         // §5.3, §18.6: so does what is in it, and how far it has been opened.
         rounds: line.rounds,
         salvageSeconds: line.salvageSeconds,
+        // §11.1: the name goes down with it and comes back up with it.
+        uid: line.uid,
         position: at,
         droppedAt: DateTime.now().toUtc(),
       ),
@@ -2062,6 +2064,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       attachments: item.attachments,
       rounds: item.rounds,
       salvageSeconds: item.salvageSeconds,
+      uid: item.uid,
     );
     if (!result.isAccepted && (result.acceptedCount ?? 0) == 0) {
       if (mounted) _say(L10n.of(context).droppedNoRoom);
@@ -3919,7 +3922,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     // ⚠️ Out of the pack, never off the body. The piece stays where it is
     // while the work runs (that is what the bar is under), so a weapon still
     // in the hands would go on being fired through its own dismantling.
-    if (!_inventory.value.carried.any((entry) => identical(entry, line))) {
+    if (!_inventory.value.carried.any((entry) => entry.isSame(line))) {
       _say(L10n.of(context).craftNotAtShelter);
       return;
     }
@@ -4498,7 +4501,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final before = _inventory.value.carried;
     final arrived =
         added.inventory.carried
-            .where((entry) => !before.any((old) => identical(old, entry)))
+            .where((entry) => !before.any((old) => old.isSame(entry)))
             .firstOrNull ??
         added.inventory.carried
             .where((entry) => entry.itemId == line.itemId)

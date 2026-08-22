@@ -2,10 +2,7 @@ import 'package:flutter/foundation.dart';
 
 /// Reprezentuje przypięty cel ("Quest") widoczny na głównym ekranie.
 class PinnedGoal {
-  const PinnedGoal({
-    required this.title,
-    required this.requirements,
-  });
+  const PinnedGoal({required this.title, required this.requirements});
 
   /// Nazwa celu, np. "Magazyn (poziom 2)"
   final String title;

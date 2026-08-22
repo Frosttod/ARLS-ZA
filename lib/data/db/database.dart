@@ -29,7 +29,7 @@ import 'tables.dart';
 part 'database.g.dart';
 
 /// Bumped only alongside a migration step in [_migration]. Never reused.
-const int kSchemaVersion = 23;
+const int kSchemaVersion = 24;
 
 /// Keys used in [MetaEntries].
 abstract final class MetaKeys {
@@ -74,7 +74,7 @@ class SaveDatabase extends _$SaveDatabase {
   /// follow a constant reference. `schema_test.dart` keeps it in step with
   /// [kSchemaVersion].
   @override
-  int get schemaVersion => 23;
+  int get schemaVersion => 24;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -287,6 +287,19 @@ class SaveDatabase extends _$SaveDatabase {
       }
       if (from >= 20 && from < 23) {
         await m.addColumn(shelterItems, shelterItems.salvageSeconds);
+      }
+
+      // §11.1: a piece keeps its name across a save. Same three guarded
+      // steps as v21 and v23, same reason: createTable builds from today's
+      // definition, so a table made during this very migration already has it.
+      if (from >= 3 && from < 24) {
+        await m.addColumn(inventoryLines, inventoryLines.uid);
+      }
+      if (from >= 7 && from < 24) {
+        await m.addColumn(groundItems, groundItems.uid);
+      }
+      if (from >= 20 && from < 24) {
+        await m.addColumn(shelterItems, shelterItems.uid);
       }
 
       await _writeSchemaVersion(to);

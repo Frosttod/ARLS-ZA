@@ -49,6 +49,7 @@ class StashStore {
                   : row.attachments.split(','),
               rounds: row.rounds,
               salvageSeconds: row.salvageSeconds,
+              uid: row.uid ?? newLineId(),
             ),
       ],
     );
@@ -70,6 +71,7 @@ class StashStore {
             attachments: Value(line.attachments.join(',')),
             rounds: Value(line.rounds),
             salvageSeconds: Value(line.salvageSeconds),
+            uid: Value(line.uid ?? newLineId()),
           ),
       ]);
 }

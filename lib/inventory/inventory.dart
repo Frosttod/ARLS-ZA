@@ -72,6 +72,7 @@ class CarriedItem {
     this.attachments = const [],
     this.rounds,
     this.salvageSeconds,
+    this.uid,
   });
 
   final String itemId;
@@ -124,6 +125,39 @@ class CarriedItem {
   /// §18.6: whether this piece has been opened up and not finished.
   bool get isPartlyDismantled => (salvageSeconds ?? 0) > 0;
 
+  /// Which piece this is, across a save and across a rebuild.
+  ///
+  /// ⚠️ **Object identity is not identity.** Every edit rebuilds the line, and
+  /// every save and load rebuilds all of them — so `identical` answers "is this
+  /// the very object I was handed", which is a different question from "is this
+  /// the same rifle". They agree right up until an `await` on the database
+  /// happens between capturing a handle and using it, and then they do not.
+  ///
+  /// That gap has produced real losses in this codebase: rounds spent into
+  /// nothing because [withLine] silently matched nobody, a dismantling bar
+  /// under the wrong row, an attachment fitted to a copy that was no longer in
+  /// the pack. [LoadRefusal.gone] exists as a patch over one instance of it.
+  ///
+  /// Null for anything built in a test or by older code, and [isSame] falls
+  /// back to object identity there — which is exactly right, because a line
+  /// nobody has saved has no history to be confused with.
+  final String? uid;
+
+  /// Whether [other] is this same piece.
+  ///
+  /// The uid where both have one, object identity otherwise. Never value
+  /// equality: two full water bottles are two bottles, and the whole point of
+  /// per-piece state is that they can diverge.
+  bool isSame(CarriedItem? other) {
+    if (other == null) return false;
+
+    final mine = uid;
+    final theirs = other.uid;
+    if (mine != null && theirs != null) return mine == theirs;
+
+    return identical(this, other);
+  }
+
   /// How much of this piece is left, 0–1 (§4.7).
   ///
   /// A bottle put down half way through is half a bottle, not a wasted one and
@@ -140,6 +174,7 @@ class CarriedItem {
     List<String>? attachments,
     int? rounds,
     int? salvageSeconds,
+    String? uid,
   }) => CarriedItem(
     itemId: itemId,
     count: count ?? this.count,
@@ -151,6 +186,10 @@ class CarriedItem {
     attachments: attachments ?? this.attachments,
     rounds: rounds ?? this.rounds,
     salvageSeconds: salvageSeconds ?? this.salvageSeconds,
+    // ⚠️ Carried through every edit. A copy that dropped it would be a new
+    // piece as far as everything else is concerned, which is the bug this
+    // field exists to stop.
+    uid: uid ?? this.uid,
   );
 
   /// Mass of this line, using the rolled page count where there is one.
@@ -342,6 +381,10 @@ class Inventory {
     List<String> attachments = const [],
     int? rounds,
     int? salvageSeconds,
+
+    /// The name it already had, for something coming back off the ground or a
+    /// shelf. Null for anything the world has just made.
+    String? uid,
   }) {
     final definition = catalogue[itemId];
     if (definition == null) {
@@ -407,6 +450,11 @@ class Inventory {
         attachments: attachments,
         rounds: rounds,
         salvageSeconds: salvageSeconds,
+        // ⚠️ Keeps the name it came with, or is given one now. A thing put
+        // on the pavement and picked up again is the same thing, and a thing
+        // the world has just made needs a name before anything can point at
+        // it — the very next tap is a control holding a handle.
+        uid: uid ?? newLineId(),
       ),
     );
 
@@ -452,7 +500,7 @@ class Inventory {
   /// three where one is half drunk is not a stack of three — and what is left
   /// below a mouthful is gone rather than kept as a rounding error.
   Inventory consumePortion(CarriedItem line, double fraction) {
-    final index = carried.indexWhere((entry) => identical(entry, line));
+    final index = carried.indexWhere((entry) => entry.isSame(line));
     if (index < 0) return this;
 
     final left = line.portion * (1 - fraction.clamp(0.0, 1.0));
@@ -482,10 +530,8 @@ class Inventory {
   /// ⚠️ Both lists, because the one weapon whose state changes most is the one
   /// in the hand, and the hand is `worn`. The same trap [attach] documents.
   Inventory withLine(CarriedItem line, CarriedItem next) => Inventory(
-    carried: [
-      for (final entry in carried) identical(entry, line) ? next : entry,
-    ],
-    worn: [for (final entry in worn) identical(entry, line) ? next : entry],
+    carried: [for (final entry in carried) entry.isSame(line) ? next : entry],
+    worn: [for (final entry in worn) entry.isSame(line) ? next : entry],
     packId: packId,
   );
 
@@ -510,19 +556,18 @@ class Inventory {
     final without = removeLine(attachment) ?? this;
 
     final lines = [
-      for (final entry in without.carried)
-        identical(entry, line) ? fitted : entry,
+      for (final entry in without.carried) entry.isSame(line) ? fitted : entry,
     ];
     final dressed = [
-      for (final entry in without.worn) identical(entry, line) ? fitted : entry,
+      for (final entry in without.worn) entry.isSame(line) ? fitted : entry,
     ];
 
     // Neither list holds this very piece: it came from somewhere that is no
     // longer part of this inventory, and quietly bolting the part onto a copy
     // would lose it.
     final placed =
-        lines.any((entry) => identical(entry, fitted)) ||
-        dressed.any((entry) => identical(entry, fitted));
+        lines.any((entry) => entry.isSame(fitted)) ||
+        dressed.any((entry) => entry.isSame(fitted));
     if (!placed) return this;
 
     return Inventory(carried: lines, worn: dressed, packId: packId);
@@ -549,10 +594,10 @@ class Inventory {
     );
 
     final lines = [
-      for (final entry in carried) identical(entry, line) ? stripped : entry,
+      for (final entry in carried) entry.isSame(line) ? stripped : entry,
     ];
     final worn = [
-      for (final entry in this.worn) identical(entry, line) ? stripped : entry,
+      for (final entry in this.worn) entry.isSame(line) ? stripped : entry,
     ];
 
     // Never destroyed for want of room: §18.1a's overflow is a state, not a
@@ -578,7 +623,7 @@ class Inventory {
   /// back to [remove] for a line that is no longer in the pack, so a stale tap
   /// still does something sensible rather than nothing.
   Inventory? removeLine(CarriedItem line, {int count = 1}) {
-    final index = carried.indexWhere((entry) => identical(entry, line));
+    final index = carried.indexWhere((entry) => entry.isSame(line));
     if (index < 0) return remove(line.itemId, count: count);
     if (carried[index].count < count) return null;
 
@@ -638,7 +683,10 @@ class Inventory {
     final totalTime = salvageTime(content);
     if (totalTime.inSeconds <= 0) return DiscardResult(without, const {});
 
-    final fraction = (line.salvageSeconds! / totalTime.inSeconds).clamp(0.0, 1.0);
+    final fraction = (line.salvageSeconds! / totalTime.inSeconds).clamp(
+      0.0,
+      1.0,
+    );
     if (fraction <= 0) return DiscardResult(without, const {});
 
     final recovered = salvageOf(
@@ -668,7 +716,7 @@ class Inventory {
   /// exactly what [overflowL] is for.
   Inventory wearPack(CarriedItem line) {
     final previous = packId;
-    final lines = [...carried]..removeWhere((entry) => identical(entry, line));
+    final lines = [...carried]..removeWhere((entry) => entry.isSame(line));
 
     return Inventory(
       carried: [
@@ -893,3 +941,15 @@ CarriedItem? fittedWith(
     rounds: magazine == null ? null : (attachment.rounds ?? 0),
   );
 }
+
+/// A fresh identifier for a piece nobody has seen before.
+///
+/// Unique within one save, which is all that is asked of it: these never leave
+/// the device and nothing compares them across profiles. The clock gives the
+/// ordering and the counter breaks ties inside a microsecond, so two things
+/// picked up in the same frame are still two things.
+String newLineId() =>
+    '${DateTime.now().microsecondsSinceEpoch.toRadixString(36)}'
+    '.${(_lineSeq = (_lineSeq + 1) & 0xFFFF).toRadixString(36)}';
+
+int _lineSeq = 0;
