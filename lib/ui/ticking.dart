@@ -68,10 +68,19 @@ mixin Ticking<T extends StatefulWidget> on State<T>, WidgetsBindingObserver {
     _tick?.cancel();
     _tick = wanted
         ? Timer.periodic(tickEvery, (_) {
-            if (mounted) setState(() {});
+            if (mounted) onTick();
           })
         : null;
   }
+
+  /// What one beat does. Rebuilds the whole subtree by default.
+  ///
+  /// ⚠️ Override where the subtree is bigger than the number that changed. A
+  /// strip of running actions is a Material, a Column, an icon and a label per
+  /// line, and the only things that move once a second are a countdown and a
+  /// progress bar — rebuilding the rest sixty times a minute is work nobody
+  /// asked for.
+  void onTick() => setState(() {});
 
   @override
   void dispose() {

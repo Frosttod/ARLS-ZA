@@ -13,6 +13,7 @@
 /// their character is doing.
 library;
 
+import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 
 import 'fonts.dart';
@@ -80,12 +81,28 @@ class _ActionStripState extends State<ActionStrip>
   @override
   bool get ticking => widget.actions.isNotEmpty;
 
+  /// ⚠️ The beat, rather than a rebuild of the strip.
+  ///
+  /// Only two things on a line move once a second: the countdown and the bar.
+  /// The Material, the Column, the icon, the label, the stop button and the
+  /// note do not — so this drives a notifier that those two listen to, and
+  /// the rest is built once and left alone.
+  final ValueNotifier<DateTime> _now = ValueNotifier(DateTime.now().toUtc());
+
+  @override
+  void onTick() => _now.value = DateTime.now().toUtc();
+
+  @override
+  void dispose() {
+    _now.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     if (widget.actions.isEmpty) return const SizedBox.shrink();
 
     final colours = HudColors.of(context);
-    final now = DateTime.now().toUtc();
 
     return Material(
       color: colours.panel.withValues(alpha: 0.92),
@@ -96,7 +113,7 @@ class _ActionStripState extends State<ActionStrip>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             for (final action in widget.actions)
-              _ActionLine(action: action, now: now, colours: colours),
+              _ActionLine(action: action, now: _now, colours: colours),
           ],
         ),
       ),
@@ -112,13 +129,14 @@ class _ActionLine extends StatelessWidget {
   });
 
   final RunningAction action;
-  final DateTime now;
+
+  /// The clock, listened to rather than read: see [_ActionStripState._now].
+  final ValueListenable<DateTime> now;
+
   final HudColors colours;
 
   @override
   Widget build(BuildContext context) {
-    final left = action.remainingAt(now);
-
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: Column(
@@ -136,13 +154,16 @@ class _ActionLine extends StatelessWidget {
                   style: TextStyle(fontSize: 13, color: colours.text),
                 ),
               ),
-              Text(
-                _said(left),
-                style: TextStyle(
-                  fontSize: 13,
-                  color: colours.data,
-                  fontFamily: kDataFont,
-                  fontFeatures: const [FontFeature.tabularFigures()],
+              ValueListenableBuilder<DateTime>(
+                valueListenable: now,
+                builder: (context, at, _) => Text(
+                  _said(action.remainingAt(at)),
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: colours.data,
+                    fontFamily: kDataFont,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
                 ),
               ),
               if (action.onStop != null)
@@ -160,11 +181,14 @@ class _ActionLine extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 3),
-          LinearProgressIndicator(
-            value: action.progressAt(now),
-            minHeight: 3,
-            backgroundColor: colours.muted.withValues(alpha: 0.25),
-            color: colours.data,
+          ValueListenableBuilder<DateTime>(
+            valueListenable: now,
+            builder: (context, at, _) => LinearProgressIndicator(
+              value: action.progressAt(at),
+              minHeight: 3,
+              backgroundColor: colours.muted.withValues(alpha: 0.25),
+              color: colours.data,
+            ),
           ),
           if (action.note != null) ...[
             const SizedBox(height: 2),

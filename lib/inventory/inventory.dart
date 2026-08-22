@@ -325,7 +325,16 @@ class Inventory {
 
   double massKg(ItemCatalogue catalogue) {
     var total = 0.0;
-    for (final line in [...carried, ...worn]) {
+    // ⚠️ Two loops rather than `[...carried, ...worn]`. This is called from
+    // the carry gauges, from every fit check and from the pack screen, and a
+    // spread builds a whole new list every time to be walked once.
+    for (final line in carried) {
+      final definition = catalogue[line.itemId];
+      if (definition != null) {
+        total += line.massKg(definition, catalogue: catalogue);
+      }
+    }
+    for (final line in worn) {
       final definition = catalogue[line.itemId];
       if (definition != null) {
         total += line.massKg(definition, catalogue: catalogue);
@@ -346,6 +355,16 @@ class Inventory {
       }
     }
     return total;
+  }
+
+  /// §18.1a: what is still free, in one walk of the pack.
+  PackRoom roomLeft(BodyProfile body, ItemCatalogue catalogue) {
+    final limit = limits(body, catalogue);
+
+    return PackRoom(
+      massKg: limit.maxKg - massKg(catalogue),
+      volumeL: limit.capacityL - volumeL(catalogue),
+    );
   }
 
   CarryLimits limits(BodyProfile body, ItemCatalogue catalogue) =>
@@ -940,6 +959,59 @@ CarriedItem? fittedWith(
     attachments: [...line.attachments, part.id],
     rounds: magazine == null ? null : (attachment.rounds ?? 0),
   );
+}
+
+/// §18.1a: what is left of both limits, worked out once.
+///
+/// ⚠️ Exists because asking "would this fit" used to mean *adding* it: the
+/// interface called [Inventory.add] and threw the result away, which walked
+/// the pack twice and cloned the line list — once per row, per action, per
+/// frame. On a shelf of thirty things that is two hundred clones of the whole
+/// inventory in one frame, and it is exactly the sort of thing that makes a
+/// list stutter under a thumb.
+///
+/// Both figures come from the same walk, and a caller that holds one of these
+/// can test any number of candidates against it for free.
+class PackRoom {
+  const PackRoom({required this.massKg, required this.volumeL});
+
+  /// Kilograms before §1.3's hard limit. Negative when already over.
+  final double massKg;
+
+  /// Litres before the pack is full.
+  final double volumeL;
+
+  /// How many of [line] would go in, capped at [count].
+  ///
+  /// The same arithmetic [Inventory.add] does, without building anything.
+  int room(
+    CarriedItem line,
+    ItemDefinition definition, {
+    required ItemCatalogue catalogue,
+    int count = 1,
+  }) {
+    final massEach = line.massKg(definition, catalogue: catalogue);
+    final volumeEach = line.volumeL(definition, catalogue: catalogue);
+
+    var fits = count;
+    if (massEach > 0) {
+      final byMass = (massKg / massEach).floor();
+      if (byMass < fits) fits = byMass;
+    }
+    if (volumeEach > 0) {
+      final byVolume = (volumeL / volumeEach).floor();
+      if (byVolume < fits) fits = byVolume;
+    }
+
+    return fits < 0 ? 0 : fits;
+  }
+
+  /// Whether one of it would go in at all.
+  bool holds(
+    CarriedItem line,
+    ItemDefinition definition, {
+    required ItemCatalogue catalogue,
+  }) => room(line, definition, catalogue: catalogue) >= 1;
 }
 
 /// A fresh identifier for a piece nobody has seen before.

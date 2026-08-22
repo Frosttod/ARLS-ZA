@@ -1343,16 +1343,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
           // §18.6's forty per cent rounds to nothing. Lighting the glyph on
           // everything with a material content lit it on axes, knives and
           // magazines and then refused every one of them on the tap.
-          canDismantle: (line) =>
-              _catalogue != null &&
-              (line.isPartlyDismantled ||
-                  salvagePreview(
-                    line.itemId,
-                    _bench(),
-                    catalogue: _catalogue!,
-                    book: _recipes,
-                    condition: line.condition ?? 100,
-                  ).isNotEmpty),
+          canDismantle: _worthTakingApart,
           onRead: _readNote,
           onDetails: (line) => unawaited(_showItemDetails(line)),
           action: _search,
@@ -3847,7 +3838,43 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// builds. Anything on a shelf is already where the work is happening, and
   /// making somebody pick their own wood up off their own shelf before the
   /// button lights is bookkeeping rather than a decision.
+  ///
+  /// ⚠️ **Cached, because this is on the hot path and used to be rebuilt every
+  /// frame.** Every one of these calls walked the pack and the shelves to
+  /// build two maps, and it is asked once per rebuild of the map screen — on
+  /// every GPS fix, every tick of the action strip, every drag of the map —
+  /// plus once per action per row of the pack, which at seven actions and
+  /// thirty rows is two hundred walks in one frame.
+  ///
+  /// The inputs are all immutable and replaced wholesale, so comparing the
+  /// references answers "has anything changed" exactly and in constant time.
+  /// The one thing that is not a reference is the clock, and [_BenchInputs]
+  /// says why that is safe.
   CraftBench _bench() {
+    final now = DateTime.now().toUtc();
+    final inputs = _BenchInputs(
+      shelters: _shelters.value,
+      standingAt: _standingAt.value,
+      inventory: _inventory.value,
+      stash: _stash.value,
+      search: _search.value,
+      reload: _reload,
+      job: _craftJob.value,
+    );
+
+    final cached = _benchCache;
+    if (cached != null && cached.inputs == inputs && cached.freshAt(now)) {
+      return cached.bench;
+    }
+
+    final bench = _computeBench(now);
+    _benchCache = (inputs: inputs, bench: bench, madeAt: now);
+    return bench;
+  }
+
+  ({_BenchInputs inputs, CraftBench bench, DateTime madeAt})? _benchCache;
+
+  CraftBench _computeBench(DateTime now) {
     final main = _shelters.value
         .where((place) => place.kind == ShelterKind.main)
         .firstOrNull;
@@ -3862,10 +3889,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       // §2.1a: any shelter or camp will do. Making is something you do where
       // you keep your things, and a camp is one of those places (§8.5).
       atShelter:
-          at != null &&
-          _shelters.value.any(
-            (place) => place.coversAt(at, DateTime.now().toUtc()),
-          ),
+          at != null && _shelters.value.any((place) => place.coversAt(at, now)),
       workshopLevel: main?.levelOf(ShelterModule.workshop) ?? 0,
       atHand: counts.keys.toSet(),
       materials: counts,
@@ -4363,16 +4387,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
           order: _packOrder,
           onAct: (index, action) => unawaited(_shelfAct(index, action)),
           onDetails: (index) => unawaited(_shelfDetails(index)),
-          canDismantle: (line) =>
-              _catalogue != null &&
-              (line.isPartlyDismantled ||
-                  salvagePreview(
-                    line.itemId,
-                    _bench(),
-                    catalogue: _catalogue!,
-                    book: _recipes,
-                    condition: line.condition ?? 100,
-                  ).isNotEmpty),
+          canDismantle: _worthTakingApart,
           refusalOf: _shelfRefusal,
           // §18.4: what the bench is doing, said where the player is standing.
           // They came in to put things away while a spear is being made.
@@ -4627,20 +4642,85 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final catalogue = _catalogue;
     if (character == null || catalogue == null) return null;
 
-    final room = _inventory.value.add(
-      line.itemId,
-      catalogue,
-      body: character.body,
-      count: 1,
-      condition: line.condition,
-      attachments: line.attachments,
-      rounds: line.rounds,
-      salvageSeconds: line.salvageSeconds,
-    );
-    if (!room.isAccepted) return L10n.of(context).stashNoRoomInPack;
+    final definition = catalogue[line.itemId];
+    if (definition == null) return null;
+
+    // ⚠️ Asked, not attempted. This used to call `add` and throw the result
+    // away, which walked the whole pack twice and cloned its line list — once
+    // per row, per action, per frame. Thirty things on a shelf and seven
+    // actions each is two hundred clones of the inventory in one frame.
+    if (!_packRoom().holds(line, definition, catalogue: catalogue)) {
+      return L10n.of(context).stashNoRoomInPack;
+    }
 
     return _packRefusal(line, action);
   }
+
+  /// §18.6: whether the glyph is worth drawing on this piece.
+  ///
+  /// ⚠️ Cached by what the answer actually depends on: the item and how worn
+  /// it is. Nothing else moves it — §18.6's share only changes with skills and
+  /// the workshop, and both are held in the key too.
+  ///
+  /// It is asked once per row of a list somebody is scrolling, and each answer
+  /// costs a recipe lookup, a material breakdown and a largest-remainder
+  /// allocation. The same rifle asked thirty times a second is thirty
+  /// identical answers.
+  bool _worthTakingApart(CarriedItem line) {
+    final catalogue = _catalogue;
+    if (catalogue == null) return false;
+    if (line.isPartlyDismantled) return true;
+
+    final bench = _bench();
+    final key =
+        '${line.itemId}.${(line.condition ?? 100).round()}'
+        '.${bench.workshopLevel}.${bench.engineering}';
+
+    final known = _salvageWorth[key];
+    if (known != null) return known;
+
+    final worth = salvagePreview(
+      line.itemId,
+      bench,
+      catalogue: catalogue,
+      book: _recipes,
+      condition: line.condition ?? 100,
+    ).isNotEmpty;
+
+    // Bounded, because condition is a continuum: a hundred and one distinct
+    // answers per item is more than the catalogue has items, and a pack is
+    // nowhere near that. Cleared wholesale rather than aged — the entries are
+    // booleans and rebuilding one is cheap.
+    if (_salvageWorth.length > 512) _salvageWorth.clear();
+    _salvageWorth[key] = worth;
+
+    return worth;
+  }
+
+  final Map<String, bool> _salvageWorth = {};
+
+  /// §18.1a: what is still free in the pack, worked out once per change.
+  ///
+  /// The same shape as [_bench]'s cache and for the same reason: the answer
+  /// depends only on the inventory and the body, both of which are replaced
+  /// wholesale, so a reference comparison is exact.
+  PackRoom _packRoom() {
+    final character = _character;
+    final catalogue = _catalogue;
+    if (character == null || catalogue == null) {
+      return const PackRoom(massKg: 0, volumeL: 0);
+    }
+
+    final pack = _inventory.value;
+    final cached = _packRoomCache;
+    if (cached != null && identical(cached.pack, pack)) return cached.room;
+
+    final room = pack.roomLeft(character.body, catalogue);
+    _packRoomCache = (pack: pack, room: room);
+    return room;
+  }
+
+  ({Inventory pack, PackRoom room})? _packRoomCache;
 
   /// §18.2: does something to a piece that is on a shelf.
   ///
@@ -6276,4 +6356,63 @@ class _FillPlan {
 
   int roundsAt(double progress) =>
       (from + (to - from) * progress.clamp(0.0, 1.0)).round();
+}
+
+/// What the crafting bench is made of, for deciding whether to make it again.
+///
+/// Every field is an immutable value replaced wholesale when it changes, so
+/// reference equality is exact: two of these are equal precisely when nothing
+/// the bench reads has moved.
+///
+/// ⚠️ The clock is deliberately not in here. Only one thing the bench reads
+/// depends on it — whether a shelter is finished (§8.3) — and that changes at
+/// most once in three hours. A cache entry is held for a second so that a
+/// build finishing is noticed promptly without making the clock an input, and
+/// a second is far below anything a player can act on.
+class _BenchInputs {
+  const _BenchInputs({
+    required this.shelters,
+    required this.standingAt,
+    required this.inventory,
+    required this.stash,
+    required this.search,
+    required this.reload,
+    required this.job,
+  });
+
+  final List<Shelter> shelters;
+  final GeoPoint? standingAt;
+  final Inventory inventory;
+  final Stash stash;
+  final Search? search;
+  final Reload? reload;
+  final CraftJob? job;
+
+  @override
+  bool operator ==(Object other) =>
+      other is _BenchInputs &&
+      identical(other.shelters, shelters) &&
+      identical(other.standingAt, standingAt) &&
+      identical(other.inventory, inventory) &&
+      identical(other.stash, stash) &&
+      identical(other.search, search) &&
+      identical(other.reload, reload) &&
+      identical(other.job, job);
+
+  @override
+  int get hashCode => Object.hash(
+    identityHashCode(shelters),
+    identityHashCode(standingAt),
+    identityHashCode(inventory),
+    identityHashCode(stash),
+    identityHashCode(search),
+    identityHashCode(reload),
+    identityHashCode(job),
+  );
+}
+
+extension on ({_BenchInputs inputs, CraftBench bench, DateTime madeAt}) {
+  /// Whether this entry is young enough to trust. See [_BenchInputs].
+  bool freshAt(DateTime now) =>
+      now.difference(madeAt) < const Duration(seconds: 1);
 }
