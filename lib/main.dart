@@ -1784,6 +1784,17 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     await _actions?.finish();
   }
 
+  /// The label for a stored action, by its wire name (§12).
+  String _useLabelFor(String kind, CarriedItem line) {
+    final catalogue = _catalogue;
+    for (final known in ActionKind.values) {
+      if (known.name == kind) {
+        return _useLabel(known, catalogue?[line.itemId]);
+      }
+    }
+    return L10n.of(context).searchAreaRunning;
+  }
+
   /// §12: the action and the thing it is being done to, in one line.
   ///
   /// ⚠️ The item's name, not the kind of action. A strip that says "jedzenie"
@@ -3687,6 +3698,24 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// Everything with a duration goes through here before it starts.
   String? _alreadyBusy() {
     final l10n = L10n.of(context);
+
+    // §2.1a, §11.1: the row first, because it is the only one of these that
+    // survives a restart. A use the operating system interrupted is still on
+    // it until the boot has settled it, and starting something else on top
+    // would be starting two things.
+    final running = _actions?.current;
+    if (running != null) {
+      final subject = running.subjectUid;
+      final line = subject == null
+          ? null
+          : _inventory.value.carried
+                .where((entry) => entry.uid == subject)
+                .firstOrNull;
+
+      return line == null
+          ? l10n.searchAreaRunning
+          : _useLabelFor(running.kind, line);
+    }
 
     if (_search.value != null) {
       return _search.value!.usingLabel ?? l10n.searchAreaRunning;
