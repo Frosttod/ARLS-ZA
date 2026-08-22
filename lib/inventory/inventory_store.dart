@@ -83,6 +83,14 @@ class InventoryStore {
     );
   }
 
+  /// §4.7: writes down how much of one piece is left.
+  ///
+  /// The cheap half of [save], for the one figure that changes every second
+  /// while somebody is eating. Everything else about the line is untouched, so
+  /// there is nothing here that a concurrent change could undo.
+  Future<void> savePortion(int profileId, String uid, double portion) =>
+      db.writePortion(profileId, uid, portion);
+
   Future<void> save(int profileId, Inventory inventory) =>
       db.writeInventory(profileId, [
         for (final line in inventory.carried)

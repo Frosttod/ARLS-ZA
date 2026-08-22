@@ -44,15 +44,39 @@ const int kSearchBudget = 6;
 ///
 /// The multiplier is on the *time*, never on what comes out. A bin searched
 /// thoroughly is still a bin searched thoroughly; it is simply over sooner.
+/// A bin, a car, a crate: things reached by hand.
+///
+/// ⚠️ **Thirty, not fifteen, and the difference is the pavement.** Fifteen
+/// metres is what a person can touch, and it was chosen for exactly that. On
+/// a walk it is not what a person can *stand at*: a car is reached from the
+/// road it is parked on, a skip from the yard gate, and §3.2's filter has a
+/// dead zone of its own on top of that. Reported from the field as things
+/// that could be seen and not opened.
+///
+/// Still far short of a building's fifty (§10.2), which is the number that
+/// exists because a shop's door is round the back.
+///
+/// ⚠️ Not the same figure as [kStillnessM], and deliberately. That one is
+/// §4.8's arm's length for something the player put down at their own feet;
+/// this one is how close counts as being *at* a thing in the world.
+const double kNearReachM = 30;
+
+/// A shop, a library, a warehouse: things with a door somewhere else.
+///
+/// 50 m is the same figure §10.2 already used for buildings. Kept as a named
+/// constant so that any comment or test can reference it by intent rather than
+/// by number.
+const double kBuildingReachM = 50;
+
 enum PlaceSize {
   /// A bin, a crate, a tap. One layer, and you can see most of it standing up.
-  tiny(0.2, 15.0),
+  tiny(0.2, kNearReachM),
 
   /// A car, an ambulance, a hunting stand: a few compartments, all in reach.
-  small(0.5, 15.0),
+  small(0.5, kNearReachM),
 
   /// A shop, a flat, a workshop. §10.3.5's own figures.
-  normal(1.0, 50.0);
+  normal(1.0, kBuildingReachM);
 
   const PlaceSize(this.timeScale, this.reachM);
 

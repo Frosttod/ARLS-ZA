@@ -606,7 +606,25 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     _inventory.value = next.inventory;
     _usingLine.value = next.line;
 
-    await _saveInventory();
+    // ⚠️ **One column, not the whole pack.**
+    //
+    // This runs once a second for the length of a meal, and [_saveInventory]
+    // deletes every row the profile owns and inserts them all back inside a
+    // transaction. A full pack is thirty-odd rows through the write queue per
+    // second, ahead of everything §11.1 and §3.2 are trying to save — reported
+    // from the field as the game freezing the moment food is started.
+    //
+    // The last mouthful is the exception: the row is gone rather than changed,
+    // and that is a write only the wholesale one knows how to do.
+    final uid = next.line?.uid;
+    final character = _character;
+    if (next.line != null && uid != null && character != null) {
+      await InventoryStore(
+        widget.session.db,
+      ).savePortion(character.profile.id, uid, left);
+    } else {
+      await _saveInventory();
+    }
   }
 
   /// §4.7: applies the part of a use that actually happened.
@@ -2212,7 +2230,12 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         context,
         dropped: _dropped,
         at: _standingAt,
-        reachM: kStillnessM,
+        // ⚠️ The same reach [_pilesInReach] used to decide the button was
+        // worth drawing. These disagreed: the hand appeared because a pile
+        // was within the school's fifty metres, and then opened a list that
+        // only gathered from fifteen — so a player who had just searched a
+        // school from the pavement was shown an empty floor.
+        reachM: _reachForPilesAt(_standingAt.value ?? const GeoPoint(0, 0)),
         catalogue: _catalogue!,
         names: _names ?? ItemNames.empty,
         onTake: (pile) => unawaited(_takePile(pile)),
@@ -5485,9 +5508,14 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
           id: 'dropped.${item.id}',
           kind: MarkerKind.dropped,
           at: item.position,
-          // §4.8: a pile is picked up from arm's reach, which is a much
-          // tighter ring than a building's.
-          reachM: kStillnessM,
+          // §4.8: a pile the player dropped is picked up from arm's reach.
+          //
+          // ⚠️ But §10.2 gives a shop fifty metres *because its door is not
+          // where the dot is*, and a search drops what it found at the dot.
+          // Drawing a fifteen-metre ring round that pile drew a promise the
+          // pickup rule does not make — reported from a school, where the
+          // find could be taken but the ring said it could not.
+          reachM: _reachForPilesAt(item.position),
         ),
     ];
   }
@@ -5614,6 +5642,17 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final next = search.advance(
       delta,
       at: at,
+      // §10.2: the place being searched decides how far "still here" reaches.
+      //
+      // ⚠️ Reported from a walk over a school: the search cancelled itself
+      // while the player was still well inside the building they were
+      // searching. [kStillnessM] is fifteen metres — an arm's length rule for
+      // a wheelie bin — and it was being applied to a fifty-metre school
+      // because this call never passed the radius the parameter exists for.
+      //
+      // Recon (§10.2.2) and forcing a door keep the tight rule: those really
+      // are about standing in one spot.
+      boundaryRadiusM: _boundaryForSearch(search),
       // §2.1a: a search counts only while the game can still say where the
       // player is — that is the one question a search asks, did they stand
       // still. Being under a roof answers it better than a fix does: the
@@ -5652,6 +5691,25 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         );
       }
     }
+  }
+
+  /// §10.2: how far a running search lets the player drift before it counts
+  /// as walking off.
+  ///
+  /// The place's own reach where there is a place — a school is fifty metres
+  /// of school, and crossing a corridor is not leaving. Anything anchored to
+  /// a spot rather than a building keeps [kStillnessM].
+  double _boundaryForSearch(Search search) {
+    final poiId = search.targetPoiId;
+    if (poiId == null) return kStillnessM;
+
+    final box = _boxes.where((entry) => entry.poiId == poiId).firstOrNull;
+    if (box == null) return kStillnessM;
+
+    final reach = searchReachFor(
+      _world?.tables[box.tableId]?.size ?? PlaceSize.normal,
+    );
+    return reach > kStillnessM ? reach : kStillnessM;
   }
 
   void _startSearchTimer() {

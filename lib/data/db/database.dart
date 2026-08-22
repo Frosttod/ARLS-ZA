@@ -421,6 +421,21 @@ class SaveDatabase extends _$SaveDatabase {
   /// diffing it against rows would mean two descriptions of the same thing
   /// disagreeing after a crash. An inventory is tens of rows, so the write is
   /// cheap and always correct.
+  /// §4.7: how much of one piece is left, and nothing else.
+  ///
+  /// ⚠️ **Not [writeInventory].** A meal moves this figure once a second, and
+  /// the wholesale write deletes every row a profile owns and inserts them all
+  /// back inside a transaction. Doing that every second of every meal is a
+  /// pack's worth of rows through the queue per second, ahead of the position
+  /// writes and the hot state the loop is trying to save — reported from the
+  /// field as the game freezing on food.
+  ///
+  /// One row, found by the name §11.1 gave it.
+  Future<void> writePortion(int profileId, String uid, double portion) =>
+      (update(inventoryLines)
+            ..where((t) => t.profileId.equals(profileId) & t.uid.equals(uid)))
+          .write(InventoryLinesCompanion(portion: Value(portion)));
+
   Future<void> writeInventory(
     int profileId,
     List<InventoryLinesCompanion> lines,

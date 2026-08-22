@@ -23,6 +23,11 @@ import '../map/geometry.dart';
 import 'loot_table.dart';
 import 'obstacle.dart';
 
+// The two reach figures live with [PlaceSize], which is what carries them,
+// and are re-exported here because this is where every caller looks for
+// them — and because a place's size and its reach are one fact.
+export 'loot_table.dart' show kBuildingReachM, kNearReachM;
+
 /// §10.2.1: moving further than this cancels reconnaissance.
 ///
 /// The doc's eight metres is the position filter's dead zone (§3.2), and on
@@ -126,20 +131,6 @@ double searchReachFor(PlaceSize size) => size.reachM;
 /// layer.
 bool isPlayerWithinRadius(GeoPoint playerPos, GeoPoint centre, double radius) =>
     playerPos.distanceTo(centre) <= radius;
-
-/// A bin, a car, a crate: things reached by hand.
-///
-/// 15 m is close enough that standing "at" a wheelie bin means what a player
-/// thinks it means, and far enough to forgive the few metres of GPS drift that
-/// put them on the wrong side of a parked car.
-const double kNearReachM = 15;
-
-/// A shop, a library, a warehouse: things with a door somewhere else.
-///
-/// 50 m is the same figure §10.2 already used for buildings. Kept as a named
-/// constant so that any comment or test can reference it by intent rather than
-/// by number.
-const double kBuildingReachM = 50;
 
 /// The radius reconnaissance covers (§10.2.2).
 ///
