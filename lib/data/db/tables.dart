@@ -659,3 +659,53 @@ class CraftJobs extends Table {
     'FOREIGN KEY (profile_id) REFERENCES profiles (id) ON DELETE CASCADE',
   ];
 }
+
+/// §2.1a, §11.1: the one thing the character is doing, on a row.
+///
+/// ⚠️ **This replaces four separate records of the same idea.** An occupation
+/// as JSON on the vitals row, a craft job in its own table, three columns on
+/// the shelter row — and, for eating, drinking, dressing a wound, searching
+/// and forcing a door, nothing at all. That last gap is why closing the app
+/// halfway through a meal handed the sandwich back untouched: the action lived
+/// in a notifier inside a widget, so killing the process was a way to eat for
+/// free.
+///
+/// One row per profile. §2.1a gives the character one pair of hands, and a
+/// table that can only hold one row is a rule that cannot be forgotten.
+@DataClassName('ActiveActionRow')
+class ActiveActions extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get profileId => integer()();
+
+  /// What is being done: an ActionKind's name, or one of ActionKinds'.
+  TextColumn get kind => text()();
+
+  /// §11.1: which piece it is being done to, by uid. Never the item id — a
+  /// half-eaten sandwich must not come back as a bite out of its neighbour.
+  TextColumn get subjectUid => text().nullable()();
+
+  DateTimeColumn get startedAt => dateTime()();
+  IntColumn get totalSeconds => integer()();
+
+  /// ⚠️ How much has been **earned**, which is not how much has passed.
+  ///
+  /// §4.7 and §10.2 give an action a rate: a dressing walked away from has
+  /// been running ten minutes and earned six, and a search whose owner stepped
+  /// off the spot has been running and earned nothing. Storing the elapsed
+  /// time instead would hand both of them back finished.
+  IntColumn get creditedSeconds => integer().withDefault(const Constant(0))();
+
+  /// §10.2: where it began, for anything that has to stay put.
+  RealColumn get latitude => real().nullable()();
+  RealColumn get longitude => real().nullable()();
+
+  /// Whatever else this kind needs — a recipe id, a POI, a search depth.
+  /// Opaque for the reason §2.1a's occupation column is: new kinds arrive with
+  /// new fields, and each would otherwise be a migration.
+  TextColumn get extraJson => text().nullable()();
+
+  @override
+  List<String> get customConstraints => [
+    'FOREIGN KEY (profile_id) REFERENCES profiles (id) ON DELETE CASCADE',
+  ];
+}

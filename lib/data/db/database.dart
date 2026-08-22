@@ -29,7 +29,7 @@ import 'tables.dart';
 part 'database.g.dart';
 
 /// Bumped only alongside a migration step in [_migration]. Never reused.
-const int kSchemaVersion = 24;
+const int kSchemaVersion = 25;
 
 /// Keys used in [MetaEntries].
 abstract final class MetaKeys {
@@ -62,6 +62,7 @@ abstract final class MetaKeys {
     ProfileStats,
     ShelterItems,
     CraftJobs,
+    ActiveActions,
   ],
 )
 class SaveDatabase extends _$SaveDatabase {
@@ -74,7 +75,7 @@ class SaveDatabase extends _$SaveDatabase {
   /// follow a constant reference. `schema_test.dart` keeps it in step with
   /// [kSchemaVersion].
   @override
-  int get schemaVersion => 24;
+  int get schemaVersion => 25;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -301,6 +302,12 @@ class SaveDatabase extends _$SaveDatabase {
       if (from >= 20 && from < 24) {
         await m.addColumn(shelterItems, shelterItems.uid);
       }
+
+      // §2.1a: one table for everything with a clock on it. CraftJobs stays
+      // for now and is emptied by the migration that moves its rows across —
+      // this schema is additive, so a table is dropped a version after it
+      // stops being written, never in the same one.
+      if (from < 25) await m.createTable(activeActions);
 
       await _writeSchemaVersion(to);
     },
@@ -553,6 +560,34 @@ class SaveDatabase extends _$SaveDatabase {
   Future<List<ChronicleEntry>> chronicleFor(int profileId) => (select(
     chronicleEntries,
   )..where((t) => t.profileId.equals(profileId))).get();
+
+  // -------------------------------------------------------------- actions ---
+
+  /// §2.1a: what this profile is doing, or null.
+  Future<ActiveActionRow?> activeActionFor(int profileId) => (select(
+    activeActions,
+  )..where((t) => t.profileId.equals(profileId))).getSingleOrNull();
+
+  /// Puts one on, replacing whatever was there.
+  ///
+  /// ⚠️ Replacing rather than refusing: the caller has already asked whether
+  /// the hands are free, and a stale row surviving a crash would otherwise
+  /// block every future action with no way to clear it.
+  Future<int> beginActiveAction(ActiveActionsCompanion action) =>
+      transaction(() async {
+        await (delete(
+          activeActions,
+        )..where((t) => t.profileId.equals(action.profileId.value))).go();
+        return into(activeActions).insert(action);
+      });
+
+  /// §2.1a.3: writes down what has been earned, without ending anything.
+  Future<void> creditActiveAction(int profileId, int seconds) =>
+      (update(activeActions)..where((t) => t.profileId.equals(profileId)))
+          .write(ActiveActionsCompanion(creditedSeconds: Value(seconds)));
+
+  Future<void> clearActiveAction(int profileId) =>
+      (delete(activeActions)..where((t) => t.profileId.equals(profileId))).go();
 
   // ---------------------------------------------------------------- craft ---
 

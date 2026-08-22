@@ -9350,6 +9350,634 @@ class CraftJobsCompanion extends UpdateCompanion<CraftJobRow> {
   }
 }
 
+class $ActiveActionsTable extends ActiveActions
+    with TableInfo<$ActiveActionsTable, ActiveActionRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ActiveActionsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _profileIdMeta = const VerificationMeta(
+    'profileId',
+  );
+  @override
+  late final GeneratedColumn<int> profileId = GeneratedColumn<int>(
+    'profile_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  @override
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+    'kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _subjectUidMeta = const VerificationMeta(
+    'subjectUid',
+  );
+  @override
+  late final GeneratedColumn<String> subjectUid = GeneratedColumn<String>(
+    'subject_uid',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _startedAtMeta = const VerificationMeta(
+    'startedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> startedAt = GeneratedColumn<DateTime>(
+    'started_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _totalSecondsMeta = const VerificationMeta(
+    'totalSeconds',
+  );
+  @override
+  late final GeneratedColumn<int> totalSeconds = GeneratedColumn<int>(
+    'total_seconds',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _creditedSecondsMeta = const VerificationMeta(
+    'creditedSeconds',
+  );
+  @override
+  late final GeneratedColumn<int> creditedSeconds = GeneratedColumn<int>(
+    'credited_seconds',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _latitudeMeta = const VerificationMeta(
+    'latitude',
+  );
+  @override
+  late final GeneratedColumn<double> latitude = GeneratedColumn<double>(
+    'latitude',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _longitudeMeta = const VerificationMeta(
+    'longitude',
+  );
+  @override
+  late final GeneratedColumn<double> longitude = GeneratedColumn<double>(
+    'longitude',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _extraJsonMeta = const VerificationMeta(
+    'extraJson',
+  );
+  @override
+  late final GeneratedColumn<String> extraJson = GeneratedColumn<String>(
+    'extra_json',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    profileId,
+    kind,
+    subjectUid,
+    startedAt,
+    totalSeconds,
+    creditedSeconds,
+    latitude,
+    longitude,
+    extraJson,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'active_actions';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ActiveActionRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('profile_id')) {
+      context.handle(
+        _profileIdMeta,
+        profileId.isAcceptableOrUnknown(data['profile_id']!, _profileIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_profileIdMeta);
+    }
+    if (data.containsKey('kind')) {
+      context.handle(
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_kindMeta);
+    }
+    if (data.containsKey('subject_uid')) {
+      context.handle(
+        _subjectUidMeta,
+        subjectUid.isAcceptableOrUnknown(data['subject_uid']!, _subjectUidMeta),
+      );
+    }
+    if (data.containsKey('started_at')) {
+      context.handle(
+        _startedAtMeta,
+        startedAt.isAcceptableOrUnknown(data['started_at']!, _startedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_startedAtMeta);
+    }
+    if (data.containsKey('total_seconds')) {
+      context.handle(
+        _totalSecondsMeta,
+        totalSeconds.isAcceptableOrUnknown(
+          data['total_seconds']!,
+          _totalSecondsMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_totalSecondsMeta);
+    }
+    if (data.containsKey('credited_seconds')) {
+      context.handle(
+        _creditedSecondsMeta,
+        creditedSeconds.isAcceptableOrUnknown(
+          data['credited_seconds']!,
+          _creditedSecondsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('latitude')) {
+      context.handle(
+        _latitudeMeta,
+        latitude.isAcceptableOrUnknown(data['latitude']!, _latitudeMeta),
+      );
+    }
+    if (data.containsKey('longitude')) {
+      context.handle(
+        _longitudeMeta,
+        longitude.isAcceptableOrUnknown(data['longitude']!, _longitudeMeta),
+      );
+    }
+    if (data.containsKey('extra_json')) {
+      context.handle(
+        _extraJsonMeta,
+        extraJson.isAcceptableOrUnknown(data['extra_json']!, _extraJsonMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ActiveActionRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ActiveActionRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      profileId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}profile_id'],
+      )!,
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kind'],
+      )!,
+      subjectUid: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}subject_uid'],
+      ),
+      startedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}started_at'],
+      )!,
+      totalSeconds: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}total_seconds'],
+      )!,
+      creditedSeconds: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}credited_seconds'],
+      )!,
+      latitude: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}latitude'],
+      ),
+      longitude: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}longitude'],
+      ),
+      extraJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}extra_json'],
+      ),
+    );
+  }
+
+  @override
+  $ActiveActionsTable createAlias(String alias) {
+    return $ActiveActionsTable(attachedDatabase, alias);
+  }
+}
+
+class ActiveActionRow extends DataClass implements Insertable<ActiveActionRow> {
+  final int id;
+  final int profileId;
+
+  /// What is being done: an ActionKind's name, or one of ActionKinds'.
+  final String kind;
+
+  /// §11.1: which piece it is being done to, by uid. Never the item id — a
+  /// half-eaten sandwich must not come back as a bite out of its neighbour.
+  final String? subjectUid;
+  final DateTime startedAt;
+  final int totalSeconds;
+
+  /// ⚠️ How much has been **earned**, which is not how much has passed.
+  ///
+  /// §4.7 and §10.2 give an action a rate: a dressing walked away from has
+  /// been running ten minutes and earned six, and a search whose owner stepped
+  /// off the spot has been running and earned nothing. Storing the elapsed
+  /// time instead would hand both of them back finished.
+  final int creditedSeconds;
+
+  /// §10.2: where it began, for anything that has to stay put.
+  final double? latitude;
+  final double? longitude;
+
+  /// Whatever else this kind needs — a recipe id, a POI, a search depth.
+  /// Opaque for the reason §2.1a's occupation column is: new kinds arrive with
+  /// new fields, and each would otherwise be a migration.
+  final String? extraJson;
+  const ActiveActionRow({
+    required this.id,
+    required this.profileId,
+    required this.kind,
+    this.subjectUid,
+    required this.startedAt,
+    required this.totalSeconds,
+    required this.creditedSeconds,
+    this.latitude,
+    this.longitude,
+    this.extraJson,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['profile_id'] = Variable<int>(profileId);
+    map['kind'] = Variable<String>(kind);
+    if (!nullToAbsent || subjectUid != null) {
+      map['subject_uid'] = Variable<String>(subjectUid);
+    }
+    map['started_at'] = Variable<DateTime>(startedAt);
+    map['total_seconds'] = Variable<int>(totalSeconds);
+    map['credited_seconds'] = Variable<int>(creditedSeconds);
+    if (!nullToAbsent || latitude != null) {
+      map['latitude'] = Variable<double>(latitude);
+    }
+    if (!nullToAbsent || longitude != null) {
+      map['longitude'] = Variable<double>(longitude);
+    }
+    if (!nullToAbsent || extraJson != null) {
+      map['extra_json'] = Variable<String>(extraJson);
+    }
+    return map;
+  }
+
+  ActiveActionsCompanion toCompanion(bool nullToAbsent) {
+    return ActiveActionsCompanion(
+      id: Value(id),
+      profileId: Value(profileId),
+      kind: Value(kind),
+      subjectUid: subjectUid == null && nullToAbsent
+          ? const Value.absent()
+          : Value(subjectUid),
+      startedAt: Value(startedAt),
+      totalSeconds: Value(totalSeconds),
+      creditedSeconds: Value(creditedSeconds),
+      latitude: latitude == null && nullToAbsent
+          ? const Value.absent()
+          : Value(latitude),
+      longitude: longitude == null && nullToAbsent
+          ? const Value.absent()
+          : Value(longitude),
+      extraJson: extraJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(extraJson),
+    );
+  }
+
+  factory ActiveActionRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ActiveActionRow(
+      id: serializer.fromJson<int>(json['id']),
+      profileId: serializer.fromJson<int>(json['profileId']),
+      kind: serializer.fromJson<String>(json['kind']),
+      subjectUid: serializer.fromJson<String?>(json['subjectUid']),
+      startedAt: serializer.fromJson<DateTime>(json['startedAt']),
+      totalSeconds: serializer.fromJson<int>(json['totalSeconds']),
+      creditedSeconds: serializer.fromJson<int>(json['creditedSeconds']),
+      latitude: serializer.fromJson<double?>(json['latitude']),
+      longitude: serializer.fromJson<double?>(json['longitude']),
+      extraJson: serializer.fromJson<String?>(json['extraJson']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'profileId': serializer.toJson<int>(profileId),
+      'kind': serializer.toJson<String>(kind),
+      'subjectUid': serializer.toJson<String?>(subjectUid),
+      'startedAt': serializer.toJson<DateTime>(startedAt),
+      'totalSeconds': serializer.toJson<int>(totalSeconds),
+      'creditedSeconds': serializer.toJson<int>(creditedSeconds),
+      'latitude': serializer.toJson<double?>(latitude),
+      'longitude': serializer.toJson<double?>(longitude),
+      'extraJson': serializer.toJson<String?>(extraJson),
+    };
+  }
+
+  ActiveActionRow copyWith({
+    int? id,
+    int? profileId,
+    String? kind,
+    Value<String?> subjectUid = const Value.absent(),
+    DateTime? startedAt,
+    int? totalSeconds,
+    int? creditedSeconds,
+    Value<double?> latitude = const Value.absent(),
+    Value<double?> longitude = const Value.absent(),
+    Value<String?> extraJson = const Value.absent(),
+  }) => ActiveActionRow(
+    id: id ?? this.id,
+    profileId: profileId ?? this.profileId,
+    kind: kind ?? this.kind,
+    subjectUid: subjectUid.present ? subjectUid.value : this.subjectUid,
+    startedAt: startedAt ?? this.startedAt,
+    totalSeconds: totalSeconds ?? this.totalSeconds,
+    creditedSeconds: creditedSeconds ?? this.creditedSeconds,
+    latitude: latitude.present ? latitude.value : this.latitude,
+    longitude: longitude.present ? longitude.value : this.longitude,
+    extraJson: extraJson.present ? extraJson.value : this.extraJson,
+  );
+  ActiveActionRow copyWithCompanion(ActiveActionsCompanion data) {
+    return ActiveActionRow(
+      id: data.id.present ? data.id.value : this.id,
+      profileId: data.profileId.present ? data.profileId.value : this.profileId,
+      kind: data.kind.present ? data.kind.value : this.kind,
+      subjectUid: data.subjectUid.present
+          ? data.subjectUid.value
+          : this.subjectUid,
+      startedAt: data.startedAt.present ? data.startedAt.value : this.startedAt,
+      totalSeconds: data.totalSeconds.present
+          ? data.totalSeconds.value
+          : this.totalSeconds,
+      creditedSeconds: data.creditedSeconds.present
+          ? data.creditedSeconds.value
+          : this.creditedSeconds,
+      latitude: data.latitude.present ? data.latitude.value : this.latitude,
+      longitude: data.longitude.present ? data.longitude.value : this.longitude,
+      extraJson: data.extraJson.present ? data.extraJson.value : this.extraJson,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ActiveActionRow(')
+          ..write('id: $id, ')
+          ..write('profileId: $profileId, ')
+          ..write('kind: $kind, ')
+          ..write('subjectUid: $subjectUid, ')
+          ..write('startedAt: $startedAt, ')
+          ..write('totalSeconds: $totalSeconds, ')
+          ..write('creditedSeconds: $creditedSeconds, ')
+          ..write('latitude: $latitude, ')
+          ..write('longitude: $longitude, ')
+          ..write('extraJson: $extraJson')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    profileId,
+    kind,
+    subjectUid,
+    startedAt,
+    totalSeconds,
+    creditedSeconds,
+    latitude,
+    longitude,
+    extraJson,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ActiveActionRow &&
+          other.id == this.id &&
+          other.profileId == this.profileId &&
+          other.kind == this.kind &&
+          other.subjectUid == this.subjectUid &&
+          other.startedAt == this.startedAt &&
+          other.totalSeconds == this.totalSeconds &&
+          other.creditedSeconds == this.creditedSeconds &&
+          other.latitude == this.latitude &&
+          other.longitude == this.longitude &&
+          other.extraJson == this.extraJson);
+}
+
+class ActiveActionsCompanion extends UpdateCompanion<ActiveActionRow> {
+  final Value<int> id;
+  final Value<int> profileId;
+  final Value<String> kind;
+  final Value<String?> subjectUid;
+  final Value<DateTime> startedAt;
+  final Value<int> totalSeconds;
+  final Value<int> creditedSeconds;
+  final Value<double?> latitude;
+  final Value<double?> longitude;
+  final Value<String?> extraJson;
+  const ActiveActionsCompanion({
+    this.id = const Value.absent(),
+    this.profileId = const Value.absent(),
+    this.kind = const Value.absent(),
+    this.subjectUid = const Value.absent(),
+    this.startedAt = const Value.absent(),
+    this.totalSeconds = const Value.absent(),
+    this.creditedSeconds = const Value.absent(),
+    this.latitude = const Value.absent(),
+    this.longitude = const Value.absent(),
+    this.extraJson = const Value.absent(),
+  });
+  ActiveActionsCompanion.insert({
+    this.id = const Value.absent(),
+    required int profileId,
+    required String kind,
+    this.subjectUid = const Value.absent(),
+    required DateTime startedAt,
+    required int totalSeconds,
+    this.creditedSeconds = const Value.absent(),
+    this.latitude = const Value.absent(),
+    this.longitude = const Value.absent(),
+    this.extraJson = const Value.absent(),
+  }) : profileId = Value(profileId),
+       kind = Value(kind),
+       startedAt = Value(startedAt),
+       totalSeconds = Value(totalSeconds);
+  static Insertable<ActiveActionRow> custom({
+    Expression<int>? id,
+    Expression<int>? profileId,
+    Expression<String>? kind,
+    Expression<String>? subjectUid,
+    Expression<DateTime>? startedAt,
+    Expression<int>? totalSeconds,
+    Expression<int>? creditedSeconds,
+    Expression<double>? latitude,
+    Expression<double>? longitude,
+    Expression<String>? extraJson,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (profileId != null) 'profile_id': profileId,
+      if (kind != null) 'kind': kind,
+      if (subjectUid != null) 'subject_uid': subjectUid,
+      if (startedAt != null) 'started_at': startedAt,
+      if (totalSeconds != null) 'total_seconds': totalSeconds,
+      if (creditedSeconds != null) 'credited_seconds': creditedSeconds,
+      if (latitude != null) 'latitude': latitude,
+      if (longitude != null) 'longitude': longitude,
+      if (extraJson != null) 'extra_json': extraJson,
+    });
+  }
+
+  ActiveActionsCompanion copyWith({
+    Value<int>? id,
+    Value<int>? profileId,
+    Value<String>? kind,
+    Value<String?>? subjectUid,
+    Value<DateTime>? startedAt,
+    Value<int>? totalSeconds,
+    Value<int>? creditedSeconds,
+    Value<double?>? latitude,
+    Value<double?>? longitude,
+    Value<String?>? extraJson,
+  }) {
+    return ActiveActionsCompanion(
+      id: id ?? this.id,
+      profileId: profileId ?? this.profileId,
+      kind: kind ?? this.kind,
+      subjectUid: subjectUid ?? this.subjectUid,
+      startedAt: startedAt ?? this.startedAt,
+      totalSeconds: totalSeconds ?? this.totalSeconds,
+      creditedSeconds: creditedSeconds ?? this.creditedSeconds,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+      extraJson: extraJson ?? this.extraJson,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (profileId.present) {
+      map['profile_id'] = Variable<int>(profileId.value);
+    }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
+    }
+    if (subjectUid.present) {
+      map['subject_uid'] = Variable<String>(subjectUid.value);
+    }
+    if (startedAt.present) {
+      map['started_at'] = Variable<DateTime>(startedAt.value);
+    }
+    if (totalSeconds.present) {
+      map['total_seconds'] = Variable<int>(totalSeconds.value);
+    }
+    if (creditedSeconds.present) {
+      map['credited_seconds'] = Variable<int>(creditedSeconds.value);
+    }
+    if (latitude.present) {
+      map['latitude'] = Variable<double>(latitude.value);
+    }
+    if (longitude.present) {
+      map['longitude'] = Variable<double>(longitude.value);
+    }
+    if (extraJson.present) {
+      map['extra_json'] = Variable<String>(extraJson.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ActiveActionsCompanion(')
+          ..write('id: $id, ')
+          ..write('profileId: $profileId, ')
+          ..write('kind: $kind, ')
+          ..write('subjectUid: $subjectUid, ')
+          ..write('startedAt: $startedAt, ')
+          ..write('totalSeconds: $totalSeconds, ')
+          ..write('creditedSeconds: $creditedSeconds, ')
+          ..write('latitude: $latitude, ')
+          ..write('longitude: $longitude, ')
+          ..write('extraJson: $extraJson')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$SaveDatabase extends GeneratedDatabase {
   _$SaveDatabase(QueryExecutor e) : super(e);
   $SaveDatabaseManager get managers => $SaveDatabaseManager(this);
@@ -9371,6 +9999,7 @@ abstract class _$SaveDatabase extends GeneratedDatabase {
   late final $ProfileStatsTable profileStats = $ProfileStatsTable(this);
   late final $ShelterItemsTable shelterItems = $ShelterItemsTable(this);
   late final $CraftJobsTable craftJobs = $CraftJobsTable(this);
+  late final $ActiveActionsTable activeActions = $ActiveActionsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -9390,6 +10019,7 @@ abstract class _$SaveDatabase extends GeneratedDatabase {
     profileStats,
     shelterItems,
     craftJobs,
+    activeActions,
   ];
   @override
   DriftDatabaseOptions get options =>
@@ -13743,6 +14373,305 @@ typedef $$CraftJobsTableProcessedTableManager =
       CraftJobRow,
       PrefetchHooks Function()
     >;
+typedef $$ActiveActionsTableCreateCompanionBuilder =
+    ActiveActionsCompanion Function({
+      Value<int> id,
+      required int profileId,
+      required String kind,
+      Value<String?> subjectUid,
+      required DateTime startedAt,
+      required int totalSeconds,
+      Value<int> creditedSeconds,
+      Value<double?> latitude,
+      Value<double?> longitude,
+      Value<String?> extraJson,
+    });
+typedef $$ActiveActionsTableUpdateCompanionBuilder =
+    ActiveActionsCompanion Function({
+      Value<int> id,
+      Value<int> profileId,
+      Value<String> kind,
+      Value<String?> subjectUid,
+      Value<DateTime> startedAt,
+      Value<int> totalSeconds,
+      Value<int> creditedSeconds,
+      Value<double?> latitude,
+      Value<double?> longitude,
+      Value<String?> extraJson,
+    });
+
+class $$ActiveActionsTableFilterComposer
+    extends Composer<_$SaveDatabase, $ActiveActionsTable> {
+  $$ActiveActionsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get profileId => $composableBuilder(
+    column: $table.profileId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get subjectUid => $composableBuilder(
+    column: $table.subjectUid,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get startedAt => $composableBuilder(
+    column: $table.startedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get totalSeconds => $composableBuilder(
+    column: $table.totalSeconds,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get creditedSeconds => $composableBuilder(
+    column: $table.creditedSeconds,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get latitude => $composableBuilder(
+    column: $table.latitude,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get longitude => $composableBuilder(
+    column: $table.longitude,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get extraJson => $composableBuilder(
+    column: $table.extraJson,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ActiveActionsTableOrderingComposer
+    extends Composer<_$SaveDatabase, $ActiveActionsTable> {
+  $$ActiveActionsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get profileId => $composableBuilder(
+    column: $table.profileId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get subjectUid => $composableBuilder(
+    column: $table.subjectUid,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get startedAt => $composableBuilder(
+    column: $table.startedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get totalSeconds => $composableBuilder(
+    column: $table.totalSeconds,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get creditedSeconds => $composableBuilder(
+    column: $table.creditedSeconds,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get latitude => $composableBuilder(
+    column: $table.latitude,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get longitude => $composableBuilder(
+    column: $table.longitude,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get extraJson => $composableBuilder(
+    column: $table.extraJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ActiveActionsTableAnnotationComposer
+    extends Composer<_$SaveDatabase, $ActiveActionsTable> {
+  $$ActiveActionsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get profileId =>
+      $composableBuilder(column: $table.profileId, builder: (column) => column);
+
+  GeneratedColumn<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
+
+  GeneratedColumn<String> get subjectUid => $composableBuilder(
+    column: $table.subjectUid,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get startedAt =>
+      $composableBuilder(column: $table.startedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get totalSeconds => $composableBuilder(
+    column: $table.totalSeconds,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get creditedSeconds => $composableBuilder(
+    column: $table.creditedSeconds,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get latitude =>
+      $composableBuilder(column: $table.latitude, builder: (column) => column);
+
+  GeneratedColumn<double> get longitude =>
+      $composableBuilder(column: $table.longitude, builder: (column) => column);
+
+  GeneratedColumn<String> get extraJson =>
+      $composableBuilder(column: $table.extraJson, builder: (column) => column);
+}
+
+class $$ActiveActionsTableTableManager
+    extends
+        RootTableManager<
+          _$SaveDatabase,
+          $ActiveActionsTable,
+          ActiveActionRow,
+          $$ActiveActionsTableFilterComposer,
+          $$ActiveActionsTableOrderingComposer,
+          $$ActiveActionsTableAnnotationComposer,
+          $$ActiveActionsTableCreateCompanionBuilder,
+          $$ActiveActionsTableUpdateCompanionBuilder,
+          (
+            ActiveActionRow,
+            BaseReferences<
+              _$SaveDatabase,
+              $ActiveActionsTable,
+              ActiveActionRow
+            >,
+          ),
+          ActiveActionRow,
+          PrefetchHooks Function()
+        > {
+  $$ActiveActionsTableTableManager(_$SaveDatabase db, $ActiveActionsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ActiveActionsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ActiveActionsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ActiveActionsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> profileId = const Value.absent(),
+                Value<String> kind = const Value.absent(),
+                Value<String?> subjectUid = const Value.absent(),
+                Value<DateTime> startedAt = const Value.absent(),
+                Value<int> totalSeconds = const Value.absent(),
+                Value<int> creditedSeconds = const Value.absent(),
+                Value<double?> latitude = const Value.absent(),
+                Value<double?> longitude = const Value.absent(),
+                Value<String?> extraJson = const Value.absent(),
+              }) => ActiveActionsCompanion(
+                id: id,
+                profileId: profileId,
+                kind: kind,
+                subjectUid: subjectUid,
+                startedAt: startedAt,
+                totalSeconds: totalSeconds,
+                creditedSeconds: creditedSeconds,
+                latitude: latitude,
+                longitude: longitude,
+                extraJson: extraJson,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int profileId,
+                required String kind,
+                Value<String?> subjectUid = const Value.absent(),
+                required DateTime startedAt,
+                required int totalSeconds,
+                Value<int> creditedSeconds = const Value.absent(),
+                Value<double?> latitude = const Value.absent(),
+                Value<double?> longitude = const Value.absent(),
+                Value<String?> extraJson = const Value.absent(),
+              }) => ActiveActionsCompanion.insert(
+                id: id,
+                profileId: profileId,
+                kind: kind,
+                subjectUid: subjectUid,
+                startedAt: startedAt,
+                totalSeconds: totalSeconds,
+                creditedSeconds: creditedSeconds,
+                latitude: latitude,
+                longitude: longitude,
+                extraJson: extraJson,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ActiveActionsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$SaveDatabase,
+      $ActiveActionsTable,
+      ActiveActionRow,
+      $$ActiveActionsTableFilterComposer,
+      $$ActiveActionsTableOrderingComposer,
+      $$ActiveActionsTableAnnotationComposer,
+      $$ActiveActionsTableCreateCompanionBuilder,
+      $$ActiveActionsTableUpdateCompanionBuilder,
+      (
+        ActiveActionRow,
+        BaseReferences<_$SaveDatabase, $ActiveActionsTable, ActiveActionRow>,
+      ),
+      ActiveActionRow,
+      PrefetchHooks Function()
+    >;
 
 class $SaveDatabaseManager {
   final _$SaveDatabase _db;
@@ -13775,4 +14704,6 @@ class $SaveDatabaseManager {
       $$ShelterItemsTableTableManager(_db, _db.shelterItems);
   $$CraftJobsTableTableManager get craftJobs =>
       $$CraftJobsTableTableManager(_db, _db.craftJobs);
+  $$ActiveActionsTableTableManager get activeActions =>
+      $$ActiveActionsTableTableManager(_db, _db.activeActions);
 }
