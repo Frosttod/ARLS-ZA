@@ -535,6 +535,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// watching during it is the number this action exists to change.
   _FillPlan? _filling;
 
+  /// §4.7: the meal under way, so the tin empties as it is eaten.
+  _MealPlan? _meal;
+
   /// §11.1: finishes whatever the app was killed in the middle of.
   ///
   /// ⚠️ **The reported bug lives here.** Closing the game while eating used to
@@ -562,6 +565,46 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     }
 
     await runner.finish();
+  }
+
+  /// §4.7, §2.2: moves the meal on to where the bar is.
+  ///
+  /// ⚠️ Called on every tick, and idempotent by construction: it works out
+  /// what should have been swallowed by this fraction and applies the
+  /// difference. A tick that arrives late, or twice in one frame, cannot feed
+  /// somebody twice.
+  ///
+  /// The tin empties as it is eaten, so there is no moment at which the pack
+  /// is lying about what is in it — which is the whole of the bug this
+  /// replaces. Killing the app halfway leaves a half-eaten tin because it
+  /// *is* half eaten, not because anything reconstructed one.
+  Future<void> _advanceMeal(double progress) async {
+    final plan = _meal;
+    final loop = _loop;
+    final line = _usingLine.value;
+    if (plan == null || loop == null || line == null) return;
+
+    final share = progress.clamp(0.0, 1.0);
+    final step = share - plan.applied;
+    if (step <= 0) return;
+
+    // §2.2: the body gets it as it goes down, not in a lump at the end.
+    final swallowed = step * plan.portionAtStart;
+    loop.applyUse(
+      kcal: plan.kcal * swallowed,
+      waterMl: plan.waterMl * swallowed,
+    );
+
+    final left = plan.portionAt(share);
+    _meal = plan.appliedTo(share);
+
+    // The line is rebuilt by every change, so the handle goes with it — the
+    // same rule §11.1's uid exists for.
+    final next = _inventory.value.setPortion(line, left);
+    _inventory.value = next.inventory;
+    _usingLine.value = next.line;
+
+    await _saveInventory();
   }
 
   /// §4.7: applies the part of a use that actually happened.
@@ -1749,10 +1792,33 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     // §11.1: on disk before the first second passes. [_restoreInterruptedAction]
     // is what reads it back, and it only works if this happened.
     final takes = Duration(seconds: seconds < 1 ? 1 : seconds);
+
+    // ⚠️ §4.7: the tin is opened now. Only what is swallowed comes in
+    // mouthfuls, so a tourniquet is not a meal and gets no plan — half a
+    // tourniquet is a tourniquet still in the pack.
+    var piece = line;
+    if (use.consumesItem && (use.kcal > 0 || use.waterMl > 0)) {
+      final opened = _inventory.value.openOne(line);
+      piece = opened.line;
+
+      _inventory.value = opened.inventory;
+      _usingLine.value = piece;
+      await _saveInventory();
+
+      _meal = _MealPlan(
+        uid: piece.uid,
+        portionAtStart: piece.portion,
+        kcal: use.kcal,
+        waterMl: use.waterMl,
+      );
+    } else {
+      _meal = null;
+    }
+
     await _actions?.start(
       TimedAction(
         kind: use.action.name,
-        subjectUid: line.uid,
+        subjectUid: piece.uid,
         startedAt: DateTime.now().toUtc(),
         total: takes,
       ),
@@ -1844,24 +1910,35 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final use = definition == null ? null : useOf(definition);
     if (definition == null || use == null) return;
 
+    // ⚠️ A meal has been emptying itself all along (§4.7), so finishing is
+    // one last step to the end of the bar rather than a lump at the end.
+    // Swallowing it twice here would feed somebody two tins for one.
+    final wasMeal = _meal != null;
+    if (wasMeal) {
+      await _advanceMeal(1);
+      _meal = null;
+    }
+
     // What was left of the piece, which is all that is left to swallow.
     final line = _usingLine.value;
     final portion = line?.portion ?? 1;
     _usingLine.value = null;
 
-    if (use.consumesItem) {
-      // The very piece that was in hand: a half bottle beside a full one is
-      // two different things to own.
-      final next = line == null
-          ? _inventory.value.remove(itemId, count: 1)
-          : _inventory.value.removeLine(line);
-      if (next != null) {
-        _inventory.value = next;
-        await _saveInventory();
+    if (!wasMeal) {
+      if (use.consumesItem) {
+        // The very piece that was in hand: a half bottle beside a full one is
+        // two different things to own.
+        final next = line == null
+            ? _inventory.value.remove(itemId, count: 1)
+            : _inventory.value.removeLine(line);
+        if (next != null) {
+          _inventory.value = next;
+          await _saveInventory();
+        }
       }
-    }
 
-    loop.applyUse(kcal: use.kcal * portion, waterMl: use.waterMl * portion);
+      loop.applyUse(kcal: use.kcal * portion, waterMl: use.waterMl * portion);
+    }
 
     // §2.6: what the dressing was for. After the item is gone, so an
     // interrupted one neither heals nor is consumed.
@@ -5301,6 +5378,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     if (next.isRunning) {
       _search.value = next;
       if (_filling != null) setState(() => _advanceFilling(next));
+      if (_meal != null) await _advanceMeal(next.progress);
       return;
     }
 
@@ -5510,9 +5588,15 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       return;
     }
 
-    // ⚠️ The same call the boot makes for a use the operating system
-    // interrupted. Those are one event as far as the character is concerned,
-    // and they gave different answers for as long as only this one existed.
+    // ⚠️ Nothing to settle for a meal: it has been emptying itself as it
+    // went (§4.7), so the pack is already telling the truth. Only the things
+    // that are *not* swallowed in mouthfuls — a tourniquet, a splint — reach
+    // the older path, and for those an interruption leaves them in the pack.
+    if (_meal != null) {
+      _meal = null;
+      return;
+    }
+
     await _swallow(line, action.progress);
   }
 
@@ -6479,6 +6563,57 @@ class _Notice extends StatelessWidget {
 /// magazine started and where it is going, and the fraction says where it
 /// should be now. Working it out from the fraction rather than counting ticks
 /// is what makes a late tick — or two in one frame — harmless.
+/// §4.7: a meal being eaten, and how much of it there was to begin with.
+///
+/// ⚠️ **The tin is opened at the first tap, not at the last.**
+///
+/// Consuming a portion at the end — or restoring it at the next boot — leaves
+/// a window in which the pack is lying: the bar is half across and the tin is
+/// still sealed. Anything that ends the session in that window gives the meal
+/// back whole, and closing the app becomes a way to eat for free.
+///
+/// So the portion follows the bar, the same way a magazine's rounds follow it
+/// (§4.2). Nothing has to be restored because nothing was ever deferred.
+///
+/// Worked out from the fraction rather than counted down per tick: a tick that
+/// arrives late, or twice in one frame, cannot make a player eat more than
+/// they had.
+class _MealPlan {
+  const _MealPlan({
+    required this.uid,
+    required this.portionAtStart,
+    required this.kcal,
+    required this.waterMl,
+    this.applied = 0,
+  });
+
+  /// §11.1: which piece. Never the item id — a half-drunk bottle beside two
+  /// full ones is one row being emptied and two that are not.
+  final String? uid;
+
+  /// How much of it there was when the tap happened. A bottle already half
+  /// drunk is half a bottle of water, and half again is a quarter.
+  final double portionAtStart;
+
+  /// What a whole one of these is worth (§2.2).
+  final double kcal;
+  final double waterMl;
+
+  /// How much of the meal has already been swallowed and paid for.
+  final double applied;
+
+  double portionAt(double progress) =>
+      portionAtStart * (1 - progress.clamp(0.0, 1.0));
+
+  _MealPlan appliedTo(double share) => _MealPlan(
+    uid: uid,
+    portionAtStart: portionAtStart,
+    kcal: kcal,
+    waterMl: waterMl,
+    applied: share,
+  );
+}
+
 class _FillPlan {
   const _FillPlan({required this.itemId, required this.from, required this.to});
 

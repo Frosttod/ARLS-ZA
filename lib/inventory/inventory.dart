@@ -518,6 +518,70 @@ class Inventory {
   /// is split off from whatever stack it sat in first, because a stack of
   /// three where one is half drunk is not a stack of three — and what is left
   /// below a mouthful is gone rather than kept as a rounding error.
+  /// §4.7: takes one piece out of a stack, to be eaten.
+  ///
+  /// ⚠️ **Opening the tin is a separate act from eating it.** A stack of four
+  /// becomes three and one, and the one is what the meal happens to — so a
+  /// player who stops after two mouthfuls has three whole tins and an open
+  /// one, which is what actually happened.
+  ///
+  /// Done once, at the tap. [setPortion] is what runs afterwards, and it has
+  /// no splitting to do because this already did it. Doing both on every tick
+  /// would carve the stack up a slice at a time.
+  ///
+  /// The piece that comes out gets its own name (§11.1): it has a history now
+  /// that the ones left in the stack do not.
+  ({Inventory inventory, CarriedItem line}) openOne(CarriedItem line) {
+    final index = carried.indexWhere((entry) => entry.isSame(line));
+    if (index < 0) return (inventory: this, line: line);
+    if (line.count <= 1) return (inventory: this, line: carried[index]);
+
+    final opened = line.copyWith(count: 1, uid: newLineId());
+    final lines = [...carried];
+    lines[index] = line.copyWith(count: line.count - 1);
+    lines.insert(index + 1, opened);
+
+    return (
+      inventory: Inventory(carried: lines, worn: worn, packId: packId),
+      line: opened,
+    );
+  }
+
+  /// §4.7: how much of this piece is left, set outright.
+  ///
+  /// Absolute rather than a decrement, so a caller can drive it from a bar's
+  /// fraction and a repeated or late call changes nothing. Below a crumb the
+  /// piece is gone.
+  ///
+  /// Returns the piece as it now is, or null when there is none of it left —
+  /// the handle has to travel with the change, exactly as §5.3's magazine
+  /// filling learned.
+  ({Inventory inventory, CarriedItem? line}) setPortion(
+    CarriedItem line,
+    double portion,
+  ) {
+    final index = carried.indexWhere((entry) => entry.isSame(line));
+    if (index < 0) return (inventory: this, line: null);
+
+    final lines = [...carried];
+
+    if (portion < kPortionCrumb) {
+      lines.removeAt(index);
+      return (
+        inventory: Inventory(carried: lines, worn: worn, packId: packId),
+        line: null,
+      );
+    }
+
+    final next = carried[index].copyWith(portion: portion);
+    lines[index] = next;
+
+    return (
+      inventory: Inventory(carried: lines, worn: worn, packId: packId),
+      line: next,
+    );
+  }
+
   Inventory consumePortion(CarriedItem line, double fraction) {
     final index = carried.indexWhere((entry) => entry.isSame(line));
     if (index < 0) return this;

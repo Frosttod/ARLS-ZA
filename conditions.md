@@ -1008,6 +1008,30 @@ if craft_job_running and player opens shelves
 
 ---
 
+## Otwarta puszka (§4.7)
+
+```
+if use tapped and item is food or drink
+    then one piece opened out of the stack NOW   // ⚠️ Otwarcie puszki i zjedzenie jej to dwie różne czynności, a pierwsza dzieje się przy tapnięciu. Cztery puszki stają się trzema i jedną otwartą — stos nie staje się "3,7 puszki".
+
+opened piece gets its own uid                     // §11.1. Ma teraz historię, której nie mają te w stosie.
+
+portion = portionAtStart × (1 − progress)         // Porcja idzie za paskiem, tak samo jak naboje w magazynku (§4.2). Liczona z ułamka, nie odejmowana co tyk — tyk spóźniony albo podwójny nie da zjeść więcej, niż się miało.
+
+kcal i woda też idą za paskiem                     // §2.2. Ciało dostaje to w trakcie, nie hurtem na końcu.
+
+if app killed mid-meal
+    then nothing to restore                       // ⚠️ Plecak był prawdziwy w każdej chwili. Zabicie w połowie zostawia nadgryzioną puszkę, bo ona **jest** nadgryziona, a nie dlatego że coś ją odtworzyło. Odkładanie stanu na koniec paska zostawiało okno, w którym plecak kłamał — i wyjście z gry w tym oknie oddawało posiłek w całości.
+
+if portion < kPortionCrumb
+    then piece removed                            // Okruch to nie posiłek.
+
+if use does not consume item (staza, szyna)
+    then no meal plan, old path                   // Połowa stazy to nie pół stazy — to staza nadal w plecaku.
+```
+
+---
+
 ## Akcja przerwana przez system (§11.1, §4.7)
 
 ```
