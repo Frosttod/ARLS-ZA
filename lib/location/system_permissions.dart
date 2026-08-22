@@ -18,6 +18,7 @@
 /// that recorded nothing.
 library;
 
+import 'device_position_source.dart';
 import 'package:flutter/services.dart';
 
 import 'location_access.dart';
@@ -85,4 +86,32 @@ class SystemSettings {
       // Desktop.
     }
   }
+}
+
+/// What the operating system will say about us, behind one seam (§16.1).
+///
+/// ⚠️ Exists so the game screen can be built in a test. `_boot` awaits the
+/// location permission and the battery setting, and both are platform
+/// channels — in a test they never answer, so the whole screen stayed blank
+/// and the orchestration in `main.dart` had no test at all. That was not a
+/// missing test; it was a missing seam.
+///
+/// The default is the real device. Nothing in the game passes anything else.
+abstract class SystemProbe {
+  const SystemProbe();
+
+  Future<SystemPermissions> read();
+}
+
+/// The real one.
+class DeviceSystemProbe extends SystemProbe {
+  const DeviceSystemProbe();
+
+  @override
+  Future<SystemPermissions> read() async => SystemPermissions(
+    // checkPermission only; asking here would fire a prompt every time the
+    // settings screen is opened.
+    location: await currentLocationAccess(),
+    batteryOptimised: await const SystemSettings().isBatteryOptimised(),
+  );
 }

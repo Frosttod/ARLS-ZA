@@ -259,10 +259,24 @@ class _IntroScreenState extends State<IntroScreen> {
 /// Title screen. Routes to the creator on a first run, or resumes the active
 /// character and puts the HUD on screen.
 class TitleScreen extends StatefulWidget {
-  const TitleScreen({required this.session, required this.settings, super.key});
+  const TitleScreen({
+    required this.session,
+    required this.settings,
+    this.probe = const DeviceSystemProbe(),
+    super.key,
+  });
 
   final SaveSession session;
   final AppSettings settings;
+
+  /// ⚠️ What the system will say about permissions, behind a seam.
+  ///
+  /// [_boot] awaits this, and on a device it is two platform channels. In a
+  /// test they never answer, so the whole screen stayed blank and the
+  /// orchestration in this file had no test at all — which was a missing seam
+  /// rather than a missing test. The default is the real device; nothing in
+  /// the game passes anything else.
+  final SystemProbe probe;
 
   @override
   State<TitleScreen> createState() => _TitleScreenState();
@@ -955,12 +969,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// route given a value keeps showing the value it was built with, which is
   /// stale exactly when the player is looking at it — right after they walked
   /// to the system settings and changed something.
-  Future<SystemPermissions> _currentPermissions() async => SystemPermissions(
-    // checkPermission only; asking here would fire a prompt every time the
-    // settings screen is opened.
-    location: await currentLocationAccess(),
-    batteryOptimised: await const SystemSettings().isBatteryOptimised(),
-  );
+  Future<SystemPermissions> _currentPermissions() => widget.probe.read();
 
   /// Offered once, after the map is up, and dismissible.
   ///
