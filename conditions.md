@@ -1008,6 +1008,30 @@ if craft_job_running and player opens shelves
 
 ---
 
+## Akcja przerwana przez system (§11.1, §4.7)
+
+```
+if action started
+    then row written before first second passes  // ⚠️ Zgłoszony błąd mieszkał tutaj. Zamknięcie gry w trakcie jedzenia oddawało kanapkę nietkniętą, bo akcja istniała wyłącznie w notifierze wewnątrz widgetu — zabicie procesu ją cofało. Proces da się zabić w pierwszej sekundzie tak samo łatwo jak w ostatniej.
+
+if app killed mid-use
+    then on boot: swallow(progress), item stays open
+                                                 // Dokładnie to, co §4.7 robi przy przerwaniu na ekranie. Przerwanie przez gracza i przerwanie przez system to jedno zdarzenie z punktu widzenia postaci — i dawały różne odpowiedzi tak długo, jak istniało tylko pierwsze.
+
+nothing is resumed after a kill                   // Posiłku nie podejmuje się godzinę później. To posiłek przerwany, a puszka jest otwarta.
+
+if pace = unattended and gap
+    then credited += cała przerwa                 // §2.1a.3. Budowa i rozbiórka idą niezależnie od tego, czy ktoś patrzy.
+
+if pace ≠ unattended and gap
+    then credited unchanged                       // ⚠️ Nie ma jak stwierdzić, czy postać stała, czy biegła. Zgadywanie na korzyść gracza robiłoby z kieszeni najszybszy sposób jedzenia.
+
+if action ends any way at all
+    then row removed                              // Każde wyjście przechodzi przez jedno miejsce. Wyjście, które by go ominęło, zostawiłoby wiersz — a następny start gry zastosowałby posiłek skończony pół godziny temu.
+```
+
+---
+
 ## Tempo akcji (§2.1a, §4.7, §10.2)
 
 ```

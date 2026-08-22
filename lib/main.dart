@@ -71,7 +71,9 @@ import 'ui/notices.dart';
 import 'ui/refresh_rate.dart';
 import 'ui/search_panel.dart';
 import 'game/game_session.dart';
+import 'actions/action_runner.dart';
 import 'game/position_controller.dart';
+import 'sim/timed_action.dart';
 import 'game/relocation.dart';
 import 'l10n/app_localizations.dart';
 import 'location/device_position_source.dart';
@@ -533,6 +535,63 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// watching during it is the number this action exists to change.
   _FillPlan? _filling;
 
+  /// §11.1: finishes whatever the app was killed in the middle of.
+  ///
+  /// ⚠️ **The reported bug lives here.** Closing the game while eating used to
+  /// give the sandwich back untouched: the action existed only in a notifier
+  /// inside this widget, so killing the process undid it. Now it is a row, and
+  /// coming back applies exactly what §4.7 already applies to a meal
+  /// interrupted on screen — the mouthfuls that were swallowed, and no more.
+  ///
+  /// Nothing is resumed. A meal is not picked up an hour later; it is a meal
+  /// that was interrupted, and the tin is open.
+  Future<void> _restoreInterruptedAction() async {
+    final runner = _actions;
+    if (runner == null) return;
+
+    final found = await runner.restore();
+    if (found == null) return;
+
+    final subject = found.subjectUid;
+    if (subject != null) {
+      final line = _inventory.value.carried
+          .where((entry) => entry.uid == subject)
+          .firstOrNull;
+
+      if (line != null) await _swallow(line, found.progress);
+    }
+
+    await runner.finish();
+  }
+
+  /// §4.7: applies the part of a use that actually happened.
+  ///
+  /// One place, because it is now reached from two: an interruption on screen
+  /// and an interruption by the operating system. Those are the same event as
+  /// far as the character is concerned, and they gave different answers for as
+  /// long as only the first one existed.
+  Future<void> _swallow(CarriedItem line, double progress) async {
+    final loop = _loop;
+    final catalogue = _catalogue;
+    if (loop == null || catalogue == null) return;
+
+    final definition = catalogue[line.itemId];
+    final use = definition == null ? null : useOf(definition);
+
+    // Only what is swallowed comes in mouthfuls. A tourniquet half tied is not
+    // half a tourniquet — it is a tourniquet still in the pack.
+    if (use == null || !use.consumesItem) return;
+    if (use.kcal == 0 && use.waterMl == 0) return;
+
+    final share = progress.clamp(0.0, 1.0);
+    final swallowed = share * line.portion;
+    if (swallowed <= 0) return;
+
+    loop.applyUse(kcal: use.kcal * swallowed, waterMl: use.waterMl * swallowed);
+    _inventory.value = _inventory.value.consumePortion(line, share);
+    await _saveInventory();
+  }
+
   /// §4.2: thumbs loose rounds into a magazine.
   ///
   /// ⚠️ An action with a clock on it, not a button that changes a number.
@@ -733,6 +792,15 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// sticky position — see [PositionController] for the list. Two names on one
   /// object is a great deal harder to confuse than two fields ten lines apart.
   final PositionController _position = PositionController();
+
+  /// §2.1a, §11.1: the one clock, and the row that survives a kill.
+  ///
+  /// ⚠️ Null until a character is loaded, because it is keyed on the profile.
+  /// Everything with a duration is written here the moment it starts — an
+  /// action that lived only in a notifier was an action a killed process
+  /// undid, which is how closing the app during a meal handed the sandwich
+  /// back whole.
+  ActionRunner? _actions;
 
   ValueNotifier<GeoPoint?> get _standingAt => _position.standingAt;
 
@@ -1158,6 +1226,13 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         _position.seed(GeoPoint(last.latitude, last.longitude));
       }
     }
+
+    // §2.1a: the clock, before anything that might want to start something.
+    _actions = ActionRunner(
+      db: widget.session.db,
+      profileId: character.profile.id,
+    );
+    await _restoreInterruptedAction();
 
     await _reloadShelters();
 
@@ -1670,12 +1745,26 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final seconds = (use.duration.inSeconds * line.portion).round();
 
     _usingLine.value = line;
+
+    // §11.1: on disk before the first second passes. [_restoreInterruptedAction]
+    // is what reads it back, and it only works if this happened.
+    final takes = Duration(seconds: seconds < 1 ? 1 : seconds);
+    await _actions?.start(
+      TimedAction(
+        kind: use.action.name,
+        subjectUid: line.uid,
+        startedAt: DateTime.now().toUtc(),
+        total: takes,
+      ),
+    );
+    if (!mounted) return;
+
     setState(() {
       _search.value = Search.using(
         at: at ?? const GeoPoint(0, 0),
         now: DateTime.now().toUtc(),
         itemId: line.itemId,
-        duration: Duration(seconds: seconds < 1 ? 1 : seconds),
+        duration: takes,
         // §12: what is being swallowed, by name. "Jedzenie" says what kind
         // of action it is; "Jesz: Kanapka" says what the player is doing with
         // the thing they just tapped, which is the question the strip exists
@@ -1684,6 +1773,15 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       );
     });
     _startSearchTimer();
+  }
+
+  /// §2.1a: the row goes when the action does, whichever way it ended.
+  ///
+  /// ⚠️ Every exit from a use passes through here. One that did not would
+  /// leave a row behind, and the next boot would apply a meal the player
+  /// finished half an hour ago.
+  Future<void> _endTimedAction() async {
+    await _actions?.finish();
   }
 
   /// §12: the action and the thing it is being done to, in one line.
@@ -1705,6 +1803,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
   /// The action finished: the item is gone and the body has it.
   Future<void> _finishUse(Search action) async {
+    // The row goes first: whatever happens below, this use is over.
+    await _endTimedAction();
+
     final catalogue = _catalogue;
     final loop = _loop;
     final itemId = action.usingItemId;
@@ -5359,6 +5460,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// might have to run round; getting it all back for free would make the
   /// time it takes meaningless.
   Future<void> _interruptUse(Search action) async {
+    await _endTimedAction();
+
     // §4.2: a fill stopped part way keeps the rounds it already moved — they
     // are in the magazine, and that is where they are.
     final interrupted = _filling != null;
@@ -5378,22 +5481,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       return;
     }
 
-    final definition = catalogue[line.itemId];
-    final use = definition == null ? null : useOf(definition);
-    // Only what is swallowed comes in mouthfuls. A tourniquet half tied is not
-    // half a tourniquet — it is a tourniquet still in the pack.
-    if (use == null || !use.consumesItem) return;
-    if (use.kcal == 0 && use.waterMl == 0) return;
-
-    final swallowed = action.progress.clamp(0.0, 1.0) * line.portion;
-    if (swallowed <= 0) return;
-
-    loop.applyUse(kcal: use.kcal * swallowed, waterMl: use.waterMl * swallowed);
-    _inventory.value = _inventory.value.consumePortion(
-      line,
-      action.progress.clamp(0.0, 1.0),
-    );
-    await _saveInventory();
+    // ⚠️ The same call the boot makes for a use the operating system
+    // interrupted. Those are one event as far as the character is concerned,
+    // and they gave different answers for as long as only this one existed.
+    await _swallow(line, action.progress);
   }
 
   /// §10.2.3: reconnaissance reveals the places that cannot be seen from the
@@ -5778,6 +5869,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     _position.dispose();
     _reloadTimer?.cancel();
     _benchTimer?.cancel();
+    _actions?.dispose();
     _craftJob.removeListener(_onBenchChanged);
     _craftJob.dispose();
     _dismantling.dispose();
