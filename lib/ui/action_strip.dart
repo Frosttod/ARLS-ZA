@@ -13,11 +13,10 @@
 /// their character is doing.
 library;
 
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 
 import 'fonts.dart';
+import 'ticking.dart';
 import 'units.dart';
 import 'hud.dart' show HudColors;
 
@@ -75,22 +74,11 @@ class ActionStrip extends StatefulWidget {
   State<ActionStrip> createState() => _ActionStripState();
 }
 
-class _ActionStripState extends State<ActionStrip> {
-  Timer? _tick;
-
+class _ActionStripState extends State<ActionStrip>
+    with WidgetsBindingObserver, Ticking<ActionStrip> {
+  /// Nothing running, nothing to redraw — and most of the time nothing is.
   @override
-  void initState() {
-    super.initState();
-    _tick = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) setState(() {});
-    });
-  }
-
-  @override
-  void dispose() {
-    _tick?.cancel();
-    super.dispose();
-  }
+  bool get ticking => widget.actions.isNotEmpty;
 
   @override
   Widget build(BuildContext context) {

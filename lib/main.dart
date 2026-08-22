@@ -2894,45 +2894,45 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       builder: (context, searchVal, _) {
         return SearchPanel(
           search: searchVal,
-      targetName: box?.name,
-      canSearchHere: box != null,
-      // §10.3.5: how much of this place is left to turn over, so the panel can
-      // grey out a pass there is no longer room for.
-      searchUnitsLeft: box?.searchUnitsLeft ?? 0,
-      // §10.3.5: what each depth costs in seconds, here. A bin is not a
-      // supermarket, and the caption is where the player finds that out.
-      searchTimes: _searchTimesAt(box),
-      barrier: _barrierOn(box),
-      carried: _carriedIds(),
-      onSearchArea: _startAreaSearch,
-      onSearchHere: _startObjectSearch,
-      onBreach: _startBreach,
-      droppedLabel: _groundLabel(),
-      // Only with something actually underfoot. Found on a walk: the glyph
-      // stayed on the panel from anywhere, so "can I pick that up from here"
-      // was answered by pressing it and finding out.
-      onTakeDropped: _catalogue == null || _pilesInReach().isEmpty
-          ? null
-          : _openGround,
-      // §5.6.2: a round into the air.
-      //
-      // ⚠️ Offered whenever anything is in hand, and refused *out loud*. It
-      // used to vanish on any of four conditions, which read on a walk as "the
-      // button does not work" — the commonest cause being an unloaded weapon
-      // after a restart, since §8.4's magazines are not saved yet. A control
-      // that disappears cannot explain itself.
-      onFireAway: _weapon == null ? null : () => unawaited(_fireAway()),
+          targetName: box?.name,
+          canSearchHere: box != null,
+          // §10.3.5: how much of this place is left to turn over, so the panel can
+          // grey out a pass there is no longer room for.
+          searchUnitsLeft: box?.searchUnitsLeft ?? 0,
+          // §10.3.5: what each depth costs in seconds, here. A bin is not a
+          // supermarket, and the caption is where the player finds that out.
+          searchTimes: _searchTimesAt(box),
+          barrier: _barrierOn(box),
+          carried: _carriedIds(),
+          onSearchArea: _startAreaSearch,
+          onSearchHere: _startObjectSearch,
+          onBreach: _startBreach,
+          droppedLabel: _groundLabel(),
+          // Only with something actually underfoot. Found on a walk: the glyph
+          // stayed on the panel from anywhere, so "can I pick that up from here"
+          // was answered by pressing it and finding out.
+          onTakeDropped: _catalogue == null || _pilesInReach().isEmpty
+              ? null
+              : _openGround,
+          // §5.6.2: a round into the air.
+          //
+          // ⚠️ Offered whenever anything is in hand, and refused *out loud*. It
+          // used to vanish on any of four conditions, which read on a walk as "the
+          // button does not work" — the commonest cause being an unloaded weapon
+          // after a restart, since §8.4's magazines are not saved yet. A control
+          // that disappears cannot explain itself.
+          onFireAway: _weapon == null ? null : () => unawaited(_fireAway()),
 
-      // §5.3, §4.2: what is in hand and what is in it, on the panel that is
-      // always there. Preparing a weapon is something done before anything is
-      // in front of you, and until now there was nowhere to do it.
-      weapon: _weapon == null ? null : _nameOfItem(_weapon!),
-      rounds: _loaded,
-      capacity: _weaponCapacity,
-      onReload: _weapon == null ? null : _startReload,
-      fittings: _weaponFittings(),
-      reload: _reloadProgress(),
-      onCancel: _cancelSearch,
+          // §5.3, §4.2: what is in hand and what is in it, on the panel that is
+          // always there. Preparing a weapon is something done before anything is
+          // in front of you, and until now there was nowhere to do it.
+          weapon: _weapon == null ? null : _nameOfItem(_weapon!),
+          rounds: _loaded,
+          capacity: _weaponCapacity,
+          onReload: _weapon == null ? null : _startReload,
+          fittings: _weaponFittings(),
+          reload: _reloadProgress(),
+          onCancel: _cancelSearch,
         );
       },
     );
@@ -3409,12 +3409,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final sure = await _confirmDemolish(module, level, back);
     if (!sure || !mounted) return;
 
-    await ShelterStore(widget.session.db).setModule(
-      shelter.id,
-      module,
-      level - 1,
-      shelter.modules,
-    );
+    await ShelterStore(
+      widget.session.db,
+    ).setModule(shelter.id, module, level - 1, shelter.modules);
     await _refund(back);
     await _reloadShelters();
 
@@ -5621,12 +5618,56 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       case AppLifecycleState.detached:
       case AppLifecycleState.hidden:
         unawaited(loop.onPaused(DateTime.now().toUtc()));
+        _sleepTickers();
       case AppLifecycleState.resumed:
         unawaited(loop.onResumed());
         unawaited(_readPermissions());
+        unawaited(_wakeTickers());
       case AppLifecycleState.inactive:
+        // Not a background: a dialog over the app, the recents view, a call
+        // coming in. The screen is still the player's, and a bar that froze
+        // behind a permission sheet would read as the game hanging.
         break;
     }
+  }
+
+  /// ⚠️ **Nothing ticks while the app is in the background.**
+  ///
+  /// Seven periodic timers ran at one second and a hundred milliseconds, none
+  /// of them tied to the lifecycle. This game lives in a pocket for hours at a
+  /// time — that is the whole design — so a timer nobody stops is a wake-up
+  /// every second for as long as the phone is carried, rebuilding a widget
+  /// tree that no one can see.
+  ///
+  /// Nothing is lost by stopping. Every one of these draws a **deadline**, not
+  /// an accumulator: the search knows when it ends, the bench knows when it
+  /// ends, the reload knows when it ends. Waking up settles them against the
+  /// wall clock, exactly as opening the app after a night already does.
+  void _sleepTickers() {
+    _stopSearchTimer();
+    _stopReloadTimer();
+    _stopBenchTimer();
+  }
+
+  /// Puts the clocks back, and pays out whatever finished while they were off.
+  ///
+  /// The order matters: settle first, restart second. Restarting a timer for
+  /// an action that ended twenty minutes ago would draw a full bar for one
+  /// frame before the next tick cleared it.
+  Future<void> _wakeTickers() async {
+    if (_search.value != null) {
+      await _advanceSearch();
+      if (_search.value != null) _startSearchTimer();
+    }
+
+    if (_reload != null) {
+      _advanceReload(_standingAt.value ?? const GeoPoint(0, 0));
+      if (_reload != null) _startReloadTimer();
+    }
+
+    // Reloads what is on the bench, and pays it out if its time came while
+    // the phone was in a pocket.
+    await _reloadCraftJob();
   }
 
   @override

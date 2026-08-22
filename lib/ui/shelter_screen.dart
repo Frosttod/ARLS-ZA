@@ -20,6 +20,7 @@ import 'fonts.dart';
 import '../craft/craft_job.dart';
 import 'hud.dart' show HudColors;
 import 'units.dart';
+import 'ticking.dart';
 
 class ShelterScreen extends StatefulWidget {
   const ShelterScreen({
@@ -101,23 +102,18 @@ class ShelterScreen extends StatefulWidget {
   State<ShelterScreen> createState() => _ShelterScreenState();
 }
 
-class _ShelterScreenState extends State<ShelterScreen> {
+class _ShelterScreenState extends State<ShelterScreen>
+    with WidgetsBindingObserver, Ticking<ShelterScreen> {
   /// §8.3: the counters are the whole content of this screen while something
   /// is going up, and a screen whose only content is a number that never moves
   /// reads as broken.
-  Timer? _tick;
-
+  /// §8.3: only while something is going up. A finished shelter is a page of
+  /// figures that do not move.
   @override
-  void initState() {
-    super.initState();
-    _tick = Timer.periodic(const Duration(seconds: 1), (_) => setState(() {}));
-  }
-
-  @override
-  void dispose() {
-    _tick?.cancel();
-    super.dispose();
-  }
+  bool get ticking => widget.shelters.value.any(
+    (place) =>
+        !place.isReadyAt(DateTime.now().toUtc()) || place.building != null,
+  );
 
   Shelter? _main(List<Shelter> shelters) =>
       shelters.where((s) => s.kind == ShelterKind.main).firstOrNull;
@@ -535,7 +531,9 @@ class _ModuleRow extends StatelessWidget {
                   const SizedBox(width: 8),
                   TextButton(
                     onPressed: onDemolish,
-                    style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
+                    style: TextButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                    ),
                     child: Text(
                       l10n.shelterDemolish,
                       style: TextStyle(fontSize: 12, color: colours.alert),

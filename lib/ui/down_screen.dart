@@ -8,8 +8,7 @@
 library;
 
 import 'fonts.dart';
-import 'dart:async';
-
+import 'ticking.dart';
 import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
@@ -47,22 +46,14 @@ class DownScreen extends StatefulWidget {
   State<DownScreen> createState() => _DownScreenState();
 }
 
-class _DownScreenState extends State<DownScreen> {
+class _DownScreenState extends State<DownScreen>
+    with WidgetsBindingObserver, Ticking<DownScreen> {
   /// The hour runs on the wall clock (§9.2), so the screen has to as well —
   /// a countdown that only moves when a tick happens reads as a stopped one.
-  Timer? _tick;
-
+  /// §9.1's countdown is the one thing on screen, so it always ticks — but
+  /// not in a pocket, where nobody is reading it.
   @override
-  void initState() {
-    super.initState();
-    _tick = Timer.periodic(const Duration(seconds: 1), (_) => setState(() {}));
-  }
-
-  @override
-  void dispose() {
-    _tick?.cancel();
-    super.dispose();
-  }
+  bool get ticking => true;
 
   @override
   Widget build(BuildContext context) {

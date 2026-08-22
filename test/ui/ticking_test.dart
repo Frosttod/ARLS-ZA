@@ -1,0 +1,141 @@
+import 'dart:io';
+
+import 'package:arls_za/ui/ticking.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+/// ZEGAR, KTÓRY NIE CHODZI W KIESZENI (§3.3, §2.1a.3).
+///
+/// ⚠️ This game is carried for hours by design. Four widgets each made their
+/// own one-second timer in initState and none of them ever stopped: an empty
+/// action strip woke the app three thousand six hundred times an hour to
+/// rebuild a `SizedBox.shrink()`.
+///
+/// Two rules, and both are here: nothing ticks while there is nothing to
+/// redraw, and nothing ticks while the app is in the background.
+class _Probe extends StatefulWidget {
+  const _Probe({required this.busy});
+
+  final bool busy;
+
+  @override
+  State<_Probe> createState() => _ProbeState();
+}
+
+class _ProbeState extends State<_Probe>
+    with WidgetsBindingObserver, Ticking<_Probe> {
+  int builds = 0;
+
+  @override
+  bool get ticking => widget.busy;
+
+  @override
+  Widget build(BuildContext context) {
+    builds++;
+    return const SizedBox.shrink();
+  }
+}
+
+void main() {
+  _ProbeState stateOf(WidgetTester tester) =>
+      tester.state<_ProbeState>(find.byType(_Probe));
+
+  testWidgets('nothing to show, nothing to wake up for', (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: _Probe(busy: false)));
+    final probe = stateOf(tester);
+    final before = probe.builds;
+
+    await tester.pump(const Duration(seconds: 5));
+
+    expect(probe.builds, before, reason: 'an idle widget rebuilt itself');
+  });
+
+  testWidgets('something running redraws every second', (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: _Probe(busy: true)));
+    final probe = stateOf(tester);
+    final before = probe.builds;
+
+    await tester.pump(const Duration(seconds: 1));
+    await tester.pump(const Duration(seconds: 1));
+
+    expect(probe.builds, greaterThan(before));
+    await tester.pumpWidget(const MaterialApp(home: _Probe(busy: false)));
+  });
+
+  testWidgets('the clock stops when the app goes into a pocket', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const MaterialApp(home: _Probe(busy: true)));
+    final probe = stateOf(tester);
+
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    await tester.pump();
+    final asleep = probe.builds;
+
+    await tester.pump(const Duration(seconds: 5));
+    expect(probe.builds, asleep, reason: 'it ticked in the background');
+
+    // And starts again on the way back, without waiting a second first.
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pump();
+    expect(probe.builds, greaterThan(asleep));
+
+    await tester.pumpWidget(const MaterialApp(home: _Probe(busy: false)));
+  });
+
+  testWidgets('a dialog over the app is not a pocket', (tester) async {
+    // ⚠️ `inactive` is the recents view, a permission sheet, an incoming call.
+    // The screen is still the player's, and a bar that froze behind a dialog
+    // would read as the game hanging.
+    await tester.pumpWidget(const MaterialApp(home: _Probe(busy: true)));
+    final probe = stateOf(tester);
+
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    await tester.pump();
+    final before = probe.builds;
+
+    await tester.pump(const Duration(seconds: 2));
+    expect(probe.builds, greaterThan(before));
+
+    await tester.pumpWidget(const MaterialApp(home: _Probe(busy: false)));
+  });
+
+  group('the rule holds in the source', () {
+    test('no screen rolls its own periodic timer any more', () {
+      // A budget, like the sticky-position one. Four copies of the same thirty
+      // lines is how the lifecycle got forgotten in three of them.
+      final offenders = <String>[];
+
+      for (final file in Directory('lib/ui').listSync().whereType<File>()) {
+        if (!file.path.endsWith('.dart')) continue;
+        if (file.path.endsWith('ticking.dart')) continue;
+
+        if (file.readAsStringSync().contains('Timer.periodic')) {
+          offenders.add(file.uri.pathSegments.last);
+        }
+      }
+
+      expect(
+        offenders,
+        isEmpty,
+        reason: 'these should mix in Ticking: ${offenders.join(', ')}',
+      );
+    });
+
+    test('and main.dart stops its own when the app is backgrounded', () {
+      final main = File('lib/main.dart').readAsStringSync();
+
+      expect(main.contains('_sleepTickers()'), isTrue);
+      expect(main.contains('_wakeTickers()'), isTrue);
+
+      // Each of the three named, so adding a fourth and forgetting it fails.
+      for (final needle in [
+        '_stopSearchTimer();',
+        '_stopReloadTimer();',
+        '_stopBenchTimer();',
+      ]) {
+        expect(main.contains(needle), isTrue, reason: '$needle is not stopped');
+      }
+    });
+  });
+}
