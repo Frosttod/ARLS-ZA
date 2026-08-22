@@ -48,3 +48,14 @@ app.*.map.json
 # 1.4 GB of cache that lands here whenever the build script runs with the repo
 # as the working directory, and that GitHub refuses at 100 MB a file.
 /data/
+
+# Grafika źródłowa (§12).
+#
+# ⚠️ Oryginały nigdy nie trafiają do repozytorium ani do APK. 35 plików to
+# 66 MB — przy 200 przedmiotach z katalogu byłoby ~380 MB, a limit modułu
+# bazowego AAB w Google Play to 200 MB. Do tego JPG 1408x768 zdekodowany zajmuje
+# 4,3 MB RAM, więc dziesięć wierszy plecaka na ekranie to 43 MB.
+#
+# źródła zostają na dysku, `tool/build_art.py` robi z nich WebP w dwóch
+# rozmiarach, i dopiero to ląduje w assets/images/ oraz w gicie.
+/images/
