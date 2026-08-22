@@ -71,6 +71,7 @@ import 'ui/notices.dart';
 import 'ui/refresh_rate.dart';
 import 'ui/search_panel.dart';
 import 'game/game_session.dart';
+import 'game/position_controller.dart';
 import 'game/relocation.dart';
 import 'l10n/app_localizations.dart';
 import 'location/device_position_source.dart';
@@ -319,8 +320,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
   /// Which shelter [_stash] belongs to, so a save goes to the right shelves.
   Shelter? _openShelves;
+
   GameLoop? _loop;
-  GameSnapshot? _snapshot;
   bool _loading = true;
 
   /// Everything the game knows about items (§4.1), read once at boot from the
@@ -725,9 +726,17 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// would keep offering things already in the pack.
   final ValueNotifier<List<DroppedItem>> _dropped = ValueNotifier(const []);
 
-  /// Where the player is, for the ground list to measure reach from as they
-  /// move about the pile.
-  final ValueNotifier<GeoPoint?> _standingAt = ValueNotifier(null);
+  /// §3.2, §3.6: where the player is, and what the phone says.
+  ///
+  /// ⚠️ Behind one object rather than beside each other as two fields. Seven
+  /// bugs in this file were a line reading `displayFix` where it meant the
+  /// sticky position — see [PositionController] for the list. Two names on one
+  /// object is a great deal harder to confuse than two fields ten lines apart.
+  final PositionController _position = PositionController();
+
+  ValueNotifier<GeoPoint?> get _standingAt => _position.standingAt;
+
+  GameSnapshot? get _snapshot => _position.snapshot.value;
 
   /// Procedural places the player has actually looked for (§10.2.3). A
   /// pharmacy is a building and is visible from the street; a wrecked car in a
@@ -1103,18 +1112,11 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     );
     loop.snapshots.listen((snapshot) {
       if (!mounted) return;
-      setState(() {
-        _sessionStart ??= snapshot.state.lastUpdate;
-        _snapshot = snapshot;
-      });
-      // ⚠️ Sticky. A snapshot without a position is the phone having nothing
-      // to say, not the player having vanished — and everything that reads
-      // this measures *from* it, so a single blank frame put every enemy and
-      // every lootbox off the map for as long as it lasted.
-      final fix = snapshot.displayFix;
-      if (fix != null) {
-        _standingAt.value = GeoPoint(fix.latitude, fix.longitude);
-      }
+      _sessionStart ??= snapshot.state.lastUpdate;
+
+      // Both the snapshot and the sticky rule, in one call. The rule itself
+      // lives in [PositionController.accept] now.
+      setState(() => _position.accept(snapshot));
       // §3.3: the same moment animations stop is the moment smoothness does.
       unawaited(_refresh.want(economy: snapshot.economy));
 
@@ -1153,7 +1155,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     if (_standingAt.value == null) {
       final last = await _factory.lastKnownPosition(character.profile.id);
       if (last != null) {
-        _standingAt.value = GeoPoint(last.latitude, last.longitude);
+        _position.seed(GeoPoint(last.latitude, last.longitude));
       }
     }
 
@@ -5773,7 +5775,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     _inventory.dispose();
     _search.dispose();
     _dropped.dispose();
-    _standingAt.dispose();
+    _position.dispose();
     _reloadTimer?.cancel();
     _benchTimer?.cancel();
     _craftJob.removeListener(_onBenchChanged);
