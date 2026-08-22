@@ -1008,6 +1008,32 @@ if craft_job_running and player opens shelves
 
 ---
 
+## Tempo akcji (§2.1a, §4.7, §10.2)
+
+```
+credited += elapsed × rate(pace, kontekst)       // ⚠️ Jedna reguła zamiast trzech osobnych przypadków. Budowa zatrzymywana wyjściem z placu, przeszukanie kasowane krokiem i przeładowanie łamane ciałem na pięciu metrach to były trzy ręcznie pisane `if` w trzech plikach, odpowiadające na to samo pytanie.
+
+pace = unattended  -> rate 1.0 zawsze           // §2.1a.3. Budowa, wytwarzanie, rozbiórka, sen, lektura. Postać nastawia i wraca.
+pace = handsOn     -> rate 1 / mnożnik(prędkość)  // §4.7. Jedzenie, picie, opatrunki. Własne dwie ręce.
+pace = onTheSpot   -> rate 0 poza miejscem      // §10.2. Przeszukanie, wyważanie. Połowa sklepu przeszukana z drugiej strony ulicy to nie wolniejsze przeszukanie, to żadne przeszukanie.
+
+mnożnik: stój ×1.0 · marsz ×1.6 · szybki marsz ×2.5 · bieg rate=0
+                                                 // ⚠️ Zwolnienie, nie anulowanie. Wcześniej jeden krok wyrzucał cały posiłek — co robiło z najzwyklejszej czynności w grze rzecz wykonalną tylko przy staniu w bezruchu na środku ulicy.
+
+if rate = 0
+    then zegar stoi, praca zostaje                // Nie porażka. §18.6 i §8.3 już tak działają: to, co zaliczone, zostaje i wraca się do tego.
+
+if kind = suturing and bieg
+    then akcja przerwana                          // ⚠️ Jedyny wyjątek i jest decyzją, nie regułą. Szesnastu minut szycia (§4.7) nikt nie podejmuje po ucieczce sprintem od Brutala z igłą w środku.
+
+if akcja startuje przy niezerowej prędkości
+    then UI pokazuje czas po mnożniku            // §12. Piętnaście minut, które po cichu staje się dwadzieścia cztery, to interfejs kłamiący.
+
+próg bezruchu = 0.5 km/h, jeden dla wszystkiego   // Dwa progi znaczyłyby prędkość, przy której przeszukanie liczy się jako stój, a bandaż nie.
+```
+
+---
+
 ## Akcje w toku (§2.1a, §12)
 
 ```

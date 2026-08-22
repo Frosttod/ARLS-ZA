@@ -14,6 +14,8 @@
 /// | background | metabolism, bleeding, hotspot growth | always, independent of everything |
 library;
 
+import 'action_pace.dart';
+
 /// What the character is doing. One at a time (§2.1a.1).
 enum OccupationKind {
   /// Default state, not a choice. When the conditions of §2.5.1 hold and
@@ -36,6 +38,13 @@ enum OccupationKind {
 
   /// Default states are entered automatically rather than chosen.
   final bool isDefault;
+
+  /// §2.1a.3: what an occupation's clock does.
+  ///
+  /// Everything here that ticks with the app closed is [ActionPace.unattended]
+  /// by definition — the character set it going and walked away. Idle is not
+  /// an action and has no clock, so it gets the same answer and nobody asks.
+  ActionPace get pace => ActionPace.unattended;
 
   /// Shelter occupations tick with the app closed, as long as the character
   /// stays in the zone (§2.1a.3). Field work does not.
@@ -74,6 +83,36 @@ enum ActionKind {
     ActionKind.searching || ActionKind.shooting || ActionKind.reloading => true,
     _ => false,
   };
+
+  /// §4.7, §10.2: what the character's feet do to this.
+  ///
+  /// ⚠️ **Eating and dressing a wound are slowed by walking, not cancelled by
+  /// it.** They used to be cancelled — one step threw the whole meal away —
+  /// which made the most ordinary thing in the game a thing you could only do
+  /// by standing perfectly still in a street. §4.7 asks for hands, not for a
+  /// statue.
+  ///
+  /// Searching is the opposite and stays that way: half a shop turned over
+  /// from across the road is not a slower search, it is not a search.
+  ActionPace get pace => switch (this) {
+    ActionKind.eating ||
+    ActionKind.drinking ||
+    ActionKind.dressing ||
+    ActionKind.tourniquet ||
+    ActionKind.suturing => ActionPace.handsOn,
+
+    ActionKind.searching ||
+    ActionKind.reloading ||
+    ActionKind.shooting => ActionPace.onTheSpot,
+  };
+
+  /// §4.7: whether running ends this rather than pausing it.
+  ///
+  /// ⚠️ One exception, and it is a decision rather than a rule: sixteen
+  /// minutes of suturing (§4.7) is not something anybody picks up again after
+  /// sprinting away from a Brute with the needle still in. Everything else is
+  /// kept and gone back to, exactly as §18.6's dismantling is.
+  bool get ruinedByRunning => this == ActionKind.suturing;
 }
 
 /// Why an occupation ended.
