@@ -66,6 +66,178 @@ LOOK = {
 }
 
 
+# Rzeczy, ktore nie sa przedmiotami, ale maja folder i sa widoczne w grze.
+WORLD = [
+    ('zombies/walker', 'Walker',
+     'a shambling infected human, ragged clothing, grey mottled skin, '
+     'slack posture, head slightly down'),
+    ('zombies/runner', 'Runner',
+     'a lean infected human caught mid-stride, taut sinew, torn clothing, '
+     'head forward, unnaturally fast posture'),
+    ('zombies/brute', 'Brute',
+     'a massively built infected human, swollen shoulders and arms, '
+     'thickened hide, slow and heavy stance'),
+
+    ('lootplaces/poi_pharmacy', 'Pharmacy', 'a looted small-town pharmacy shopfront'),
+    ('lootplaces/poi_hardware', 'Hardware shop', 'a ransacked hardware shop entrance'),
+    ('lootplaces/poi_grocery', 'Grocery shop', 'an emptied corner grocery shopfront'),
+    ('lootplaces/poi_sports', 'Sports shop', 'a broken-into sports shop window'),
+    ('lootplaces/poi_weapons', 'Gun shop', 'a gun shop with a shuttered, forced door'),
+    ('lootplaces/poi_library', 'Library', 'a dim public library reading room, shelves disturbed'),
+    ('lootplaces/poi_industrial', 'Industrial site', 'a dead industrial yard, rusted plant'),
+    ('lootplaces/poi_hospital', 'Hospital', 'a hospital entrance, gurneys abandoned outside'),
+    ('lootplaces/poi_military', 'Military site', 'a small abandoned military checkpoint'),
+    ('lootplaces/poi_school', 'School', 'an empty school corridor seen from a doorway'),
+    ('lootplaces/poi_warehouse', 'Warehouse', 'a dark warehouse interior, pallets toppled'),
+    ('lootplaces/proc_abandoned_car', 'Abandoned car', 'a stripped car at a kerb, doors open'),
+    ('lootplaces/proc_abandoned_house', 'Abandoned house', 'a boarded suburban house front'),
+    ('lootplaces/proc_barn', 'Barn', 'a leaning timber barn, doors ajar'),
+    ('lootplaces/proc_garage', 'Garage', 'a domestic garage with the door half up'),
+    ('lootplaces/proc_waste', 'Waste bins', 'overflowing municipal bins in an alley'),
+    ('lootplaces/proc_shelter', 'Bus shelter', 'a bus shelter with broken glass'),
+    ('lootplaces/proc_hunting_stand', 'Hunting stand', 'a wooden hunting stand at a field edge'),
+    ('lootplaces/proc_water_point', 'Water point', 'a rural standpipe and trough'),
+    ('lootplaces/proc_roadside', 'Roadside', 'a verge with scattered spilled luggage'),
+    ('lootplaces/proc_ambulance', 'Ambulance', 'an abandoned ambulance, rear doors open'),
+    ('lootplaces/proc_police_car', 'Police car', 'an abandoned police car, one door open'),
+
+    ('shelter/shelter', 'Shelter', 'the inside of a barricaded flat, boards over the windows'),
+    ('shelter/storage', 'Storage module', 'shelving of salvaged timber, crates stacked'),
+    ('shelter/workshop', 'Workshop module', 'a workbench with a vice and hand tools'),
+    ('shelter/lounge', 'Lounge module', 'a mattress, blankets and a curtained corner'),
+    ('shelter/lab', 'Lab module', 'improvised sealed containers and glassware on a bench'),
+
+    ('skills/scout', 'Scouting', 'a figure crouched at a corner, watching a street'),
+    ('skills/weapon', 'Weapon handling', 'hands checking over a rifle at a bench'),
+    ('skills/medic', 'Medicine', 'hands winding a bandage over a forearm'),
+    ('skills/crafting', 'Engineering', 'hands shaping metal at a vice'),
+]
+
+
+def world_prompt(path, name, look):
+    scene = not path.startswith('zombies/')
+
+    lines = [
+        '=' * 72,
+        path,
+        'zapisz jako:  images/%s.jpg' % path,
+        'rozdzielczosc: 1024 x 1024  (kwadrat, bez wyjatkow)',
+        '=' * 72,
+        '',
+        'PROMPT',
+        '------',
+        '%s. %s.' % (name, look[0].upper() + look[1:]),
+        ('Post-apocalyptic survival game art. Photorealistic, overcast '
+         'daylight, muted desaturated palette, nothing glamorous.'),
+    ]
+
+    if scene:
+        lines += [
+            ('Deserted. No people, no bodies, no blood. Quiet and ordinary, '
+             'as if everyone left in a hurry some months ago.'),
+            'Composed square, subject centred, mid distance.',
+        ]
+    else:
+        lines += [
+            ('Full figure, centred, plain flat dark warm grey background '
+             '(#2A2724), no scene, no floor, no horizon.'),
+            ('Grounded and believable, not a monster: a person this happened '
+             'to. No glowing eyes, no fangs, no claws, no gore.'),
+        ]
+
+    lines += [
+        'No text, no logos, no watermarks, no UI.',
+        'Square 1:1 composition. 1024x1024.',
+        '',
+        'NEGATIVE PROMPT',
+        '---------------',
+        ('text, letters, numbers, logo, watermark, signature, frame, border, '
+         'UI, HUD, cartoon, anime, cel shading, neon, glowing eyes, fangs, '
+         'claws, gore, blood, dismemberment, horror poster, cinematic '
+         'lighting, lens flare, bokeh, vignette, oversaturated'),
+        '',
+    ]
+
+    return chr(10).join(lines)
+
+# ⚠️ Rodzaj to za grube sito dla czesci katalogu. `armor` obejmuje T-shirt i
+# kamizelke z plytami; jedno zdanie dla obu daje dwa razy to samo zdjecie.
+# Prefiks id jest tym, co je rozroznia, i jest juz w danych.
+LOOK_BY_PREFIX = [
+    ('cloth_', 'ordinary worn civilian clothing, faded and mended, '
+               'no military look'),
+    ('armor_', 'improvised or surplus body protection, scuffed panels, '
+               'webbing straps'),
+    ('med_', 'medical supplies, packaging creased, partly used'),
+    ('mat_', 'a small pile of salvaged raw material, dirty and irregular'),
+    ('tool_light', 'a battery lamp, lens scratched, casing scuffed'),
+    ('lit_', 'a battered paperback or manual, cover creased, pages foxed'),
+    ('pack_', 'a scuffed pack, webbing worn, one strap repaired'),
+    ('mag_', 'a detached box magazine, scratched steel or polymer'),
+    ('att_', 'a small clamp-on weapon sight or light, matte finish'),
+    ('melee_', 'a worn hand tool pressed into use as a weapon, '
+               'chipped edge, taped grip'),
+    ('food_', 'salvaged food, dented tin or crumpled wrapper, label faded'),
+]
+
+
+def look_for(item):
+    """The one sentence that makes this thing not the thing beside it."""
+    for prefix, said in LOOK_BY_PREFIX:
+        if item['id'].startswith(prefix):
+            return said
+    return LOOK.get(item.get('type', 'misc'), 'a salvaged object')
+
+
+STYLE = """STYL — obowiazuje kazda grafike w tej liscie
+============================================
+
+Post-apocalyptic survival game art. Photorealistic. Overcast daylight,
+soft and even, no cinematic contrast. Muted desaturated palette: greys,
+browns, faded olive. Nothing glamorous, nothing heroic, nothing shiny.
+
+Everything is used. Objects are worn, scratched, faded, repaired — not
+new and not destroyed. This is a world people left a few months ago, not
+a battlefield.
+
+KADR: kwadrat 1:1, 1024 x 1024. Bez wyjatkow.
+  Ikona w plecaku to kwadrat 40 px, a kwadratowy wycinek z panoramy albo
+  przecina przedmiot, albo zostawia dwa pasy tla. Kwadrat u zrodla znaczy,
+  ze ten sam plik obsluguje ikone 96 px i karte 512 px.
+
+TLO PRZEDMIOTOW I POSTACI: plaskie, rowno oswietlone, ciemny cieply szary
+  #2A2724. Bez sceny, bez podlogi, bez horyzontu, bez rekwizytow, bez
+  cienia rzucanego na cokolwiek.
+  JPG nie ma kanalu alfa, wiec jednolite tlo mozna wyciac albo zostawic w
+  kolorze panelu. Sceny nie da sie ani jedno, ani drugie.
+
+TLO MIEJSC: prawdziwa scena, mid distance, pusto. Bez ludzi, bez zwlok,
+  bez krwi.
+
+NIGDY: tekst, cyfry, logo, znak wodny, podpis, ramka, UI, HUD, kolaz,
+  wiele obiektow w kadrze, cartoon, anime, cel shading, neon, swiecace
+  oczy, kly, pazury, gore, lens flare, bokeh, winieta, przesycone kolory.
+
+NAZWY PLIKOW: dokladnie tak, jak podano przy kazdej pozycji. Nazwa pliku
+  jest identyfikatorem przedmiotu w grze i kod znajduje grafike po niej.
+"""
+
+
+def brief_line(item, table):
+    """One line per item: where it goes, what it is, what it must not deny."""
+    kind = item.get('type', 'misc')
+    folder = FOLDERS.get(kind, 'items/misc')
+    look = look_for(item)
+    numbers = facts(item)
+
+    said = '%-34s | %s' % ('%s/%s.jpg' % (folder, item['id']),
+                           english(item, table))
+    said += ' — %s' % look
+    if numbers:
+        said += '  [%s]' % numbers
+    return said
+
+
 def catalogue():
     """Every item, as (id, type, props), from the shipped files."""
     out = []
@@ -188,6 +360,43 @@ def main(argv):
         print('Bez grafiki: %d z %d' % (len(gone), len(items)))
         for item in gone:
             print('  %-28s %s' % (item['id'], item.get('type')))
+        return 0
+
+    if argv[0] == '--brief':
+        print(STYLE)
+        print()
+        print('PRZEDMIOTY  (%d)' % len(items))
+        print('=' * 72)
+
+        seen = None
+        for item in items:
+            kind = item.get('type')
+            if kind != seen:
+                seen = kind
+                print()
+                print('-- %s' % kind)
+            print('  ' + brief_line(item, table))
+
+        print()
+        print()
+        print('SWIAT  (%d)' % len(WORLD))
+        print('=' * 72)
+
+        group = None
+        for path, name, look in WORLD:
+            head = path.split('/')[0]
+            if head != group:
+                group = head
+                print()
+                print('-- %s' % head)
+            print('  %-34s | %s — %s' % ('%s.jpg' % path, name, look))
+
+        print()
+        return 0
+
+    if argv[0] == '--world':
+        for path, name, look in WORLD:
+            print(world_prompt(path, name, look))
         return 0
 
     if argv[0] == '--all':

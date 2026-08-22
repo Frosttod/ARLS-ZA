@@ -1,0 +1,240 @@
+STYL — obowiazuje kazda grafike w tej liscie
+============================================
+
+Post-apocalyptic survival game art. Photorealistic. Overcast daylight,
+soft and even, no cinematic contrast. Muted desaturated palette: greys,
+browns, faded olive. Nothing glamorous, nothing heroic, nothing shiny.
+
+Everything is used. Objects are worn, scratched, faded, repaired — not
+new and not destroyed. This is a world people left a few months ago, not
+a battlefield.
+
+KADR: kwadrat 1:1, 1024 x 1024. Bez wyjatkow.
+  Ikona w plecaku to kwadrat 40 px, a kwadratowy wycinek z panoramy albo
+  przecina przedmiot, albo zostawia dwa pasy tla. Kwadrat u zrodla znaczy,
+  ze ten sam plik obsluguje ikone 96 px i karte 512 px.
+
+TLO PRZEDMIOTOW I POSTACI: plaskie, rowno oswietlone, ciemny cieply szary
+  #2A2724. Bez sceny, bez podlogi, bez horyzontu, bez rekwizytow, bez
+  cienia rzucanego na cokolwiek.
+  JPG nie ma kanalu alfa, wiec jednolite tlo mozna wyciac albo zostawic w
+  kolorze panelu. Sceny nie da sie ani jedno, ani drugie.
+
+TLO MIEJSC: prawdziwa scena, mid distance, pusto. Bez ludzi, bez zwlok,
+  bez krwi.
+
+NIGDY: tekst, cyfry, logo, znak wodny, podpis, ramka, UI, HUD, kolaz,
+  wiele obiektow w kadrze, cartoon, anime, cel shading, neon, swiecace
+  oczy, kly, pazury, gore, lens flare, bokeh, winieta, przesycone kolory.
+
+NAZWY PLIKOW: dokladnie tak, jak podano przy kazdej pozycji. Nazwa pliku
+  jest identyfikatorem przedmiotu w grze i kod znajduje grafike po niej.
+
+
+PRZEDMIOTY  (134)
+========================================================================
+
+-- ammo
+  items/weapons/ammo_22lr.jpg        | .22 LR round — a small heap of loose cartridges, brass dulled  [0.003 kg, calibre 22lr]
+  items/weapons/ammo_38special.jpg   | .38 Special round — a small heap of loose cartridges, brass dulled  [0.012 kg, calibre 38special]
+  items/weapons/ammo_9x19.jpg        | 9x19 mm round — a small heap of loose cartridges, brass dulled  [0.012 kg, calibre 9x19]
+  items/weapons/ammo_545x39.jpg      | 5.45x39 mm round — a small heap of loose cartridges, brass dulled  [0.0107 kg, calibre 5.45x39]
+  items/weapons/ammo_762x39.jpg      | 7.62x39 mm round — a small heap of loose cartridges, brass dulled  [0.0163 kg, calibre 7.62x39]
+  items/weapons/ammo_762x54r.jpg     | 7.62x54R round — a small heap of loose cartridges, brass dulled  [0.022 kg, calibre 7.62x54r]
+  items/weapons/ammo_12ga_buck.jpg   | 12 ga buckshot — a small heap of loose cartridges, brass dulled  [0.045 kg, calibre 12ga]
+  items/weapons/ammo_12ga_slug.jpg   | 12 ga slug — a small heap of loose cartridges, brass dulled  [0.048 kg, calibre 12ga]
+
+-- armor
+  items/armors/cloth_tshirt.jpg      | T-shirt — ordinary worn civilian clothing, faded and mended, no military look  [0.15 kg]
+  items/armors/cloth_thermal_underwear.jpg | Thermal underwear — ordinary worn civilian clothing, faded and mended, no military look  [0.35 kg]
+  items/armors/cloth_fleece.jpg      | Fleece — ordinary worn civilian clothing, faded and mended, no military look  [0.45 kg]
+  items/armors/cloth_winter_jacket.jpg | Winter jacket — ordinary worn civilian clothing, faded and mended, no military look  [1.2 kg]
+  items/armors/cloth_rain_shell.jpg  | Rain shell — ordinary worn civilian clothing, faded and mended, no military look  [0.4 kg]
+  items/armors/cloth_trousers.jpg    | Trousers — ordinary worn civilian clothing, faded and mended, no military look  [0.5 kg]
+  items/armors/cloth_winter_trousers.jpg | Winter trousers — ordinary worn civilian clothing, faded and mended, no military look  [0.8 kg]
+  items/armors/cloth_boots.jpg       | Hiking boots — ordinary worn civilian clothing, faded and mended, no military look  [1.1 kg]
+  items/armors/cloth_gloves.jpg      | Gloves — ordinary worn civilian clothing, faded and mended, no military look  [0.1 kg]
+  items/armors/cloth_hat.jpg         | Hat — ordinary worn civilian clothing, faded and mended, no military look  [0.08 kg]
+  items/armors/armor_helmet_ballistic.jpg | Ballistic helmet — improvised or surplus body protection, scuffed panels, webbing straps  [1.4 kg]
+  items/armors/armor_vest_soft.jpg   | Soft body armour — improvised or surplus body protection, scuffed panels, webbing straps  [2.6 kg]
+  items/armors/armor_vest_plate.jpg  | Plate carrier — improvised or surplus body protection, scuffed panels, webbing straps  [8.5 kg]
+  items/armors/armor_bite_sleeves.jpg | Forearm guards — improvised or surplus body protection, scuffed panels, webbing straps  [0.6 kg]
+
+-- attachment
+  items/weapons/tool_suppressor.jpg  | Suppressor — a small weapon accessory, matte finish  [0.4 kg]
+  items/weapons/att_red_dot.jpg      | Red dot sight — a small clamp-on weapon sight or light, matte finish  [0.15 kg]
+  items/weapons/att_laser.jpg        | Laser sight — a small clamp-on weapon sight or light, matte finish  [0.1 kg]
+  items/weapons/att_weapon_light.jpg | Weapon light — a small clamp-on weapon sight or light, matte finish  [0.2 kg]
+  items/weapons/att_foregrip.jpg     | Foregrip — a small clamp-on weapon sight or light, matte finish  [0.18 kg]
+
+-- magazine
+  items/weapons/mag_pistol_9mm.jpg   | Pistol magazine 9x19 (15) — a detached box magazine, scratched steel or polymer  [0.12 kg, calibre 9x19, capacity 15]
+  items/weapons/mag_pistol_9mm_ext.jpg | Extended magazine 9x19 (25) — a detached box magazine, scratched steel or polymer  [0.18 kg, calibre 9x19, capacity 25]
+  items/weapons/mag_smg_9mm.jpg      | SMG magazine 9x19 (30) — a detached box magazine, scratched steel or polymer  [0.22 kg, calibre 9x19, capacity 30]
+  items/weapons/mag_rifle_22lr.jpg   | Rifle magazine .22 LR (10) — a detached box magazine, scratched steel or polymer  [0.1 kg, calibre 22lr, capacity 10]
+  items/weapons/mag_rifle_545.jpg    | Rifle magazine 5.45x39 (30) — a detached box magazine, scratched steel or polymer  [0.23 kg, calibre 5.45x39, capacity 30]
+  items/weapons/mag_rifle_545_drum.jpg | Drum magazine 5.45x39 (60) — a detached box magazine, scratched steel or polymer  [0.65 kg, calibre 5.45x39, capacity 60]
+  items/weapons/mag_rifle_762x39.jpg | Rifle magazine 7.62x39 (30) — a detached box magazine, scratched steel or polymer  [0.33 kg, calibre 7.62x39, capacity 30]
+
+-- backpack
+  items/backpacks/pack_school.jpg    | School backpack — a scuffed pack, webbing worn, one strap repaired  [0.6 kg, litres 22]
+  items/backpacks/pack_shopping_bag.jpg | Shopping bag — a scuffed pack, webbing worn, one strap repaired  [0.3 kg, litres 30]
+  items/backpacks/pack_daypack.jpg   | Daypack — a scuffed pack, webbing worn, one strap repaired  [0.9 kg, litres 45]
+  items/backpacks/pack_tactical.jpg  | Tactical backpack — a scuffed pack, webbing worn, one strap repaired  [1.4 kg, litres 55]
+  items/backpacks/pack_trekking.jpg  | Trekking backpack — a scuffed pack, webbing worn, one strap repaired  [1.8 kg, litres 65]
+  items/backpacks/pack_military.jpg  | Military rucksack — a scuffed pack, webbing worn, one strap repaired  [2.6 kg, litres 90]
+  items/backpacks/pack_improvised.jpg | Improvised pack — a scuffed pack, webbing worn, one strap repaired  [0.7 kg, litres 30]
+
+-- crafting
+  items/crafting/mat_wood.jpg        | Wood — a small pile of salvaged raw material, dirty and irregular  [2.0 kg]
+  items/crafting/mat_metal.jpg       | Scrap metal — a small pile of salvaged raw material, dirty and irregular  [1.5 kg]
+  items/crafting/mat_plastic.jpg     | Plastic — a small pile of salvaged raw material, dirty and irregular  [0.4 kg]
+  items/crafting/mat_fabric.jpg      | Fabric — a small pile of salvaged raw material, dirty and irregular  [0.3 kg]
+  items/crafting/mat_component.jpg   | Electronic component — a small pile of salvaged raw material, dirty and irregular  [0.8 kg]
+  items/crafting/mat_rope.jpg        | Rope — a small pile of salvaged raw material, dirty and irregular  [0.9 kg]
+  items/crafting/mat_duct_tape.jpg   | Duct tape — a small pile of salvaged raw material, dirty and irregular  [0.25 kg]
+  items/crafting/mat_wire.jpg        | Wire — a small pile of salvaged raw material, dirty and irregular  [0.4 kg]
+  items/crafting/mat_nails.jpg       | Nails — a small pile of salvaged raw material, dirty and irregular  [0.5 kg]
+  items/crafting/mat_battery.jpg     | Battery — a small pile of salvaged raw material, dirty and irregular  [0.05 kg]
+  items/crafting/mat_fuel.jpg        | Fuel canister — a small pile of salvaged raw material, dirty and irregular  [3.8 kg]
+  items/crafting/mat_leather.jpg     | Leather — a small pile of salvaged raw material, dirty and irregular  [0.6 kg]
+  items/crafting/mat_glue.jpg        | Glue — a small pile of salvaged raw material, dirty and irregular  [0.15 kg]
+  items/crafting/mat_alcohol.jpg     | Spirit alcohol — a small pile of salvaged raw material, dirty and irregular  [0.55 kg]
+
+-- food
+  items/food/food_canned_meat.jpg    | Canned meat — salvaged food, dented tin or crumpled wrapper, label faded  [0.4 kg]
+  items/food/food_canned_vegetables.jpg | Canned vegetables — salvaged food, dented tin or crumpled wrapper, label faded  [0.4 kg]
+  items/food/food_energy_bar.jpg     | Energy bar — salvaged food, dented tin or crumpled wrapper, label faded  [0.06 kg]
+  items/food/food_crackers.jpg       | Crackers — salvaged food, dented tin or crumpled wrapper, label faded  [0.2 kg]
+  items/food/food_sandwich.jpg       | Sandwich — salvaged food, dented tin or crumpled wrapper, label faded  [0.15 kg]
+  items/food/food_dried_meat.jpg     | Dried meat — salvaged food, dented tin or crumpled wrapper, label faded  [0.1 kg]
+  items/food/food_instant_soup.jpg   | Instant soup — salvaged food, dented tin or crumpled wrapper, label faded  [0.07 kg]
+  items/food/food_chocolate.jpg      | Chocolate — salvaged food, dented tin or crumpled wrapper, label faded  [0.1 kg]
+  items/food/food_apple.jpg          | Apple — salvaged food, dented tin or crumpled wrapper, label faded  [0.18 kg]
+  items/food/drink_water_bottle_500.jpg | Water, 0.5 l — salvaged food, dented tin or crumpled wrapper, label faded  [0.52 kg]
+  items/food/drink_water_bottle_1500.jpg | Water, 1.5 l — salvaged food, dented tin or crumpled wrapper, label faded  [1.55 kg]
+  items/food/drink_water_dirty.jpg   | Untreated water — salvaged food, dented tin or crumpled wrapper, label faded  [1.05 kg]
+  items/food/drink_energy.jpg        | Energy drink — salvaged food, dented tin or crumpled wrapper, label faded  [0.28 kg]
+
+-- literature
+  items/literature/lit_note.jpg      | Note — a battered paperback or manual, cover creased, pages foxed  [0.002 kg]
+  items/literature/lit_leaflet_first_aid.jpg | Leaflet: first aid — a battered paperback or manual, cover creased, pages foxed  [0.003 kg]
+  items/literature/lit_leaflet_range_safety.jpg | Leaflet: range safety — a battered paperback or manual, cover creased, pages foxed  [0.003 kg]
+  items/literature/lit_magazine_hunting.jpg | Hunting magazine — a battered paperback or manual, cover creased, pages foxed  [0.12 kg]
+  items/literature/lit_magazine_guns.jpg | Firearms magazine — a battered paperback or manual, cover creased, pages foxed  [0.12 kg]
+  items/literature/lit_magazine_diy.jpg | DIY magazine — a battered paperback or manual, cover creased, pages foxed  [0.12 kg]
+  items/literature/lit_guide_first_aid.jpg | First aid guide — a battered paperback or manual, cover creased, pages foxed  [0.21 kg]
+  items/literature/lit_guide_survival.jpg | Survival guide — a battered paperback or manual, cover creased, pages foxed  [0.21 kg]
+  items/literature/lit_guide_gunsmithing.jpg | Gunsmithing guide — a battered paperback or manual, cover creased, pages foxed  [0.21 kg]
+  items/literature/lit_guide_repairs.jpg | Home repair guide — a battered paperback or manual, cover creased, pages foxed  [0.21 kg]
+  items/literature/lit_textbook_medicine.jpg | Emergency medicine textbook — a battered paperback or manual, cover creased, pages foxed  [0.49 kg]
+  items/literature/lit_textbook_ballistics.jpg | Ballistics textbook — a battered paperback or manual, cover creased, pages foxed  [0.49 kg]
+  items/literature/lit_textbook_engineering.jpg | Engineering textbook — a battered paperback or manual, cover creased, pages foxed  [0.49 kg]
+  items/literature/lit_textbook_fieldcraft.jpg | Fieldcraft textbook — a battered paperback or manual, cover creased, pages foxed  [0.49 kg]
+  items/literature/lit_encyclopedia_medicine.jpg | Medical encyclopedia — a battered paperback or manual, cover creased, pages foxed  [1.57 kg]
+  items/literature/lit_encyclopedia_weapons.jpg | Encyclopedia of weapons — a battered paperback or manual, cover creased, pages foxed  [1.57 kg]
+  items/literature/lit_encyclopedia_engineering.jpg | Encyclopedia of engineering — a battered paperback or manual, cover creased, pages foxed  [1.57 kg]
+  items/literature/lit_encyclopedia_nature.jpg | Encyclopedia of nature — a battered paperback or manual, cover creased, pages foxed  [1.57 kg]
+
+-- medical
+  items/medical/med_bandage.jpg      | Bandage — medical supplies, packaging creased, partly used  [0.03 kg]
+  items/medical/med_pressure_dressing.jpg | Pressure dressing — medical supplies, packaging creased, partly used  [0.08 kg]
+  items/medical/med_tourniquet.jpg   | Tourniquet — medical supplies, packaging creased, partly used  [0.12 kg]
+  items/medical/med_suture_kit.jpg   | Suture kit — medical supplies, packaging creased, partly used  [0.15 kg]
+  items/medical/med_first_aid_kit.jpg | First aid kit — medical supplies, packaging creased, partly used  [0.6 kg]
+  items/medical/med_painkillers.jpg  | Painkillers — medical supplies, packaging creased, partly used  [0.02 kg]
+  items/medical/med_antibiotics.jpg  | Antibiotics — medical supplies, packaging creased, partly used  [0.03 kg]
+  items/medical/med_antiseptic.jpg   | Antiseptic — medical supplies, packaging creased, partly used  [0.1 kg]
+  items/medical/med_splint.jpg       | Splint — medical supplies, packaging creased, partly used  [0.35 kg]
+  items/medical/med_saline.jpg       | Saline drip — medical supplies, packaging creased, partly used  [0.55 kg]
+  items/medical/med_bandage_improvised.jpg | Improvised dressing — medical supplies, packaging creased, partly used  [0.05 kg]
+  items/medical/med_pressure_improvised.jpg | Improvised pressure dressing — medical supplies, packaging creased, partly used  [0.1 kg]
+  items/medical/med_tourniquet_improvised.jpg | Improvised tourniquet — medical supplies, packaging creased, partly used  [0.14 kg]
+  items/medical/med_splint_improvised.jpg | Improvised splint — medical supplies, packaging creased, partly used  [0.4 kg]
+
+-- melee
+  items/weapons/melee_knife.jpg      | Knife — a worn hand tool pressed into use as a weapon, chipped edge, taped grip  [0.15 kg, reach 0.4]
+  items/weapons/melee_machete.jpg    | Machete — a worn hand tool pressed into use as a weapon, chipped edge, taped grip  [0.6 kg, reach 0.7]
+  items/weapons/melee_axe.jpg        | Axe — a worn hand tool pressed into use as a weapon, chipped edge, taped grip  [1.4 kg, reach 0.8]
+  items/weapons/melee_crowbar.jpg    | Crowbar — a worn hand tool pressed into use as a weapon, chipped edge, taped grip  [1.6 kg, reach 0.7]
+  items/weapons/melee_hammer.jpg     | Hammer — a worn hand tool pressed into use as a weapon, chipped edge, taped grip  [0.7 kg, reach 0.4]
+  items/weapons/melee_bat.jpg        | Baseball bat — a worn hand tool pressed into use as a weapon, chipped edge, taped grip  [0.9 kg, reach 0.9]
+  items/weapons/melee_shovel.jpg     | Shovel — a worn hand tool pressed into use as a weapon, chipped edge, taped grip  [1.9 kg, reach 1.1]
+  items/weapons/melee_screwdriver.jpg | Screwdriver — a worn hand tool pressed into use as a weapon, chipped edge, taped grip  [0.12 kg, reach 0.3]
+  items/weapons/melee_spike.jpg      | Sharpened stake — a worn hand tool pressed into use as a weapon, chipped edge, taped grip  [0.8 kg, reach 1.2]
+  items/weapons/melee_spear.jpg      | Spear — a worn hand tool pressed into use as a weapon, chipped edge, taped grip  [1.3 kg, reach 1.8]
+  items/weapons/melee_club_studded.jpg | Studded club — a worn hand tool pressed into use as a weapon, chipped edge, taped grip  [1.7 kg, reach 0.9]
+
+-- tool
+  items/tools/tool_multitool.jpg     | Multitool — a working tool, handle worn smooth, metal scratched  [0.25 kg]
+  items/tools/tool_can_opener.jpg    | Can opener — a working tool, handle worn smooth, metal scratched  [0.08 kg]
+  items/tools/tool_flashlight.jpg    | Flashlight — a working tool, handle worn smooth, metal scratched  [0.2 kg]
+  items/tools/tool_headlamp.jpg      | Headlamp — a working tool, handle worn smooth, metal scratched  [0.12 kg]
+  items/tools/tool_binoculars.jpg    | Binoculars — a working tool, handle worn smooth, metal scratched  [0.7 kg]
+  items/tools/tool_lighter.jpg       | Lighter — a battery lamp, lens scratched, casing scuffed  [0.02 kg]
+  items/tools/tool_matches.jpg       | Matches — a working tool, handle worn smooth, metal scratched  [0.02 kg]
+  items/tools/tool_saw.jpg           | Saw — a working tool, handle worn smooth, metal scratched  [1.0 kg]
+  items/tools/tool_wrench_set.jpg    | Wrench set — a working tool, handle worn smooth, metal scratched  [1.8 kg]
+  items/tools/tool_water_filter.jpg  | Water filter — a working tool, handle worn smooth, metal scratched  [0.3 kg]
+  items/tools/tool_crank_radio.jpg   | Crank radio — a working tool, handle worn smooth, metal scratched  [0.5 kg]
+  items/tools/tool_lockpicks.jpg     | Lockpicks — a working tool, handle worn smooth, metal scratched  [0.1 kg]
+  items/tools/tool_sewing_kit.jpg    | Sewing kit — a working tool, handle worn smooth, metal scratched  [0.1 kg]
+  items/tools/tool_gun_cleaning_kit.jpg | Gun cleaning kit — a working tool, handle worn smooth, metal scratched  [0.35 kg]
+  items/tools/tool_bolt_cutters.jpg  | Bolt cutters — a working tool, handle worn smooth, metal scratched  [1.9 kg]
+
+-- firearm
+  items/weapons/weapon_rifle_22lr.jpg | .22 LR rifle — a used but serviceable firearm, worn bluing, scuffed furniture  [2.5 kg, calibre 22lr, magazine 10]
+  items/weapons/weapon_revolver_38.jpg | .38 revolver — a used but serviceable firearm, worn bluing, scuffed furniture  [0.9 kg, calibre 38special, magazine 6]
+  items/weapons/weapon_pistol_9mm.jpg | 9 mm pistol — a used but serviceable firearm, worn bluing, scuffed furniture  [0.7 kg, calibre 9x19, magazine 15]
+  items/weapons/weapon_smg_9mm.jpg   | 9 mm submachine gun — a used but serviceable firearm, worn bluing, scuffed furniture  [2.9 kg, calibre 9x19, magazine 30]
+  items/weapons/weapon_rifle_545.jpg | 5.45 mm carbine — a used but serviceable firearm, worn bluing, scuffed furniture  [3.3 kg, calibre 5.45x39, magazine 30]
+  items/weapons/weapon_rifle_762x39.jpg | 7.62 mm carbine — a used but serviceable firearm, worn bluing, scuffed furniture  [3.6 kg, calibre 7.62x39, magazine 30]
+  items/weapons/weapon_shotgun_pump.jpg | Pump shotgun — a used but serviceable firearm, worn bluing, scuffed furniture  [3.2 kg, calibre 12ga, magazine 5]
+  items/weapons/weapon_rifle_mosin.jpg | 7.62x54R bolt-action rifle — a used but serviceable firearm, worn bluing, scuffed furniture  [4.0 kg, calibre 7.62x54r, magazine 5]
+
+
+SWIAT  (34)
+========================================================================
+
+-- zombies
+  zombies/walker.jpg                 | Walker — a shambling infected human, ragged clothing, grey mottled skin, slack posture, head slightly down
+  zombies/runner.jpg                 | Runner — a lean infected human caught mid-stride, taut sinew, torn clothing, head forward, unnaturally fast posture
+  zombies/brute.jpg                  | Brute — a massively built infected human, swollen shoulders and arms, thickened hide, slow and heavy stance
+
+-- lootplaces
+  lootplaces/poi_pharmacy.jpg        | Pharmacy — a looted small-town pharmacy shopfront
+  lootplaces/poi_hardware.jpg        | Hardware shop — a ransacked hardware shop entrance
+  lootplaces/poi_grocery.jpg         | Grocery shop — an emptied corner grocery shopfront
+  lootplaces/poi_sports.jpg          | Sports shop — a broken-into sports shop window
+  lootplaces/poi_weapons.jpg         | Gun shop — a gun shop with a shuttered, forced door
+  lootplaces/poi_library.jpg         | Library — a dim public library reading room, shelves disturbed
+  lootplaces/poi_industrial.jpg      | Industrial site — a dead industrial yard, rusted plant
+  lootplaces/poi_hospital.jpg        | Hospital — a hospital entrance, gurneys abandoned outside
+  lootplaces/poi_military.jpg        | Military site — a small abandoned military checkpoint
+  lootplaces/poi_school.jpg          | School — an empty school corridor seen from a doorway
+  lootplaces/poi_warehouse.jpg       | Warehouse — a dark warehouse interior, pallets toppled
+  lootplaces/proc_abandoned_car.jpg  | Abandoned car — a stripped car at a kerb, doors open
+  lootplaces/proc_abandoned_house.jpg | Abandoned house — a boarded suburban house front
+  lootplaces/proc_barn.jpg           | Barn — a leaning timber barn, doors ajar
+  lootplaces/proc_garage.jpg         | Garage — a domestic garage with the door half up
+  lootplaces/proc_waste.jpg          | Waste bins — overflowing municipal bins in an alley
+  lootplaces/proc_shelter.jpg        | Bus shelter — a bus shelter with broken glass
+  lootplaces/proc_hunting_stand.jpg  | Hunting stand — a wooden hunting stand at a field edge
+  lootplaces/proc_water_point.jpg    | Water point — a rural standpipe and trough
+  lootplaces/proc_roadside.jpg       | Roadside — a verge with scattered spilled luggage
+  lootplaces/proc_ambulance.jpg      | Ambulance — an abandoned ambulance, rear doors open
+  lootplaces/proc_police_car.jpg     | Police car — an abandoned police car, one door open
+
+-- shelter
+  shelter/shelter.jpg                | Shelter — the inside of a barricaded flat, boards over the windows
+  shelter/storage.jpg                | Storage module — shelving of salvaged timber, crates stacked
+  shelter/workshop.jpg               | Workshop module — a workbench with a vice and hand tools
+  shelter/lounge.jpg                 | Lounge module — a mattress, blankets and a curtained corner
+  shelter/lab.jpg                    | Lab module — improvised sealed containers and glassware on a bench
+
+-- skills
+  skills/scout.jpg                   | Scouting — a figure crouched at a corner, watching a street
+  skills/weapon.jpg                  | Weapon handling — hands checking over a rifle at a bench
+  skills/medic.jpg                   | Medicine — hands winding a bandage over a forearm
+  skills/crafting.jpg                | Engineering — hands shaping metal at a vice
+
