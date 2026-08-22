@@ -87,9 +87,7 @@ flutter:
     # JPEG-ów) nigdy tu nie trafiają — tool/build_art.py robi z nich 1,7 MB.
     - assets/images/items/weapons/
     - assets/images/items/armors/
-    - assets/images/items/boots/
-    - assets/images/items/pants/
-    - assets/images/items/tools/
+    - assets/images/placeholders/
     - assets/images/lootplaces/
     - assets/images/shelter/
     - assets/images/skills/

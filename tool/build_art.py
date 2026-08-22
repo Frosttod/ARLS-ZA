@@ -46,6 +46,16 @@ CARD = 512
 ICON_QUALITY = 82
 CARD_QUALITY = 80
 
+# ⚠️ Grafika, która jest żarłoczna, a nie używana.
+#
+# `placeholders/<kind>.jpg` to środkowy szczebel łańcucha zapasowego:
+# id przedmiotu → rodzaj → ikona Material. Grafika "narzędzia" pod każde
+# narzędzie, które jeszcze nie ma własnej, czyta się lepiej niż szara ikonka.
+#
+# `_unused/` to czyjaś praca, której gra jeszcze nie ma gdzie użyć. Odkładana,
+# nie kasowana — i nie zgłaszana jako błąd, bo nie jest błędem.
+UNUSED = '_unused'
+
 DATA = os.path.join('assets', 'data')
 SKIP_DATA = {'names.json', 'loot_tables.json', 'notes.json', 'recipes.json'}
 
@@ -113,6 +123,7 @@ def main(argv):
 
     unmatched = []
     total_in = total_out = 0
+    built = 0
 
     for source in sources:
         relative = source[len(SOURCE) + 1:]
@@ -122,11 +133,15 @@ def main(argv):
         # ⚠️ Only the items/ tree has to match an id. Zombies, places, shelter
         # modules and skills are named by what they are, and the code looks
         # them up the same way.
+        if folder.split('/')[0] == UNUSED:
+            continue
+
         if folder.startswith('items/') and stem not in known:
             unmatched.append(relative)
 
         size_in = os.path.getsize(source)
         total_in += size_in
+        built += 1
 
         if check:
             continue
@@ -148,8 +163,12 @@ def main(argv):
         print('Zrodla: %d plikow, %.1f MB' % (len(sources), total_in / 1048576.0))
     else:
         print('%d plikow: %.1f MB -> %.0f kB  (%.1f%% oryginalu)' %
-              (len(sources), total_in / 1048576.0, total_out / 1024.0,
+              (built, total_in / 1048576.0, total_out / 1024.0,
                100.0 * total_out / total_in))
+
+        spare = len(sources) - built
+        if spare:
+            print('%d w %s/ — pominiete' % (spare, UNUSED))
 
     if unmatched:
         print()
