@@ -1845,4 +1845,46 @@ class L10nPl extends L10n {
   @override
   String get mapWaitingBody =>
       'Gra czeka na sygnał, zanim pokaże mapę — inaczej pokazałaby okolicę, w której cię nie ma.';
+
+  @override
+  String get salvageTitle => 'Rozbiórka';
+
+  @override
+  String get salvagePick =>
+      'Zaznacz, co ma pójść na części. Idą po kolei — jedno po drugim.';
+
+  @override
+  String get salvageNothingWorth =>
+      'Nie ma tu nic, z czego cokolwiek zostanie.';
+
+  @override
+  String salvageChosen(int count) {
+    return 'Wybrane: $count';
+  }
+
+  @override
+  String get salvageSummaryTitle => 'Zanim zaczniesz';
+
+  @override
+  String get salvageGone => 'To nie wróci. Zostaną z tego materiały.';
+
+  @override
+  String get salvageYouGet => 'Dostaniesz';
+
+  @override
+  String salvageTakes(String time) {
+    return 'Razem $time';
+  }
+
+  @override
+  String get salvageInOrder =>
+      'Po kolei. Przerwane w połowie — to, co zrobione, zostaje; reszta leży nietknięta.';
+
+  @override
+  String get salvageWaiting => 'Czeka na swoją kolej';
+
+  @override
+  String salvageBatchRunning(String item, int rest) {
+    return 'Rozbiórka: $item (+$rest)';
+  }
 }

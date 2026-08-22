@@ -60,7 +60,16 @@
   "hudSleep": "Sen",
   "hudHeartRate": "Tętno",
   "hudThreat": "{count} w walce · najbliżej {metres} m",
-  "@hudThreat": {"placeholders": {"count": {"type": "int"}, "metres": {"type": "int"}}},
+  "@hudThreat": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "metres": {
+        "type": "int"
+      }
+    }
+  },
   "hudThreatSprint": "ma jeszcze sprint",
   "hudCarry": "Udźwig",
   "hudBulk": "Objętość",
@@ -68,11 +77,29 @@
   "hudAcquiring": "Szukam GPS",
   "hudWeakSignal": "Słaby sygnał",
   "statusDegree": "{degree} stopnia",
-  "@statusDegree": {"placeholders": {"degree": {"type": "String"}}},
+  "@statusDegree": {
+    "placeholders": {
+      "degree": {
+        "type": "String"
+      }
+    }
+  },
   "statusOfDaily": "{percent}% dobowej normy",
-  "@statusOfDaily": {"placeholders": {"percent": {"type": "int"}}},
+  "@statusOfDaily": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "statusDebtHours": "{hours} h długu",
-  "@statusDebtHours": {"placeholders": {"hours": {"type": "int"}}},
+  "@statusDebtHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
   "statusEffect": "Wpływ",
   "statusFix": "Co zrobić",
   "statusWhere": "Gdzie znaleźć",
@@ -93,13 +120,18 @@
   "statusDehydrated": "Odwodnienie",
   "statusStarving": "Głód",
   "statusSleepDeprived": "Niewyspanie",
-  "statusBleeding": "Krwawienie",
   "bleedSuperficial": "powierzchowne",
   "bleedModerate": "umiarkowane",
   "bleedSevere": "silne",
   "bleedArterial": "tętnicze",
   "statusBleedingEffect": "{millilitres} ml na minutę, a bieg to zwielokrotnia — przy tętnie 160 wobec spoczynkowego 70 jest to ponad dwa razy tyle. Dopóki coś jest otwarte, krew w ogóle nie wraca.",
-  "@statusBleedingEffect": {"placeholders": {"millilitres": {"type": "int"}}},
+  "@statusBleedingEffect": {
+    "placeholders": {
+      "millilitres": {
+        "type": "int"
+      }
+    }
+  },
   "statusBleedingFix": "Opatrunek uciskowy i stanie w miejscu, dopóki trwa.",
   "statusBleedingFixArterial": "Staza, i nic innego. Opatrunek tego nie utrzyma.",
   "statusBleedingWhere": "Apteki, przychodnie, karetki; apteczki w biurach i warsztatach.",
@@ -111,7 +143,13 @@
   "deathWhat": "Hardcore: ta postać się skończyła. Passa trafia do Kroniki wraz ze wszystkim, co osiągnęła. Nowa zachowa Twoje ciało — ten sam wzrost, wagę i wiek — zmieni się tylko imię.",
   "downWhat": "Ockniesz się tam, gdzie będziesz, za godzinę — z ćwiercią krwi i niemal pustym żołądkiem. To, co miałeś w rękach, przepadło; około połowy noszonego sprzętu leży tam, gdzie padłeś. Przez dziesięć minut po przebudzeniu będą Cię brać za martwego — ale i Ty nie możesz walczyć.",
   "downLeft": "{time}",
-  "@downLeft": {"placeholders": {"time": {"type": "String"}}},
+  "@downLeft": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "downClosedApp": "Godzina leci niezależnie od tego, czy aplikacja jest otwarta.",
   "downLog": "Ostatnie chwile",
   "downGrace": "Wciąż biorą Cię za martwego. Nie zdradź się.",
@@ -202,9 +240,24 @@
   "profileSkills": "Umiejętności",
   "profileSkillsSoon": "Jeszcze ich nie ma. Dopóki nie będzie, każdy strzela jak nowicjusz — dwadzieścia pięć minut kątowych, czyli największy wiersz powyżej.",
   "profileAliveDays": "Żyje {days} d {hours} h",
-  "@profileAliveDays": {"placeholders": {"days": {"type": "int"}, "hours": {"type": "int"}}},
+  "@profileAliveDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      },
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
   "profileAliveHours": "Żyje {hours} h",
-  "@profileAliveHours": {"placeholders": {"hours": {"type": "int"}}},
+  "@profileAliveHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
   "menuInventory": "EKWIPUNEK",
   "menuShelter": "SCHRON",
   "stashOnTheShelves": "W magazynie",
@@ -233,7 +286,13 @@
   "shelterDemolish": "Rozmontuj",
   "shelterDemolished": "Moduł rozmontowany.",
   "shelterDemolishWhat": "Rozmontowanie tego modułu zwraca połowę surowców: {gives}. Niższe poziomy zostają. Tej decyzji nie można cofnąć.",
-  "@shelterDemolishWhat": {"placeholders": {"gives": {"type": "String"}}},
+  "@shelterDemolishWhat": {
+    "placeholders": {
+      "gives": {
+        "type": "String"
+      }
+    }
+  },
   "shelterSafeZone": "Strefa bezpieczna",
   "shelterSleep": "Jakość snu",
   "shelterStorage": "Pojemność",
@@ -242,9 +301,21 @@
   "shelterWorkStopped": "Praca stoi — nikogo nie ma na miejscu.",
   "shelterNeedsTool": "Wymaga młotka. Od Warsztatu 2 także multitoola.",
   "shelterMissing": "Brakuje: {what}",
-  "@shelterMissing": {"placeholders": {"what": {"type": "String"}}},
+  "@shelterMissing": {
+    "placeholders": {
+      "what": {
+        "type": "String"
+      }
+    }
+  },
   "shelterBuildingLeft": "Zostało {time}",
-  "@shelterBuildingLeft": {"placeholders": {"time": {"type": "String"}}},
+  "@shelterBuildingLeft": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "shelterNoneWhat": "Powstaje tam, gdzie stoisz, i to tam będziesz wracać spać. Pięćdziesiąt metrów ziemi, na którą umarli nie wchodzą — i z której ty też nie strzelasz.",
   "campWhat": "Gdzieś indziej, gdzie spędzasz dzień: praca, uczelnia, mieszkanie rodziny. Dwadzieścia metrów, skrzynia i noc warta siedem dziesiątych. Najwyżej dwa i nie bliżej niż 800 m od tego, co już stoi.",
   "campTooMany": "Dwa obozy to maksimum. Najpierw zwiń któryś.",
@@ -345,21 +416,45 @@
   "searchFoundNearby": "Zauważasz w pobliżu: {what}.",
   "scoutCar": "porzucony samochód",
   "scoutWaste": "kontener na śmieci",
-  "@searchFoundNearby": {"placeholders": {"what": {"type": "String"}}},
+  "@searchFoundNearby": {
+    "placeholders": {
+      "what": {
+        "type": "String"
+      }
+    }
+  },
   "placeDistance": "Odległość",
   "placeWayIn": "Wejście",
   "placeOpen": "Otwarte",
   "placeSearched": "Przeszukane",
   "placeUntouched": "Jeszcze nie",
   "placePartly": "zostało {percent}%",
-  "@placePartly": {"placeholders": {"percent": {"type": "int"}}},
+  "@placePartly": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "placeStripped": "Puste — coś wróci za jakieś {hours} h",
-  "@placeStripped": {"placeholders": {"hours": {"type": "int"}}},
+  "@placeStripped": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
   "placeCanStill": "Jeszcze możliwe",
   "placeNothingLeft": "Nie ma już czego przewracać",
   "placeHolds": "Można znaleźć",
   "combatHurt": "Trafiony — {millilitres} ml",
-  "@combatHurt": {"placeholders": {"millilitres": {"type": "int"}}},
+  "@combatHurt": {
+    "placeholders": {
+      "millilitres": {
+        "type": "int"
+      }
+    }
+  },
   "combatStrike": "Cios",
   "enemyWalker": "Szwędacz",
   "enemyLeaper": "Skakun",
@@ -375,13 +470,40 @@
   "combatReloading": "Przeładowanie…",
   "combatReloadBroken": "Za blisko — magazynek zostaje.",
   "combatRounds": "{loaded} / {magazine}",
-  "@combatRounds": {"placeholders": {"loaded": {"type": "int"}, "magazine": {"type": "int"}}},
+  "@combatRounds": {
+    "placeholders": {
+      "loaded": {
+        "type": "int"
+      },
+      "magazine": {
+        "type": "int"
+      }
+    }
+  },
   "combatAiming": "Celowanie…",
   "combatOnTarget": "Namierzony",
   "combatHurtAt": "Dostałeś — {where}, {millilitres} ml",
-  "@combatHurtAt": {"placeholders": {"where": {"type": "String"}, "millilitres": {"type": "int"}}},
+  "@combatHurtAt": {
+    "placeholders": {
+      "where": {
+        "type": "String"
+      },
+      "millilitres": {
+        "type": "int"
+      }
+    }
+  },
   "combatHitAt": "Trafienie — {where}, {millilitres} ml",
-  "@combatHitAt": {"placeholders": {"where": {"type": "String"}, "millilitres": {"type": "int"}}},
+  "@combatHitAt": {
+    "placeholders": {
+      "where": {
+        "type": "String"
+      },
+      "millilitres": {
+        "type": "int"
+      }
+    }
+  },
   "combatExecution": "Strzał w głowę. Koniec.",
   "hitHead": "głowa",
   "hitTorso": "tors",
@@ -394,9 +516,21 @@
   "fireAwayInShelter": "Nie z własnego terenu.",
   "combatFiredAway": "Strzał w powietrze. Ktoś przyjdzie sprawdzić.",
   "combatChance": "{percent}% trafienia",
-  "@combatChance": {"placeholders": {"percent": {"type": "int"}}},
+  "@combatChance": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "combatDistance": "{metres} m",
-  "@combatDistance": {"placeholders": {"metres": {"type": "int"}}},
+  "@combatDistance": {
+    "placeholders": {
+      "metres": {
+        "type": "int"
+      }
+    }
+  },
   "combatNoWeapon": "Nic w ręku.",
   "combatNoAmmo": "Brak amunicji do tego.",
   "reloadNoMagazine": "Brak pasującego magazynka.",
@@ -412,17 +546,53 @@
   "slotEmpty": "puste",
   "craftTitle": "Wytwarzanie",
   "actionBusy": "Zajęty: {what}",
-  "@actionBusy": { "placeholders": { "what": { "type": "String" } } },
+  "@actionBusy": {
+    "placeholders": {
+      "what": {
+        "type": "String"
+      }
+    }
+  },
   "actionEating": "Jesz: {item}",
-  "@actionEating": { "placeholders": { "item": { "type": "String" } } },
+  "@actionEating": {
+    "placeholders": {
+      "item": {
+        "type": "String"
+      }
+    }
+  },
   "actionDrinking": "Pijesz: {item}",
-  "@actionDrinking": { "placeholders": { "item": { "type": "String" } } },
+  "@actionDrinking": {
+    "placeholders": {
+      "item": {
+        "type": "String"
+      }
+    }
+  },
   "actionUsing": "Używasz: {item}",
-  "@actionUsing": { "placeholders": { "item": { "type": "String" } } },
+  "@actionUsing": {
+    "placeholders": {
+      "item": {
+        "type": "String"
+      }
+    }
+  },
   "actionLoading": "Ładujesz: {item}",
-  "@actionLoading": { "placeholders": { "item": { "type": "String" } } },
+  "@actionLoading": {
+    "placeholders": {
+      "item": {
+        "type": "String"
+      }
+    }
+  },
   "actionUnloading": "Rozładowujesz: {item}",
-  "@actionUnloading": { "placeholders": { "item": { "type": "String" } } },
+  "@actionUnloading": {
+    "placeholders": {
+      "item": {
+        "type": "String"
+      }
+    }
+  },
   "craftBenchFree": "Nic w robocie",
   "craftTakeApart": "Rozbierz",
   "craftPartlyApart": "częściowo rozebrany",
@@ -432,7 +602,16 @@
   "craftTakeApartRunning": "Rozbiórka w toku",
   "craftDone": "Gotowe.",
   "craftDismantleWarning": "Nie wróci. Zostanie: {gives}. {minutes} minut.",
-  "@craftDismantleWarning": { "placeholders": { "gives": { "type": "String" }, "minutes": { "type": "int" } } },
+  "@craftDismantleWarning": {
+    "placeholders": {
+      "gives": {
+        "type": "String"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "craftMake": "Wytwórz",
   "craftCancel": "Przerwij",
   "craftCancelWarning": "Materiały przepadają. Poszły w to.",
@@ -443,25 +622,70 @@
   "craftNotAtShelter": "Nie tutaj — w schronie.",
   "craftNothingBack": "Nie ma z tego czego odzyskać.",
   "craftNeedsWorkshop": "Warsztat L{level}",
-  "@craftNeedsWorkshop": { "placeholders": { "level": { "type": "int" } } },
+  "@craftNeedsWorkshop": {
+    "placeholders": {
+      "level": {
+        "type": "int"
+      }
+    }
+  },
   "craftMaking": "Wytwarzanie: {item}",
-  "@craftMaking": { "placeholders": { "item": { "type": "String" } } },
+  "@craftMaking": {
+    "placeholders": {
+      "item": {
+        "type": "String"
+      }
+    }
+  },
   "craftTakingApart": "Rozbiórka: {item}",
-  "@craftTakingApart": { "placeholders": { "item": { "type": "String" } } },
+  "@craftTakingApart": {
+    "placeholders": {
+      "item": {
+        "type": "String"
+      }
+    }
+  },
   "attachmentChoose": "Do wyboru: {count}",
-  "@attachmentChoose": { "placeholders": { "count": { "type": "int" } } },
+  "@attachmentChoose": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "reloadFitting": "Montowanie magazynka",
   "reloadSwapping": "Wymiana magazynka",
   "reloadFeeding": "Ładowanie naboi",
   "magazineRounds": "{rounds} / {capacity}",
-  "@magazineRounds": {"placeholders": {"rounds": {"type": "int"}, "capacity": {"type": "int"}}},
+  "@magazineRounds": {
+    "placeholders": {
+      "rounds": {
+        "type": "int"
+      },
+      "capacity": {
+        "type": "int"
+      }
+    }
+  },
   "combatHit": "Trafienie — {millilitres} ml",
-  "@combatHit": {"placeholders": {"millilitres": {"type": "int"}}},
+  "@combatHit": {
+    "placeholders": {
+      "millilitres": {
+        "type": "int"
+      }
+    }
+  },
   "combatMiss": "Pudło.",
   "combatStillHunted": "Wciąż Cię szukają.",
   "combatDown": "Padł.",
   "combatHeard": "Słychać na {metres} m.",
-  "@combatHeard": {"placeholders": {"metres": {"type": "int"}}},
+  "@combatHeard": {
+    "placeholders": {
+      "metres": {
+        "type": "int"
+      }
+    }
+  },
   "errorWeapon": "BROŃ",
   "errorSkill": "WPRAWA",
   "errorHeart": "TĘTNO",
@@ -493,7 +717,13 @@
   "inventoryDropAll": "Wszystko",
   "inventoryUse": "Użyj",
   "inventoryPortion": "zostało {percent}%",
-  "@inventoryPortion": {"placeholders": {"percent": {"type": "int"}}},
+  "@inventoryPortion": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "inventoryWear": "Załóż",
   "inventoryEmptySlot": "puste",
   "inventoryUsing": "{action}…",
@@ -513,7 +743,7 @@
   "slotHand": "W ręku",
   "statEnergy": "Energia wylotowa",
   "statMoa": "Rozrzut",
-  "statMagazine": "Magazynek",
+  "statMagazine": "szt.",
   "statReload": "Przeładowanie",
   "statRange": "Zasięg skuteczny",
   "statNoise": "Słychać z",
@@ -535,7 +765,7 @@
   "statPagesMin": "Stron, najmniej",
   "statPagesMax": "Stron, najwięcej",
   "statXpPerPage": "XP za stronę",
-  "statLight": "Światło",
+  "statLight": "światła",
   "statBattery": "Bateria",
   "statCraftTime": "Czas wytwarzania",
   "statSearchBonus": "Promień przeszukania",
@@ -546,7 +776,13 @@
   "statCondition": "Stan",
   "attachmentsFitted": "Zamontowane",
   "attachmentsFree": "wolne sloty: {count}",
-  "@attachmentsFree": {"placeholders": {"count": {"type": "int"}}},
+  "@attachmentsFree": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "attachmentsNone": "Nic nie zamontowano",
   "attachmentFit": "Zamontuj",
   "attachmentRefused": "Nie da się tego zamontować.",
@@ -555,8 +791,6 @@
   "attachmentNoRail": "Brak wolnego slotu w tej broni.",
   "attachmentRemove": "Zdejmij",
   "itemDetails": "Szczegóły",
-  "statMagazine": "szt.",
-  "statLight": "światła",
   "itemCompare": "Porównanie z",
   "itemCarried": "w plecaku",
   "itemWorn": "na sobie",
@@ -614,5 +848,40 @@
   "permStartupLater": "Później",
   "permStartupFix": "Ustaw teraz",
   "mapWaitingTitle": "Szukam pozycji",
-  "mapWaitingBody": "Gra czeka na sygnał, zanim pokaże mapę — inaczej pokazałaby okolicę, w której cię nie ma."
+  "mapWaitingBody": "Gra czeka na sygnał, zanim pokaże mapę — inaczej pokazałaby okolicę, w której cię nie ma.",
+  "salvageTitle": "Rozbiórka",
+  "salvagePick": "Zaznacz, co ma pójść na części. Idą po kolei — jedno po drugim.",
+  "salvageNothingWorth": "Nie ma tu nic, z czego cokolwiek zostanie.",
+  "salvageChosen": "Wybrane: {count}",
+  "@salvageChosen": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "salvageSummaryTitle": "Zanim zaczniesz",
+  "salvageGone": "To nie wróci. Zostaną z tego materiały.",
+  "salvageYouGet": "Dostaniesz",
+  "salvageTakes": "Razem {time}",
+  "@salvageTakes": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "salvageInOrder": "Po kolei. Przerwane w połowie — to, co zrobione, zostaje; reszta leży nietknięta.",
+  "salvageWaiting": "Czeka na swoją kolej",
+  "salvageBatchRunning": "Rozbiórka: {item} (+{rest})",
+  "@salvageBatchRunning": {
+    "placeholders": {
+      "item": {
+        "type": "String"
+      },
+      "rest": {
+        "type": "int"
+      }
+    }
+  }
 }

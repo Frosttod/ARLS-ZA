@@ -38,6 +38,7 @@ class ShelterScreen extends StatefulWidget {
     required this.onShelves,
     required this.onCraft,
     required this.craftJob,
+    this.onDisassemble,
     required this.shelved,
     required this.shelvedMassKg,
     required this.shelvedVolumeL,
@@ -83,6 +84,9 @@ class ShelterScreen extends StatefulWidget {
 
   /// What is on it, so the row can say so without opening it.
   final ValueListenable<CraftJob?> craftJob;
+
+  /// §18.6: taking several things apart at once, from the bench.
+  final VoidCallback? onDisassemble;
 
   /// §18.2: what is on the shelves of the main shelter, by item id.
   ///
@@ -162,40 +166,38 @@ class _ShelterScreenState extends State<ShelterScreen>
             ),
             const SizedBox(height: 16),
 
-            // §18.2: somewhere to put things down, from the moment the boards
-            // are up. Before any module — a barricaded house holds
-            // twenty-five kilograms on its own, and Storage is what makes
-            // that a hundred and twenty-five. Offered above the modules
-            // because it is the thing a player walks in wanting.
-            if (shelter.isReadyAt(now))
-              _ShelvesRow(
-                shelter: shelter,
-                away: at == null || !shelter.atSite(at),
-                massKg: widget.shelvedMassKg,
-                volumeL: widget.shelvedVolumeL,
-                onOpen: () => widget.onShelves(shelter),
-                colours: colours,
-              ),
-
-            // §18.4: the bench. Beside the shelves rather than under the
-            // modules, because making something is what a player walks in to
-            // do — the modules are what they walk in to plan.
-            if (shelter.isReadyAt(now))
-              ValueListenableBuilder<CraftJob?>(
-                valueListenable: widget.craftJob,
-                builder: (_, job, _) => _CraftRow(
-                  away: at == null || !shelter.atSite(at),
-                  job: job,
-                  onOpen: widget.onCraft,
-                  colours: colours,
-                  l10n: l10n,
-                ),
-              ),
-
             const SizedBox(height: 12),
             if (shelter.isReadyAt(now))
               for (final module in ShelterModule.values)
                 _ModuleRow(
+                  // §18.2, §18.4: the shelves belong to Storage and the bench
+                  // belongs to Workshop, because that is what those modules
+                  // are for. They were two more cards above this list, and a
+                  // player reading "Magazyn 2/3" beside a separate "Półki"
+                  // card had to work out for themselves that the first was
+                  // the reason for the second.
+                  panel: switch (module) {
+                    ShelterModule.storage => _ShelvesRow(
+                      shelter: shelter,
+                      away: at == null || !shelter.atSite(at),
+                      massKg: widget.shelvedMassKg,
+                      volumeL: widget.shelvedVolumeL,
+                      onOpen: () => widget.onShelves(shelter),
+                      colours: colours,
+                    ),
+                    ShelterModule.workshop => ValueListenableBuilder<CraftJob?>(
+                      valueListenable: widget.craftJob,
+                      builder: (_, job, _) => _CraftRow(
+                        away: at == null || !shelter.atSite(at),
+                        job: job,
+                        onOpen: widget.onCraft,
+                        onDisassemble: widget.onDisassemble,
+                        colours: colours,
+                        l10n: l10n,
+                      ),
+                    ),
+                    _ => null,
+                  },
                   shelter: shelter,
                   module: module,
                   now: now,
@@ -452,7 +454,17 @@ class _ModuleRow extends StatelessWidget {
     this.onDemolish,
     required this.onCancel,
     required this.colours,
+    this.panel,
   });
+
+  /// ⚠️ What this module lets the player *do*, under what it costs to build.
+  ///
+  /// The shelves and the bench used to be their own cards above the modules,
+  /// and that split one thing in two on screen: the Storage module exists to
+  /// make the shelves bigger, and the Workshop module exists to make the bench
+  /// better. A player looking at "Magazyn 2/3" and a separate "Półki" card had
+  /// to work out for themselves that the first was the reason for the second.
+  final Widget? panel;
 
   final Shelter shelter;
   final ShelterModule module;
@@ -551,6 +563,16 @@ class _ModuleRow extends StatelessWidget {
                 color: colours.muted,
               ),
             ),
+
+            // ⚠️ What the module *does*, above what the next level costs.
+            //
+            // A player walks into a shelter to put something down or to make
+            // something, and only sometimes to plan a build. The doing comes
+            // first on the card for the same reason it used to be a separate
+            // card above the modules — what changed is that it is no longer a
+            // separate card, because the shelves and the Storage module were
+            // never two things.
+            if (panel != null) ...[const SizedBox(height: 10), panel!],
 
             if (underway) ...[
               const SizedBox(height: 8),
@@ -923,41 +945,32 @@ class _ShelvesRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = L10n.of(context);
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.shelterShelves,
-                  style: TextStyle(fontSize: 14, color: colours.text),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  away
-                      ? l10n.shelterNotHere
-                      : '${outOfKg(massKg, shelter.storageKg)}'
-                            '   ·   '
-                            '${outOfL(volumeL, shelter.storageL)}',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: colours.muted,
-                    fontFamily: kDataFont,
-                    fontFeatures: const [FontFeature.tabularFigures()],
-                  ),
-                ),
-              ],
-            ),
+    // ⚠️ No heading of its own any more. This is inside the Storage module,
+    // which is already titled, and a card that said "Magazyn" over a row that
+    // said "Półki" was two names for one thing — the module *is* the shelves.
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          away
+              ? l10n.shelterNotHere
+              : '${outOfKg(massKg, shelter.storageKg)}'
+                    '   ·   '
+                    '${outOfL(volumeL, shelter.storageL)}',
+          style: TextStyle(
+            fontSize: 12,
+            color: colours.muted,
+            fontFamily: kDataFont,
+            fontFeatures: const [FontFeature.tabularFigures()],
           ),
-          TextButton(
-            onPressed: away ? null : onOpen,
-            child: Text(l10n.shelterShelves),
-          ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 4),
+        FilledButton.tonalIcon(
+          onPressed: away ? null : onOpen,
+          icon: const Icon(Icons.inventory_2, size: 18),
+          label: Text(l10n.shelterShelves),
+        ),
+      ],
     );
   }
 }
@@ -1041,6 +1054,11 @@ class _Need extends StatelessWidget {
 }
 
 /// §18.4: the way to the bench, and what is on it.
+/// §18.4, §18.6: what the bench is doing and what can be done at it.
+///
+/// Lives inside the Workshop module rather than beside it. Making something
+/// and taking something apart are both "use the workshop", and offering them
+/// on a card of their own said the module was one thing and the bench another.
 class _CraftRow extends StatelessWidget {
   const _CraftRow({
     required this.away,
@@ -1048,11 +1066,13 @@ class _CraftRow extends StatelessWidget {
     required this.onOpen,
     required this.colours,
     required this.l10n,
+    this.onDisassemble,
   });
 
   final bool away;
   final CraftJob? job;
   final VoidCallback onOpen;
+  final VoidCallback? onDisassemble;
   final HudColors colours;
   final L10n l10n;
 
@@ -1060,26 +1080,36 @@ class _CraftRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final running = job;
 
-    return Card(
-      color: colours.panel,
-      margin: const EdgeInsets.only(top: 8),
-      child: ListTile(
-        leading: Icon(Icons.handyman, color: colours.data),
-        title: Text(
-          l10n.craftTitle,
-          style: TextStyle(fontSize: 15, color: colours.text),
-        ),
-        subtitle: Text(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
           running == null
               ? l10n.craftBenchFree
               : '${(running.progressAt(DateTime.now().toUtc()) * 100).round()}%',
           style: TextStyle(fontSize: 12, color: colours.muted),
         ),
-        // ⚠️ Standing on the site, not merely inside the zone. The same rule
-        // the shelves keep, and for the same reason: the bench is a place.
-        onTap: away ? null : onOpen,
-        enabled: !away,
-      ),
+        const SizedBox(height: 4),
+        Row(
+          children: [
+            // ⚠️ Standing on the site, not merely inside the zone. The same
+            // rule the shelves keep, and for the same reason: the bench is a
+            // place, not a permission.
+            FilledButton.tonalIcon(
+              onPressed: away ? null : onOpen,
+              icon: const Icon(Icons.handyman, size: 18),
+              label: Text(l10n.craftMake),
+            ),
+            const SizedBox(width: 8),
+            if (onDisassemble != null)
+              OutlinedButton.icon(
+                onPressed: away ? null : onDisassemble,
+                icon: const Icon(Icons.content_cut, size: 18),
+                label: Text(l10n.craftTakeApart),
+              ),
+          ],
+        ),
+      ],
     );
   }
 }

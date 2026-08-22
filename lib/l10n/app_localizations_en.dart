@@ -1844,4 +1844,46 @@ class L10nEn extends L10n {
   @override
   String get mapWaitingBody =>
       'The game waits for a signal before drawing the map — otherwise it would show a place you are not.';
+
+  @override
+  String get salvageTitle => 'Taking apart';
+
+  @override
+  String get salvagePick =>
+      'Tick what goes to pieces. They go in order, one after another.';
+
+  @override
+  String get salvageNothingWorth => 'Nothing here would leave anything behind.';
+
+  @override
+  String salvageChosen(int count) {
+    return 'Picked: $count';
+  }
+
+  @override
+  String get salvageSummaryTitle => 'Before you start';
+
+  @override
+  String get salvageGone =>
+      'This will not come back. What is left of it is materials.';
+
+  @override
+  String get salvageYouGet => 'You get';
+
+  @override
+  String salvageTakes(String time) {
+    return '$time in all';
+  }
+
+  @override
+  String get salvageInOrder =>
+      'In order. Stopped half way, what is finished stays finished and the rest is untouched.';
+
+  @override
+  String get salvageWaiting => 'Waiting its turn';
+
+  @override
+  String salvageBatchRunning(String item, int rest) {
+    return 'Taking apart: $item (+$rest)';
+  }
 }

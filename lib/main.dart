@@ -28,9 +28,11 @@ import 'combat/engagement.dart';
 import 'combat/magazine.dart';
 import 'craft/craft_job.dart';
 import 'craft/craft_store.dart';
+import 'craft/salvage_batch.dart';
 import 'craft/item_recipe.dart';
 import 'ui/action_strip.dart';
 import 'ui/craft_screen.dart';
+import 'ui/disassemble_screen.dart';
 import 'combat/magazine_item.dart';
 import 'combat/weapon_load.dart';
 import 'combat/enemy.dart';
@@ -804,10 +806,21 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
   /// §18.6: which piece is currently under the multitool.
   ///
-  /// ⚠️ The line, not the item id. Two rifles in one pack are two rifles, and
-  /// the bar belongs under the one being taken apart — the same rule §4.7's
-  /// half-eaten tin already lives by.
-  final ValueNotifier<CarriedItem?> _dismantling = ValueNotifier(null);
+  /// ⚠️ The lines, not the item ids. Two rifles in one pack are two rifles,
+  /// and the bar belongs under the one being taken apart — the same rule
+  /// §4.7's half-eaten tin already lives by.
+  ///
+  /// ⚠️ **A list, and the order is the order it happens in (§18.6).** The
+  /// first is the one actually under the multitool and the only one with a
+  /// bar; the rest are locked and waiting their turn. Everything in here is
+  /// unusable — a rifle in a sitting cannot be worn, fired, dropped or
+  /// shelved, which is the whole reason the pieces stay visible instead of
+  /// vanishing for a quarter of an hour.
+  final ValueNotifier<List<CarriedItem>> _dismantling = ValueNotifier(const []);
+
+  /// Whether this piece is spoken for by the sitting on the bench.
+  bool _inSitting(CarriedItem line) =>
+      _dismantling.value.any((piece) => piece.isSame(line));
 
   Reload? _reload;
 
@@ -1464,7 +1477,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
               ? (line) => unawaited(_quickShelve(line))
               : null,
           craftJob: _craftJob,
-          craftLine: _dismantling,
+          craftLines: _dismantling,
           // ⚠️ What actually comes out, not what the thing is made of.
           //
           // Two different questions, and the difference is most of the
@@ -3494,6 +3507,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
           onDemolishModule: (module) => unawaited(_demolishModule(module)),
           onShelves: (place) => unawaited(_openStash(place)),
           onCraft: () => unawaited(_openCraft()),
+          onDisassemble: () => unawaited(_openDisassemble()),
           craftJob: _craftJob,
           onCancelBuild: (place) => unawaited(_cancelBuild(place)),
         ),
@@ -3979,7 +3993,14 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   String _jobLabel(CraftJob job) {
     final l10n = L10n.of(context);
     if (job.isSalvage) {
-      return l10n.craftTakingApart(_nameOfId(job.salvageItemId!));
+      final name = _nameOfId(job.salvageItemId!);
+
+      // §12: a sitting says how much of itself is left. "Rozbiórka: Nóż" on a
+      // bar with three quarters of an hour on it reads as broken.
+      final rest = _sittingOf(job).length - 1;
+      return rest > 0
+          ? l10n.salvageBatchRunning(name, rest)
+          : l10n.craftTakingApart(name);
     }
 
     final recipe = _recipes.recipes
@@ -3999,29 +4020,97 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   Future<void> _pauseDismantle() async {
     final character = _character;
     final job = _craftJob.value;
-    final line = _dismantling.value;
     if (character == null || job == null || !job.isSalvage) return;
 
-    final done = DateTime.now().toUtc().difference(job.startedAt);
-    final total = job.readyAt.difference(job.startedAt);
-    final kept = done > total ? total : done;
+    final kept = job.creditedAt(DateTime.now().toUtc());
 
-    if (line != null) {
+    // §18.6: a sitting stops in whole pieces. Everything that finished before
+    // the stop is already apart and gets paid out; the one that was under the
+    // multitool keeps its minutes; the rest were never touched.
+    final batch = _sittingOf(job);
+    final settled = batch.settledAt(kept);
+
+    if (settled.done.isNotEmpty) await _paySalvage(settled.done);
+
+    final head = settled.left.isEmpty ? null : settled.left.first;
+    final piece = head == null ? null : _pieceOf(head);
+    if (head != null && piece != null && !piece.fromShelf) {
+      final into = batch.creditedOn(kept);
+      final already = piece.line.salvageSeconds ?? 0;
+
       _inventory.value = _inventory.value.withLine(
-        line,
+        piece.line,
         // Never nought: a piece that has been opened at all is a piece that
         // no longer works, and a zero here would read as untouched.
-        line.copyWith(salvageSeconds: kept.inSeconds < 1 ? 1 : kept.inSeconds),
+        piece.line.copyWith(
+          salvageSeconds: into.inSeconds + already < 1
+              ? 1
+              : into.inSeconds + already,
+        ),
       );
       await _saveInventory();
     }
 
     await CraftStore(widget.session.db).clear(character.profile.id);
     _craftJob.value = null;
-    _dismantling.value = null;
+    _dismantling.value = const [];
 
     if (!mounted) return;
     _say(L10n.of(context).craftStopped);
+  }
+
+  /// §18.6: the sitting on a job, whether it was written as one or as many.
+  ///
+  /// A job from before sittings existed has no list, and is a sitting of one.
+  /// Everything downstream reads this rather than [CraftJob.batch] so that the
+  /// two kinds of row never need telling apart again.
+  SalvageBatch _sittingOf(CraftJob job) {
+    if (job.batch.isNotEmpty) return job.batch;
+    if (!job.isSalvage) return SalvageBatch.empty;
+
+    return SalvageBatch([
+      SalvageStep(
+        itemId: job.salvageItemId!,
+        condition: job.salvageCondition ?? 100,
+        takes: job.readyAt.difference(job.startedAt),
+      ),
+    ]);
+  }
+
+  /// §11.1: finds the very piece a step names, in the pack or on the shelves.
+  ///
+  /// ⚠️ By uid first, because that is what a step stores and what survives a
+  /// restart. The fall back to the item id is for rows written before uids
+  /// existed: two of a thing are interchangeable until one is worn or partly
+  /// undone, and a partly undone one is never interchangeable — which is why
+  /// the fall back looks for the most-undone one rather than the first.
+  ({CarriedItem line, bool fromShelf, int index})? _pieceOf(SalvageStep step) {
+    final uid = step.uid;
+
+    if (uid != null) {
+      for (final line in _inventory.value.carried) {
+        if (line.uid == uid) {
+          return (line: line, fromShelf: false, index: -1);
+        }
+      }
+      for (final (index, line) in _stash.value.lines.indexed) {
+        if (line.uid == uid) {
+          return (line: line, fromShelf: true, index: index);
+        }
+      }
+      return null;
+    }
+
+    final matches =
+        _inventory.value.carried
+            .where((line) => line.itemId == step.itemId)
+            .toList()
+          ..sort(
+            (a, b) => (b.salvageSeconds ?? 0).compareTo(a.salvageSeconds ?? 0),
+          );
+
+    final line = matches.firstOrNull;
+    return line == null ? null : (line: line, fromShelf: false, index: -1);
   }
 
   /// §18.4: gives up on whatever is on the bench.
@@ -4045,7 +4134,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
     // §18.6: giving up hands the piece back whole. Nothing was taken out of
     // it — the minutes were the cost, and they are gone.
-    _dismantling.value = null;
+    _dismantling.value = const [];
     if (!mounted) return;
     _say(L10n.of(context).shelterCancelled);
   }
@@ -4151,6 +4240,95 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     _say(L10n.of(context).shelterBuildStarted);
   }
 
+  /// §18.6, §18.2: picks a sitting out of the pack and the shelves together.
+  ///
+  /// ⚠️ Both piles, because at a bench they are one pile. Making somebody
+  /// carry their own scrap off their own shelf before it can be opened is
+  /// bookkeeping rather than a decision — the same rule §18.2's builds and the
+  /// bench's own materials already live by.
+  Future<void> _openDisassemble() async {
+    final catalogue = _catalogue;
+    if (catalogue == null) return;
+
+    // §2.1a: one pair of hands. Asked before the screen opens rather than
+    // after something is picked, so nobody builds a sitting they cannot start.
+    final busy = _alreadyBusy();
+    if (busy != null) {
+      _say(L10n.of(context).actionBusy(busy));
+      return;
+    }
+
+    final bench = _bench();
+
+    SalvageOffer? offer(CarriedItem line, {required bool fromShelf}) {
+      // ⚠️ Only pieces with a name of their own (§11.1). A sitting is written
+      // down and read back after a restart, and a piece it cannot name again
+      // is a piece it would find by guessing. The single-item path still opens
+      // those, and does not have to survive anything.
+      if (line.uid == null) return null;
+
+      return offerFor(
+        line,
+        bench: bench,
+        catalogue: catalogue,
+        book: _recipes,
+        fromShelf: fromShelf,
+      );
+    }
+
+    final offers = <SalvageOffer>[
+      for (final line in _inventory.value.carried)
+        ?offer(line, fromShelf: false),
+      for (final line in _stash.value.lines) ?offer(line, fromShelf: true),
+    ];
+
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => DisassembleScreen(
+          offers: offers,
+          catalogue: catalogue,
+          nameOf: _nameOfId,
+          onStart: (picked) {
+            Navigator.of(context).pop();
+            unawaited(_startSitting(picked));
+          },
+        ),
+      ),
+    );
+
+    await _reloadCraftJob();
+  }
+
+  /// §18.6: puts a whole sitting on the bench, in the order it was agreed to.
+  ///
+  /// ⚠️ **Nothing leaves the pack or the shelf yet.** The pieces stay where
+  /// they are, locked, and go one at a time as their turn finishes — which is
+  /// what makes stopping half way honest: everything is either apart or
+  /// exactly as it was.
+  Future<void> _startSitting(List<SalvageOffer> picked) async {
+    final character = _character;
+    if (character == null || picked.isEmpty) return;
+
+    final busy = _alreadyBusy();
+    if (busy != null) {
+      _say(L10n.of(context).actionBusy(busy));
+      return;
+    }
+
+    final batch = SalvageBatch([for (final offer in picked) offer.toStep()]);
+
+    await CraftStore(widget.session.db).beginBatchSalvage(
+      character.profile.id,
+      batch,
+      now: DateTime.now().toUtc(),
+    );
+
+    await _reloadCraftJob();
+
+    if (!mounted) return;
+    _say(L10n.of(context).shelterBuildStarted);
+  }
+
   /// §18.6: takes something apart for what is in it.
   ///
   /// The item leaves the pack now, with the work. Leaving it there until the
@@ -4214,7 +4392,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     // stops the other half of the problem: while this row is under the
     // multitool it cannot be worn, used, dropped or shelved, so a rifle being
     // taken apart still cannot be fired.
-    _dismantling.value = line;
+    _dismantling.value = [line];
 
     // ⚠️ Started in the past by however long it has already had, so the bar
     // picks up where it was left rather than beginning again at nothing.
@@ -4264,11 +4442,6 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
     return answer ?? false;
   }
-
-  /// The first piece of [itemId] in the pack, or null.
-  CarriedItem? _firstCarried(String itemId) => _inventory.value.carried
-      .where((line) => line.itemId == itemId)
-      .firstOrNull;
 
   String _nameOfId(String itemId) {
     final definition = _catalogue?[itemId];
@@ -4323,13 +4496,24 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         _startBenchTimer();
       }
 
-      // ⚠️ Found again by id after a restart, because identity does not
-      // survive the process. First match, which is the honest answer when
-      // somebody owns two of a thing: they are interchangeable until one of
-      // them is worn differently, and a worn one cannot be dismantled at all.
-      _dismantling.value = job != null && job.isSalvage
-          ? _firstCarried(job.salvageItemId!)
-          : null;
+      // ⚠️ Found again after a restart, because object identity does not
+      // survive the process — by uid where the row has one (§11.1), and by
+      // item id for rows written before uids existed.
+      //
+      // Only the pack, deliberately. A piece waiting its turn on a shelf is
+      // locked by [_takeOffShelf] refusing to hand it over; putting it in this
+      // list would draw a bar under a row on a screen it does not belong to.
+      _dismantling.value = job == null || !job.isSalvage
+          ? const []
+          : [
+              for (final step in _sittingOf(job).steps)
+                if (_pieceOf(step) case (
+                  line: final line,
+                  fromShelf: false,
+                  index: _,
+                ))
+                  line,
+            ];
       return;
     }
 
@@ -4346,43 +4530,101 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
     await CraftStore(widget.session.db).clear(character.profile.id);
 
-    final made = <String, int>{};
-
     if (job.isSalvage) {
-      made.addAll(
-        salvagePreview(
-          job.salvageItemId!,
-          _bench(),
-          catalogue: catalogue,
-          book: _recipes,
-          condition: job.salvageCondition ?? 100,
-        ),
-      );
+      // §18.6: every piece of the sitting, in order. The whole job ran, so
+      // every one of them is apart.
+      await _paySalvage(_sittingOf(job).steps);
+      _dismantling.value = const [];
 
-      // Now it goes. Whatever is left of it is what came out of it.
-      final piece = _dismantling.value ?? _firstCarried(job.salvageItemId!);
-      if (piece != null) {
-        final without = _inventory.value.removeLine(piece);
-        if (without != null) {
-          _inventory.value = without;
-        } else {
-          final fallback = _inventory.value.remove(job.salvageItemId!);
-          if (fallback != null) _inventory.value = fallback;
-        }
-      }
-      _dismantling.value = null;
-    } else {
-      final recipe = _recipes.recipes
-          .where((entry) => entry.id == job.recipeId)
-          .firstOrNull;
-      if (recipe != null) made[recipe.output] = recipe.count;
+      if (!mounted) return;
+      _say(L10n.of(context).craftDone);
+      return;
     }
 
-    // ⚠️ Onto the shelves when the pack will not take it, never nowhere.
-    //
-    // §18.1a's overflow is a state, not a reason to destroy something: a
-    // forty-five minute pack that vanishes because the bag was full is the
-    // worst possible reading of a carry limit.
+    final recipe = _recipes.recipes
+        .where((entry) => entry.id == job.recipeId)
+        .firstOrNull;
+    if (recipe == null) return;
+
+    await _grant({recipe.output: recipe.count});
+
+    if (!mounted) return;
+    _say(L10n.of(context).craftDone);
+  }
+
+  /// §18.6: destroys the pieces [steps] names and hands over what was in them.
+  ///
+  /// ⚠️ **Worked out at the end, not at the start.** The return is scaled by
+  /// the workshop and by skill (§18.6), and a player who finished a Workshop
+  /// while the sitting ran should get the better share — the same way the
+  /// single-item path has always read the bench at the moment it paid out.
+  ///
+  /// Both piles, because §18.2 makes them one pile at a bench: a piece that
+  /// went into the sitting from a shelf leaves from the shelf.
+  Future<void> _paySalvage(List<SalvageStep> steps) async {
+    final character = _character;
+    final catalogue = _catalogue;
+    if (character == null || catalogue == null || steps.isEmpty) return;
+
+    final bench = _bench();
+    final made = <String, int>{};
+
+    var shelf = _stash.value;
+    var pack = _inventory.value;
+    var movedShelf = false;
+
+    for (final step in steps) {
+      for (final entry in salvagePreview(
+        step.itemId,
+        bench,
+        catalogue: catalogue,
+        book: _recipes,
+        condition: step.condition,
+      ).entries) {
+        made[entry.key] = (made[entry.key] ?? 0) + entry.value;
+      }
+
+      // Now it goes. Whatever came out of it is what is left of it.
+      final piece = _pieceOf(step);
+      if (piece == null) continue;
+
+      if (piece.fromShelf) {
+        // ⚠️ Looked up again against the shelf as it stands now: taking one
+        // line off it moves every index after it, and a list of indices
+        // worked out before the loop would take the wrong things out.
+        final index = shelf.lines.indexWhere((line) => line.isSame(piece.line));
+        if (index < 0) continue;
+
+        shelf = shelf.take(index).stash;
+        movedShelf = true;
+      } else {
+        pack = pack.removeLine(piece.line) ?? pack;
+      }
+    }
+
+    _inventory.value = pack;
+    await _saveInventory();
+
+    if (movedShelf) {
+      _stash.value = shelf;
+      await _saveShelf();
+    }
+
+    await _grant(made);
+  }
+
+  /// Hands [made] over, and puts on the shelves whatever will not fit.
+  ///
+  /// ⚠️ Onto the shelves when the pack will not take it, never nowhere.
+  ///
+  /// §18.1a's overflow is a state, not a reason to destroy something: a
+  /// forty-five minute pack that vanishes because the bag was full is the
+  /// worst possible reading of a carry limit.
+  Future<void> _grant(Map<String, int> made) async {
+    final character = _character;
+    final catalogue = _catalogue;
+    if (character == null || catalogue == null || made.isEmpty) return;
+
     var pack = _inventory.value;
     final overflow = <String, int>{};
 
@@ -4404,9 +4646,6 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     await _saveInventory();
 
     if (overflow.isNotEmpty) await _shelveSpill(overflow);
-
-    if (!mounted) return;
-    _say(L10n.of(context).craftDone);
   }
 
   /// Puts what would not fit onto the shelves of the main shelter.
@@ -4701,6 +4940,16 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final catalogue = _catalogue;
     final place = _openShelves;
     if (character == null || catalogue == null || place == null) return null;
+
+    final held = _stash.value.lines.elementAtOrNull(index);
+
+    // §18.6: it is spoken for. Handing it over would put a piece that the
+    // bench is counting on into the pack, where it could be worn, eaten or
+    // dropped before its turn came round.
+    if (held != null && _inSitting(held)) {
+      if (mounted) _say(L10n.of(context).craftBenchBusy);
+      return null;
+    }
 
     final took = _stash.value.take(index);
     final line = took.taken;

@@ -8,6 +8,7 @@ import 'package:drift/drift.dart' show Value;
 
 import '../data/db/database.dart';
 import 'craft_job.dart';
+import 'salvage_batch.dart';
 
 class CraftStore {
   const CraftStore(this.db);
@@ -22,6 +23,7 @@ class CraftStore {
       recipeId: row.recipeId,
       salvageItemId: row.salvageItemId,
       salvageCondition: row.salvageCondition,
+      batch: SalvageBatch.decode(row.salvageBatch),
       startedAt: row.startedAt.toUtc(),
       readyAt: row.readyAt.toUtc(),
     );
@@ -62,6 +64,32 @@ class CraftStore {
       salvageCondition: Value(condition),
     ),
   );
+
+  /// §18.6: starts a sitting of several things, in order.
+  ///
+  /// ⚠️ Still one row. The head of the batch is written to the same two
+  /// columns a single dismantling uses, so everything that already knows how
+  /// to read a dismantling goes on working and only the parts that care about
+  /// the rest of the list have to look at [CraftJob.batch].
+  Future<void> beginBatchSalvage(
+    int profileId,
+    SalvageBatch batch, {
+    required DateTime now,
+  }) {
+    final head = batch.head;
+    if (head == null) return clear(profileId);
+
+    return db.beginCraftJob(
+      CraftJobsCompanion.insert(
+        profileId: profileId,
+        startedAt: now,
+        readyAt: now.add(batch.total),
+        salvageItemId: Value(head.itemId),
+        salvageCondition: Value(head.condition),
+        salvageBatch: Value(batch.encode()),
+      ),
+    );
+  }
 
   Future<void> clear(int profileId) => db.clearCraftJob(profileId);
 }

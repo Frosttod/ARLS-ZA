@@ -83,7 +83,7 @@ class InventoryScreen extends StatelessWidget {
     this.onStopDismantle,
     this.refusalOf,
     this.craftJob,
-    this.craftLine,
+    this.craftLines,
     this.onDetails,
     this.usingLine,
     this.onDevFill,
@@ -156,7 +156,14 @@ class InventoryScreen extends StatelessWidget {
 
   /// §18.6, §2.1a.3: the job on the bench, and which piece it is holding.
   final ValueListenable<CraftJob?>? craftJob;
-  final ValueListenable<CarriedItem?>? craftLine;
+
+  /// §18.6: every piece spoken for by the sitting on the bench.
+  ///
+  /// ⚠️ A list, and the order matters: the first is the one actually under the
+  /// multitool and the only one that gets a bar. The rest are waiting their
+  /// turn — locked, so a rifle queued for the sitting cannot be worn and
+  /// fired, but not pretending to be in progress.
+  final ValueListenable<List<CarriedItem>>? craftLines;
 
   /// §4.2: tipping them back out again.
   final void Function(CarriedItem line)? onEmpty;
@@ -327,7 +334,7 @@ class InventoryScreen extends StatelessWidget {
                 onStopDismantle: onStopDismantle,
                 refusalOf: refusalOf,
                 craftJob: craftJob,
-                craftLine: craftLine,
+                craftLines: craftLines,
                 onDetails: onDetails,
                 // The progress bar belongs under the thing it belongs to, not
                 // at the top of the screen: a player who taps "use" looks at
@@ -762,7 +769,7 @@ class _ItemRow extends StatefulWidget {
     this.onStopDismantle,
     this.refusalOf,
     this.craftJob,
-    this.craftLine,
+    this.craftLines,
     this.onDetails,
     this.action,
     this.usingLine,
@@ -798,7 +805,7 @@ class _ItemRow extends StatefulWidget {
   final VoidCallback? onStopDismantle;
   final String? Function(CarriedItem line, PackAction action)? refusalOf;
   final ValueListenable<CraftJob?>? craftJob;
-  final ValueListenable<CarriedItem?>? craftLine;
+  final ValueListenable<List<CarriedItem>>? craftLines;
 
   /// §4.2: tipping them back out again.
   final void Function(CarriedItem)? onEmpty;
@@ -843,17 +850,21 @@ class _ItemRowState extends State<_ItemRow> {
     if (!stillTrue) _refused = null;
   }
 
-  /// §18.6: whether this very piece is the one on the bench.
+  /// §18.6: whether this very piece is spoken for by the bench.
+  ///
+  /// ⚠️ Anywhere in the sitting, not just at the head of it. A piece waiting
+  /// its turn is as unusable as the one under the multitool — it has been
+  /// promised, and letting somebody fire a rifle that is third in the queue
+  /// would put it back in the pack in the middle of its own dismantling.
   bool get _busy =>
-      widget.craftLine?.value != null &&
-      widget.line.isSame(widget.craftLine!.value) &&
-      widget.craftJob?.value != null;
+      widget.craftJob?.value != null &&
+      (widget.craftLines?.value ?? const []).any(widget.line.isSame);
 
   @override
   Widget build(BuildContext context) {
     final listenables = <Listenable>[
       if (widget.craftJob != null) widget.craftJob!,
-      if (widget.craftLine != null) widget.craftLine!,
+      if (widget.craftLines != null) widget.craftLines!,
       if (widget.action != null) widget.action!,
       if (widget.usingLine != null) widget.usingLine!,
     ];
@@ -1167,19 +1178,28 @@ class _ItemRowState extends State<_ItemRow> {
               // row is what has to answer. The same piece is locked while it runs,
               // so a rifle being taken apart cannot be worn and fired.
               if (widget.craftJob != null)
-                ValueListenableBuilder<CarriedItem?>(
-                  valueListenable: widget.craftLine ?? const _NoLine(),
-                  builder: (context, piece, _) =>
+                ValueListenableBuilder<List<CarriedItem>>(
+                  valueListenable: widget.craftLines ?? const _NoLines(),
+                  builder: (context, sitting, _) =>
                       ValueListenableBuilder<CraftJob?>(
                         valueListenable: widget.craftJob!,
-                        builder: (context, job, _) =>
-                            job == null || piece == null || !line.isSame(piece)
-                            ? const SizedBox.shrink()
-                            : _CraftRunning(
-                                job: job,
-                                onStop: widget.onStopDismantle,
-                                colours: colours,
-                              ),
+                        builder: (context, job, _) {
+                          // ⚠️ The head only. Everything else in the sitting is
+                          // locked and waiting, and a bar under a row that has
+                          // not been started on is a bar that lies.
+                          final head = sitting.firstOrNull;
+                          if (job == null ||
+                              head == null ||
+                              !line.isSame(head)) {
+                            return const SizedBox.shrink();
+                          }
+
+                          return _CraftRunning(
+                            job: job,
+                            onStop: widget.onStopDismantle,
+                            colours: colours,
+                          );
+                        },
                       ),
                 ),
 
@@ -1311,6 +1331,19 @@ class _ItemRowState extends State<_ItemRow> {
 /// A listenable that is always null, for a screen told nothing about which
 /// piece is in hand — every test that predates part-used items, and the dev
 /// tools. Const, so it costs nothing to hand out.
+class _NoLines implements ValueListenable<List<CarriedItem>> {
+  const _NoLines();
+
+  @override
+  List<CarriedItem> get value => const [];
+
+  @override
+  void addListener(VoidCallback listener) {}
+
+  @override
+  void removeListener(VoidCallback listener) {}
+}
+
 class _NoLine implements ValueListenable<CarriedItem?> {
   const _NoLine();
 

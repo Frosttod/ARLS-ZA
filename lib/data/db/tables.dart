@@ -651,6 +651,20 @@ class CraftJobs extends Table {
   /// itself is no longer around to ask.
   RealColumn get salvageCondition => real().nullable()();
 
+  /// §18.6: several things taken apart in one sitting, in the order they come
+  /// apart. JSON, null for anything else.
+  ///
+  /// ⚠️ **Still one job, not a queue.** The comment above is unchanged: a
+  /// person has one pair of hands, and this row is still the one thing they
+  /// are doing. What the list adds is that the sitting has parts — the rifle
+  /// first, then the vest — so that stopping half way through leaves every
+  /// piece either finished or untouched, and never something in between.
+  ///
+  /// The pieces named here are **still in the pack**, locked, waiting their
+  /// turn. Only the one at the head is being worked on, which is why only it
+  /// carries a bar and why the others can be given back untouched.
+  TextColumn get salvageBatch => text().nullable()();
+
   DateTimeColumn get startedAt => dateTime()();
   DateTimeColumn get readyAt => dateTime()();
 

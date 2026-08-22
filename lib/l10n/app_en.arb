@@ -136,7 +136,16 @@
   "hudSleep": "Rest",
   "hudHeartRate": "Heart rate",
   "hudThreat": "{count} in the fight · nearest {metres} m",
-  "@hudThreat": {"placeholders": {"count": {"type": "int"}, "metres": {"type": "int"}}},
+  "@hudThreat": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "metres": {
+        "type": "int"
+      }
+    }
+  },
   "hudThreatSprint": "can still sprint",
   "hudCarry": "Carry",
   "hudBulk": "Bulk",
@@ -144,11 +153,29 @@
   "hudAcquiring": "Acquiring GPS",
   "hudWeakSignal": "Weak signal",
   "statusDegree": "{degree} degree",
-  "@statusDegree": {"placeholders": {"degree": {"type": "String"}}},
+  "@statusDegree": {
+    "placeholders": {
+      "degree": {
+        "type": "String"
+      }
+    }
+  },
   "statusOfDaily": "{percent}% of the daily need",
-  "@statusOfDaily": {"placeholders": {"percent": {"type": "int"}}},
+  "@statusOfDaily": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "statusDebtHours": "{hours} h of debt",
-  "@statusDebtHours": {"placeholders": {"hours": {"type": "int"}}},
+  "@statusDebtHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
   "statusEffect": "Effect",
   "statusFix": "What to do",
   "statusWhere": "Where to find it",
@@ -169,13 +196,18 @@
   "statusDehydrated": "Dehydrated",
   "statusStarving": "Starving",
   "statusSleepDeprived": "Sleep-deprived",
-  "statusBleeding": "Bleeding",
   "bleedSuperficial": "superficial",
   "bleedModerate": "moderate",
   "bleedSevere": "severe",
   "bleedArterial": "arterial",
   "statusBleedingEffect": "{millilitres} ml a minute, and running multiplies it — at 160 bpm against a resting 70 it is more than twice that. Blood does not come back at all while something is open.",
-  "@statusBleedingEffect": {"placeholders": {"millilitres": {"type": "int"}}},
+  "@statusBleedingEffect": {
+    "placeholders": {
+      "millilitres": {
+        "type": "int"
+      }
+    }
+  },
   "statusBleedingFix": "A pressure dressing, and stand still while it goes on.",
   "statusBleedingFixArterial": "A tourniquet, and nothing else. A dressing will not hold this one.",
   "statusBleedingWhere": "Pharmacies, clinics, ambulances; first-aid kits in offices and workshops.",
@@ -187,7 +219,13 @@
   "deathWhat": "Hardcore: this character is over. The streak goes into the Chronicle with everything it reached. A new one keeps your body — the same height, weight and age — and only the name changes.",
   "downWhat": "You come round where you are, an hour from now, with a quarter of your blood and almost nothing in you. Whatever was in your hands is gone; about half of what you carried is scattered where you fell. For ten minutes afterwards they will take you for dead — and you cannot fight either.",
   "downLeft": "{time}",
-  "@downLeft": {"placeholders": {"time": {"type": "String"}}},
+  "@downLeft": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "downClosedApp": "The hour runs whether the app is open or not.",
   "downLog": "The last of it",
   "downGrace": "They still take you for dead. Do not give it away.",
@@ -278,9 +316,24 @@
   "profileSkills": "Skills",
   "profileSkillsSoon": "Not in the game yet. Until they are, everybody shoots like a novice — twenty-five minutes of angle, which is the largest row above.",
   "profileAliveDays": "Alive {days} d {hours} h",
-  "@profileAliveDays": {"placeholders": {"days": {"type": "int"}, "hours": {"type": "int"}}},
+  "@profileAliveDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      },
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
   "profileAliveHours": "Alive {hours} h",
-  "@profileAliveHours": {"placeholders": {"hours": {"type": "int"}}},
+  "@profileAliveHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
   "menuInventory": "INVENTORY",
   "menuShelter": "SHELTER",
   "stashOnTheShelves": "On the shelves",
@@ -309,7 +362,13 @@
   "shelterDemolish": "Dismantle",
   "shelterDemolished": "Module dismantled.",
   "shelterDemolishWhat": "Taking this module down returns half the materials: {gives}. Lower levels stay. This cannot be undone.",
-  "@shelterDemolishWhat": {"placeholders": {"gives": {"type": "String"}}},
+  "@shelterDemolishWhat": {
+    "placeholders": {
+      "gives": {
+        "type": "String"
+      }
+    }
+  },
   "shelterSafeZone": "Safe zone",
   "shelterSleep": "Sleep quality",
   "shelterStorage": "Capacity",
@@ -318,9 +377,21 @@
   "shelterWorkStopped": "Work stopped — nobody is on the site.",
   "shelterNeedsTool": "Needs a hammer. From Workshop 2, a multitool as well.",
   "shelterMissing": "Missing: {what}",
-  "@shelterMissing": {"placeholders": {"what": {"type": "String"}}},
+  "@shelterMissing": {
+    "placeholders": {
+      "what": {
+        "type": "String"
+      }
+    }
+  },
   "shelterBuildingLeft": "{time} left",
-  "@shelterBuildingLeft": {"placeholders": {"time": {"type": "String"}}},
+  "@shelterBuildingLeft": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "shelterNoneWhat": "It goes up where you are standing, and that is where you will come back to sleep. Fifty metres of ground the dead do not walk into — and out of which you cannot shoot either.",
   "campWhat": "Somewhere else you spend your day: work, a lecture hall, a relative’s flat. Twenty metres, a chest, and a night worth seven tenths of one. Two at most, and not within 800 m of anything you have already built.",
   "campTooMany": "Two camps is the limit. Take one down first.",
@@ -411,33 +482,69 @@
   "searchLostSignal": "The search stopped: no trusted position.",
   "searchNoise": "Searching is heard about 80 m away.",
   "searchFound": "Found: {items}",
-  "@searchFound": {"placeholders": {"items": {"type": "String"}}},
+  "@searchFound": {
+    "placeholders": {
+      "items": {
+        "type": "String"
+      }
+    }
+  },
   "searchFoundNothing": "Nothing worth carrying.",
   "searchNoRoom": "No room for everything — the rest stays.",
   "searchEmpty": "Already emptied.",
   "searchRevealed": "Places revealed: {count}",
-  "@searchRevealed": {"placeholders": {"count": {"type": "int"}}},
+  "@searchRevealed": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "searchNothingNew": "Nothing new here yet.",
   "searchTooSoon": "Nothing new to see yet.",
   "searchTooClose": "You would be looking at the same ground.",
   "searchFoundNearby": "You spot {what} nearby.",
   "scoutCar": "an abandoned car",
   "scoutWaste": "a skip",
-  "@searchFoundNearby": {"placeholders": {"what": {"type": "String"}}},
+  "@searchFoundNearby": {
+    "placeholders": {
+      "what": {
+        "type": "String"
+      }
+    }
+  },
   "placeDistance": "Distance",
   "placeWayIn": "Way in",
   "placeOpen": "Open",
   "placeSearched": "Searched",
   "placeUntouched": "Not yet",
   "placePartly": "{percent}% of it left",
-  "@placePartly": {"placeholders": {"percent": {"type": "int"}}},
+  "@placePartly": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "placeStripped": "Stripped — something back in about {hours} h",
-  "@placeStripped": {"placeholders": {"hours": {"type": "int"}}},
+  "@placeStripped": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
   "placeCanStill": "Still possible",
   "placeNothingLeft": "Nothing left to turn over",
   "placeHolds": "Holds",
   "combatHurt": "Hit — {millilitres} ml lost",
-  "@combatHurt": {"placeholders": {"millilitres": {"type": "int"}}},
+  "@combatHurt": {
+    "placeholders": {
+      "millilitres": {
+        "type": "int"
+      }
+    }
+  },
   "combatStrike": "Strike",
   "enemyWalker": "Walker",
   "enemyLeaper": "Leaper",
@@ -453,13 +560,40 @@
   "combatReloading": "Reloading…",
   "combatReloadBroken": "Too close — the magazine stays out.",
   "combatRounds": "{loaded} / {magazine}",
-  "@combatRounds": {"placeholders": {"loaded": {"type": "int"}, "magazine": {"type": "int"}}},
+  "@combatRounds": {
+    "placeholders": {
+      "loaded": {
+        "type": "int"
+      },
+      "magazine": {
+        "type": "int"
+      }
+    }
+  },
   "combatAiming": "Aiming…",
   "combatOnTarget": "On target",
   "combatHurtAt": "Hit — {where}, {millilitres} ml lost",
-  "@combatHurtAt": {"placeholders": {"where": {"type": "String"}, "millilitres": {"type": "int"}}},
+  "@combatHurtAt": {
+    "placeholders": {
+      "where": {
+        "type": "String"
+      },
+      "millilitres": {
+        "type": "int"
+      }
+    }
+  },
   "combatHitAt": "Hit — {where}, {millilitres} ml",
-  "@combatHitAt": {"placeholders": {"where": {"type": "String"}, "millilitres": {"type": "int"}}},
+  "@combatHitAt": {
+    "placeholders": {
+      "where": {
+        "type": "String"
+      },
+      "millilitres": {
+        "type": "int"
+      }
+    }
+  },
   "combatExecution": "Head shot. It is over.",
   "hitHead": "head",
   "hitTorso": "torso",
@@ -472,9 +606,21 @@
   "fireAwayInShelter": "Not from your own ground.",
   "combatFiredAway": "A shot into the air. Something will come and look.",
   "combatChance": "{percent}% hit",
-  "@combatChance": {"placeholders": {"percent": {"type": "int"}}},
+  "@combatChance": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "combatDistance": "{metres} m",
-  "@combatDistance": {"placeholders": {"metres": {"type": "int"}}},
+  "@combatDistance": {
+    "placeholders": {
+      "metres": {
+        "type": "int"
+      }
+    }
+  },
   "combatNoWeapon": "Nothing in hand.",
   "combatNoAmmo": "No rounds for this.",
   "reloadNoMagazine": "No magazine that fits.",
@@ -490,17 +636,53 @@
   "slotEmpty": "empty",
   "craftTitle": "Making",
   "actionBusy": "Busy: {what}",
-  "@actionBusy": { "placeholders": { "what": { "type": "String" } } },
+  "@actionBusy": {
+    "placeholders": {
+      "what": {
+        "type": "String"
+      }
+    }
+  },
   "actionEating": "Eating: {item}",
-  "@actionEating": { "placeholders": { "item": { "type": "String" } } },
+  "@actionEating": {
+    "placeholders": {
+      "item": {
+        "type": "String"
+      }
+    }
+  },
   "actionDrinking": "Drinking: {item}",
-  "@actionDrinking": { "placeholders": { "item": { "type": "String" } } },
+  "@actionDrinking": {
+    "placeholders": {
+      "item": {
+        "type": "String"
+      }
+    }
+  },
   "actionUsing": "Using: {item}",
-  "@actionUsing": { "placeholders": { "item": { "type": "String" } } },
+  "@actionUsing": {
+    "placeholders": {
+      "item": {
+        "type": "String"
+      }
+    }
+  },
   "actionLoading": "Loading: {item}",
-  "@actionLoading": { "placeholders": { "item": { "type": "String" } } },
+  "@actionLoading": {
+    "placeholders": {
+      "item": {
+        "type": "String"
+      }
+    }
+  },
   "actionUnloading": "Unloading: {item}",
-  "@actionUnloading": { "placeholders": { "item": { "type": "String" } } },
+  "@actionUnloading": {
+    "placeholders": {
+      "item": {
+        "type": "String"
+      }
+    }
+  },
   "craftBenchFree": "Nothing on it",
   "craftTakeApart": "Take apart",
   "craftPartlyApart": "partly apart",
@@ -510,7 +692,16 @@
   "craftTakeApartRunning": "Taking it apart",
   "craftDone": "Finished on the bench.",
   "craftDismantleWarning": "It will not come back. You get: {gives}. {minutes} minutes.",
-  "@craftDismantleWarning": { "placeholders": { "gives": { "type": "String" }, "minutes": { "type": "int" } } },
+  "@craftDismantleWarning": {
+    "placeholders": {
+      "gives": {
+        "type": "String"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "craftMake": "Make",
   "craftCancel": "Give up",
   "craftCancelWarning": "The materials are gone. They went into it.",
@@ -521,25 +712,70 @@
   "craftNotAtShelter": "Not here — at the shelter.",
   "craftNothingBack": "There is nothing in it worth getting back.",
   "craftNeedsWorkshop": "Workshop L{level}",
-  "@craftNeedsWorkshop": { "placeholders": { "level": { "type": "int" } } },
+  "@craftNeedsWorkshop": {
+    "placeholders": {
+      "level": {
+        "type": "int"
+      }
+    }
+  },
   "craftMaking": "Making: {item}",
-  "@craftMaking": { "placeholders": { "item": { "type": "String" } } },
+  "@craftMaking": {
+    "placeholders": {
+      "item": {
+        "type": "String"
+      }
+    }
+  },
   "craftTakingApart": "Taking apart: {item}",
-  "@craftTakingApart": { "placeholders": { "item": { "type": "String" } } },
+  "@craftTakingApart": {
+    "placeholders": {
+      "item": {
+        "type": "String"
+      }
+    }
+  },
   "attachmentChoose": "{count} to choose from",
-  "@attachmentChoose": { "placeholders": { "count": { "type": "int" } } },
+  "@attachmentChoose": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "reloadFitting": "Fitting magazine",
   "reloadSwapping": "Changing magazine",
   "reloadFeeding": "Loading rounds",
   "magazineRounds": "{rounds} / {capacity}",
-  "@magazineRounds": {"placeholders": {"rounds": {"type": "int"}, "capacity": {"type": "int"}}},
+  "@magazineRounds": {
+    "placeholders": {
+      "rounds": {
+        "type": "int"
+      },
+      "capacity": {
+        "type": "int"
+      }
+    }
+  },
   "combatHit": "Hit — {millilitres} ml",
-  "@combatHit": {"placeholders": {"millilitres": {"type": "int"}}},
+  "@combatHit": {
+    "placeholders": {
+      "millilitres": {
+        "type": "int"
+      }
+    }
+  },
   "combatMiss": "Missed.",
   "combatStillHunted": "They are still looking for you.",
   "combatDown": "It went down.",
   "combatHeard": "Heard {metres} m away.",
-  "@combatHeard": {"placeholders": {"metres": {"type": "int"}}},
+  "@combatHeard": {
+    "placeholders": {
+      "metres": {
+        "type": "int"
+      }
+    }
+  },
   "errorWeapon": "WEAPON",
   "errorSkill": "PRACTICE",
   "errorHeart": "PULSE",
@@ -555,7 +791,13 @@
   "breachNoTool": "No tool for this — a padlock needs one.",
   "breachDone": "You are in.",
   "breachNoise": "{metres} m of noise",
-  "@breachNoise": {"placeholders": {"metres": {"type": "int"}}},
+  "@breachNoise": {
+    "placeholders": {
+      "metres": {
+        "type": "int"
+      }
+    }
+  },
   "fieldRestingHrKnown": "I know my resting heart rate",
   "fieldRestingHr": "Resting heart rate",
   "fieldRestingHrHint": "Measured sitting still. Left off, the game estimates it from your age and build — and gets it wrong for anyone whose heart is slower or faster than average. Stays on this device.",
@@ -564,23 +806,50 @@
   "droppedTake": "Pick up",
   "droppedTooFar": "Too far to reach into.",
   "droppedExpires": "{hours} h left",
-  "@droppedExpires": {"placeholders": {"hours": {"type": "int"}}},
+  "@droppedExpires": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
   "droppedNoRoom": "No room in the pack.",
   "groundEmpty": "Nothing here now.",
-  "@groundEmpty": {"description": "Shown in the ground list once everything within reach has been picked up."},
+  "@groundEmpty": {
+    "description": "Shown in the ground list once everything within reach has been picked up."
+  },
   "noteRead": "Read",
   "noteClose": "Put it back",
   "inventoryTakeOff": "Take off",
   "inventoryDropAll": "All",
   "inventoryUse": "Use",
   "inventoryPortion": "{percent}% left",
-  "@inventoryPortion": {"description": "How much of a part-used item is left.", "placeholders": {"percent": {"type": "int"}}},
+  "@inventoryPortion": {
+    "description": "How much of a part-used item is left.",
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "inventoryWear": "Put on",
   "inventoryEmptySlot": "empty",
   "inventoryUsing": "{action}…",
-  "@inventoryUsing": {"placeholders": {"action": {"type": "String"}}},
+  "@inventoryUsing": {
+    "placeholders": {
+      "action": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryUsed": "{item} — used",
-  "@inventoryUsed": {"placeholders": {"item": {"type": "String"}}},
+  "@inventoryUsed": {
+    "placeholders": {
+      "item": {
+        "type": "String"
+      }
+    }
+  },
   "inventoryNoWound": "Nothing to dress.",
   "inventoryWrongDressing": "That dressing is not enough for this wound.",
   "slotHead": "Head",
@@ -596,7 +865,7 @@
   "slotHand": "In hand",
   "statEnergy": "Muzzle energy",
   "statMoa": "Dispersion",
-  "statMagazine": "Magazine",
+  "statMagazine": "rds",
   "statReload": "Reload",
   "statRange": "Effective range",
   "statNoise": "Heard from",
@@ -618,7 +887,7 @@
   "statPagesMin": "Pages, fewest",
   "statPagesMax": "Pages, most",
   "statXpPerPage": "XP a page",
-  "statLight": "Light",
+  "statLight": "light",
   "statBattery": "Battery",
   "statCraftTime": "Crafting time",
   "statSearchBonus": "Search radius",
@@ -627,10 +896,18 @@
   "statSettle": "Settling",
   "statCraftSkill": "Craft skill",
   "statCondition": "Condition",
-  "@statCondition": {"description": "How worn one copy of an item is, in percent."},
+  "@statCondition": {
+    "description": "How worn one copy of an item is, in percent."
+  },
   "attachmentsFitted": "Fitted",
   "attachmentsFree": "{count} free",
-  "@attachmentsFree": {"placeholders": {"count": {"type": "int"}}},
+  "@attachmentsFree": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "attachmentsNone": "Nothing fitted",
   "attachmentFit": "Fit",
   "attachmentRefused": "It will not go on that.",
@@ -639,8 +916,6 @@
   "attachmentNoRail": "No rail left on this weapon.",
   "attachmentRemove": "Take off",
   "itemDetails": "Details",
-  "statMagazine": "rds",
-  "statLight": "light",
   "itemCompare": "Compared with",
   "itemCarried": "carried",
   "itemWorn": "worn",
@@ -658,7 +933,13 @@
   "inventoryDrop": "Drop",
   "inventoryOverComfort": "Over a comfortable load: every step costs more.",
   "inventoryLost": "{count} items were lost with a removed content pack.",
-  "@inventoryLost": {"placeholders": {"count": {"type": "int"}}},
+  "@inventoryLost": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "settingsTitle": "Settings",
   "settingsLanguage": "Language",
   "settingsMaps": "Offline maps",
@@ -699,5 +980,40 @@
   "permStartupLater": "Later",
   "permStartupFix": "Set it up",
   "mapWaitingTitle": "Finding you",
-  "mapWaitingBody": "The game waits for a signal before drawing the map — otherwise it would show a place you are not."
+  "mapWaitingBody": "The game waits for a signal before drawing the map — otherwise it would show a place you are not.",
+  "salvageTitle": "Taking apart",
+  "salvagePick": "Tick what goes to pieces. They go in order, one after another.",
+  "salvageNothingWorth": "Nothing here would leave anything behind.",
+  "salvageChosen": "Picked: {count}",
+  "@salvageChosen": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "salvageSummaryTitle": "Before you start",
+  "salvageGone": "This will not come back. What is left of it is materials.",
+  "salvageYouGet": "You get",
+  "salvageTakes": "{time} in all",
+  "@salvageTakes": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "salvageInOrder": "In order. Stopped half way, what is finished stays finished and the rest is untouched.",
+  "salvageWaiting": "Waiting its turn",
+  "salvageBatchRunning": "Taking apart: {item} (+{rest})",
+  "@salvageBatchRunning": {
+    "placeholders": {
+      "item": {
+        "type": "String"
+      },
+      "rest": {
+        "type": "int"
+      }
+    }
+  }
 }

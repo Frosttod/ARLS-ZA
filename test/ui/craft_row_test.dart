@@ -48,7 +48,7 @@ void main() {
           names: names,
           body: body,
           craftJob: ValueNotifier(job),
-          craftLine: ValueNotifier(busy),
+          craftLines: ValueNotifier(busy == null ? const [] : [busy]),
           onDismantle: (_) {},
           canDismantle: (_) => true,
           onStash: onStash,

@@ -15,6 +15,7 @@ library;
 
 import '../items/item_catalogue.dart';
 import 'item_recipe.dart';
+import 'salvage_batch.dart';
 
 /// What is on the bench.
 class CraftJob {
@@ -24,6 +25,7 @@ class CraftJob {
     this.recipeId,
     this.salvageItemId,
     this.salvageCondition,
+    this.batch = SalvageBatch.empty,
   });
 
   /// §18.4: the recipe being made, or null when this is a dismantling.
@@ -36,10 +38,32 @@ class CraftJob {
   /// with the job.
   final double? salvageCondition;
 
+  /// §18.6: the rest of the sitting, when this is more than one piece.
+  ///
+  /// Empty for a making, and for a dismantling of one thing written by a
+  /// version that did not know about sittings — [salvageItemId] is still the
+  /// head either way, so nothing downstream has to ask which kind it is.
+  final SalvageBatch batch;
+
   final DateTime startedAt;
   final DateTime readyAt;
 
   bool get isSalvage => salvageItemId != null;
+
+  /// Whether this sitting has more than one piece in it.
+  bool get isBatch => batch.length > 1;
+
+  /// §18.6: how much work this job has been credited with by [now].
+  ///
+  /// Capped at the total, because a job left running while the app was closed
+  /// cannot earn more than it was worth.
+  Duration creditedAt(DateTime now) {
+    final total = readyAt.difference(startedAt);
+    final done = now.difference(startedAt);
+
+    if (done.isNegative) return Duration.zero;
+    return done > total ? total : done;
+  }
 
   bool isDoneAt(DateTime now) => !now.isBefore(readyAt);
 

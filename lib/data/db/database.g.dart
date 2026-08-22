@@ -8931,6 +8931,17 @@ class $CraftJobsTable extends CraftJobs
     type: DriftSqlType.double,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _salvageBatchMeta = const VerificationMeta(
+    'salvageBatch',
+  );
+  @override
+  late final GeneratedColumn<String> salvageBatch = GeneratedColumn<String>(
+    'salvage_batch',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _startedAtMeta = const VerificationMeta(
     'startedAt',
   );
@@ -8960,6 +8971,7 @@ class $CraftJobsTable extends CraftJobs
     recipeId,
     salvageItemId,
     salvageCondition,
+    salvageBatch,
     startedAt,
     readyAt,
   ];
@@ -9010,6 +9022,15 @@ class $CraftJobsTable extends CraftJobs
         ),
       );
     }
+    if (data.containsKey('salvage_batch')) {
+      context.handle(
+        _salvageBatchMeta,
+        salvageBatch.isAcceptableOrUnknown(
+          data['salvage_batch']!,
+          _salvageBatchMeta,
+        ),
+      );
+    }
     if (data.containsKey('started_at')) {
       context.handle(
         _startedAtMeta,
@@ -9055,6 +9076,10 @@ class $CraftJobsTable extends CraftJobs
         DriftSqlType.double,
         data['${effectivePrefix}salvage_condition'],
       ),
+      salvageBatch: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}salvage_batch'],
+      ),
       startedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}started_at'],
@@ -9089,6 +9114,20 @@ class CraftJobRow extends DataClass implements Insertable<CraftJobRow> {
   /// §18.6: how worn it was, because the return is scaled by it and the item
   /// itself is no longer around to ask.
   final double? salvageCondition;
+
+  /// §18.6: several things taken apart in one sitting, in the order they come
+  /// apart. JSON, null for anything else.
+  ///
+  /// ⚠️ **Still one job, not a queue.** The comment above is unchanged: a
+  /// person has one pair of hands, and this row is still the one thing they
+  /// are doing. What the list adds is that the sitting has parts — the rifle
+  /// first, then the vest — so that stopping half way through leaves every
+  /// piece either finished or untouched, and never something in between.
+  ///
+  /// The pieces named here are **still in the pack**, locked, waiting their
+  /// turn. Only the one at the head is being worked on, which is why only it
+  /// carries a bar and why the others can be given back untouched.
+  final String? salvageBatch;
   final DateTime startedAt;
   final DateTime readyAt;
   const CraftJobRow({
@@ -9097,6 +9136,7 @@ class CraftJobRow extends DataClass implements Insertable<CraftJobRow> {
     this.recipeId,
     this.salvageItemId,
     this.salvageCondition,
+    this.salvageBatch,
     required this.startedAt,
     required this.readyAt,
   });
@@ -9113,6 +9153,9 @@ class CraftJobRow extends DataClass implements Insertable<CraftJobRow> {
     }
     if (!nullToAbsent || salvageCondition != null) {
       map['salvage_condition'] = Variable<double>(salvageCondition);
+    }
+    if (!nullToAbsent || salvageBatch != null) {
+      map['salvage_batch'] = Variable<String>(salvageBatch);
     }
     map['started_at'] = Variable<DateTime>(startedAt);
     map['ready_at'] = Variable<DateTime>(readyAt);
@@ -9132,6 +9175,9 @@ class CraftJobRow extends DataClass implements Insertable<CraftJobRow> {
       salvageCondition: salvageCondition == null && nullToAbsent
           ? const Value.absent()
           : Value(salvageCondition),
+      salvageBatch: salvageBatch == null && nullToAbsent
+          ? const Value.absent()
+          : Value(salvageBatch),
       startedAt: Value(startedAt),
       readyAt: Value(readyAt),
     );
@@ -9148,6 +9194,7 @@ class CraftJobRow extends DataClass implements Insertable<CraftJobRow> {
       recipeId: serializer.fromJson<String?>(json['recipeId']),
       salvageItemId: serializer.fromJson<String?>(json['salvageItemId']),
       salvageCondition: serializer.fromJson<double?>(json['salvageCondition']),
+      salvageBatch: serializer.fromJson<String?>(json['salvageBatch']),
       startedAt: serializer.fromJson<DateTime>(json['startedAt']),
       readyAt: serializer.fromJson<DateTime>(json['readyAt']),
     );
@@ -9161,6 +9208,7 @@ class CraftJobRow extends DataClass implements Insertable<CraftJobRow> {
       'recipeId': serializer.toJson<String?>(recipeId),
       'salvageItemId': serializer.toJson<String?>(salvageItemId),
       'salvageCondition': serializer.toJson<double?>(salvageCondition),
+      'salvageBatch': serializer.toJson<String?>(salvageBatch),
       'startedAt': serializer.toJson<DateTime>(startedAt),
       'readyAt': serializer.toJson<DateTime>(readyAt),
     };
@@ -9172,6 +9220,7 @@ class CraftJobRow extends DataClass implements Insertable<CraftJobRow> {
     Value<String?> recipeId = const Value.absent(),
     Value<String?> salvageItemId = const Value.absent(),
     Value<double?> salvageCondition = const Value.absent(),
+    Value<String?> salvageBatch = const Value.absent(),
     DateTime? startedAt,
     DateTime? readyAt,
   }) => CraftJobRow(
@@ -9184,6 +9233,7 @@ class CraftJobRow extends DataClass implements Insertable<CraftJobRow> {
     salvageCondition: salvageCondition.present
         ? salvageCondition.value
         : this.salvageCondition,
+    salvageBatch: salvageBatch.present ? salvageBatch.value : this.salvageBatch,
     startedAt: startedAt ?? this.startedAt,
     readyAt: readyAt ?? this.readyAt,
   );
@@ -9198,6 +9248,9 @@ class CraftJobRow extends DataClass implements Insertable<CraftJobRow> {
       salvageCondition: data.salvageCondition.present
           ? data.salvageCondition.value
           : this.salvageCondition,
+      salvageBatch: data.salvageBatch.present
+          ? data.salvageBatch.value
+          : this.salvageBatch,
       startedAt: data.startedAt.present ? data.startedAt.value : this.startedAt,
       readyAt: data.readyAt.present ? data.readyAt.value : this.readyAt,
     );
@@ -9211,6 +9264,7 @@ class CraftJobRow extends DataClass implements Insertable<CraftJobRow> {
           ..write('recipeId: $recipeId, ')
           ..write('salvageItemId: $salvageItemId, ')
           ..write('salvageCondition: $salvageCondition, ')
+          ..write('salvageBatch: $salvageBatch, ')
           ..write('startedAt: $startedAt, ')
           ..write('readyAt: $readyAt')
           ..write(')'))
@@ -9224,6 +9278,7 @@ class CraftJobRow extends DataClass implements Insertable<CraftJobRow> {
     recipeId,
     salvageItemId,
     salvageCondition,
+    salvageBatch,
     startedAt,
     readyAt,
   );
@@ -9236,6 +9291,7 @@ class CraftJobRow extends DataClass implements Insertable<CraftJobRow> {
           other.recipeId == this.recipeId &&
           other.salvageItemId == this.salvageItemId &&
           other.salvageCondition == this.salvageCondition &&
+          other.salvageBatch == this.salvageBatch &&
           other.startedAt == this.startedAt &&
           other.readyAt == this.readyAt);
 }
@@ -9246,6 +9302,7 @@ class CraftJobsCompanion extends UpdateCompanion<CraftJobRow> {
   final Value<String?> recipeId;
   final Value<String?> salvageItemId;
   final Value<double?> salvageCondition;
+  final Value<String?> salvageBatch;
   final Value<DateTime> startedAt;
   final Value<DateTime> readyAt;
   const CraftJobsCompanion({
@@ -9254,6 +9311,7 @@ class CraftJobsCompanion extends UpdateCompanion<CraftJobRow> {
     this.recipeId = const Value.absent(),
     this.salvageItemId = const Value.absent(),
     this.salvageCondition = const Value.absent(),
+    this.salvageBatch = const Value.absent(),
     this.startedAt = const Value.absent(),
     this.readyAt = const Value.absent(),
   });
@@ -9263,6 +9321,7 @@ class CraftJobsCompanion extends UpdateCompanion<CraftJobRow> {
     this.recipeId = const Value.absent(),
     this.salvageItemId = const Value.absent(),
     this.salvageCondition = const Value.absent(),
+    this.salvageBatch = const Value.absent(),
     required DateTime startedAt,
     required DateTime readyAt,
   }) : profileId = Value(profileId),
@@ -9274,6 +9333,7 @@ class CraftJobsCompanion extends UpdateCompanion<CraftJobRow> {
     Expression<String>? recipeId,
     Expression<String>? salvageItemId,
     Expression<double>? salvageCondition,
+    Expression<String>? salvageBatch,
     Expression<DateTime>? startedAt,
     Expression<DateTime>? readyAt,
   }) {
@@ -9283,6 +9343,7 @@ class CraftJobsCompanion extends UpdateCompanion<CraftJobRow> {
       if (recipeId != null) 'recipe_id': recipeId,
       if (salvageItemId != null) 'salvage_item_id': salvageItemId,
       if (salvageCondition != null) 'salvage_condition': salvageCondition,
+      if (salvageBatch != null) 'salvage_batch': salvageBatch,
       if (startedAt != null) 'started_at': startedAt,
       if (readyAt != null) 'ready_at': readyAt,
     });
@@ -9294,6 +9355,7 @@ class CraftJobsCompanion extends UpdateCompanion<CraftJobRow> {
     Value<String?>? recipeId,
     Value<String?>? salvageItemId,
     Value<double?>? salvageCondition,
+    Value<String?>? salvageBatch,
     Value<DateTime>? startedAt,
     Value<DateTime>? readyAt,
   }) {
@@ -9303,6 +9365,7 @@ class CraftJobsCompanion extends UpdateCompanion<CraftJobRow> {
       recipeId: recipeId ?? this.recipeId,
       salvageItemId: salvageItemId ?? this.salvageItemId,
       salvageCondition: salvageCondition ?? this.salvageCondition,
+      salvageBatch: salvageBatch ?? this.salvageBatch,
       startedAt: startedAt ?? this.startedAt,
       readyAt: readyAt ?? this.readyAt,
     );
@@ -9326,6 +9389,9 @@ class CraftJobsCompanion extends UpdateCompanion<CraftJobRow> {
     if (salvageCondition.present) {
       map['salvage_condition'] = Variable<double>(salvageCondition.value);
     }
+    if (salvageBatch.present) {
+      map['salvage_batch'] = Variable<String>(salvageBatch.value);
+    }
     if (startedAt.present) {
       map['started_at'] = Variable<DateTime>(startedAt.value);
     }
@@ -9343,6 +9409,7 @@ class CraftJobsCompanion extends UpdateCompanion<CraftJobRow> {
           ..write('recipeId: $recipeId, ')
           ..write('salvageItemId: $salvageItemId, ')
           ..write('salvageCondition: $salvageCondition, ')
+          ..write('salvageBatch: $salvageBatch, ')
           ..write('startedAt: $startedAt, ')
           ..write('readyAt: $readyAt')
           ..write(')'))
@@ -14144,6 +14211,7 @@ typedef $$CraftJobsTableCreateCompanionBuilder =
       Value<String?> recipeId,
       Value<String?> salvageItemId,
       Value<double?> salvageCondition,
+      Value<String?> salvageBatch,
       required DateTime startedAt,
       required DateTime readyAt,
     });
@@ -14154,6 +14222,7 @@ typedef $$CraftJobsTableUpdateCompanionBuilder =
       Value<String?> recipeId,
       Value<String?> salvageItemId,
       Value<double?> salvageCondition,
+      Value<String?> salvageBatch,
       Value<DateTime> startedAt,
       Value<DateTime> readyAt,
     });
@@ -14189,6 +14258,11 @@ class $$CraftJobsTableFilterComposer
 
   ColumnFilters<double> get salvageCondition => $composableBuilder(
     column: $table.salvageCondition,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get salvageBatch => $composableBuilder(
+    column: $table.salvageBatch,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -14237,6 +14311,11 @@ class $$CraftJobsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get salvageBatch => $composableBuilder(
+    column: $table.salvageBatch,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get startedAt => $composableBuilder(
     column: $table.startedAt,
     builder: (column) => ColumnOrderings(column),
@@ -14273,6 +14352,11 @@ class $$CraftJobsTableAnnotationComposer
 
   GeneratedColumn<double> get salvageCondition => $composableBuilder(
     column: $table.salvageCondition,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get salvageBatch => $composableBuilder(
+    column: $table.salvageBatch,
     builder: (column) => column,
   );
 
@@ -14319,6 +14403,7 @@ class $$CraftJobsTableTableManager
                 Value<String?> recipeId = const Value.absent(),
                 Value<String?> salvageItemId = const Value.absent(),
                 Value<double?> salvageCondition = const Value.absent(),
+                Value<String?> salvageBatch = const Value.absent(),
                 Value<DateTime> startedAt = const Value.absent(),
                 Value<DateTime> readyAt = const Value.absent(),
               }) => CraftJobsCompanion(
@@ -14327,6 +14412,7 @@ class $$CraftJobsTableTableManager
                 recipeId: recipeId,
                 salvageItemId: salvageItemId,
                 salvageCondition: salvageCondition,
+                salvageBatch: salvageBatch,
                 startedAt: startedAt,
                 readyAt: readyAt,
               ),
@@ -14337,6 +14423,7 @@ class $$CraftJobsTableTableManager
                 Value<String?> recipeId = const Value.absent(),
                 Value<String?> salvageItemId = const Value.absent(),
                 Value<double?> salvageCondition = const Value.absent(),
+                Value<String?> salvageBatch = const Value.absent(),
                 required DateTime startedAt,
                 required DateTime readyAt,
               }) => CraftJobsCompanion.insert(
@@ -14345,6 +14432,7 @@ class $$CraftJobsTableTableManager
                 recipeId: recipeId,
                 salvageItemId: salvageItemId,
                 salvageCondition: salvageCondition,
+                salvageBatch: salvageBatch,
                 startedAt: startedAt,
                 readyAt: readyAt,
               ),

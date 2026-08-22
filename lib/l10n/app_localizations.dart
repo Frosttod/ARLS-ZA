@@ -3384,6 +3384,72 @@ abstract class L10n {
   /// In en, this message translates to:
   /// **'The game waits for a signal before drawing the map — otherwise it would show a place you are not.'**
   String get mapWaitingBody;
+
+  /// No description provided for @salvageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Taking apart'**
+  String get salvageTitle;
+
+  /// No description provided for @salvagePick.
+  ///
+  /// In en, this message translates to:
+  /// **'Tick what goes to pieces. They go in order, one after another.'**
+  String get salvagePick;
+
+  /// No description provided for @salvageNothingWorth.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing here would leave anything behind.'**
+  String get salvageNothingWorth;
+
+  /// No description provided for @salvageChosen.
+  ///
+  /// In en, this message translates to:
+  /// **'Picked: {count}'**
+  String salvageChosen(int count);
+
+  /// No description provided for @salvageSummaryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Before you start'**
+  String get salvageSummaryTitle;
+
+  /// No description provided for @salvageGone.
+  ///
+  /// In en, this message translates to:
+  /// **'This will not come back. What is left of it is materials.'**
+  String get salvageGone;
+
+  /// No description provided for @salvageYouGet.
+  ///
+  /// In en, this message translates to:
+  /// **'You get'**
+  String get salvageYouGet;
+
+  /// No description provided for @salvageTakes.
+  ///
+  /// In en, this message translates to:
+  /// **'{time} in all'**
+  String salvageTakes(String time);
+
+  /// No description provided for @salvageInOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'In order. Stopped half way, what is finished stays finished and the rest is untouched.'**
+  String get salvageInOrder;
+
+  /// No description provided for @salvageWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting its turn'**
+  String get salvageWaiting;
+
+  /// No description provided for @salvageBatchRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Taking apart: {item} (+{rest})'**
+  String salvageBatchRunning(String item, int rest);
 }
 
 class _L10nDelegate extends LocalizationsDelegate<L10n> {

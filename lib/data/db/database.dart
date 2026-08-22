@@ -29,7 +29,7 @@ import 'tables.dart';
 part 'database.g.dart';
 
 /// Bumped only alongside a migration step in [_migration]. Never reused.
-const int kSchemaVersion = 25;
+const int kSchemaVersion = 26;
 
 /// Keys used in [MetaEntries].
 abstract final class MetaKeys {
@@ -75,7 +75,7 @@ class SaveDatabase extends _$SaveDatabase {
   /// follow a constant reference. `schema_test.dart` keeps it in step with
   /// [kSchemaVersion].
   @override
-  int get schemaVersion => 25;
+  int get schemaVersion => 26;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -308,6 +308,14 @@ class SaveDatabase extends _$SaveDatabase {
       // this schema is additive, so a table is dropped a version after it
       // stops being written, never in the same one.
       if (from < 25) await m.createTable(activeActions);
+
+      // §18.6: a sitting can take several things apart, in order. The list
+      // lives on the job because the pieces are still in the pack until their
+      // turn comes. Guarded from 22 because that is when the table appeared —
+      // anything older gets the column from createTable above.
+      if (from >= 22 && from < 26) {
+        await m.addColumn(craftJobs, craftJobs.salvageBatch);
+      }
 
       await _writeSchemaVersion(to);
     },
