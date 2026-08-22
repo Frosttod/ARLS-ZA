@@ -83,3 +83,14 @@ flutter:
     - assets/INTRO.mp4
     - assets/regions.json
     - assets/data/
+    # §12: grafika, jako WebP w dwóch rozmiarach. Zródła (images/, 66 MB
+    # JPEG-ów) nigdy tu nie trafiają — tool/build_art.py robi z nich 1,7 MB.
+    - assets/images/items/weapons/
+    - assets/images/items/armors/
+    - assets/images/items/boots/
+    - assets/images/items/pants/
+    - assets/images/items/tools/
+    - assets/images/lootplaces/
+    - assets/images/shelter/
+    - assets/images/skills/
+    - assets/images/zombies/
