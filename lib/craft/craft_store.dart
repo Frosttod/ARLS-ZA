@@ -22,8 +22,8 @@ class CraftStore {
       recipeId: row.recipeId,
       salvageItemId: row.salvageItemId,
       salvageCondition: row.salvageCondition,
-      startedAt: row.startedAt,
-      readyAt: row.readyAt,
+      startedAt: row.startedAt.toUtc(),
+      readyAt: row.readyAt.toUtc(),
     );
   }
 

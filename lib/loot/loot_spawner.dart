@@ -125,6 +125,7 @@ class LootBox {
     required this.position,
     required this.tableId,
     required this.spawnedAt,
+    this.size = PlaceSize.normal,
     this.name,
     this.lootedAt,
     this.respawnAt,
@@ -139,6 +140,20 @@ class LootBox {
   final GeoPoint position;
   final String tableId;
   final String? name;
+
+  /// §10.2: the physical scale of this place.
+  ///
+  /// Defaults to [PlaceSize.normal] so that any box constructed without a
+  /// size — existing saves, tests, procedural points that omit it — behaves
+  /// exactly as before.
+  final PlaceSize size;
+
+  /// §10.2: how close the player must be to search this box or pick up from it.
+  ///
+  /// The same radius applies to both operations — see [PlaceSize.reachM].
+  /// Prefer this getter over calling [searchReachFor] directly; it keeps the
+  /// reach co-located with the box rather than scattered across the UI layer.
+  double get reachM => size.reachM;
 
   final DateTime spawnedAt;
 
@@ -184,6 +199,7 @@ class LootBox {
       poiId: poiId,
       position: position,
       tableId: tableId,
+      size: size,
       name: name,
       spawnedAt: spawnedAt,
       lootedAt: lootedAt,
@@ -200,6 +216,7 @@ class LootBox {
     poiId: poiId,
     position: position,
     tableId: tableId,
+    size: size,
     name: name,
     spawnedAt: spawnedAt,
     lootedAt: lootedAt,
@@ -239,6 +256,7 @@ class LootBox {
       poiId: poiId,
       position: position,
       tableId: tableId,
+      size: size,
       name: name,
       spawnedAt: spawnedAt,
       lootedAt: now,
@@ -256,6 +274,7 @@ class LootBox {
     poiId: poiId,
     position: position,
     tableId: tableId,
+    size: size,
     name: name,
     spawnedAt: now,
     openedAt: openedAt,

@@ -94,6 +94,22 @@ class ShelterStore {
   Future<void> setModules(int id, Map<ShelterModule, int> modules) =>
       _db.updateShelter(id, SheltersCompanion(modules: Value(_wire(modules))));
 
+  /// §8.4: sets the level of a single module on a shelter.
+  Future<void> setModule(
+    int id,
+    ShelterModule module,
+    int level, [
+    Map<ShelterModule, int> current = const {},
+  ]) {
+    final updated = {...current};
+    if (level <= 0) {
+      updated.remove(module);
+    } else {
+      updated[module] = level;
+    }
+    return setModules(id, updated);
+  }
+
   /// §8.4, §18.2: starts a module. The materials are taken by the caller —
   /// this only records what is going up and when it is done.
   Future<void> beginModule(

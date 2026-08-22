@@ -37,6 +37,7 @@ import '../items/item_names.dart';
 import '../l10n/app_localizations.dart';
 import '../loot/search.dart';
 import '../sim/body.dart';
+import '../sim/pinned_goal.dart';
 import 'hud.dart' show HudColors;
 
 /// How the pack is ordered (§4.1, §12).
@@ -221,6 +222,19 @@ class InventoryScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
         children: [
+          ValueListenableBuilder<PinnedGoal?>(
+            valueListenable: PinnedGoalManager.current,
+            builder: (context, goal, _) {
+              if (goal == null) return const SizedBox.shrink();
+              return _QuestStatusDisplay(
+                goal: goal,
+                inventory: inventory,
+                catalogue: catalogue,
+                language: language,
+              );
+            },
+          ),
+          const SizedBox(height: 8),
           _Limits(
             massKg: mass,
             comfortKg: limits.comfortKg,
@@ -838,31 +852,41 @@ class _ItemRowState extends State<_ItemRow> {
 
   @override
   Widget build(BuildContext context) {
-    final colours = HudColors.of(context);
-    final line = widget.line;
-    final l10n = widget.l10n;
+    final listenables = <Listenable>[
+      if (widget.craftJob != null) widget.craftJob!,
+      if (widget.craftLine != null) widget.craftLine!,
+      if (widget.action != null) widget.action!,
+      if (widget.usingLine != null) widget.usingLine!,
+    ];
 
-    // §5.6.3: with whatever is bolted on. A suppressor that costs nothing to
-    // carry is a suppressor nobody would ever leave behind.
-    final mass = line.massKg(widget.definition, catalogue: widget.catalogue);
-    final volume = line.volumeL(widget.definition, catalogue: widget.catalogue);
-    final wearable =
-        BodySlot.fromWire(wearSlotOf(widget.definition)) != null ||
-        widget.definition.kind == ItemKind.backpack;
-    final usable = useOf(widget.definition) != null;
+    return AnimatedBuilder(
+      animation: Listenable.merge(listenables),
+      builder: (context, _) {
+        final colours = HudColors.of(context);
+        final line = widget.line;
+        final l10n = widget.l10n;
 
-    final count = line.count < 1 ? 1 : line.count;
-    final toDrop = _toDrop > count ? count : _toDrop;
+        // §5.6.3: with whatever is bolted on. A suppressor that costs nothing to
+        // carry is a suppressor nobody would ever leave behind.
+        final mass = line.massKg(widget.definition, catalogue: widget.catalogue);
+        final volume = line.volumeL(widget.definition, catalogue: widget.catalogue);
+        final wearable =
+            BodySlot.fromWire(wearSlotOf(widget.definition)) != null ||
+            widget.definition.kind == ItemKind.backpack;
+        final usable = useOf(widget.definition) != null;
 
-    return Container(
-      // A frame each. A flat list of rows with two lines of buttons under
-      // every one reads as a wall; a boxed row reads as a thing you own.
-      margin: const EdgeInsets.only(bottom: 6),
-      padding: const EdgeInsets.fromLTRB(10, 6, 4, 6),
-      decoration: BoxDecoration(
-        border: Border.all(color: colours.muted.withValues(alpha: 0.35)),
-        borderRadius: BorderRadius.circular(4),
-      ),
+        final count = line.count < 1 ? 1 : line.count;
+        final toDrop = _toDrop > count ? count : _toDrop;
+
+        return Container(
+          // A frame each. A flat list of rows with two lines of buttons under
+          // every one reads as a wall; a boxed row reads as a thing you own.
+          margin: const EdgeInsets.only(bottom: 6),
+          padding: const EdgeInsets.fromLTRB(10, 6, 4, 6),
+          decoration: BoxDecoration(
+            border: Border.all(color: colours.muted.withValues(alpha: 0.35)),
+            borderRadius: BorderRadius.circular(4),
+          ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1174,6 +1198,8 @@ class _ItemRowState extends State<_ItemRow> {
             ),
         ],
       ),
+    );
+      },
     );
   }
 
@@ -1524,3 +1550,88 @@ class _CraftRunningState extends State<_CraftRunning> {
     );
   }
 }
+
+class _QuestStatusDisplay extends StatelessWidget {
+  const _QuestStatusDisplay({
+    required this.goal,
+    required this.inventory,
+    required this.catalogue,
+    required this.language,
+  });
+
+  final PinnedGoal goal;
+  final Inventory inventory;
+  final ItemCatalogue catalogue;
+  final String language;
+
+  @override
+  Widget build(BuildContext context) {
+    final colours = HudColors.of(context);
+    
+    // Check if goal is fully met
+    bool allMet = true;
+    final List<Widget> requirements = [];
+    
+    for (final entry in goal.requirements.entries) {
+      final itemId = entry.key;
+      final requiredCount = entry.value;
+      final haveCount = inventory.countOf(itemId);
+      final met = haveCount >= requiredCount;
+      if (!met) allMet = false;
+      
+      final def = catalogue[itemId];
+      final name = def?.name.resolve(language: language, lookup: null) ?? itemId;
+      
+      requirements.add(
+        Text(
+          '${met ? '✓ ' : ''}$name: $haveCount / $requiredCount',
+          style: TextStyle(
+            fontSize: 12,
+            color: met ? colours.data : colours.alert,
+            fontFamily: kDataFont,
+            fontFeatures: const [FontFeature.tabularFigures()],
+          ),
+        ),
+      );
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colours.panel.withValues(alpha: 0.8),
+        border: Border.all(color: allMet ? colours.data : colours.alert),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.push_pin, size: 16, color: colours.text),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Cel: ${goal.title}',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: colours.text),
+                ),
+              ),
+              if (allMet)
+                Text(
+                  'GOTOWE',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: colours.data),
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 12,
+            runSpacing: 4,
+            children: requirements,
+          ),
+        ],
+      ),
+    );
+  }
+}
+

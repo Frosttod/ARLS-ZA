@@ -86,6 +86,9 @@ enum OccupationEndReason {
   /// GPS says the character left the shelter zone (§2.1a.4).
   leftZone('opuszczenie strefy'),
 
+  /// Suspended because the character left the shelter zone. Can be resumed.
+  zoneSuspended('wstrzymane (poza strefą)'),
+
   /// A field occupation was running when the app went away (§2.1a.4).
   appClosed('zamknięcie aplikacji'),
 
@@ -249,7 +252,7 @@ OccupationProgress advanceOccupation({
       occupation: null,
       workApplied: Duration.zero,
       finished: true,
-      endReason: OccupationEndReason.leftZone,
+      endReason: OccupationEndReason.zoneSuspended,
     );
   }
 

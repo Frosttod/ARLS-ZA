@@ -97,6 +97,7 @@ const double kSearchNoiseM = 80;
 /// A lootbox sits on a position the map gave it, which is a building's centre
 /// as often as its door. Twenty-five metres is the slack that makes standing
 /// "at" a supermarket mean what a player thinks it means.
+@Deprecated('Use searchReachFor(size) instead')
 const double kSearchReachM = 25;
 
 /// §10.2: how close a place has to be before it can be turned over.
@@ -110,15 +111,37 @@ const double kSearchReachM = 25;
 /// A bin is not a building. Something you could put your hand into keeps a
 /// short reach, because standing thirty metres from a wheelie bin and going
 /// through it is not a thing.
-double searchReachFor(PlaceSize size) => switch (size) {
-  PlaceSize.tiny || PlaceSize.small => kNearReachM,
-  PlaceSize.normal => kBuildingReachM,
-};
+/// §10.2: how close a player must be to search or pick up from [size].
+///
+/// Delegates to [PlaceSize.reachM] — the single source of truth. The named
+/// constants [kNearReachM] and [kBuildingReachM] exist for comments and tests;
+/// the enum value is what the runtime uses.
+double searchReachFor(PlaceSize size) => size.reachM;
+
+/// Whether [playerPos] is within [radius] metres of [centre].
+///
+/// The check is the same for both the Search phase and the Pickup phase:
+/// §10.2 makes the two radii equal, so one function covers both. Call with
+/// `radius: box.reachM` (or `searchReachFor(box.size)`) from the interaction
+/// layer.
+bool isPlayerWithinRadius(
+  GeoPoint playerPos,
+  GeoPoint centre,
+  double radius,
+) => playerPos.distanceTo(centre) <= radius;
 
 /// A bin, a car, a crate: things reached by hand.
-const double kNearReachM = 30;
+///
+/// 15 m is close enough that standing "at" a wheelie bin means what a player
+/// thinks it means, and far enough to forgive the few metres of GPS drift that
+/// put them on the wrong side of a parked car.
+const double kNearReachM = 15;
 
 /// A shop, a library, a warehouse: things with a door somewhere else.
+///
+/// 50 m is the same figure §10.2 already used for buildings. Kept as a named
+/// constant so that any comment or test can reference it by intent rather than
+/// by number.
 const double kBuildingReachM = 50;
 
 /// The radius reconnaissance covers (§10.2.2).
@@ -297,14 +320,42 @@ class Search {
   /// position to invalidate. §2.1a.3 asks for presence for *field* work, and
   /// swallowing is not field work. Anything else — searching, breaking in —
   /// keeps both rules.
-  Search advance(Duration delta, {required GeoPoint? at, bool present = true}) {
+  /// Advances by [delta].
+  ///
+  /// [at] is where the player is now, and null means the position is not
+  /// trusted — which ends the search, because §2.1a will not let one run on a
+  /// position the game is guessing at.
+  ///
+  /// [boundaryRadiusM] is the per-object movement limit (§10.2). When provided
+  /// it replaces [kStillnessM] as the cancel threshold, so a player inside a
+  /// 50 m building search zone is not penalised for the fifteen metres of
+  /// ordinary GPS drift that the stillness filter was built around. Pass
+  /// `box.reachM` (or `searchReachFor(box.size)`) from the interaction layer.
+  /// Null falls back to [kStillnessM], keeping all existing call-sites intact.
+  ///
+  /// ⚠️ **Using something is exempt from both rules, position included.**
+  /// Found on a phone: a bandage started in a stairwell was lost along with
+  /// the wound it was for, because the signal went. Eating, drinking and first
+  /// aid are things a body does, not things the GPS witnesses — they ask no
+  /// question about where anybody stood, so there is nothing for a lost
+  /// position to invalidate. §2.1a.3 asks for presence for *field* work, and
+  /// swallowing is not field work. Anything else — searching, breaking in —
+  /// keeps both rules.
+  Search advance(
+    Duration delta, {
+    required GeoPoint? at,
+    bool present = true,
+    double? boundaryRadiusM,
+  }) {
     if (!isRunning) return this;
 
     if (!isUse && (!present || at == null)) {
       return _endedAs(SearchState.lostPresence);
     }
+
     // Using something is not searching: a person can drink while walking.
-    if (!isUse && at!.distanceTo(anchor) > kStillnessM) {
+    final effectiveRadius = boundaryRadiusM ?? kStillnessM;
+    if (!isUse && at!.distanceTo(anchor) > effectiveRadius) {
       final missed = strikes + 1;
       return missed >= kStillnessStrikes
           ? _endedAs(SearchState.cancelledByMovement)

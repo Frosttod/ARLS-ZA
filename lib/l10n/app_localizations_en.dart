@@ -648,9 +648,6 @@ class L10nEn extends L10n {
   String get menuShelter => 'SHELTER';
 
   @override
-  String get stashTitle => 'Shelves';
-
-  @override
   String get stashOnTheShelves => 'On the shelves';
 
   @override
@@ -722,6 +719,17 @@ class L10nEn extends L10n {
   @override
   String get shelterCancelModuleWhat =>
       'The materials for this level are gone — they are in the frame. The levels already finished stay. Starting this one again means carrying the lot back. This cannot be undone.';
+
+  @override
+  String get shelterDemolish => 'Dismantle';
+
+  @override
+  String get shelterDemolished => 'Module dismantled.';
+
+  @override
+  String shelterDemolishWhat(String gives) {
+    return 'Taking this module down returns half the materials: $gives. Lower levels stay. This cannot be undone.';
+  }
 
   @override
   String get shelterSafeZone => 'Safe zone';
@@ -1263,6 +1271,11 @@ class L10nEn extends L10n {
 
   @override
   String get craftTitle => 'Making';
+
+  @override
+  String actionBusy(String what) {
+    return 'Busy: $what';
+  }
 
   @override
   String actionEating(String item) {

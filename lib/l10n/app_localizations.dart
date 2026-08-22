@@ -1201,12 +1201,6 @@ abstract class L10n {
   /// **'SHELTER'**
   String get menuShelter;
 
-  /// No description provided for @stashTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Shelves'**
-  String get stashTitle;
-
   /// No description provided for @stashOnTheShelves.
   ///
   /// In en, this message translates to:
@@ -1344,6 +1338,24 @@ abstract class L10n {
   /// In en, this message translates to:
   /// **'The materials for this level are gone — they are in the frame. The levels already finished stay. Starting this one again means carrying the lot back. This cannot be undone.'**
   String get shelterCancelModuleWhat;
+
+  /// No description provided for @shelterDemolish.
+  ///
+  /// In en, this message translates to:
+  /// **'Dismantle'**
+  String get shelterDemolish;
+
+  /// No description provided for @shelterDemolished.
+  ///
+  /// In en, this message translates to:
+  /// **'Module dismantled.'**
+  String get shelterDemolished;
+
+  /// No description provided for @shelterDemolishWhat.
+  ///
+  /// In en, this message translates to:
+  /// **'Taking this module down returns half the materials: {gives}. Lower levels stay. This cannot be undone.'**
+  String shelterDemolishWhat(String gives);
 
   /// No description provided for @shelterSafeZone.
   ///
@@ -2340,6 +2352,12 @@ abstract class L10n {
   /// In en, this message translates to:
   /// **'Making'**
   String get craftTitle;
+
+  /// No description provided for @actionBusy.
+  ///
+  /// In en, this message translates to:
+  /// **'Busy: {what}'**
+  String actionBusy(String what);
 
   /// No description provided for @actionEating.
   ///

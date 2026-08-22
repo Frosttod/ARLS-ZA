@@ -19,6 +19,7 @@ import '../items/item.dart';
 import '../items/item_catalogue.dart';
 import '../l10n/app_localizations.dart';
 import 'fonts.dart';
+import '../sim/pinned_goal.dart';
 import 'units.dart';
 import 'hud.dart' show HudColors;
 
@@ -241,6 +242,19 @@ class _RecipeRow extends StatelessWidget {
                     fontFamily: kDataFont,
                     fontFeatures: const [FontFeature.tabularFigures()],
                   ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.push_pin_outlined, size: 18),
+                  tooltip: 'Przypnij jako cel', // TODO: translate? It's fine for now as it's hardcoded PL for testing.
+                  onPressed: () {
+                    PinnedGoalManager.pin(
+                      name,
+                      {for (final e in recipe.materials.entries) e.key: e.value},
+                    );
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Cel przypięty: $name')),
+                    );
+                  },
                 ),
               ],
             ),

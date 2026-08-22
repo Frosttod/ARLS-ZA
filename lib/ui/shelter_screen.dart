@@ -32,6 +32,7 @@ class ShelterScreen extends StatefulWidget {
     required this.hasMultitool,
     required this.onBuild,
     required this.onBuildModule,
+    this.onDemolishModule,
     required this.onCancelBuild,
     required this.onShelves,
     required this.onCraft,
@@ -67,6 +68,7 @@ class ShelterScreen extends StatefulWidget {
 
   final void Function(ShelterKind kind) onBuild;
   final void Function(ShelterModule module) onBuildModule;
+  final void Function(ShelterModule module)? onDemolishModule;
 
   /// §8.3: gives up on whatever is going up. Asked about first, because the
   /// materials are already in the walls and the work starts again from zero.
@@ -210,6 +212,9 @@ class _ShelterScreenState extends State<ShelterScreen> {
                   // not a thing, so the offer is refused here and says why.
                   away: at == null || !shelter.atSite(at),
                   onBuild: () => widget.onBuildModule(module),
+                  onDemolish: widget.onDemolishModule == null
+                      ? null
+                      : () => widget.onDemolishModule!(module),
                   onCancel: () => _confirmCancel(context, shelter),
                   colours: colours,
                 ),
@@ -448,6 +453,7 @@ class _ModuleRow extends StatelessWidget {
     required this.hasMultitool,
     required this.away,
     required this.onBuild,
+    this.onDemolish,
     required this.onCancel,
     required this.colours,
   });
@@ -467,6 +473,7 @@ class _ModuleRow extends StatelessWidget {
   final bool hasHammer;
   final bool hasMultitool;
   final VoidCallback onBuild;
+  final VoidCallback? onDemolish;
 
   /// §8.3: gives up on the level going up right now.
   final VoidCallback onCancel;
@@ -524,6 +531,17 @@ class _ModuleRow extends StatelessWidget {
                   '$level / ${ShelterModule.maxLevel}',
                   style: TextStyle(fontSize: 13, color: colours.data),
                 ),
+                if (level > 0 && !underway && onDemolish != null) ...[
+                  const SizedBox(width: 8),
+                  TextButton(
+                    onPressed: onDemolish,
+                    style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
+                    child: Text(
+                      l10n.shelterDemolish,
+                      style: TextStyle(fontSize: 12, color: colours.alert),
+                    ),
+                  ),
+                ],
               ],
             ),
             const SizedBox(height: 4),
@@ -938,7 +956,7 @@ class _ShelvesRow extends StatelessWidget {
           ),
           TextButton(
             onPressed: away ? null : onOpen,
-            child: Text(l10n.stashTitle),
+            child: Text(l10n.shelterShelves),
           ),
         ],
       ),

@@ -651,10 +651,7 @@ class L10nPl extends L10n {
   String get menuShelter => 'SCHRON';
 
   @override
-  String get stashTitle => 'Półki';
-
-  @override
-  String get stashOnTheShelves => 'Na półkach';
+  String get stashOnTheShelves => 'W magazynie';
 
   @override
   String get stashInThePack => 'W plecaku';
@@ -672,7 +669,7 @@ class L10nPl extends L10n {
   String get stashTake => 'Weź';
 
   @override
-  String get stashFull => 'Na półkach nie ma miejsca.';
+  String get stashFull => 'W magazynie nie ma miejsca.';
 
   @override
   String get stashNoRoomInPack => 'To się nie mieści w plecaku.';
@@ -725,6 +722,17 @@ class L10nPl extends L10n {
   @override
   String get shelterCancelModuleWhat =>
       'Materiały na ten poziom przepadły — są już w konstrukcji. Ukończone poziomy zostają. Rozpoczęcie tego od nowa oznacza przyniesienie wszystkiego jeszcze raz. Tego nie da się cofnąć.';
+
+  @override
+  String get shelterDemolish => 'Rozmontuj';
+
+  @override
+  String get shelterDemolished => 'Moduł rozmontowany.';
+
+  @override
+  String shelterDemolishWhat(String gives) {
+    return 'Rozmontowanie tego modułu zwraca połowę surowców: $gives. Niższe poziomy zostają. Tej decyzji nie można cofnąć.';
+  }
 
   @override
   String get shelterSafeZone => 'Strefa bezpieczna';
@@ -1263,6 +1271,11 @@ class L10nPl extends L10n {
 
   @override
   String get craftTitle => 'Wytwarzanie';
+
+  @override
+  String actionBusy(String what) {
+    return 'Zajęty: $what';
+  }
 
   @override
   String actionEating(String item) {

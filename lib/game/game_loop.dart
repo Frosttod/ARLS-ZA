@@ -56,6 +56,7 @@ class GameSnapshot {
     required this.speedKmh,
     required this.isNight,
     required this.occupation,
+    this.sleepCountdown,
     this.fix,
     this.displayFix,
     this.integrity = IntegrityState.ok,
@@ -85,6 +86,7 @@ class GameSnapshot {
   final double speedKmh;
   final bool isNight;
   final Occupation? occupation;
+  final Duration? sleepCountdown;
 
   /// The smoothed position the simulation trusts, or null while nothing has
   /// passed the accuracy gate (§3.2).
@@ -176,6 +178,7 @@ class GameLoop {
 
   SimState _state;
   Occupation? _occupation;
+  Occupation? _suspendedByShelterExit;
 
   /// §8: what the player has built. Handed in from outside rather than read
   /// here, because the loop must not depend on the save layer — the tick
@@ -200,12 +203,14 @@ class GameLoop {
   /// It matters here for one reason: somebody halfway through a bandage is not
   /// somebody who has been sitting still doing nothing.
   bool _acting = false;
+  DateTime? _actingStartedAt;
 
   /// Tells the loop that the player has started or finished one.
   void setActing({required bool acting}) {
     if (_acting == acting) return;
 
     _acting = acting;
+    _actingStartedAt = acting ? _state.lastUpdate : null;
     _applyShelter();
     _publish();
   }
@@ -326,8 +331,14 @@ class GameLoop {
     // *action* is the short one the interface owns (§4.7: eating, drinking,
     // dressing a wound, turning a place over). The loop cannot see the second
     // kind on its own, which is why it is told.
-    final busy =
-        _acting || (_occupation != null && !_occupation!.kind.isDefault);
+    if (_acting && _actingStartedAt != null) {
+      if (now.difference(_actingStartedAt!) > const Duration(minutes: 5)) {
+        _acting = false;
+        _actingStartedAt = null;
+      }
+    }
+
+    final busy = _acting || (_occupation != null && !_occupation!.kind.isDefault);
 
     // How long they have been under this roof with nothing on. Reset by
     // leaving and by starting anything — those are the two ways a person stops
@@ -336,6 +347,11 @@ class GameLoop {
       _settledAt = null;
     } else {
       _settledAt ??= now;
+    }
+
+    if (inside != null && _suspendedByShelterExit != null && _occupation == null) {
+      _occupation = _suspendedByShelterExit;
+      _suspendedByShelterExit = null;
     }
 
     final settled =
@@ -721,6 +737,12 @@ class GameLoop {
       gpsHealthy: source.currentSignal != PositionSignal.lost,
     );
 
+    if (progress.endReason == OccupationEndReason.zoneSuspended) {
+      _suspendedByShelterExit = current;
+    } else if (progress.endReason != null && progress.endReason != OccupationEndReason.completed) {
+      _suspendedByShelterExit = null;
+    }
+
     _occupation = progress.occupation;
   }
 
@@ -760,6 +782,13 @@ class GameLoop {
     if (_snapshots.isClosed) return;
 
     final fix = _lastFix;
+    final settledAt = _settledAt;
+    Duration? countdown;
+    if (settledAt != null && !isNightAt(momentUtc: _state.lastUpdate, latitude: fix?.latitude ?? 0, longitude: fix?.longitude ?? 0)) {
+       final left = kSettleToSleep - _state.lastUpdate.difference(settledAt);
+       countdown = left.isNegative ? Duration.zero : left;
+    }
+
     _snapshots.add(
       GameSnapshot(
         state: _state,
@@ -774,6 +803,7 @@ class GameLoop {
                 longitude: fix.longitude,
               ),
         occupation: _occupation,
+        sleepCountdown: countdown,
         fix: fix,
         // The smoothed one when there is one: it is the same position with
         // the scatter taken out, and a pin that twitches while the player

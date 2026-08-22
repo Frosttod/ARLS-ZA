@@ -357,6 +357,16 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   DateTime? _searchTickedAt;
   Timer? _searchTimer;
 
+  /// ⚠️ §2.1a.3: the bench needs a clock of its own.
+  ///
+  /// Reported from a shelter: a dismantling reached 00:00 and stopped there,
+  /// and only pressing stop and starting again finished it. Nothing was
+  /// polling the deadline. The job is a row in a database with a time on it,
+  /// and the only things that ever looked at it were opening the app and
+  /// opening the bench — neither of which a player does while watching a bar
+  /// run out in front of them.
+  Timer? _benchTimer;
+
   /// The very piece being eaten or drunk (§4.7), so a mouthful comes out of
   /// the bottle in hand rather than out of whichever one the list finds first.
   final ValueNotifier<CarriedItem?> _usingLine = ValueNotifier(null);
@@ -516,7 +526,13 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// filling one is a thing done somewhere quiet, ahead of time.
   Future<void> _fillMagazine(CarriedItem line) async {
     final catalogue = _catalogue;
-    if (catalogue == null || _search.value != null) return;
+    if (catalogue == null) return;
+
+    final busy = _alreadyBusy();
+    if (busy != null) {
+      _say(L10n.of(context).actionBusy(busy));
+      return;
+    }
 
     final item = catalogue[line.itemId];
     if (item == null) return;
@@ -558,7 +574,13 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// somebody makes standing still, which is what the seconds are for.
   Future<void> _emptyMagazine(CarriedItem line) async {
     final catalogue = _catalogue;
-    if (catalogue == null || _search.value != null) return;
+    if (catalogue == null) return;
+
+    final busy = _alreadyBusy();
+    if (busy != null) {
+      _say(L10n.of(context).actionBusy(busy));
+      return;
+    }
 
     final item = catalogue[line.itemId];
     if (item == null) return;
@@ -1595,7 +1617,13 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final character = _character;
     final loop = _loop;
     if (catalogue == null || character == null || loop == null) return;
-    if (_search.value != null) return;
+
+    // §2.1a: one pair of hands.
+    final busy = _alreadyBusy();
+    if (busy != null) {
+      _say(L10n.of(context).actionBusy(busy));
+      return;
+    }
 
     // ⚠️ §18.6: a piece somebody has already opened up does not work any
     // more. The row and the sheet both hide the control, and this is the
@@ -2658,7 +2686,14 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final line = _weaponLine;
     final catalogue = _catalogue;
     if (weapon == null || line == null || catalogue == null) return;
-    if (_reload != null) return;
+
+    // §2.1a: one pair of hands. §5.5.4's seconds are hands doing something,
+    // and hands that are already eating are not free to change a magazine.
+    final busy = _alreadyBusy();
+    if (busy != null) {
+      _say(L10n.of(context).actionBusy(busy));
+      return;
+    }
 
     // ⚠️ Asked before the seconds are spent, not after.
     //
@@ -2854,8 +2889,11 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   Widget _actionPanel(BuildContext context) {
     final box = _boxInReach();
 
-    return SearchPanel(
-      search: _search.value,
+    return ValueListenableBuilder<Search?>(
+      valueListenable: _search,
+      builder: (context, searchVal, _) {
+        return SearchPanel(
+          search: searchVal,
       targetName: box?.name,
       canSearchHere: box != null,
       // §10.3.5: how much of this place is left to turn over, so the panel can
@@ -2895,6 +2933,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       fittings: _weaponFittings(),
       reload: _reloadProgress(),
       onCancel: _cancelSearch,
+        );
+      },
     );
   }
 
@@ -3257,6 +3297,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
           hasMultitool: _atHand('tool_multitool'),
           onBuild: (kind) => unawaited(_buildShelter(kind)),
           onBuildModule: (module) => unawaited(_buildModule(module)),
+          onDemolishModule: (module) => unawaited(_demolishModule(module)),
           onShelves: (place) => unawaited(_openStash(place)),
           onCraft: () => unawaited(_openCraft()),
           craftJob: _craftJob,
@@ -3275,6 +3316,12 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final character = _character;
     final at = _standingAt.value;
     if (character == null || at == null) return;
+
+    final busy = _alreadyBusy();
+    if (busy != null) {
+      _say(L10n.of(context).actionBusy(busy));
+      return;
+    }
 
     if (kind == ShelterKind.camp) {
       final refusal = campRefusalAt(at, existing: _shelters.value);
@@ -3312,6 +3359,16 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     _shelterBusy = true;
     final store = ShelterStore(widget.session.db);
 
+    // ⚠️ **The materials come back.** They did not, and §18.2 never said they
+    // should not — that was my reading of "already in the walls", which turns
+    // a change of mind into a punishment for a build somebody has not finished.
+    // Reported plainly: stopping a module and starting it again should cost
+    // the hours, not the timber.
+    final module = place.building;
+    final owed = module == null
+        ? (place.kind == ShelterKind.camp ? kCampMaterials : null)
+        : nextLevelOf(module, have: place.buildingLevel - 1)?.materials;
+
     if (place.building != null) {
       // Only the module: the shelter itself is still standing.
       await store.cancelModule(place.id);
@@ -3319,10 +3376,114 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       await store.remove(place.id);
     }
 
+    if (owed != null) await _refund(owed);
+
     _shelterBusy = false;
     await _reloadShelters();
     if (!mounted) return;
     _say(L10n.of(context).shelterCancelled);
+  }
+
+  /// §8.4: pulls a level off a module and gets half of it back.
+  ///
+  /// ⚠️ Half, rounded down, and the same figure §18.6 gives for a thing taken
+  /// apart with a multitool — the ratio is the point, not the number. Pulling a
+  /// workshop down to build a lounge should be possible and should hurt.
+  Future<void> _demolishModule(ShelterModule module) async {
+    final shelter = _shelters.value
+        .where((place) => place.kind == ShelterKind.main)
+        .firstOrNull;
+    if (shelter == null || shelter.building != null) return;
+
+    final level = shelter.levelOf(module);
+    if (level <= 0) return;
+
+    final recipe = nextLevelOf(module, have: level - 1);
+    if (recipe == null) return;
+
+    final back = {
+      for (final entry in recipe.materials.entries)
+        if ((entry.value / 2).ceil() > 0) entry.key: (entry.value / 2).ceil(),
+    };
+
+    final sure = await _confirmDemolish(module, level, back);
+    if (!sure || !mounted) return;
+
+    await ShelterStore(widget.session.db).setModule(
+      shelter.id,
+      module,
+      level - 1,
+      shelter.modules,
+    );
+    await _refund(back);
+    await _reloadShelters();
+
+    if (!mounted) return;
+    _say(L10n.of(context).shelterDemolished);
+  }
+
+  Future<bool> _confirmDemolish(
+    ShelterModule module,
+    int level,
+    Map<String, int> back,
+  ) async {
+    final l10n = L10n.of(context);
+    final gives = back.entries
+        .map((entry) => '${_nameOfId(entry.key)} ×${entry.value}')
+        .join(', ');
+
+    final answer = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('${moduleName(l10n, module)} L$level'),
+        content: Text(l10n.shelterDemolishWhat(gives)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.shelterCancelKeep),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(l10n.shelterDemolish),
+          ),
+        ],
+      ),
+    );
+
+    return answer ?? false;
+  }
+
+  /// §18.2: puts materials back where they came from.
+  ///
+  /// Onto the shelves first when the shelter is standing, because that is
+  /// where they were spent from — and §18.1a's overflow is a state, not a
+  /// reason to destroy anything.
+  Future<void> _refund(Map<String, int> materials) async {
+    final character = _character;
+    final catalogue = _catalogue;
+    if (character == null || catalogue == null) return;
+
+    var pack = _inventory.value;
+    final spill = <String, int>{};
+
+    for (final entry in materials.entries) {
+      final change = pack.add(
+        entry.key,
+        catalogue,
+        body: character.body,
+        count: entry.value,
+      );
+      pack = change.inventory;
+
+      final took =
+          change.acceptedCount ?? (change.isAccepted ? entry.value : 0);
+      if (took < entry.value) spill[entry.key] = entry.value - took;
+    }
+
+    _inventory.value = pack;
+    await _saveInventory();
+
+    if (spill.isNotEmpty) await _shelveSpill(spill);
   }
 
   /// §8.4, §18.2: one level onto one module, against the clock.
@@ -3331,6 +3492,12 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         .where((place) => place.kind == ShelterKind.main)
         .firstOrNull;
     if (shelter == null || shelter.building != null) return;
+
+    final busy = _alreadyBusy();
+    if (busy != null) {
+      _say(L10n.of(context).actionBusy(busy));
+      return;
+    }
 
     final recipe = nextLevelOf(module, have: shelter.levelOf(module));
     if (recipe == null) return;
@@ -3406,6 +3573,41 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     await _reloadCraftJob();
   }
 
+  /// §2.1a: whatever the character is already doing, or null.
+  ///
+  /// ⚠️ **One pair of hands.** §2.1a says an occupation excludes every other
+  /// occupation, and the interface did not: a walk came back with a photograph
+  /// of somebody eating a tin of meat *and* taking a pair of boots apart at the
+  /// same time. Each half checked its own clock and neither asked about the
+  /// other's.
+  ///
+  /// Everything with a duration goes through here before it starts.
+  String? _alreadyBusy() {
+    final l10n = L10n.of(context);
+
+    if (_search.value != null) {
+      return _search.value!.usingLabel ?? l10n.searchAreaRunning;
+    }
+    if (_reload != null) return l10n.combatReload;
+
+    final job = _craftJob.value;
+    if (job != null) return _jobLabel(job);
+
+    final now = DateTime.now().toUtc();
+    for (final place in _shelters.value) {
+      if (!place.isReadyAt(now)) {
+        return place.kind == ShelterKind.main
+            ? l10n.shelterTitle
+            : l10n.campTitle;
+      }
+      if (place.building != null) {
+        return moduleName(l10n, place.building!);
+      }
+    }
+
+    return null;
+  }
+
   /// §12: why one action would not work on one piece **right now**.
   ///
   /// ⚠️ Only for the second kind of "no". An action that does not apply to the
@@ -3424,18 +3626,15 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final catalogue = _catalogue;
     if (catalogue == null) return null;
 
-    // Anything with a clock rules out starting another one, and §4.7's own
-    // rule is that a use in progress is the only use in progress.
-    final busySearching = _search.value != null;
+    // §2.1a: anything at all rules out starting anything else.
+    final busy = _alreadyBusy();
 
     switch (action) {
       case PackAction.use:
       case PackAction.read:
-        return busySearching ? l10n.craftBenchBusy : null;
-
       case PackAction.fill:
       case PackAction.empty:
-        return busySearching ? l10n.craftBenchBusy : null;
+        return busy == null ? null : l10n.actionBusy(busy);
 
       case PackAction.wear:
         return null;
@@ -3670,7 +3869,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       workshopLevel: main?.levelOf(ShelterModule.workshop) ?? 0,
       atHand: counts.keys.toSet(),
       materials: counts,
-      busy: _craftJob.value != null,
+      // §2.1a: anything at all, not just another bench job.
+      busy: _search.value != null || _reload != null || _craftJob.value != null,
       // §7 is not built. Everybody is a beginner, and the discount is nought
       // until skills exist — wired here so that turning them on is one line.
       engineering: 0,
@@ -3847,6 +4047,25 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
   /// §2.1a.3: reads the bench, and pays out anything that finished while the
   /// app was closed.
+  /// Watches the bench while something is on it.
+  void _startBenchTimer() {
+    _benchTimer?.cancel();
+    _benchTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (_craftJob.value == null) {
+        _stopBenchTimer();
+        return;
+      }
+      if (_craftJob.value!.isDoneAt(DateTime.now().toUtc())) {
+        unawaited(_reloadCraftJob());
+      }
+    });
+  }
+
+  void _stopBenchTimer() {
+    _benchTimer?.cancel();
+    _benchTimer = null;
+  }
+
   Future<void> _reloadCraftJob() async {
     final character = _character;
     if (character == null) return;
@@ -3856,6 +4075,11 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
     if (job == null || !job.isDoneAt(DateTime.now().toUtc())) {
       _craftJob.value = job;
+      if (job == null) {
+        _stopBenchTimer();
+      } else {
+        _startBenchTimer();
+      }
 
       // ⚠️ Found again by id after a restart, because identity does not
       // survive the process. First match, which is the honest answer when
@@ -3867,8 +4091,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       return;
     }
 
-    await _finishCraftJob(job);
+    _stopBenchTimer();
     _craftJob.value = null;
+    await _finishCraftJob(job);
   }
 
   /// What a finished job hands over (§18.4, §18.6).
@@ -3896,7 +4121,12 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       final piece = _dismantling.value ?? _firstCarried(job.salvageItemId!);
       if (piece != null) {
         final without = _inventory.value.removeLine(piece);
-        if (without != null) _inventory.value = without;
+        if (without != null) {
+          _inventory.value = without;
+        } else {
+          final fallback = _inventory.value.remove(job.salvageItemId!);
+          if (fallback != null) _inventory.value = fallback;
+        }
       }
       _dismantling.value = null;
     } else {
@@ -4917,7 +5147,15 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     // `displayFix` is null and searching the area silently did nothing — on
     // the one spot the player is most likely to be standing still.
     final at = _standingAt.value;
-    if (at == null || _search.value != null) return;
+    if (at == null) return;
+
+    // §2.1a: one pair of hands. A reload or a dismantling running is a
+    // character with something in them.
+    final busy = _alreadyBusy();
+    if (busy != null) {
+      _say(L10n.of(context).actionBusy(busy));
+      return;
+    }
 
     final now = DateTime.now().toUtc();
     final refusal = _scoutRefusal(at, now);
@@ -4936,7 +5174,13 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     // Sticky, for the same reason as the area search above.
     final at = _standingAt.value;
     final box = _boxInReach();
-    if (at == null || box == null || _search.value != null) return;
+    if (at == null || box == null) return;
+
+    final busy = _alreadyBusy();
+    if (busy != null) {
+      _say(L10n.of(context).actionBusy(busy));
+      return;
+    }
 
     setState(() {
       _search.value = Search.object(
@@ -5398,6 +5642,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     _dropped.dispose();
     _standingAt.dispose();
     _reloadTimer?.cancel();
+    _benchTimer?.cancel();
     _craftJob.removeListener(_onBenchChanged);
     _craftJob.dispose();
     _dismantling.dispose();

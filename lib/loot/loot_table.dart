@@ -46,18 +46,28 @@ const int kSearchBudget = 6;
 /// thoroughly is still a bin searched thoroughly; it is simply over sooner.
 enum PlaceSize {
   /// A bin, a crate, a tap. One layer, and you can see most of it standing up.
-  tiny(0.2),
+  tiny(0.2, 15.0),
 
   /// A car, an ambulance, a hunting stand: a few compartments, all in reach.
-  small(0.5),
+  small(0.5, 15.0),
 
   /// A shop, a flat, a workshop. §10.3.5's own figures.
-  normal(1.0);
+  normal(1.0, 50.0);
 
-  const PlaceSize(this.timeScale);
+  const PlaceSize(this.timeScale, this.reachM);
 
   /// What §10.3.5's seconds are multiplied by.
   final double timeScale;
+
+  /// §10.2: how close the player must be to search or pick up from this place.
+  ///
+  /// Deliberately the same for both operations — a player who can reach a
+  /// thing can pick it up from the same spot without taking a step.
+  ///
+  /// Tiny/small (bins, cars, crates): 15 m — hand reach, not a walk.
+  /// Normal (shops, libraries, stations): 50 m — a building is big and its
+  /// door is not where the map puts its dot (§10.2).
+  final double reachM;
 
   static PlaceSize fromWire(String? value) =>
       values.where((size) => size.name == value).firstOrNull ??

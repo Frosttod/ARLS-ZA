@@ -20,6 +20,7 @@ import '../items/item.dart';
 import '../items/item_catalogue.dart';
 import '../combat/attachment.dart';
 import '../combat/magazine_item.dart';
+import '../craft/item_recipe.dart';
 import 'body_slots.dart';
 import '../sim/body.dart';
 
@@ -236,6 +237,12 @@ class InventoryChange {
   final int? acceptedCount;
 
   bool get isAccepted => refusal == null;
+}
+
+class DiscardResult {
+  const DiscardResult(this.inventory, this.recovered);
+  final Inventory inventory;
+  final Map<String, int> recovered;
 }
 
 /// The limits in force right now: body plus whatever is on the player's back.
@@ -604,6 +611,44 @@ class Inventory {
 
     if (left > 0) return null;
     return Inventory(carried: lines, worn: worn, packId: packId);
+  }
+
+  /// Discards a partially dismantled item and returns the updated inventory
+  /// along with any recovered materials based on the progress.
+  DiscardResult discardDismantled(
+    CarriedItem line,
+    ItemCatalogue catalogue,
+    RecipeBook book, {
+    double engineering = 0,
+    int workshopLevel = 0,
+  }) {
+    final without = removeLine(line);
+    if (without == null) return DiscardResult(this, const {});
+
+    if (!line.isPartlyDismantled) {
+      return DiscardResult(without, const {});
+    }
+
+    final item = catalogue[line.itemId];
+    if (item == null) return DiscardResult(without, const {});
+
+    final content = materialContent(item, book);
+    if (content.isEmpty) return DiscardResult(without, const {});
+
+    final totalTime = salvageTime(content);
+    if (totalTime.inSeconds <= 0) return DiscardResult(without, const {});
+
+    final fraction = (line.salvageSeconds! / totalTime.inSeconds).clamp(0.0, 1.0);
+    if (fraction <= 0) return DiscardResult(without, const {});
+
+    final recovered = salvageOf(
+      item,
+      book,
+      condition: line.condition ?? 100,
+      share: kSalvageReturn * fraction,
+    );
+
+    return DiscardResult(without, recovered);
   }
 
   /// Swaps the pack. The old one goes into the new one's contents by mass, so
