@@ -340,6 +340,25 @@ class L10nEn extends L10n {
   }
 
   @override
+  String get statusWornOut => 'Worn out';
+
+  @override
+  String get statusWornOutEffect =>
+      'Slower to heal, slower to catch your breath, steadier hands would be nice. A good night does not fix it.';
+
+  @override
+  String get statusWornOutFix =>
+      'Longer nights than you need. Winter, or a Lounge.';
+
+  @override
+  String get statusWornOutWhere => 'The shelter, and time.';
+
+  @override
+  String statusWornOutLevel(int nights) {
+    return '$nights nights behind';
+  }
+
+  @override
   String get statusSleepDeprived => 'Sleep-deprived';
 
   @override

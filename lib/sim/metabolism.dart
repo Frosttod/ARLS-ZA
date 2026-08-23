@@ -134,10 +134,19 @@ double relaxHeartRate({
   required double current,
   required double target,
   required Duration elapsed,
+  double tauMultiplier = 1,
 }) {
   if (elapsed <= Duration.zero) return current;
   final seconds = elapsed.inMicroseconds / Duration.microsecondsPerSecond;
-  final decay = math.exp(-seconds / kHeartRateTau.inSeconds);
+
+  // §2.5.5: a body weeks short of sleep takes longer to settle, which in a
+  // game with no stamina bar is a real cost — §2.4's whole point is that the
+  // heart *is* the stamina, so a slower recovery is more time spent unable to
+  // aim after a run.
+  final tau =
+      kHeartRateTau.inSeconds * (tauMultiplier <= 0 ? 1 : tauMultiplier);
+
+  final decay = math.exp(-seconds / tau);
   return target + (current - target) * decay;
 }
 

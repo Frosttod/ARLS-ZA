@@ -655,6 +655,36 @@ abstract class L10n {
   /// **'−{percent}% of body weight'**
   String statusWastingLevel(int percent);
 
+  /// No description provided for @statusWornOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Worn out'**
+  String get statusWornOut;
+
+  /// No description provided for @statusWornOutEffect.
+  ///
+  /// In en, this message translates to:
+  /// **'Slower to heal, slower to catch your breath, steadier hands would be nice. A good night does not fix it.'**
+  String get statusWornOutEffect;
+
+  /// No description provided for @statusWornOutFix.
+  ///
+  /// In en, this message translates to:
+  /// **'Longer nights than you need. Winter, or a Lounge.'**
+  String get statusWornOutFix;
+
+  /// No description provided for @statusWornOutWhere.
+  ///
+  /// In en, this message translates to:
+  /// **'The shelter, and time.'**
+  String get statusWornOutWhere;
+
+  /// No description provided for @statusWornOutLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'{nights} nights behind'**
+  String statusWornOutLevel(int nights);
+
   /// No description provided for @statusSleepDeprived.
   ///
   /// In en, this message translates to:

@@ -93,6 +93,21 @@ List<StatusNote> statusNotes(
       fix: l10n.statusWastingFix,
       where: l10n.statusWastingWhere,
     ),
+  // ⚠️ §2.5.5, §12: its own note, and it has to be.
+  //
+  // Under chronic restriction subjective sleepiness plateaus while performance
+  // goes on falling — which is exactly what makes this a good mechanic and
+  // exactly what makes it unfair without a caption. The sleep bar reads full
+  // after one good night; a player who is still worse than they were is owed
+  // the reason, or the penalty reads as a bug.
+  if (status.chronicSleep.strain >= 1)
+    (
+      name: l10n.statusWornOut,
+      level: l10n.statusWornOutLevel(status.chronicSleep.strain.round()),
+      effect: l10n.statusWornOutEffect,
+      fix: l10n.statusWornOutFix,
+      where: l10n.statusWornOutWhere,
+    ),
   if (status.sleep.extraMoa > 0)
     (
       name: l10n.statusSleepDeprived,

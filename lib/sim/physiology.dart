@@ -252,6 +252,136 @@ ThirstState thirstState({
   );
 }
 
+/// §2.5.5: how the strain comes off again.
+///
+/// ⚠️ **Only a night longer than the requirement pays anything back**, and
+/// that is deliberate rather than harsh. A night that exactly meets the
+/// requirement holds the strain where it is; recovery from chronic
+/// restriction really does need extra sleep, not merely adequate sleep.
+///
+/// Which lands this axis squarely on the seasonality §2.5.3 is built around,
+/// with no modifier of any kind. Poznań in June gives 7.4 hours of darkness —
+/// strain accrues *however carefully the player plays*. December gives 16.6,
+/// and a few of those clear a summer's worth. The Salon module (§8.4) becomes
+/// the one thing that can buy recovery out of season, which is what §2.5.4
+/// says it is for.
+///
+/// A fortnight of six-hour nights is three and a half points; four December
+/// nights take it off.
+const double kStrainRecoveryNeedsLongerNights = 1;
+
+/// §2.5.5: the deepest the hole gets, in night-equivalents.
+///
+/// The same argument [kMaxSleepDebt] makes one tier up: past the last row
+/// there is no further penalty, so everything beyond the cap is only a longer
+/// climb out — a punishment nobody asked for and one no interface can draw.
+/// Ten is about six weeks of losing a quarter of a night.
+const double kMaxSleepStrain = 10;
+
+/// §2.5.3: one night of headroom below nought, and not a minute more.
+///
+/// ⚠️ **Not a bank, and §2.5.3 forbids one** — "nadmiar nocy w schronie ponad
+/// zapotrzebowanie nie kumuluje zapasu". This is arithmetic, not credit.
+///
+/// The strain is a per-*day* balance (`1 − S/8`) evaluated second by second,
+/// and a day is lived as a night and then a day: the night's payoff arrives
+/// before the day's accrual. Floored hard at nought, the payoff of every night
+/// would be thrown away before the waking hours it was meant to cancel, and a
+/// character sleeping their eight hours would gain a third of a night of
+/// strain every day for ever. Somebody sleeping *twelve* would too.
+///
+/// One night of room is the least that lets a night-then-day cycle land where
+/// the daily figure says it should. [sleepStrainState] reads nought for
+/// anything below it, so nothing here is ever visible as credit.
+const double kSleepStrainFloor = -1;
+
+/// §2.5.5: what weeks and months of not sleeping enough do.
+///
+/// ⚠️ **A second axis, and deliberately not the first one turned up.**
+///
+/// §2.5.4's debt is about last night: it is capped at a day, it clears in a
+/// day, and one short night reads the same whether it is the first in a month
+/// or the fourteenth in a row. That is right for what it measures and useless
+/// for what it does not — a character three weeks into six-hour nights was in
+/// exactly the same state as one who stayed up late once.
+///
+/// The physiology this models is well documented and makes an unusually good
+/// mechanic: under chronic restriction **subjective sleepiness plateaus while
+/// performance goes on falling**. So the penalties here are deliberately ones
+/// the sleep bar does not show — learning, healing, a heart that takes longer
+/// to settle — and a player who slept well last night and is still worse than
+/// they were is being told something true.
+///
+/// Which is exactly why it needs a note of its own on the status screen
+/// (§12). A penalty nobody can see the reason for is a bug, however real it
+/// is.
+class SleepStrainState {
+  const SleepStrainState({
+    required this.strain,
+    this.learningRateMultiplier = 1.0,
+    this.extraMoa = 0,
+    this.healingMultiplier = 1.0,
+    this.heartRecoveryMultiplier = 1.0,
+    this.microsleepsAnyway = false,
+  });
+
+  /// Accumulated shortfall, in whole nights.
+  final double strain;
+
+  /// §7.1: on top of §2.5.4's own figure. Reading is the first thing to go.
+  final double learningRateMultiplier;
+
+  /// Added to `MOA_total` (§5.1.1) whatever last night was like.
+  final double extraMoa;
+
+  /// §2.6: on the blood the body puts back, and on anything else that mends.
+  final double healingMultiplier;
+
+  /// §2.4: how much longer the heart takes to come back down.
+  final double heartRecoveryMultiplier;
+
+  /// §2.5.4's microsleeps, reached without a day of acute debt behind them.
+  final bool microsleepsAnyway;
+
+  static const rested = SleepStrainState(strain: 0);
+}
+
+SleepStrainState sleepStrainState(double rawStrain) {
+  // ⚠️ Below nought is arithmetic headroom, never credit — see
+  // [kSleepStrainFloor]. A character who slept in is rested, not owed.
+  final strain = rawStrain < 0 ? 0.0 : rawStrain;
+
+  // A night or less. Somebody who stayed up once is not chronically anything,
+  // and this is the tier that keeps that true.
+  if (strain < 1) return SleepStrainState(strain: strain);
+
+  if (strain < 3) {
+    return SleepStrainState(
+      strain: strain,
+      learningRateMultiplier: 0.80,
+      heartRecoveryMultiplier: 1.35,
+    );
+  }
+  if (strain < 6) {
+    return SleepStrainState(
+      strain: strain,
+      learningRateMultiplier: 0.60,
+      extraMoa: 1.0,
+      healingMultiplier: 0.70,
+      heartRecoveryMultiplier: 1.35,
+    );
+  }
+
+  return SleepStrainState(
+    strain: strain,
+    learningRateMultiplier: 0.60,
+    extraMoa: 2.0,
+    healingMultiplier: 0.50,
+    heartRecoveryMultiplier: 1.5,
+    microsleepsAnyway: true,
+  );
+}
+
 /// Effects of sleep debt (§2.5.4).
 class SleepState {
   const SleepState({

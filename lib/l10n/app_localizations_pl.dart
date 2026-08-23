@@ -343,6 +343,25 @@ class L10nPl extends L10n {
   }
 
   @override
+  String get statusWornOut => 'Wyczerpanie';
+
+  @override
+  String get statusWornOutEffect =>
+      'Rany goją się wolniej, oddech wraca wolniej, ręce mniej pewne. Jedna dobra noc tego nie cofa.';
+
+  @override
+  String get statusWornOutFix =>
+      'Noce dłuższe, niż potrzebujesz. Zima albo Salon.';
+
+  @override
+  String get statusWornOutWhere => 'Schron i czas.';
+
+  @override
+  String statusWornOutLevel(int nights) {
+    return '$nights nocy do odrobienia';
+  }
+
+  @override
   String get statusSleepDeprived => 'Niewyspanie';
 
   @override

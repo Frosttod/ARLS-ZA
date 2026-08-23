@@ -184,6 +184,13 @@ class Vitals extends Table {
   /// creation weight, because that is the only place that knows it (§11.1.4).
   RealColumn get bodyMassKg => real().withDefault(const Constant(0))();
 
+  /// §2.5.5: accumulated sleep shortfall, in whole nights.
+  ///
+  /// Nought is a rested character, which is the right reading for a row
+  /// written before this existed: nobody was ever chronically short of sleep
+  /// in a version that could not measure it (§11.1.4).
+  RealColumn get sleepStrain => real().withDefault(const Constant(0))();
+
   @override
   Set<Column> get primaryKey => {profileId};
 

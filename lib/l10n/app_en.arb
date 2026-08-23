@@ -207,6 +207,18 @@
       }
     }
   },
+  "statusWornOut": "Worn out",
+  "statusWornOutEffect": "Slower to heal, slower to catch your breath, steadier hands would be nice. A good night does not fix it.",
+  "statusWornOutFix": "Longer nights than you need. Winter, or a Lounge.",
+  "statusWornOutWhere": "The shelter, and time.",
+  "statusWornOutLevel": "{nights} nights behind",
+  "@statusWornOutLevel": {
+    "placeholders": {
+      "nights": {
+        "type": "int"
+      }
+    }
+  },
   "statusSleepDeprived": "Sleep-deprived",
   "bleedSuperficial": "superficial",
   "bleedModerate": "moderate",

@@ -828,6 +828,7 @@ class GameLoop {
     pendingWaterMl: Value(_state.pendingWaterMl),
     heartRateBpm: Value(_state.heartRateBpm),
     sleepDebtSeconds: Value(_state.sleepDebtSeconds),
+    sleepStrain: Value(_state.sleepStrain),
     // §2.3: the two clocks the lethal rules hang on. They have to survive a
     // kill, or closing the app would be a glass of water.
     bodyMassKg: Value(_state.bodyMassKg),

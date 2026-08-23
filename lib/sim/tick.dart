@@ -223,6 +223,7 @@ class SimState {
     required this.heartRateBpm,
     required this.bodyMassKg,
     required this.sleepDebtSeconds,
+    this.sleepStrain = 0,
     required this.zone,
     required this.rngCursor,
     this.pendingKcal = 0,
@@ -260,6 +261,16 @@ class SimState {
   final double bodyMassKg;
 
   final int sleepDebtSeconds;
+
+  /// §2.5.5: accumulated shortfall in whole nights — see [SleepStrainState].
+  ///
+  /// ⚠️ A second clock rather than a bigger first one. [sleepDebtSeconds] is
+  /// about last night, is capped at a day and clears in a day; this is about
+  /// the last month and takes a month to clear. One short night reads the same
+  /// on the debt whether it is the first in a fortnight or the fourteenth in a
+  /// row, and that is the right answer to the question the debt asks.
+  final double sleepStrain;
+
   final MetabolicZone zone;
 
   /// Draw position of the world RNG stream, carried so a resumed session
@@ -316,6 +327,7 @@ class SimState {
     double? heartRateBpm,
     double? bodyMassKg,
     int? sleepDebtSeconds,
+    double? sleepStrain,
     MetabolicZone? zone,
     int? rngCursor,
     double? pendingKcal,
@@ -330,6 +342,7 @@ class SimState {
     heartRateBpm: heartRateBpm ?? this.heartRateBpm,
     bodyMassKg: bodyMassKg ?? this.bodyMassKg,
     sleepDebtSeconds: sleepDebtSeconds ?? this.sleepDebtSeconds,
+    sleepStrain: sleepStrain ?? this.sleepStrain,
     zone: zone ?? this.zone,
     rngCursor: rngCursor ?? this.rngCursor,
     pendingKcal: pendingKcal ?? this.pendingKcal,
@@ -346,6 +359,7 @@ class SimState {
     'heartRateBpm': heartRateBpm,
     'bodyMassKg': bodyMassKg,
     'sleepDebtSeconds': sleepDebtSeconds,
+    'sleepStrain': sleepStrain,
     'zone': zone.wire,
     'rngCursor': rngCursor,
     'pendingKcal': pendingKcal,
@@ -366,6 +380,7 @@ class SimState {
     // guessed at here (§11.1.4).
     bodyMassKg: (json['bodyMassKg'] as num?)?.toDouble() ?? 0,
     sleepDebtSeconds: (json['sleepDebtSeconds'] as num).toInt(),
+    sleepStrain: (json['sleepStrain'] as num?)?.toDouble() ?? 0,
     zone: MetabolicZone.fromWire(json['zone']! as String),
     rngCursor: (json['rngCursor'] as num?)?.toInt() ?? 0,
     pendingKcal: (json['pendingKcal'] as num?)?.toDouble() ?? 0,
@@ -402,6 +417,7 @@ class SimState {
       _close(heartRateBpm, other.heartRateBpm) &&
       _close(bodyMassKg, other.bodyMassKg) &&
       sleepDebtSeconds == other.sleepDebtSeconds &&
+      _close(sleepStrain, other.sleepStrain) &&
       dryStreakSeconds == other.dryStreakSeconds &&
       starvedStreakSeconds == other.starvedStreakSeconds &&
       zone == other.zone &&
@@ -422,6 +438,7 @@ class SimStatus {
     required this.sleep,
     required this.heartRate,
     this.wasting = StarvationState.healthy,
+    this.chronicSleep = SleepStrainState.rested,
   });
 
   final BloodState blood;
@@ -432,11 +449,19 @@ class SimStatus {
   final StarvationState wasting;
 
   final SleepState sleep;
+
+  /// §2.5.5: the weeks-long axis of not sleeping enough.
+  final SleepStrainState chronicSleep;
+
   final HeartRatePenalty heartRate;
 
   /// Everything that currently adds to `MOA_total` (§5.1.1).
   double get totalExtraMoa =>
-      blood.extraMoa + sleep.extraMoa + heartRate.extraMoa + wasting.extraMoa;
+      blood.extraMoa +
+      sleep.extraMoa +
+      heartRate.extraMoa +
+      wasting.extraMoa +
+      chronicSleep.extraMoa;
 
   /// Multiplier on how long an action takes (§2.3, §2.5.4).
   double get actionTimeMultiplier =>
@@ -500,6 +525,7 @@ SimStatus statusOf({
     startingMassKg: constants.startingMassKg,
   ),
   sleep: sleepState(state.sleepDebt),
+  chronicSleep: sleepStrainState(state.sleepStrain),
   heartRate: heartRatePenalty(
     currentHr: state.heartRateBpm,
     maxHr: constants.maxHeartRate,
@@ -643,6 +669,9 @@ TickOutcome advance({
 
   // ---- heart rate (§2.4) -------------------------------------------------
   // Asleep the heart goes below waking resting, so that is the target it
+  // §2.5.5: weeks of short nights, read once and applied where they belong.
+  final chronic = sleepStrainState(state.sleepStrain);
+
   // relaxes towards. Awake, §2.4's formula stands.
   final heartRate = relaxHeartRate(
     current: state.heartRateBpm,
@@ -654,6 +683,7 @@ TickOutcome advance({
             maxHr: constants.maxHeartRate,
           ),
     elapsed: step,
+    tauMultiplier: chronic.heartRecoveryMultiplier,
   );
 
   // ---- bleeding (§2.6) ---------------------------------------------------
@@ -690,6 +720,36 @@ TickOutcome advance({
   final sleepDebt = math
       .max(0, state.sleepDebtSeconds + debtChange)
       .clamp(0, kMaxSleepDebt.inSeconds);
+
+  // §2.5.5: the other clock, the one that counts weeks.
+  //
+  // ⚠️ **Different arithmetic from the debt above, on purpose.**
+  //
+  // The debt only accrues while the character is *awake*, so a night of eight
+  // hours over-pays it — sixteen waking hours are worth five and a third, and
+  // the night pays eight. The upshot is that six-hour nights break even and
+  // the debt never moves, which is why three weeks of them read exactly like
+  // one late evening. That is the defect this whole tier exists to answer.
+  //
+  // Here the requirement accrues against the *wall clock*, which is what
+  // §2.5.3's own formula says: a day needs eight hours whatever you did with
+  // it. Over twenty-four hours with S hours slept the strain moves by
+  // `1 − S/8` — a quarter of a night for six hours, a whole one for none, and
+  // downwards only for a night longer than the requirement.
+  final strainChange =
+      seconds / Duration.secondsPerDay -
+      (input.sleeping ? seconds / kDailySleepNeed.inSeconds : 0);
+
+  // ⚠️ Floored one night *below* nought rather than at it. A day is lived as
+  // a night and then a day, so the night's payoff arrives before the waking
+  // hours it cancels — and a hard floor at nought would throw that payoff away
+  // every morning, leaving somebody who sleeps their full eight hours gaining
+  // a third of a night of strain a day for ever. See [kSleepStrainFloor];
+  // nothing below nought is ever readable as credit.
+  final sleepStrain = (state.sleepStrain + strainChange).clamp(
+    kSleepStrainFloor,
+    kMaxSleepStrain,
+  );
 
   // ---- absorption (§2.2, §2.3) -------------------------------------------
   //
@@ -778,7 +838,12 @@ TickOutcome advance({
       ? kBloodRegenMlPerHour *
             (input.sleeping ? kSleepBloodRegenFactor : 1.0) *
             (seconds / Duration.secondsPerHour) *
-            nourishment(state, constants)
+            nourishment(state, constants) *
+            // §2.5.5: a body that has not slept properly in weeks mends
+            // slowly. The one penalty here a player is most likely to feel
+            // and least likely to guess at, which is why it has a note of its
+            // own on the status screen (§12).
+            chronic.healingMultiplier
       : 0.0;
 
   var blood = math.min(
@@ -847,6 +912,7 @@ TickOutcome advance({
       heartRateBpm: heartRate,
       bodyMassKg: massKg,
       sleepDebtSeconds: sleepDebt,
+      sleepStrain: sleepStrain,
       dryStreakSeconds: dryStreak,
       starvedStreakSeconds: starvedStreak,
       pendingKcal: state.pendingKcal - kcalAbsorbed,

@@ -29,7 +29,7 @@ import 'tables.dart';
 part 'database.g.dart';
 
 /// Bumped only alongside a migration step in [_migration]. Never reused.
-const int kSchemaVersion = 28;
+const int kSchemaVersion = 29;
 
 /// Keys used in [MetaEntries].
 abstract final class MetaKeys {
@@ -75,7 +75,7 @@ class SaveDatabase extends _$SaveDatabase {
   /// follow a constant reference. `schema_test.dart` keeps it in step with
   /// [kSchemaVersion].
   @override
-  int get schemaVersion => 28;
+  int get schemaVersion => 29;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -329,6 +329,11 @@ class SaveDatabase extends _$SaveDatabase {
       // moved" and is filled in from the profile's creation weight on load —
       // the only place that knows it.
       if (from < 28) await m.addColumn(vitals, vitals.bodyMassKg);
+
+      // §2.5.5: the weeks-long axis of not sleeping enough. Nought reads as a
+      // rested character, which is the honest answer for a row written by a
+      // version that could not measure it.
+      if (from < 29) await m.addColumn(vitals, vitals.sleepStrain);
 
       await _writeSchemaVersion(to);
     },

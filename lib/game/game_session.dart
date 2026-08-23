@@ -126,6 +126,7 @@ class GameSessionFactory {
             ? vitals.bodyMassKg
             : profile.weightKg,
         sleepDebtSeconds: vitals.sleepDebtSeconds,
+        sleepStrain: vitals.sleepStrain,
         dryStreakSeconds: vitals.dryStreakSeconds,
         starvedStreakSeconds: vitals.starvedStreakSeconds,
         zone: MetabolicZone.fromWire(vitals.zone),
