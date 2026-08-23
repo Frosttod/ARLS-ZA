@@ -10,6 +10,7 @@ import 'devtools/dev_mode.dart';
 import 'devtools/dev_overlay.dart';
 import 'devtools/dev_session.dart';
 import 'game/controllers/inventory_controller.dart';
+import 'game/controllers/loot_controller.dart';
 import 'game/controllers/stash_controller.dart';
 import 'game/game_loop.dart';
 import 'inventory/body_slots.dart';
@@ -184,10 +185,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// Separate from [_knowledge], which is about what has been *seen*: the ten
   /// minutes there stop a second look repeating the first, and this stops the
   /// finding from becoming a tap somebody stands on.
-  DateTime? _scoutedAt;
+  DateTime? get _scoutedAt => _loot.scoutedAt;
 
   /// §10.2.3: and where that was, so the next one has to be somewhere else.
-  GeoPoint? _scoutedFrom;
+  GeoPoint? get _scoutedFrom => _loot.scoutedFrom;
 
   /// §12: how the pack is sorted. Outlives the screen it belongs to.
   ValueNotifier<PackOrder> get _packOrder => _pack.order;
@@ -228,7 +229,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// What people left behind (§19.1), and what the map calls where the player
   /// is standing — the second is what fills the first in.
   NoteSet? _notes;
-  PlaceNames _placeNames = PlaceNames.none;
+  PlaceNames get _placeNames => _loot.placeNames;
 
   /// The loot layer (§10). Null until the tables have been read; it does
   /// nothing at all until there is an installed pack to read places out of.
@@ -237,7 +238,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// What is standing on the map right now. Held here because the map view is
   /// rebuilt constantly and re-reading the tiles for every frame would keep the
   /// phone busy for no gain.
-  List<LootBox> _boxes = const [];
+  List<LootBox> get _boxes => _loot.boxes.value;
 
   /// The search in progress (§10.2, §19.3), and when it was last advanced.
   ///
@@ -268,7 +269,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   final ValueNotifier<CarriedItem?> _usingLine = ValueNotifier(null);
 
   /// §10.3: the bodies, with their pockets still in them.
-  List<Remains> _remains = const [];
+  List<Remains> get _remains => _loot.remains.value;
 
   /// §5.5: the last of the fight, in the order it happened.
   ///
@@ -742,7 +743,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   ///
   /// A notifier because the ground list is a pushed route: handed a copy, it
   /// would keep offering things already in the pack.
-  final ValueNotifier<List<DroppedItem>> _dropped = ValueNotifier(const []);
+  ValueNotifier<List<DroppedItem>> get _dropped => _loot.dropped;
 
   /// §3.2, §3.6: where the player is, and what the phone says.
   ///
@@ -768,7 +769,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// Procedural places the player has actually looked for (§10.2.3). A
   /// pharmacy is a building and is visible from the street; a wrecked car in a
   /// side road is not, until somebody stops and looks.
-  final Set<String> _revealed = {};
+  Set<String> get _revealed => _loot.revealed;
 
   /// Both HUD bars read these. Zero without a catalogue, which only happens if
   /// every bundled data file failed to parse — a broken build, not a state the
@@ -863,6 +864,20 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     // same notifier the inventory screen does.
     _search.addListener(_onInventoryChanged);
 
+    // ⚠️ **The places and the bodies used to be plain fields.**
+    //
+    // They changed inside a `setState` on this widget, which is how the map
+    // and the panel found out. Now they belong to [LootController], so this
+    // tree has to listen for itself — one listener, one `setState`, the same
+    // frame as before.
+    //
+    // Narrowing that down to the widgets that actually care is a later change
+    // and a separate one: a move that also changed which frames redraw would
+    // be impossible to tell apart from a regression.
+    _loot.boxes.addListener(_onInventoryChanged);
+    _loot.remains.addListener(_onInventoryChanged);
+    _loot.dropped.addListener(_onInventoryChanged);
+
     // §2.1a.2: the loop owns sleep and this tree owns actions, so the one has
     // to tell the other. Somebody halfway through a bandage is not somebody
     // who has been sitting in a chair doing nothing.
@@ -942,6 +957,12 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       await rootBundle.loadString('assets/data/loot_tables.json'),
     );
     _world = LootWorld(tables: tables);
+
+    // ⚠️ The tables, not the world. §10.2's radius and §10.2.1's hidden places
+    // are read off them, and that is all the loot needs to know — the world
+    // itself plans, downloads and decodes map packs, none of which is a
+    // question about what is on the map right now.
+    _loot.tables = tables;
     if (!mounted) return;
 
     await _readPermissions();
@@ -1080,6 +1101,12 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         body: character.body,
       );
       _shelf.bind(profileId: character.profile.id);
+
+      // ⚠️ The tables, not the world. §10.2's radius and §10.2.1's hidden
+      // places are read off them, and that is all the loot needs to know —
+      // the world itself plans, downloads and decodes, none of which is a
+      // question about what is on the map right now.
+      _loot.bind(profileId: character.profile.id);
 
       await _pack.load(catalogue);
       if (!mounted) return;
@@ -1901,18 +1928,6 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     await _saveInventory();
   }
 
-  Future<void> _reloadDropped() async {
-    final character = _character;
-    if (character == null) return;
-
-    final items = await DroppedStore(
-      widget.session.db,
-    ).load(character.profile.id, DateTime.now().toUtc());
-    if (!mounted) return;
-
-    setState(() => _dropped.value = items);
-  }
-
   /// Opens a note the player is carrying (§19.1).
   void _readNote(CarriedItem line) {
     final note = line.noteId == null ? null : _notes?[line.noteId!];
@@ -2101,22 +2116,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     //
     // What the player dropped themselves, and what a body left, keep the
     // arm's length of §4.8: those really are at their feet.
-    final reach = _reachForPilesAt(at);
-    return pilesWithin(_dropped.value, at, reachM: reach);
-  }
-
-  /// The widest reach any place near [at] grants, or §4.8's arm's length.
-  double _reachForPilesAt(GeoPoint at) {
-    var reach = kStillnessM;
-
-    for (final box in _boxes) {
-      final size = _world?.tables[box.tableId]?.size ?? PlaceSize.normal;
-      final placeReach = searchReachFor(size);
-      if (box.position.distanceTo(at) > placeReach) continue;
-      if (placeReach > reach) reach = placeReach;
-    }
-
-    return reach;
+    return _loot.pilesInReach(at);
   }
 
   /// Opens the heap at the player's feet.
@@ -2221,13 +2221,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// Read before anything is spawned, so a player who walked towards a marker
   /// and closed the app finds the same marker in the same place.
   Future<void> _loadLootBoxes() async {
-    final character = _character;
-    if (character == null) return;
-
-    final boxes = await LootStore(widget.session.db).load(character.profile.id);
+    await _loot.loadBoxes();
     if (!mounted) return;
 
-    setState(() => _boxes = boxes);
     await _reloadDropped();
   }
 
@@ -2256,10 +2252,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     await LootStore(widget.session.db).save(character.profile.id, plan);
     if (!mounted) return;
 
-    setState(() {
-      _boxes = plan.boxes;
-      _placeNames = plan.names;
-    });
+    _loot.adopt(plan);
   }
 
   /// §6.1a: one step of the fight, driven by the same tick as everything else.
@@ -2332,7 +2325,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
     setState(() {
       // §10.3: bodies nobody came back for stop being worth drawing.
-      _remains = sweepRemains(_remains, now);
+      _loot.sweep(now);
 
       // ⚠️ The safety net, and it is here because a death can be missed. The
       // session reports the ones it kills during a tick, and the shot reports
@@ -4664,7 +4657,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     );
 
     final before = _remains;
-    _remains = addRemains(_remains, body);
+    _loot.addBody(body);
 
     // §10.3: and onto the disk, because the player put it there. §6.4 remakes
     // the living every run and that is right — a Walker is not a place — but a
@@ -5097,19 +5090,6 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     );
   }
 
-  /// §10.3: the bodies this character has left, from the save.
-  Future<void> _reloadRemains() async {
-    final character = _character;
-    if (character == null) return;
-
-    final bodies = await RemainsStore(
-      widget.session.db,
-    ).load(character.profile.id, DateTime.now().toUtc());
-    if (!mounted) return;
-
-    setState(() => _remains = bodies);
-  }
-
   /// §10.3: turns out the pockets of the body in reach.
   ///
   /// Only from arm's length, and only once. What comes out lands on the ground
@@ -5122,12 +5102,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
     _note((stats) => stats.searchedSomething());
 
-    setState(() {
-      _remains = [
-        for (final other in _remains)
-          other.id == body.id ? other.emptied : other,
-      ];
-    });
+    _loot.replaceBody(body.emptied);
 
     final character = _character;
     if (character != null) {
@@ -5222,6 +5197,43 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// building and is visible from the street, so its marker is always there. A
   /// wrecked car in a side road is not, and appears only once the player has
   /// stopped and searched the area.
+  /// The markers as the map wants them, worked out once per change.
+  ///
+  /// ⚠️ **This is on the hot path and used to be rebuilt on every `setState`.**
+  ///
+  /// [clusterMarkers] is O(n²) over everything on the map — places, bodies,
+  /// piles, the fight — and [_lootMarkers] walks the places once per pile on
+  /// top of that. Eating calls `setState` once a second for the length of a
+  /// meal, so all of it ran once a second to produce, almost always, exactly
+  /// the same list.
+  ///
+  /// Cached the way [_bench] is cached, and for the same reason: every input
+  /// here is a value replaced wholesale when it changes, so comparing
+  /// references is exact and costs nothing.
+  List<MapMarker> _markers() {
+    final inputs = MarkerInputs(
+      boxes: _loot.boxes.value,
+      dropped: _loot.dropped.value,
+      remains: _loot.remains.value,
+      shelters: _shelters.value,
+      at: _standingAt.value,
+      // §5.5.6: the fight moves every tick, so this is what actually decides
+      // whether the answer can be reused.
+      enemies: _combat.enemies,
+      revealed: _loot.revealed.length,
+      shot: _combat.open,
+    );
+
+    final cached = _markerCache;
+    if (cached != null && cached.inputs == inputs) return cached.markers;
+
+    final markers = clusterMarkers(_lootMarkers());
+    _markerCache = (inputs: inputs, markers: markers);
+    return markers;
+  }
+
+  ({MarkerInputs inputs, List<MapMarker> markers})? _markerCache;
+
   List<MapMarker> _lootMarkers() {
     final now = _snapshot?.state.lastUpdate ?? DateTime.now().toUtc();
     final here = _standingAt.value;
@@ -5379,12 +5391,6 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     return visible;
   }
 
-  bool _isVisible(LootBox box) {
-    final table = _world?.tables[box.tableId];
-    if (table == null || !table.hidden) return true;
-    return _revealed.contains(box.poiId);
-  }
-
   /// §10.3.5: how long each depth takes at this place.
   Map<SearchDepth, Duration> _searchTimesAt(LootBox? box) {
     final table = box == null ? null : _world?.tables[box.tableId];
@@ -5393,37 +5399,6 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       for (final depth in SearchDepth.values)
         depth: table?.searchTime(depth) ?? Duration(seconds: depth.seconds),
     };
-  }
-
-  /// The box the player is standing at, if any (§19.3).
-  LootBox? _boxInReach() {
-    // ⚠️ The sticky position, and this line has now been the bug six times.
-    // §2.1a.4 switches the receiver off under a roof, so `displayFix` is null
-    // in a shelter — which left the search button dead there. Fixing the
-    // handler was not enough: nothing ever reached it, because this is what
-    // decides whether the button is offered at all.
-    final at = _standingAt.value;
-    if (at == null) return null;
-
-    final now = _snapshot?.state.lastUpdate ?? DateTime.now().toUtc();
-
-    LootBox? best;
-    var bestDistance = double.infinity;
-    for (final box in _boxes) {
-      // §10.2.1: a remembered place is a grey dot, not something to open.
-      if (!box.isActiveAt(now) || !_isVisible(box)) continue;
-
-      // §10.2: a bin is reached by hand and a supermarket has its door round
-      // the back. One radius made the second unreachable rather than awkward.
-      final reach = searchReachFor(
-        _world?.tables[box.tableId]?.size ?? PlaceSize.normal,
-      );
-      final distance = box.position.distanceTo(at);
-      if (distance > reach || distance > bestDistance) continue;
-      best = box;
-      bestDistance = distance;
-    }
-    return best;
   }
 
   /// Advances whatever search is running, once a second.
@@ -5693,12 +5668,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     if (box == null) return;
 
     final opened = box.openedAtTime(now);
-    setState(() {
-      _boxes = [
-        for (final b in _boxes)
-          if (b.poiId == poiId) opened else b,
-      ];
-    });
+    _loot.replace(opened);
 
     await LootStore(widget.session.db).saveOne(character.profile.id, opened);
     if (mounted) _say(L10n.of(context).breachDone);
@@ -5818,8 +5788,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     // The valve is spent by *looking*, not by finding: [_startAreaSearch]
     // refuses a second look until the clock and the distance are both paid,
     // and this only has to roll the odds.
-    _scoutedAt = now;
-    _scoutedFrom = at;
+    _loot.scouted(at, now);
 
     // §11: seeded from the character and the minute, so the same look at the
     // same moment gives the same answer however many times it is replayed.
@@ -5852,10 +5821,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       spawnedAt: now,
     );
 
-    setState(() {
-      _boxes = [..._boxes, box];
-      _revealed.add(box.poiId);
-    });
+    _loot.reveal(box);
 
     await LootStore(widget.session.db).saveOne(character.profile.id, box);
     return selector;
@@ -5944,13 +5910,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     // one shop.
     final searched = box.searchedAt(depth, now, random);
 
-    setState(() {
-      _inventory.value = inventory;
-      _boxes = [
-        for (final b in _boxes)
-          if (b.poiId == poiId) searched else b,
-      ];
-    });
+    _inventory.value = inventory;
+    _loot.replace(searched);
 
     await LootStore(widget.session.db).saveOne(character.profile.id, searched);
     await _saveInventory();
@@ -6141,7 +6102,6 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     unawaited(_world?.dispose());
     _searchTimer?.cancel();
     _search.dispose();
-    _dropped.dispose();
     _position.dispose();
     _reloadTimer?.cancel();
     _benchTimer?.cancel();
@@ -6169,6 +6129,31 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// §18.2: the shelves of whichever shelter is open.
   late final StashController _shelf = _controllers.adopt(
     StashController(widget.session.db),
+  );
+
+  /// §10, §4.8, §10.3: the places, the ground and the bodies.
+  late final LootController _loot = _controllers.adopt(
+    LootController(widget.session.db),
+  );
+
+  Future<void> _reloadDropped() => _loot.reloadDropped(DateTime.now().toUtc());
+
+  Future<void> _reloadRemains() => _loot.reloadRemains(DateTime.now().toUtc());
+
+  double _reachForPilesAt(GeoPoint at) => _loot.reachForPilesAt(at);
+
+  bool _isVisible(LootBox box) => _loot.isVisible(box);
+
+  /// §19.3: the place the player is standing at, if any.
+  ///
+  /// ⚠️ The sticky position, and this line has now been the bug six times.
+  /// §2.1a.4 switches the receiver off under a roof, so `displayFix` is null
+  /// in a shelter — which left the search button dead there. Fixing the
+  /// handler was not enough: nothing ever reached it, because this is what
+  /// decides whether the button is offered at all.
+  LootBox? _boxInReach() => _loot.boxInReach(
+    _standingAt.value,
+    _snapshot?.state.lastUpdate ?? DateTime.now().toUtc(),
   );
 
   Future<void> _saveInventory() => _pack.save();
@@ -6271,7 +6256,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
             fix: snapshot?.displayFix,
             // §4.8: a pack emptied on a corner is fourteen rows in one place,
             // and fourteen overlapping circles is a smear rather than a map.
-            markers: clusterMarkers(_lootMarkers()),
+            markers: _markers(),
             onMarkerTap: _showMarker,
             // §5.6.5: what the last shot woke up, drawn at the radius it
             // actually carried.

@@ -14,6 +14,12 @@ import 'dart:ui' show Offset;
 
 import '../l10n/app_localizations.dart';
 import '../map/geometry.dart';
+import '../combat/enemy.dart';
+import '../combat/noise.dart';
+import '../combat/remains.dart';
+import '../loot/dropped_items.dart';
+import '../loot/loot_spawner.dart';
+import '../shelter/shelter.dart';
 
 /// The kinds of thing §3.6 puts on the map.
 enum MarkerKind {
@@ -91,6 +97,61 @@ enum PlaceIcon {
 }
 
 /// One thing on the map.
+/// What the map's markers are made of, for deciding whether to make them again.
+///
+/// ⚠️ Every field is a value replaced wholesale when it changes, so reference
+/// equality is exact: two of these are equal precisely when nothing the
+/// markers are drawn from has moved. The same rule `_BenchInputs` lives by.
+///
+/// [revealed] is a count rather than the set, because the set is mutated in
+/// place — §10.2.1 adds to it when reconnaissance turns something up — and a
+/// reference comparison would never notice.
+class MarkerInputs {
+  const MarkerInputs({
+    required this.boxes,
+    required this.dropped,
+    required this.remains,
+    required this.shelters,
+    required this.at,
+    required this.enemies,
+    required this.revealed,
+    required this.shot,
+  });
+
+  final List<LootBox> boxes;
+  final List<DroppedItem> dropped;
+  final List<Remains> remains;
+  final List<Shelter> shelters;
+  final GeoPoint? at;
+  final List<Enemy> enemies;
+  final int revealed;
+  final NoiseEvent? shot;
+
+  @override
+  bool operator ==(Object other) =>
+      other is MarkerInputs &&
+      identical(other.boxes, boxes) &&
+      identical(other.dropped, dropped) &&
+      identical(other.remains, remains) &&
+      identical(other.shelters, shelters) &&
+      identical(other.at, at) &&
+      identical(other.enemies, enemies) &&
+      other.revealed == revealed &&
+      identical(other.shot, shot);
+
+  @override
+  int get hashCode => Object.hash(
+    identityHashCode(boxes),
+    identityHashCode(dropped),
+    identityHashCode(remains),
+    identityHashCode(shelters),
+    identityHashCode(at),
+    identityHashCode(enemies),
+    revealed,
+    identityHashCode(shot),
+  );
+}
+
 class MapMarker {
   const MapMarker({
     required this.id,

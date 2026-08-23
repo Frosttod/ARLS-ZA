@@ -147,11 +147,12 @@ void main() {
       //   start   7088
       //   phase 1 6876   scaffolding out
       //   phase 2 6824   the pack and the shelves out
+      //   phase 3 6809   the loot, the ground and the bodies out
       //
       // Lower it when a phase lands. Never raise it.
       expect(
         lines,
-        lessThanOrEqualTo(6830),
+        lessThanOrEqualTo(6810),
         reason: 'main.dart grew; something went in that should have come out',
       );
     });
