@@ -10,6 +10,7 @@ import 'devtools/dev_mode.dart';
 import 'devtools/dev_overlay.dart';
 import 'devtools/dev_session.dart';
 import 'game/controllers/action_controller.dart';
+import 'game/controllers/combat_controller.dart';
 import 'game/controllers/craft_controller.dart';
 import 'game/controllers/inventory_controller.dart';
 import 'game/controllers/loot_controller.dart';
@@ -278,18 +279,11 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// by the time it mattered — a notice lasts seconds and a death is exactly
   /// the moment somebody wants the last minute back. Thirty lines is about two
   /// minutes of a bad fight.
-  final List<String> _combatLog = [];
+  List<String> get _combatLog => _fight.log;
 
-  void _logCombat(String line) {
-    _combatLog.add(line);
-    if (_combatLog.length > 30) _combatLog.removeAt(0);
-  }
+  void _logCombat(String line) => _fight.say(line);
 
   /// §8: the shelter and the camps, as the save last had them.
-  /// §5.5.6: which enemies the map is currently drawing, so one crossing the
-  /// edge does not flicker in and out with every step.
-  final Set<String> _shownEnemies = {};
-
   /// §8: listened to rather than passed by value — the shelter screen is a
   /// pushed route, and a pushed route handed a list keeps showing the list it
   /// opened with. Starting a build then left the counter at zero until
@@ -304,11 +298,15 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// Not persisted. A Walker is not a place — §6.4 makes them afresh whenever
   /// the game runs, so writing them down would only mean loading yesterday's
   /// fight onto a street the player has already left.
-  CombatSession _combat = const CombatSession(seed: 0);
+  CombatSession get _combat => _fight.session;
+
+  set _combat(CombatSession next) => _fight.session = next;
 
   /// When the enemies were last stepped, so a gap in the tick is a gap in
   /// their walk rather than a jump.
-  DateTime? _combatAt;
+  DateTime? get _combatAt => _fight.steppedAt;
+
+  set _combatAt(DateTime? next) => _fight.steppedAt = next;
 
   /// §5.5.1: the one being aimed at. One target for a firearm, and nothing
   /// takes its place when it dies.
@@ -5067,28 +5065,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final fix = snapshot.displayFix;
     if (fix == null) return null;
 
-    final at = GeoPoint(fix.latitude, fix.longitude);
-    final engaged = [
-      for (final enemy in _combat.near(at))
-        if (enemy.state != EnemyState.idle &&
-            enemy.state != EnemyState.returning)
-          enemy,
-    ];
-    if (engaged.isEmpty) return null;
-
-    var nearest = double.infinity;
-    var sprinting = false;
-    for (final enemy in engaged) {
-      final distance = enemy.position.distanceTo(at);
-      if (distance < nearest) nearest = distance;
-      if (enemy.budget > Duration.zero) sprinting = true;
-    }
-
-    return ThreatReading(
-      count: engaged.length,
-      nearestM: nearest,
-      anySprinting: sprinting,
-    );
+    return _fight.threatAt(GeoPoint(fix.latitude, fix.longitude));
   }
 
   /// §3.6: loot is yellow. An emptied box is not drawn at all — a marker that
@@ -5266,31 +5243,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// So a marker that is already drawn stays drawn a quarter further out.
   /// Coming into view still costs the full approach, which is the half of the
   /// rule §7's Reconnaissance is going to take over.
-  List<Enemy> _visibleEnemies() {
-    final at = _standingAt.value;
-    if (at == null) return const [];
-
-    final shown = <String>{};
-    final visible = <Enemy>[];
-
-    for (final enemy in _combat.enemies) {
-      if (enemy.isDead) continue;
-
-      final distance = enemy.position.distanceTo(at);
-      final limit = _shownEnemies.contains(enemy.id)
-          ? kActiveRadiusM * 1.25
-          : kActiveRadiusM;
-      if (distance > limit) continue;
-
-      shown.add(enemy.id);
-      visible.add(enemy);
-    }
-
-    _shownEnemies
-      ..clear()
-      ..addAll(shown);
-    return visible;
-  }
+  List<Enemy> _visibleEnemies() => _fight.visible(_standingAt.value);
 
   /// §10.3.5: how long each depth takes at this place.
   Map<SearchDepth, Duration> _searchTimesAt(LootBox? box) {
@@ -6032,6 +5985,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   late final CraftController _bench2 = _controllers.adopt(
     CraftController(widget.session.db),
   );
+
+  /// §5.5, §6.1a: everything hostile that is out there.
+  late final CombatController _fight = _controllers.adopt(CombatController());
 
   /// §2.1a, §3.3: the one clock everything with a bar runs on.
   ///

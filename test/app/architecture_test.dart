@@ -150,11 +150,12 @@ void main() {
       //   phase 3 6809   the loot, the ground and the bodies out
       //   phase 4 6767   the bench and the shelters out
       //   phase 5 6711   five clocks became one, and the action state with it
+      //   phase 6 6667   the fight out
       //
       // Lower it when a phase lands. Never raise it.
       expect(
         lines,
-        lessThanOrEqualTo(6715),
+        lessThanOrEqualTo(6670),
         reason: 'main.dart grew; something went in that should have come out',
       );
     });
