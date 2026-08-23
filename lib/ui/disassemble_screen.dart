@@ -33,6 +33,7 @@ class DisassembleScreen extends StatefulWidget {
     required this.catalogue,
     required this.nameOf,
     required this.onStart,
+    required this.yieldsOf,
     this.job,
     this.onStop,
     super.key,
@@ -49,6 +50,13 @@ class DisassembleScreen extends StatefulWidget {
 
   /// §12: every running action is stoppable, from where it is drawn.
   final VoidCallback? onStop;
+
+  /// §18.6: what one piece of a running sitting gives back.
+  ///
+  /// ⚠️ Handed in rather than worked out here. §18.6's share depends on the
+  /// workshop and on skills, and a screen has no business knowing about
+  /// either — the caller already holds the bench.
+  final Map<String, int> Function(SalvageStep step) yieldsOf;
 
   /// Everything worth opening, pack and shelves together, already worked out
   /// by the caller against the same bench the single-item path uses.
@@ -119,6 +127,7 @@ class _DisassembleScreenState extends State<DisassembleScreen> {
       body: SalvageRunningView(
         job: job,
         nameOf: widget.nameOf,
+        yieldsOf: widget.yieldsOf,
         onStop: widget.onStop,
       ),
       bottomNavigationBar: widget.onStop == null
@@ -368,7 +377,7 @@ class _OfferRow extends StatelessWidget {
                     ],
 
                     const SizedBox(height: 4),
-                    _Gives(
+                    SalvageYields(
                       yields: offer.yields,
                       nameOf: nameOf,
                       colours: colours,
@@ -389,45 +398,6 @@ class _OfferRow extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-/// What comes back, said the same way everywhere it is said.
-class _Gives extends StatelessWidget {
-  const _Gives({
-    required this.yields,
-    required this.nameOf,
-    required this.colours,
-  });
-
-  final Map<String, int> yields;
-  final String Function(String itemId) nameOf;
-  final HudColors colours;
-
-  @override
-  Widget build(BuildContext context) {
-    // ⚠️ Sorted by name, so the same sitting always reads the same way. A map
-    // that comes out in insertion order reorders itself the moment somebody
-    // ticks a different box first.
-    final entries = yields.entries.toList()
-      ..sort((a, b) => nameOf(a.key).compareTo(nameOf(b.key)));
-
-    return Wrap(
-      spacing: 12,
-      runSpacing: 2,
-      children: [
-        for (final entry in entries)
-          Text(
-            '${nameOf(entry.key)} ×${entry.value}',
-            style: TextStyle(
-              fontSize: 12,
-              color: colours.data,
-              fontFamily: kDataFont,
-              fontFeatures: const [FontFeature.tabularFigures()],
-            ),
-          ),
-      ],
     );
   }
 }
@@ -483,7 +453,7 @@ class _Total extends StatelessWidget {
               ),
               if (chosen.isNotEmpty) ...[
                 const SizedBox(height: 4),
-                _Gives(
+                SalvageYields(
                   yields: totalYield(chosen),
                   nameOf: nameOf,
                   colours: colours,
@@ -589,7 +559,7 @@ class _SummaryDialog extends StatelessWidget {
               style: TextStyle(fontSize: 12, color: colours.muted),
             ),
             const SizedBox(height: 4),
-            _Gives(
+            SalvageYields(
               yields: totalYield(chosen),
               nameOf: nameOf,
               colours: colours,

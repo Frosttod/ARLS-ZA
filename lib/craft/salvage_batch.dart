@@ -415,6 +415,25 @@ List<SalvageOffer> offersFrom({
   ];
 }
 
+/// §18.6: what one step of a sitting gives back, at this player's share.
+///
+/// The step-shaped face of [salvagePreview]. A running sitting knows its
+/// pieces as [SalvageStep]s — that is what the row on disk holds — and asking
+/// the same question about them should not mean unpacking one at every call
+/// site.
+Map<String, int> yieldOf(
+  SalvageStep step, {
+  required CraftBench bench,
+  required ItemCatalogue catalogue,
+  required RecipeBook book,
+}) => salvagePreview(
+  step.itemId,
+  bench,
+  catalogue: catalogue,
+  book: book,
+  condition: step.condition,
+);
+
 /// Everything a set of offers comes to, added up.
 ///
 /// The number the summary screen shows, and the one the player will count in

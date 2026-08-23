@@ -325,15 +325,32 @@ class _RecipeRow extends StatelessWidget {
     );
   }
 
-  String _said(L10n l10n, CraftRefusal refusal) => switch (refusal) {
-    CraftRefusal.busy => l10n.craftBenchBusy,
-    CraftRefusal.noWorkshop => l10n.craftNeedsWorkshop(recipe.workshopLevel),
-    CraftRefusal.noTool => l10n.craftNoTool,
-    CraftRefusal.noMaterials => l10n.craftNoMaterials,
-    CraftRefusal.nothingBack => l10n.craftNothingBack,
-    CraftRefusal.notAtShelter => l10n.craftNotAtShelter,
-  };
+  String _said(L10n l10n, CraftRefusal refusal) =>
+      craftRefusalText(l10n, refusal, workshopLevel: recipe.workshopLevel);
 }
+
+/// §18.4, §18.6, §12: why the bench will not take this, in the player's words.
+///
+/// ⚠️ **One of these, not two.** There were two — this one and a copy on the
+/// game screen — and they had drifted: the copy answered a missing *workshop*
+/// with "nothing to do it with", which is the wrong sentence. A player reads
+/// that and goes looking for a tool they already have.
+///
+/// [workshopLevel] is what §18.4 asks for, when the caller knows. Without it
+/// the refusal still names the workshop rather than a tool, because that is
+/// what is actually missing.
+String craftRefusalText(
+  L10n l10n,
+  CraftRefusal refusal, {
+  int? workshopLevel,
+}) => switch (refusal) {
+  CraftRefusal.busy => l10n.craftBenchBusy,
+  CraftRefusal.noWorkshop => l10n.craftNeedsWorkshop(workshopLevel ?? 1),
+  CraftRefusal.noTool => l10n.craftNoTool,
+  CraftRefusal.noMaterials => l10n.craftNoMaterials,
+  CraftRefusal.nothingBack => l10n.craftNothingBack,
+  CraftRefusal.notAtShelter => l10n.craftNotAtShelter,
+};
 
 /// One material: what is held against what it takes.
 class _Need extends StatelessWidget {

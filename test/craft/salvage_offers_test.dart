@@ -98,6 +98,45 @@ void main() {
     expect(list.map((offer) => offer.line.uid), ['pack', 'body', 'shelf']);
   });
 
+  group('§18.6: what a step of a running sitting gives back', () {
+    // ⚠️ Reported from a walk: a finished piece in the queue said "Gotowe."
+    // and nothing else, so the one moment a player most wants the answer —
+    // *what did I actually get* — was the moment the screen went quiet.
+    test('a step answers the same as the offer it came from', () {
+      final offer = offers(carried: [rifle('a.1')]).single;
+
+      final fromStep = yieldOf(
+        offer.toStep(),
+        bench: bench,
+        catalogue: catalogue,
+        book: recipes,
+      );
+
+      expect(
+        fromStep,
+        offer.yields,
+        reason: 'the queue and the picker must never disagree',
+      );
+    });
+
+    test('and how worn it was travels with the step (§18.6)', () {
+      // The piece is gone by the time this is asked, so the condition has to
+      // come off the row rather than off an item nobody holds any more.
+      final ruined = yieldOf(
+        const SalvageStep(
+          itemId: 'weapon_rifle_545',
+          condition: 1,
+          takes: Duration(minutes: 5),
+        ),
+        bench: bench,
+        catalogue: catalogue,
+        book: recipes,
+      );
+
+      expect(ruined, isEmpty, reason: 'a wreck gives nothing back');
+    });
+  });
+
   group('what never reaches the list', () {
     test('a piece with no name of its own (§11.1)', () {
       // A sitting is written down and read back after a restart, and a piece

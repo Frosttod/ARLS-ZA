@@ -38,12 +38,21 @@ class SalvageRunningView extends StatefulWidget {
   const SalvageRunningView({
     required this.job,
     required this.nameOf,
+    required this.yieldsOf,
     required this.onStop,
     super.key,
   });
 
   final CraftJob job;
   final String Function(String itemId) nameOf;
+
+  /// §18.6: what a piece of the sitting gives back.
+  ///
+  /// ⚠️ Handed in rather than worked out here, for the same reason [nameOf]
+  /// is: §18.6's share depends on the workshop and on skills, and this view
+  /// has no business knowing about either. The caller already holds the bench.
+  final Map<String, int> Function(SalvageStep step) yieldsOf;
+
   final VoidCallback? onStop;
 
   @override
@@ -79,6 +88,8 @@ class _SalvageRunningViewState extends State<SalvageRunningView>
             index: index,
             row: row,
             name: widget.nameOf(row.step.itemId),
+            yields: widget.yieldsOf(row.step),
+            nameOf: widget.nameOf,
             colours: colours,
             l10n: l10n,
           ),
@@ -106,6 +117,8 @@ class _SittingRow extends StatelessWidget {
     required this.index,
     required this.row,
     required this.name,
+    required this.yields,
+    required this.nameOf,
     required this.colours,
     required this.l10n,
   });
@@ -113,6 +126,11 @@ class _SittingRow extends StatelessWidget {
   final int index;
   final SalvageProgress row;
   final String name;
+
+  /// §18.6: what this piece gives — or, once it is apart, what it gave.
+  final Map<String, int> yields;
+
+  final String Function(String itemId) nameOf;
   final HudColors colours;
   final L10n l10n;
 
@@ -172,6 +190,22 @@ class _SittingRow extends StatelessWidget {
               color: tint,
             ),
 
+            // ⚠️ §18.6: what came out of it, and the same line on every row.
+            //
+            // Reported from a walk: a finished piece said "Gotowe." and
+            // nothing else, so the one moment a player most wants the answer —
+            // *what did I actually get* — was the one moment the screen went
+            // quiet about it.
+            //
+            // The same line on the rows still waiting, deliberately. Two rules
+            // would be worse than one: on a finished piece it reads as what it
+            // gave, on the others as what it will give, and a player scanning
+            // the queue is asking the same question of all of them.
+            if (yields.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              SalvageYields(yields: yields, nameOf: nameOf, colours: colours),
+            ],
+
             // ⚠️ A waiting row says when *its own turn begins*, counted from
             // now — not how far the sitting as a whole has got. Measured from
             // the start it read as an absurd number and was reported as one:
@@ -188,6 +222,46 @@ class _SittingRow extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// What comes back, said the same way everywhere it is said.
+class SalvageYields extends StatelessWidget {
+  const SalvageYields({
+    required this.yields,
+    required this.nameOf,
+    required this.colours,
+    super.key,
+  });
+
+  final Map<String, int> yields;
+  final String Function(String itemId) nameOf;
+  final HudColors colours;
+
+  @override
+  Widget build(BuildContext context) {
+    // ⚠️ Sorted by name, so the same sitting always reads the same way. A map
+    // that comes out in insertion order reorders itself the moment somebody
+    // ticks a different box first.
+    final entries = yields.entries.toList()
+      ..sort((a, b) => nameOf(a.key).compareTo(nameOf(b.key)));
+
+    return Wrap(
+      spacing: 12,
+      runSpacing: 2,
+      children: [
+        for (final entry in entries)
+          Text(
+            '${nameOf(entry.key)} ×${entry.value}',
+            style: TextStyle(
+              fontSize: 12,
+              color: colours.data,
+              fontFamily: kDataFont,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+      ],
     );
   }
 }

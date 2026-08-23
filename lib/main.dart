@@ -4153,6 +4153,14 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
           // the same place.
           job: _craftJob,
           onStop: () => unawaited(_cancelCraft()),
+          // §18.6: at this player's share. Asked here because this is where
+          // the bench is.
+          yieldsOf: (step) => yieldOf(
+            step,
+            bench: _bench(),
+            catalogue: catalogue,
+            book: _recipes,
+          ),
           onStart: (picked) {
             Navigator.of(context).pop();
             unawaited(_startSitting(picked));
@@ -4308,17 +4316,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     return definition == null ? itemId : _nameOfItem(definition);
   }
 
-  String _craftRefusal(CraftRefusal refusal) {
-    final l10n = L10n.of(context);
-    return switch (refusal) {
-      CraftRefusal.busy => l10n.craftBenchBusy,
-      CraftRefusal.noWorkshop => l10n.craftNoTool,
-      CraftRefusal.noTool => l10n.craftNoTool,
-      CraftRefusal.noMaterials => l10n.craftNoMaterials,
-      CraftRefusal.nothingBack => l10n.craftNothingBack,
-      CraftRefusal.notAtShelter => l10n.craftNotAtShelter,
-    };
-  }
+  String _craftRefusal(CraftRefusal refusal) =>
+      craftRefusalText(L10n.of(context), refusal);
 
   /// §2.1a.3: reads the bench, and pays out anything that finished while the
   /// app was closed.
