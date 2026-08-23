@@ -237,6 +237,44 @@ pot [ml/h] = 400 + 200 × (MET − 1) + 50 × max(0, T_otoczenia − 20)
 
 gdzie `modyfikator_odzieży` = suma izolacji noszonych elementów × 100 ml/h przy T > 22°C. To domyka liczbowo przypadek „kurtka zimowa w 30 stopniach".
 
+#### 2.3.1. Głód długoterminowy — masa ciała 📐
+
+⚠️ **Zapas kaloryczny to doba, a nie odporność na głód.** Reguła „0% przez > 24 h" dotyczy *zapasu*, nie organizmu. Postać bez jedzenia stoi na zerze od drugiego poranka klęski głodu aż do jej końca — czytanie tego jako śmierci czyniło głód groźniejszym od pragnienia, wbrew §2.3.
+
+Długą osią jest **masa ciała**. Przestaje być stałą i staje się stanem.
+
+masa [kg] += (nadwyżka × 0,75 − niedobór) / 7000
+
+7000 kcal/kg, nie 7700 z tabeli czystego tłuszczu: organizm pod deficytem spala mniej więcej trzy części tłuszczu na jedną część tkanki chudej, a ta jest w większości wodą. Magazynowanie jest stratne (0,75) — tydzień objadania się nie cofa tygodnia głodu.
+
+| Ubytek masy startowej | Efekt |
+| :---- | :---- |
+| 0–5% | brak |
+| 5–15% | +15% czasu wszystkich czynności |
+| 15–30% | +40% czasu, +2 MOA |
+| > 30% | śmierć |
+
+**Przykład — 80 kg, głodówka totalna, bezruch:**
+
+| Dzień | Masa | Ubytek |
+| :---- | :---- | :---- |
+| 7 | 77,6 kg | 3,0% |
+| 14 | 75,2 kg | 6,0% |
+| 42 | 66,1 kg | 17,4% |
+| 75 | 55,9 kg | 30,1% — koniec |
+
+W marszu szybciej. Literatura kliniczna daje 6–10 tygodni głodówki totalnej.
+
+⚠️ **Reszta ciała idzie za masą (§1.3), bez żadnego dodatkowego wzoru.** Limity udźwigu (§18.1a), zapotrzebowanie Mifflina–St Jeora, dobowa woda 35 ml/kg i objętość krwi wg Nadlera są wyprowadzane z masy — więc lżejsze ciało pali mniej i adaptacja metaboliczna wychodzi za darmo. Objętość krwi skaluje się **proporcjonalnie razem z aktualnym ubytkiem**, żeby samo chudnięcie nie wrzuciło postaci w klasę wstrząsu bez rany.
+
+⚠️ Nadwyżka ponad dobowy zapas **nie jest wyrzucana** — idzie w ciało. Bez tego objedzenie się przed wyprawą nie dawało nic.
+
+⚠️ Przy zamkniętej aplikacji nic nie schodzi z ciała (§2.1.1). Podłoga offline istnieje po to, żeby telefon w szufladzie nikogo nie zabił.
+
+**Asymetria woda / jedzenie nie jest projektowana — wypada ze stałych.** Zapas to doba jednego i drugiego, ale progi pragnienia to ułamki masy ciała, a ciało niesie miesiące tłuszczu i około trzech dób wody. Pragnienie przebiega całą swoją drogę, zanim głód zdąży się zacząć: ~3 doby wobec ~10 tygodni.
+
+⚠️ **Pragnienie nie ma osi długoterminowej i to jest właściwa odpowiedź.** Odwodnienie nie ma pamięci — napijesz się i jesteś zdrowy. Kontrast z jedzeniem jest całym sensem tej pary. Dodane zostało jedynie `kCriticalThirstGrace`: 12 h w stanie krytycznym (10% masy ciała) kończy sprawę, bo sama reguła „48 h w warunkach wysiłku" czyni nieśmiertelnym kogoś, kto siedzi w schronie.
+
 ### 2.4. Tętno 📐
 
 %intensywności = (MET − 1) / (MET_max − 1), MET_max ≈ 14
@@ -314,6 +352,29 @@ Dług senny liczony wobec zapotrzebowania z §1.3:
 
 Moduł Salon (§8.4) podnosi tempo regeneracji, co realnie oznacza: **mniej godzin snu na pokrycie tego samego zapotrzebowania, czyli więcej czasu na lekturę i budowę.** To czyni Salon modułem konkurencyjnym wobec Magazynu, a nie „miłym dodatkiem".
 
+#### 2.5.5. Deprywacja przewlekła — drugi zegar
+
+⚠️ **Dług z §2.5.4 mierzy ostatnią noc, nie ostatni miesiąc.** Ma sufit doby, kasuje się w dobę, a ponieważ narasta wyłącznie w czasie czuwania — na sześciogodzinnych nocach wychodzi na zero i nie drgnie. Trzy tygodnie niedosypiania czytały się jak jeden zarwany wieczór.
+
+Drugi zegar liczy się wobec **zegara ściennego**, czyli tak, jak mówi formuła §2.5.3: doba potrzebuje ośmiu godzin niezależnie od tego, co się w niej robiło.
+
+obciążenie += 1 − S/8    (S = godziny snu w dobie)
+
+| Sytuacja | Obciążenie | Efekt |
+| :---- | :---- | :---- |
+| jedna noc krótsza o 2 h | 0,25 | brak |
+| cztery noce po 4 h | 2,0 | −20% tempa nauki, tętno wraca o 35% wolniej |
+| dwa tygodnie po 6 h | 3,5 | −40% nauki, +1 MOA, gojenie −30% |
+| dwa miesiące po 6 h | 10 (sufit) | +2 MOA, gojenie −50%, mikrosny |
+
+⚠️ **Kary są celowo te, których pasek snu nie pokazuje.** Tak działa przewlekłe niedosypianie: subiektywna senność się wypłaszcza, a wydolność dalej spada. Po jednej dobrej nocy pasek jest pełny, a gojenie, tętno i ręce dalej są złe. To wymaga własnej notatki stanu (§12) — kara bez widocznego powodu czyta się jako błąd, choćby najprawdziwsza.
+
+⚠️ **Spłaca tylko noc dłuższa niż potrzeba.** Regeneracja po przewlekłej deprywacji wymaga snu nadmiarowego, nie wystarczającego — i to sadza tę oś dokładnie na sezonowości §2.5.3, bez jednego modyfikatora:
+
+- **Poznań, 21 czerwca (7,4 h nocy):** obciążenie narasta niezależnie od tego, jak ostrożnie gra gracz.
+- **Poznań, 21 grudnia (16,6 h nocy):** cztery takie noce kasują całe lato.
+- **Salon (§8.4)** staje się jedyną rzeczą kupującą regenerację poza sezonem — czyli tym, czym §2.5.4 go nazywa.
+
 ### 2.6. Model obrażeń i krwawienia
 
 ⚠️ **Blokuje sekcje 5 i 6** — bez przelicznika trafienia na ubytek krwi walka jest niepoliczalna.
@@ -354,6 +415,8 @@ typ_krwawienia = f(lokalizacja, energia)
 ### 2.7. Czego świadomie NIE modelujemy
 
 Żeby zakres nie eksplodował: brak złamań, infekcji, chorób, temperatury ciała jako osobnego parametru, zatruć pokarmowych i zdrowia psychicznego. Do rozważenia po MVP.
+
+⚠️ **Masa ciała jest wyjątkiem i nie jest złamaniem tej zasady.** To nie nowy parametr obok istniejących — to ta sama liczba z §1.3, która przestała być stała. Wszystko, co z niej wynikało (krew, BMR, woda, udźwig), wynika z niej dalej. Bez tego §2.3 nie miało czym mierzyć głodu dłuższego niż doba.
 
 ---
 
