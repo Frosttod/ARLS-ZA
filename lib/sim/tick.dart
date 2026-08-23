@@ -205,6 +205,8 @@ class SimState {
     required this.rngCursor,
     this.pendingKcal = 0,
     this.pendingWaterMl = 0,
+    this.dryStreakSeconds = 0,
+    this.starvedStreakSeconds = 0,
   });
 
   /// The instant the simulation has been advanced to. Everything is derived
@@ -232,7 +234,37 @@ class SimState {
   final double pendingKcal;
   final double pendingWaterMl;
 
+  /// §2.3: how long since any water at all reached the body.
+  ///
+  /// ⚠️ **The clock §2.3's lethal rule needs, and it did not exist.**
+  /// `thirstState` has taken a `timeWithoutWater` since it was written and
+  /// every call site left it at the default of zero, so `lethal` was always
+  /// false and `DeathCause.thirst` was an enumerator nothing could reach. The
+  /// game let a character go for ever without drinking.
+  ///
+  /// Reset by a swallow rather than by a full reserve, which is what "brak
+  /// wody" says and is also the honest physiology: a mouthful resets the
+  /// clock on dying of thirst and does nothing at all to the deficit, so the
+  /// two thresholds go on climbing while the countdown restarts.
+  final int dryStreakSeconds;
+
+  /// §2.3: how long the calorie reserve has been at nought.
+  ///
+  /// The same defect as [dryStreakSeconds], one paragraph up: "0% przez > 24 h
+  /// → postępująca utrata przytomności" was a rule whose clock nobody wound.
+  ///
+  /// ⚠️ Measured on the *reserve*, not on the last meal — that is what §2.3
+  /// says here, and it is the difference between the two halves of §2.3. A
+  /// person with an empty stomach is not a person with nothing left.
+  final int starvedStreakSeconds;
+
   Duration get sleepDebt => Duration(seconds: sleepDebtSeconds);
+
+  /// §2.3: how long since the last swallow of water.
+  Duration get dryFor => Duration(seconds: dryStreakSeconds);
+
+  /// §2.3: how long the reserve has been empty.
+  Duration get starvedFor => Duration(seconds: starvedStreakSeconds);
 
   SimState copyWith({
     DateTime? lastUpdate,
@@ -245,6 +277,8 @@ class SimState {
     int? rngCursor,
     double? pendingKcal,
     double? pendingWaterMl,
+    int? dryStreakSeconds,
+    int? starvedStreakSeconds,
   }) => SimState(
     lastUpdate: lastUpdate ?? this.lastUpdate,
     bloodMl: bloodMl ?? this.bloodMl,
@@ -256,6 +290,8 @@ class SimState {
     rngCursor: rngCursor ?? this.rngCursor,
     pendingKcal: pendingKcal ?? this.pendingKcal,
     pendingWaterMl: pendingWaterMl ?? this.pendingWaterMl,
+    dryStreakSeconds: dryStreakSeconds ?? this.dryStreakSeconds,
+    starvedStreakSeconds: starvedStreakSeconds ?? this.starvedStreakSeconds,
   );
 
   Map<String, Object?> toJson() => {
@@ -269,6 +305,8 @@ class SimState {
     'rngCursor': rngCursor,
     'pendingKcal': pendingKcal,
     'pendingWaterMl': pendingWaterMl,
+    'dryStreakSeconds': dryStreakSeconds,
+    'starvedStreakSeconds': starvedStreakSeconds,
   };
 
   factory SimState.fromJson(Map<String, Object?> json) => SimState(
@@ -282,6 +320,8 @@ class SimState {
     rngCursor: (json['rngCursor'] as num?)?.toInt() ?? 0,
     pendingKcal: (json['pendingKcal'] as num?)?.toDouble() ?? 0,
     pendingWaterMl: (json['pendingWaterMl'] as num?)?.toDouble() ?? 0,
+    dryStreakSeconds: (json['dryStreakSeconds'] as num?)?.toInt() ?? 0,
+    starvedStreakSeconds: (json['starvedStreakSeconds'] as num?)?.toInt() ?? 0,
   );
 
   /// Starting state for a freshly created character.
@@ -309,6 +349,8 @@ class SimState {
       _close(pendingWaterMl, other.pendingWaterMl) &&
       _close(heartRateBpm, other.heartRateBpm) &&
       sleepDebtSeconds == other.sleepDebtSeconds &&
+      dryStreakSeconds == other.dryStreakSeconds &&
+      starvedStreakSeconds == other.starvedStreakSeconds &&
       zone == other.zone &&
       rngCursor == other.rngCursor;
 
@@ -340,7 +382,9 @@ class SimStatus {
 
   /// Multiplier on how long an action takes (§2.3, §2.5.4).
   double get actionTimeMultiplier =>
-      hunger.actionTimeMultiplier * sleep.actionTimeMultiplier;
+      hunger.actionTimeMultiplier *
+      thirst.actionTimeMultiplier *
+      sleep.actionTimeMultiplier;
 
   /// The same figure the way a clock wants it: how much of a second of work a
   /// second of wall time is worth (§2.3, §2.5.4).
@@ -359,19 +403,29 @@ class SimStatus {
 }
 
 /// Interprets a state through the tables of §2.
+///
+/// ⚠️ [underExertion] is §2.3's own qualifier on the only lethal rule it gives
+/// thirst — "brak wody > 48 h **w warunkach wysiłku**". Only the caller knows
+/// whether anybody is walking, so it comes in from outside; the default is the
+/// merciful one, because a status asked about with no context should not kill
+/// anybody.
 SimStatus statusOf({
   required SimState state,
   required SimConstants constants,
+  bool underExertion = false,
 }) => SimStatus(
   blood: bloodState(volumeMl: state.bloodMl, maxMl: constants.bloodMaxMl),
   hunger: hungerState(
     caloriesKcal: state.caloriesKcal,
     dailyKcal: constants.caloriesDailyKcal,
+    timeAtZero: state.starvedFor,
   ),
   thirst: thirstState(
     waterMl: state.waterMl,
     dailyMl: constants.waterDailyMl,
     bodyMassKg: constants.bodyMassKg,
+    timeWithoutWater: state.dryFor,
+    underExertion: underExertion,
   ),
   sleep: sleepState(state.sleepDebt),
   heartRate: heartRatePenalty(
@@ -663,6 +717,23 @@ TickOutcome advance({
     water = math.max(-_lethalWaterDeficitMl(constants), water);
   }
 
+  // ---- the two clocks §2.3's lethal rules need (§2.3) --------------------
+  //
+  // ⚠️ Both rules were written and neither could ever fire. `hungerState` and
+  // `thirstState` have taken `timeAtZero` and `timeWithoutWater` since they
+  // were written, `statusOf` passed neither, and `SimState` had nowhere to
+  // keep them — so `losingConsciousness` and `lethal` were permanently false
+  // and two of the three `DeathCause` values were unreachable. A character
+  // could go without food or water for ever.
+  //
+  // Reset by a *swallow* for water and by the *reserve* for food, which is
+  // exactly how §2.3 words its two halves: "brak wody > 48 h" is about
+  // drinking, "0% przez > 24 h" is about what is left. A mouthful therefore
+  // restarts the countdown to dying of thirst and does nothing whatever to the
+  // deficit, which goes on climbing towards the thresholds underneath.
+  final dryStreak = waterAbsorbed > 0 ? 0 : state.dryStreakSeconds + seconds;
+  final starvedStreak = calories > 0 ? 0 : state.starvedStreakSeconds + seconds;
+
   return TickOutcome(
     state: state.copyWith(
       lastUpdate: state.lastUpdate.add(step),
@@ -671,6 +742,8 @@ TickOutcome advance({
       bloodMl: blood,
       heartRateBpm: heartRate,
       sleepDebtSeconds: sleepDebt,
+      dryStreakSeconds: dryStreak,
+      starvedStreakSeconds: starvedStreak,
       pendingKcal: state.pendingKcal - kcalAbsorbed,
       pendingWaterMl: state.pendingWaterMl - waterAbsorbed,
     ),

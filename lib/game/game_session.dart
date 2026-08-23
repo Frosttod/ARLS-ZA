@@ -119,6 +119,8 @@ class GameSessionFactory {
         pendingWaterMl: vitals.pendingWaterMl,
         heartRateBpm: vitals.heartRateBpm,
         sleepDebtSeconds: vitals.sleepDebtSeconds,
+        dryStreakSeconds: vitals.dryStreakSeconds,
+        starvedStreakSeconds: vitals.starvedStreakSeconds,
         zone: MetabolicZone.fromWire(vitals.zone),
         rngCursor: 0,
       ),

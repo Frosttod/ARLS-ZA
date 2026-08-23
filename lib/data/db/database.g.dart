@@ -1264,6 +1264,29 @@ class $VitalsTable extends Vitals with TableInfo<$VitalsTable, Vital> {
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _dryStreakSecondsMeta = const VerificationMeta(
+    'dryStreakSeconds',
+  );
+  @override
+  late final GeneratedColumn<int> dryStreakSeconds = GeneratedColumn<int>(
+    'dry_streak_seconds',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _starvedStreakSecondsMeta =
+      const VerificationMeta('starvedStreakSeconds');
+  @override
+  late final GeneratedColumn<int> starvedStreakSeconds = GeneratedColumn<int>(
+    'starved_streak_seconds',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     profileId,
@@ -1290,6 +1313,8 @@ class $VitalsTable extends Vitals with TableInfo<$VitalsTable, Vital> {
     carriedKg,
     pendingKcal,
     pendingWaterMl,
+    dryStreakSeconds,
+    starvedStreakSeconds,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1481,6 +1506,24 @@ class $VitalsTable extends Vitals with TableInfo<$VitalsTable, Vital> {
         ),
       );
     }
+    if (data.containsKey('dry_streak_seconds')) {
+      context.handle(
+        _dryStreakSecondsMeta,
+        dryStreakSeconds.isAcceptableOrUnknown(
+          data['dry_streak_seconds']!,
+          _dryStreakSecondsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('starved_streak_seconds')) {
+      context.handle(
+        _starvedStreakSecondsMeta,
+        starvedStreakSeconds.isAcceptableOrUnknown(
+          data['starved_streak_seconds']!,
+          _starvedStreakSecondsMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -1586,6 +1629,14 @@ class $VitalsTable extends Vitals with TableInfo<$VitalsTable, Vital> {
         DriftSqlType.double,
         data['${effectivePrefix}pending_water_ml'],
       )!,
+      dryStreakSeconds: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}dry_streak_seconds'],
+      )!,
+      starvedStreakSeconds: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}starved_streak_seconds'],
+      )!,
     );
   }
 
@@ -1675,6 +1726,18 @@ class Vital extends DataClass implements Insertable<Vital> {
   /// watch the bar instead.
   final double pendingKcal;
   final double pendingWaterMl;
+
+  /// §2.3: seconds since any water at all reached the body.
+  ///
+  /// Feeds "brak wody > 48 h w warunkach wysiłku = śmierć". Reset by a
+  /// swallow, not by a full reserve.
+  final int dryStreakSeconds;
+
+  /// §2.3: seconds the calorie reserve has been at nought.
+  ///
+  /// Feeds "0% przez > 24 h → postępująca utrata przytomności". Measured on
+  /// the reserve rather than on the last meal, which is what that line says.
+  final int starvedStreakSeconds;
   const Vital({
     required this.profileId,
     required this.lastUpdate,
@@ -1700,6 +1763,8 @@ class Vital extends DataClass implements Insertable<Vital> {
     required this.carriedKg,
     required this.pendingKcal,
     required this.pendingWaterMl,
+    required this.dryStreakSeconds,
+    required this.starvedStreakSeconds,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1746,6 +1811,8 @@ class Vital extends DataClass implements Insertable<Vital> {
     map['carried_kg'] = Variable<double>(carriedKg);
     map['pending_kcal'] = Variable<double>(pendingKcal);
     map['pending_water_ml'] = Variable<double>(pendingWaterMl);
+    map['dry_streak_seconds'] = Variable<int>(dryStreakSeconds);
+    map['starved_streak_seconds'] = Variable<int>(starvedStreakSeconds);
     return map;
   }
 
@@ -1793,6 +1860,8 @@ class Vital extends DataClass implements Insertable<Vital> {
       carriedKg: Value(carriedKg),
       pendingKcal: Value(pendingKcal),
       pendingWaterMl: Value(pendingWaterMl),
+      dryStreakSeconds: Value(dryStreakSeconds),
+      starvedStreakSeconds: Value(starvedStreakSeconds),
     );
   }
 
@@ -1826,6 +1895,10 @@ class Vital extends DataClass implements Insertable<Vital> {
       carriedKg: serializer.fromJson<double>(json['carriedKg']),
       pendingKcal: serializer.fromJson<double>(json['pendingKcal']),
       pendingWaterMl: serializer.fromJson<double>(json['pendingWaterMl']),
+      dryStreakSeconds: serializer.fromJson<int>(json['dryStreakSeconds']),
+      starvedStreakSeconds: serializer.fromJson<int>(
+        json['starvedStreakSeconds'],
+      ),
     );
   }
   @override
@@ -1856,6 +1929,8 @@ class Vital extends DataClass implements Insertable<Vital> {
       'carriedKg': serializer.toJson<double>(carriedKg),
       'pendingKcal': serializer.toJson<double>(pendingKcal),
       'pendingWaterMl': serializer.toJson<double>(pendingWaterMl),
+      'dryStreakSeconds': serializer.toJson<int>(dryStreakSeconds),
+      'starvedStreakSeconds': serializer.toJson<int>(starvedStreakSeconds),
     };
   }
 
@@ -1884,6 +1959,8 @@ class Vital extends DataClass implements Insertable<Vital> {
     double? carriedKg,
     double? pendingKcal,
     double? pendingWaterMl,
+    int? dryStreakSeconds,
+    int? starvedStreakSeconds,
   }) => Vital(
     profileId: profileId ?? this.profileId,
     lastUpdate: lastUpdate ?? this.lastUpdate,
@@ -1913,6 +1990,8 @@ class Vital extends DataClass implements Insertable<Vital> {
     carriedKg: carriedKg ?? this.carriedKg,
     pendingKcal: pendingKcal ?? this.pendingKcal,
     pendingWaterMl: pendingWaterMl ?? this.pendingWaterMl,
+    dryStreakSeconds: dryStreakSeconds ?? this.dryStreakSeconds,
+    starvedStreakSeconds: starvedStreakSeconds ?? this.starvedStreakSeconds,
   );
   Vital copyWithCompanion(VitalsCompanion data) {
     return Vital(
@@ -1962,6 +2041,12 @@ class Vital extends DataClass implements Insertable<Vital> {
       pendingWaterMl: data.pendingWaterMl.present
           ? data.pendingWaterMl.value
           : this.pendingWaterMl,
+      dryStreakSeconds: data.dryStreakSeconds.present
+          ? data.dryStreakSeconds.value
+          : this.dryStreakSeconds,
+      starvedStreakSeconds: data.starvedStreakSeconds.present
+          ? data.starvedStreakSeconds.value
+          : this.starvedStreakSeconds,
     );
   }
 
@@ -1991,7 +2076,9 @@ class Vital extends DataClass implements Insertable<Vital> {
           ..write('speedKmh: $speedKmh, ')
           ..write('carriedKg: $carriedKg, ')
           ..write('pendingKcal: $pendingKcal, ')
-          ..write('pendingWaterMl: $pendingWaterMl')
+          ..write('pendingWaterMl: $pendingWaterMl, ')
+          ..write('dryStreakSeconds: $dryStreakSeconds, ')
+          ..write('starvedStreakSeconds: $starvedStreakSeconds')
           ..write(')'))
         .toString();
   }
@@ -2022,6 +2109,8 @@ class Vital extends DataClass implements Insertable<Vital> {
     carriedKg,
     pendingKcal,
     pendingWaterMl,
+    dryStreakSeconds,
+    starvedStreakSeconds,
   ]);
   @override
   bool operator ==(Object other) =>
@@ -2050,7 +2139,9 @@ class Vital extends DataClass implements Insertable<Vital> {
           other.speedKmh == this.speedKmh &&
           other.carriedKg == this.carriedKg &&
           other.pendingKcal == this.pendingKcal &&
-          other.pendingWaterMl == this.pendingWaterMl);
+          other.pendingWaterMl == this.pendingWaterMl &&
+          other.dryStreakSeconds == this.dryStreakSeconds &&
+          other.starvedStreakSeconds == this.starvedStreakSeconds);
 }
 
 class VitalsCompanion extends UpdateCompanion<Vital> {
@@ -2078,6 +2169,8 @@ class VitalsCompanion extends UpdateCompanion<Vital> {
   final Value<double> carriedKg;
   final Value<double> pendingKcal;
   final Value<double> pendingWaterMl;
+  final Value<int> dryStreakSeconds;
+  final Value<int> starvedStreakSeconds;
   const VitalsCompanion({
     this.profileId = const Value.absent(),
     this.lastUpdate = const Value.absent(),
@@ -2103,6 +2196,8 @@ class VitalsCompanion extends UpdateCompanion<Vital> {
     this.carriedKg = const Value.absent(),
     this.pendingKcal = const Value.absent(),
     this.pendingWaterMl = const Value.absent(),
+    this.dryStreakSeconds = const Value.absent(),
+    this.starvedStreakSeconds = const Value.absent(),
   });
   VitalsCompanion.insert({
     this.profileId = const Value.absent(),
@@ -2129,6 +2224,8 @@ class VitalsCompanion extends UpdateCompanion<Vital> {
     this.carriedKg = const Value.absent(),
     this.pendingKcal = const Value.absent(),
     this.pendingWaterMl = const Value.absent(),
+    this.dryStreakSeconds = const Value.absent(),
+    this.starvedStreakSeconds = const Value.absent(),
   }) : lastUpdate = Value(lastUpdate),
        bloodMl = Value(bloodMl),
        waterMl = Value(waterMl),
@@ -2159,6 +2256,8 @@ class VitalsCompanion extends UpdateCompanion<Vital> {
     Expression<double>? carriedKg,
     Expression<double>? pendingKcal,
     Expression<double>? pendingWaterMl,
+    Expression<int>? dryStreakSeconds,
+    Expression<int>? starvedStreakSeconds,
   }) {
     return RawValuesInsertable({
       if (profileId != null) 'profile_id': profileId,
@@ -2185,6 +2284,9 @@ class VitalsCompanion extends UpdateCompanion<Vital> {
       if (carriedKg != null) 'carried_kg': carriedKg,
       if (pendingKcal != null) 'pending_kcal': pendingKcal,
       if (pendingWaterMl != null) 'pending_water_ml': pendingWaterMl,
+      if (dryStreakSeconds != null) 'dry_streak_seconds': dryStreakSeconds,
+      if (starvedStreakSeconds != null)
+        'starved_streak_seconds': starvedStreakSeconds,
     });
   }
 
@@ -2213,6 +2315,8 @@ class VitalsCompanion extends UpdateCompanion<Vital> {
     Value<double>? carriedKg,
     Value<double>? pendingKcal,
     Value<double>? pendingWaterMl,
+    Value<int>? dryStreakSeconds,
+    Value<int>? starvedStreakSeconds,
   }) {
     return VitalsCompanion(
       profileId: profileId ?? this.profileId,
@@ -2239,6 +2343,8 @@ class VitalsCompanion extends UpdateCompanion<Vital> {
       carriedKg: carriedKg ?? this.carriedKg,
       pendingKcal: pendingKcal ?? this.pendingKcal,
       pendingWaterMl: pendingWaterMl ?? this.pendingWaterMl,
+      dryStreakSeconds: dryStreakSeconds ?? this.dryStreakSeconds,
+      starvedStreakSeconds: starvedStreakSeconds ?? this.starvedStreakSeconds,
     );
   }
 
@@ -2317,6 +2423,12 @@ class VitalsCompanion extends UpdateCompanion<Vital> {
     if (pendingWaterMl.present) {
       map['pending_water_ml'] = Variable<double>(pendingWaterMl.value);
     }
+    if (dryStreakSeconds.present) {
+      map['dry_streak_seconds'] = Variable<int>(dryStreakSeconds.value);
+    }
+    if (starvedStreakSeconds.present) {
+      map['starved_streak_seconds'] = Variable<int>(starvedStreakSeconds.value);
+    }
     return map;
   }
 
@@ -2346,7 +2458,9 @@ class VitalsCompanion extends UpdateCompanion<Vital> {
           ..write('speedKmh: $speedKmh, ')
           ..write('carriedKg: $carriedKg, ')
           ..write('pendingKcal: $pendingKcal, ')
-          ..write('pendingWaterMl: $pendingWaterMl')
+          ..write('pendingWaterMl: $pendingWaterMl, ')
+          ..write('dryStreakSeconds: $dryStreakSeconds, ')
+          ..write('starvedStreakSeconds: $starvedStreakSeconds')
           ..write(')'))
         .toString();
   }
@@ -10599,6 +10713,8 @@ typedef $$VitalsTableCreateCompanionBuilder =
       Value<double> carriedKg,
       Value<double> pendingKcal,
       Value<double> pendingWaterMl,
+      Value<int> dryStreakSeconds,
+      Value<int> starvedStreakSeconds,
     });
 typedef $$VitalsTableUpdateCompanionBuilder =
     VitalsCompanion Function({
@@ -10626,6 +10742,8 @@ typedef $$VitalsTableUpdateCompanionBuilder =
       Value<double> carriedKg,
       Value<double> pendingKcal,
       Value<double> pendingWaterMl,
+      Value<int> dryStreakSeconds,
+      Value<int> starvedStreakSeconds,
     });
 
 class $$VitalsTableFilterComposer
@@ -10754,6 +10872,16 @@ class $$VitalsTableFilterComposer
 
   ColumnFilters<double> get pendingWaterMl => $composableBuilder(
     column: $table.pendingWaterMl,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get dryStreakSeconds => $composableBuilder(
+    column: $table.dryStreakSeconds,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get starvedStreakSeconds => $composableBuilder(
+    column: $table.starvedStreakSeconds,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -10886,6 +11014,16 @@ class $$VitalsTableOrderingComposer
     column: $table.pendingWaterMl,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<int> get dryStreakSeconds => $composableBuilder(
+    column: $table.dryStreakSeconds,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get starvedStreakSeconds => $composableBuilder(
+    column: $table.starvedStreakSeconds,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$VitalsTableAnnotationComposer
@@ -10990,6 +11128,16 @@ class $$VitalsTableAnnotationComposer
     column: $table.pendingWaterMl,
     builder: (column) => column,
   );
+
+  GeneratedColumn<int> get dryStreakSeconds => $composableBuilder(
+    column: $table.dryStreakSeconds,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get starvedStreakSeconds => $composableBuilder(
+    column: $table.starvedStreakSeconds,
+    builder: (column) => column,
+  );
 }
 
 class $$VitalsTableTableManager
@@ -11044,6 +11192,8 @@ class $$VitalsTableTableManager
                 Value<double> carriedKg = const Value.absent(),
                 Value<double> pendingKcal = const Value.absent(),
                 Value<double> pendingWaterMl = const Value.absent(),
+                Value<int> dryStreakSeconds = const Value.absent(),
+                Value<int> starvedStreakSeconds = const Value.absent(),
               }) => VitalsCompanion(
                 profileId: profileId,
                 lastUpdate: lastUpdate,
@@ -11069,6 +11219,8 @@ class $$VitalsTableTableManager
                 carriedKg: carriedKg,
                 pendingKcal: pendingKcal,
                 pendingWaterMl: pendingWaterMl,
+                dryStreakSeconds: dryStreakSeconds,
+                starvedStreakSeconds: starvedStreakSeconds,
               ),
           createCompanionCallback:
               ({
@@ -11096,6 +11248,8 @@ class $$VitalsTableTableManager
                 Value<double> carriedKg = const Value.absent(),
                 Value<double> pendingKcal = const Value.absent(),
                 Value<double> pendingWaterMl = const Value.absent(),
+                Value<int> dryStreakSeconds = const Value.absent(),
+                Value<int> starvedStreakSeconds = const Value.absent(),
               }) => VitalsCompanion.insert(
                 profileId: profileId,
                 lastUpdate: lastUpdate,
@@ -11121,6 +11275,8 @@ class $$VitalsTableTableManager
                 carriedKg: carriedKg,
                 pendingKcal: pendingKcal,
                 pendingWaterMl: pendingWaterMl,
+                dryStreakSeconds: dryStreakSeconds,
+                starvedStreakSeconds: starvedStreakSeconds,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

@@ -29,7 +29,7 @@ import 'tables.dart';
 part 'database.g.dart';
 
 /// Bumped only alongside a migration step in [_migration]. Never reused.
-const int kSchemaVersion = 26;
+const int kSchemaVersion = 27;
 
 /// Keys used in [MetaEntries].
 abstract final class MetaKeys {
@@ -75,7 +75,7 @@ class SaveDatabase extends _$SaveDatabase {
   /// follow a constant reference. `schema_test.dart` keeps it in step with
   /// [kSchemaVersion].
   @override
-  int get schemaVersion => 26;
+  int get schemaVersion => 27;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -315,6 +315,14 @@ class SaveDatabase extends _$SaveDatabase {
       // anything older gets the column from createTable above.
       if (from >= 22 && from < 26) {
         await m.addColumn(craftJobs, craftJobs.salvageBatch);
+      }
+
+      // §2.3: the two clocks the lethal rules need. Additive with defaults of
+      // nought, which reads as a character who has just eaten and drunk —
+      // never as one who is two days dry.
+      if (from < 27) {
+        await m.addColumn(vitals, vitals.dryStreakSeconds);
+        await m.addColumn(vitals, vitals.starvedStreakSeconds);
       }
 
       await _writeSchemaVersion(to);

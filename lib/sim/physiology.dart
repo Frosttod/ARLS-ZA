@@ -70,6 +70,7 @@ class ThirstState {
     required this.severelyWeakened,
     required this.critical,
     required this.lethal,
+    this.actionTimeMultiplier = 1.0,
   });
 
   /// Water remaining as a fraction of the daily requirement.
@@ -86,6 +87,17 @@ class ThirstState {
   final bool critical;
   final bool lethal;
 
+  /// §2.3: what "severe weakness" costs, in the only currency §2 measures
+  /// anything in.
+  ///
+  /// ⚠️ Added because five and ten per cent had no consequence at all. §2.3
+  /// names three thresholds and only the first — two per cent, the accuracy
+  /// penalty — was attached to anything; a character at "stan krytyczny" shot
+  /// exactly as well as one merely thirsty and did everything at full speed.
+  /// Hunger, which the same paragraph insists must be the *gentler* of the
+  /// two, was the only one of the pair that slowed anybody down.
+  final double actionTimeMultiplier;
+
   static const healthy = ThirstState(
     fraction: 1,
     deficitFractionOfBodyMass: 0,
@@ -95,6 +107,20 @@ class ThirstState {
     lethal: false,
   );
 }
+
+/// §2.3: how long the critical state may be held before it is the end.
+///
+/// ⚠️ **An extension, and named as one.** §2.3 gives thirst one lethal rule —
+/// forty-eight hours without water *under exertion* — and nothing at all for
+/// somebody who sits still. The reserve floors at ten per cent of body mass,
+/// so without this a character who stops walking survives complete dehydration
+/// for ever, which is the one outcome §2.3's own warning ("tu realizm jest
+/// bezlitosny") rules out.
+///
+/// Twelve hours because ten per cent of body mass in water is the point at
+/// which the clinical literature stops talking about performance and starts
+/// talking about organ failure, and half a day is the generous end of it.
+const Duration kCriticalThirstGrace = Duration(hours: 12);
 
 ThirstState thirstState({
   required double waterMl,
@@ -111,13 +137,25 @@ ThirstState thirstState({
   // 1 ml of water weighs 1 g, so the deficit converts directly to body mass.
   final deficitFraction = (deficitMl / 1000) / bodyMassKg;
 
+  final critical = deficitFraction >= 0.10;
+
   return ThirstState(
     fraction: fraction,
     deficitFractionOfBodyMass: deficitFraction,
     accuracyPenalty: deficitFraction >= 0.02 ? 0.85 : 1.0,
     severelyWeakened: deficitFraction >= 0.05,
-    critical: deficitFraction >= 0.10,
-    lethal: underExertion && timeWithoutWater > const Duration(hours: 48),
+    critical: critical,
+    // §2.3: harsher than hunger, in both directions. A fifth longer is what
+    // twenty per cent of the day's calories costs; five per cent of body mass
+    // in water costs more than that, and ten per cent more again.
+    actionTimeMultiplier: critical
+        ? 1.60
+        : (deficitFraction >= 0.05 ? 1.30 : 1.0),
+    // Two ways to die of thirst, and the second is an extension — see
+    // [kCriticalThirstGrace].
+    lethal:
+        (underExertion && timeWithoutWater > const Duration(hours: 48)) ||
+        (critical && timeWithoutWater > kCriticalThirstGrace),
   );
 }
 

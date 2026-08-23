@@ -155,6 +155,26 @@ class Vitals extends Table {
   RealColumn get pendingKcal => real().withDefault(const Constant(0))();
   RealColumn get pendingWaterMl => real().withDefault(const Constant(0))();
 
+  // --------------------------------------------------------- schema v27 ---
+  //
+  // §2.3's two lethal rules each need a clock, and neither had one. Both
+  // default to nought, which is where a character who has just drunk and
+  // eaten stands — so a v26 row loads as somebody in good order rather than
+  // as somebody two days dry (§11.1.4).
+
+  /// §2.3: seconds since any water at all reached the body.
+  ///
+  /// Feeds "brak wody > 48 h w warunkach wysiłku = śmierć". Reset by a
+  /// swallow, not by a full reserve.
+  IntColumn get dryStreakSeconds => integer().withDefault(const Constant(0))();
+
+  /// §2.3: seconds the calorie reserve has been at nought.
+  ///
+  /// Feeds "0% przez > 24 h → postępująca utrata przytomności". Measured on
+  /// the reserve rather than on the last meal, which is what that line says.
+  IntColumn get starvedStreakSeconds =>
+      integer().withDefault(const Constant(0))();
+
   @override
   Set<Column> get primaryKey => {profileId};
 

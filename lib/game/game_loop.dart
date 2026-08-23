@@ -33,6 +33,7 @@ import '../safety/player_safety.dart';
 import '../sim/daylight.dart';
 import '../map/geometry.dart';
 import '../shelter/shelter.dart';
+import '../sim/action_pace.dart';
 import '../sim/body.dart';
 import '../combat/pursuit.dart';
 import '../sim/death.dart';
@@ -602,6 +603,18 @@ class GameLoop {
     );
   }
 
+  /// §2: the state read through §2's tables, with the one thing they need
+  /// from outside.
+  ///
+  /// ⚠️ §2.3's lethal thirst rule is qualified — "brak wody > 48 h **w
+  /// warunkach wysiłku**" — and only the loop knows whether anybody is
+  /// walking. Everything else in §2 is a function of the state alone.
+  SimStatus _status() => statusOf(
+    state: _state,
+    constants: constants,
+    underExertion: _speedKmh >= kStillKmh,
+  );
+
   /// §9: whether the body has given out, and what that means for this mode.
   ///
   /// Called after every tick. The two refusals in §9.1 are checked here rather
@@ -611,7 +624,7 @@ class GameLoop {
   void _checkDown() {
     if (_dead || _downUntil != null) return;
 
-    final cause = fatalCause(statusOf(state: _state, constants: constants));
+    final cause = fatalCause(_status());
     if (cause == null) return;
 
     if (!mayDie(
@@ -765,6 +778,10 @@ class GameLoop {
     pendingWaterMl: Value(_state.pendingWaterMl),
     heartRateBpm: Value(_state.heartRateBpm),
     sleepDebtSeconds: Value(_state.sleepDebtSeconds),
+    // §2.3: the two clocks the lethal rules hang on. They have to survive a
+    // kill, or closing the app would be a glass of water.
+    dryStreakSeconds: Value(_state.dryStreakSeconds),
+    starvedStreakSeconds: Value(_state.starvedStreakSeconds),
     zone: Value(_state.zone.wire),
     latitude: Value(_lastFix?.latitude),
     longitude: Value(_lastFix?.longitude),
@@ -801,7 +818,7 @@ class GameLoop {
     _snapshots.add(
       GameSnapshot(
         state: _state,
-        status: statusOf(state: _state, constants: constants),
+        status: _status(),
         signal: source.currentSignal,
         speedKmh: _speedKmh,
         isNight: fix == null
