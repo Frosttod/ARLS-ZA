@@ -165,7 +165,7 @@ void main() {
       );
 
       for (final recipe in kShelterRecipes) {
-        final key = '${recipe.module!.name}.${recipe.level}';
+        final key = '${recipe.module.name}.${recipe.level}';
 
         expect(
           massOf(recipe.materials),
