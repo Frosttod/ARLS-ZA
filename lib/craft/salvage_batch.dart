@@ -151,7 +151,7 @@ class SalvageBatch {
   /// nought with the time **their own turn** ends.
   ///
   /// The waiting ones are deliberately not left blank. Nought with a clock on
-  /// it is information — "yours is in eleven minutes" — where a blank row is
+  /// it is information — "yours starts in five minutes" — where a blank row is
   /// only an absence.
   List<SalvageProgress> progressAt(Duration credited) {
     final out = <SalvageProgress>[];
@@ -160,6 +160,9 @@ class SalvageBatch {
     for (final step in steps) {
       final into = credited - before;
       final done = into >= step.takes;
+
+      // Everything ahead of this one that has not been paid for yet.
+      final startsIn = before - credited;
 
       out.add(
         SalvageProgress(
@@ -177,9 +180,18 @@ class SalvageBatch {
           left: done || into.isNegative
               ? (done ? Duration.zero : step.takes)
               : step.takes - into,
-          // When this one's own turn ends, measured from the start of the
-          // sitting. The answer to "will mine be done".
-          endsAfter: before + step.takes,
+          // ⚠️ **From now, and to the moment it STARTS.**
+          //
+          // Measured from the start of the sitting this read as an absurd
+          // number and was reported as one: the figure against a waiting
+          // piece included every minute already spent, so the third of four
+          // said eighteen minutes when the thing in front of it had two and
+          // three quarters left. Both of those minutes were in the past.
+          //
+          // What somebody watching the queue is asking is "when does mine
+          // begin" — which is what is left of everything ahead of it, and
+          // nothing else.
+          startsIn: startsIn.isNegative ? Duration.zero : startsIn,
         ),
       );
 
@@ -237,7 +249,7 @@ class SalvageProgress {
     required this.done,
     required this.fraction,
     required this.left,
-    required this.endsAfter,
+    required this.startsIn,
   });
 
   final SalvageStep step;
@@ -251,8 +263,12 @@ class SalvageProgress {
   /// What is left of this piece at full rate — its whole time while it waits.
   final Duration left;
 
-  /// How far into the sitting this one's own turn ends.
-  final Duration endsAfter;
+  /// §12: how long until this piece's own turn **begins**, from now.
+  ///
+  /// ⚠️ Zero for the one under the multitool and for anything already apart.
+  /// For a piece still waiting it is whatever is left of everything in front
+  /// of it — which is the only figure that answers "when does mine begin".
+  final Duration startsIn;
 
   /// Whether this is the one actually under the multitool.
   bool get running => !done && fraction > 0;

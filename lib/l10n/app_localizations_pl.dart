@@ -1912,15 +1912,15 @@ class L10nPl extends L10n {
   String get salvageWornFirst => 'Masz to na sobie — zdejmij najpierw.';
 
   @override
-  String salvageWaitingUntil(String time) {
-    return 'Czeka na swoją kolej — za $time';
-  }
-
-  @override
   String get goalPin => 'Przypnij jako cel';
 
   @override
   String goalPinned(String item) {
     return 'Cel przypięty: $item';
+  }
+
+  @override
+  String salvageStartsIn(String time) {
+    return 'Zacznie się za $time';
   }
 }

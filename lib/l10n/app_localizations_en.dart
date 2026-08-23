@@ -1911,15 +1911,15 @@ class L10nEn extends L10n {
   String get salvageWornFirst => 'You are wearing it — take it off first.';
 
   @override
-  String salvageWaitingUntil(String time) {
-    return 'Waiting its turn — in $time';
-  }
-
-  @override
   String get goalPin => 'Pin as a goal';
 
   @override
   String goalPinned(String item) {
     return 'Goal pinned: $item';
+  }
+
+  @override
+  String salvageStartsIn(String time) {
+    return 'Starts in $time';
   }
 }

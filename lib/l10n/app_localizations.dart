@@ -3493,12 +3493,6 @@ abstract class L10n {
   /// **'You are wearing it — take it off first.'**
   String get salvageWornFirst;
 
-  /// No description provided for @salvageWaitingUntil.
-  ///
-  /// In en, this message translates to:
-  /// **'Waiting its turn — in {time}'**
-  String salvageWaitingUntil(String time);
-
   /// No description provided for @goalPin.
   ///
   /// In en, this message translates to:
@@ -3510,6 +3504,12 @@ abstract class L10n {
   /// In en, this message translates to:
   /// **'Goal pinned: {item}'**
   String goalPinned(String item);
+
+  /// No description provided for @salvageStartsIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Starts in {time}'**
+  String salvageStartsIn(String time);
 }
 
 class _L10nDelegate extends LocalizationsDelegate<L10n> {

@@ -7,10 +7,16 @@
 /// finished* — and a bar at forty per cent of an hour does not say that. So
 /// each piece gets its own: the finished ones are full and struck through, the
 /// one under the multitool is where it actually is, and the ones waiting sit
-/// at nought with the time **their own turn** ends.
+/// at nought with the time **their own turn begins**.
+///
+/// ⚠️ Begins, counted from now — not "ends, counted from the start of the
+/// sitting", which is what it said first and what came back from a walk as an
+/// absurd number. The third of four read eighteen minutes while the thing in
+/// front of it had two and three quarters left, because the figure was adding
+/// up minutes that had already been spent.
 ///
 /// The waiting rows are deliberately not blank. Nought with a clock on it says
-/// "yours is in eleven minutes"; a blank row says nothing at all.
+/// "yours starts in five minutes"; a blank row says nothing at all.
 ///
 /// ⚠️ This lives here rather than on the making screen, which is where it used
 /// to be. A bar about taking things apart, at the top of a list of recipes, is
@@ -166,13 +172,16 @@ class _SittingRow extends StatelessWidget {
               color: tint,
             ),
 
-            // ⚠️ A waiting row says when *its* turn comes, not how far the
-            // sitting as a whole has got. "Yours is in eleven minutes" is the
-            // answer to the question somebody with twenty minutes is asking.
+            // ⚠️ A waiting row says when *its own turn begins*, counted from
+            // now — not how far the sitting as a whole has got. Measured from
+            // the start it read as an absurd number and was reported as one:
+            // the third of four said eighteen minutes while the thing in front
+            // of it had two and three quarters left, because the figure
+            // included every minute already spent.
             if (row.waiting) ...[
               const SizedBox(height: 4),
               Text(
-                l10n.salvageWaitingUntil(remaining(row.endsAfter)),
+                l10n.salvageStartsIn(remaining(row.startsIn)),
                 style: TextStyle(fontSize: 11, color: colours.muted),
               ),
             ],

@@ -898,19 +898,19 @@
   "crashCopied": "Skopiowane. Wklej mi to.",
   "crashHung": "Gra przestała odpowiadać",
   "salvageWornFirst": "Masz to na sobie — zdejmij najpierw.",
-  "salvageWaitingUntil": "Czeka na swoją kolej — za {time}",
-  "@salvageWaitingUntil": {
-    "placeholders": {
-      "time": {
-        "type": "String"
-      }
-    }
-  },
   "goalPin": "Przypnij jako cel",
   "goalPinned": "Cel przypięty: {item}",
   "@goalPinned": {
     "placeholders": {
       "item": {
+        "type": "String"
+      }
+    }
+  },
+  "salvageStartsIn": "Zacznie się za {time}",
+  "@salvageStartsIn": {
+    "placeholders": {
+      "time": {
         "type": "String"
       }
     }

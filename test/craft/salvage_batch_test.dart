@@ -97,7 +97,9 @@ void main() {
 
       expect(rows.map((r) => r.fraction), [0, 0, 0]);
       expect(rows.every((r) => r.waiting), isTrue);
-      expect(rows.map((r) => r.endsAfter.inSeconds), [600, 900, 1020]);
+
+      // Nothing paid for yet, so each waits for everything in front of it.
+      expect(rows.map((r) => r.startsIn.inSeconds), [0, 600, 900]);
     });
 
     test('half way through the first, only the first has moved', () {
@@ -114,6 +116,37 @@ void main() {
 
       expect(rows[1].left, const Duration(seconds: 300));
       expect(rows[2].left, const Duration(seconds: 120));
+    });
+
+    test('a waiting piece says when its own turn begins, from now', () {
+      // ⚠️ **The reported bug, in numbers.** Measured from the start of the
+      // sitting this figure included every minute already spent: the third of
+      // four said eighteen minutes while the thing in front of it had two and
+      // three quarters left. Both of those minutes were in the past.
+      //
+      // Five minutes in: the rifle has five of its ten left, so the vest
+      // begins in five, and the pack five plus the vest's own five.
+      final rows = sitting.progressAt(const Duration(seconds: 300));
+
+      expect(rows[0].startsIn, Duration.zero, reason: 'it has begun');
+      expect(rows[1].startsIn, const Duration(seconds: 300));
+      expect(rows[2].startsIn, const Duration(seconds: 600));
+    });
+
+    test('and it counts down as the one in front of it is worked on', () {
+      final early = sitting.progressAt(const Duration(seconds: 100));
+      final later = sitting.progressAt(const Duration(seconds: 400));
+
+      expect(later[1].startsIn, lessThan(early[1].startsIn));
+      expect(later[2].startsIn, lessThan(early[2].startsIn));
+    });
+
+    test('nothing already apart is still waiting for anything', () {
+      final rows = sitting.progressAt(const Duration(seconds: 750));
+
+      expect(rows[0].startsIn, Duration.zero, reason: 'done');
+      expect(rows[1].startsIn, Duration.zero, reason: 'under the multitool');
+      expect(rows[2].startsIn, const Duration(seconds: 150));
     });
 
     test('a finished piece is full and owes nothing', () {
