@@ -2493,6 +2493,12 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       maxHr: character.constants.maxHeartRate,
       playerSpeedKmh: (snapshot.fix?.speedMps ?? 0) * 3.6,
       targetSpeedKmh: target.speedKmh,
+      // ⚠️ §5.1.1: the body's own contribution, and it was missing. The
+      // parameter had a default of nought and nobody ever passed it, so
+      // §2.5.4's three minutes of arc for a day without sleep and §2.6's for
+      // blood loss were worked out, drawn on the profile screen, and thrown
+      // away before any shot was resolved. The penalty existed as a caption.
+      conditionMoa: snapshot.status.totalExtraMoa,
       spreadMultiplier: _aim.spreadMultiplierAt(DateTime.now()),
     );
   }
@@ -5298,6 +5304,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       present:
           at != null &&
           (sheltered || snapshot?.signal != PositionSignal.unavailable),
+      // §2.3, §2.5.4: how much of this second the body is actually worth.
+      rate: snapshot?.status.workRate ?? 1,
     );
 
     if (next.isRunning) {
@@ -5360,24 +5368,16 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   }
 
   /// §10.2.3: whether looking around again is worth the forty-five seconds.
-  ///
-  /// ⚠️ This gates the *search*, not the find. It was only on the find, which
-  /// is not what was asked for and is not what a player sees: the button was
-  /// live the instant the last look finished, so the honest answer to "is
-  /// there a cooldown" was no. Refusing with a reason beats letting somebody
-  /// spend forty-five seconds of standing still on a certainty.
-  String? _scoutRefusal(GeoPoint at, DateTime now) {
-    final last = _scoutedAt;
-    final from = _scoutedFrom;
-
-    if (last != null && now.difference(last) < kScoutCooldown) {
-      return L10n.of(context).searchTooSoon;
-    }
-    if (from != null && from.distanceTo(at) < kScoutMoveM) {
-      return L10n.of(context).searchTooClose;
-    }
-    return null;
-  }
+  String? _scoutRefusal(GeoPoint at, DateTime now) => switch (scoutRefusal(
+    at: at,
+    now: now,
+    lastAt: _scoutedAt,
+    lastFrom: _scoutedFrom,
+  )) {
+    ScoutRefusal.tooSoon => L10n.of(context).searchTooSoon,
+    ScoutRefusal.tooClose => L10n.of(context).searchTooClose,
+    null => null,
+  };
 
   void _startAreaSearch() {
     // ⚠️ The sticky position, not the snapshot's fix. Fifth time this exact

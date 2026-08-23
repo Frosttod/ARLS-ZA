@@ -334,12 +334,26 @@ class Search {
     required GeoPoint? at,
     bool present = true,
     double? boundaryRadiusM,
+    double rate = 1,
   }) {
     if (!isRunning) return this;
 
     if (!isUse && (!present || at == null)) {
       return _endedAs(SearchState.lostPresence);
     }
+
+    // ⚠️ §2.3, §2.5.4: a second of wall time is not a second of work.
+    //
+    // Below a fifth of the day's calories everything takes a fifth longer, and
+    // past twelve hours of sleep debt half as long again. Both figures existed
+    // and neither reached a clock: they were worked out every tick, written on
+    // the status notes, and then every action in the game ran at full speed
+    // anyway. This is where the multiplier meets a duration.
+    //
+    // Applied to the *credit*, not to the wall clock — the strike rule below
+    // still counts real seconds, because standing still is standing still
+    // whether or not the body is worn out.
+    final earned = rate <= 0 ? Duration.zero : delta * rate;
 
     // Using something is not searching: a person can drink while walking.
     final effectiveRadius = boundaryRadiusM ?? kStillnessM;
@@ -349,10 +363,10 @@ class Search {
           ? _endedAs(SearchState.cancelledByMovement)
           // The clock keeps running through a single stray fix. A player who
           // really walked off will produce another one a second later.
-          : _copy(elapsed: elapsed + delta, strikes: missed);
+          : _copy(elapsed: elapsed + earned, strikes: missed);
     }
 
-    final next = elapsed + delta;
+    final next = elapsed + earned;
     if (next >= requiredTime) {
       return _copy(elapsed: requiredTime, state: SearchState.done, strikes: 0);
     }
@@ -405,4 +419,35 @@ class AreaKnowledge {
   bool covers(GeoPoint point, DateTime now) =>
       now.difference(completedAt) < kAreaSearchMemory &&
       at.distanceTo(point) <= radiusM / 2;
+}
+
+/// §10.2.3: why looking around again would be refused, or null when it is not.
+///
+/// ⚠️ This gates the *search*, not the find. It was only on the find, which is
+/// not what was asked for and is not what a player sees: the button was live
+/// the instant the last look finished, so the honest answer to "is there a
+/// cooldown" was no. Refusing with a reason beats letting somebody spend
+/// forty-five seconds of standing still on a certainty.
+enum ScoutRefusal {
+  /// The cooldown has not run out.
+  tooSoon,
+
+  /// The same spot as the last look. §10.2.2's radius has not moved, so
+  /// neither has anything it would find.
+  tooClose,
+}
+
+ScoutRefusal? scoutRefusal({
+  required GeoPoint at,
+  required DateTime now,
+  DateTime? lastAt,
+  GeoPoint? lastFrom,
+}) {
+  if (lastAt != null && now.difference(lastAt) < kScoutCooldown) {
+    return ScoutRefusal.tooSoon;
+  }
+  if (lastFrom != null && lastFrom.distanceTo(at) < kScoutMoveM) {
+    return ScoutRefusal.tooClose;
+  }
+  return null;
 }

@@ -165,12 +165,21 @@ class BodyProfile {
   final double carryMaxKg;
 
   /// Constants the tick engine needs.
+  ///
+  /// ⚠️ [SimConstants.bodyMassKg] used to be left out, and it has a default of
+  /// eighty. §2.3's dehydration thresholds are fractions of *body mass* — two
+  /// per cent for the accuracy penalty, ten for the critical state — so every
+  /// character in the game was being measured against an eighty-kilogram
+  /// person regardless of what the player typed on the character sheet. A
+  /// fifty-five kilogram character was given the thresholds of somebody
+  /// twenty-five kilos heavier, which is most of a day of extra grace.
   SimConstants toSimConstants() => SimConstants(
     bloodMaxMl: bloodVolumeMl,
     waterDailyMl: baseWaterMlPerDay,
     caloriesDailyKcal: dailyEnergyKcal,
     restingHeartRate: restingHeartRate,
     maxHeartRate: maxHeartRate,
+    bodyMassKg: spec.weightKg,
   );
 
   /// Derives the profile from a validated spec.

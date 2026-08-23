@@ -342,6 +342,18 @@ class SimStatus {
   double get actionTimeMultiplier =>
       hunger.actionTimeMultiplier * sleep.actionTimeMultiplier;
 
+  /// The same figure the way a clock wants it: how much of a second of work a
+  /// second of wall time is worth (§2.3, §2.5.4).
+  ///
+  /// ⚠️ **This is what [actionTimeMultiplier] was missing.** §2.3's "+20% to
+  /// the time of every action" and §2.5.4's "+50%" were computed, written on
+  /// the status notes, and read by nothing that measures anything — hunger and
+  /// sleep debt lengthened precisely nothing. A multiplier on a duration has
+  /// to meet a duration somewhere, and the only place every duration in this
+  /// game passes through is the rate its clock credits at.
+  double get workRate =>
+      actionTimeMultiplier <= 0 ? 1 : 1 / actionTimeMultiplier;
+
   bool get isIncapacitated =>
       blood.isFatal || hunger.losingConsciousness || thirst.lethal;
 }

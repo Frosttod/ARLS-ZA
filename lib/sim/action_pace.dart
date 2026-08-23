@@ -65,7 +65,11 @@ enum ActionPace {
 /// sampling the rate costs nothing extra and happens at exactly the moments
 /// the speed is known.
 class PaceContext {
-  const PaceContext({this.speedKmh = 0, this.atStartingPlace = true});
+  const PaceContext({
+    this.speedKmh = 0,
+    this.atStartingPlace = true,
+    this.bodyRate = 1,
+  });
 
   /// Ground speed from the last accepted fix.
   final double speedKmh;
@@ -73,6 +77,18 @@ class PaceContext {
   /// Whether the character is still where the action began, within whatever
   /// radius that action calls close enough.
   final bool atStartingPlace;
+
+  /// §2.3, §2.5.4: how much a second of this body's work is worth.
+  ///
+  /// ⚠️ **The other half of the rate, and it was missing entirely.** The world
+  /// slows an action down — a step, a walk — and so does the body: §2.3 puts a
+  /// fifth on everything below twenty per cent of the day's calories, and
+  /// §2.5.4 puts half on everything past twelve hours of sleep debt. Both
+  /// figures were computed every tick and read by nothing that measures time.
+  ///
+  /// One is `SimStatus.workRate`; nothing here knows that, which is the point
+  /// — `lib/sim` may not reach into the game loop, so the loop hands it down.
+  final double bodyRate;
 
   /// Standing still, for anything that cares.
   bool get isStill => speedKmh < kStillKmh;
@@ -84,18 +100,30 @@ class PaceContext {
 /// dismantling and §8.3's building both keep what they have earned and go on
 /// when the condition comes back. Whether stopping should also *end* something
 /// is a decision for the action, not for its clock.
-double rateFor(ActionPace pace, PaceContext context) => switch (pace) {
-  ActionPace.unattended => 1,
+double rateFor(ActionPace pace, PaceContext context) {
+  final world = switch (pace) {
+    ActionPace.unattended => 1.0,
 
-  ActionPace.onTheSpot => context.atStartingPlace ? 1 : 0,
+    ActionPace.onTheSpot => context.atStartingPlace ? 1.0 : 0.0,
 
-  ActionPace.handsOn => switch (context.speedKmh) {
-    < kStillKmh => 1,
-    < kWalkingKmh => 1 / kPaceWalking,
-    < kRunningKmh => 1 / kPaceBrisk,
-    _ => 0,
-  },
-};
+    ActionPace.handsOn => switch (context.speedKmh) {
+      < kStillKmh => 1.0,
+      < kWalkingKmh => 1 / kPaceWalking,
+      < kRunningKmh => 1 / kPaceBrisk,
+      _ => 0.0,
+    },
+  };
+
+  // ⚠️ Multiplied, not taken as the smaller of the two. A hungry person
+  // dressing a wound while walking is slowed by both — they are two different
+  // reasons for the same hands to be slower, not one reason twice.
+  //
+  // A stopped clock stays stopped: nought times anything is nought, which is
+  // what "a search away from where it started is not a slower search" means.
+  final body = context.bodyRate <= 0 ? 1.0 : context.bodyRate;
+
+  return world * body;
+}
 
 /// How long [work] will really take at this rate, or null when it never ends.
 ///
