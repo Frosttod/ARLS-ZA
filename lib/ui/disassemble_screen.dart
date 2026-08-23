@@ -22,6 +22,7 @@ import '../craft/salvage_batch.dart';
 import '../items/item.dart';
 import '../items/item_catalogue.dart';
 import '../l10n/app_localizations.dart';
+import 'effects.dart';
 import 'fonts.dart';
 import 'hud.dart' show HudColors;
 import 'salvage_running_view.dart';
@@ -420,10 +421,10 @@ class _OfferRow extends StatelessWidget {
                     if (condition != null || line.isPartlyDismantled) ...[
                       const SizedBox(height: 2),
                       Text(
-                        [
+                        effects([
                           if (condition != null) '${amount(condition)}%',
                           if (line.isPartlyDismantled) l10n.craftPartlyApart,
-                        ].join(' · '),
+                        ]),
                         style: TextStyle(
                           fontSize: 11,
                           color: colours.muted,

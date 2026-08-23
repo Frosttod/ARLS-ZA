@@ -462,6 +462,16 @@
       }
     }
   },
+  "effectRadius": "Radius",
+  "effectRare": "Rare finds",
+  "effectSearch": "Searching",
+  "effectStealth": "Noticed at",
+  "effectSpread": "Spread",
+  "effectReload": "Reload and settling",
+  "effectDressing": "Dressings",
+  "effectHealing": "Healing",
+  "effectWork": "Building and making",
+  "effectSalvage": "Salvage yield",
   "profileSkillLevel": "{level} / 100",
   "@profileSkillLevel": {
     "placeholders": {
@@ -485,56 +495,6 @@
   "profileSkillWeapons": "Weapons",
   "profileSkillMedicine": "Medicine",
   "profileSkillEngineering": "Engineering",
-  "profileSkillScoutingWhat": "Search radius +{radius}% · rare finds +{rare}% · searches {faster}% faster · noticed {stealth}% later",
-  "@profileSkillScoutingWhat": {
-    "placeholders": {
-      "radius": {
-        "type": "int"
-      },
-      "rare": {
-        "type": "int"
-      },
-      "faster": {
-        "type": "int"
-      },
-      "stealth": {
-        "type": "int"
-      }
-    }
-  },
-  "profileSkillWeaponsWhat": "Aim {moa} MOA · reload and settling {faster}% faster",
-  "@profileSkillWeaponsWhat": {
-    "placeholders": {
-      "moa": {
-        "type": "String"
-      },
-      "faster": {
-        "type": "int"
-      }
-    }
-  },
-  "profileSkillMedicineWhat": "Dressings {faster}% faster · wounds mend {healing}% faster",
-  "@profileSkillMedicineWhat": {
-    "placeholders": {
-      "faster": {
-        "type": "int"
-      },
-      "healing": {
-        "type": "int"
-      }
-    }
-  },
-  "profileSkillEngineeringWhat": "Building, making and stripping {faster}% faster · {share}% back from what you take apart",
-  "@profileSkillEngineeringWhat": {
-    "placeholders": {
-      "faster": {
-        "type": "int"
-      },
-      "share": {
-        "type": "int"
-      }
-    }
-  },
   "profileAimQuadrature": "These do not add up, and should not: §5.1 combines them in quadrature, so the largest one dominates and the small ones almost vanish. The percentage beside each is its real share of the group.",
   "profileAimShare": "{percent}%",
   "@profileAimShare": {
@@ -632,10 +592,13 @@
   "moduleWorkshop": "Workshop",
   "moduleLounge": "Lounge",
   "moduleLaboratory": "Laboratory",
-  "moduleStorageWhat": "Fifty kilograms a level, on top of the twenty-five the shelter holds bare.",
-  "moduleWorkshopWhat": "Repairs: to 60% of condition, then 85%, then as new. Level 2 also opens complex recipes.",
-  "moduleLoungeWhat": "Fifteen per cent a level off what a night has to cover — an hour of the night given back.",
-  "moduleLaboratoryWhat": "Three per cent a level more out of everything eaten and drunk.",
+  "moduleStorageEffect": "Capacity",
+  "moduleWorkshopEffect": "Repairs to",
+  "moduleWorkshopNone": "none",
+  "moduleWorkshopComplex": "complex recipes",
+  "moduleLoungeEffect": "Sleep",
+  "moduleLaboratoryEffect": "From food and drink",
+  "moduleMaxed": "maximum",
   "shelterBuildStarted": "Work started. It carries on with the app closed.",
   "shelterInside": "You cannot fire from inside your own zone.",
   "menuSettings": "SETTINGS",

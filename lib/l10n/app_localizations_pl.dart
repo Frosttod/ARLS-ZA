@@ -773,6 +773,36 @@ class L10nPl extends L10n {
   }
 
   @override
+  String get effectRadius => 'Promień';
+
+  @override
+  String get effectRare => 'Rzadkie';
+
+  @override
+  String get effectSearch => 'Przeszukanie';
+
+  @override
+  String get effectStealth => 'Zauważony z';
+
+  @override
+  String get effectSpread => 'Rozrzut';
+
+  @override
+  String get effectReload => 'Przeładowanie i stabilizacja';
+
+  @override
+  String get effectDressing => 'Medykamenty';
+
+  @override
+  String get effectHealing => 'Gojenie';
+
+  @override
+  String get effectWork => 'Budowa i wytwarzanie';
+
+  @override
+  String get effectSalvage => 'Odzysk z rozbiórki';
+
+  @override
   String profileSkillLevel(int level) {
     return '$level / 100';
   }
@@ -793,31 +823,6 @@ class L10nPl extends L10n {
 
   @override
   String get profileSkillEngineering => 'Inżynieria';
-
-  @override
-  String profileSkillScoutingWhat(
-    int radius,
-    int rare,
-    int faster,
-    int stealth,
-  ) {
-    return 'Promień przeszukania +$radius% · rzadkie znaleziska +$rare% · przeszukanie o $faster% szybciej · zauważony o $stealth% później';
-  }
-
-  @override
-  String profileSkillWeaponsWhat(String moa, int faster) {
-    return 'Rozrzut $moa MOA · przeładowanie i stabilizacja o $faster% szybciej';
-  }
-
-  @override
-  String profileSkillMedicineWhat(int faster, int healing) {
-    return 'Medykamenty o $faster% szybciej · rany goją się o $healing% szybciej';
-  }
-
-  @override
-  String profileSkillEngineeringWhat(int faster, int share) {
-    return 'Budowa, wytwarzanie i rozbiórka o $faster% szybciej · odzysk $share% z rozbieranego';
-  }
 
   @override
   String get profileAimQuadrature =>
@@ -999,20 +1004,25 @@ class L10nPl extends L10n {
   String get moduleLaboratory => 'Laboratorium';
 
   @override
-  String get moduleStorageWhat =>
-      'Pięćdziesiąt kilogramów na poziom, ponad dwadzieścia pięć, które schron mieści goły.';
+  String get moduleStorageEffect => 'Pojemność';
 
   @override
-  String get moduleWorkshopWhat =>
-      'Naprawy: do 60% kondycji, potem 85%, potem jak nowe. Poziom 2 otwiera też receptury złożone.';
+  String get moduleWorkshopEffect => 'Naprawa do';
 
   @override
-  String get moduleLoungeWhat =>
-      'Piętnaście procent na poziom mniej do przespania — godzina nocy do odzyskania.';
+  String get moduleWorkshopNone => 'brak';
 
   @override
-  String get moduleLaboratoryWhat =>
-      'Trzy procent na poziom więcej z każdego posiłku i napoju.';
+  String get moduleWorkshopComplex => 'receptury złożone';
+
+  @override
+  String get moduleLoungeEffect => 'Sen';
+
+  @override
+  String get moduleLaboratoryEffect => 'Z jedzenia i picia';
+
+  @override
+  String get moduleMaxed => 'maksimum';
 
   @override
   String get shelterBuildStarted =>

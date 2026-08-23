@@ -13,6 +13,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
+import 'effects.dart';
 import '../map/geometry.dart';
 import '../shelter/recipes.dart';
 import '../shelter/shelter.dart';
@@ -401,9 +402,13 @@ class _Standing extends StatelessWidget {
                 value: '${shelter.kind.safeRadiusM.round()} m',
                 colours: colours,
               ),
+              // §8.4, §8.5.1: the same shape the module cards use — a
+              // multiplier, never a percentage, because a Lounge at level two
+              // is ×1,30 and that is not "+15% twice" in any arithmetic a
+              // player does in their head.
               _Line(
                 label: l10n.shelterSleep,
-                value: '${(shelter.sleepRate * 100).round()}%',
+                value: times(shelter.sleepRate),
                 colours: colours,
               ),
               // ⚠️ No storage line here any more. The shelves row below says
@@ -414,9 +419,10 @@ class _Standing extends StatelessWidget {
               if (shelter.kind == ShelterKind.camp)
                 _Line(
                   label: l10n.shelterStorage,
-                  value:
-                      '${shelter.storageKg.round()} kg · '
-                      '${shelter.storageL.round()} l',
+                  value: effects([
+                    '${shelter.storageKg.round()} kg',
+                    '${shelter.storageL.round()} l',
+                  ]),
                   colours: colours,
                 ),
               if (shelter.isDecayingAt(now))
@@ -554,13 +560,40 @@ class _ModuleRow extends StatelessWidget {
                 ],
               ],
             ),
+            // §12: what it is worth, in the same shape everywhere — a label,
+            // a number, and where there is a next level, an arrow to it.
+            //
+            // ⚠️ The sentence that used to be here is gone rather than kept
+            // alongside. "Fifteen per cent a level less to sleep off" is true,
+            // is a paragraph, and still left a player working out what their
+            // own Lounge was doing — which is the question the card is for.
             const SizedBox(height: 4),
             Text(
-              moduleWhat(l10n, module),
+              effect(
+                moduleEffectLabel(l10n, module),
+                step(
+                  moduleEffectAt(
+                    l10n,
+                    module,
+                    level,
+                    baseStorageKg: shelter.kind.storageKg,
+                  ),
+                  level >= ShelterModule.maxLevel
+                      ? null
+                      : moduleEffectAt(
+                          l10n,
+                          module,
+                          level + 1,
+                          baseStorageKg: shelter.kind.storageKg,
+                        ),
+                ),
+              ),
               style: TextStyle(
                 fontSize: 12,
                 height: 1.35,
-                color: colours.muted,
+                color: level >= ShelterModule.maxLevel
+                    ? colours.muted
+                    : colours.text,
               ),
             ),
 
@@ -780,11 +813,45 @@ String moduleName(L10n l10n, ShelterModule module) => switch (module) {
   ShelterModule.laboratory => l10n.moduleLaboratory,
 };
 
-String moduleWhat(L10n l10n, ShelterModule module) => switch (module) {
-  ShelterModule.storage => l10n.moduleStorageWhat,
-  ShelterModule.workshop => l10n.moduleWorkshopWhat,
-  ShelterModule.lounge => l10n.moduleLoungeWhat,
-  ShelterModule.laboratory => l10n.moduleLaboratoryWhat,
+/// §8.4, §12: what this module is worth at [level], as a number.
+///
+/// ⚠️ **A number, because a sentence was not answering the question.** The
+/// rows used to read "fifteen per cent a level less to sleep off", which is
+/// true, is a paragraph, and still leaves a player working out what their own
+/// Lounge is doing right now. This says `×1,15`, and the row beside it says
+/// what the next level makes it.
+///
+/// [baseStorageKg] is the shelter's own capacity before any shelves, because
+/// §18.2's figure is a total rather than a bonus and a player reads the total.
+String moduleEffectAt(
+  L10n l10n,
+  ShelterModule module,
+  int level, {
+  required double baseStorageKg,
+}) => switch (module) {
+  ShelterModule.storage =>
+    '${(baseStorageKg + kStorageKgPerLevel * level).round()} kg',
+
+  // The only module whose steps are not one figure repeated: level two also
+  // opens §18.4's complex recipes, and that is worth more than the ten points
+  // of condition beside it.
+  ShelterModule.workshop => switch (level) {
+    0 => l10n.moduleWorkshopNone,
+    1 => percent(0.60),
+    2 => '${percent(0.85)}$kEffectGap${l10n.moduleWorkshopComplex}',
+    _ => percent(1.0),
+  },
+
+  ShelterModule.lounge => times(1 + kLoungeSleepPerLevel * level),
+  ShelterModule.laboratory => times(1 + kLabNutritionPerLevel * level),
+};
+
+/// The label the figure above belongs to.
+String moduleEffectLabel(L10n l10n, ShelterModule module) => switch (module) {
+  ShelterModule.storage => l10n.moduleStorageEffect,
+  ShelterModule.workshop => l10n.moduleWorkshopEffect,
+  ShelterModule.lounge => l10n.moduleLoungeEffect,
+  ShelterModule.laboratory => l10n.moduleLaboratoryEffect,
 };
 
 /// Hours and minutes, which is how every time in §8 is quoted — and seconds
@@ -954,9 +1021,10 @@ class _ShelvesRow extends StatelessWidget {
         Text(
           away
               ? l10n.shelterNotHere
-              : '${outOfKg(massKg, shelter.storageKg)}'
-                    '   ·   '
-                    '${outOfL(volumeL, shelter.storageL)}',
+              : effects([
+                  outOfKg(massKg, shelter.storageKg),
+                  outOfL(volumeL, shelter.storageL),
+                ]),
           style: TextStyle(
             fontSize: 12,
             color: colours.muted,

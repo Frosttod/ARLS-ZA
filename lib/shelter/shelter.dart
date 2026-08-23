@@ -108,6 +108,18 @@ enum ShelterKind {
 }
 
 /// §8.4: what can be built onto a main shelter, three levels each.
+/// §18.2, §8.4: what one level of each module is worth.
+///
+/// ⚠️ Named rather than written into the getters below, because the interface
+/// has to quote them (§12) and a figure the screen works out for itself is a
+/// figure that drifts from the one the simulation uses. That is not
+/// hypothetical here: the Lounge and the Laboratory were computed, one of them
+/// was drawn on screen as a percentage, and neither reached a clock — so both
+/// modules did nothing at all while the screen said otherwise.
+const double kStorageKgPerLevel = 50;
+const double kLoungeSleepPerLevel = 0.15;
+const double kLabNutritionPerLevel = 0.03;
+
 enum ShelterModule {
   /// §18.2: fifty kilograms a level, on top of the base twenty-five.
   storage,
@@ -330,7 +342,7 @@ class Shelter {
 
   /// §18.2, §8.4: what it holds, in kilograms.
   double get storageKg =>
-      kind.storageKg + 50 * levelOf(ShelterModule.storage).toDouble();
+      kind.storageKg + kStorageKgPerLevel * levelOf(ShelterModule.storage);
 
   /// §18.1a: bulk runs out before mass does, at three litres to the kilogram.
   double get storageL => storageKg * 3;
@@ -341,10 +353,12 @@ class Shelter {
   /// cent a level of what the night has to cover. §2.5.4 explains why that is
   /// worth building: fewer hours asleep is more hours awake with a book.
   double get sleepRate =>
-      kind.sleepQuality * (1 + 0.15 * levelOf(ShelterModule.lounge));
+      kind.sleepQuality *
+      (1 + kLoungeSleepPerLevel * levelOf(ShelterModule.lounge));
 
   /// §8.4: three per cent a level out of everything eaten and drunk.
-  double get nutritionRate => 1 + 0.03 * levelOf(ShelterModule.laboratory);
+  double get nutritionRate =>
+      1 + kLabNutritionPerLevel * levelOf(ShelterModule.laboratory);
 
   /// §8.4: the best condition this workshop can bring something back to.
   /// Nought where there is no workshop — a repair nobody can make.

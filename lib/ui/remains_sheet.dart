@@ -10,6 +10,7 @@ library;
 import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
+import 'effects.dart';
 import 'hud.dart' show HudColors;
 
 Future<void> showRemains(
@@ -63,7 +64,7 @@ class RemainsSheet extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    '${l10n.remainsTitle} · $kindName',
+                    effects([l10n.remainsTitle, kindName]),
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.bold,

@@ -23,6 +23,7 @@ import 'fonts.dart';
 import 'units.dart';
 import 'hud.dart' show HudColors;
 import '../l10n/app_localizations.dart';
+import 'effects.dart';
 
 class StashScreen extends StatelessWidget {
   const StashScreen({
@@ -402,12 +403,12 @@ class _LineState extends State<_Line> {
                 // rifle is not the other rifle.
                 if (line.attachments.isNotEmpty)
                   Text(
-                    line.attachments.map(nameOf).join(' · '),
+                    effects(line.attachments.map(nameOf)),
                     style: TextStyle(fontSize: 11, color: colours.data),
                   ),
                 const SizedBox(height: 2),
                 Text(
-                  '${kilograms(mass)}  ·  ${litres(volume)}',
+                  effects([kilograms(mass), litres(volume)]),
                   style: TextStyle(
                     fontSize: 11,
                     color: colours.muted,

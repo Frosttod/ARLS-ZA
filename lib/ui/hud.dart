@@ -15,6 +15,7 @@ import 'fonts.dart';
 import 'units.dart';
 import '../inventory/inventory.dart' show kPocketCapacityL;
 import '../l10n/app_localizations.dart';
+import 'effects.dart';
 import 'status_notes.dart';
 import '../sim/physiology.dart';
 import '../sim/tick.dart';
@@ -903,8 +904,10 @@ class _Threat extends StatelessWidget {
         const SizedBox(width: 6),
         Expanded(
           child: Text(
-            l10n.hudThreat(reading.count, metres) +
-                (reading.anySprinting ? ' · ${l10n.hudThreatSprint}' : ''),
+            effects([
+              l10n.hudThreat(reading.count, metres),
+              if (reading.anySprinting) l10n.hudThreatSprint,
+            ]),
             style: TextStyle(
               fontSize: 11,
               color: colour,

@@ -34,6 +34,7 @@ import '../combat/magazine_item.dart';
 import '../items/item_catalogue.dart';
 import '../items/item_names.dart';
 import '../l10n/app_localizations.dart';
+import 'effects.dart';
 import '../loot/search.dart';
 import '../sim/body.dart';
 import '../sim/pinned_goal.dart';
@@ -571,9 +572,9 @@ class _SlotRow extends StatelessWidget {
                     // screen changed.
                     if (worn != null && worn.attachments.isNotEmpty)
                       Text(
-                        [
+                        effects([
                           for (final id in worn.attachments) nameOf(id),
-                        ].join(' · '),
+                        ]),
                         style: TextStyle(fontSize: 11, color: colours.data),
                       ),
                   ],
@@ -949,7 +950,7 @@ class _ItemRowState extends State<_ItemRow> {
                                 if (widget.attachments.isNotEmpty) ...[
                                   const SizedBox(height: 2),
                                   Text(
-                                    widget.attachmentNames.join(' · '),
+                                    effects(widget.attachmentNames),
                                     style: TextStyle(
                                       fontSize: 11,
                                       color: colours.data,
@@ -989,7 +990,7 @@ class _ItemRowState extends State<_ItemRow> {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
-                        '${kilograms(mass)}  ·  ${litres(volume)}',
+                        effects([kilograms(mass), litres(volume)]),
                         style: TextStyle(fontSize: 11, color: colours.data),
                       ),
                       const SizedBox(height: 2),
@@ -1286,7 +1287,7 @@ class _ItemRowState extends State<_ItemRow> {
     if (fitted.lightRadiusM > 0) {
       parts.add('${fitted.lightRadiusM.round()} m ${widget.l10n.statLight}');
     }
-    return parts.join(' · ');
+    return effects(parts);
   }
 
   String _subtitle() {
@@ -1324,7 +1325,7 @@ class _ItemRowState extends State<_ItemRow> {
       );
     }
 
-    return parts.join(' · ');
+    return effects(parts);
   }
 }
 

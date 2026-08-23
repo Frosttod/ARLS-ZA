@@ -16,6 +16,7 @@ import 'package:flutter/material.dart';
 import '../items/item_catalogue.dart';
 import '../items/item_names.dart';
 import '../l10n/app_localizations.dart';
+import 'effects.dart';
 import '../loot/dropped_items.dart';
 import '../map/geometry.dart';
 import 'hud.dart' show HudColors;
@@ -214,6 +215,6 @@ class _PileRow extends StatelessWidget {
     final pages = pile.pagesTotal;
     if (pages != null) parts.add('${pile.pagesRead} / $pages');
 
-    return parts.join(' · ');
+    return effects(parts);
   }
 }

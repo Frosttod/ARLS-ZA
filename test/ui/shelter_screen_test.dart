@@ -105,7 +105,10 @@ void main() {
       await pump(tester, shelters: [built()]);
 
       expect(find.text('50 m'), findsOneWidget);
-      expect(find.text('100%'), findsOneWidget);
+      // §12: a multiplier, not a percentage. The module cards say ×1,15 and
+      // the summary has to say the same thing the same way — "115%" and
+      // "×1.15" on one screen are two units for one figure.
+      expect(find.text('×1.00'), findsOneWidget);
       // The shelves row carries it now, with how much is used.
       expect(find.textContaining('/ 100.00 kg'), findsOneWidget);
     });
@@ -161,7 +164,11 @@ void main() {
       );
 
       expect(find.textContaining('/ 150.00 kg'), findsOneWidget);
-      expect(find.text('115%'), findsOneWidget);
+      expect(find.text('×1.15'), findsOneWidget);
+
+      // §8.4, §12: and the card says what the next level makes it, which is
+      // the question "ile bonusu daje salon" was actually asking.
+      expect(find.textContaining('×1.15 → ×1.30'), findsOneWidget);
     });
   });
 

@@ -168,6 +168,8 @@ class TickInput {
     this.sleeping = false,
     this.offline = false,
     this.medicine = 0,
+    this.sleepRate = 1,
+    this.nutritionRate = 1,
   });
 
   /// §7: how well this character looks after a wound, 0–1.
@@ -183,6 +185,29 @@ class TickInput {
   /// is what the body does afterwards: §2.6's regeneration, which is the whole
   /// of getting better in this game.
   final double medicine;
+
+  /// §8.4, §8.5.1, §2.5.3: what an hour of sleep here is worth.
+  ///
+  /// ⚠️ **Neither this nor [nutritionRate] reached anything until now.**
+  /// `Shelter.sleepRate` and `Shelter.nutritionRate` were computed, one of
+  /// them was drawn on the shelter screen as a percentage, and no clock ever
+  /// read either — so the Lounge and the Laboratory did nothing at all, and
+  /// neither did §8.5.1's rule that a camp is worth seven tenths of a night.
+  /// Three rules, three decorations.
+  ///
+  /// One rather than a level, for the same reason [medicine] is a number:
+  /// `lib/sim` must not learn what a shelter module is.
+  final double sleepRate;
+
+  /// §8.4: how much of what is eaten and drunk actually arrives.
+  final double nutritionRate;
+
+  /// What an hour of sleep here is worth, never negative and never absurd.
+  ///
+  /// Clamped rather than trusted: a rate arriving from a module table is a
+  /// number somebody could get wrong, and a negative one would make sleeping
+  /// *add* debt — a bug that reads exactly like the game being broken.
+  double get nightWorth => sleepRate.clamp(0.0, 3.0);
 
   /// Ground speed from the position layer. Already filtered — the dead zone of
   /// §3.2 decides what counts as movement before it reaches here.
@@ -725,8 +750,11 @@ TickOutcome advance({
   //
   // Sleeping pays the debt down at the rate it was accrued; being awake builds
   // it at the daily requirement spread over the day.
+  // §8.4, §8.5.1: an hour under a good roof covers more than an hour under a
+  // tarpaulin. The Lounge gives fifteen per cent a level back; a camp takes
+  // three tenths away.
   final debtChange = input.sleeping
-      ? -seconds
+      ? -(seconds * input.nightWorth).round()
       : (kDailySleepNeed.inSeconds * seconds / Duration.secondsPerDay).round();
   // ⚠️ Capped, and §2.5 gives no cap.
   //
@@ -761,7 +789,9 @@ TickOutcome advance({
   // downwards only for a night longer than the requirement.
   final strainChange =
       seconds / Duration.secondsPerDay -
-      (input.sleeping ? seconds / kDailySleepNeed.inSeconds : 0);
+      (input.sleeping
+          ? seconds * input.nightWorth / kDailySleepNeed.inSeconds
+          : 0);
 
   // ⚠️ Floored one night *below* nought rather than at it. A day is lived as
   // a night and then a day, so the night's payoff arrives before the waking
@@ -784,14 +814,22 @@ TickOutcome advance({
   // Linear, and capped by what is left waiting, so the whole thing composes
   // for catch-up exactly as the losses do.
   final minutes = seconds / Duration.secondsPerMinute;
-  final kcalAbsorbed = math.min(
+  // ⚠️ The Laboratory (§8.4) multiplies what *arrives*, not what is taken out
+  // of the stomach. "Three per cent more out of every meal" is about the meal,
+  // so the pending pool drains at its own rate and credits a little more than
+  // it loses — which is also the only reading that works for something eaten
+  // before the module was finished.
+  final kcalTaken = math.min(
     state.pendingKcal,
     kCalorieAbsorptionKcalPerMin * minutes,
   );
-  final waterAbsorbed = math.min(
+  final waterTaken = math.min(
     state.pendingWaterMl,
     kWaterAbsorptionMlPerMin * minutes,
   );
+
+  final kcalAbsorbed = kcalTaken * input.nutritionRate;
+  final waterAbsorbed = waterTaken * input.nutritionRate;
 
   // ⚠️ Neither reserve holds more than a day's worth, and the surplus is
   // simply lost. A stomach is not a warehouse: eating four tins on a full
@@ -942,8 +980,8 @@ TickOutcome advance({
       sleepStrain: sleepStrain,
       dryStreakSeconds: dryStreak,
       starvedStreakSeconds: starvedStreak,
-      pendingKcal: state.pendingKcal - kcalAbsorbed,
-      pendingWaterMl: state.pendingWaterMl - waterAbsorbed,
+      pendingKcal: state.pendingKcal - kcalTaken,
+      pendingWaterMl: state.pendingWaterMl - waterTaken,
     ),
     secondsApplied: seconds,
     floored: floored,

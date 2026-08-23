@@ -769,6 +769,36 @@ class L10nEn extends L10n {
   }
 
   @override
+  String get effectRadius => 'Radius';
+
+  @override
+  String get effectRare => 'Rare finds';
+
+  @override
+  String get effectSearch => 'Searching';
+
+  @override
+  String get effectStealth => 'Noticed at';
+
+  @override
+  String get effectSpread => 'Spread';
+
+  @override
+  String get effectReload => 'Reload and settling';
+
+  @override
+  String get effectDressing => 'Dressings';
+
+  @override
+  String get effectHealing => 'Healing';
+
+  @override
+  String get effectWork => 'Building and making';
+
+  @override
+  String get effectSalvage => 'Salvage yield';
+
+  @override
   String profileSkillLevel(int level) {
     return '$level / 100';
   }
@@ -789,31 +819,6 @@ class L10nEn extends L10n {
 
   @override
   String get profileSkillEngineering => 'Engineering';
-
-  @override
-  String profileSkillScoutingWhat(
-    int radius,
-    int rare,
-    int faster,
-    int stealth,
-  ) {
-    return 'Search radius +$radius% · rare finds +$rare% · searches $faster% faster · noticed $stealth% later';
-  }
-
-  @override
-  String profileSkillWeaponsWhat(String moa, int faster) {
-    return 'Aim $moa MOA · reload and settling $faster% faster';
-  }
-
-  @override
-  String profileSkillMedicineWhat(int faster, int healing) {
-    return 'Dressings $faster% faster · wounds mend $healing% faster';
-  }
-
-  @override
-  String profileSkillEngineeringWhat(int faster, int share) {
-    return 'Building, making and stripping $faster% faster · $share% back from what you take apart';
-  }
 
   @override
   String get profileAimQuadrature =>
@@ -996,20 +1001,25 @@ class L10nEn extends L10n {
   String get moduleLaboratory => 'Laboratory';
 
   @override
-  String get moduleStorageWhat =>
-      'Fifty kilograms a level, on top of the twenty-five the shelter holds bare.';
+  String get moduleStorageEffect => 'Capacity';
 
   @override
-  String get moduleWorkshopWhat =>
-      'Repairs: to 60% of condition, then 85%, then as new. Level 2 also opens complex recipes.';
+  String get moduleWorkshopEffect => 'Repairs to';
 
   @override
-  String get moduleLoungeWhat =>
-      'Fifteen per cent a level off what a night has to cover — an hour of the night given back.';
+  String get moduleWorkshopNone => 'none';
 
   @override
-  String get moduleLaboratoryWhat =>
-      'Three per cent a level more out of everything eaten and drunk.';
+  String get moduleWorkshopComplex => 'complex recipes';
+
+  @override
+  String get moduleLoungeEffect => 'Sleep';
+
+  @override
+  String get moduleLaboratoryEffect => 'From food and drink';
+
+  @override
+  String get moduleMaxed => 'maximum';
 
   @override
   String get shelterBuildStarted =>

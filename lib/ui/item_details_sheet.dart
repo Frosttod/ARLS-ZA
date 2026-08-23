@@ -28,6 +28,7 @@ import '../items/item_catalogue.dart';
 import '../items/item_names.dart';
 import '../items/item_stats.dart';
 import '../l10n/app_localizations.dart';
+import 'effects.dart';
 import 'hud.dart' show HudColors;
 
 Future<void> showItemDetails(
@@ -459,7 +460,7 @@ class _Attachments extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '${l10n.attachmentsFitted} · ${l10n.attachmentsFree(free)}',
+          effects([l10n.attachmentsFitted, l10n.attachmentsFree(free)]),
           style: TextStyle(
             fontSize: 10,
             letterSpacing: 1.1,

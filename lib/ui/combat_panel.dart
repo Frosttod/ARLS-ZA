@@ -17,6 +17,7 @@ import 'fonts.dart';
 import '../combat/ballistics.dart';
 import '../combat/enemy.dart';
 import '../l10n/app_localizations.dart';
+import 'effects.dart';
 import 'hud.dart' show HudColors;
 
 class CombatPanel extends StatelessWidget {
@@ -143,15 +144,20 @@ class CombatPanel extends StatelessWidget {
                     // already on the map as a glyph over its head (§6.1a), and
                     // saying it twice cost the line the weapon needed.
                     Text(
-                      '$targetName · ${l10n.combatDistance(distanceM.round())}'
-                      ' · ${conditionName(l10n, condition)}'
-                      '${bleeding ? ' · ${l10n.enemyBleeding}' : ''}',
+                      effects([
+                        targetName,
+                        l10n.combatDistance(distanceM.round()),
+                        conditionName(l10n, condition),
+                        if (bleeding) l10n.enemyBleeding,
+                      ]),
                       style: TextStyle(fontSize: 12, color: colours.text),
                     ),
                     if (weaponName != null)
                       Text(
-                        '$weaponName'
-                        '${magazine > 0 ? ' · ${l10n.combatRounds(loaded, magazine)}' : ''}',
+                        effects([
+                          weaponName!,
+                          if (magazine > 0) l10n.combatRounds(loaded, magazine),
+                        ]),
                         style: TextStyle(fontSize: 12, color: colours.data),
                       ),
                     const SizedBox(height: 3),

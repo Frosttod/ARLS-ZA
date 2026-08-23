@@ -15,6 +15,7 @@ import 'package:flutter/material.dart';
 
 import 'fonts.dart';
 import '../l10n/app_localizations.dart';
+import 'effects.dart';
 import '../loot/loot_table.dart';
 import '../loot/obstacle.dart';
 import '../loot/search.dart';
@@ -358,9 +359,10 @@ class _Actions extends StatelessWidget {
                 icon: _wayIcon(shut!, way),
                 // Seconds and metres of noise: §19.3's whole choice, and not
                 // one an icon can carry on its own.
-                caption:
-                    '${way.seconds} s \u00b7 '
-                    '${l10n.breachNoise(way.noiseM.round())}',
+                caption: effects([
+                  '${way.seconds} s',
+                  l10n.breachNoise(way.noiseM.round()),
+                ]),
                 tooltip: _verb(l10n, shut, way),
                 colours: colours,
                 onPressed: onBreach == null ? null : () => onBreach!(way),

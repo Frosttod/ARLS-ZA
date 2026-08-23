@@ -623,6 +623,10 @@ class GameLoop {
       // §7: the one skill the tick is told about. See [TickInput.medicine] —
       // it arrives as a number, so `lib/sim` never learns what a skill is.
       medicine: medicine,
+      // §8.4, §8.5.1: what this roof is worth. The same rule: a number, never
+      // a module.
+      sleepRate: _inside?.sleepRate ?? 1,
+      nutritionRate: _inside?.nutritionRate ?? 1,
     );
   }
 

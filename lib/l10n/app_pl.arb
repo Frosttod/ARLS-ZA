@@ -386,6 +386,16 @@
       }
     }
   },
+  "effectRadius": "Promień",
+  "effectRare": "Rzadkie",
+  "effectSearch": "Przeszukanie",
+  "effectStealth": "Zauważony z",
+  "effectSpread": "Rozrzut",
+  "effectReload": "Przeładowanie i stabilizacja",
+  "effectDressing": "Medykamenty",
+  "effectHealing": "Gojenie",
+  "effectWork": "Budowa i wytwarzanie",
+  "effectSalvage": "Odzysk z rozbiórki",
   "profileSkillLevel": "{level} / 100",
   "@profileSkillLevel": {
     "placeholders": {
@@ -409,56 +419,6 @@
   "profileSkillWeapons": "Walka",
   "profileSkillMedicine": "Leczenie",
   "profileSkillEngineering": "Inżynieria",
-  "profileSkillScoutingWhat": "Promień przeszukania +{radius}% · rzadkie znaleziska +{rare}% · przeszukanie o {faster}% szybciej · zauważony o {stealth}% później",
-  "@profileSkillScoutingWhat": {
-    "placeholders": {
-      "radius": {
-        "type": "int"
-      },
-      "rare": {
-        "type": "int"
-      },
-      "faster": {
-        "type": "int"
-      },
-      "stealth": {
-        "type": "int"
-      }
-    }
-  },
-  "profileSkillWeaponsWhat": "Rozrzut {moa} MOA · przeładowanie i stabilizacja o {faster}% szybciej",
-  "@profileSkillWeaponsWhat": {
-    "placeholders": {
-      "moa": {
-        "type": "String"
-      },
-      "faster": {
-        "type": "int"
-      }
-    }
-  },
-  "profileSkillMedicineWhat": "Medykamenty o {faster}% szybciej · rany goją się o {healing}% szybciej",
-  "@profileSkillMedicineWhat": {
-    "placeholders": {
-      "faster": {
-        "type": "int"
-      },
-      "healing": {
-        "type": "int"
-      }
-    }
-  },
-  "profileSkillEngineeringWhat": "Budowa, wytwarzanie i rozbiórka o {faster}% szybciej · odzysk {share}% z rozbieranego",
-  "@profileSkillEngineeringWhat": {
-    "placeholders": {
-      "faster": {
-        "type": "int"
-      },
-      "share": {
-        "type": "int"
-      }
-    }
-  },
   "profileAimQuadrature": "Te liczby się nie sumują i nie powinny: §5.1 składa je pierwiastkiem z sumy kwadratów, więc największa dominuje, a małe niemal znikają. Procent obok każdej to jej rzeczywisty udział.",
   "profileAimShare": "{percent}%",
   "@profileAimShare": {
@@ -556,10 +516,13 @@
   "moduleWorkshop": "Warsztat",
   "moduleLounge": "Salon",
   "moduleLaboratory": "Laboratorium",
-  "moduleStorageWhat": "Pięćdziesiąt kilogramów na poziom, ponad dwadzieścia pięć, które schron mieści goły.",
-  "moduleWorkshopWhat": "Naprawy: do 60% kondycji, potem 85%, potem jak nowe. Poziom 2 otwiera też receptury złożone.",
-  "moduleLoungeWhat": "Piętnaście procent na poziom mniej do przespania — godzina nocy do odzyskania.",
-  "moduleLaboratoryWhat": "Trzy procent na poziom więcej z każdego posiłku i napoju.",
+  "moduleStorageEffect": "Pojemność",
+  "moduleWorkshopEffect": "Naprawa do",
+  "moduleWorkshopNone": "brak",
+  "moduleWorkshopComplex": "receptury złożone",
+  "moduleLoungeEffect": "Sen",
+  "moduleLaboratoryEffect": "Z jedzenia i picia",
+  "moduleMaxed": "maksimum",
   "shelterBuildStarted": "Praca ruszyła. Idzie dalej przy zamkniętej aplikacji.",
   "shelterInside": "Ze swojej strefy nie strzelasz.",
   "menuSettings": "USTAWIENIA",

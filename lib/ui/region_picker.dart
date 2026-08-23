@@ -27,6 +27,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
+import 'effects.dart';
 import '../map/pack_manager.dart';
 import '../map/pack_store.dart';
 import '../map/region_pack.dart';
@@ -319,7 +320,9 @@ class _RegionRow extends StatelessWidget {
   String _subtitle(L10n l10n) {
     if (!status.downloadable) return l10n.regionUnavailable;
     if (status.installed) return l10n.regionInstalled;
-    if (nearby) return '${l10n.regionNearYou} · ${status.pack.megabytes} MB';
+    if (nearby) {
+      return effects([l10n.regionNearYou, '${status.pack.megabytes} MB']);
+    }
     return '${status.pack.megabytes} MB';
   }
 

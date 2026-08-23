@@ -16,6 +16,7 @@ import 'package:flutter/services.dart';
 import 'fonts.dart';
 import 'units.dart';
 import '../l10n/app_localizations.dart';
+import 'effects.dart';
 import '../sim/body.dart';
 
 /// What the creator produces.
@@ -467,9 +468,10 @@ class _ComputedSummary extends StatelessWidget {
             ),
             _Row(
               label: l10n.dailyRequirement,
-              value:
-                  '${profile.dailyEnergyKcal.round()} kcal · '
-                  '${profile.baseWaterMlPerDay.round()} ml',
+              value: effects([
+                '${profile.dailyEnergyKcal.round()} kcal',
+                '${profile.baseWaterMlPerDay.round()} ml',
+              ]),
             ),
             _Row(
               label: l10n.carryComfort,

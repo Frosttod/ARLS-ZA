@@ -1393,6 +1393,66 @@ abstract class L10n {
   /// **'Blood loss class {roman} — {effect}.'**
   String profileWhyBlood(String roman, String effect);
 
+  /// No description provided for @effectRadius.
+  ///
+  /// In en, this message translates to:
+  /// **'Radius'**
+  String get effectRadius;
+
+  /// No description provided for @effectRare.
+  ///
+  /// In en, this message translates to:
+  /// **'Rare finds'**
+  String get effectRare;
+
+  /// No description provided for @effectSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Searching'**
+  String get effectSearch;
+
+  /// No description provided for @effectStealth.
+  ///
+  /// In en, this message translates to:
+  /// **'Noticed at'**
+  String get effectStealth;
+
+  /// No description provided for @effectSpread.
+  ///
+  /// In en, this message translates to:
+  /// **'Spread'**
+  String get effectSpread;
+
+  /// No description provided for @effectReload.
+  ///
+  /// In en, this message translates to:
+  /// **'Reload and settling'**
+  String get effectReload;
+
+  /// No description provided for @effectDressing.
+  ///
+  /// In en, this message translates to:
+  /// **'Dressings'**
+  String get effectDressing;
+
+  /// No description provided for @effectHealing.
+  ///
+  /// In en, this message translates to:
+  /// **'Healing'**
+  String get effectHealing;
+
+  /// No description provided for @effectWork.
+  ///
+  /// In en, this message translates to:
+  /// **'Building and making'**
+  String get effectWork;
+
+  /// No description provided for @effectSalvage.
+  ///
+  /// In en, this message translates to:
+  /// **'Salvage yield'**
+  String get effectSalvage;
+
   /// No description provided for @profileSkillLevel.
   ///
   /// In en, this message translates to:
@@ -1428,35 +1488,6 @@ abstract class L10n {
   /// In en, this message translates to:
   /// **'Engineering'**
   String get profileSkillEngineering;
-
-  /// No description provided for @profileSkillScoutingWhat.
-  ///
-  /// In en, this message translates to:
-  /// **'Search radius +{radius}% · rare finds +{rare}% · searches {faster}% faster · noticed {stealth}% later'**
-  String profileSkillScoutingWhat(
-    int radius,
-    int rare,
-    int faster,
-    int stealth,
-  );
-
-  /// No description provided for @profileSkillWeaponsWhat.
-  ///
-  /// In en, this message translates to:
-  /// **'Aim {moa} MOA · reload and settling {faster}% faster'**
-  String profileSkillWeaponsWhat(String moa, int faster);
-
-  /// No description provided for @profileSkillMedicineWhat.
-  ///
-  /// In en, this message translates to:
-  /// **'Dressings {faster}% faster · wounds mend {healing}% faster'**
-  String profileSkillMedicineWhat(int faster, int healing);
-
-  /// No description provided for @profileSkillEngineeringWhat.
-  ///
-  /// In en, this message translates to:
-  /// **'Building, making and stripping {faster}% faster · {share}% back from what you take apart'**
-  String profileSkillEngineeringWhat(int faster, int share);
 
   /// No description provided for @profileAimQuadrature.
   ///
@@ -1770,29 +1801,47 @@ abstract class L10n {
   /// **'Laboratory'**
   String get moduleLaboratory;
 
-  /// No description provided for @moduleStorageWhat.
+  /// No description provided for @moduleStorageEffect.
   ///
   /// In en, this message translates to:
-  /// **'Fifty kilograms a level, on top of the twenty-five the shelter holds bare.'**
-  String get moduleStorageWhat;
+  /// **'Capacity'**
+  String get moduleStorageEffect;
 
-  /// No description provided for @moduleWorkshopWhat.
+  /// No description provided for @moduleWorkshopEffect.
   ///
   /// In en, this message translates to:
-  /// **'Repairs: to 60% of condition, then 85%, then as new. Level 2 also opens complex recipes.'**
-  String get moduleWorkshopWhat;
+  /// **'Repairs to'**
+  String get moduleWorkshopEffect;
 
-  /// No description provided for @moduleLoungeWhat.
+  /// No description provided for @moduleWorkshopNone.
   ///
   /// In en, this message translates to:
-  /// **'Fifteen per cent a level off what a night has to cover — an hour of the night given back.'**
-  String get moduleLoungeWhat;
+  /// **'none'**
+  String get moduleWorkshopNone;
 
-  /// No description provided for @moduleLaboratoryWhat.
+  /// No description provided for @moduleWorkshopComplex.
   ///
   /// In en, this message translates to:
-  /// **'Three per cent a level more out of everything eaten and drunk.'**
-  String get moduleLaboratoryWhat;
+  /// **'complex recipes'**
+  String get moduleWorkshopComplex;
+
+  /// No description provided for @moduleLoungeEffect.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep'**
+  String get moduleLoungeEffect;
+
+  /// No description provided for @moduleLaboratoryEffect.
+  ///
+  /// In en, this message translates to:
+  /// **'From food and drink'**
+  String get moduleLaboratoryEffect;
+
+  /// No description provided for @moduleMaxed.
+  ///
+  /// In en, this message translates to:
+  /// **'maximum'**
+  String get moduleMaxed;
 
   /// No description provided for @shelterBuildStarted.
   ///

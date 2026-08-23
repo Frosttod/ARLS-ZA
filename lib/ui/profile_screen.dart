@@ -30,6 +30,7 @@ import '../loot/search.dart' show kScoutingSpeed;
 import '../sim/physiology.dart';
 import '../l10n/app_localizations.dart';
 import '../skills/skill.dart';
+import 'effects.dart';
 import '../sim/body.dart';
 import '../sim/player_stats.dart';
 import '../sim/tick.dart';
@@ -191,8 +192,10 @@ class ProfileScreen extends StatelessWidget {
             label: l10n.profileSwings,
             value: stats.meleeAccuracy == null
                 ? '${stats.swings}'
-                : '${stats.swings} · '
-                      '${(stats.meleeAccuracy! * 100).round()}%',
+                : effects([
+                    '${stats.swings}',
+                    '${(stats.meleeAccuracy! * 100).round()}%',
+                  ]),
             colours: colours,
           ),
           _Line(
@@ -496,7 +499,6 @@ class _SkillRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final fraction = progress.fraction;
-    final pc = (fraction * 100).round();
 
     final name = switch (progress.skill) {
       Skill.scouting => l10n.profileSkillScouting,
@@ -505,32 +507,40 @@ class _SkillRow extends StatelessWidget {
       Skill.engineering => l10n.profileSkillEngineering,
     };
 
-    final what = switch (progress.skill) {
+    // §12: the same shape the shelter modules use — a label, a number, one
+    // separator. Three screens were each inventing their own.
+    final what = effects(switch (progress.skill) {
       // §10.2.2 doubles the radius at full mastery; §10.3.5 gives the rare
       // share; the other two are §7's own thirty per cent.
-      Skill.scouting => l10n.profileSkillScoutingWhat(
-        pc,
-        (30 * fraction).round(),
-        (kScoutingSpeed * 100 * fraction).round(),
-        (kScoutingStealth * 100 * fraction).round(),
-      ),
+      Skill.scouting => [
+        effect(l10n.effectRadius, plusPercent(fraction)),
+        effect(l10n.effectRare, plusPercent(0.30 * fraction)),
+        effect(l10n.effectSearch, plusPercent(-kScoutingSpeed * fraction)),
+        effect(l10n.effectStealth, times(1 - kScoutingStealth * fraction)),
+      ],
       // §5.1.1: 25 MOA at nothing, 4 at everything.
-      Skill.weapons => l10n.profileSkillWeaponsWhat(
-        skillMoa(fraction).toStringAsFixed(1),
-        (kWeaponsSpeed * 100 * fraction).round(),
-      ),
-      Skill.medicine => l10n.profileSkillMedicineWhat(
-        (kMedicineSpeed * 100 * fraction).round(),
-        (kMedicineHealing * 100 * fraction).round(),
-      ),
-      Skill.engineering => l10n.profileSkillEngineeringWhat(
-        (30 * fraction).round(),
-        (100 *
-                (kSalvageReturn +
-                    (kSalvageReturnSkilled - kSalvageReturn) * fraction))
-            .round(),
-      ),
-    };
+      Skill.weapons => [
+        effect(
+          l10n.effectSpread,
+          '${skillMoa(fraction).toStringAsFixed(1)} MOA',
+        ),
+        effect(l10n.effectReload, plusPercent(-kWeaponsSpeed * fraction)),
+      ],
+      Skill.medicine => [
+        effect(l10n.effectDressing, plusPercent(-kMedicineSpeed * fraction)),
+        effect(l10n.effectHealing, times(1 + kMedicineHealing * fraction)),
+      ],
+      Skill.engineering => [
+        effect(l10n.effectWork, plusPercent(-0.30 * fraction)),
+        effect(
+          l10n.effectSalvage,
+          percent(
+            kSalvageReturn +
+                (kSalvageReturnSkilled - kSalvageReturn) * fraction,
+          ),
+        ),
+      ],
+    });
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
@@ -646,10 +656,15 @@ class _AimBudget extends StatelessWidget {
           if (error.get(source) > 0)
             _Line(
               label: errorName(l10n, source),
-              value:
-                  '${error.get(source).toStringAsFixed(1)} MOA'
-                  '   ·   '
-                  '${l10n.profileAimShare(variance <= 0 ? 0 : (100 * error.get(source) * error.get(source) / variance).round())}',
+              value: effects([
+                '${error.get(source).toStringAsFixed(1)} MOA',
+                l10n.profileAimShare(
+                  variance <= 0
+                      ? 0
+                      : (100 * error.get(source) * error.get(source) / variance)
+                            .round(),
+                ),
+              ]),
               colours: colours,
             ),
         const Divider(height: 18),
@@ -727,7 +742,7 @@ class _HitBar extends StatelessWidget {
           SizedBox(
             width: 58,
             child: Text(
-              '$hits · ${(share * 100).round()}%',
+              effects(['$hits', '${(share * 100).round()}%']),
               textAlign: TextAlign.right,
               style: TextStyle(fontSize: 11, color: colours.text),
             ),
