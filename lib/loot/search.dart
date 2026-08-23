@@ -132,6 +132,25 @@ double searchReachFor(PlaceSize size) => size.reachM;
 bool isPlayerWithinRadius(GeoPoint playerPos, GeoPoint centre, double radius) =>
     playerPos.distanceTo(centre) <= radius;
 
+/// §7: how much of a search Scouting takes off the clock.
+///
+/// ⚠️ **An extension, and named as one.** §7 gives Scouting a radius, a loot
+/// share and a stealth bonus, and says nothing about time. But a search is
+/// forty-five seconds of standing perfectly still in a street after dark
+/// (§10.2), and that is the price the whole system is built on — so the one
+/// thing a skilled searcher should buy is less of it.
+///
+/// Thirty per cent, the same ceiling every other skill effect uses. A search
+/// never goes free: §10.2's stillness is the decision, and a skill that
+/// removed it would remove the decision.
+const double kScoutingSpeed = 0.30;
+
+Duration searchTimeWith(Duration base, double scouting) => Duration(
+  milliseconds:
+      (base.inMilliseconds * (1 - kScoutingSpeed * scouting.clamp(0.0, 1.0)))
+          .round(),
+);
+
 /// The radius reconnaissance covers (§10.2.2).
 ///
 /// Written as the doc writes it, factor by factor, because each one is somebody
@@ -189,8 +208,16 @@ class Search {
   });
 
   /// Reconnaissance: forty-five seconds where the player is standing.
-  factory Search.area({required GeoPoint at, required DateTime now}) =>
-      Search(anchor: at, startedAt: now, requiredTime: kAreaSearchTime);
+  factory Search.area({
+    required GeoPoint at,
+    required DateTime now,
+    double scouting = 0,
+  }) => Search(
+    anchor: at,
+    startedAt: now,
+    // §7: a practised eye covers the same ground faster.
+    requiredTime: searchTimeWith(kAreaSearchTime, scouting),
+  );
 
   /// §19.3: getting through what shuts a place.
   ///
@@ -240,10 +267,16 @@ class Search {
 
     /// §10.3.5: how long this depth takes *here*. A bin is not a supermarket.
     Duration? takes,
+
+    /// §7: a practised eye turns a place over faster.
+    double scouting = 0,
   }) => Search(
     anchor: at,
     startedAt: now,
-    requiredTime: takes ?? Duration(seconds: depth.seconds),
+    requiredTime: searchTimeWith(
+      takes ?? Duration(seconds: depth.seconds),
+      scouting,
+    ),
     targetPoiId: poiId,
     depth: depth,
   );
@@ -450,4 +483,26 @@ ScoutRefusal? scoutRefusal({
     return ScoutRefusal.tooClose;
   }
   return null;
+}
+
+/// §10.2: how far a running search lets the player drift before it counts as
+/// walking off.
+///
+/// ⚠️ The place's own reach where there is a place — a school is fifty metres
+/// of school, and crossing a corridor is not leaving. Reported from a walk
+/// over a school as a search that cancelled itself while the player was still
+/// well inside the building they were searching: [kStillnessM] is an arm's
+/// length rule for a wheelie bin, and it was being applied to everything.
+///
+/// Anything anchored to a spot rather than a building keeps [kStillnessM] —
+/// reconnaissance (§10.2.2) and forcing a door really are about standing in
+/// one place.
+double searchBoundaryM<T>({
+  required T? place,
+  required PlaceSize? Function(T place) sizeOf,
+}) {
+  if (place == null) return kStillnessM;
+
+  final reach = searchReachFor(sizeOf(place) ?? PlaceSize.normal);
+  return reach > kStillnessM ? reach : kStillnessM;
 }

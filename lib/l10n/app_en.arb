@@ -339,6 +339,211 @@
   "profileNothingYet": "Nothing has landed yet.",
   "profileSkills": "Skills",
   "profileSkillsSoon": "Not in the game yet. Until they are, everybody shoots like a novice — twenty-five minutes of angle, which is the largest row above.",
+  "profileSheet": "The character sheet",
+  "profileSex": "Sex",
+  "profileSexMale": "male",
+  "profileSexFemale": "female",
+  "profileAge": "Age",
+  "profileHeight": "Height",
+  "profileMass": "Mass",
+  "profileMassLost": "{now} kg  ({start} kg at the start, −{percent}%)",
+  "@profileMassLost": {
+    "placeholders": {
+      "now": {
+        "type": "String"
+      },
+      "start": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "profileBmi": "BMI",
+  "profileState": "How this body is doing",
+  "profileStateWater": "Water",
+  "profileStateCalories": "Calories",
+  "profileStateSleep": "Sleep debt",
+  "profileStateStrain": "Nights behind",
+  "profileStateBlood": "Blood",
+  "profileOfDaily": "{amount} of {daily}",
+  "@profileOfDaily": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "daily": {
+        "type": "String"
+      }
+    }
+  },
+  "profileDebtHours": "{hours} h",
+  "@profileDebtHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "profileNightsBehind": "{nights} nights",
+  "@profileNightsBehind": {
+    "placeholders": {
+      "nights": {
+        "type": "int"
+      }
+    }
+  },
+  "profileWhy": "What it is doing to you",
+  "profileWhyNothing": "Nothing is costing you anything right now. Fed, watered, rested and whole.",
+  "profileWhySleepDebt": "Sleep debt {hours} h — you have been awake when you should not have been. Every action takes {percent}% longer and the sights are {moa} MOA wider.",
+  "@profileWhySleepDebt": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "percent": {
+        "type": "int"
+      },
+      "moa": {
+        "type": "String"
+      }
+    }
+  },
+  "profileWhyStrain": "{nights} nights behind — weeks of short nights, not last night. Wounds mend {healing}% slower and your pulse takes longer to settle. One good night will not clear it: only nights longer than you need.",
+  "@profileWhyStrain": {
+    "placeholders": {
+      "nights": {
+        "type": "int"
+      },
+      "healing": {
+        "type": "int"
+      }
+    }
+  },
+  "profileWhyThirst": "Water deficit {percent}% of body mass — everything takes {slower}% longer and your aim is {aim}% worse.",
+  "@profileWhyThirst": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      },
+      "slower": {
+        "type": "int"
+      },
+      "aim": {
+        "type": "int"
+      }
+    }
+  },
+  "profileWhyHunger": "Calorie reserve at {percent}% of a day — the hands are unsteady and everything takes longer.",
+  "@profileWhyHunger": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "profileWhyWasting": "You have lost {percent}% of your starting weight. This is not hunger, it is the body itself, and it comes back only by eating more than a day needs.",
+  "@profileWhyWasting": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "profileWhyBlood": "Blood loss class {roman} — {effect}.",
+  "@profileWhyBlood": {
+    "placeholders": {
+      "roman": {
+        "type": "String"
+      },
+      "effect": {
+        "type": "String"
+      }
+    }
+  },
+  "profileSkillLevel": "{level} / 100",
+  "@profileSkillLevel": {
+    "placeholders": {
+      "level": {
+        "type": "int"
+      }
+    }
+  },
+  "profileSkillXp": "{xp} XP · {next} to the next level",
+  "@profileSkillXp": {
+    "placeholders": {
+      "xp": {
+        "type": "int"
+      },
+      "next": {
+        "type": "int"
+      }
+    }
+  },
+  "profileSkillScouting": "Scouting",
+  "profileSkillWeapons": "Weapons",
+  "profileSkillMedicine": "Medicine",
+  "profileSkillEngineering": "Engineering",
+  "profileSkillScoutingWhat": "Search radius +{radius}% · rare finds +{rare}% · searches {faster}% faster · noticed {stealth}% later",
+  "@profileSkillScoutingWhat": {
+    "placeholders": {
+      "radius": {
+        "type": "int"
+      },
+      "rare": {
+        "type": "int"
+      },
+      "faster": {
+        "type": "int"
+      },
+      "stealth": {
+        "type": "int"
+      }
+    }
+  },
+  "profileSkillWeaponsWhat": "Aim {moa} MOA · reload and settling {faster}% faster",
+  "@profileSkillWeaponsWhat": {
+    "placeholders": {
+      "moa": {
+        "type": "String"
+      },
+      "faster": {
+        "type": "int"
+      }
+    }
+  },
+  "profileSkillMedicineWhat": "Dressings {faster}% faster · wounds mend {healing}% faster",
+  "@profileSkillMedicineWhat": {
+    "placeholders": {
+      "faster": {
+        "type": "int"
+      },
+      "healing": {
+        "type": "int"
+      }
+    }
+  },
+  "profileSkillEngineeringWhat": "Building, making and stripping {faster}% faster · {share}% back from what you take apart",
+  "@profileSkillEngineeringWhat": {
+    "placeholders": {
+      "faster": {
+        "type": "int"
+      },
+      "share": {
+        "type": "int"
+      }
+    }
+  },
+  "profileAimQuadrature": "These do not add up, and should not: §5.1 combines them in quadrature, so the largest one dominates and the small ones almost vanish. The percentage beside each is its real share of the group.",
+  "profileAimShare": "{percent}%",
+  "@profileAimShare": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "profileAliveDays": "Alive {days} d {hours} h",
   "@profileAliveDays": {
     "placeholders": {

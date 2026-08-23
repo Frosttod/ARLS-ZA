@@ -11,6 +11,8 @@
 library;
 
 import '../l10n/app_localizations.dart';
+import '../items/item.dart';
+import '../sim/occupation.dart';
 import '../sim/physiology.dart';
 import '../sim/tick.dart';
 
@@ -134,3 +136,44 @@ String _shockDegree(ShockClass shock) => switch (shock) {
   ShockClass.decompensated => 'III',
   ShockClass.critical => 'IV',
 };
+
+/// §12: the action and the thing it is being done to, in one line.
+///
+/// ⚠️ The item's name, not the kind of action. A strip that says "jedzenie"
+/// tells a player what sort of thing is happening; one that says "Jesz:
+/// Kanapka" tells them what they tapped and what it will cost — which is what
+/// somebody glancing at a phone while walking actually needs.
+///
+/// [nameOf] is handed in because §4.1 lets a content pack rename anything, and
+/// resolving a name is the catalogue's job rather than a label's.
+String useLabel(
+  L10n l10n,
+  ActionKind kind,
+  ItemDefinition? item, {
+  required String Function(ItemDefinition item) nameOf,
+}) {
+  final name = item == null ? '' : nameOf(item);
+
+  return switch (kind) {
+    ActionKind.eating => l10n.actionEating(name),
+    ActionKind.drinking => l10n.actionDrinking(name),
+    _ => l10n.actionUsing(name),
+  };
+}
+
+/// The same, for a kind that arrived as the string a row on disk holds.
+///
+/// A row naming something this version does not know about is a row that still
+/// has to say *something* — §2.1a's one-action rule reads this to explain a
+/// refusal, and "busy" with no reason is worse than a vague one.
+String useLabelFor(
+  L10n l10n,
+  String kind,
+  ItemDefinition? item, {
+  required String Function(ItemDefinition item) nameOf,
+}) {
+  for (final known in ActionKind.values) {
+    if (known.name == kind) return useLabel(l10n, known, item, nameOf: nameOf);
+  }
+  return l10n.searchAreaRunning;
+}

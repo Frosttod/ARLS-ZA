@@ -58,7 +58,16 @@ class ItemUse {
 /// Deliberately data-driven: the props were written in stage 4.1 with these
 /// figures in them, and reading them back is what makes a content pack's
 /// tinned soup as edible as the bundled one.
-ItemUse? useOf(ItemDefinition item) {
+/// §7: how much of a dressing Medicine takes off the clock.
+const double kMedicineSpeed = 0.30;
+
+/// §7, §4.7: what using [item] would do, at this character's hands.
+///
+/// ⚠️ [medicine] shortens medical items **and nothing else**. §7.1 is explicit
+/// about the shape of this mistake in the other direction — reading a weapons
+/// encyclopaedia must not depend on medical knowledge — and the same rule
+/// holds here: knowing how to pack a wound does not help anybody open a tin.
+ItemUse? useOf(ItemDefinition item, {double medicine = 0}) {
   final seconds = (item.props['use_seconds'] as num?)?.toDouble();
   final consumeSeconds = (item.props['consume_seconds'] as num?)?.toDouble();
 
@@ -81,6 +90,7 @@ ItemUse? useOf(ItemDefinition item) {
     case ItemKind.medical:
       if (seconds == null) return null;
       final stops = item.props['stops_bleeding_class'];
+      final skilled = seconds * (1 - kMedicineSpeed * medicine.clamp(0.0, 1.0));
 
       return ItemUse(
         action: switch (stops) {
@@ -88,7 +98,7 @@ ItemUse? useOf(ItemDefinition item) {
           'strong' => ActionKind.suturing,
           _ => ActionKind.dressing,
         },
-        duration: Duration(seconds: seconds.round()),
+        duration: Duration(milliseconds: (skilled * 1000).round()),
         // A dressing that handles moderate bleeding brings anything worse down
         // to what it can hold, and anything lighter to none at all (§2.6).
         stopsBleedingTo: stops is String ? BleedTier.none : null,

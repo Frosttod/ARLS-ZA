@@ -80,6 +80,14 @@ const double kBloodRegenMlPerHour = 60;
 /// two bars answer rather than a mystery.
 const double kSleepBloodRegenFactor = 2.5;
 
+/// §7: how much faster a skilled medic's body puts blood back.
+///
+/// §7 gives Medicine "+30% skuteczności opatrunków". A dressing either stops a
+/// bleed or does not, so the honest reading of *effectiveness* is what the
+/// body does once it is closed — §2.6's regeneration, which is the whole of
+/// getting better in this game.
+const double kMedicineHealing = 0.30;
+
 /// Constants a tick needs that do not change during a session. Derived once
 /// from the character sheet (§1.3) by `BodyProfile.toSimConstants`.
 class SimConstants {
@@ -159,7 +167,22 @@ class TickInput {
     this.bleedTier = BleedTier.none,
     this.sleeping = false,
     this.offline = false,
+    this.medicine = 0,
   });
+
+  /// §7: how well this character looks after a wound, 0–1.
+  ///
+  /// ⚠️ **The one place a skill reaches the tick, and it comes in from
+  /// outside.** Everything else in `advance()` is physiology; skills are not,
+  /// and `lib/sim` must not learn what a skill is. So it arrives as a number
+  /// on the input, exactly as the bleed tier and the ground speed do — the
+  /// tick sees a rate, not a character sheet.
+  ///
+  /// §7 gives Medicine "+30% skuteczności opatrunków". A dressing that stops a
+  /// bleed either stops it or does not, so the honest reading of *effectiveness*
+  /// is what the body does afterwards: §2.6's regeneration, which is the whole
+  /// of getting better in this game.
+  final double medicine;
 
   /// Ground speed from the position layer. Already filtered — the dead zone of
   /// §3.2 decides what counts as movement before it reaches here.
@@ -843,7 +866,11 @@ TickOutcome advance({
             // slowly. The one penalty here a player is most likely to feel
             // and least likely to guess at, which is why it has a note of its
             // own on the status screen (§12).
-            chronic.healingMultiplier
+            chronic.healingMultiplier *
+            // §7: +30% at full mastery, and it stacks with §2.6's own
+            // ×2.5 for being asleep — so a skilled medic who sleeps mends at
+            // over three times the waking rate of a novice.
+            (1 + kMedicineHealing * input.medicine.clamp(0.0, 1.0))
       : 0.0;
 
   var blood = math.min(

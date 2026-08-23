@@ -670,6 +670,161 @@ class L10nEn extends L10n {
       'Not in the game yet. Until they are, everybody shoots like a novice — twenty-five minutes of angle, which is the largest row above.';
 
   @override
+  String get profileSheet => 'The character sheet';
+
+  @override
+  String get profileSex => 'Sex';
+
+  @override
+  String get profileSexMale => 'male';
+
+  @override
+  String get profileSexFemale => 'female';
+
+  @override
+  String get profileAge => 'Age';
+
+  @override
+  String get profileHeight => 'Height';
+
+  @override
+  String get profileMass => 'Mass';
+
+  @override
+  String profileMassLost(String now, String start, int percent) {
+    return '$now kg  ($start kg at the start, −$percent%)';
+  }
+
+  @override
+  String get profileBmi => 'BMI';
+
+  @override
+  String get profileState => 'How this body is doing';
+
+  @override
+  String get profileStateWater => 'Water';
+
+  @override
+  String get profileStateCalories => 'Calories';
+
+  @override
+  String get profileStateSleep => 'Sleep debt';
+
+  @override
+  String get profileStateStrain => 'Nights behind';
+
+  @override
+  String get profileStateBlood => 'Blood';
+
+  @override
+  String profileOfDaily(String amount, String daily) {
+    return '$amount of $daily';
+  }
+
+  @override
+  String profileDebtHours(int hours) {
+    return '$hours h';
+  }
+
+  @override
+  String profileNightsBehind(int nights) {
+    return '$nights nights';
+  }
+
+  @override
+  String get profileWhy => 'What it is doing to you';
+
+  @override
+  String get profileWhyNothing =>
+      'Nothing is costing you anything right now. Fed, watered, rested and whole.';
+
+  @override
+  String profileWhySleepDebt(int hours, int percent, String moa) {
+    return 'Sleep debt $hours h — you have been awake when you should not have been. Every action takes $percent% longer and the sights are $moa MOA wider.';
+  }
+
+  @override
+  String profileWhyStrain(int nights, int healing) {
+    return '$nights nights behind — weeks of short nights, not last night. Wounds mend $healing% slower and your pulse takes longer to settle. One good night will not clear it: only nights longer than you need.';
+  }
+
+  @override
+  String profileWhyThirst(int percent, int slower, int aim) {
+    return 'Water deficit $percent% of body mass — everything takes $slower% longer and your aim is $aim% worse.';
+  }
+
+  @override
+  String profileWhyHunger(int percent) {
+    return 'Calorie reserve at $percent% of a day — the hands are unsteady and everything takes longer.';
+  }
+
+  @override
+  String profileWhyWasting(int percent) {
+    return 'You have lost $percent% of your starting weight. This is not hunger, it is the body itself, and it comes back only by eating more than a day needs.';
+  }
+
+  @override
+  String profileWhyBlood(String roman, String effect) {
+    return 'Blood loss class $roman — $effect.';
+  }
+
+  @override
+  String profileSkillLevel(int level) {
+    return '$level / 100';
+  }
+
+  @override
+  String profileSkillXp(int xp, int next) {
+    return '$xp XP · $next to the next level';
+  }
+
+  @override
+  String get profileSkillScouting => 'Scouting';
+
+  @override
+  String get profileSkillWeapons => 'Weapons';
+
+  @override
+  String get profileSkillMedicine => 'Medicine';
+
+  @override
+  String get profileSkillEngineering => 'Engineering';
+
+  @override
+  String profileSkillScoutingWhat(
+    int radius,
+    int rare,
+    int faster,
+    int stealth,
+  ) {
+    return 'Search radius +$radius% · rare finds +$rare% · searches $faster% faster · noticed $stealth% later';
+  }
+
+  @override
+  String profileSkillWeaponsWhat(String moa, int faster) {
+    return 'Aim $moa MOA · reload and settling $faster% faster';
+  }
+
+  @override
+  String profileSkillMedicineWhat(int faster, int healing) {
+    return 'Dressings $faster% faster · wounds mend $healing% faster';
+  }
+
+  @override
+  String profileSkillEngineeringWhat(int faster, int share) {
+    return 'Building, making and stripping $faster% faster · $share% back from what you take apart';
+  }
+
+  @override
+  String get profileAimQuadrature =>
+      'These do not add up, and should not: §5.1 combines them in quadrature, so the largest one dominates and the small ones almost vanish. The percentage beside each is its real share of the group.';
+
+  @override
+  String profileAimShare(int percent) {
+    return '$percent%';
+  }
+
+  @override
   String profileAliveDays(int days, int hours) {
     return 'Alive $days d $hours h';
   }

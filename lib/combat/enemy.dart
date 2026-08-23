@@ -182,6 +182,14 @@ const double kWanderRadiusM = 40;
 /// a body, and a marker that changes direction every second is unreadable.
 const double kWanderTurnPerSecond = 12;
 
+/// §7: how much of an enemy's detection radius Scouting takes away.
+///
+/// ⚠️ §7's own figure, and the only one of the four skills whose effect the
+/// player never sees a number for — you cannot watch a fight that did not
+/// happen. Which is why the profile screen spells it out: at full mastery a
+/// Walker notices you at eighty-four metres instead of a hundred and twenty.
+const double kScoutingStealth = 0.30;
+
 /// One of them, at one moment.
 class Enemy {
   const Enemy({
@@ -296,6 +304,19 @@ class Enemy {
 
   /// §6.1a: it charges inside sixty per cent of what it can see.
   double get chaseM => sightM * 0.6;
+
+  /// §6.2, §7: how far this one notices **this** player.
+  ///
+  /// ⚠️ Not the same question as [sightM], and the difference is the whole of
+  /// §7's Scouting: [sightM] is what the enemy can see, this is what it sees
+  /// *of somebody who knows how to move*. Thirty per cent at full mastery,
+  /// which turns a Walker's hundred and twenty metres into eighty-four.
+  ///
+  /// A radius rather than a roll, because §6.2 gives detection as a radius and
+  /// nothing else. Making stealth a dice roll here would put a coin flip
+  /// between the player and a fight they thought they had avoided.
+  double sightAgainst(double scouting) =>
+      sightM * (1 - kScoutingStealth * scouting.clamp(0.0, 1.0));
 
   bool get isDead => bloodLostMl >= bloodMl * kind.deathAtLoss;
 
@@ -426,6 +447,7 @@ Enemy advanceEnemy(
   required Duration elapsed,
   bool heardShot = false,
   SpawnFilter? ground,
+  double scouting = 0,
 }) {
   if (enemy.isDead || elapsed <= Duration.zero) return enemy;
 
@@ -456,6 +478,7 @@ Enemy advanceEnemy(
     heardShot: heardShot,
     beyondLeash: beyondLeash,
     lostContact: lostContact,
+    scouting: scouting,
   );
 
   // §6.1: the stopwatch. Spent only while sprinting, given back while walking.
@@ -478,7 +501,7 @@ Enemy advanceEnemy(
   // the player is not the nearer answer — something in front of you beats
   // something you heard.
   final noise = enemy.heardAt;
-  final seen = distance <= enemy.sightM;
+  final seen = distance <= enemy.sightAgainst(scouting);
   final investigating = noise != null && !seen && state != EnemyState.returning;
 
   var left = enemy.investigateLeft;
@@ -568,6 +591,7 @@ EnemyState _nextState(
   required bool heardShot,
   required bool beyondLeash,
   required bool lostContact,
+  double scouting = 0,
 }) {
   // ⚠️ §6.1a's contact rule and §5.6.2's search would otherwise contradict
   // each other: an enemy sent to a noise is *supposed* to be somewhere the
@@ -587,7 +611,7 @@ EnemyState _nextState(
         : EnemyState.returning;
   }
 
-  final noticed = heardShot || distance <= enemy.sightM;
+  final noticed = heardShot || distance <= enemy.sightAgainst(scouting);
   if (!noticed) {
     // §5.6.2: a sound already heard is still worth walking to, so it stays
     // alert rather than forgetting the moment the player is out of sight.

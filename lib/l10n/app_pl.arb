@@ -263,6 +263,211 @@
   "profileNothingYet": "Jeszcze nic nie trafiło.",
   "profileSkills": "Umiejętności",
   "profileSkillsSoon": "Jeszcze ich nie ma. Dopóki nie będzie, każdy strzela jak nowicjusz — dwadzieścia pięć minut kątowych, czyli największy wiersz powyżej.",
+  "profileSheet": "Karta postaci",
+  "profileSex": "Płeć",
+  "profileSexMale": "mężczyzna",
+  "profileSexFemale": "kobieta",
+  "profileAge": "Wiek",
+  "profileHeight": "Wzrost",
+  "profileMass": "Masa",
+  "profileMassLost": "{now} kg  (start {start} kg, −{percent}%)",
+  "@profileMassLost": {
+    "placeholders": {
+      "now": {
+        "type": "String"
+      },
+      "start": {
+        "type": "String"
+      },
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "profileBmi": "BMI",
+  "profileState": "Jak się to ciało ma",
+  "profileStateWater": "Woda",
+  "profileStateCalories": "Kalorie",
+  "profileStateSleep": "Dług senny",
+  "profileStateStrain": "Nocy do odrobienia",
+  "profileStateBlood": "Krew",
+  "profileOfDaily": "{amount} z {daily}",
+  "@profileOfDaily": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "daily": {
+        "type": "String"
+      }
+    }
+  },
+  "profileDebtHours": "{hours} h",
+  "@profileDebtHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "profileNightsBehind": "{nights} nocy",
+  "@profileNightsBehind": {
+    "placeholders": {
+      "nights": {
+        "type": "int"
+      }
+    }
+  },
+  "profileWhy": "Co to z Tobą robi",
+  "profileWhyNothing": "Nic Cię teraz nie kosztuje. Najedzony, napojony, wyspany i cały.",
+  "profileWhySleepDebt": "Dług senny {hours} h — nie spałeś wtedy, kiedy trzeba było. Każda czynność trwa o {percent}% dłużej, a rozrzut jest szerszy o {moa} MOA.",
+  "@profileWhySleepDebt": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "percent": {
+        "type": "int"
+      },
+      "moa": {
+        "type": "String"
+      }
+    }
+  },
+  "profileWhyStrain": "{nights} nocy do odrobienia — to tygodnie krótkich nocy, nie wczorajsza. Rany goją się o {healing}% wolniej, a tętno wraca dłużej. Jedna dobra noc tego nie skasuje: tylko noce dłuższe, niż potrzebujesz.",
+  "@profileWhyStrain": {
+    "placeholders": {
+      "nights": {
+        "type": "int"
+      },
+      "healing": {
+        "type": "int"
+      }
+    }
+  },
+  "profileWhyThirst": "Deficyt wody {percent}% masy ciała — wszystko trwa o {slower}% dłużej, a celność jest gorsza o {aim}%.",
+  "@profileWhyThirst": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      },
+      "slower": {
+        "type": "int"
+      },
+      "aim": {
+        "type": "int"
+      }
+    }
+  },
+  "profileWhyHunger": "Zapas kaloryczny na {percent}% doby — ręce mniej pewne i wszystko idzie wolniej.",
+  "@profileWhyHunger": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "profileWhyWasting": "Straciłeś {percent}% masy startowej. To już nie głód, to samo ciało — wraca wyłącznie przez jedzenie ponad dobowe zapotrzebowanie.",
+  "@profileWhyWasting": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "profileWhyBlood": "Utrata krwi klasy {roman} — {effect}.",
+  "@profileWhyBlood": {
+    "placeholders": {
+      "roman": {
+        "type": "String"
+      },
+      "effect": {
+        "type": "String"
+      }
+    }
+  },
+  "profileSkillLevel": "{level} / 100",
+  "@profileSkillLevel": {
+    "placeholders": {
+      "level": {
+        "type": "int"
+      }
+    }
+  },
+  "profileSkillXp": "{xp} XP · {next} do następnego poziomu",
+  "@profileSkillXp": {
+    "placeholders": {
+      "xp": {
+        "type": "int"
+      },
+      "next": {
+        "type": "int"
+      }
+    }
+  },
+  "profileSkillScouting": "Zwiad",
+  "profileSkillWeapons": "Walka",
+  "profileSkillMedicine": "Leczenie",
+  "profileSkillEngineering": "Inżynieria",
+  "profileSkillScoutingWhat": "Promień przeszukania +{radius}% · rzadkie znaleziska +{rare}% · przeszukanie o {faster}% szybciej · zauważony o {stealth}% później",
+  "@profileSkillScoutingWhat": {
+    "placeholders": {
+      "radius": {
+        "type": "int"
+      },
+      "rare": {
+        "type": "int"
+      },
+      "faster": {
+        "type": "int"
+      },
+      "stealth": {
+        "type": "int"
+      }
+    }
+  },
+  "profileSkillWeaponsWhat": "Rozrzut {moa} MOA · przeładowanie i stabilizacja o {faster}% szybciej",
+  "@profileSkillWeaponsWhat": {
+    "placeholders": {
+      "moa": {
+        "type": "String"
+      },
+      "faster": {
+        "type": "int"
+      }
+    }
+  },
+  "profileSkillMedicineWhat": "Medykamenty o {faster}% szybciej · rany goją się o {healing}% szybciej",
+  "@profileSkillMedicineWhat": {
+    "placeholders": {
+      "faster": {
+        "type": "int"
+      },
+      "healing": {
+        "type": "int"
+      }
+    }
+  },
+  "profileSkillEngineeringWhat": "Budowa, wytwarzanie i rozbiórka o {faster}% szybciej · odzysk {share}% z rozbieranego",
+  "@profileSkillEngineeringWhat": {
+    "placeholders": {
+      "faster": {
+        "type": "int"
+      },
+      "share": {
+        "type": "int"
+      }
+    }
+  },
+  "profileAimQuadrature": "Te liczby się nie sumują i nie powinny: §5.1 składa je pierwiastkiem z sumy kwadratów, więc największa dominuje, a małe niemal znikają. Procent obok każdej to jej rzeczywisty udział.",
+  "profileAimShare": "{percent}%",
+  "@profileAimShare": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "profileAliveDays": "Żyje {days} d {hours} h",
   "@profileAliveDays": {
     "placeholders": {

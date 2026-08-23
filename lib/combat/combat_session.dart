@@ -73,6 +73,9 @@ class CombatSession {
     GeoPoint? shelterAt,
     List<Sanctuary> sanctuaries = const [],
     bool denseUrban = false,
+    // §7: how well this player moves. Nothing here rolls for it — see
+    // [Enemy.sightAgainst].
+    double scouting = 0,
     void Function(Enemy dead)? onDeath,
   }) {
     // §3.5's features are what a person may not be sent through; most of them
@@ -97,6 +100,7 @@ class CombatSession {
         playerAt: playerAt,
         elapsed: elapsed,
         ground: ground,
+        scouting: scouting,
       );
 
       if (after.isDead) {

@@ -10273,6 +10273,270 @@ class ActiveActionsCompanion extends UpdateCompanion<ActiveActionRow> {
   }
 }
 
+class $SkillRowsTable extends SkillRows
+    with TableInfo<$SkillRowsTable, SkillRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SkillRowsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _profileIdMeta = const VerificationMeta(
+    'profileId',
+  );
+  @override
+  late final GeneratedColumn<int> profileId = GeneratedColumn<int>(
+    'profile_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _skillMeta = const VerificationMeta('skill');
+  @override
+  late final GeneratedColumn<String> skill = GeneratedColumn<String>(
+    'skill',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _xpMeta = const VerificationMeta('xp');
+  @override
+  late final GeneratedColumn<int> xp = GeneratedColumn<int>(
+    'xp',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [profileId, skill, xp];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'skills';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SkillRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('profile_id')) {
+      context.handle(
+        _profileIdMeta,
+        profileId.isAcceptableOrUnknown(data['profile_id']!, _profileIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_profileIdMeta);
+    }
+    if (data.containsKey('skill')) {
+      context.handle(
+        _skillMeta,
+        skill.isAcceptableOrUnknown(data['skill']!, _skillMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_skillMeta);
+    }
+    if (data.containsKey('xp')) {
+      context.handle(_xpMeta, xp.isAcceptableOrUnknown(data['xp']!, _xpMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {profileId, skill};
+  @override
+  SkillRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SkillRow(
+      profileId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}profile_id'],
+      )!,
+      skill: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}skill'],
+      )!,
+      xp: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}xp'],
+      )!,
+    );
+  }
+
+  @override
+  $SkillRowsTable createAlias(String alias) {
+    return $SkillRowsTable(attachedDatabase, alias);
+  }
+}
+
+class SkillRow extends DataClass implements Insertable<SkillRow> {
+  final int profileId;
+
+  /// The wire name from [Skill]: 'scouting' | 'weapons' | 'medicine' |
+  /// 'engineering'. Text rather than an index, because it also appears in
+  /// `assets/data/literature.json` and the two must not drift apart.
+  final String skill;
+
+  /// Everything earned in this skill, ever. The level is derived (§7.2) and
+  /// never stored — a stored level and a stored total can disagree, and then
+  /// nobody knows which one the player earned.
+  final int xp;
+  const SkillRow({
+    required this.profileId,
+    required this.skill,
+    required this.xp,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['profile_id'] = Variable<int>(profileId);
+    map['skill'] = Variable<String>(skill);
+    map['xp'] = Variable<int>(xp);
+    return map;
+  }
+
+  SkillRowsCompanion toCompanion(bool nullToAbsent) {
+    return SkillRowsCompanion(
+      profileId: Value(profileId),
+      skill: Value(skill),
+      xp: Value(xp),
+    );
+  }
+
+  factory SkillRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SkillRow(
+      profileId: serializer.fromJson<int>(json['profileId']),
+      skill: serializer.fromJson<String>(json['skill']),
+      xp: serializer.fromJson<int>(json['xp']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'profileId': serializer.toJson<int>(profileId),
+      'skill': serializer.toJson<String>(skill),
+      'xp': serializer.toJson<int>(xp),
+    };
+  }
+
+  SkillRow copyWith({int? profileId, String? skill, int? xp}) => SkillRow(
+    profileId: profileId ?? this.profileId,
+    skill: skill ?? this.skill,
+    xp: xp ?? this.xp,
+  );
+  SkillRow copyWithCompanion(SkillRowsCompanion data) {
+    return SkillRow(
+      profileId: data.profileId.present ? data.profileId.value : this.profileId,
+      skill: data.skill.present ? data.skill.value : this.skill,
+      xp: data.xp.present ? data.xp.value : this.xp,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SkillRow(')
+          ..write('profileId: $profileId, ')
+          ..write('skill: $skill, ')
+          ..write('xp: $xp')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(profileId, skill, xp);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SkillRow &&
+          other.profileId == this.profileId &&
+          other.skill == this.skill &&
+          other.xp == this.xp);
+}
+
+class SkillRowsCompanion extends UpdateCompanion<SkillRow> {
+  final Value<int> profileId;
+  final Value<String> skill;
+  final Value<int> xp;
+  final Value<int> rowid;
+  const SkillRowsCompanion({
+    this.profileId = const Value.absent(),
+    this.skill = const Value.absent(),
+    this.xp = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SkillRowsCompanion.insert({
+    required int profileId,
+    required String skill,
+    this.xp = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : profileId = Value(profileId),
+       skill = Value(skill);
+  static Insertable<SkillRow> custom({
+    Expression<int>? profileId,
+    Expression<String>? skill,
+    Expression<int>? xp,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (profileId != null) 'profile_id': profileId,
+      if (skill != null) 'skill': skill,
+      if (xp != null) 'xp': xp,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SkillRowsCompanion copyWith({
+    Value<int>? profileId,
+    Value<String>? skill,
+    Value<int>? xp,
+    Value<int>? rowid,
+  }) {
+    return SkillRowsCompanion(
+      profileId: profileId ?? this.profileId,
+      skill: skill ?? this.skill,
+      xp: xp ?? this.xp,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (profileId.present) {
+      map['profile_id'] = Variable<int>(profileId.value);
+    }
+    if (skill.present) {
+      map['skill'] = Variable<String>(skill.value);
+    }
+    if (xp.present) {
+      map['xp'] = Variable<int>(xp.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SkillRowsCompanion(')
+          ..write('profileId: $profileId, ')
+          ..write('skill: $skill, ')
+          ..write('xp: $xp, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$SaveDatabase extends GeneratedDatabase {
   _$SaveDatabase(QueryExecutor e) : super(e);
   $SaveDatabaseManager get managers => $SaveDatabaseManager(this);
@@ -10295,6 +10559,7 @@ abstract class _$SaveDatabase extends GeneratedDatabase {
   late final $ShelterItemsTable shelterItems = $ShelterItemsTable(this);
   late final $CraftJobsTable craftJobs = $CraftJobsTable(this);
   late final $ActiveActionsTable activeActions = $ActiveActionsTable(this);
+  late final $SkillRowsTable skillRows = $SkillRowsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -10315,6 +10580,7 @@ abstract class _$SaveDatabase extends GeneratedDatabase {
     shelterItems,
     craftJobs,
     activeActions,
+    skillRows,
   ];
   @override
   DriftDatabaseOptions get options =>
@@ -15072,6 +15338,162 @@ typedef $$ActiveActionsTableProcessedTableManager =
       ActiveActionRow,
       PrefetchHooks Function()
     >;
+typedef $$SkillRowsTableCreateCompanionBuilder =
+    SkillRowsCompanion Function({
+      required int profileId,
+      required String skill,
+      Value<int> xp,
+      Value<int> rowid,
+    });
+typedef $$SkillRowsTableUpdateCompanionBuilder =
+    SkillRowsCompanion Function({
+      Value<int> profileId,
+      Value<String> skill,
+      Value<int> xp,
+      Value<int> rowid,
+    });
+
+class $$SkillRowsTableFilterComposer
+    extends Composer<_$SaveDatabase, $SkillRowsTable> {
+  $$SkillRowsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get profileId => $composableBuilder(
+    column: $table.profileId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get skill => $composableBuilder(
+    column: $table.skill,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get xp => $composableBuilder(
+    column: $table.xp,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$SkillRowsTableOrderingComposer
+    extends Composer<_$SaveDatabase, $SkillRowsTable> {
+  $$SkillRowsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get profileId => $composableBuilder(
+    column: $table.profileId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get skill => $composableBuilder(
+    column: $table.skill,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get xp => $composableBuilder(
+    column: $table.xp,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$SkillRowsTableAnnotationComposer
+    extends Composer<_$SaveDatabase, $SkillRowsTable> {
+  $$SkillRowsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get profileId =>
+      $composableBuilder(column: $table.profileId, builder: (column) => column);
+
+  GeneratedColumn<String> get skill =>
+      $composableBuilder(column: $table.skill, builder: (column) => column);
+
+  GeneratedColumn<int> get xp =>
+      $composableBuilder(column: $table.xp, builder: (column) => column);
+}
+
+class $$SkillRowsTableTableManager
+    extends
+        RootTableManager<
+          _$SaveDatabase,
+          $SkillRowsTable,
+          SkillRow,
+          $$SkillRowsTableFilterComposer,
+          $$SkillRowsTableOrderingComposer,
+          $$SkillRowsTableAnnotationComposer,
+          $$SkillRowsTableCreateCompanionBuilder,
+          $$SkillRowsTableUpdateCompanionBuilder,
+          (SkillRow, BaseReferences<_$SaveDatabase, $SkillRowsTable, SkillRow>),
+          SkillRow,
+          PrefetchHooks Function()
+        > {
+  $$SkillRowsTableTableManager(_$SaveDatabase db, $SkillRowsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SkillRowsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SkillRowsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SkillRowsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> profileId = const Value.absent(),
+                Value<String> skill = const Value.absent(),
+                Value<int> xp = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SkillRowsCompanion(
+                profileId: profileId,
+                skill: skill,
+                xp: xp,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required int profileId,
+                required String skill,
+                Value<int> xp = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SkillRowsCompanion.insert(
+                profileId: profileId,
+                skill: skill,
+                xp: xp,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$SkillRowsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$SaveDatabase,
+      $SkillRowsTable,
+      SkillRow,
+      $$SkillRowsTableFilterComposer,
+      $$SkillRowsTableOrderingComposer,
+      $$SkillRowsTableAnnotationComposer,
+      $$SkillRowsTableCreateCompanionBuilder,
+      $$SkillRowsTableUpdateCompanionBuilder,
+      (SkillRow, BaseReferences<_$SaveDatabase, $SkillRowsTable, SkillRow>),
+      SkillRow,
+      PrefetchHooks Function()
+    >;
 
 class $SaveDatabaseManager {
   final _$SaveDatabase _db;
@@ -15106,4 +15528,6 @@ class $SaveDatabaseManager {
       $$CraftJobsTableTableManager(_db, _db.craftJobs);
   $$ActiveActionsTableTableManager get activeActions =>
       $$ActiveActionsTableTableManager(_db, _db.activeActions);
+  $$SkillRowsTableTableManager get skillRows =>
+      $$SkillRowsTableTableManager(_db, _db.skillRows);
 }

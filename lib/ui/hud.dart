@@ -18,6 +18,11 @@ import '../l10n/app_localizations.dart';
 import 'status_notes.dart';
 import '../sim/physiology.dart';
 import '../sim/tick.dart';
+import '../game/game_loop.dart' show GameSnapshot;
+import '../location/location_access.dart';
+import '../location/movement_integrity.dart';
+import '../location/position_fix.dart' show PositionSignal;
+import '../safety/player_safety.dart' show CombatBlock;
 
 /// Colours the HUD reads in, in both themes (§12).
 ///
@@ -941,3 +946,44 @@ String _grouped(double value) {
 /// ⚠️ A clock, not a decimal. "11.8 h" is a figure nobody can act on —
 /// eleven hours and how many minutes? — and it sat on the screen for weeks.
 String _sleepOwed(Duration debt) => owed(debt);
+
+/// §12: everything the strip under the bars has to say right now.
+///
+/// ⚠️ A free function rather than a method, because none of it is about the
+/// screen: every row is a rule from somewhere else — §3.2's signal, §3.3's
+/// battery, §1.2's speed block, Android's own permission state — and reading
+/// them is the kind of thing that quietly grows a God class a line at a time.
+List<String> hudWarnings(
+  L10n l10n,
+  GameSnapshot snapshot, {
+  LocationAccess? location,
+}) => [
+  ?switch (snapshot.integrityReason) {
+    IntegrityReason.mockProvider => l10n.integritySuspendedMock,
+    IntegrityReason.vehicleSpeed
+        when snapshot.integrity == IntegrityState.suspended =>
+      l10n.integritySuspendedVehicle,
+    _ => null,
+  },
+  // ⚠️ Nothing about the signal while the character is under a roof.
+  //
+  // §2.1a.4 switches the receiver off in a shelter on purpose — the
+  // character is not moving, so the position is not needed and the battery
+  // is better spent elsewhere. The watchdog then reports no fixes, which is
+  // true and useless: the game was warning the player about a decision the
+  // game had just made, on the one screen where nothing is wrong.
+  ?switch (snapshot.state.zone.isSheltered
+      ? PositionSignal.good
+      : snapshot.signal) {
+    PositionSignal.lost || PositionSignal.unavailable => l10n.hudNoSignal,
+    PositionSignal.degraded => l10n.hudWeakSignal,
+    // Not a warning. The receiver is doing what a receiver does, and saying
+    // so is what stops the player reading a cold start as a fault.
+    PositionSignal.acquiring => l10n.hudAcquiring,
+    PositionSignal.good => null,
+  },
+  if (snapshot.economy) l10n.hudLowBattery,
+  if (location == LocationAccess.foregroundOnly) l10n.permLocationForeground,
+  if (snapshot.combatBlocked == CombatBlock.movingTooFast)
+    l10n.safetyNoCombatMoving,
+];

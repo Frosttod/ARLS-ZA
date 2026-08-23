@@ -1237,6 +1237,239 @@ abstract class L10n {
   /// **'Not in the game yet. Until they are, everybody shoots like a novice — twenty-five minutes of angle, which is the largest row above.'**
   String get profileSkillsSoon;
 
+  /// No description provided for @profileSheet.
+  ///
+  /// In en, this message translates to:
+  /// **'The character sheet'**
+  String get profileSheet;
+
+  /// No description provided for @profileSex.
+  ///
+  /// In en, this message translates to:
+  /// **'Sex'**
+  String get profileSex;
+
+  /// No description provided for @profileSexMale.
+  ///
+  /// In en, this message translates to:
+  /// **'male'**
+  String get profileSexMale;
+
+  /// No description provided for @profileSexFemale.
+  ///
+  /// In en, this message translates to:
+  /// **'female'**
+  String get profileSexFemale;
+
+  /// No description provided for @profileAge.
+  ///
+  /// In en, this message translates to:
+  /// **'Age'**
+  String get profileAge;
+
+  /// No description provided for @profileHeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Height'**
+  String get profileHeight;
+
+  /// No description provided for @profileMass.
+  ///
+  /// In en, this message translates to:
+  /// **'Mass'**
+  String get profileMass;
+
+  /// No description provided for @profileMassLost.
+  ///
+  /// In en, this message translates to:
+  /// **'{now} kg  ({start} kg at the start, −{percent}%)'**
+  String profileMassLost(String now, String start, int percent);
+
+  /// No description provided for @profileBmi.
+  ///
+  /// In en, this message translates to:
+  /// **'BMI'**
+  String get profileBmi;
+
+  /// No description provided for @profileState.
+  ///
+  /// In en, this message translates to:
+  /// **'How this body is doing'**
+  String get profileState;
+
+  /// No description provided for @profileStateWater.
+  ///
+  /// In en, this message translates to:
+  /// **'Water'**
+  String get profileStateWater;
+
+  /// No description provided for @profileStateCalories.
+  ///
+  /// In en, this message translates to:
+  /// **'Calories'**
+  String get profileStateCalories;
+
+  /// No description provided for @profileStateSleep.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep debt'**
+  String get profileStateSleep;
+
+  /// No description provided for @profileStateStrain.
+  ///
+  /// In en, this message translates to:
+  /// **'Nights behind'**
+  String get profileStateStrain;
+
+  /// No description provided for @profileStateBlood.
+  ///
+  /// In en, this message translates to:
+  /// **'Blood'**
+  String get profileStateBlood;
+
+  /// No description provided for @profileOfDaily.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} of {daily}'**
+  String profileOfDaily(String amount, String daily);
+
+  /// No description provided for @profileDebtHours.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours} h'**
+  String profileDebtHours(int hours);
+
+  /// No description provided for @profileNightsBehind.
+  ///
+  /// In en, this message translates to:
+  /// **'{nights} nights'**
+  String profileNightsBehind(int nights);
+
+  /// No description provided for @profileWhy.
+  ///
+  /// In en, this message translates to:
+  /// **'What it is doing to you'**
+  String get profileWhy;
+
+  /// No description provided for @profileWhyNothing.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing is costing you anything right now. Fed, watered, rested and whole.'**
+  String get profileWhyNothing;
+
+  /// No description provided for @profileWhySleepDebt.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep debt {hours} h — you have been awake when you should not have been. Every action takes {percent}% longer and the sights are {moa} MOA wider.'**
+  String profileWhySleepDebt(int hours, int percent, String moa);
+
+  /// No description provided for @profileWhyStrain.
+  ///
+  /// In en, this message translates to:
+  /// **'{nights} nights behind — weeks of short nights, not last night. Wounds mend {healing}% slower and your pulse takes longer to settle. One good night will not clear it: only nights longer than you need.'**
+  String profileWhyStrain(int nights, int healing);
+
+  /// No description provided for @profileWhyThirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Water deficit {percent}% of body mass — everything takes {slower}% longer and your aim is {aim}% worse.'**
+  String profileWhyThirst(int percent, int slower, int aim);
+
+  /// No description provided for @profileWhyHunger.
+  ///
+  /// In en, this message translates to:
+  /// **'Calorie reserve at {percent}% of a day — the hands are unsteady and everything takes longer.'**
+  String profileWhyHunger(int percent);
+
+  /// No description provided for @profileWhyWasting.
+  ///
+  /// In en, this message translates to:
+  /// **'You have lost {percent}% of your starting weight. This is not hunger, it is the body itself, and it comes back only by eating more than a day needs.'**
+  String profileWhyWasting(int percent);
+
+  /// No description provided for @profileWhyBlood.
+  ///
+  /// In en, this message translates to:
+  /// **'Blood loss class {roman} — {effect}.'**
+  String profileWhyBlood(String roman, String effect);
+
+  /// No description provided for @profileSkillLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'{level} / 100'**
+  String profileSkillLevel(int level);
+
+  /// No description provided for @profileSkillXp.
+  ///
+  /// In en, this message translates to:
+  /// **'{xp} XP · {next} to the next level'**
+  String profileSkillXp(int xp, int next);
+
+  /// No description provided for @profileSkillScouting.
+  ///
+  /// In en, this message translates to:
+  /// **'Scouting'**
+  String get profileSkillScouting;
+
+  /// No description provided for @profileSkillWeapons.
+  ///
+  /// In en, this message translates to:
+  /// **'Weapons'**
+  String get profileSkillWeapons;
+
+  /// No description provided for @profileSkillMedicine.
+  ///
+  /// In en, this message translates to:
+  /// **'Medicine'**
+  String get profileSkillMedicine;
+
+  /// No description provided for @profileSkillEngineering.
+  ///
+  /// In en, this message translates to:
+  /// **'Engineering'**
+  String get profileSkillEngineering;
+
+  /// No description provided for @profileSkillScoutingWhat.
+  ///
+  /// In en, this message translates to:
+  /// **'Search radius +{radius}% · rare finds +{rare}% · searches {faster}% faster · noticed {stealth}% later'**
+  String profileSkillScoutingWhat(
+    int radius,
+    int rare,
+    int faster,
+    int stealth,
+  );
+
+  /// No description provided for @profileSkillWeaponsWhat.
+  ///
+  /// In en, this message translates to:
+  /// **'Aim {moa} MOA · reload and settling {faster}% faster'**
+  String profileSkillWeaponsWhat(String moa, int faster);
+
+  /// No description provided for @profileSkillMedicineWhat.
+  ///
+  /// In en, this message translates to:
+  /// **'Dressings {faster}% faster · wounds mend {healing}% faster'**
+  String profileSkillMedicineWhat(int faster, int healing);
+
+  /// No description provided for @profileSkillEngineeringWhat.
+  ///
+  /// In en, this message translates to:
+  /// **'Building, making and stripping {faster}% faster · {share}% back from what you take apart'**
+  String profileSkillEngineeringWhat(int faster, int share);
+
+  /// No description provided for @profileAimQuadrature.
+  ///
+  /// In en, this message translates to:
+  /// **'These do not add up, and should not: §5.1 combines them in quadrature, so the largest one dominates and the small ones almost vanish. The percentage beside each is its real share of the group.'**
+  String get profileAimQuadrature;
+
+  /// No description provided for @profileAimShare.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}%'**
+  String profileAimShare(int percent);
+
   /// No description provided for @profileAliveDays.
   ///
   /// In en, this message translates to:

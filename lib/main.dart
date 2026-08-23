@@ -11,6 +11,7 @@ import 'devtools/dev_overlay.dart';
 import 'devtools/dev_session.dart';
 import 'game/controllers/action_controller.dart';
 import 'game/controllers/combat_controller.dart';
+import 'game/controllers/skill_controller.dart';
 import 'game/controllers/craft_controller.dart';
 import 'game/controllers/inventory_controller.dart';
 import 'game/controllers/loot_controller.dart';
@@ -88,7 +89,6 @@ import 'l10n/app_localizations.dart';
 import 'location/device_position_source.dart';
 import 'location/device_power_source.dart';
 import 'location/location_access.dart';
-import 'location/movement_integrity.dart';
 import 'location/position_fix.dart';
 import 'location/system_permissions.dart';
 import 'map/map_bootstrap.dart';
@@ -110,6 +110,7 @@ import 'ui/character_creator.dart';
 import 'ui/language_picker.dart';
 import 'ui/safety_briefing.dart';
 import 'ui/hud.dart';
+import 'ui/status_notes.dart';
 import 'ui/inventory_screen.dart';
 import 'ui/map_markers.dart';
 import 'ui/map_view.dart';
@@ -523,7 +524,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     if (loop == null || catalogue == null) return;
 
     final definition = catalogue[line.itemId];
-    final use = definition == null ? null : useOf(definition);
+    final use = definition == null
+        ? null
+        // §7: Medicine shortens a dressing, and nothing else.
+        : useOf(definition, medicine: _learned.medicine);
 
     // Only what is swallowed comes in mouthfuls. A tourniquet half tied is not
     // half a tourniquet — it is a tourniquet still in the pack.
@@ -1108,6 +1112,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       _places.bind(profileId: character.profile.id);
       _bench2.bind(profileId: character.profile.id);
 
+      // §7: what this character has learned, before anything can ask.
+      await _learned.load(character.profile.id);
+
       await _pack.load(catalogue);
       if (!mounted) return;
     }
@@ -1205,6 +1212,11 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     setState(() {
       _character = character;
       _loop = loop;
+
+      // §7, §2.6: kept in step rather than read once — a level earned
+      // tonight has to reach tonight's regeneration, not tomorrow's boot.
+      loop.medicine = _learned.medicine;
+      _learned.skills.addListener(() => loop.medicine = _learned.medicine);
       _blocked = null;
       _loading = false;
     });
@@ -1710,7 +1722,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     CrashLog.note('use:${line.itemId}');
 
     final definition = catalogue[line.itemId];
-    final use = definition == null ? null : useOf(definition);
+    final use = definition == null
+        ? null
+        // §7: Medicine shortens a dressing, and nothing else.
+        : useOf(definition, medicine: _learned.medicine);
     if (definition == null || use == null) return;
 
     // §2.6: a dressing with nothing open to close is a dressing spent for
@@ -1810,32 +1825,15 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   }
 
   /// The label for a stored action, by its wire name (§12).
-  String _useLabelFor(String kind, CarriedItem line) {
-    final catalogue = _catalogue;
-    for (final known in ActionKind.values) {
-      if (known.name == kind) {
-        return _useLabel(known, catalogue?[line.itemId]);
-      }
-    }
-    return L10n.of(context).searchAreaRunning;
-  }
+  String _useLabelFor(String kind, CarriedItem line) => useLabelFor(
+    L10n.of(context),
+    kind,
+    _catalogue?[line.itemId],
+    nameOf: _nameOfItem,
+  );
 
-  /// §12: the action and the thing it is being done to, in one line.
-  ///
-  /// ⚠️ The item's name, not the kind of action. A strip that says "jedzenie"
-  /// tells a player what sort of thing is happening; one that says "Jesz:
-  /// Kanapka" tells them what they tapped and what it will cost — which is
-  /// what somebody glancing at a phone while walking actually needs.
-  String _useLabel(ActionKind kind, ItemDefinition? item) {
-    final l10n = L10n.of(context);
-    final name = item == null ? '' : _nameOfItem(item);
-
-    return switch (kind) {
-      ActionKind.eating => l10n.actionEating(name),
-      ActionKind.drinking => l10n.actionDrinking(name),
-      _ => l10n.actionUsing(name),
-    };
-  }
+  String _useLabel(ActionKind kind, ItemDefinition? item) =>
+      useLabel(L10n.of(context), kind, item, nameOf: _nameOfItem);
 
   /// The action finished: the item is gone and the body has it.
   Future<void> _finishUse(Search action) async {
@@ -1868,7 +1866,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     }
 
     final definition = catalogue[itemId];
-    final use = definition == null ? null : useOf(definition);
+    final use = definition == null
+        ? null
+        // §7: Medicine shortens a dressing, and nothing else.
+        : useOf(definition, medicine: _learned.medicine);
     if (definition == null || use == null) return;
 
     // ⚠️ A meal has been emptying itself all along (§4.7), so finishing is
@@ -2004,10 +2005,14 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         _aim = _aim.at(
           marker.id,
           now: DateTime.now(),
+          // §7: −30% on the time it takes to pick a new target up.
+          weaponSkill: _learned.weapons,
           settle: settleTime(
             heartRate: _snapshot?.state.heartRateBpm ?? 70,
             rest: _character?.constants.restingHeartRate ?? 70,
             max: _character?.constants.maxHeartRate ?? 190,
+            // §7: the sights come back faster.
+            weapons: _learned.weapons,
           ),
         );
       });
@@ -2378,6 +2383,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
             ?.position,
         // §5.6.1: walls that swallow a shot swallow a silhouette too.
         denseUrban: _world?.denseUrban ?? false,
+        // §7: somebody who knows how to move is noticed later.
+        scouting: _learned.scouting,
       );
 
       final here = GeoPoint(fix.latitude, fix.longitude);
@@ -2485,9 +2492,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     return aimError(
       weapon: weapon,
       attachments: _attachmentsFor(weapon),
-      // §7's Marksmanship does not exist yet, so everybody is a novice — which
-      // is §5.1.2's first row and the one the balance is built on.
-      skill: 0,
+      // §7: 25 MOA at no skill, 4 at full mastery (§5.1.1). §5.1.2's
+      // calibration table is the first row of that scale, not the whole of it.
+      skill: _learned.weapons,
       heartRate: snapshot.state.heartRateBpm,
       restingHr: character.constants.restingHeartRate,
       maxHr: character.constants.maxHeartRate,
@@ -2835,7 +2842,12 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       return;
     }
 
-    final total = reloadTime(weapon, attachments: _attachmentsFor(weapon));
+    final total = reloadTime(
+      weapon,
+      attachments: _attachmentsFor(weapon),
+      // §7: −30% at full mastery.
+      weapons: _learned.weapons,
+    );
 
     setState(() {
       _reload = Reload(
@@ -2901,9 +2913,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
     final limits = _inventory.value.limits(character.body, catalogue);
     final chance = meleeHitChance(
-      // §7's Melee skill does not exist yet, so everybody swings like a
-      // novice — which is §5.4's own baseline.
-      skill: 0,
+      // §7: §5.4's budget is `0.65 + 0.30 × skill − …`. Weapons covers the
+      // blade as well as the rifle — §7 gives four skills, not five, and a
+      // separate Melee would be a fifth nobody asked for.
+      skill: _learned.weapons,
       carriedKg: _carriedKg,
       maxCarryKg: limits.maxKg,
       fatigue:
@@ -4064,9 +4077,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       materials: counts,
       // §2.1a: anything at all, not just another bench job.
       busy: _search.value != null || _reload != null || _craftJob.value != null,
-      // §7 is not built. Everybody is a beginner, and the discount is nought
-      // until skills exist — wired here so that turning them on is one line.
-      engineering: 0,
+      // §7: −30% on building, making and taking apart at full mastery, and a
+      // better share back from §18.6.
+      engineering: _learned.engineering,
     );
   }
 
@@ -4922,6 +4935,27 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   }
 
   /// §13.1: the character, and what they have done.
+  /// §15.3: the developer overlay, built the same way in both places.
+  ///
+  /// ⚠️ It was written out twice — once over the map and once over the loading
+  /// state — and the copy that gained §7's skill buttons would have been
+  /// whichever one somebody happened to be editing.
+  Widget _devOverlay(DevSession dev, GameSnapshot? snapshot) => DevOverlay(
+    console: dev.console,
+    // §7, §15.3: every effect of every skill is wired and nothing yet grants
+    // meaningful experience, so without this the whole feature is untestable
+    // in the field until reading lands.
+    onSetSkill: (skill, level) => unawaited(_learned.setLevel(skill, level)),
+    snapshot: DevSnapshot(
+      state: snapshot?.state,
+      fix: snapshot?.fix,
+      signal: snapshot?.signal ?? PositionSignal.unavailable,
+      ticksApplied: _simulatedSeconds(snapshot),
+      lastFlushAt: snapshot?.lastFlushAt,
+      clockRolledBack: snapshot?.clockRolledBack ?? false,
+    ),
+  );
+
   Future<void> _openProfile() async {
     final character = _character;
     final snapshot = _snapshot;
@@ -4934,7 +4968,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         builder: (_) => ProfileScreen(
           name: character.profile.name,
           body: character.body,
+          // §2: the raw figures, so the screen can account for a penalty.
+          state: snapshot.state,
           status: snapshot.status,
+          skills: _learned.set,
           stats: _stats,
           // §16.4: from the game's own clock, so a character created under
           // the simulator ages at the same rate as everything else about them.
@@ -5338,24 +5375,13 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     }
   }
 
-  /// §10.2: how far a running search lets the player drift before it counts
-  /// as walking off.
-  ///
-  /// The place's own reach where there is a place — a school is fifty metres
-  /// of school, and crossing a corridor is not leaving. Anything anchored to
-  /// a spot rather than a building keeps [kStillnessM].
-  double _boundaryForSearch(Search search) {
-    final poiId = search.targetPoiId;
-    if (poiId == null) return kStillnessM;
-
-    final box = _boxes.where((entry) => entry.poiId == poiId).firstOrNull;
-    if (box == null) return kStillnessM;
-
-    final reach = searchReachFor(
-      _world?.tables[box.tableId]?.size ?? PlaceSize.normal,
-    );
-    return reach > kStillnessM ? reach : kStillnessM;
-  }
+  /// §10.2: how far a running search lets the player drift.
+  double _boundaryForSearch(Search search) => searchBoundaryM(
+    place: _boxes
+        .where((entry) => entry.poiId == search.targetPoiId)
+        .firstOrNull,
+    sizeOf: (box) => _world?.tables[box.tableId]?.size,
+  );
 
   void _startSearchTimer() {
     _clock.tickedAt = DateTime.now().toUtc();
@@ -5403,7 +5429,12 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     }
 
     setState(() {
-      _search.value = Search.area(at: at, now: now);
+      _search.value = Search.area(
+        at: at,
+        now: now,
+        // §7: less of §10.2's forty-five seconds of standing still.
+        scouting: _learned.scouting,
+      );
     });
     _startSearchTimer();
   }
@@ -5430,6 +5461,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         // wheelie bin is the same three minutes as a supermarket, and reads
         // as exactly that.
         takes: _world?.tables[box.tableId]?.searchTime(depth),
+        scouting: _learned.scouting,
       );
     });
     _startSearchTimer();
@@ -5546,7 +5578,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   Future<void> _finishAreaSearch(Search search, DateTime now) async {
     final previous = _knowledge;
     final radius = searchRadiusM(
-      // Reconnaissance is §7 and does not exist yet; binoculars do.
+      // ⚠️ §7's strongest single effect: at full mastery the radius doubles,
+      // which is four times the area looked over. §10.2.2 warns about exactly
+      // this, which is why nothing else on the list comes close.
+      scouting: _learned.scouting,
       binoculars:
           _inventory.value.countOf('tool_binoculars') > 0 ||
           _inventory.value.worn.any((line) => line.itemId == 'tool_binoculars'),
@@ -5678,7 +5713,13 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
           poiId.hashCode ^
           (box.searchUnits * 2654435761),
     );
-    final drop = table.roll(random, depth: depth, catalogue: catalogue);
+    final drop = table.roll(
+      random,
+      depth: depth,
+      catalogue: catalogue,
+      // §7, §10.3.5: a skilled searcher finds better, never more.
+      scouting: _learned.scouting,
+    );
 
     // ⚠️ Onto the floor of the place, not straight into the pack.
     //
@@ -5958,6 +5999,15 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
   /// §5.5, §6.1a: everything hostile that is out there.
   late final CombatController _fight = _controllers.adopt(CombatController());
+
+  /// §7: what this character has learned.
+  ///
+  /// ⚠️ Owns no clock and never will. Skills are the one long axis in this
+  /// game that owes nothing to time — they move when something happens and
+  /// never on their own.
+  late final SkillController _learned = _controllers.adopt(
+    SkillController(widget.session.db),
+  );
 
   /// §2.1a, §3.3: the one clock everything with a bar runs on.
   ///
@@ -6345,18 +6395,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
               }
             },
           ),
-          if (dev != null)
-            DevOverlay(
-              console: dev.console,
-              snapshot: DevSnapshot(
-                state: snapshot?.state,
-                fix: snapshot?.fix,
-                signal: snapshot?.signal ?? PositionSignal.unavailable,
-                ticksApplied: _simulatedSeconds(snapshot),
-                lastFlushAt: snapshot?.lastFlushAt,
-                clockRolledBack: snapshot?.clockRolledBack ?? false,
-              ),
-            ),
+          if (dev != null) _devOverlay(dev, snapshot),
         ],
       );
     }
@@ -6463,18 +6502,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
               ),
             ],
           ),
-          if (dev != null)
-            DevOverlay(
-              console: dev.console,
-              snapshot: DevSnapshot(
-                state: snapshot?.state,
-                fix: snapshot?.fix,
-                signal: snapshot?.signal ?? PositionSignal.unavailable,
-                ticksApplied: _simulatedSeconds(snapshot),
-                lastFlushAt: snapshot?.lastFlushAt,
-                clockRolledBack: snapshot?.clockRolledBack ?? false,
-              ),
-            ),
+          if (dev != null) _devOverlay(dev, snapshot),
         ],
       ),
     );
@@ -6544,37 +6572,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   ///
   /// A suspended run comes first: while it holds, nothing else the HUD says is
   /// being applied anyway (§3.4).
-  List<String> _warnings(L10n l10n, GameSnapshot snapshot) => [
-    ?switch (snapshot.integrityReason) {
-      IntegrityReason.mockProvider => l10n.integritySuspendedMock,
-      IntegrityReason.vehicleSpeed
-          when snapshot.integrity == IntegrityState.suspended =>
-        l10n.integritySuspendedVehicle,
-      _ => null,
-    },
-    // ⚠️ Nothing about the signal while the character is under a roof.
-    //
-    // §2.1a.4 switches the receiver off in a shelter on purpose — the
-    // character is not moving, so the position is not needed and the battery
-    // is better spent elsewhere. The watchdog then reports no fixes, which is
-    // true and useless: the game was warning the player about a decision the
-    // game had just made, on the one screen where nothing is wrong.
-    ?switch (snapshot.state.zone.isSheltered
-        ? PositionSignal.good
-        : snapshot.signal) {
-      PositionSignal.lost || PositionSignal.unavailable => l10n.hudNoSignal,
-      PositionSignal.degraded => l10n.hudWeakSignal,
-      // Not a warning. The receiver is doing what a receiver does, and saying
-      // so is what stops the player reading a cold start as a fault.
-      PositionSignal.acquiring => l10n.hudAcquiring,
-      PositionSignal.good => null,
-    },
-    if (snapshot.economy) l10n.hudLowBattery,
-    if (_permissions?.location == LocationAccess.foregroundOnly)
-      l10n.permLocationForeground,
-    if (snapshot.combatBlocked == CombatBlock.movingTooFast)
-      l10n.safetyNoCombatMoving,
-  ];
+  /// §12: what the strip under the bars is saying, if anything.
+  List<String> _warnings(L10n l10n, GameSnapshot snapshot) =>
+      hudWarnings(l10n, snapshot, location: _permissions?.location);
 }
 
 /// What the crafting bench is made of, for deciding whether to make it again.

@@ -29,7 +29,7 @@ import 'tables.dart';
 part 'database.g.dart';
 
 /// Bumped only alongside a migration step in [_migration]. Never reused.
-const int kSchemaVersion = 29;
+const int kSchemaVersion = 30;
 
 /// Keys used in [MetaEntries].
 abstract final class MetaKeys {
@@ -63,6 +63,7 @@ abstract final class MetaKeys {
     ShelterItems,
     CraftJobs,
     ActiveActions,
+    SkillRows,
   ],
 )
 class SaveDatabase extends _$SaveDatabase {
@@ -75,7 +76,7 @@ class SaveDatabase extends _$SaveDatabase {
   /// follow a constant reference. `schema_test.dart` keeps it in step with
   /// [kSchemaVersion].
   @override
-  int get schemaVersion => 29;
+  int get schemaVersion => 30;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -335,6 +336,11 @@ class SaveDatabase extends _$SaveDatabase {
       // version that could not measure it.
       if (from < 29) await m.addColumn(vitals, vitals.sleepStrain);
 
+      // §7: the four skills. A new table, so every character that existed
+      // before this reads back as a complete novice — which is exactly what
+      // they were, since nothing in the game could grow a skill (§11.1.4).
+      if (from < 30) await m.createTable(skillRows);
+
       await _writeSchemaVersion(to);
     },
     beforeOpen: (details) async {
@@ -563,6 +569,30 @@ class SaveDatabase extends _$SaveDatabase {
   /// Rewritten whole rather than diffed, exactly as the pack is: a stash is a
   /// handful of rows, and half-applied contents would be worse than a rewrite
   /// that costs nothing measurable.
+  /// §7: everything this character has earned, by skill wire name.
+  Future<Map<String, int>> skillsFor(int profileId) async {
+    final rows = await (select(
+      skillRows,
+    )..where((t) => t.profileId.equals(profileId))).get();
+
+    return {for (final row in rows) row.skill: row.xp};
+  }
+
+  /// §7: one skill's total, written outright rather than incremented.
+  ///
+  /// ⚠️ The caller owns the arithmetic. An `UPDATE … SET xp = xp + ?` would be
+  /// one round trip fewer and would let the number on screen and the number on
+  /// disk disagree the moment anything else touched the row — and §7.2.1 pays
+  /// experience out from eight different places.
+  Future<void> writeSkill(int profileId, String skill, int xp) =>
+      into(skillRows).insertOnConflictUpdate(
+        SkillRowsCompanion.insert(
+          profileId: profileId,
+          skill: skill,
+          xp: Value(xp),
+        ),
+      );
+
   Future<void> writeStash(
     int profileId,
     int shelterId,

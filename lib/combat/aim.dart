@@ -12,6 +12,7 @@
 library;
 
 import 'engagement.dart';
+import 'magazine.dart' show kWeaponsSpeed;
 
 /// §5.3: how long the group takes to settle once the shooter is still.
 ///
@@ -86,6 +87,7 @@ Duration settleTime({
   required double heartRate,
   required double rest,
   required double max,
+  double weapons = 0,
 }) {
   final span = max - rest;
   final over = span <= 0 ? 0.0 : ((heartRate - rest) / span).clamp(0.0, 1.0);
@@ -94,5 +96,10 @@ Duration settleTime({
       kSettleFast.inMilliseconds +
       (kSettleSlow.inMilliseconds - kSettleFast.inMilliseconds) * over;
 
-  return Duration(milliseconds: ms.round());
+  // §7: −30% on the narrowing circle at full mastery. §5.3 calls that circle
+  // the main decision loop of a firefight, so this is the one skill effect a
+  // player watches happen rather than reads about.
+  return Duration(
+    milliseconds: (ms * (1 - kWeaponsSpeed * weapons.clamp(0.0, 1.0))).round(),
+  );
 }

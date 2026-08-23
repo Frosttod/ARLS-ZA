@@ -620,8 +620,19 @@ class GameLoop {
       // Away from the screen but still being tracked is not offline: the walk
       // is real and measured (§3.3). Away with nothing measuring is.
       offline: offline || (!_appForeground && !_tracking),
+      // §7: the one skill the tick is told about. See [TickInput.medicine] —
+      // it arrives as a number, so `lib/sim` never learns what a skill is.
+      medicine: medicine,
     );
   }
+
+  /// §7: how well this character looks after a wound, 0–1.
+  ///
+  /// ⚠️ Set from outside rather than read from a controller. The loop is
+  /// constructible with nothing but a memory database, and reaching for a
+  /// `SkillController` would break that — the same rule every other
+  /// controller in this project keeps about its neighbours.
+  double medicine = 0;
 
   /// §1.3, §2.3: re-derives the body when the character's weight has moved.
   ///

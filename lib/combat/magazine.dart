@@ -19,10 +19,28 @@ import 'attachment.dart';
 const double kReloadBreakM = 5;
 
 /// How long a magazine change takes, with whatever is on the weapon (§4.2).
+/// §7: how much of a reload Weapons takes off the clock.
+const double kWeaponsSpeed = 0.30;
+
 Duration reloadTime(
   ItemDefinition weapon, {
   List<ItemDefinition> attachments = const [],
-}) => FittedWeapon(weapon: weapon, attachments: attachments).reloadTime;
+  double weapons = 0,
+}) {
+  final fitted = FittedWeapon(
+    weapon: weapon,
+    attachments: attachments,
+  ).reloadTime;
+
+  // §7: −30% at full mastery. §2.4's own reload penalty for a racing heart
+  // multiplies on top of this, so a master out of breath is still slower than
+  // a master standing still — which is the point of §2.4 having one at all.
+  return Duration(
+    milliseconds:
+        (fitted.inMilliseconds * (1 - kWeaponsSpeed * weapons.clamp(0.0, 1.0)))
+            .round(),
+  );
+}
 
 /// How many rounds the weapon holds, extended magazine and all.
 int magazineSize(

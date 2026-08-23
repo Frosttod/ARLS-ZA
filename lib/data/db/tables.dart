@@ -223,6 +223,37 @@ class ChronicleEntries extends Table {
   ];
 }
 
+/// Warm layer: §7's four skills, one row each.
+///
+/// ⚠️ A row per skill rather than a JSON blob on the profile, and the reason
+/// is the write pattern: experience arrives one event at a time — a shot, a
+/// page, a bandage — and a blob would mean reading and rewriting all four
+/// every time any one of them moved.
+class SkillRows extends Table {
+  @override
+  String get tableName => 'skills';
+
+  IntColumn get profileId => integer()();
+
+  /// The wire name from [Skill]: 'scouting' | 'weapons' | 'medicine' |
+  /// 'engineering'. Text rather than an index, because it also appears in
+  /// `assets/data/literature.json` and the two must not drift apart.
+  TextColumn get skill => text()();
+
+  /// Everything earned in this skill, ever. The level is derived (§7.2) and
+  /// never stored — a stored level and a stored total can disagree, and then
+  /// nobody knows which one the player earned.
+  IntColumn get xp => integer().withDefault(const Constant(0))();
+
+  @override
+  Set<Column> get primaryKey => {profileId, skill};
+
+  @override
+  List<String> get customConstraints => [
+    'FOREIGN KEY (profile_id) REFERENCES profiles (id) ON DELETE CASCADE',
+  ];
+}
+
 /// Cold layer: player settings.
 class Settings extends Table {
   TextColumn get key => text()();

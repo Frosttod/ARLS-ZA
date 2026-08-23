@@ -16,6 +16,7 @@ import '../core/game_clock.dart';
 import '../core/scaled_wall_clock.dart';
 import '../location/position_fix.dart';
 import '../sim/tick.dart';
+import '../skills/skill.dart';
 import 'dev_console.dart';
 import 'dev_mode.dart';
 import 'simulated_position_source.dart';
@@ -45,10 +46,23 @@ class DevSnapshot {
 
 /// A small always-on readout, plus a button that opens the full panel.
 class DevOverlay extends StatelessWidget {
-  const DevOverlay({required this.console, required this.snapshot, super.key});
+  const DevOverlay({
+    required this.console,
+    required this.snapshot,
+    this.onSetSkill,
+    super.key,
+  });
 
   final DevConsole console;
   final DevSnapshot snapshot;
+
+  /// §7, §15.3: sets one skill outright.
+  ///
+  /// ⚠️ Exists so that §7 can be walked before reading lands. Every effect of
+  /// every skill is wired up and nothing yet grants meaningful experience, so
+  /// without this the whole feature would be untestable in the field for as
+  /// long as the literature phase takes.
+  final void Function(Skill skill, int level)? onSetSkill;
 
   @override
   Widget build(BuildContext context) {
@@ -133,7 +147,11 @@ class DevOverlay extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: const Color(0xFF14181A),
-      builder: (_) => DevPanel(console: console, snapshot: snapshot),
+      builder: (_) => DevPanel(
+        console: console,
+        snapshot: snapshot,
+        onSetSkill: onSetSkill,
+      ),
     );
   }
 
@@ -148,10 +166,16 @@ class DevOverlay extends StatelessWidget {
 
 /// The full control panel: time, GPS and physiology.
 class DevPanel extends StatefulWidget {
-  const DevPanel({required this.console, required this.snapshot, super.key});
+  const DevPanel({
+    required this.console,
+    required this.snapshot,
+    this.onSetSkill,
+    super.key,
+  });
 
   final DevConsole console;
   final DevSnapshot snapshot;
+  final void Function(Skill skill, int level)? onSetSkill;
 
   @override
   State<DevPanel> createState() => _DevPanelState();
@@ -317,6 +341,34 @@ class _DevPanelState extends State<DevPanel> {
                     FilledButton(onPressed: _jump, child: const Text('Skocz')),
                   ],
                 ),
+
+                if (widget.onSetSkill case final set?) ...[
+                  const _Heading('Umiejętności (§7)'),
+                  for (final skill in Skill.values)
+                    Row(
+                      children: [
+                        SizedBox(
+                          width: 96,
+                          child: Text(
+                            skill.wire,
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                        for (final level in const [0, 25, 50, 75, 100])
+                          Padding(
+                            padding: const EdgeInsets.only(right: 6),
+                            child: OutlinedButton(
+                              onPressed: () => set(skill, level),
+                              child: Text('$level'),
+                            ),
+                          ),
+                      ],
+                    ),
+                  const SizedBox(height: 8),
+                ],
 
                 const _Heading('Fizjologia'),
                 Wrap(
