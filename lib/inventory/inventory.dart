@@ -502,8 +502,23 @@ class Inventory {
       }
     } else if (line.count > 1) {
       // One entry per piece: each has its own condition or its own pages.
+      //
+      // ⚠️ **And a name each (§11.1).** [copyWith] carries the uid through —
+      // that is what it is for — so this used to hand three knives one name
+      // between them. Everything downstream asks [CarriedItem.isSame], and
+      // [isSame] compares uids, so *any* per-piece act on one of the three
+      // found all three: the bar, the lock, the portion, the dismantling.
+      //
+      // Reported from a walk as two progress bars under two different
+      // bottles. One action, several rows answering to it.
+      //
+      // The first keeps whatever name it arrived with, because a thing put on
+      // the pavement and picked up again is the same thing; the rest are new
+      // pieces and are named now.
       for (var i = 0; i < line.count; i++) {
-        lines.add(line.copyWith(count: 1));
+        lines.add(
+          line.copyWith(count: 1, uid: i == 0 ? line.uid : newLineId()),
+        );
       }
       return Inventory(carried: lines, worn: worn, packId: packId);
     }

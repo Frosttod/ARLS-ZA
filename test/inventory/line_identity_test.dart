@@ -229,4 +229,76 @@ void main() {
 
     expect(change.inventory.carried.single.uid, 'a.1');
   });
+
+  group('a name each, however many arrive at once (§11.1)', () {
+    // ⚠️ Reported from a walk, with a photograph: two part-drunk bottles, and
+    // starting one of them drew a bar under both. §2.1a allows one action, so
+    // there was one action — what there were two of was rows answering to it.
+    //
+    // The mechanism was here. [CarriedItem.copyWith] carries the uid through,
+    // which is what it is for, so splitting a stack of three into three
+    // pieces handed them one name between them. Everything downstream asks
+    // [CarriedItem.isSame], and isSame compares uids.
+    final catalogue = ItemCatalogue.load([
+      for (final asset in kBundledItemAssets)
+        ItemSource(asset, File(asset).readAsStringSync()),
+    ]);
+    final body = BodyProfile.from(
+      const BodySpec(sex: Sex.male, ageYears: 30, heightCm: 180, weightKg: 80),
+    );
+
+    test('three of a thing with its own state are three names', () {
+      final out = const Inventory().add(
+        'tool_multitool',
+        catalogue,
+        body: body,
+        count: 3,
+        condition: 80,
+      );
+
+      final lines = out.inventory.carried;
+      expect(lines, hasLength(3), reason: 'each has its own condition');
+      expect(
+        lines.map((line) => line.uid).toSet(),
+        hasLength(3),
+        reason: 'three pieces, three names',
+      );
+    });
+
+    test('and no piece answers to another', () {
+      final out = const Inventory().add(
+        'tool_multitool',
+        catalogue,
+        body: body,
+        count: 3,
+        condition: 80,
+      );
+
+      final lines = out.inventory.carried;
+      for (final line in lines) {
+        final answering = lines.where(line.isSame).length;
+        expect(
+          answering,
+          1,
+          reason: 'an act on one piece must not find the other two',
+        );
+      }
+    });
+
+    test('the first keeps the name it arrived with', () {
+      // A thing put on the pavement and picked up again is the same thing
+      // (§4.8), so a caller that knows the name keeps it.
+      final out = const Inventory().add(
+        'tool_multitool',
+        catalogue,
+        body: body,
+        count: 2,
+        condition: 80,
+        uid: 'from.the.ground',
+      );
+
+      expect(out.inventory.carried.first.uid, 'from.the.ground');
+      expect(out.inventory.carried.last.uid, isNot('from.the.ground'));
+    });
+  });
 }

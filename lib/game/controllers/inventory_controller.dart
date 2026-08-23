@@ -67,8 +67,35 @@ class InventoryController extends ChangeNotifier {
   Inventory get pack => inventory.value;
 
   set pack(Inventory next) {
+    assert(_namesAreUnique(next), 'two pieces answering to one name (§11.1)');
+
     inventory.value = next;
     notifyListeners();
+  }
+
+  /// §11.1: no two pieces share a name.
+  ///
+  /// ⚠️ **An assert, in the one place every edit passes through.**
+  ///
+  /// This was found the hard way, twice. [CarriedItem.isSame] compares uids,
+  /// and everything that acts on one piece — the progress bar, the dismantling
+  /// lock, the portion of a meal, the rounds in a magazine — asks it. Two rows
+  /// with one name means an act on either finds both, which reached the field
+  /// as two progress bars under two different bottles.
+  ///
+  /// Debug only, and deliberately: in a debug build this fires the moment the
+  /// rule breaks and the crash strip shows it, which is a walk's worth of
+  /// diagnosis for nothing. In release it costs nothing at all — the model
+  /// having been fixed is what makes the game right; this is what stops the
+  /// next mutator from quietly un-fixing it.
+  static bool _namesAreUnique(Inventory next) {
+    final seen = <String>{};
+    for (final line in [...next.carried, ...next.worn]) {
+      final uid = line.uid;
+      if (uid == null) continue;
+      if (!seen.add(uid)) return false;
+    }
+    return true;
   }
 
   // ------------------------------------------------------------- reading ---
