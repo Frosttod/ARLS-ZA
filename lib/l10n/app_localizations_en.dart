@@ -1914,4 +1914,12 @@ class L10nEn extends L10n {
   String salvageWaitingUntil(String time) {
     return 'Waiting its turn — in $time';
   }
+
+  @override
+  String get goalPin => 'Pin as a goal';
+
+  @override
+  String goalPinned(String item) {
+    return 'Goal pinned: $item';
+  }
 }

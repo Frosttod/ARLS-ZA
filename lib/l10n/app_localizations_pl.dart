@@ -1915,4 +1915,12 @@ class L10nPl extends L10n {
   String salvageWaitingUntil(String time) {
     return 'Czeka na swoją kolej — za $time';
   }
+
+  @override
+  String get goalPin => 'Przypnij jako cel';
+
+  @override
+  String goalPinned(String item) {
+    return 'Cel przypięty: $item';
+  }
 }

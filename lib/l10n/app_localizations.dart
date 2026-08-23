@@ -3498,6 +3498,18 @@ abstract class L10n {
   /// In en, this message translates to:
   /// **'Waiting its turn — in {time}'**
   String salvageWaitingUntil(String time);
+
+  /// No description provided for @goalPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Pin as a goal'**
+  String get goalPin;
+
+  /// No description provided for @goalPinned.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal pinned: {item}'**
+  String goalPinned(String item);
 }
 
 class _L10nDelegate extends LocalizationsDelegate<L10n> {

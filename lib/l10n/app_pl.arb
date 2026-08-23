@@ -905,5 +905,14 @@
         "type": "String"
       }
     }
+  },
+  "goalPin": "Przypnij jako cel",
+  "goalPinned": "Cel przypięty: {item}",
+  "@goalPinned": {
+    "placeholders": {
+      "item": {
+        "type": "String"
+      }
+    }
   }
 }

@@ -3,7 +3,6 @@ import 'package:arls_za/combat/remains.dart';
 import 'package:arls_za/data/db/database.dart';
 import 'package:arls_za/game/controllers/loot_controller.dart';
 import 'package:arls_za/loot/loot_spawner.dart';
-import 'package:arls_za/loot/loot_table.dart';
 import 'package:arls_za/loot/search.dart';
 import 'package:arls_za/map/geometry.dart';
 import 'package:test/test.dart';

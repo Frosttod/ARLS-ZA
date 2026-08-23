@@ -1037,5 +1037,14 @@
         "type": "String"
       }
     }
+  },
+  "goalPin": "Pin as a goal",
+  "goalPinned": "Goal pinned: {item}",
+  "@goalPinned": {
+    "placeholders": {
+      "item": {
+        "type": "String"
+      }
+    }
   }
 }
