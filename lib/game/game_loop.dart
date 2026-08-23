@@ -867,6 +867,27 @@ class GameLoop {
   /// dressing has nothing to treat, and accepting a parameter that silently
   /// did nothing would be worse than not offering it. The caller refuses to
   /// spend a bandage on an uninjured character instead.
+  /// ⚠️ **Stages, and deliberately does not publish.**
+  ///
+  /// This is the bug the field reported as the game hanging on food, and it
+  /// was a feedback loop rather than a slow function:
+  ///
+  ///     _advanceMeal → applyUse → _publish → snapshots listener
+  ///       → _advanceSearch → _advanceMeal → applyUse → …
+  ///
+  /// §4.7 feeds a meal across in mouthfuls, once a second — so the interface
+  /// credits the meal, the credit reached this method, this method broadcast a
+  /// snapshot, and the listener that rides the tick credited the meal again.
+  /// Each turn round advanced the clock by a microsecond, which was enough for
+  /// the "has any time passed" guard, so it went round as fast as the machine
+  /// allowed until the meal was finished. Dart stayed busy in microtasks, the
+  /// platform thread starved waiting on channel replies, and Android called it
+  /// what it was: an application not responding.
+  ///
+  /// A method that changes state must not broadcast state. The tick publishes
+  /// a second later and nothing is lost — what goes in here is §2.2's pending
+  /// stomach, which nothing draws directly and which the tick moves across at
+  /// its own rate anyway.
   void applyUse({double kcal = 0, double waterMl = 0}) {
     // Into the stomach, not into the bloodstream. The tick moves it across at
     // the rates of §2.2 and §2.3, which is what makes a meal something taken
@@ -876,7 +897,6 @@ class GameLoop {
       pendingWaterMl: _state.pendingWaterMl + waterMl,
     );
     writer.stageHot(_toCompanion());
-    _publish();
   }
 
   /// §2.6: what is still open, and going on costing.
@@ -954,12 +974,20 @@ class GameLoop {
   /// Down to the grade rather than to nothing: a pressure dressing on an
   /// arterial bleed is not a tourniquet, and §2.6's table is explicit that
   /// only a tourniquet answers that one.
+  /// ⚠️ Stages, like [applyUse], and for the same reason — see the note there.
+  ///
+  /// This one is reached by the same path: a dressing finishes inside
+  /// `_finishUse`, which is inside the tick that the snapshot listener runs.
+  /// Publishing from here puts a second listener run inside the first. It has
+  /// never been observed going round for ever, because finishing a use clears
+  /// the action on the way in — but that is an accident of ordering, not a
+  /// rule, and the meal proved what this shape costs when the ordering does
+  /// not save it.
   void treatBleeding(BleedTier down) {
     if (_bleeding.index <= down.index) return;
 
     _bleeding = down;
     writer.stageHot(_toCompanion());
-    _publish();
   }
 
   /// A wound, in millilitres of blood (§2.6, §6.2).

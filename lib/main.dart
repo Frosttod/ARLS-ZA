@@ -5665,15 +5665,52 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// with anything new to say when the player is standing still, which is
   /// precisely the whole duration of a search.
   Future<void> _advanceSearch() async {
+    // ⚠️ **Re-entrant, and that is what hung the game on food.**
+    //
+    // This is reached from two places on purpose — its own one-second timer
+    // and the loop's tick, so that a meal goes on finishing with the screen
+    // off. Both are fine. What was not fine is that crediting a meal used to
+    // publish a snapshot, which ran the listener, which arrived back here:
+    //
+    //     _advanceSearch → _advanceMeal → applyUse → publish → listener → …
+    //
+    // The old guard was "has any time passed at all", and between two turns
+    // of that loop a microsecond had, so it went round as fast as the machine
+    // allowed. [GameLoop.applyUse] no longer publishes, which closes that
+    // particular circuit — these two guards close the shape of it, so that the
+    // next thing to publish from inside a listener cannot reopen it.
+    if (_advancingSearch) return;
+
     final search = _search.value;
     if (search == null || !search.isRunning) return;
 
     final now = DateTime.now().toUtc();
     final since = _searchTickedAt ?? now;
     final delta = now.difference(since);
-    if (delta <= Duration.zero) return;
-    _searchTickedAt = now;
 
+    // A floor rather than "any time at all". Everything upstream of this runs
+    // on a one-second clock, so a call a fifth of a second after the last one
+    // is not a tick — it is a loop. Nothing is lost by refusing it: the credit
+    // stays owed, because [_searchTickedAt] only moves when it is paid.
+    if (delta < const Duration(milliseconds: 200)) return;
+    _searchTickedAt = now;
+    _advancingSearch = true;
+
+    try {
+      await _advanceSearchStep(search, delta, now);
+    } finally {
+      _advancingSearch = false;
+    }
+  }
+
+  /// ⚠️ Guards [_advanceSearch] against arriving inside itself. See there.
+  bool _advancingSearch = false;
+
+  Future<void> _advanceSearchStep(
+    Search search,
+    Duration delta,
+    DateTime now,
+  ) async {
     final snapshot = _snapshot;
 
     // ⚠️ The sticky position, and this is the seventh time this line has been

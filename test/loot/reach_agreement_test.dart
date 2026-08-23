@@ -54,7 +54,10 @@ void main() {
     test('a search asks the place how far that is', () {
       // ⚠️ The parameter existed and nothing passed it. `advance` defaulted to
       // [kStillnessM] and so a fifty-metre school cancelled at fifteen.
-      final advancing = bodyOf('Future<void> _advanceSearch() async {');
+      //
+      // The work moved into `_advanceSearchStep` when `_advanceSearch` grew
+      // its re-entrancy guard — see the feedback-loop budget.
+      final advancing = bodyOf('Future<void> _advanceSearchStep(');
 
       expect(
         advancing.contains('boundaryRadiusM:'),
