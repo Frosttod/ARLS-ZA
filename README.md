@@ -10,17 +10,23 @@ Hiper-realistyczny survival GPS na Androida. Ciało gracza jest kontrolerem: obj
 | Pakiet | `com.raidodevelopment.arlsza` |
 | Nazwa w sklepie | ARLS-ZA Game |
 | Model sieciowy | offline-first, brak własnych serwerów gry |
-| Status | dokumentacja kompletna, implementacja na etapie 0 |
+| Status | 2121 testów · schemat bazy v29 · etapy 0–2 zamknięte, 3–5 i 8 po testach w terenie |
 
 ## Dokumentacja
 
 | Plik | Zawartość |
 | :---- | :---- |
-| [ARLS-ZA_design_doc_v2.md](ARLS-ZA_design_doc_v2.md) | dokument projektowy — wszystkie systemy, wzory, tabele balansu, otwarte decyzje |
+| [ARLS-ZA_design_doc_v2.md](ARLS-ZA_design_doc_v2.md) | dokument projektowy — **co** chcemy zbudować i **dlaczego**: systemy, wzory, tabele balansu, otwarte decyzje |
+| [MECHANICS.md](MECHANICS.md) | **co gra faktycznie robi**, z liczbami wziętymi z kodu — wraz z listą świadomych odejść od dokumentu projektowego |
+| [conditions.md](conditions.md) | każda reguła gry jako `if … then …`, z powodem przy każdej |
+| [item_base.md](item_base.md) | wszystkie przedmioty: parametry, crafting, odzysk z rozbiórki — **generowany**, `dart run tool/item_base.dart` |
 | [ROADMAP.md](ROADMAP.md) | dziesięć etapów wdrożenia z kryteriami wyjścia, zakres MVP, rejestr ryzyk |
+| [CHECKLIST.md](CHECKLIST.md) | **co jest przetestowane** i co sprawdza wyłącznie spacer |
 | [PROCEDURA_RELEASE.md](PROCEDURA_RELEASE.md) | procedura wydania |
 | [CHANGELOG.md](CHANGELOG.md) | historia zmian w kodzie |
 | `ARLS-ZA_design_doc_v2.original.md` | archiwum: historia wersji dokumentu i odrzucone warianty projektowe |
+
+⚠️ Te dokumenty odpowiadają na **różne** pytania i nie zastępują się nawzajem. W kilkunastu miejscach kod świadomie odchodzi od dokumentu projektowego — czasem dlatego, że jego liczby były wewnętrznie sprzeczne, czasem dlatego, że spacer pokazał co innego. [MECHANICS §15](MECHANICS.md#15-odejścia-od-dokumentu-projektowego) zbiera te decyzje z powodami.
 
 ## Uruchomienie
 

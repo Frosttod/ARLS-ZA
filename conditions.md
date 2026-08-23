@@ -2,7 +2,7 @@
 
 Każda reguła zapisana jako `if … then …`, z komentarzem na końcu.
 
-**Skąd to jest:** wprost z kodu, nie z dokumentu projektowego. Tam, gdzie kod świadomie odchodzi od `ARLS-ZA_design_doc_v2.md`, komentarz mówi o tym wprost. Stan na schemat bazy **v20**.
+**Skąd to jest:** wprost z kodu, nie z dokumentu projektowego. Tam, gdzie kod świadomie odchodzi od `ARLS-ZA_design_doc_v2.md`, komentarz mówi o tym wprost. Stan na schemat bazy **v29**.
 
 **Jak czytać:** `=` to porównanie, `:=` to przypisanie. Nazwy są pseudokodem, nie identyfikatorami z Darta — plik ma być czytelny bez otwierania źródeł.
 
@@ -16,8 +16,10 @@ Każda reguła zapisana jako `if … then …`, z komentarzem na końcu.
 2. [Bezpieczeństwo gracza](#2-bezpieczeństwo-gracza)
 3. [Strefy metaboliczne](#3-strefy-metaboliczne)
 4. [Głód](#4-głód)
+4a. [Głód długoterminowy — masa ciała](#4a-głód-długoterminowy--masa-ciała-231)
 5. [Pragnienie](#5-pragnienie)
 6. [Sen](#6-sen)
+6a. [Sen — obciążenie przewlekłe](#6a-sen--obciążenie-przewlekłe-255)
 7. [Tętno](#7-tętno)
 8. [Krew, rany i wstrząs](#8-krew-rany-i-wstrząs)
 9. [Śmierć i utrata przytomności](#9-śmierć-i-utrata-przytomności)
@@ -130,14 +132,57 @@ if calorie_fraction < 0.20
     then action_time := ×1.20                    // Wszystko trwa piątą część dłużej: przeszukanie, budowa, opatrunek.
 
 if calorie_fraction <= 0 for > 24h
-    then losing_consciousness := true and death_cause := starvation
-                                                 // Doba na zerze, nie moment zejścia do zera. Głód zabija powoli i przewidywalnie.
+    then losing_consciousness := true            // ⚠️ Przewraca, NIE zabija. Zapas to *doba* jedzenia — postać bez zapasów stoi na zerze od drugiego poranka klęski głodu do jej końca, więc czytanie tego jako zgonu zabijało w 48 h. Szybciej niż pragnienie, wbrew §2.3.
 
 if eaten_kcal > 0
     then absorption := 8 kcal/min                // §2.2. Puszka 500 kcal wchłania się ~62 min — jedzenie nosi się i bierze *zanim* jest potrzebne.
 
-if pending_kcal + calories_kcal > daily_kcal
-    then pending := capped                       // Nadmiar nie jest bankowany. Nie da się najeść na zapas na trzy dni.
+if calories_kcal > daily_kcal
+    then calories_kcal := daily_kcal             // Zapas dobowy dalej się nie kumuluje (§2.5.3 mówi to samo o śnie).
+```
+
+---
+
+## 4a. Głód długoterminowy — masa ciała (§2.3.1)
+
+```
+raw = calories_kcal − burn + absorbed
+overflow  = max(0, raw − daily_kcal)
+shortfall = max(0, −raw)
+
+if not offline
+    then body_mass_kg += (overflow × 0.75 − shortfall) / 7000
+    else body_mass_kg += (overflow × 0.75) / 7000
+                                                 // ⚠️ §2.1.1. Podłoga offline istnieje po to, żeby telefon w szufladzie nikogo nie zabił — dwa tygodnie niepilnowanego chudnięcia przeszłyby przez nią bokiem. Co zjedzone, to zjedzone, więc nadwyżka liczy się dalej.
+
+// 7000 kcal/kg, nie 7700: organizm pod deficytem spala ~3 części tłuszczu na 1 część
+// tkanki chudej, a ta jest w większości wodą.
+// 0.75 przy odkładaniu: magazynowanie jest stratne. Tydzień objadania się nie cofa
+// tygodnia głodu.
+
+lost = (starting_mass_kg − body_mass_kg) / starting_mass_kg
+
+if lost < 0.05
+    then no_penalty                              // Tydzień głodówki to 2,5 kg. Ma być niewygodą — cała ta oś liczy się w tygodniach.
+
+if lost >= 0.05 and < 0.15
+    then action_time := ×1.15                    // Miesiąc bez jedzenia.
+
+if lost >= 0.15 and < 0.30
+    then action_time := ×1.40 and extra_moa := +2.0
+                                                 // Sześć tygodni. Ciało przestaje być pewne.
+
+if lost >= 0.30
+    then fatal := true and death_cause := starvation
+                                                 // ~10 tygodni głodówki totalnej. Granica kliniczna, nie wymyślona.
+
+if body_mass_kg changed by >= 0.25 kg
+    then rebuild BodyProfile at new mass
+    and  blood_ml := blood_ml × (new_blood_max / old_blood_max)
+                                                 // ⚠️ Wszystko z §1.3 idzie za masą: udźwig 30%/45%, Mifflin–St Jeor, woda 35 ml/kg, Nadler. Krew skaluje się PROPORCJONALNIE — gdyby mililitry stały przy opadającym suficie, samo chudnięcie podniosłoby ułamek utraty i wrzuciło postać w klasę III wstrząsu bez jednego zadrapania.
+
+// starting_mass_kg nigdy się nie rusza. To odpowiedź na inne pytanie niż body_mass_kg:
+// "ile mnie ubyło". Postać 55 kg przy 50 kg ma kłopoty, postać 95 kg przy 50 kg nie żyje.
 ```
 
 ---
@@ -152,17 +197,33 @@ if deficit_fraction >= 0.02
     then aim_accuracy := 0.85                    // 2% masy ciała. Dla 80 kg to 1,6 l długu — realny próg fizjologiczny, nie wymyślony.
 
 if deficit_fraction >= 0.05
-    then severely_weakened := true               // 5%: osłabienie widoczne w każdej akcji.
+    then severely_weakened := true and action_time := ×1.30
+                                                 // ⚠️ 5%: osłabienie z liczbą przy nim. Do niedawna ten wiersz i następny nie miały ŻADNEJ konsekwencji — postać w stanie krytycznym strzelała jak lekko spragniona i wszystko robiła w pełnym tempie. Głód był jedyną z tej pary, która kogokolwiek spowalniała, dokładnie odwrotnie niż nakazuje §2.3.
 
 if deficit_fraction >= 0.10
-    then critical := true                        // 10%: stan krytyczny.
+    then critical := true and action_time := ×1.60
+                                                 // 10%: ostrzej niż ×1.20 głodu, bo tak ma być.
 
 if under_exertion and no_water_for > 48h
     then lethal := true and death_cause := thirst
-                                                 // Wysiłek plus dwie doby. Bez wysiłku organizm wytrzymuje dłużej.
+                                                 // Wysiłek plus dwie doby. Reguła §2.3 dosłownie.
+
+if critical and no_water_for > 12h
+    then lethal := true and death_cause := thirst
+                                                 // ⚠️ Rozszerzenie, nazwane jako rozszerzenie. Sama reguła powyżej czyni nieśmiertelnym kogoś, kto siedzi w schronie: zapas ma podłogę na 10% masy ciała i tam zostaje. Dwanaście godzin to miejsce, gdzie literatura przestaje mówić o wydolności.
+
+if drunk_ml > 0
+    then dry_streak := 0                         // ⚠️ Zeruje ŁYK, nie pełny zapas — tak brzmi "brak wody" w §2.3. Łyk restartuje odliczanie do zgonu i nie robi absolutnie nic deficytowi, który dalej pnie się ku progom. Dwie reguły się nie zazębiają, więc żadnej nie da się wyzyskać.
+
+if no_water_absorbed this tick
+    then dry_streak += elapsed
 
 if drunk_ml > 0
     then absorption := 25 ml/min                 // Pół litra wchłania się 20 minut. Butelka wypita w biegu nie ratuje od razu.
+
+// Pragnienie NIE MA osi długoterminowej i to jest właściwa odpowiedź. Odwodnienie nie
+// ma pamięci: napijesz się i jesteś zdrowy. Kontrast z §4a jest całym sensem tej pary.
+// ~3 doby wobec ~10 tygodni — stosunek 25:1, wprost ze stałych §1.3.
 ```
 
 ---
@@ -194,6 +255,61 @@ if sleep_debt_hours >= 24
 
 if sleep_debt = 0
     then sleep_bar_marker := none                // Nie da się "wyspać na zapas". Dług zatrzymuje się na zerze.
+
+sleep_debt = min(sleep_debt, 24h)                // Sufit. Dalej nie ma nic gorszego, więc głębszy dołek to tylko dłuższa wspinaczka i pasek, który czyta się jako pusty tak samo.
+```
+
+---
+
+## 6a. Sen — obciążenie przewlekłe (§2.5.5)
+
+⚠️ Dług powyżej mierzy **ostatnią noc** i tylko ją. Ma sufit doby, kasuje się w dobę, a ponieważ narasta wyłącznie w czasie *czuwania* — na sześciogodzinnych nocach wychodzi na zero i nie drga. Szesnaście godzin na nogach jest warte 5 h 20 min długu, noc spłaca sześć. Trzy tygodnie niedosypiania czytały się jak jeden zarwany wieczór.
+
+```
+// Ten zegar liczy się wobec ZEGARA ŚCIENNEGO, tak jak mówi formuła §2.5.3:
+// doba potrzebuje ośmiu godzin niezależnie od tego, co się w niej robiło.
+
+strain += elapsed / 24h
+if is_sleeping
+    then strain −= elapsed / 8h
+
+// Przez dobę przy S godzinach snu:  strain += 1 − S/8
+//   S = 8  →  0        utrzymuje
+//   S = 6  →  +0.25    kwadrans nocy dziennie
+//   S = 0  →  +1.0
+//   S = 12 →  −0.5     spłaca WYŁĄCZNIE noc dłuższa niż potrzeba
+
+strain = clamp(strain, −1, 10)
+                                                 // ⚠️ Podłoga jest jedną nocą PONIŻEJ zera. Doba przeżywa się jako noc, a potem dzień, więc spłata nocy przychodzi przed godzinami czuwania, które ma skasować. Twarda podłoga na zerze wyrzucałaby tę spłatę każdego poranka i ktoś śpiący pełne osiem godzin narastałby o 1/3 nocy dziennie w nieskończoność.
+
+readable_strain = max(0, strain)                 // §2.5.3 zabrania banku wprost: "nadmiar nocy w schronie nie kumuluje zapasu". Nic poniżej zera nie jest czytelne jako zapas.
+
+if readable_strain < 1
+    then no_penalty                              // Jedna zarwana noc to 0.25. Kto raz posiedział dłużej, nie jest przewlekle niczym.
+
+if readable_strain >= 1 and < 3
+    then learning := ×0.80 and heart_recovery_tau := ×1.35
+                                                 // Cztery noce po 4 h. Tętno wraca wolniej — a w grze bez paska staminy tętno JEST staminą, więc to realny koszt po każdym biegu.
+
+if readable_strain >= 3 and < 6
+    then learning := ×0.60 and extra_moa := +1.0 and healing := ×0.70 and heart_recovery_tau := ×1.35
+                                                 // Dwa tygodnie po 6 h.
+
+if readable_strain >= 6
+    then learning := ×0.60 and extra_moa := +2.0 and healing := ×0.50
+     and heart_recovery_tau := ×1.5 and microsleeps := true
+                                                 // Mikrosny bez ostrego długu za nimi.
+
+// ⚠️ Kary są celowo te, których pasek snu NIE pokazuje — gojenie, uspokajanie tętna,
+// ręce. Tak działa przewlekłe niedosypianie: subiektywna senność się wypłaszcza,
+// a wydolność dalej spada. Po jednej dobrej nocy pasek jest pełny, a liczby dalej złe.
+// Dlatego ma własną notatkę stanu "WYCZERPANIE" (§12) — kara bez widocznego powodu
+// czyta się jako błąd, choćby najprawdziwsza.
+
+// Wyjście z dołka jest SEZONOWE, bez jednego modyfikatora:
+//   Poznań 21 czerwca, noc 7,4 h  →  narasta cokolwiek zrobi gracz
+//   Poznań 21 grudnia, noc 16,6 h →  cztery takie noce kasują całe lato
+//   Salon (§8.4)                  →  jedyna rzecz kupująca regenerację poza sezonem
 ```
 
 ---
@@ -285,7 +401,20 @@ if is_sleeping
 
 ```
 if blood_shock = critical or thirst = lethal or hunger = losing_consciousness
-    then body_gives_out := true                  // Trzy drogi do zejścia. Kolejność sprawdzania ustala przyczynę wpisaną do Kroniki.
+   or wasting = fatal
+    then body_gives_out := true                  // Cztery drogi na ziemię.
+
+if blood_shock = critical
+    then death_cause := blood_loss               // Minuty.
+
+if thirst = lethal
+    then death_cause := thirst                   // 2–3 doby.
+
+if wasting = fatal
+    then death_cause := starvation               // ~10 tygodni. To ciało się skończyło, nie spiżarnia.
+
+if hunger = losing_consciousness
+    then death_cause := none                     // ⚠️ Przewraca, nie zabija. Patrz §4. Dwie z tych przyczyn były zresztą do niedawna NIEOSIĄGALNE: statusOf nie podawał liczników czasu, których wymagają, a SimState nie miał gdzie ich trzymać.
 
 if body_gives_out and is_asleep
     then death := refused                        // §9.1. We śnie krwawienie jest zdławione, więc zgon mógłby wyjść tylko z arytmetyki, której nikt nie oglądał.

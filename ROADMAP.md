@@ -21,10 +21,15 @@ Każdy zamknięty etap dostaje sekcję **Dziennik wykonania** z decyzjami podję
 | — | Oprawa: krój pisma, odświeżanie, mapa Voyager, płynność 30 fps | ✅ scalone do `main` | 2026-08-20 | `d0d0e51` … `89bce39` |
 | — | Półki w schronie, pamięć przeszukanych miejsc, zasięgi per miejsce | ✅ poza etapami | 2026-08-20 | schemat v20 |
 | — | Broń: magazynki, gniazda dodatków, ładowanie po naboju | ✅ poza etapami | 2026-08-20 | schemat v21 |
+| — | Warsztat: magazyn + wytwarzanie w jednym, rozbiórka wsadowa z kolejką | ✅ poza etapami | 2026-08-22 | schemat v26 |
+| — | Migracja `main.dart`: sześć kontrolerów, granica awarii, zapadka rozmiaru | ✅ fazy 0–6 | 2026-08-22 | 7088 → 6638 linii |
+| — | **Fizjologia długoterminowa** (§2.3.1, §2.5.5) | ✅ poza etapami | 2026-08-23 | schemat v27–v29 |
 
-**Metryki:** 1652 testy · `flutter analyze` czysty · schemat bazy **v21**
+**Metryki:** 2121 testów · `flutter analyze` czysty · schemat bazy **v29**
 
-⚠️ **`main` jest 100 commitów przed `origin/main`.** Nic z tego nie było wypchnięte — cała gra istnieje na jednym dysku. To jest dziś największe ryzyko projektu i jedyne, którego nie da się naprawić kodem.
+✅ **`main` jest wypchnięty na `origin/main`.** Wcześniej cała gra istniała na jednym dysku i było to największe ryzyko projektu — jedyne, którego nie dawało się naprawić kodem.
+
+⚠️ Repozytorium `Frosttod/ARLS-ZA` jest **publiczne**. `android/key.properties` jest w `.gitignore` i nie wolno go tam wpuścić.
 
 ### Co zamyka etapy 3–5 i 8
 
@@ -195,6 +200,10 @@ Symulator działa i emituje pozycje, ale **nic ich jeszcze nie konsumuje** — `
 | 2.11 | Reguła zajęć: jedno naraz, kategorie ZAJĘCIE / CZYNNOŚĆ / PROCES TŁOWY | §2.1a |
 | 2.12 | Zawór offline: żaden zasób nie spada poniżej 10%, brak śmierci w stanie uśpionym | §2.1.1, §9.1 |
 | 2.13 | HUD: krew, statusy, woda, kalorie, udźwig (masa i objętość) | §3.6, §18.1a |
+| 2.14 | ✅ **Kary za stan docierają do zegarów i do strzału** — `conditionMoa`, `workRate`, masa ciała w progach odwodnienia | §2.3, §2.5.4, §5.1.1 |
+| 2.15 | ✅ **Zgon z głodu i pragnienia jest osiągalny** — `dryStreakSeconds`, `starvedStreakSeconds` (schemat v27) | §2.3, §9 |
+| 2.16 | ✅ **Masa ciała jako stan**, wychudzenie, nadwyżka odkładana (schemat v28) | §2.3.1 |
+| 2.17 | ✅ **Drugi zegar snu** — obciążenie przewlekłe (schemat v29) | §2.5.5 |
 
 **Kryterium wyjścia:** przy ×3600 doba symulacji daje liczby zgodne z tabelami §2 w granicach błędu zaokrągleń; postać z zamkniętą aplikacją przez 14 dni budzi się osłabiona, ale żywa.
 
@@ -208,6 +217,20 @@ Symulator działa i emituje pozycje, ale **nic ich jeszcze nie konsumuje** — `
 - **Pot rozdzielony na środowiskowy i wysiłkowy.** Upał i odzież kosztują wodę przy każdej aktywności, ale stała 400 ml/h ze wzoru to tempo *pracującego* ciała. Dodanie pełnego wzoru dawałoby 12 l na dobę komuś śpiącemu w schronie.
 - **Podstawa energetyczna z Mifflina, dopłata za ruch z MET.** To dwa różne źródła (2450 kcal/dobę wobec 2016 kcal/dobę z MET 1.0), więc ruch liczony jest jako nadwyżka ponad MET spoczynkowy, a nie jako pełny koszt.
 - **Prędkość liczona z kolejnych odczytów, nie z pola dostarczanego przez GPS.** Symulator podaje `speedMps`, prawdziwy chip czasem nie — symulacja nie może zachowywać się inaczej zależnie od tego, który jest podłączony.
+
+#### Domknięcie fizjologii, sierpień 2026 (zadania 2.14–2.17)
+
+⚠️ **Trzy kary z §2 były wyliczane co tick i nie docierały do niczego.** Wszystkie miały ten sam kształt — liczbę bez konsumenta:
+
+1. `conditionMoa` miał wartość domyślną zero i żadne wywołanie go nie wypełniało, więc +3 MOA za dobę bez snu i MOA za utratę krwi **nie zmieniały ani jednego strzału**.
+2. `actionTimeMultiplier` czytał HUD i notatki stanu — i nic, co mierzy czas. „+20% do czasu wszystkich czynności" nie wydłużało niczego.
+3. `toSimConstants()` pomijało masę ciała, a pole miało domyślne 80 kg, więc progi odwodnienia mierzyły każdą postać miarką osoby ważącej 80 kg.
+
+⚠️ **Obie śmiertelne reguły §2.3 były nieosiągalne.** Funkcje przyjmowały liczniki czasu od kiedy powstały; `statusOf` nie podawał żadnego, `SimState` nie miał gdzie ich trzymać. Można było nie jeść i nie pić w nieskończoność.
+
+**Główna zmiana projektowa:** masa ciała przestaje być stałą. §2.3 nie miało czym mierzyć głodu dłuższego niż doba — bo „0% przez > 24 h" to reguła o *dobowym zapasie*, nie o organizmie. Czytanie jej jako zgonu zabijało w 48 godzin, szybciej niż pragnienie, wbrew własnej instrukcji §2.3.
+
+Szczegóły i liczby: [MECHANICS.md §3.4a](MECHANICS.md#34a-głód-długoterminowy--masa-ciała-231) i [§5.3](MECHANICS.md#53-obciążenie-przewlekłe--ostatni-miesiąc-255).
 - **Utrata sygnału zeruje ruch, nie zamraża go.** Naliczanie ostatniej znanej prędkości przez czas bez sygnału obciążałoby gracza za dryf GPS (§3.2).
 - **Tryb śmierci nie ma domyślnego zaznaczenia.** Wybór jest nieodwracalny (§9), a preselekcja to wybór dokonany za gracza.
 - **Kompozycja gry wyjęta z widgetów do `GameSessionFactory`.** Zakładanie profilu, odczyt aktywnej postaci i start pętli to sekwencja, którą trzeba testować bez pompowania UI. `main.dart` zostaje listą ekranów.

@@ -4,6 +4,116 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Long-term physiology (§2.3.1, §2.5.5) — schema v27–v29
+
+Sleep now has a second clock that counts weeks, hunger is measured against the
+body rather than against the larder, and both of §2.3's lethal rules became
+reachable for the first time.
+
+#### Fixed — three penalties that reached nothing
+
+All three had the same shape: a figure with no consumer. A number nobody reads
+is worse than a missing feature, because the interface says the penalty is
+happening and the player plays around a rule that is not there.
+
+- **`conditionMoa` was never passed.** `aimError` has taken it since it was
+  written, with a default of nought, and no call site ever filled it in — so
+  §2.5.4's three minutes of arc for a day without sleep and §2.6's for blood
+  loss were computed, drawn on the profile screen and thrown away before any
+  shot was resolved.
+- **`actionTimeMultiplier` never met a clock.** Read by the HUD and by the
+  status notes, and by nothing that measures a duration. Now `SimStatus.workRate`
+  feeds `Search.advance` and `PaceContext.bodyRate`, which is where every
+  duration in the game passes through.
+- **Body mass never reached the simulation.** `BodyProfile.toSimConstants` left
+  `bodyMassKg` out and the field defaulted to eighty, so §2.3's dehydration
+  thresholds — fractions of *body mass* — measured every character against an
+  eighty-kilogram person.
+
+#### Fixed — two deaths the game could not reach
+
+`hungerState` takes a `timeAtZero` and `thirstState` a `timeWithoutWater`;
+`statusOf` passed neither and `SimState` had nowhere to keep them, so
+`losingConsciousness` and `lethal` were permanently false and two of the three
+`DeathCause` values named states the game could not enter.
+
+- **`dryStreakSeconds`** — seconds since any water reached the body. Reset by a
+  swallow, not by a full reserve, which is what §2.3's "brak wody" says. A
+  mouthful restarts the countdown to dying of thirst and does nothing at all to
+  the deficit, so the two rules never interfere and neither is exploitable.
+- **`starvedStreakSeconds`** — seconds the calorie reserve has been at nought.
+
+#### Changed — hunger is measured in weeks (§2.3.1)
+
+- **Body mass is a state, not a constant.** A deficit is paid from it at
+  7000 kcal/kg (not the 7700 of the fat-only figure: a body under a deficit
+  burns roughly three parts fat to one part lean tissue, and lean tissue is
+  mostly water). A surplus goes back at 0.75, because storing is lossy.
+- **Everything §1.3 derives from mass follows it** — the carry limits of
+  §18.1a, Mifflin–St Jeor, the 35 ml/kg of daily water, Nadler's blood volume.
+  A lighter body burns less, so adaptive thermogenesis falls out for free.
+  Blood is rescaled in proportion with its own ceiling, so losing weight never
+  by itself moves anybody into a shock class.
+- **An empty larder is no longer a death.** §2.3's "0% przez > 24 h" is a rule
+  about a *day's* food, and a character with nothing to eat sits at nought from
+  the second morning of a famine until the end of it — so reading it as a death
+  made hunger fatal in forty-eight hours, faster than thirst, in a section that
+  says in as many words that water must be the harsher of the two. It puts the
+  character on the ground, as §2.3 words it. Dying of hunger is 30% of the
+  starting weight gone: about seventy-five days at rest, less while walking.
+- **A surplus is banked in the body instead of discarded.** Four tins on a full
+  stomach used to give nothing, so there was never a reason to eat before a
+  journey. The day's reserve still does not accumulate.
+- Nothing comes off the body while the app is closed (§2.1.1).
+
+#### Changed — thirst got teeth, and stays short
+
+- Five and ten per cent of body mass now cost ×1.30 and ×1.60 on every action.
+  Of §2.3's three thresholds only the first was attached to anything, so a
+  character in the critical state shot as well as a merely thirsty one.
+- **`kCriticalThirstGrace`** — twelve hours at ten per cent is fatal. §2.3's one
+  lethal rule is qualified "w warunkach wysiłku", which taken alone makes
+  somebody sitting in a shelter immortal.
+- **No long-term axis, deliberately.** Dehydration has no memory; the contrast
+  with food is the whole point of the pair. About three days against ten weeks,
+  and neither figure was designed — both fall out of §1.3's constants.
+
+#### Added — the second sleep clock (§2.5.5)
+
+§2.5.4's debt measures last night and only last night. It is capped at a day,
+clears in a day, and — because it accrues only while the character is *awake* —
+settles at break-even on six-hour nights. Three weeks of short nights read
+exactly like one late evening.
+
+- **`sleepStrain`** counts against the wall clock, which is what §2.5.3's own
+  formula says: `strain += 1 − S/8` over a day. One night short by two hours is
+  0.25 and costs nothing; four four-hour nights are 2.0; a fortnight of six-hour
+  nights is 3.5; two months hits the cap of 10.
+- **The penalties are ones the sleep bar does not show** — healing, the heart
+  settling, the hands. That is how chronic restriction works: subjective
+  sleepiness plateaus while performance goes on falling. A player who slept well
+  and is still worse off is being told something true, which is why it has a
+  status note of its own (§12).
+- **Only a night longer than the requirement pays anything back.** Recovery from
+  chronic restriction needs extra sleep, not merely adequate sleep — which sits
+  this axis squarely on §2.5.3's seasonality with no modifier at all. Poznań in
+  June accrues however carefully the player plays; four December nights clear a
+  summer; the Lounge (§8.4) becomes the one thing that buys recovery out of
+  season.
+
+#### Notes
+
+- Catch-up linearity is no longer exact for calories and water, and cannot be:
+  the burn rate is `MET × 3.5 × mass / 200` and mass moves. Same shape blood
+  regeneration has always had, bounded the same way by `advanceInChunks` — one
+  kilocalorie in fifty-two hundred over six hours of walking.
+- `SimConstants.bodyMassKg` was removed rather than filled in. Two sources of
+  truth for one moving number is the shape of the defect this work started from.
+  `startingMassKg` remains, and answers a different question: how much of me is
+  gone.
+
+---
+
 ### Stage 2 — Character and physiology
 
 The first system that can be balanced. A character sheet now turns into a body

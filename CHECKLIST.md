@@ -1,7 +1,7 @@
 # ARLS-ZA — lista kontrolna systemów
 
-Stan na dzień **2026-08-16**. Wygenerowana po przejściu pełnego zestawu
-testów: **1471 testów, `flutter analyze` czysty, schemat bazy v12**.
+Stan na dzień **2026-08-23**. Wygenerowana po przejściu pełnego zestawu
+testów: **2121 testów, `flutter analyze` czysty, schemat bazy v29**.
 
 Opis wszystkich mechanik z liczbami: [MECHANICS.md](MECHANICS.md).
 
@@ -19,23 +19,27 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 
 | Obszar | Testy | Co jest tam pilnowane |
 | :---- | ----: | :---- |
-| `combat` | 255 | tabela kalibracyjna §5.1.2 wiersz po wierszu, obrażenia §5.1.5, budżet sprintu, maszyna stanów, hałas, spawn, magazynek, dodatki |
-| `ui` | 288 | HUD, ekwipunek, panele, arkusze, geometria dotknięć i pierścieni |
-| `sim` | 198 | tick, metabolizm, tętno, wchłanianie, sen, nawyk gry |
-| `loot` | 151 | tabele, spawner, przeszukanie, rzeczy na ziemi, przeszkody |
+| `ui` | 389 | HUD, ekwipunek, panele, arkusze, geometria dotknięć i pierścieni, notatki stanu |
+| `combat` | 352 | tabela kalibracyjna §5.1.2 wiersz po wierszu, obrażenia §5.1.5, budżet sprintu, maszyna stanów, hałas, spawn, magazynek, dodatki |
+| `sim` | 306 | tick, metabolizm, tętno, wchłanianie, **dwa zegary snu**, **masa ciała i wychudzenie**, **osiągalność zgonu z głodu i pragnienia**, **kary za stan docierające do zegarów**, nawyk gry |
+| `loot` | 176 | tabele, spawner, przeszukanie, rzeczy na ziemi, przeszkody |
+| `game` | 172 | pętla, kontrolery, jedna para rąk, integracja pozycji |
+| `inventory` | 122 | dwa limity §18.1a, sloty, porcje, dodatki, trwałość |
 | `map` | 88 | PMTiles, MVT, geometria, namiary, pakiety regionów |
-| `inventory` | 84 | dwa limity §18.1a, sloty, porcje, dodatki, trwałość |
-| `items` | 71 | katalog jako dane: bilans, nazwy, sloty, użycia |
-| `location` | 53 | bramka dokładności, filtr Kalmana, martwa strefa, anty-cheat |
-| `db` | 50 | migracje v1→v18, integralność, warstwa gorąca i ciepła |
-| `shelter` | 55 | strefy §8.1, czasy budowy §8.3, moduły §8.4, obozy §8.5.2, receptury §18.2 |
-| `devtools` | 44 | symulator GPS, nakładka, zegar |
-| `game` | 59 | pętla gry, nadrabianie przerw, próbkowanie |
-| `safety` | 34 | strefy wykluczone §3.5 |
-| `core` | 30 | deterministyczny RNG, zegar |
-| `notes` | 14 | notatki §19.1, podstawianie nazw miejsc |
+| `craft` | 84 | recepty, rozbiórka wsadowa, ilości ze stosu, bilans §18.2 |
+| `shelter` | 80 | budowa, moduły, półka, stackowanie |
+| `items` | 76 | katalog jako dane: bilans, nazwy, sloty, użycia |
+| `location` | 60 | bramka dokładności, filtr Kalmana, martwa strefa, anty-cheat, powrót odbiornika |
+| `db` | 50 | migracje v1→v29, integralność, warstwa gorąca i ciepła |
+| `devtools` | 44 | konsola, rejestrator sesji |
+| `safety` | 34 | §1.2, blokady na prędkości |
+| `core` | 30 | zegar gry, jeden timer |
+| `app` | 20 | bootstrap, granica awarii, **zapadka rozmiaru main.dart** |
+| `actions` | 17 | wiersz akcji przeżywający zabicie procesu |
+| `notes` | 14 | notatki i lektura |
+| `l10n` | 7 | kolizje kluczy, brak twardej polszczyzny w kodzie |
 
-**Razem 1471.**
+**Razem 2121.**
 
 ### Rzeczy, które testy trzymają jako liczby, a nie jako intencje
 
@@ -48,7 +52,16 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 - **§6.2** — parametry przeciwników, w tym progi śmierci.
 - **§5.6.1** — promienie hałasu i modyfikatory otoczenia.
 - **Migracje** — każda wydana wersja schematu daje się otworzyć i podnieść do
-  v12, z danymi.
+  v29, z danymi.
+- **§2.3, §2.5.4, §5.1.1** — trzy kary za stan trzymane **przy konsumencie**,
+  nie przy wzorze. Wada nie była złą liczbą, tylko parametrem z nieszkodliwą
+  wartością domyślną, którego nikt nie wypełniał — czego żaden test samej
+  funkcji nie złapie, bo funkcja zawsze była poprawna.
+- **§2.3.1** — przebieg głodówki totalnej w dniach: tydzień to niewygoda,
+  ~10 tygodni to koniec. Test pęknie, jeśli model wróci do bycia odliczaniem
+  w przebraniu ciała.
+- **§2.5.5** — jedna zarwana noc 0,25 · cztery pod rząd 2,0 · dwa tygodnie po
+  6 h 3,5. I to, że po dobrej nocy pasek jest pełny, a liczby dalej złe.
 
 ---
 
@@ -163,7 +176,7 @@ Kolejność jest celowa: rzeczy wyżej blokują ocenę tych niżej.
 
 - [ ] Utrata przytomności zasłania mapę — żadna akcja nie działa
 - [ ] Godzina leci przy zamkniętej aplikacji
-- [ ] Po przebudzeniu: 25% krwi, 15% wody i kalorii, broń z rąk przepadła
+- [ ] Po przebudzeniu: **65%** krwi (klasa III), 15% wody i kalorii, broń z rąk przepadła
 - [ ] Skrytki leżą tam, gdzie padłeś, 30–100 m od miejsca upadku
 - [ ] Przez 10 minut po przebudzeniu nikt nie atakuje i Ty też nie możesz
 - [ ] Sen i brak GPS nie mogą zabić (§9.1)
@@ -172,6 +185,27 @@ Kolejność jest celowa: rzeczy wyżej blokują ocenę tych niżej.
 - [ ] Licznik nieprzytomności tyka co sekundę
 - [ ] Ekran śmierci pokazuje log ostatnich chwil walki
 - [ ] Ginie połowa noszonego **i** połowa z plecaka, nie sam plecak
+
+### 2.6a. Fizjologia długoterminowa (§2.3.1, §2.5.5) — **nowe, nieprzespacerowane**
+
+Trzy z tych punktów zmieniają trudność **od pierwszego spaceru** i to jest
+najważniejsza rzecz do sprawdzenia w terenie:
+
+- [ ] **Przeszukanie zauważalnie zwalnia, gdy postać jest głodna albo
+      niewyspana** — to jest pierwsza rzecz, którą etap 0 zmienił, i była
+      martwa od zawsze
+- [ ] Niewyspanie i utrata krwi **psują strzał** (`conditionMoa` dociera do
+      rozrzutu)
+- [ ] Progi odwodnienia liczą się dla **twojej** wagi, nie dla 80 kg
+- [ ] Można nie jeść przez tydzień i dalej grać
+- [ ] Po tygodniu bez jedzenia widać ubytek masy na ekranie profilu
+- [ ] Objedzenie się przed wyprawą **coś daje** (nadwyżka idzie w ciało)
+- [ ] Notatka **„WYCZERPANIE"** pojawia się po kilku krótkich nocach pod rząd
+- [ ] Po jednej dobrej nocy pasek snu jest pełny, a notatka **zostaje** — i to
+      jest zamierzone, nie błąd
+- [ ] Zimowa noc (16 h w schronie) faktycznie kasuje obciążenie
+- [ ] Brak wody przez dwie doby w marszu **kończy postać**; wcześniej nie
+      kończył nigdy
 
 ### 2.7. Interfejs
 

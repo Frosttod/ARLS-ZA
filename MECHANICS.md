@@ -15,7 +15,7 @@ Różnica jest istotna, bo w kilkunastu miejscach **świadomie odeszliśmy od do
 
 ⚠️ **Reguła utrzymania tego pliku:** liczba zmieniona w kodzie i nieprzeniesiona tutaj czyni ten dokument gorszym niż jego brak. Przy każdej zmianie stałej — aktualizuj sekcję.
 
-**Stan:** 1466 testów · schemat bazy **v18** · etapy 0–2 zamknięte, 3–5 i 8 przed testem w terenie.
+**Stan:** 2121 testów · schemat bazy **v29** · etapy 0–2 zamknięte, 3–5 i 8 przed testem w terenie.
 
 ---
 
@@ -25,7 +25,7 @@ Różnica jest istotna, bo w kilkunastu miejscach **świadomie odeszliśmy od do
 2. [Ciało — parametry postaci](#2-ciało)
 3. [Metabolizm — kalorie, woda, tętno](#3-metabolizm)
 4. [Krew, rany i wstrząs](#4-krew-rany-i-wstrząs)
-5. [Sen](#5-sen)
+5. [Sen — dwa zegary](#5-sen)
 6. [GPS, ruch i bezpieczeństwo gracza](#6-gps-ruch-i-bezpieczeństwo)
 7. [Mapa i znaczniki](#7-mapa-i-znaczniki)
 8. [Przedmioty i ekwipunek](#8-przedmioty-i-ekwipunek)
@@ -85,6 +85,23 @@ Postać powstaje z czterech danych podanych przez gracza: **płeć, wiek, wzrost
 | Tętno maksymalne | 220 − wiek | — |
 | BMI | walidacja | 12–60 |
 
+### 2.0. ⚠️ Masa ciała jest **stanem**, nie stałą
+
+Od schematu v28 waga postaci się rusza. Deficyt kaloryczny ją zjada, nadwyżka odkłada (§3.4a) — a wtedy **wszystkie wiersze powyżej przeliczają się razem z nią**.
+
+| Co idzie za masą | Skutek chudnięcia |
+| :---- | :---- |
+| Udźwig 30% / 45% (§18.1a) | mniej udźwigniesz |
+| Mifflin–St Jeor | mniejsze zapotrzebowanie → wolniejszy dalszy spadek |
+| Woda dobowa 35 ml/kg | mniejszy zapas i **niższe progi** odwodnienia |
+| Objętość krwi (Nadler) | mniej krwi do stracenia |
+
+`BodyProfile` jest przeliczany, gdy waga drgnie o **0,25 kg**. Adaptacja metaboliczna wychodzi z tego za darmo — nikt nie pisał krzywej.
+
+⚠️ **Krew skaluje się proporcjonalnie razem z sufitem.** Gdyby mililitry stały w miejscu przy opadającym maksimum, sam spadek wagi podniósłby *ułamek utraconej krwi* i wrzucił wychudzoną postać w klasę III wstrząsu bez jednego zadrapania. Po przeskalowaniu ułamek zostaje tam, gdzie był; zmienia się tylko to, że każda przyszła rana jest większą częścią mniejszego ciała.
+
+⚠️ **Jest dokładnie jedna masa.** `SimConstants.bodyMassKg` istniało kiedyś obok i nikt go nie wypełniał, więc progi odwodnienia mierzyły każdą postać miarką osoby 80 kg. Zostało usunięte. Została `startingMassKg`, która naprawdę jest stała i odpowiada na inne pytanie — **ile mnie ubyło**. Postać 55 kg przy 50 kg ma kłopoty, postać 95 kg przy 50 kg nie żyje.
+
 ### 2.1. Dwa limity udźwigu (§18.1a)
 
 | Limit | Wartość | Skutek przekroczenia |
@@ -136,7 +153,7 @@ Na pasku HUD widać to jako znacznik `+` przed wypełnieniem. To jest cała mech
 
 Brak znacznika na śnie, gdy postać nie śpi — dług rośnie każdą godzinę na jawie, a znak, który jest zawsze, nie mówi nic. Brak znacznika na krwi przy pustym żołądku — krew powstaje z tego, co zjedzone i wypite, więc głodujący nie regeneruje i pasek tego nie obiecuje.
 
-⚠️ Zapas jest **capowany dobowym zapotrzebowaniem**. Nadmiar nie jest bankowany.
+⚠️ Zapas jest **capowany dobowym zapotrzebowaniem**, ale nadmiar **nie jest już wyrzucany** — idzie w ciało (§3.4a). Wcześniej cztery puszki na pełny żołądek nie dawały nic i nigdy nie było powodu, żeby najeść się przed wyprawą.
 
 ### 3.3. Progi odwodnienia
 
@@ -145,19 +162,75 @@ Liczone jako **deficyt względem masy ciała**, nie względem paska:
 | Deficyt | Skutek |
 | :---- | :---- |
 | ≥ 2% masy ciała | celność ×0,85 |
-| ≥ 5% | poważne osłabienie |
-| ≥ 10% | stan krytyczny |
-| > 48 h bez wody przy wysiłku | śmiertelne |
+| ≥ 5% | **czas czynności ×1,30** |
+| ≥ 10% | stan krytyczny, **czas czynności ×1,60** |
+| > 48 h bez wody **przy wysiłku** | śmiertelne |
+| ≥ 10% utrzymane **> 12 h** | śmiertelne |
 
 ⚠️ Woda może zejść **poniżej zera**. Zapas to dobowe zapotrzebowanie (2 800 ml dla 80 kg), a progi to procenty masy ciała (2% = 1 600 ml, 10% = 8 000 ml) — clampowanie na zerze uczyniłoby dwa z trzech progów nieosiągalnymi.
 
-### 3.4. Głód
+⚠️ **Progi 5% i 10% nie miały do niedawna żadnej konsekwencji.** Z trzech wierszy tylko pierwszy był do czegokolwiek podpięty, więc postać w stanie krytycznym strzelała tak samo jak lekko spragniona i wszystko robiła w pełnym tempie. Głód był jedyną z tej pary, która kogokolwiek spowalniała — dokładnie odwrotnie, niż nakazuje §2.3.
+
+⚠️ **Drugi próg śmiertelny (12 h w stanie krytycznym) to rozszerzenie**, nie zapis z dokumentu. §2.3 daje pragnieniu jedną regułę i kwalifikuje ją słowami „w warunkach wysiłku" — samo to czyni nieśmiertelnym kogoś, kto siedzi w schronie, bo zapas ma podłogę na 10% masy ciała i tam zostaje.
+
+⚠️ **Pragnienie nie ma osi długoterminowej i to jest właściwa odpowiedź.** Odwodnienie nie ma pamięci: napijesz się i jesteś zdrowy. Kontrast z jedzeniem (§3.4a) jest całym sensem tej pary.
+
+### 3.4. Głód — dobowy zapas
 
 | Zapas | Skutek |
 | :---- | :---- |
 | < 50% | precyzja ×0,90 |
 | < 20% | wszystkie czynności ×1,20 czasu |
-| 0 przez > 24 h | utrata przytomności |
+| 0 przez > 24 h | **utrata przytomności — nie śmierć** |
+
+⚠️ **Puste konserwy to nie puste ciało.** Ostatni wiersz był wdrożony jako zgon i to psuło całą oś: zapas to *dobowa* porcja jedzenia, więc postać bez zapasów stoi na zerze od drugiego poranka klęski głodu aż do jej końca. Głód zabijał w 48 godzin — szybciej niż pragnienie, w sekcji, która wprost nakazuje odwrotnie. Teraz przewraca, a zabija wychudzenie.
+
+### 3.4a. Głód długoterminowy — masa ciała (§2.3.1)
+
+Bilans energii nie ginie na żadnym końcu. Niedobór schodzi z ciała, nadwyżka wraca.
+
+```
+masa [kg] += (nadwyżka × 0,75 − niedobór) / 7000
+```
+
+| Stała | Wartość | Dlaczego |
+| :---- | ----: | :---- |
+| `kKcalPerKgOfBody` | **7000** | nie 7700 z tabeli czystego tłuszczu — organizm pod deficytem spala ~3 części tłuszczu na 1 część tkanki chudej, a ta jest w większości wodą |
+| `kSurplusStorageEfficiency` | **0,75** | magazynowanie jest stratne; tydzień objadania się nie cofa tygodnia głodu |
+| `kFatalMassLoss` | **30%** masy startowej | granica kliniczna |
+
+| Ubytek masy startowej | Skutek |
+| :---- | :---- |
+| 0–5% | brak |
+| 5–15% | czas czynności ×1,15 |
+| 15–30% | czas czynności ×1,40, **+2 MOA** |
+| > 30% | śmierć |
+
+**Przebieg dla 80 kg, głodówka totalna, bezruch:**
+
+| Dzień | Masa | Ubytek | |
+| :---- | ----: | ----: | :---- |
+| 7 | 77,6 kg | 3,0% | nic |
+| 14 | 75,2 kg | 6,0% | ×1,15 |
+| 42 | 66,1 kg | 17,4% | ×1,40, +2 MOA |
+| 75 | 55,9 kg | 30,1% | koniec |
+
+W marszu szybciej. Literatura daje 6–10 tygodni głodówki totalnej.
+
+⚠️ **Przy zamkniętej aplikacji nic nie schodzi z ciała** (§2.1.1). Podłoga offline istnieje po to, żeby telefon w szufladzie nikogo nie zabił, a dwa tygodnie niepilnowanego chudnięcia przeszłyby przez nią bokiem. Nadwyżka liczy się dalej — co zjedzone, to zjedzone.
+
+⚠️ **Liniowość nadrabiania przestała być dokładna.** Tempo spalania to `MET × 3,5 × masa / 200`, a masa się rusza — więc bieg w kawałkach widzi, jak postać lżeje, a jeden wielki krok nie. Ten sam kształt, który regeneracja krwi ma od zawsze, i ograniczony tak samo przez `advanceInChunks`: **kilokaloria na 5200** przez sześć godzin marszu.
+
+### 3.4b. Asymetria woda / jedzenie
+
+Nie jest projektowana — **wypada ze stałych §1.3**. Zapas to doba jednego i drugiego, ale progi pragnienia są ułamkami masy ciała, a ciało niesie miesiące tłuszczu i około trzech dób wody.
+
+| | Do stanu krytycznego | Do zgonu |
+| :---- | :---- | :---- |
+| **Woda** | ~2,9 doby w bezruchu | 2–3 doby w marszu |
+| **Jedzenie** | ~6 tygodni | ~10 tygodni |
+
+Stosunek ~25 : 1. Nikt tego nie projektował — trzeba było to tylko podłączyć.
 
 ### 3.5. Tętno (§2.4)
 
@@ -231,7 +304,7 @@ Noc wyliczana offline ze wschodu i zachodu słońca dla szerokości geograficzne
 
 **Wybudza:** rozpoczęcie czegokolwiek (budowa, crafting, lektura, jedzenie, opatrunek, przeszukanie) albo wyjście ze strefy.
 
-### 5.2. Skutki długu
+### 5.2. Skutki długu — **ostatnia noc**
 
 | Dług | Skutek |
 | :---- | :---- |
@@ -239,6 +312,37 @@ Noc wyliczana offline ze wschodu i zachodu słońca dla szerokości geograficzne
 | 4–12 h | +20% czasu lektury, **+1 MOA** |
 | 12–24 h | +50% czasu wszystkich czynności, **+3 MOA**, −20% nauki |
 | > 24 h | **mikrosny** — 5–15 s zablokowania interfejsu |
+
+Sufit długu: **24 h**. Dalej nie ma nic gorszego, więc głębszy dołek byłby tylko dłuższą wspinaczką — i paskiem, który czyta się jako pusty tak samo.
+
+### 5.3. Obciążenie przewlekłe — **ostatni miesiąc** (§2.5.5)
+
+⚠️ **Dług z §2.5.4 mierzy ostatnią noc i tylko ją.** Ma sufit doby, kasuje się w dobę, a ponieważ narasta wyłącznie w czasie *czuwania* — na sześciogodzinnych nocach wychodzi na zero i nie drga. Szesnaście godzin na nogach jest warte 5 h 20 min długu, noc spłaca sześć. Trzy tygodnie niedosypiania czytały się jak jeden zarwany wieczór.
+
+Drugi zegar liczy się wobec **zegara ściennego**, tak jak mówi formuła §2.5.3: doba potrzebuje ośmiu godzin niezależnie od tego, co się w niej robiło.
+
+```
+obciążenie += 1 − S/8      (S = godziny snu w dobie)
+```
+
+| Sytuacja | Obciążenie | Skutek |
+| :---- | ----: | :---- |
+| jedna noc krótsza o 2 h | 0,25 | **brak** |
+| cztery noce po 4 h | 2,0 | −20% nauki, tętno wraca ×1,35 wolniej |
+| dwa tygodnie po 6 h | 3,5 | −40% nauki, **+1 MOA**, gojenie −30% |
+| dwa miesiące po 6 h | 10 (sufit) | **+2 MOA**, gojenie −50%, mikrosny |
+
+⚠️ **Kary są celowo te, których pasek snu NIE pokazuje** — gojenie, uspokajanie tętna, ręce. Tak działa przewlekłe niedosypianie: subiektywna senność się wypłaszcza, a wydolność dalej spada. Po jednej dobrej nocy pasek jest pełny, a liczby dalej złe. To jest sedno mechaniki i dlatego ma **własną notatkę stanu „WYCZERPANIE"** (§12) — kara bez widocznego powodu czyta się jako błąd, choćby najprawdziwsza.
+
+**Spłaca tylko noc dłuższa niż potrzeba.** Regeneracja po przewlekłej deprywacji wymaga snu nadmiarowego, nie wystarczającego — i to sadza całą oś na sezonowości §2.5.3, bez jednego modyfikatora:
+
+| Poznań | Noc | Co się dzieje |
+| :---- | ----: | :---- |
+| 21 czerwca | 7,4 h | obciążenie narasta **cokolwiek zrobi gracz** |
+| 21 grudnia | 16,6 h | cztery takie noce kasują całe lato |
+| **Salon (§8.4)** | — | jedyna rzecz kupująca regenerację **poza sezonem** |
+
+⚠️ **Podłoga stanu jest jedną nocą poniżej zera, nie na zerze.** Doba przeżywa się jako noc, a potem dzień, więc spłata nocy przychodzi przed godzinami czuwania, które ma skasować. Twarda podłoga na zerze wyrzucałaby tę spłatę każdego poranka i ktoś śpiący pełne osiem godzin narastałby o jedną trzecią nocy dziennie w nieskończoność. Nic poniżej zera nie jest czytelne jako zapas — §2.5.3 zabrania banku wprost.
 
 ---
 
@@ -874,6 +978,18 @@ Tryb wybierany raz przy tworzeniu postaci. **Nieodwracalnie.**
 - Śmierć **nie może** nastąpić we śnie.
 - Śmierć **nie może** nastąpić przy utraconym sygnale GPS.
 
+### 13.0. Co faktycznie zabija
+
+| Przyczyna | Warunek | Ile to trwa |
+| :---- | :---- | :---- |
+| **Wykrwawienie** | klasa IV wstrząsu (≥ 40% ubytku) | minuty |
+| **Pragnienie** | 48 h bez wody **przy wysiłku**, albo 12 h w stanie krytycznym | 2–3 doby |
+| **Wychudzenie** | 30% ubytku masy startowej (§3.4a) | ~10 tygodni |
+
+⚠️ **Dwie z tych trzech były do niedawna nieosiągalne.** `hungerState` przyjmuje `timeAtZero`, `thirstState` przyjmuje `timeWithoutWater` — od kiedy powstały. `statusOf` nie podawał żadnego z nich, a `SimState` nie miał gdzie ich trzymać, więc oba pozostawały fałszem i można było nie jeść ani nie pić w nieskończoność. Zegary siedzą teraz w stanie (`dryStreakSeconds`, `starvedStreakSeconds`, schemat v27).
+
+⚠️ **Pusty zapas kaloryczny nie jest przyczyną zgonu.** Kładzie postać (`isIncapacitated`), tak jak §2.3 to nazywa — „postępująca utrata przytomności". Zabija dopiero ciało, które się skończyło.
+
 ### 13.2. Hardcore
 
 Koniec postaci. Wpis do Kroniki z pełnym stanem. Nowa postać zachowuje parametry fizjologiczne — to nadal to samo ciało gracza, zmienia się tylko imię.
@@ -982,6 +1098,12 @@ Miejsca, w których kod **świadomie** robi coś innego niż `ARLS-ZA_design_doc
 | **Skrytki po utracie przytomności** | 48 h | **24 h** | Leżą jako zwykłe rzeczy na ziemi (§4.8), a te mają dobę. Dług. |
 | **Okno łaski** | warunkowe (przeciwnicy w 300 m) | zawsze 10 min | Dług. |
 | **Udźwig** | — | gender-neutralny | Świadoma decyzja gracza. |
+| **Śmierć z głodu** | „0% przez > 24 h → utrata przytomności" czytane jako zgon | **przewraca, nie zabija**; zabija 30% ubytku masy | Zapas to *doba* jedzenia. Postać bez zapasów stoi na zerze od drugiego poranka klęski głodu do jej końca — więc głód zabijał w 48 h, szybciej niż pragnienie, wbrew §2.3. |
+| **Masa ciała** | stała z karty postaci | **stan** (§3.4a) | §2.3 nie miało czym mierzyć głodu dłuższego niż doba. |
+| **Śmierć z pragnienia w bezruchu** | tylko „48 h przy wysiłku" | także **12 h w stanie krytycznym** | Sama reguła z dokumentu czyni nieśmiertelnym kogoś, kto siedzi w schronie: zapas ma podłogę na 10% masy ciała i tam zostaje. |
+| **Progi 5% i 10% odwodnienia** | „osłabienie" / „stan krytyczny", bez liczb | ×1,30 / ×1,60 czasu czynności | §2.3 nakazuje, żeby pragnienie było ostrzejsze od głodu; bez tego było odwrotnie. |
+| **Deprywacja przewlekła** | brak | **drugi zegar** (§5.3) | §2.5.4 mierzy ostatnią noc, ma sufit doby i na 6-godzinnych nocach nie drga. Trzy tygodnie niedosypiania czytały się jak jeden zarwany wieczór. |
+| **Nadwyżka kalorii** | „nadmiar nie kumuluje zapasu" | idzie w **masę ciała** | Wyrzucana, nie dawała nic — nie było powodu najeść się przed wyprawą. Zapas dobowy dalej się nie kumuluje. |
 
 ---
 
@@ -1014,7 +1136,7 @@ ze składem ognisk.
 | Mechanika | Stan | Blokuje |
 | :---- | :---- | :---- |
 | **Ogniska (§6.5)** | ⬜ etap 6 | prawdziwą populację przeciwników; dziś świat ma maks. 2 tłowych |
-| **Umiejętności (§7)** | ⬜ | wszyscy strzelają jak nowicjusz (25 MOA) |
+| **Umiejętności (§7)** | ⬜ | wszyscy strzelają jak nowicjusz (25 MOA); `learningRateMultiplier` z §2.5.4 i §2.5.5 nie ma jeszcze konsumenta |
 | **Magazynki jako przedmioty** | ⬜ | stan magazynka nie jest zapisywany |
 | **Zawartość magazynu schronu** | ⬜ | pojemność policzona, nie ma gdzie odłożyć |
 | **Dźwięki i haptyka** | ⬜ etap 7 | ~55 plików, licencje |
