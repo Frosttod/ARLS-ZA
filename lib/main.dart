@@ -9,10 +9,11 @@ import 'data/persistence/save_bootstrap.dart';
 import 'devtools/dev_mode.dart';
 import 'devtools/dev_overlay.dart';
 import 'devtools/dev_session.dart';
+import 'game/controllers/inventory_controller.dart';
+import 'game/controllers/stash_controller.dart';
 import 'game/game_loop.dart';
 import 'inventory/body_slots.dart';
 import 'inventory/inventory.dart';
-import 'inventory/inventory_store.dart';
 import 'inventory/item_use.dart';
 import 'items/item_assets.dart';
 import 'items/item.dart';
@@ -69,7 +70,6 @@ import 'ui/down_screen.dart';
 import 'ui/shelter_screen.dart';
 import 'ui/stash_screen.dart';
 import 'shelter/stash.dart';
-import 'shelter/stash_store.dart';
 import 'ui/item_details_sheet.dart';
 import 'ui/note_sheet.dart';
 import 'ui/notices.dart';
@@ -190,17 +190,17 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   GeoPoint? _scoutedFrom;
 
   /// §12: how the pack is sorted. Outlives the screen it belongs to.
-  final _packOrder = ValueNotifier(PackOrder.kind);
+  ValueNotifier<PackOrder> get _packOrder => _pack.order;
 
   /// §18.2: what is on the shelves of the place currently open.
   ///
   /// ⚠️ A notifier, and the shelter screen is a pushed route — which is the
   /// bug class this codebase has found five times. Passing a plain value would
   /// leave the list on screen showing what the shelves held when it opened.
-  final _stash = ValueNotifier<Stash>(const Stash(capacityKg: 0));
+  ValueNotifier<Stash> get _stash => _shelf.stash;
 
   /// Which shelter [_stash] belongs to, so a save goes to the right shelves.
-  Shelter? _openShelves;
+  Shelter? get _openShelves => _shelf.openAt;
 
   GameLoop? _loop;
   bool _loading = true;
@@ -220,7 +220,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// again — and again — because the button was reading a stale list.
   ///
   /// One source of truth, and both the screen and this tree listen to it.
-  final ValueNotifier<Inventory> _inventory = ValueNotifier(const Inventory());
+  ValueNotifier<Inventory> get _inventory => _pack.inventory;
 
   /// Item names, read alongside the catalogue (§1.1, §4.1).
   ItemNames? _names;
@@ -505,11 +505,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     if (next.line == null) CrashLog.note('meal.gone');
 
     final uid = next.line?.uid;
-    final character = _character;
-    if (next.line != null && uid != null && character != null) {
-      await InventoryStore(
-        widget.session.db,
-      ).savePortion(character.profile.id, uid, left);
+    if (next.line != null && uid != null) {
+      await _pack.savePortion(uid, left);
     } else {
       await _saveInventory();
     }
@@ -1073,11 +1070,19 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     // what took the item with it.
     final catalogue = _catalogue;
     if (catalogue != null) {
-      final loaded = await InventoryStore(
-        widget.session.db,
-      ).load(character.profile.id, catalogue);
+      // ⚠️ Said once, here, and never again. The controllers exist from the
+      // first frame so their notifiers can be handed to screens before
+      // anything is loaded; this is the moment they learn whose things they
+      // are holding.
+      _pack.bind(
+        profileId: character.profile.id,
+        catalogue: catalogue,
+        body: character.body,
+      );
+      _shelf.bind(profileId: character.profile.id);
+
+      await _pack.load(catalogue);
       if (!mounted) return;
-      _inventory.value = loaded.inventory;
     }
 
     _stats = await PlayerStatsStore(
@@ -2209,14 +2214,6 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     ).takeSome(item.id, left: item.count - taken);
     if (taken < item.count && mounted) _say(L10n.of(context).droppedNoRoom);
     await _reloadDropped();
-  }
-
-  Future<void> _saveInventory() async {
-    final character = _character;
-    if (character == null) return;
-    await InventoryStore(
-      widget.session.db,
-    ).save(character.profile.id, _inventory.value);
   }
 
   /// What was on the map when the app last closed.
@@ -4569,32 +4566,6 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     if (overflow.isNotEmpty) await _shelveSpill(overflow);
   }
 
-  /// Puts what would not fit onto the shelves of the main shelter.
-  Future<void> _shelveSpill(Map<String, int> spill) async {
-    final character = _character;
-    final catalogue = _catalogue;
-    final main = _shelters.value
-        .where((place) => place.kind == ShelterKind.main)
-        .firstOrNull;
-    if (character == null || catalogue == null || main == null) return;
-
-    var shelf = _stash.value;
-    for (final entry in spill.entries) {
-      // One at a time: the shelves refuse a line that will not fit, and a
-      // stack of five refused whole would lose five rather than one.
-      for (var i = 0; i < entry.value; i++) {
-        final put = shelf.put(CarriedItem(itemId: entry.key), catalogue);
-        if (!put.moved) break;
-        shelf = put.stash;
-      }
-    }
-
-    _stash.value = shelf;
-    await StashStore(
-      widget.session.db,
-    ).save(character.profile.id, main.id, shelf);
-  }
-
   /// Takes what a build costs out of the pack (§18.2).
   Future<void> _spendMaterials(Map<String, int> materials) async {
     // ⚠️ The shelves first, the pack second.
@@ -4648,46 +4619,27 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     await _saveInventory();
   }
 
-  /// §18.2: what is on the shelves of the main shelter, by item id.
-  Map<String, int> _shelvedCounts() {
-    final counts = <String, int>{};
-    for (final line in _stash.value.lines) {
-      counts[line.itemId] = (counts[line.itemId] ?? 0) + line.count;
-    }
-    return counts;
-  }
-
   /// Carried or on the shelf — the two places a thing can be within reach of
   /// somebody standing in their own shelter.
   bool _atHand(String itemId) =>
       _carries(itemId) || (_shelvedCounts()[itemId] ?? 0) > 0;
 
-  /// §18.2: reads the shelves of the main shelter into [_stash].
+  /// §18.2: reads the shelves of the main shelter in.
   Future<void> _loadShelvesOfMain() async {
-    final character = _character;
     final catalogue = _catalogue;
     final main = _shelters.value
         .where((place) => place.kind == ShelterKind.main)
         .firstOrNull;
 
-    if (character == null || catalogue == null || main == null) {
-      _stash.value = const Stash(capacityKg: 0);
-      _openShelves = null;
+    if (catalogue == null || main == null) {
+      // ⚠️ Closed rather than emptied. With no shelter open there is nothing
+      // to write to, and shelves that saved themselves against no shelter
+      // would put one shelter's things into another's.
+      _shelf.close();
       return;
     }
 
-    _openShelves = main;
-    _stash.value = await StashStore(
-      widget.session.db,
-    ).load(character.profile.id, main, catalogue);
-  }
-
-  Map<String, int> _carriedCounts() {
-    final counts = <String, int>{};
-    for (final line in _inventory.value.carried) {
-      counts[line.itemId] = (counts[line.itemId] ?? 0) + line.count;
-    }
-    return counts;
+    await _shelf.open(main, catalogue);
   }
 
   bool _carries(String itemId) => _carriedIds().contains(itemId);
@@ -4739,10 +4691,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final catalogue = _catalogue;
     if (character == null || catalogue == null) return;
 
-    _openShelves = place;
-    _stash.value = await StashStore(
-      widget.session.db,
-    ).load(character.profile.id, place, catalogue);
+    await _shelf.open(place, catalogue);
     if (!mounted) return;
 
     await Navigator.of(context).push(
@@ -4776,7 +4725,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       ),
     );
 
-    _openShelves = null;
+    _shelf.close();
   }
 
   /// §18.2: onto the shelf without opening it first.
@@ -4812,9 +4761,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     _stash.value = moved.stash;
     _inventory.value = left;
 
-    await StashStore(
-      widget.session.db,
-    ).save(character.profile.id, main.id, _stash.value);
+    // ⚠️ Against the main shelter rather than [StashController.openAt]: this
+    // is reached from the pack screen, where the shelves themselves were
+    // never opened.
+    await _shelf.saveTo(main);
     await _saveInventory();
   }
 
@@ -5087,29 +5037,6 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
   final Map<String, bool> _salvageWorth = {};
 
-  /// §18.1a: what is still free in the pack, worked out once per change.
-  ///
-  /// The same shape as [_bench]'s cache and for the same reason: the answer
-  /// depends only on the inventory and the body, both of which are replaced
-  /// wholesale, so a reference comparison is exact.
-  PackRoom _packRoom() {
-    final character = _character;
-    final catalogue = _catalogue;
-    if (character == null || catalogue == null) {
-      return const PackRoom(massKg: 0, volumeL: 0);
-    }
-
-    final pack = _inventory.value;
-    final cached = _packRoomCache;
-    if (cached != null && identical(cached.pack, pack)) return cached.room;
-
-    final room = pack.roomLeft(character.body, catalogue);
-    _packRoomCache = (pack: pack, room: room);
-    return room;
-  }
-
-  ({Inventory pack, PackRoom room})? _packRoomCache;
-
   /// §18.2: does something to a piece that is on a shelf.
   ///
   /// ⚠️ By picking it up first, always. Eating off a shelf, putting on a coat
@@ -5137,16 +5064,6 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       case PackAction.empty:
         break;
     }
-  }
-
-  Future<void> _saveShelf() async {
-    final character = _character;
-    final place = _openShelves;
-    if (character == null || place == null) return;
-
-    await StashStore(
-      widget.session.db,
-    ).save(character.profile.id, place.id, _stash.value);
   }
 
   /// §13.1: the character, and what they have done.
@@ -5747,12 +5664,6 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     return _world?.tables[box.tableId]?.barrier;
   }
 
-  /// Item ids the player is carrying or wearing. What decides the ways in.
-  Set<String> _carriedIds() => {
-    for (final line in _inventory.value.carried) line.itemId,
-    for (final line in _inventory.value.worn) line.itemId,
-  };
-
   void _startBreach(BarrierBreach breach) {
     // ⚠️ Sticky. The car outside the shelter has a door on it, so opening it
     // goes through here rather than through the search — which is why "I
@@ -6229,7 +6140,6 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     unawaited(_dev?.dispose());
     unawaited(_world?.dispose());
     _searchTimer?.cancel();
-    _inventory.dispose();
     _search.dispose();
     _dropped.dispose();
     _position.dispose();
@@ -6244,6 +6154,44 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     _notices.dispose();
     _controllers.dispose();
     super.dispose();
+  }
+
+  /// §18.1a, §11.1: the pack, and everything that is only about the pack.
+  ///
+  /// ⚠️ Created here rather than at boot so the notifiers inside it exist
+  /// before any screen can ask for one. The character arrives later and is
+  /// handed over with [InventoryController.bind] — that is the only thing
+  /// allowed to be late.
+  late final InventoryController _pack = _controllers.adopt(
+    InventoryController(widget.session.db),
+  );
+
+  /// §18.2: the shelves of whichever shelter is open.
+  late final StashController _shelf = _controllers.adopt(
+    StashController(widget.session.db),
+  );
+
+  Future<void> _saveInventory() => _pack.save();
+
+  Future<void> _saveShelf() => _shelf.save();
+
+  Map<String, int> _carriedCounts() => _pack.counts();
+
+  Set<String> _carriedIds() => _pack.ids();
+
+  Map<String, int> _shelvedCounts() => _shelf.counts();
+
+  PackRoom _packRoom() => _pack.room();
+
+  /// §18.1a: puts what would not fit onto the shelves of the main shelter.
+  Future<void> _shelveSpill(Map<String, int> spill) async {
+    final catalogue = _catalogue;
+    final main = _shelters.value
+        .where((place) => place.kind == ShelterKind.main)
+        .firstOrNull;
+    if (catalogue == null || main == null) return;
+
+    await _shelf.spill(spill, main, catalogue);
   }
 
   @override

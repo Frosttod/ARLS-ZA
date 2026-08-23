@@ -96,6 +96,45 @@ void main() {
     });
   });
 
+  group('controllers stay controllers', () {
+    // ⚠️ The rule the whole exercise rests on. A controller that can reach a
+    // widget is a controller that will end up holding one, and then it cannot
+    // be tested without a binding, a pump and a running game — which is the
+    // state `_TitleScreenState` is in and the reason this is happening.
+    test('nothing in lib/game/controllers imports the interface', () {
+      for (final file in dartFilesIn('lib/game/controllers')) {
+        for (final line in importsOf(file)) {
+          expect(
+            line.contains('package:flutter/material.dart') ||
+                line.contains('package:flutter/widgets.dart'),
+            isFalse,
+            reason: '${file.path} can reach a widget',
+          );
+        }
+      }
+    });
+
+    test('and none of them knows another', () {
+      // Where one genuinely needs another — a bench spends off the shelves and
+      // then the pack (§18.2) — the thing that needs both asks both. The
+      // moment a controller imports a neighbour, moving either means moving
+      // both.
+      final files = dartFilesIn('lib/game/controllers');
+      expect(files, isNotEmpty, reason: 'the phase moved nothing');
+
+      for (final file in files) {
+        for (final line in importsOf(file)) {
+          expect(
+            line.contains("_controller.dart") &&
+                !line.contains(file.uri.pathSegments.last),
+            isFalse,
+            reason: '${file.path} depends on a sibling',
+          );
+        }
+      }
+    });
+  });
+
   group('what is left in main.dart', () {
     final main = File('lib/main.dart').readAsStringSync();
     final lines = main.split('\n').length;
@@ -107,11 +146,12 @@ void main() {
       //
       //   start   7088
       //   phase 1 6876   scaffolding out
+      //   phase 2 6824   the pack and the shelves out
       //
       // Lower it when a phase lands. Never raise it.
       expect(
         lines,
-        lessThanOrEqualTo(6900),
+        lessThanOrEqualTo(6830),
         reason: 'main.dart grew; something went in that should have come out',
       );
     });

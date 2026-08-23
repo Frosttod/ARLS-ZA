@@ -17,11 +17,7 @@ import 'package:flutter/widgets.dart';
 import 'game_controllers.dart';
 
 class GameScope extends InheritedWidget {
-  const GameScope({
-    required this.controllers,
-    required super.child,
-    super.key,
-  });
+  const GameScope({required this.controllers, required super.child, super.key});
 
   final GameControllers controllers;
 
