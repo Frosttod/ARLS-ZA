@@ -379,7 +379,10 @@ void main() {
       await pumpHud(tester, healthy(), carriedVolumeL: 65, capacityL: 65);
 
       expect(find.text('65.00 / 65.00 l'), findsOneWidget);
-      expect(find.bySemanticsLabel(RegExp('65.00 of 65.00 litres')), findsOneWidget);
+      expect(
+        find.bySemanticsLabel(RegExp('65.00 of 65.00 litres')),
+        findsOneWidget,
+      );
     });
   });
 

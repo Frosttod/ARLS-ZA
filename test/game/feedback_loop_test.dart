@@ -30,6 +30,12 @@ void main() {
   final loop = File('lib/game/game_loop.dart').readAsStringSync();
   final main = File('lib/main.dart').readAsStringSync();
 
+  // The guard moved onto the clock when the five timers became one — see the
+  // migration. What it guards is still here.
+  final clock = File(
+    'lib/game/controllers/action_controller.dart',
+  ).readAsStringSync();
+
   String bodyOf(String source, String signature) {
     final start = source.indexOf(signature);
     expect(start, greaterThan(0), reason: '$signature is gone');
@@ -69,11 +75,18 @@ void main() {
       final advancing = bodyOf(main, 'Future<void> _advanceSearch() async {');
 
       expect(
-        advancing.contains('if (_advancingSearch) return;'),
+        advancing.contains('if (_clock.advancing) return;'),
         isTrue,
-        reason: 'reached from two clocks and from any future publisher',
+        reason: 'reached from the clock and from any future publisher',
       );
-      expect(advancing.contains('_advancingSearch = true'), isTrue);
+      expect(advancing.contains('_clock.advancing = true'), isTrue);
+    });
+
+    test('and the flag belongs to the clock, not to the screen', () {
+      // ⚠️ Where it has to be. The screen is being taken apart a controller at
+      // a time; a guard that lived on the widget would have to be carried
+      // along by every phase, and one of them would drop it.
+      expect(clock.contains('bool advancing = false;'), isTrue);
     });
 
     test('and the flag is always put back', () {
@@ -82,7 +95,7 @@ void main() {
       final advancing = bodyOf(main, 'Future<void> _advanceSearch() async {');
 
       expect(advancing.contains('finally'), isTrue);
-      expect(advancing.contains('_advancingSearch = false'), isTrue);
+      expect(advancing.contains('_clock.advancing = false'), isTrue);
     });
 
     test('a call a fraction of a second after the last is not a tick', () {
@@ -108,7 +121,7 @@ void main() {
       final advancing = bodyOf(main, 'Future<void> _advanceSearch() async {');
 
       final floor = advancing.indexOf('milliseconds: 200');
-      final paid = advancing.indexOf('_searchTickedAt = now;');
+      final paid = advancing.indexOf('_clock.tickedAt = now;');
 
       expect(floor, greaterThan(0));
       expect(

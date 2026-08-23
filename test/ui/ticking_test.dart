@@ -122,20 +122,42 @@ void main() {
       );
     });
 
-    test('and main.dart stops its own when the app is backgrounded', () {
+    test('and the game itself keeps no timer of its own', () {
+      // ⚠️ **This rule replaces the one that used to be here.**
+      //
+      // The old budget named the three clocks — search, reload, bench — and
+      // checked that the lifecycle stopped each of them. That was the best
+      // that could be done while there were three, and it was still a list
+      // somebody had to remember to extend: the *fourth* clock would have been
+      // the one added to the game and not to the list.
+      //
+      // There is one now. A ticker says how often it wants a beat and how to
+      // tell whether it is still running, and the clock asks. Nothing has to
+      // be stopped by name, so nothing can be forgotten by name.
       final main = File('lib/main.dart').readAsStringSync();
 
-      expect(main.contains('_sleepTickers()'), isTrue);
-      expect(main.contains('_wakeTickers()'), isTrue);
+      expect(
+        main.contains('Timer.periodic'),
+        isFalse,
+        reason: 'put it on the one clock — see ActionController',
+      );
+      expect(main.contains('_clock.sleep()'), isTrue);
+      expect(main.contains('_clock.wake()'), isTrue);
+    });
 
-      // Each of the three named, so adding a fourth and forgetting it fails.
-      for (final needle in [
-        '_stopSearchTimer();',
-        '_stopReloadTimer();',
-        '_stopBenchTimer();',
-      ]) {
-        expect(main.contains(needle), isTrue, reason: '$needle is not stopped');
-      }
+    test('and the one clock stops dead when nothing is running (§3.3)', () {
+      // The game lives in a pocket for hours by design. A clock nobody stops
+      // is the battery.
+      final clock = File(
+        'lib/game/controllers/action_controller.dart',
+      ).readAsStringSync();
+
+      expect(clock.contains('if (!_awake) return null;'), isTrue);
+      expect(
+        clock.contains('_timer = null;'),
+        isTrue,
+        reason: 'no running ticker must mean no timer held at all',
+      );
     });
   });
 }

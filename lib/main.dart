@@ -9,6 +9,7 @@ import 'data/persistence/save_bootstrap.dart';
 import 'devtools/dev_mode.dart';
 import 'devtools/dev_overlay.dart';
 import 'devtools/dev_session.dart';
+import 'game/controllers/action_controller.dart';
 import 'game/controllers/craft_controller.dart';
 import 'game/controllers/inventory_controller.dart';
 import 'game/controllers/loot_controller.dart';
@@ -251,9 +252,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// should count.
   /// A notifier for the same reason the inventory is one: the inventory screen
   /// is a pushed route, and an action started from it has to be visible on it.
-  final ValueNotifier<Search?> _search = ValueNotifier(null);
-  DateTime? _searchTickedAt;
-  Timer? _searchTimer;
+  ValueNotifier<Search?> get _search => _clock.search;
+  DateTime? get _searchTickedAt => _clock.tickedAt;
 
   /// ⚠️ §2.1a.3: the bench needs a clock of its own.
   ///
@@ -263,11 +263,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// and the only things that ever looked at it were opening the app and
   /// opening the bench — neither of which a player does while watching a bar
   /// run out in front of them.
-  Timer? _benchTimer;
 
   /// The very piece being eaten or drunk (§4.7), so a mouthful comes out of
   /// the bottle in hand rather than out of whichever one the list finds first.
-  final ValueNotifier<CarriedItem?> _usingLine = ValueNotifier(null);
+  ValueNotifier<CarriedItem?> get _usingLine => _clock.usingLine;
 
   /// §10.3: the bodies, with their pockets still in them.
   List<Remains> get _remains => _loot.remains.value;
@@ -414,10 +413,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// Half a minute of a bar creeping across with nothing changing anywhere
   /// else reads as the game having stopped — and the one thing a player is
   /// watching during it is the number this action exists to change.
-  _FillPlan? _filling;
+  FillPlan? _filling;
 
   /// §4.7: the meal under way, so the tin empties as it is eaten.
-  _MealPlan? _meal;
+  MealPlan? _meal;
 
   /// §11.1: finishes whatever the app was killed in the middle of.
   ///
@@ -573,7 +572,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     }
 
     _usingLine.value = line;
-    _filling = _FillPlan(
+    _filling = FillPlan(
       itemId: line.itemId,
       from: magazine.rounds,
       to: magazine.rounds + dry.moved,
@@ -613,7 +612,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     if (magazine == null || magazine.isEmpty) return;
 
     _usingLine.value = line;
-    _filling = _FillPlan(itemId: line.itemId, from: magazine.rounds, to: 0);
+    _filling = FillPlan(itemId: line.itemId, from: magazine.rounds, to: 0);
 
     setState(() {
       _search.value = Search.using(
@@ -734,7 +733,6 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// or anywhere the signal had gone — which is most of where a player stops
   /// to reload — the seconds never passed: the magazine was never seated, no
   /// bar moved, and pressing the button appeared to do nothing at all.
-  Timer? _reloadTimer;
 
   /// What the last reconnaissance revealed, for §10.2.1's ten minutes.
   AreaKnowledge? _knowledge;
@@ -856,6 +854,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     // from outside setState — by a job finishing on the way into the app, by a
     // stop, by a pause. Without this the bar for a dismantling appeared only
     // when something else happened to rebuild the tree.
+    _putClocksOn();
     _craftJob.addListener(_onBenchChanged);
     // The HUD bars and the search panel read the inventory too, so this tree
     // follows the same notifier the screen does.
@@ -1763,7 +1762,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
       CrashLog.note('use.opened:${piece.uid}:${piece.portion}');
 
-      _meal = _MealPlan(
+      _meal = MealPlan(
         uid: piece.uid,
         portionAtStart: piece.portion,
         kcal: use.kcal,
@@ -2844,26 +2843,13 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     _startReloadTimer();
   }
 
-  /// Ten ticks a second, so the bar moves and the seconds pass indoors.
-  void _startReloadTimer() {
-    _reloadTimer?.cancel();
-    _reloadTimer = Timer.periodic(const Duration(milliseconds: 100), (_) {
-      if (_reload == null) {
-        _stopReloadTimer();
-        return;
-      }
+  /// Ten beats a second, so the bar moves and the seconds pass indoors.
+  void _startReloadTimer() => _clock.restart(_kReload);
 
-      // ⚠️ Not inside setState: this can finish the reload, and finishing it
-      // calls setState itself. The repaint the bar needs comes after.
-      _advanceReload(_standingAt.value ?? const GeoPoint(0, 0));
-      if (mounted && _reload != null) setState(() {});
-    });
-  }
-
-  void _stopReloadTimer() {
-    _reloadTimer?.cancel();
-    _reloadTimer = null;
-  }
+  /// ⚠️ Nothing to stop. The ticker asks `_reload != null` on every beat, so a
+  /// reload that ended has already stopped itself — and the clock drops back
+  /// from ten beats a second to one the moment it does.
+  void _stopReloadTimer() => _clock.retime();
 
   /// What to say when a weapon will not take anything (§4.2, §5.5.4).
   String _loadRefusal(LoadRefusal refusal) {
@@ -4347,23 +4333,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// §2.1a.3: reads the bench, and pays out anything that finished while the
   /// app was closed.
   /// Watches the bench while something is on it.
-  void _startBenchTimer() {
-    _benchTimer?.cancel();
-    _benchTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (_craftJob.value == null) {
-        _stopBenchTimer();
-        return;
-      }
-      if (_craftJob.value!.isDoneAt(DateTime.now().toUtc())) {
-        unawaited(_reloadCraftJob());
-      }
-    });
-  }
+  void _startBenchTimer() => _clock.restart(_kBench);
 
-  void _stopBenchTimer() {
-    _benchTimer?.cancel();
-    _benchTimer = null;
-  }
+  void _stopBenchTimer() => _clock.retime();
 
   Future<void> _reloadCraftJob() async {
     final character = _character;
@@ -5350,7 +5322,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     // allowed. [GameLoop.applyUse] no longer publishes, which closes that
     // particular circuit — these two guards close the shape of it, so that the
     // next thing to publish from inside a listener cannot reopen it.
-    if (_advancingSearch) return;
+    if (_clock.advancing) return;
 
     final search = _search.value;
     if (search == null || !search.isRunning) return;
@@ -5364,18 +5336,17 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     // is not a tick — it is a loop. Nothing is lost by refusing it: the credit
     // stays owed, because [_searchTickedAt] only moves when it is paid.
     if (delta < const Duration(milliseconds: 200)) return;
-    _searchTickedAt = now;
-    _advancingSearch = true;
+    _clock.tickedAt = now;
+    _clock.advancing = true;
 
     try {
       await _advanceSearchStep(search, delta, now);
     } finally {
-      _advancingSearch = false;
+      _clock.advancing = false;
     }
   }
 
   /// ⚠️ Guards [_advanceSearch] against arriving inside itself. See there.
-  bool _advancingSearch = false;
 
   Future<void> _advanceSearchStep(
     Search search,
@@ -5469,18 +5440,13 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   }
 
   void _startSearchTimer() {
-    _searchTickedAt = DateTime.now().toUtc();
-    _searchTimer?.cancel();
-    _searchTimer = Timer.periodic(
-      const Duration(seconds: 1),
-      (_) => unawaited(_advanceSearch()),
-    );
+    _clock.tickedAt = DateTime.now().toUtc();
+    _clock.restart(_kSearch);
   }
 
   void _stopSearchTimer() {
-    _searchTimer?.cancel();
-    _searchTimer = null;
-    _searchTickedAt = null;
+    _clock.tickedAt = null;
+    _clock.retime();
   }
 
   /// §10.2.3: whether looking around again is worth the forty-five seconds.
@@ -5995,11 +5961,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// an accumulator: the search knows when it ends, the bench knows when it
   /// ends, the reload knows when it ends. Waking up settles them against the
   /// wall clock, exactly as opening the app after a night already does.
-  void _sleepTickers() {
-    _stopSearchTimer();
-    _stopReloadTimer();
-    _stopBenchTimer();
-  }
+  void _sleepTickers() => _clock.sleep();
 
   /// Puts the clocks back, and pays out whatever finished while they were off.
   ///
@@ -6007,19 +5969,22 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// an action that ended twenty minutes ago would draw a full bar for one
   /// frame before the next tick cleared it.
   Future<void> _wakeTickers() async {
+    // ⚠️ Settle first, start second. Putting a beat back for an action that
+    // ended twenty minutes ago would draw a full bar for one frame before the
+    // next tick cleared it.
     if (_search.value != null) {
+      _clock.tickedAt = DateTime.now().toUtc();
       await _advanceSearch();
-      if (_search.value != null) _startSearchTimer();
     }
-
     if (_reload != null) {
       _advanceReload(_standingAt.value ?? const GeoPoint(0, 0));
-      if (_reload != null) _startReloadTimer();
     }
 
     // Reloads what is on the bench, and pays it out if its time came while
     // the phone was in a pocket.
     await _reloadCraftJob();
+
+    _clock.wake();
   }
 
   @override
@@ -6029,14 +5994,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     unawaited(_loop?.dispose());
     unawaited(_dev?.dispose());
     unawaited(_world?.dispose());
-    _searchTimer?.cancel();
-    _search.dispose();
+
     _position.dispose();
-    _reloadTimer?.cancel();
-    _benchTimer?.cancel();
     _actions?.dispose();
     _craftJob.removeListener(_onBenchChanged);
-    _usingLine.dispose();
     _notices.dispose();
     _controllers.dispose();
     super.dispose();
@@ -6071,6 +6032,57 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   late final CraftController _bench2 = _controllers.adopt(
     CraftController(widget.session.db),
   );
+
+  /// §2.1a, §3.3: the one clock everything with a bar runs on.
+  ///
+  /// ⚠️ There were five, none of them knowing about the others, and the
+  /// lifecycle stopped three of them by name. The sixth would have been the
+  /// one somebody forgot to add to both lists.
+  late final ActionController _clock = _controllers.adopt(ActionController());
+
+  /// §2.1a.3: puts the three things with a beat on the one clock.
+  ///
+  /// ⚠️ Registration is not starting. Each ticker says how often it wants a
+  /// beat and how to tell whether it is still running; the clock asks, and
+  /// runs at the finest period anything actually needs. A reload wants ten
+  /// beats a second so its bar looks smooth; a forty-five minute pack wants
+  /// one, and waking the phone ten times a second for it would be §3.3's
+  /// complaint made real.
+  void _putClocksOn() {
+    _clock.every(
+      _kSearch,
+      const Duration(seconds: 1),
+      running: () => _search.value != null,
+      onTick: () => unawaited(_advanceSearch()),
+    );
+
+    _clock.every(
+      _kReload,
+      const Duration(milliseconds: 100),
+      running: () => _reload != null,
+      onTick: () {
+        // ⚠️ Not inside setState: this can finish the reload, and finishing it
+        // calls setState itself. The repaint the bar needs comes after.
+        _advanceReload(_standingAt.value ?? const GeoPoint(0, 0));
+        if (mounted && _reload != null) setState(() {});
+      },
+    );
+
+    _clock.every(
+      _kBench,
+      const Duration(seconds: 1),
+      running: () => _craftJob.value != null,
+      onTick: () {
+        if (_craftJob.value!.isDoneAt(DateTime.now().toUtc())) {
+          unawaited(_reloadCraftJob());
+        }
+      },
+    );
+  }
+
+  static const _kSearch = 'search';
+  static const _kReload = 'reload';
+  static const _kBench = 'bench';
 
   SalvageBatch _sittingOf(CraftJob job) => CraftController.sittingOf(job);
 
@@ -6637,74 +6649,6 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     if (snapshot.combatBlocked == CombatBlock.movingTooFast)
       l10n.safetyNoCombatMoving,
   ];
-}
-
-/// §4.2: a magazine being filled or emptied, and how far along it is.
-///
-/// Held so the rounds can move *while the bar moves*: the plan says where the
-/// magazine started and where it is going, and the fraction says where it
-/// should be now. Working it out from the fraction rather than counting ticks
-/// is what makes a late tick — or two in one frame — harmless.
-/// §4.7: a meal being eaten, and how much of it there was to begin with.
-///
-/// ⚠️ **The tin is opened at the first tap, not at the last.**
-///
-/// Consuming a portion at the end — or restoring it at the next boot — leaves
-/// a window in which the pack is lying: the bar is half across and the tin is
-/// still sealed. Anything that ends the session in that window gives the meal
-/// back whole, and closing the app becomes a way to eat for free.
-///
-/// So the portion follows the bar, the same way a magazine's rounds follow it
-/// (§4.2). Nothing has to be restored because nothing was ever deferred.
-///
-/// Worked out from the fraction rather than counted down per tick: a tick that
-/// arrives late, or twice in one frame, cannot make a player eat more than
-/// they had.
-class _MealPlan {
-  const _MealPlan({
-    required this.uid,
-    required this.portionAtStart,
-    required this.kcal,
-    required this.waterMl,
-    this.applied = 0,
-  });
-
-  /// §11.1: which piece. Never the item id — a half-drunk bottle beside two
-  /// full ones is one row being emptied and two that are not.
-  final String? uid;
-
-  /// How much of it there was when the tap happened. A bottle already half
-  /// drunk is half a bottle of water, and half again is a quarter.
-  final double portionAtStart;
-
-  /// What a whole one of these is worth (§2.2).
-  final double kcal;
-  final double waterMl;
-
-  /// How much of the meal has already been swallowed and paid for.
-  final double applied;
-
-  double portionAt(double progress) =>
-      portionAtStart * (1 - progress.clamp(0.0, 1.0));
-
-  _MealPlan appliedTo(double share) => _MealPlan(
-    uid: uid,
-    portionAtStart: portionAtStart,
-    kcal: kcal,
-    waterMl: waterMl,
-    applied: share,
-  );
-}
-
-class _FillPlan {
-  const _FillPlan({required this.itemId, required this.from, required this.to});
-
-  final String itemId;
-  final int from;
-  final int to;
-
-  int roundsAt(double progress) =>
-      (from + (to - from) * progress.clamp(0.0, 1.0)).round();
 }
 
 /// What the crafting bench is made of, for deciding whether to make it again.
