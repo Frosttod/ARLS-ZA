@@ -127,6 +127,13 @@ void main() {
     WidgetsFlutterBinding.ensureInitialized();
     CrashLog.install();
 
+    // ⚠️ **Before anything writes a step of its own.** A hang leaves no
+    // exception — the field reported SIGQUIT and a tombstone, which is
+    // Android's way of saying the main thread stopped answering. What it does
+    // leave is the last step that reached the disk, and this is the only
+    // moment that can be read.
+    unawaited(CrashLog.readLastRun());
+
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     runApp(const ArlsZaApp());
   });
@@ -610,9 +617,14 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final step = share - plan.applied;
     if (step <= 0) return;
 
-    // ⚠️ The first mouthful only. A note every second would fill the trail
-    // with one meal and push out everything that led up to it.
-    if (plan.applied <= 0) CrashLog.note('meal.first:${line.itemId}');
+    // ⚠️ The first mouthful, then a heartbeat that replaces itself. A hang
+    // during a meal is a trail ending at "~meal:0.42" — which says both that
+    // it got there and how far in it stopped.
+    if (plan.applied <= 0) {
+      CrashLog.note('meal.first:${line.itemId}');
+    } else {
+      CrashLog.beat('meal:${share.toStringAsFixed(2)}');
+    }
 
     // §2.2: the body gets it as it goes down, not in a lump at the end.
     final swallowed = step * plan.portionAtStart;
@@ -6251,6 +6263,17 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// The two moments the process is most likely to be killed (§11.1.5).
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    // ⚠️ Outside the null check below, because going away cleanly is exactly
+    // what has to be recorded — and a run that never got as far as a loop is
+    // still a run that ended.
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached ||
+        state == AppLifecycleState.hidden) {
+      // §16.1: the trail is put away on purpose, so that finding one on the
+      // next launch means the last session did *not* stop on purpose.
+      unawaited(CrashLog.settled());
+    }
+
     final loop = _loop;
     if (loop == null) return;
 

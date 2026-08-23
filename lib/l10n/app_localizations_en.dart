@@ -1903,4 +1903,7 @@ class L10nEn extends L10n {
 
   @override
   String get crashCopied => 'Copied. Paste it to me.';
+
+  @override
+  String get crashHung => 'The game stopped answering';
 }

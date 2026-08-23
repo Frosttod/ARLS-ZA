@@ -72,6 +72,19 @@ abstract final class CrashLog {
 
   static const String fileName = 'arlsza-crash.log';
 
+  /// §16.1: where the player had got to, kept through a hang.
+  ///
+  /// ⚠️ **A separate file, and it exists because a freeze is not a crash.**
+  /// Reported from the field as SIGQUIT and a tombstone — Android's own words
+  /// for "this app stopped answering". Nothing was thrown, so [reports] stayed
+  /// empty and the crash log had nothing to say.
+  ///
+  /// A hang leaves no exception. What it leaves is the last thing that
+  /// happened before the main thread stopped, and that is only useful if it
+  /// reached the disk *before* everything stopped. So the trail is flushed as
+  /// it is written, and read back on the next launch.
+  static const String stepsFileName = 'arlsza-steps.log';
+
   /// What has gone wrong this session, newest last. Watched by the strip.
   static final ValueNotifier<List<CrashReport>> reports = ValueNotifier(
     const [],
@@ -80,7 +93,22 @@ abstract final class CrashLog {
   static final List<String> _trail = [];
 
   static File? _file;
+  static File? _steps;
   static bool _installed = false;
+
+  /// The trail the previous run ended on, or null when it ended cleanly.
+  ///
+  /// Read once at startup. Non-null here means the last session stopped
+  /// without clearing up after itself — a kill, or a hang. Watched rather than
+  /// read, because it arrives from a file after the first frame is drawn.
+  static final ValueNotifier<String?> lastRun = ValueNotifier(null);
+
+  /// ⚠️ Debounced, because a heartbeat that writes to flash every tick is a
+  /// second performance bug bolted to the diagnosis of the first. One write a
+  /// second is far below anything that matters and far above the resolution
+  /// needed to see which step it stopped on.
+  static DateTime? _flushedAt;
+  static bool _flushing = false;
 
   /// §16.1: notes what the player just did, for the trail on the next crash.
   ///
@@ -89,6 +117,80 @@ abstract final class CrashLog {
   static void note(String step) {
     _trail.add(step);
     if (_trail.length > _trailLength) _trail.removeAt(0);
+
+    _flushTrail();
+  }
+
+  /// §16.1: the heartbeat, for anything that runs on a clock.
+  ///
+  /// The same as [note] except that it replaces the previous beat rather than
+  /// adding to the trail — a meal that ticks seventy-five times would
+  /// otherwise push everything that led up to it out of a twenty-step ring.
+  /// What is wanted is "it was still alive at second forty", not forty lines
+  /// saying so.
+  static void beat(String step) {
+    if (_trail.isNotEmpty && _trail.last.startsWith('~')) {
+      _trail.removeLast();
+    }
+    note('~$step');
+  }
+
+  /// Puts the trail where a hang cannot take it with it.
+  static void _flushTrail() {
+    if (_flushing) return;
+
+    final now = DateTime.now();
+    final last = _flushedAt;
+    if (last != null && now.difference(last) < const Duration(seconds: 1)) {
+      return;
+    }
+    _flushedAt = now;
+    _flushing = true;
+
+    unawaited(() async {
+      try {
+        final file = _steps ?? await _openSteps();
+        await file?.writeAsString(
+          '${now.toIso8601String()}\n${_trail.join('\n')}\n',
+          flush: true,
+        );
+      } on Object {
+        // Nothing.
+      } finally {
+        _flushing = false;
+      }
+    }());
+  }
+
+  /// Reads what the last run was doing, and starts a clean trail.
+  ///
+  /// Called once, on the way up. An empty file means the last session put its
+  /// own trail away — see [settled].
+  static Future<void> readLastRun() async {
+    try {
+      final file = _steps ?? await _openSteps();
+      if (file == null || !file.existsSync()) return;
+
+      final text = await file.readAsString();
+      lastRun.value = text.trim().isEmpty ? null : text.trim();
+
+      await file.writeAsString('');
+    } on Object {
+      // Nothing.
+    }
+  }
+
+  /// Says the app is going down on purpose, so the next launch does not
+  /// report the last step as the place it hung.
+  static Future<void> settled() async {
+    _trail.clear();
+
+    try {
+      final file = _steps ?? await _openSteps();
+      if (file != null && file.existsSync()) await file.writeAsString('');
+    } on Object {
+      // Nothing.
+    }
   }
 
   /// Catches everything Flutter has a hook for.
@@ -196,29 +298,57 @@ abstract final class CrashLog {
   /// Throws the lot away, on disk and in memory.
   static Future<void> clear() async {
     reports.value = const [];
+    lastRun.value = null;
     _trail.clear();
 
     try {
       final file = _file ?? await _openFile();
       if (file != null && file.existsSync()) await file.writeAsString('');
+
+      final steps = _steps ?? await _openSteps();
+      if (steps != null && steps.existsSync()) await steps.writeAsString('');
     } on Object {
       // Nothing. A log that will not clear is not worth a crash.
+    }
+  }
+
+  static Future<File?> _openSteps() async {
+    if (_steps != null) return _steps;
+
+    final directory = await _directory();
+    if (directory == null) return null;
+
+    try {
+      final file = File(p.join(directory.path, stepsFileName));
+      if (!file.existsSync()) await file.create(recursive: true);
+      return _steps = file;
+    } on Object {
+      return null;
+    }
+  }
+
+  static Future<Directory?> _directory() async {
+    try {
+      // ⚠️ External files first, and only on Android. That directory shows up
+      // over USB in any file manager, which is the difference between a tester
+      // who can hand over a trace and one who cannot.
+      Directory? directory;
+      if (Platform.isAndroid) {
+        directory = await getExternalStorageDirectory();
+      }
+      return directory ?? await getApplicationSupportDirectory();
+    } on Object {
+      return null;
     }
   }
 
   static Future<File?> _openFile() async {
     if (_file != null) return _file;
 
-    try {
-      // ⚠️ External files first, and only on Android. That directory shows up
-      // over USB in any file manager, which is the difference between a tester
-      // who can hand over a stack trace and one who cannot.
-      Directory? directory;
-      if (Platform.isAndroid) {
-        directory = await getExternalStorageDirectory();
-      }
-      directory ??= await getApplicationSupportDirectory();
+    final directory = await _directory();
+    if (directory == null) return null;
 
+    try {
       final file = File(p.join(directory.path, fileName));
       if (!file.existsSync()) await file.create(recursive: true);
 

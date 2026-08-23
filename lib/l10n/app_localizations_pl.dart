@@ -1904,4 +1904,7 @@ class L10nPl extends L10n {
 
   @override
   String get crashCopied => 'Skopiowane. Wklej mi to.';
+
+  @override
+  String get crashHung => 'Gra przestała odpowiadać';
 }

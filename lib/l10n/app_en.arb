@@ -1027,5 +1027,6 @@
   },
   "crashCopy": "Copy the trace",
   "crashClear": "Clear",
-  "crashCopied": "Copied. Paste it to me."
+  "crashCopied": "Copied. Paste it to me.",
+  "crashHung": "The game stopped answering"
 }

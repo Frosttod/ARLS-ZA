@@ -14,8 +14,10 @@ import 'package:flutter_test/flutter_test.dart';
 /// exactly the moment the app is already known to be in a bad state, and a
 /// reporter that crashes turns one lost bug into a launch that never starts.
 void main() {
-  setUp(() {
-    CrashLog.reports.value = const [];
+  // ⚠️ The trail is process-wide by design — there is one player and one
+  // process — so it survives between tests unless it is put away.
+  setUp(() async {
+    await CrashLog.clear();
   });
 
   group('it records what it is handed', () {
@@ -111,11 +113,46 @@ void main() {
     });
   });
 
+  group('a hang leaves a trail even though it throws nothing', () {
+    // ⚠️ The field reported SIGQUIT and a tombstone — Android saying the main
+    // thread stopped answering. Nothing was thrown, so [reports] stays empty
+    // and the crash log has nothing to say. The trail is the only witness.
+    test('the heartbeat replaces itself rather than filling the ring', () {
+      CrashLog.note('use:food_canned_meat');
+      for (var i = 0; i < 60; i++) {
+        CrashLog.beat('meal:0.$i');
+      }
+      CrashLog.record('boom', null, where: 'test');
+
+      final trail = CrashLog.reports.value.single.trail;
+
+      expect(trail, [
+        'use:food_canned_meat',
+        '~meal:0.59',
+      ], reason: 'one meal must not push out what led up to it');
+    });
+
+    test('and an ordinary note after a beat keeps both', () {
+      CrashLog.beat('meal:0.5');
+      CrashLog.note('use.finish:food_canned_meat');
+      CrashLog.record('boom', null, where: 'test');
+
+      expect(CrashLog.reports.value.single.trail, [
+        '~meal:0.5',
+        'use.finish:food_canned_meat',
+      ]);
+    });
+  });
+
   test('the file lives where a USB cable can find it', () async {
     // Not asserting a path — that needs a platform. Asserting the name, which
     // is what somebody plugging a phone in will be told to look for.
     expect(CrashLog.fileName, endsWith('.log'));
     expect(CrashLog.fileName, contains('arlsza'));
+
+    // Two files, because they answer two different questions: what was thrown,
+    // and where it had got to when it stopped.
+    expect(CrashLog.stepsFileName, isNot(CrashLog.fileName));
   });
 }
 

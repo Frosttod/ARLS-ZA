@@ -895,5 +895,6 @@
   },
   "crashCopy": "Kopiuj ślad",
   "crashClear": "Wyczyść",
-  "crashCopied": "Skopiowane. Wklej mi to."
+  "crashCopied": "Skopiowane. Wklej mi to.",
+  "crashHung": "Gra przestała odpowiadać"
 }

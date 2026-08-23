@@ -3480,6 +3480,12 @@ abstract class L10n {
   /// In en, this message translates to:
   /// **'Copied. Paste it to me.'**
   String get crashCopied;
+
+  /// No description provided for @crashHung.
+  ///
+  /// In en, this message translates to:
+  /// **'The game stopped answering'**
+  String get crashHung;
 }
 
 class _L10nDelegate extends LocalizationsDelegate<L10n> {
