@@ -883,5 +883,17 @@
         "type": "int"
       }
     }
-  }
+  },
+  "crashOne": "Coś się wysypało",
+  "crashMany": "Wysypało się {count} razy",
+  "@crashMany": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "crashCopy": "Kopiuj ślad",
+  "crashClear": "Wyczyść",
+  "crashCopied": "Skopiowane. Wklej mi to."
 }

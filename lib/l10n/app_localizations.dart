@@ -3450,6 +3450,36 @@ abstract class L10n {
   /// In en, this message translates to:
   /// **'Taking apart: {item} (+{rest})'**
   String salvageBatchRunning(String item, int rest);
+
+  /// No description provided for @crashOne.
+  ///
+  /// In en, this message translates to:
+  /// **'Something broke'**
+  String get crashOne;
+
+  /// No description provided for @crashMany.
+  ///
+  /// In en, this message translates to:
+  /// **'Broke {count} times'**
+  String crashMany(int count);
+
+  /// No description provided for @crashCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy the trace'**
+  String get crashCopy;
+
+  /// No description provided for @crashClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get crashClear;
+
+  /// No description provided for @crashCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied. Paste it to me.'**
+  String get crashCopied;
 }
 
 class _L10nDelegate extends LocalizationsDelegate<L10n> {

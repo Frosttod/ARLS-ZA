@@ -1015,5 +1015,17 @@
         "type": "int"
       }
     }
-  }
+  },
+  "crashOne": "Something broke",
+  "crashMany": "Broke {count} times",
+  "@crashMany": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "crashCopy": "Copy the trace",
+  "crashClear": "Clear",
+  "crashCopied": "Copied. Paste it to me."
 }

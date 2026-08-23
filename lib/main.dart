@@ -31,7 +31,9 @@ import 'craft/craft_store.dart';
 import 'craft/salvage_batch.dart';
 import 'craft/item_recipe.dart';
 import 'ui/action_strip.dart';
+import 'app/crash_log.dart';
 import 'ui/craft_screen.dart';
+import 'ui/crash_banner.dart';
 import 'ui/disassemble_screen.dart';
 import 'combat/magazine_item.dart';
 import 'combat/weapon_load.dart';
@@ -111,9 +113,23 @@ import 'ui/region_picker.dart';
 import 'ui/settings_screen.dart';
 
 void main() {
-  WidgetsFlutterBinding.ensureInitialized();
-  SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
-  runApp(const ArlsZaApp());
+  // ⚠️ **Everything inside the zone, including the binding.**
+  //
+  // This game is tested by walking round a city with it, and until now a
+  // thrown exception went to the console of a machine that was not there —
+  // there was no `FlutterError.onError`, no `PlatformDispatcher.onError` and
+  // no zone. Field reports could therefore say "crash" and nothing else, which
+  // is not enough to fix anything.
+  //
+  // Nearly every handler in this file is `unawaited(_something())`, so the
+  // zone is the mechanism that matters: that is where those errors surface.
+  CrashLog.guard(() {
+    WidgetsFlutterBinding.ensureInitialized();
+    CrashLog.install();
+
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    runApp(const ArlsZaApp());
+  });
 }
 
 class ArlsZaApp extends StatefulWidget {
@@ -152,6 +168,10 @@ class _ArlsZaAppState extends State<ArlsZaApp> {
       theme: buildTheme(Brightness.light),
       darkTheme: buildTheme(Brightness.dark),
       themeMode: settings?.themeMode ?? ThemeMode.dark,
+      // §16.1: over the whole app rather than on one screen — half the time
+      // the screen the player was on is the thing that broke.
+      builder: (context, child) =>
+          CrashBanner(child: child ?? const SizedBox.shrink()),
       home: IntroScreen(onSettings: _adoptSettings),
     );
   }
@@ -590,6 +610,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final step = share - plan.applied;
     if (step <= 0) return;
 
+    // ⚠️ The first mouthful only. A note every second would fill the trail
+    // with one meal and push out everything that led up to it.
+    if (plan.applied <= 0) CrashLog.note('meal.first:${line.itemId}');
+
     // §2.2: the body gets it as it goes down, not in a lump at the end.
     final swallowed = step * plan.portionAtStart;
     loop.applyUse(
@@ -616,6 +640,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     //
     // The last mouthful is the exception: the row is gone rather than changed,
     // and that is a write only the wholesale one knows how to do.
+    if (next.line == null) CrashLog.note('meal.gone');
+
     final uid = next.line?.uid;
     final character = _character;
     if (next.line != null && uid != null && character != null) {
@@ -1787,6 +1813,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       return;
     }
 
+    CrashLog.note('use:${line.itemId}');
+
     final definition = catalogue[line.itemId];
     final use = definition == null ? null : useOf(definition);
     if (definition == null || use == null) return;
@@ -1836,6 +1864,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       _usingLine.value = piece;
       await _saveInventory();
 
+      CrashLog.note('use.opened:${piece.uid}:${piece.portion}');
+
       _meal = _MealPlan(
         uid: piece.uid,
         portionAtStart: piece.portion,
@@ -1845,6 +1875,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     } else {
       _meal = null;
     }
+
+    CrashLog.note('use.row:${use.action.name}:${takes.inSeconds}s');
 
     await _actions?.start(
       TimedAction(
@@ -1869,6 +1901,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         label: _useLabel(use.action, catalogue[line.itemId]),
       );
     });
+
+    CrashLog.note('use.bar');
     _startSearchTimer();
   }
 
@@ -1911,6 +1945,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
   /// The action finished: the item is gone and the body has it.
   Future<void> _finishUse(Search action) async {
+    CrashLog.note('use.finish:${action.usingItemId}');
+
     // The row goes first: whatever happens below, this use is over.
     await _endTimedAction();
 

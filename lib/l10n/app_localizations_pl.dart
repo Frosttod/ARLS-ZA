@@ -1887,4 +1887,21 @@ class L10nPl extends L10n {
   String salvageBatchRunning(String item, int rest) {
     return 'Rozbiórka: $item (+$rest)';
   }
+
+  @override
+  String get crashOne => 'Coś się wysypało';
+
+  @override
+  String crashMany(int count) {
+    return 'Wysypało się $count razy';
+  }
+
+  @override
+  String get crashCopy => 'Kopiuj ślad';
+
+  @override
+  String get crashClear => 'Wyczyść';
+
+  @override
+  String get crashCopied => 'Skopiowane. Wklej mi to.';
 }

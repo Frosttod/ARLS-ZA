@@ -1886,4 +1886,21 @@ class L10nEn extends L10n {
   String salvageBatchRunning(String item, int rest) {
     return 'Taking apart: $item (+$rest)';
   }
+
+  @override
+  String get crashOne => 'Something broke';
+
+  @override
+  String crashMany(int count) {
+    return 'Broke $count times';
+  }
+
+  @override
+  String get crashCopy => 'Copy the trace';
+
+  @override
+  String get crashClear => 'Clear';
+
+  @override
+  String get crashCopied => 'Copied. Paste it to me.';
 }
