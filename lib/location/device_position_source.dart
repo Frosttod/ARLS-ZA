@@ -96,6 +96,22 @@ class DevicePositionSource extends BasePositionSource {
   final ForegroundNotice notice;
 
   StreamSubscription<Position>? _sub;
+
+  /// Whether the game still wants a position at all.
+  ///
+  /// ⚠️ **Not the same question as "is there a subscription".** §2.1a.4 turns
+  /// the receiver off entirely for a shelter occupation — the character is not
+  /// moving and the radio is the most expensive thing on the phone — and that
+  /// leaves no subscription behind. Asking `_sub == null` therefore cannot
+  /// tell *never started* from *we switched it off ourselves a minute ago*,
+  /// and [setCadence] used it to decide whether to reconnect.
+  ///
+  /// The consequence was reported from a walk: once the receiver went off for
+  /// a shelter it never came back on. Every later cadence change set the field
+  /// and returned before reconnecting, the signal stayed `unavailable` for the
+  /// rest of the session, and everything that needs to know where the player
+  /// is stopped working — in the middle of a street, standing perfectly still.
+  bool _wanted = false;
   PositionCadence _cadence = PositionCadence.moving;
   LocationAccess _access = LocationAccess.denied;
 
@@ -135,6 +151,7 @@ class DevicePositionSource extends BasePositionSource {
   @override
   Future<void> start({PositionCadence cadence = PositionCadence.moving}) async {
     _cadence = cadence;
+    _wanted = true;
 
     final access = await requestAccess();
     if (!access.canPlay) {
@@ -184,14 +201,23 @@ class DevicePositionSource extends BasePositionSource {
     // be complaining about three readings.
     noteCadence(cadence);
 
-    if (_sub == null) return;
+    // ⚠️ Never `_sub == null` — see the note on [_wanted]. That test could not
+    // tell a source nobody has started from one this method switched off, so
+    // the receiver went off for a shelter and stayed off for good.
+    if (!_wanted) return;
+
     if (cadence.interval <= Duration.zero) {
       // Shelter occupations run with the GPS off entirely — the character is
       // not moving, so the position is not needed and the radio is the single
       // most expensive thing on the device (§2.1a.4, §3.3).
-      await stop();
+      //
+      // Off, but still wanted: walking back out has to bring it on again.
+      await _sub?.cancel();
+      _sub = null;
+      markUnavailable();
       return;
     }
+
     await _listen();
   }
 
@@ -256,6 +282,11 @@ class DevicePositionSource extends BasePositionSource {
 
   @override
   Future<void> stop() async {
+    // ⚠️ The owner is done with it. A cadence of `off` is *not* this — see
+    // [setCadence], which keeps [_wanted] so that walking back out of a
+    // shelter turns the receiver on again.
+    _wanted = false;
+
     await _sub?.cancel();
     _sub = null;
     markUnavailable();
