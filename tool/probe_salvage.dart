@@ -33,8 +33,8 @@ void main() {
     String said(Map<String, int> m) => m.isEmpty
         ? '—'
         : (m.entries.toList()..sort((a, b) => b.value.compareTo(a.value)))
-            .map((e) => '${nameOf(e.key)} ×${e.value}')
-            .join(', ');
+              .map((e) => '${nameOf(e.key)} ×${e.value}')
+              .join(', ');
 
     rows.add([
       item.kind.name,
