@@ -3,10 +3,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:video_player/video_player.dart';
 
-import 'data/db/save_location.dart';
 import 'data/db/snapshot_store.dart';
 import 'data/persistence/save_bootstrap.dart';
 import 'devtools/dev_mode.dart';
@@ -31,9 +28,13 @@ import 'craft/craft_store.dart';
 import 'craft/salvage_batch.dart';
 import 'craft/item_recipe.dart';
 import 'ui/action_strip.dart';
+import 'app/bootstrap.dart';
+import 'app/game_controllers.dart';
+import 'app/game_scope.dart';
 import 'app/crash_log.dart';
 import 'ui/craft_screen.dart';
-import 'ui/crash_banner.dart';
+import 'ui/intro_screen.dart';
+import 'ui/location_gate.dart';
 import 'ui/disassemble_screen.dart';
 import 'combat/magazine_item.dart';
 import 'combat/weapon_load.dart';
@@ -112,181 +113,30 @@ import 'ui/maplibre_surface.dart';
 import 'ui/region_picker.dart';
 import 'ui/settings_screen.dart';
 
-void main() {
-  // ⚠️ **Everything inside the zone, including the binding.**
-  //
-  // This game is tested by walking round a city with it, and until now a
-  // thrown exception went to the console of a machine that was not there —
-  // there was no `FlutterError.onError`, no `PlatformDispatcher.onError` and
-  // no zone. Field reports could therefore say "crash" and nothing else, which
-  // is not enough to fix anything.
-  //
-  // Nearly every handler in this file is `unawaited(_something())`, so the
-  // zone is the mechanism that matters: that is where those errors surface.
-  CrashLog.guard(() {
-    WidgetsFlutterBinding.ensureInitialized();
-    CrashLog.install();
-
-    // ⚠️ **Before anything writes a step of its own.** A hang leaves no
-    // exception — the field reported SIGQUIT and a tombstone, which is
-    // Android's way of saying the main thread stopped answering. What it does
-    // leave is the last step that reached the disk, and this is the only
-    // moment that can be read.
-    unawaited(CrashLog.readLastRun());
-
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
-    runApp(const ArlsZaApp());
-  });
-}
-
-class ArlsZaApp extends StatefulWidget {
-  const ArlsZaApp({super.key});
-
-  @override
-  State<ArlsZaApp> createState() => _ArlsZaAppState();
-}
-
-class _ArlsZaAppState extends State<ArlsZaApp> {
-  /// Set once the save layer is open. Until then the app follows the system,
-  /// which is the best guess available before anything has been read.
-  AppSettings? _settings;
-
-  void _adoptSettings(AppSettings settings) {
-    if (_settings == settings) return;
-    setState(() => _settings = settings);
-    settings.addListener(() => setState(() {}));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final settings = _settings;
-
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      onGenerateTitle: (context) => L10n.of(context).appTitle,
-      localizationsDelegates: const [
-        L10n.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      supportedLocales: L10n.supportedLocales,
-      locale: settings?.locale,
-      theme: buildTheme(Brightness.light),
-      darkTheme: buildTheme(Brightness.dark),
-      themeMode: settings?.themeMode ?? ThemeMode.dark,
-      // §16.1: over the whole app rather than on one screen — half the time
-      // the screen the player was on is the thing that broke.
-      builder: (context, child) =>
-          CrashBanner(child: child ?? const SizedBox.shrink()),
-      home: IntroScreen(onSettings: _adoptSettings),
-    );
-  }
-}
-
-class IntroScreen extends StatefulWidget {
-  const IntroScreen({required this.onSettings, super.key});
-
-  /// Handed up as soon as the database is open, so the whole app can follow the
-  /// player's language and theme.
-  final void Function(AppSettings) onSettings;
-
-  @override
-  State<IntroScreen> createState() => _IntroScreenState();
-}
-
-class _IntroScreenState extends State<IntroScreen> {
-  late VideoPlayerController _controller;
-
-  /// The save layer boots while the intro plays, so opening the database,
-  /// verifying it and running any migration costs the player no extra wait.
-  late final Future<SaveSession> _session = _bootSave();
-
-  var _navigated = false;
-  AppSettings? _settings;
-
-  Future<SaveSession> _bootSave() async {
-    final paths = await resolveSavePaths();
-    final bootstrap = SaveBootstrap(paths: paths);
-    final session = await bootstrap.boot(now: DateTime.now().toUtc());
-
-    final settings = AppSettings(DatabaseSettingsStore(session.db));
-    await settings.load();
-    widget.onSettings(settings);
-    _settings = settings;
-
-    return session;
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = VideoPlayerController.asset('assets/INTRO.mp4')
-      ..initialize().then((_) {
-        if (!mounted) return;
-        setState(() {});
-        _controller.play();
-        _controller.addListener(_onVideoEnd);
-      });
-  }
-
-  void _onVideoEnd() {
-    if (_controller.value.isInitialized &&
-        !_controller.value.isPlaying &&
-        _controller.value.position >= _controller.value.duration) {
-      _goToTitle();
-    }
-  }
-
-  Future<void> _goToTitle() async {
-    if (_navigated || !mounted) return;
-    _navigated = true;
-
-    // Never leave the intro before the save layer has reported in — the player
-    // has to learn about a recovered or lost save (§11.1.3).
-    final session = await _session;
-    if (!mounted) return;
-
-    await Navigator.of(context).pushReplacement(
-      PageRouteBuilder<void>(
-        pageBuilder: (_, animation, _) => FadeTransition(
-          opacity: animation,
-          child: TitleScreen(session: session, settings: _settings!),
-        ),
-        transitionDuration: const Duration(milliseconds: 600),
-      ),
-    );
-  }
-
-  @override
-  void dispose() {
-    _controller.removeListener(_onVideoEnd);
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: GestureDetector(
-        onTap: _goToTitle,
-        child: SizedBox.expand(
-          child: _controller.value.isInitialized
-              ? FittedBox(
-                  fit: BoxFit.cover,
-                  child: SizedBox(
-                    width: _controller.value.size.width,
-                    height: _controller.value.size.height,
-                    child: VideoPlayer(_controller),
-                  ),
-                )
-              : const SizedBox.shrink(),
-        ),
-      ),
-    );
-  }
-}
+/// ⚠️ **What is left here is the door, not the house.**
+///
+/// This file was seven thousand lines and one class that owned the pack, the
+/// shelves, the shelters, the loot, the fight, five clocks and the screen they
+/// were drawn on. Crediting a meal could reach the game loop, come back
+/// through a snapshot listener and credit the meal again — three hops between
+/// layers that were, in the file, one class. That is what the field reported
+/// as the game hanging on food.
+///
+/// It is being taken apart one owner at a time. The order and the guarantees
+/// are the migration plan; what this comment is for is the direction: things
+/// leave, nothing arrives.
+void main() => runGuarded(
+  ArlsZaApp(
+    home: (onSettings) => IntroScreen(
+      onSettings: onSettings,
+      // ⚠️ Wired here rather than imported by the film. The title screen still
+      // lives in this file, and a screen in `lib/ui` reaching back into
+      // `main.dart` would make a cycle out of a one-way street.
+      next: (session, settings) =>
+          TitleScreen(session: session, settings: settings),
+    ),
+  ),
+);
 
 /// Title screen. Routes to the creator on a first run, or resumes the active
 /// character and puts the HUD on screen.
@@ -6392,11 +6242,25 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     _usingLine.dispose();
     _shelters.dispose();
     _notices.dispose();
+    _controllers.dispose();
     super.dispose();
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => GameScope(
+    // ⚠️ Empty for now, and above everything on purpose.
+    //
+    // This class owns forty fields and six and a half thousand lines. They
+    // leave one owner at a time, and each one that leaves has to be reachable
+    // from the widgets that used to read it off `this` — so the scope goes in
+    // before the first of them does, rather than as part of the same change.
+    controllers: _controllers,
+    child: Builder(builder: _buildGame),
+  );
+
+  final GameControllers _controllers = GameControllers();
+
+  Widget _buildGame(BuildContext context) {
     if (_needsLanguage) {
       return LanguagePickerScreen(
         onChosen: (locale) => unawaited(_chooseLanguage(locale)),
@@ -6741,19 +6605,19 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
                                 ),
                                 const SizedBox(height: 32),
                                 if (recovery.health == SaveHealth.restored)
-                                  _Notice(
+                                  BlockedPanel(
                                     title: l10n.saveRestoredTitle,
                                     body: l10n.saveRestoredBody(
                                       recovery.timeLost?.inMinutes ?? 0,
                                     ),
                                   ),
                                 if (recovery.health == SaveHealth.lost)
-                                  _Notice(
+                                  BlockedPanel(
                                     title: l10n.saveLostTitle,
                                     body: l10n.saveLostBody,
                                   ),
                                 if (blocked != null)
-                                  _LocationGate(
+                                  LocationGate(
                                     access: blocked,
                                     onRetry: _retryAccess,
                                   ),
@@ -6882,82 +6746,6 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     if (snapshot.combatBlocked == CombatBlock.movingTooFast)
       l10n.safetyNoCombatMoving,
   ];
-}
-
-/// What to say when the operating system will not give us a position (§16.1).
-///
-/// Each state gets its own words and its own button. "Location refused" with a
-/// button that opens the wrong settings page is worse than saying nothing.
-class _LocationGate extends StatelessWidget {
-  const _LocationGate({required this.access, required this.onRetry});
-
-  final LocationAccess access;
-  final Future<void> Function() onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = L10n.of(context);
-
-    final (title, body) = switch (access) {
-      LocationAccess.serviceDisabled => (
-        l10n.locationServiceOffTitle,
-        l10n.locationServiceOffBody,
-      ),
-      LocationAccess.deniedForever => (
-        l10n.locationDeniedTitle,
-        l10n.locationDeniedBody,
-      ),
-      // Not yet asked, or asked and dismissed. Explain what it is for before
-      // asking again, rather than firing the system prompt a second time with
-      // no context (§16.1).
-      _ => (l10n.locationTitle, l10n.locationBody),
-    };
-
-    return Column(
-      children: [
-        _Notice(title: title, body: body),
-        const SizedBox(height: 16),
-        FilledButton(
-          onPressed: () => unawaited(onRetry()),
-          child: Text(
-            access.needsSystemSettings
-                ? l10n.locationSettings
-                : l10n.locationGrant,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _Notice extends StatelessWidget {
-  const _Notice({required this.title, required this.body});
-
-  final String title;
-  final String body;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        border: Border(
-          left: BorderSide(
-            color: Theme.of(context).colorScheme.error,
-            width: 2,
-          ),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: Theme.of(context).textTheme.titleSmall),
-          const SizedBox(height: 4),
-          Text(body, style: Theme.of(context).textTheme.bodySmall),
-        ],
-      ),
-    );
-  }
 }
 
 /// §4.2: a magazine being filled or emptied, and how far along it is.
