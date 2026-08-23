@@ -77,6 +77,22 @@ List<StatusNote> statusNotes(
       fix: l10n.statusStarvingFix,
       where: l10n.statusStarvingWhere,
     ),
+  // ⚠️ §2.3: its own note, because it is its own thing.
+  //
+  // Hunger above is the day's larder and comes back with one tin. This is what
+  // weeks of that did to the body, and it does *not* come back with one tin —
+  // a player who eats their fill and finds the game still slow is owed the
+  // reason, or the penalty reads as a bug.
+  if (status.wasting.actionTimeMultiplier > 1)
+    (
+      name: l10n.statusWasting,
+      level: l10n.statusWastingLevel(
+        (status.wasting.lostFraction * 100).round(),
+      ),
+      effect: l10n.statusWastingEffect,
+      fix: l10n.statusWastingFix,
+      where: l10n.statusWastingWhere,
+    ),
   if (status.sleep.extraMoa > 0)
     (
       name: l10n.statusSleepDeprived,

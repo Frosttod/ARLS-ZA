@@ -78,7 +78,20 @@ enum DeathCause {
 DeathCause? fatalCause(SimStatus status) {
   if (status.blood.isFatal) return DeathCause.bloodLoss;
   if (status.thirst.lethal) return DeathCause.thirst;
-  if (status.hunger.losingConsciousness) return DeathCause.starvation;
+  // ⚠️ **§2.3's calorie reserve is not what kills anybody, and it used to be.**
+  //
+  // §2.3 says "0% przez > 24 h → postępująca utrata przytomności", and the
+  // game read that as a death. The reserve is a *day's* worth of food, so a
+  // character with nothing to eat sits at nought from the second day of a
+  // famine until the end of it — which made hunger fatal in forty-eight hours,
+  // faster than thirst, in a game whose own §2.3 insists water must be the
+  // harsher of the two.
+  //
+  // Blacking out is what that line describes and [HungerState] still says it.
+  // Dying of hunger is a different event, and it is about the body rather than
+  // about the larder: a third of the starting weight gone, which is six to ten
+  // weeks of a complete fast.
+  if (status.wasting.fatal) return DeathCause.starvation;
   return null;
 }
 

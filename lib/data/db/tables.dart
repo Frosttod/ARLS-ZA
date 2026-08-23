@@ -175,6 +175,15 @@ class Vitals extends Table {
   IntColumn get starvedStreakSeconds =>
       integer().withDefault(const Constant(0))();
 
+  // --------------------------------------------------------- schema v28 ---
+
+  /// §2.3, §1.3: what the character weighs now, in kilograms.
+  ///
+  /// ⚠️ Defaults to nought, which is not a body — it is the marker for "this
+  /// row predates a moving mass". The loader fills it from the profile's
+  /// creation weight, because that is the only place that knows it (§11.1.4).
+  RealColumn get bodyMassKg => real().withDefault(const Constant(0))();
+
   @override
   Set<Column> get primaryKey => {profileId};
 

@@ -13,6 +13,7 @@ const referenceConstants = SimConstants(
   caloriesDailyKcal: 2450,
   restingHeartRate: 70,
   maxHeartRate: 187,
+  startingMassKg: 80,
 );
 
 Future<int> insertProfile(

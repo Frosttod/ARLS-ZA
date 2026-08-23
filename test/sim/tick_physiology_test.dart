@@ -15,8 +15,11 @@ void main() {
 
   final t0 = DateTime.utc(2026, 8, 10, 12);
 
-  SimState fresh({MetabolicZone zone = MetabolicZone.open}) =>
-      SimState.fresh(at: t0, constants: constants).copyWith(zone: zone);
+  SimState fresh({MetabolicZone zone = MetabolicZone.open}) => SimState.fresh(
+    at: t0,
+    constants: constants,
+    massKg: 80,
+  ).copyWith(zone: zone);
 
   group('movement costs energy (§2.2)', () {
     test('walking burns more than standing', () {
@@ -248,11 +251,25 @@ void main() {
       );
 
       expect(chunked.state.lastUpdate, single.state.lastUpdate);
-      expect(
-        chunked.state.caloriesKcal,
-        closeTo(single.state.caloriesKcal, 1e-6),
-      );
-      expect(chunked.state.waterMl, closeTo(single.state.waterMl, 1e-6));
+
+      // ⚠️ **Not exact any more, and it cannot be.**
+      //
+      // §2.3's burn rate is `MET × 3.5 × mass / 200`, and mass is no longer a
+      // constant: a deficit takes it off the body, so the chunked run watches
+      // the character get lighter and burns slightly less than the single step
+      // that never saw them change. The same shape blood regeneration has had
+      // since it was written, and bounded the same way — every gap over an
+      // hour goes through [advanceInChunks], so the drift is at most one
+      // chunk's worth of a mass that moves a third of a kilogram a day.
+      //
+      // Water goes the same way and for the same reason: §2.2's load surcharge
+      // is `1 + 0.8 × load / mass`, so a lighter character works harder under
+      // the same rucksack, and §2.3's sweat follows the MET.
+      //
+      // Two units in five thousand, either way, over six hours of walking. The
+      // tolerance is what the model is worth, not what a double is worth.
+      expect(chunked.state.caloriesKcal, closeTo(single.state.caloriesKcal, 5));
+      expect(chunked.state.waterMl, closeTo(single.state.waterMl, 5));
       expect(
         chunked.state.sleepDebtSeconds,
         closeTo(single.state.sleepDebtSeconds, 60),
@@ -493,6 +510,7 @@ void main() {
     SimState wounded() => SimState.fresh(
       at: t0,
       constants: constants,
+      massKg: 80,
     ).copyWith(bloodMl: constants.bloodMaxMl * 0.65);
 
     test('two and a half times what being awake is worth', () {
@@ -550,7 +568,7 @@ void main() {
     // whether the debt was eight hours or forty. Nothing anybody could see
     // moved for a whole night's sleep.
     test('a week awake owes a day, not a week', () {
-      var state = SimState.fresh(at: t0, constants: constants);
+      var state = SimState.fresh(at: t0, constants: constants, massKg: 80);
 
       for (var day = 0; day < 7; day++) {
         state = advance(
@@ -578,6 +596,7 @@ void main() {
       final owed = SimState.fresh(
         at: t0,
         constants: constants,
+        massKg: 80,
       ).copyWith(sleepDebtSeconds: kMaxSleepDebt.inSeconds);
 
       final morning = advance(

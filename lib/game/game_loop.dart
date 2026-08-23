@@ -132,8 +132,9 @@ class GameLoop {
     required this.session,
     required this.source,
     required this.profileId,
-    required this.constants,
+    required SimConstants constants,
     required SimState initialState,
+    BodyProfile? body,
     BleedTier initialBleeding = BleedTier.none,
     this.deathMode = DeathMode.softcore,
     DateTime? downUntil,
@@ -145,7 +146,9 @@ class GameLoop {
     PowerSource? power,
     this.cadence = const Duration(seconds: 1),
     this.powerInterval = const Duration(seconds: 60),
-  }) : _state = initialState,
+  }) : _constants = constants, // ignore: prefer_initializing_formals
+       _body = body, // ignore: prefer_initializing_formals
+       _state = initialState,
        _bleeding = initialBleeding,
        // ignore: prefer_initializing_formals
        _downUntil = downUntil,
@@ -163,7 +166,23 @@ class GameLoop {
   final SaveSession session;
   final PositionSource source;
   final int profileId;
-  final SimConstants constants;
+
+  /// §1.3, §2.3: everything derived from the body, as the body is now.
+  ///
+  /// ⚠️ **Not final any more.** §2.3's calorie deficit comes off the body, and
+  /// §1.3 derives the carry limits, the energy requirement, the daily water
+  /// and Nadler's blood volume from mass — so a character who has lost a fifth
+  /// of their weight is not a full-strength character with a smaller number on
+  /// a screen. See [_reweigh].
+  SimConstants get constants => _constants;
+  SimConstants _constants;
+
+  /// The profile these constants came from, when there is one to re-derive.
+  ///
+  /// Null in tests that hand the loop bare constants: those characters simply
+  /// never change weight, which is the old behaviour and the safe one.
+  BodyProfile? _body;
+
   final GameClock clock;
   final Duration cadence;
 
@@ -475,6 +494,7 @@ class GameLoop {
           );
 
     _state = outcome.state;
+    _reweigh();
     _advanceOccupation(elapsed);
 
     // Again, now that the clock has moved. The pass in [_buildInput] decided
@@ -601,6 +621,36 @@ class GameLoop {
       // is real and measured (§3.3). Away with nothing measuring is.
       offline: offline || (!_appForeground && !_tracking),
     );
+  }
+
+  /// §1.3, §2.3: re-derives the body when the character's weight has moved.
+  ///
+  /// ⚠️ **The blood goes with it, in proportion.**
+  ///
+  /// Nadler's volume falls with mass, so a wasting character's maximum blood
+  /// falls too — and if the absolute millilitres stayed where they were, the
+  /// *fraction lost* would jump the moment the ceiling moved. §2.6 reads shock
+  /// class off that fraction, so losing weight would put somebody into class
+  /// III without a scratch on them. Scaling both together keeps the fraction
+  /// exactly where it was: what changes is that every future wound is a bigger
+  /// share of a smaller body, which is the real effect and the only one.
+  ///
+  /// A quarter of a kilogram of hysteresis, because this runs every tick and
+  /// re-deriving eight formulas for a gram is work nobody asked for.
+  void _reweigh() {
+    final body = _body;
+    if (body == null) return;
+
+    final was = body.spec.weightKg;
+    final now = _state.bodyMassKg;
+    if ((now - was).abs() < 0.25 || now <= 0 || was <= 0) return;
+
+    final next = body.at(now);
+    final rescaled = next.bloodVolumeMl / body.bloodVolumeMl;
+
+    _body = next;
+    _constants = next.toSimConstants();
+    _state = _state.copyWith(bloodMl: _state.bloodMl * rescaled);
   }
 
   /// §2: the state read through §2's tables, with the one thing they need
@@ -780,6 +830,7 @@ class GameLoop {
     sleepDebtSeconds: Value(_state.sleepDebtSeconds),
     // §2.3: the two clocks the lethal rules hang on. They have to survive a
     // kill, or closing the app would be a glass of water.
+    bodyMassKg: Value(_state.bodyMassKg),
     dryStreakSeconds: Value(_state.dryStreakSeconds),
     starvedStreakSeconds: Value(_state.starvedStreakSeconds),
     zone: Value(_state.zone.wire),

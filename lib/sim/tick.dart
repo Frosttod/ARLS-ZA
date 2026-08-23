@@ -89,7 +89,7 @@ class SimConstants {
     required this.caloriesDailyKcal,
     required this.restingHeartRate,
     required this.maxHeartRate,
-    this.bodyMassKg = 80,
+    required this.startingMassKg,
   });
 
   final double bloodMaxMl;
@@ -98,9 +98,30 @@ class SimConstants {
   final double restingHeartRate;
   final double maxHeartRate;
 
-  /// Needed by the MET formulas of §2.2 and by the dehydration thresholds,
-  /// which are expressed against body mass.
-  final double bodyMassKg;
+  // ⚠️ **Body mass is not here, and used to be.**
+  //
+  // It sat in this class with a default of eighty and `toSimConstants` never
+  // filled it in, so §2.3's thresholds — two, five and ten per cent of *body
+  // mass* — measured every character in the game against an eighty-kilogram
+  // person. Filling it in was the obvious fix and the wrong one: mass is not a
+  // constant. §2.3's calorie deficit has to come out of the body somewhere,
+  // and a figure that changes belongs with the ones that change.
+  //
+  // So it lives on [SimState] now, and there is exactly one of it. Everything
+  // that needs it — the load surcharge of §2.2, the burn rate, the thirst
+  // thresholds, §1.3's derived figures — reads that one.
+
+  /// §2.3: what the character weighed when they were made.
+  ///
+  /// ⚠️ **This one really is constant, and it is a different question.** The
+  /// live mass answers "how heavy am I"; this answers "how much of me is
+  /// gone", which is the only way to read a wasting body — a fifty-five
+  /// kilogram character at fifty is in trouble and a ninety-five kilogram one
+  /// at fifty is dead.
+  ///
+  /// Survives a rebuild: [BodyProfile.at] carries it through, so a profile
+  /// re-derived at a lighter weight still remembers where it started.
+  final double startingMassKg;
 
   /// Floor enforced while the app is closed: offline consumption never drives
   /// a resource below 10% and never kills (§2.1.1).
@@ -112,7 +133,7 @@ class SimConstants {
     'caloriesDailyKcal': caloriesDailyKcal,
     'restingHeartRate': restingHeartRate,
     'maxHeartRate': maxHeartRate,
-    'bodyMassKg': bodyMassKg,
+    'startingMassKg': startingMassKg,
   };
 
   factory SimConstants.fromJson(Map<String, Object?> json) => SimConstants(
@@ -121,7 +142,7 @@ class SimConstants {
     caloriesDailyKcal: (json['caloriesDailyKcal'] as num).toDouble(),
     restingHeartRate: (json['restingHeartRate'] as num).toDouble(),
     maxHeartRate: (json['maxHeartRate'] as num).toDouble(),
-    bodyMassKg: (json['bodyMassKg'] as num?)?.toDouble() ?? 80,
+    startingMassKg: (json['startingMassKg'] as num?)?.toDouble() ?? 0,
   );
 }
 
@@ -200,6 +221,7 @@ class SimState {
     required this.waterMl,
     required this.caloriesKcal,
     required this.heartRateBpm,
+    required this.bodyMassKg,
     required this.sleepDebtSeconds,
     required this.zone,
     required this.rngCursor,
@@ -217,6 +239,26 @@ class SimState {
   final double waterMl;
   final double caloriesKcal;
   final double heartRateBpm;
+
+  /// §2.3, §1.3: what the character weighs **now**.
+  ///
+  /// ⚠️ **A body is where a calorie deficit is paid from.** §2.3 gives hunger
+  /// one tier past an empty reserve — a day at nought and the lights go out —
+  /// and nothing whatever for the week before or the month after, so a
+  /// starving character was in exactly the same state on day three as on day
+  /// thirty. That is the wrong shape for the one axis in §2 that a person
+  /// really does survive for weeks on.
+  ///
+  /// The long axis is this number. A deficit takes mass off it at
+  /// [kKcalPerKgOfBody], a surplus puts it back, and everything §1.3 derives
+  /// from mass follows: the carry limits of §18.1a, the burn rate of §2.2,
+  /// the daily water of §1.3, and §2.3's own thresholds, which are fractions
+  /// of it.
+  ///
+  /// Which also means there is only one of it. It used to be a field on
+  /// [SimConstants] as well, unfilled — see the note there.
+  final double bodyMassKg;
+
   final int sleepDebtSeconds;
   final MetabolicZone zone;
 
@@ -272,6 +314,7 @@ class SimState {
     double? waterMl,
     double? caloriesKcal,
     double? heartRateBpm,
+    double? bodyMassKg,
     int? sleepDebtSeconds,
     MetabolicZone? zone,
     int? rngCursor,
@@ -285,6 +328,7 @@ class SimState {
     waterMl: waterMl ?? this.waterMl,
     caloriesKcal: caloriesKcal ?? this.caloriesKcal,
     heartRateBpm: heartRateBpm ?? this.heartRateBpm,
+    bodyMassKg: bodyMassKg ?? this.bodyMassKg,
     sleepDebtSeconds: sleepDebtSeconds ?? this.sleepDebtSeconds,
     zone: zone ?? this.zone,
     rngCursor: rngCursor ?? this.rngCursor,
@@ -300,6 +344,7 @@ class SimState {
     'waterMl': waterMl,
     'caloriesKcal': caloriesKcal,
     'heartRateBpm': heartRateBpm,
+    'bodyMassKg': bodyMassKg,
     'sleepDebtSeconds': sleepDebtSeconds,
     'zone': zone.wire,
     'rngCursor': rngCursor,
@@ -315,6 +360,11 @@ class SimState {
     waterMl: (json['waterMl'] as num).toDouble(),
     caloriesKcal: (json['caloriesKcal'] as num).toDouble(),
     heartRateBpm: (json['heartRateBpm'] as num).toDouble(),
+    // ⚠️ Nought is not a body. A row written before mass moved has none, and
+    // the caller is the only one that knows what the character weighed at
+    // creation — so it is read back as nought and filled in there rather than
+    // guessed at here (§11.1.4).
+    bodyMassKg: (json['bodyMassKg'] as num?)?.toDouble() ?? 0,
     sleepDebtSeconds: (json['sleepDebtSeconds'] as num).toInt(),
     zone: MetabolicZone.fromWire(json['zone']! as String),
     rngCursor: (json['rngCursor'] as num?)?.toInt() ?? 0,
@@ -328,12 +378,14 @@ class SimState {
   factory SimState.fresh({
     required DateTime at,
     required SimConstants constants,
+    required double massKg,
   }) => SimState(
     lastUpdate: at.toUtc(),
     bloodMl: constants.bloodMaxMl,
     waterMl: constants.waterDailyMl,
     caloriesKcal: constants.caloriesDailyKcal,
     heartRateBpm: constants.restingHeartRate,
+    bodyMassKg: massKg,
     sleepDebtSeconds: 0,
     zone: MetabolicZone.open,
     rngCursor: 0,
@@ -348,6 +400,7 @@ class SimState {
       _close(pendingKcal, other.pendingKcal) &&
       _close(pendingWaterMl, other.pendingWaterMl) &&
       _close(heartRateBpm, other.heartRateBpm) &&
+      _close(bodyMassKg, other.bodyMassKg) &&
       sleepDebtSeconds == other.sleepDebtSeconds &&
       dryStreakSeconds == other.dryStreakSeconds &&
       starvedStreakSeconds == other.starvedStreakSeconds &&
@@ -368,22 +421,28 @@ class SimStatus {
     required this.thirst,
     required this.sleep,
     required this.heartRate,
+    this.wasting = StarvationState.healthy,
   });
 
   final BloodState blood;
   final HungerState hunger;
   final ThirstState thirst;
+
+  /// §2.3: the long axis of going without food — see [StarvationState].
+  final StarvationState wasting;
+
   final SleepState sleep;
   final HeartRatePenalty heartRate;
 
   /// Everything that currently adds to `MOA_total` (§5.1.1).
   double get totalExtraMoa =>
-      blood.extraMoa + sleep.extraMoa + heartRate.extraMoa;
+      blood.extraMoa + sleep.extraMoa + heartRate.extraMoa + wasting.extraMoa;
 
   /// Multiplier on how long an action takes (§2.3, §2.5.4).
   double get actionTimeMultiplier =>
       hunger.actionTimeMultiplier *
       thirst.actionTimeMultiplier *
+      wasting.actionTimeMultiplier *
       sleep.actionTimeMultiplier;
 
   /// The same figure the way a clock wants it: how much of a second of work a
@@ -398,8 +457,17 @@ class SimStatus {
   double get workRate =>
       actionTimeMultiplier <= 0 ? 1 : 1 / actionTimeMultiplier;
 
+  /// §2.3, §2.6: on the ground, one way or another.
+  ///
+  /// ⚠️ [HungerState.losingConsciousness] is here and deliberately not in
+  /// [fatalCause]. §2.3 calls it "postępująca utrata przytomności" — which is
+  /// what this is for — and reading it as a death made a famine lethal in
+  /// forty-eight hours. See the note there.
   bool get isIncapacitated =>
-      blood.isFatal || hunger.losingConsciousness || thirst.lethal;
+      blood.isFatal ||
+      hunger.losingConsciousness ||
+      thirst.lethal ||
+      wasting.fatal;
 }
 
 /// Interprets a state through the tables of §2.
@@ -423,9 +491,13 @@ SimStatus statusOf({
   thirst: thirstState(
     waterMl: state.waterMl,
     dailyMl: constants.waterDailyMl,
-    bodyMassKg: constants.bodyMassKg,
+    bodyMassKg: state.bodyMassKg,
     timeWithoutWater: state.dryFor,
     underExertion: underExertion,
+  ),
+  wasting: starvationState(
+    massKg: state.bodyMassKg,
+    startingMassKg: constants.startingMassKg,
   ),
   sleep: sleepState(state.sleepDebt),
   heartRate: heartRatePenalty(
@@ -494,8 +566,8 @@ const Duration kSettleToSleep = Duration(minutes: 10);
 /// The floor is the 10% of body mass §2.3 calls critical, expressed relative
 /// to the reserve. Past this the character is dying of thirst and the outcome
 /// no longer depends on the exact figure.
-double _lethalWaterDeficitMl(SimConstants constants) =>
-    math.max(0, 0.10 * constants.bodyMassKg * 1000 - constants.waterDailyMl);
+double _lethalWaterDeficitMl(SimState state, SimConstants constants) =>
+    math.max(0, 0.10 * state.bodyMassKg * 1000 - constants.waterDailyMl);
 
 /// Advances [state] by [elapsed], in whole seconds.
 ///
@@ -527,15 +599,15 @@ TickOutcome advance({
   final met = effectiveMet(
     met: rawMet,
     loadKg: input.loadKg,
-    bodyMassKg: constants.bodyMassKg,
+    bodyMassKg: state.bodyMassKg,
   );
 
   final basalKcal =
       constants.caloriesDailyKcal / 24.0 * hours * state.zone.calorieFactor;
   final movementKcal = rawMet <= 1.0
       ? 0.0
-      : kcalOver(met: met, bodyMassKg: constants.bodyMassKg, elapsed: step) -
-            kcalOver(met: 1.0, bodyMassKg: constants.bodyMassKg, elapsed: step);
+      : kcalOver(met: met, bodyMassKg: state.bodyMassKg, elapsed: step) -
+            kcalOver(met: 1.0, bodyMassKg: state.bodyMassKg, elapsed: step);
 
   final calorieBurn = basalKcal + math.max(0, movementKcal);
 
@@ -643,10 +715,42 @@ TickOutcome advance({
   // stomach banks nothing, and without this the bar sits at a hundred per cent
   // for hours afterwards while the surplus quietly drains — which reads, from
   // the player's side, as calories that have stopped working.
-  var calories = math.min(
-    constants.caloriesDailyKcal,
-    state.caloriesKcal - calorieBurn + kcalAbsorbed,
+  // ---- the body itself (§2.3) --------------------------------------------
+  //
+  // ⚠️ **What overflows and what is short both used to vanish.**
+  //
+  // The reserve is a day's worth and no more, so eating four tins on a full
+  // stomach banked nothing — there was never a reason to eat before a journey.
+  // At the other end the reserve floors at nought, so the calories a starving
+  // character went on burning were charged to nobody. §2.3 then had exactly
+  // one thing left to say about hunger — a day at nought and the lights go out
+  // — which puts a healthy adult in the ground in forty-eight hours and makes
+  // day three of a famine identical to day thirty.
+  //
+  // Both ends are the same account, and it is the body. A deficit is paid from
+  // it at [kKcalPerKgOfBody]; a surplus is put back at
+  // [kSurplusStorageEfficiency], which is lossy because storing is — a week of
+  // overeating does not undo a week of starving.
+  final rawCalories = state.caloriesKcal - calorieBurn + kcalAbsorbed;
+
+  final overflow = math.max(0.0, rawCalories - constants.caloriesDailyKcal);
+  final shortfall = math.max(0.0, -rawCalories);
+
+  // ⚠️ §2.1.1: nothing is taken off the body while the app is closed.
+  //
+  // The offline floor exists so that a phone in a drawer cannot kill anybody,
+  // and a fortnight of unwatched wasting would walk straight through it — the
+  // reserve would be held at ten per cent by the floor below while the mass it
+  // is measured against quietly fell off. A surplus still counts: what was
+  // actually eaten was actually eaten.
+  final massKg = math.max(
+    0.0,
+    state.bodyMassKg +
+        (overflow * kSurplusStorageEfficiency - (isOffline ? 0 : shortfall)) /
+            kKcalPerKgOfBody,
   );
+
+  var calories = math.min(constants.caloriesDailyKcal, rawCalories);
   var water = math.min(
     constants.waterDailyMl,
     state.waterMl - waterLoss + waterAbsorbed,
@@ -714,7 +818,7 @@ TickOutcome advance({
     // the three published thresholds unreachable. Letting the value go
     // negative lets the deficit accumulate across days, which is what a
     // multi-day dehydration actually is.
-    water = math.max(-_lethalWaterDeficitMl(constants), water);
+    water = math.max(-_lethalWaterDeficitMl(state, constants), water);
   }
 
   // ---- the two clocks §2.3's lethal rules need (§2.3) --------------------
@@ -741,6 +845,7 @@ TickOutcome advance({
       waterMl: water,
       bloodMl: blood,
       heartRateBpm: heartRate,
+      bodyMassKg: massKg,
       sleepDebtSeconds: sleepDebt,
       dryStreakSeconds: dryStreak,
       starvedStreakSeconds: starvedStreak,

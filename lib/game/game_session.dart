@@ -118,6 +118,13 @@ class GameSessionFactory {
         pendingKcal: vitals.pendingKcal,
         pendingWaterMl: vitals.pendingWaterMl,
         heartRateBpm: vitals.heartRateBpm,
+        // ⚠️ §11.1.4: a row written before mass moved has nought here, and
+        // nought is not a body. The profile's creation weight is the only
+        // honest answer, and it is the right one — a save from before this
+        // existed is a save in which nobody ever lost a gram.
+        bodyMassKg: vitals.bodyMassKg > 0
+            ? vitals.bodyMassKg
+            : profile.weightKg,
         sleepDebtSeconds: vitals.sleepDebtSeconds,
         dryStreakSeconds: vitals.dryStreakSeconds,
         starvedStreakSeconds: vitals.starvedStreakSeconds,
@@ -140,7 +147,11 @@ class GameSessionFactory {
   }) async {
     final body = BodyProfile.from(spec);
     final constants = body.toSimConstants();
-    final state = SimState.fresh(at: now, constants: constants);
+    final state = SimState.fresh(
+      at: now,
+      constants: constants,
+      massKg: spec.weightKg,
+    );
 
     final id = await db.createProfile(
       profile: ProfilesCompanion.insert(
@@ -162,6 +173,7 @@ class GameSessionFactory {
         waterMl: state.waterMl,
         caloriesKcal: state.caloriesKcal,
         heartRateBpm: state.heartRateBpm,
+        bodyMassKg: Value(state.bodyMassKg),
         zone: Value(state.zone.wire),
       ),
     );
@@ -232,6 +244,10 @@ class GameSessionFactory {
       source: source,
       profileId: character.profile.id,
       constants: character.constants,
+      // §2.3: so the loop can re-derive §1.3's figures when the character's
+      // weight moves. Without it a starving body keeps a healthy body's carry
+      // limits, blood volume and daily requirement.
+      body: character.body,
       initialState: character.state,
       initialBleeding: character.bleeding,
       deathMode: character.deathMode,

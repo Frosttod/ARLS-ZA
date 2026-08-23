@@ -29,7 +29,7 @@ import 'tables.dart';
 part 'database.g.dart';
 
 /// Bumped only alongside a migration step in [_migration]. Never reused.
-const int kSchemaVersion = 27;
+const int kSchemaVersion = 28;
 
 /// Keys used in [MetaEntries].
 abstract final class MetaKeys {
@@ -75,7 +75,7 @@ class SaveDatabase extends _$SaveDatabase {
   /// follow a constant reference. `schema_test.dart` keeps it in step with
   /// [kSchemaVersion].
   @override
-  int get schemaVersion => 27;
+  int get schemaVersion => 28;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -324,6 +324,11 @@ class SaveDatabase extends _$SaveDatabase {
         await m.addColumn(vitals, vitals.dryStreakSeconds);
         await m.addColumn(vitals, vitals.starvedStreakSeconds);
       }
+
+      // §2.3: mass stops being a constant. Nought means "written before mass
+      // moved" and is filled in from the profile's creation weight on load —
+      // the only place that knows it.
+      if (from < 28) await m.addColumn(vitals, vitals.bodyMassKg);
 
       await _writeSchemaVersion(to);
     },

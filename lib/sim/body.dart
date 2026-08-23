@@ -127,6 +127,7 @@ class BodySpec {
 class BodyProfile {
   const BodyProfile({
     required this.spec,
+    required this.startingMassKg,
     required this.bloodVolumeMl,
     required this.basalMetabolicRateKcal,
     required this.dailyEnergyKcal,
@@ -138,6 +139,15 @@ class BodyProfile {
   });
 
   final BodySpec spec;
+
+  /// §2.3: what this character weighed when they were made.
+  ///
+  /// ⚠️ Not `spec.weightKg`, once a body starts wasting. [at] re-derives every
+  /// figure §1.3 gets from mass — carry limits, blood volume, the energy
+  /// requirement — against the *current* weight, and the spec goes with them.
+  /// This is the one number that must not move, because "how much of me is
+  /// gone" is measured against it.
+  final double startingMassKg;
 
   /// Nadler. The number every wound in §2.6 is measured against.
   final double bloodVolumeMl;
@@ -166,24 +176,39 @@ class BodyProfile {
 
   /// Constants the tick engine needs.
   ///
-  /// ⚠️ [SimConstants.bodyMassKg] used to be left out, and it has a default of
-  /// eighty. §2.3's dehydration thresholds are fractions of *body mass* — two
-  /// per cent for the accuracy penalty, ten for the critical state — so every
-  /// character in the game was being measured against an eighty-kilogram
-  /// person regardless of what the player typed on the character sheet. A
-  /// fifty-five kilogram character was given the thresholds of somebody
-  /// twenty-five kilos heavier, which is most of a day of extra grace.
+  /// ⚠️ Every figure here is derived from [spec], and `spec.weightKg` is the
+  /// character's mass **as this profile was built**. A starving character's
+  /// mass moves (§2.3), and when it does the profile is rebuilt rather than
+  /// patched — which is why body mass is not one of these constants: there
+  /// would then be two of it, and a stale copy of a number that changes is the
+  /// shape of the defect this whole stage started from.
   SimConstants toSimConstants() => SimConstants(
     bloodMaxMl: bloodVolumeMl,
     waterDailyMl: baseWaterMlPerDay,
     caloriesDailyKcal: dailyEnergyKcal,
     restingHeartRate: restingHeartRate,
     maxHeartRate: maxHeartRate,
-    bodyMassKg: spec.weightKg,
+    startingMassKg: startingMassKg,
+  );
+
+  /// §2.3: the same body at a different weight.
+  ///
+  /// Everything §1.3 derives from mass moves with it — the carry limits of
+  /// §18.1a, Mifflin–St Jeor's energy requirement, Nadler's blood volume, the
+  /// 35 ml/kg of daily water. That is the point: a character who has lost a
+  /// fifth of their body weight is not a full-strength character with a
+  /// smaller number on a screen.
+  BodyProfile at(double massKg) => BodyProfile.from(
+    spec.copyWith(weightKg: massKg),
+    startingMassKg: startingMassKg,
   );
 
   /// Derives the profile from a validated spec.
-  factory BodyProfile.from(BodySpec spec) {
+  ///
+  /// [startingMassKg] is only given when re-deriving a body that has already
+  /// lost weight (§2.3) — see [at]. A character being made now weighs what
+  /// they weigh, and that is where they started.
+  factory BodyProfile.from(BodySpec spec, {double? startingMassKg}) {
     final h = spec.heightM;
     final w = spec.weightKg;
     final a = spec.ageYears;
@@ -209,6 +234,7 @@ class BodyProfile {
 
     return BodyProfile(
       spec: spec,
+      startingMassKg: startingMassKg ?? w,
       bloodVolumeMl: bloodL * 1000,
       basalMetabolicRateKcal: bmr,
       dailyEnergyKcal: bmr * kLightActivityFactor,

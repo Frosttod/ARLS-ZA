@@ -17,7 +17,8 @@ void main() {
   final constants = profile.toSimConstants();
   final t0 = DateTime.utc(2026, 8, 10, 12);
 
-  SimState healthy() => SimState.fresh(at: t0, constants: constants);
+  SimState healthy() =>
+      SimState.fresh(at: t0, constants: constants, massKg: 80);
 
   Future<void> pumpHud(
     WidgetTester tester,

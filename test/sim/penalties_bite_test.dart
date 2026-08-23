@@ -167,8 +167,8 @@ void main() {
     );
 
     test('body mass reaches the simulation at all', () {
-      expect(profileOf(55).toSimConstants().bodyMassKg, 55);
-      expect(profileOf(95).toSimConstants().bodyMassKg, 95);
+      expect(profileOf(55).toSimConstants().startingMassKg, 55);
+      expect(profileOf(95).toSimConstants().startingMassKg, 95);
     });
 
     test('and a lighter character reaches two per cent sooner (§2.3)', () {
@@ -181,7 +181,7 @@ void main() {
         return thirstState(
           waterMl: drunkMl,
           dailyMl: constants.waterDailyMl,
-          bodyMassKg: constants.bodyMassKg,
+          bodyMassKg: constants.startingMassKg,
         );
       }
 

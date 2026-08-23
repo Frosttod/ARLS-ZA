@@ -195,6 +195,18 @@
   "statusBleeding": "Bleeding",
   "statusDehydrated": "Dehydrated",
   "statusStarving": "Starving",
+  "statusWasting": "Wasting",
+  "statusWastingEffect": "Everything is slower and the hands are unsteady. Weaker than it looks on a full stomach.",
+  "statusWastingFix": "Eat more than the day needs. It comes back slowly.",
+  "statusWastingWhere": "Anything with calories in it. Tins keep.",
+  "statusWastingLevel": "−{percent}% of body weight",
+  "@statusWastingLevel": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "statusSleepDeprived": "Sleep-deprived",
   "bleedSuperficial": "superficial",
   "bleedModerate": "moderate",

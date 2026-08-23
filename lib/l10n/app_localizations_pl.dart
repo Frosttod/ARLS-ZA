@@ -323,6 +323,26 @@ class L10nPl extends L10n {
   String get statusStarving => 'Głód';
 
   @override
+  String get statusWasting => 'Wychudzenie';
+
+  @override
+  String get statusWastingEffect =>
+      'Wszystko idzie wolniej, ręce mniej pewne. Słabiej, niż się wydaje po najedzeniu.';
+
+  @override
+  String get statusWastingFix =>
+      'Jedz ponad dzienne zapotrzebowanie. Wraca powoli.';
+
+  @override
+  String get statusWastingWhere =>
+      'Cokolwiek z kaloriami. Konserwy się nie psują.';
+
+  @override
+  String statusWastingLevel(int percent) {
+    return '−$percent% masy ciała';
+  }
+
+  @override
   String get statusSleepDeprived => 'Niewyspanie';
 
   @override

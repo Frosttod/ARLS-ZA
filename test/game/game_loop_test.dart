@@ -111,7 +111,8 @@ void main() {
       source: source,
       profileId: profileId,
       constants: constants,
-      initialState: initial ?? SimState.fresh(at: t0, constants: constants),
+      initialState:
+          initial ?? SimState.fresh(at: t0, constants: constants, massKg: 80),
       clock: clock,
       power: power,
     );
@@ -589,6 +590,7 @@ void main() {
       final tired = SimState.fresh(
         at: midnight,
         constants: constants,
+        massKg: 80,
       ).copyWith(sleepDebtSeconds: const Duration(hours: 5).inSeconds);
 
       final rig = await buildLoop(initial: tired, startAt: midnight);
@@ -637,6 +639,7 @@ void main() {
         final tired = SimState.fresh(
           at: midnight,
           constants: constants,
+          massKg: 80,
         ).copyWith(sleepDebtSeconds: const Duration(hours: 9).inSeconds);
 
         final rig = await buildLoop(initial: tired, startAt: midnight);
@@ -680,6 +683,7 @@ void main() {
       final tired = SimState.fresh(
         at: t0,
         constants: constants,
+        massKg: 80,
       ).copyWith(sleepDebtSeconds: const Duration(hours: 5).inSeconds);
 
       final rig = await buildLoop(initial: tired, startAt: t0);
@@ -727,6 +731,7 @@ void main() {
       final tired = SimState.fresh(
         at: t0,
         constants: constants,
+        massKg: 80,
       ).copyWith(sleepDebtSeconds: const Duration(hours: 5).inSeconds);
 
       final rig = await buildLoop(initial: tired, startAt: t0);
@@ -772,7 +777,11 @@ void main() {
       () async {
         // Something the player deliberately started outranks the default state.
         final rig = await buildLoop(
-          initial: SimState.fresh(at: midnight, constants: constants),
+          initial: SimState.fresh(
+            at: midnight,
+            constants: constants,
+            massKg: 80,
+          ),
           startAt: midnight,
         );
         addTearDown(() async {
@@ -809,7 +818,7 @@ void main() {
 
     test('a half-built shelter keeps nothing out (§8.3)', () async {
       final rig = await buildLoop(
-        initial: SimState.fresh(at: midnight, constants: constants),
+        initial: SimState.fresh(at: midnight, constants: constants, massKg: 80),
         startAt: midnight,
       );
       addTearDown(() async {
@@ -1245,7 +1254,7 @@ void main() {
     test('nothing dies asleep (§9.1)', () async {
       // Permadeath caused by a phone on a bedside table is a one-star review.
       final rig = await buildLoop(
-        initial: SimState.fresh(at: midnight, constants: constants),
+        initial: SimState.fresh(at: midnight, constants: constants, massKg: 80),
         startAt: midnight,
       );
       addTearDown(() async {
@@ -1394,6 +1403,7 @@ void main() {
       final tired = SimState.fresh(
         at: t0,
         constants: constants,
+        massKg: 80,
       ).copyWith(sleepDebtSeconds: const Duration(hours: 5).inSeconds);
 
       final rig = await buildLoop(initial: tired);
@@ -1450,7 +1460,11 @@ void main() {
         // it never came back. Night is §2.5.1's own condition and has no ten
         // minutes attached to it — swallowing should put them straight back.
         final rig = await buildLoop(
-          initial: SimState.fresh(at: midnight, constants: constants),
+          initial: SimState.fresh(
+            at: midnight,
+            constants: constants,
+            massKg: 80,
+          ),
           startAt: midnight,
         );
         addTearDown(() async {

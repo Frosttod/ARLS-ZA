@@ -20,7 +20,7 @@ void main() {
     double waterFraction = 1,
     double calorieFraction = 1,
   }) => statusOf(
-    state: SimState.fresh(at: t0, constants: constants).copyWith(
+    state: SimState.fresh(at: t0, constants: constants, massKg: 80).copyWith(
       bloodMl: constants.bloodMaxMl * bloodFraction,
       waterMl: constants.waterDailyMl * waterFraction,
       caloriesKcal: constants.caloriesDailyKcal * calorieFraction,
@@ -66,7 +66,7 @@ void main() {
 
   group('what is left on waking (§9.2)', () {
     final woken = wokenFrom(
-      SimState.fresh(at: t0, constants: constants),
+      SimState.fresh(at: t0, constants: constants, massKg: 80),
       constants,
     );
 
@@ -85,6 +85,7 @@ void main() {
             state: SimState.fresh(
               at: t0,
               constants: constants,
+              massKg: 80,
             ).copyWith(bloodMl: woken.bloodMl),
             constants: constants,
           ),

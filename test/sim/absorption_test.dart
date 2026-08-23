@@ -15,12 +15,13 @@ void main() {
     caloriesDailyKcal: 2450,
     restingHeartRate: 70,
     maxHeartRate: 187,
+    startingMassKg: 80,
   );
 
   final t0 = DateTime.utc(2026, 8, 15, 12);
 
   SimState resting({double pendingKcal = 0, double pendingWaterMl = 0}) =>
-      SimState.fresh(at: t0, constants: constants).copyWith(
+      SimState.fresh(at: t0, constants: constants, massKg: 80).copyWith(
         caloriesKcal: constants.caloriesDailyKcal * 0.5,
         waterMl: constants.waterDailyMl * 0.5,
         pendingKcal: pendingKcal,
@@ -130,9 +131,10 @@ void main() {
     });
 
     test('a save written before this existed reads as an empty stomach', () {
-      final old = SimState.fresh(at: t0, constants: constants).toJson()
-        ..remove('pendingKcal')
-        ..remove('pendingWaterMl');
+      final old =
+          SimState.fresh(at: t0, constants: constants, massKg: 80).toJson()
+            ..remove('pendingKcal')
+            ..remove('pendingWaterMl');
 
       expect(SimState.fromJson(old).pendingKcal, 0);
     });
@@ -146,6 +148,7 @@ void main() {
       final full = SimState.fresh(
         at: t0,
         constants: constants,
+        massKg: 80,
       ).copyWith(pendingKcal: 3000);
 
       final after = run(full, const Duration(hours: 2));
@@ -160,6 +163,7 @@ void main() {
       final full = SimState.fresh(
         at: t0,
         constants: constants,
+        massKg: 80,
       ).copyWith(pendingWaterMl: 5000);
 
       final after = run(full, const Duration(hours: 1));
@@ -169,10 +173,11 @@ void main() {
 
     test('and what fits still arrives', () {
       // The cap is a ceiling, not a refusal: a hungry player still eats.
-      final hungry = SimState.fresh(at: t0, constants: constants).copyWith(
-        caloriesKcal: constants.caloriesDailyKcal * 0.4,
-        pendingKcal: 500,
-      );
+      final hungry = SimState.fresh(at: t0, constants: constants, massKg: 80)
+          .copyWith(
+            caloriesKcal: constants.caloriesDailyKcal * 0.4,
+            pendingKcal: 500,
+          );
 
       final after = run(hungry, const Duration(hours: 2));
 

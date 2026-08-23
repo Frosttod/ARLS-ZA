@@ -34,8 +34,12 @@ void main() {
     double? caloriesKcal,
     bool underExertion = false,
   }) => statusOf(
-    state: SimState.fresh(at: DateTime.utc(2026), constants: constants)
-        .copyWith(
+    state:
+        SimState.fresh(
+          at: DateTime.utc(2026),
+          constants: constants,
+          massKg: 80,
+        ).copyWith(
           waterMl: waterMl ?? constants.waterDailyMl,
           caloriesKcal: caloriesKcal ?? constants.caloriesDailyKcal,
           dryStreakSeconds: dry.inSeconds,
@@ -85,7 +89,7 @@ void main() {
       // ⚠️ [kCriticalThirstGrace] is an extension and named as one. Half a day
       // at ten per cent of body mass in deficit is where the literature stops
       // discussing performance.
-      final deficit = -0.10 * constants.bodyMassKg * 1000;
+      final deficit = -0.10 * constants.startingMassKg * 1000;
 
       final justCritical = statusAfter(
         dry: const Duration(hours: 6),
@@ -101,14 +105,25 @@ void main() {
       expect(heldThere.thirst.lethal, isTrue);
     });
 
-    test('a day at nought calories is fatal (§2.3)', () {
+    test('a day at nought calories puts somebody on the ground (§2.3)', () {
+      // ⚠️ **On the ground, not in it.** §2.3 words this one "postępująca
+      // utrata przytomności", and the game read it as a death — which made a
+      // famine lethal in forty-eight hours, faster than thirst, in defiance of
+      // §2.3's own instruction that water must be the harsher of the two. The
+      // reserve is a *day's* food: somebody with nothing to eat sits at nought
+      // from the second morning of a famine until the end of it.
       final status = statusAfter(
         caloriesKcal: 0,
         starved: const Duration(hours: 25),
       );
 
       expect(status.hunger.losingConsciousness, isTrue);
-      expect(fatalCause(status), DeathCause.starvation);
+      expect(status.isIncapacitated, isTrue);
+      expect(
+        fatalCause(status),
+        isNull,
+        reason: 'an empty larder is not a spent body',
+      );
     });
   });
 
@@ -119,7 +134,9 @@ void main() {
       // anybody down, because five and ten per cent had no consequence
       // attached to them at all.
       final starving = statusAfter(caloriesKcal: 0);
-      final parched = statusAfter(waterMl: -0.05 * constants.bodyMassKg * 1000);
+      final parched = statusAfter(
+        waterMl: -0.05 * constants.startingMassKg * 1000,
+      );
 
       expect(parched.thirst.severelyWeakened, isTrue);
       expect(
@@ -129,9 +146,11 @@ void main() {
     });
 
     test('and the critical state costs more again', () {
-      final severe = statusAfter(waterMl: -0.05 * constants.bodyMassKg * 1000);
+      final severe = statusAfter(
+        waterMl: -0.05 * constants.startingMassKg * 1000,
+      );
       final critical = statusAfter(
-        waterMl: -0.10 * constants.bodyMassKg * 1000,
+        waterMl: -0.10 * constants.startingMassKg * 1000,
       );
 
       expect(
@@ -150,6 +169,7 @@ void main() {
       var state = SimState.fresh(
         at: DateTime.utc(2026),
         constants: constants,
+        massKg: 80,
       ).copyWith(pendingWaterMl: drinkMl, pendingKcal: eatKcal);
 
       return advanceInChunks(
@@ -194,6 +214,7 @@ void main() {
       final fresh = SimState.fresh(
         at: DateTime.utc(2026),
         constants: constants,
+        massKg: 80,
       );
 
       expect(fresh.dryFor, Duration.zero);
@@ -210,7 +231,7 @@ void main() {
     // Water: 35 ml/kg is the daily reserve, and ten per cent of body mass is
     // the critical deficit — for this character 2800 ml against 8000, so about
     // three days of complete abstinence at rest, less while walking.
-    final criticalDeficitMl = 0.10 * constants.bodyMassKg * 1000;
+    final criticalDeficitMl = 0.10 * constants.startingMassKg * 1000;
     final daysToCritical = criticalDeficitMl / constants.waterDailyMl;
 
     expect(daysToCritical, closeTo(2.9, 0.3));

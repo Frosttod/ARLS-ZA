@@ -12,6 +12,7 @@ void main() {
     caloriesDailyKcal: 2450,
     restingHeartRate: 70,
     maxHeartRate: 187,
+    startingMassKg: 80,
   );
 
   final t0 = DateTime.utc(2026, 8, 10, 12);
@@ -22,6 +23,7 @@ void main() {
     waterMl: constants.waterDailyMl,
     caloriesKcal: constants.caloriesDailyKcal,
     heartRateBpm: 70,
+    bodyMassKg: 80,
     sleepDebtSeconds: 0,
     zone: MetabolicZone.open,
     rngCursor: 0,

@@ -183,6 +183,7 @@ TickOutcome advance_(DateTime from, Duration elapsed) => advanceInChunks(
     waterMl: referenceConstants.waterDailyMl,
     caloriesKcal: referenceConstants.caloriesDailyKcal,
     heartRateBpm: referenceConstants.restingHeartRate,
+    bodyMassKg: 80,
     sleepDebtSeconds: 0,
     zone: MetabolicZone.shelter,
     rngCursor: 0,

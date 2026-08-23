@@ -625,6 +625,36 @@ abstract class L10n {
   /// **'Starving'**
   String get statusStarving;
 
+  /// No description provided for @statusWasting.
+  ///
+  /// In en, this message translates to:
+  /// **'Wasting'**
+  String get statusWasting;
+
+  /// No description provided for @statusWastingEffect.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything is slower and the hands are unsteady. Weaker than it looks on a full stomach.'**
+  String get statusWastingEffect;
+
+  /// No description provided for @statusWastingFix.
+  ///
+  /// In en, this message translates to:
+  /// **'Eat more than the day needs. It comes back slowly.'**
+  String get statusWastingFix;
+
+  /// No description provided for @statusWastingWhere.
+  ///
+  /// In en, this message translates to:
+  /// **'Anything with calories in it. Tins keep.'**
+  String get statusWastingWhere;
+
+  /// No description provided for @statusWastingLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'−{percent}% of body weight'**
+  String statusWastingLevel(int percent);
+
   /// No description provided for @statusSleepDeprived.
   ///
   /// In en, this message translates to:

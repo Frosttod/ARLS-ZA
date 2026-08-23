@@ -31,7 +31,7 @@ void main() {
     double bloodLossFraction = 0,
     Duration sleepDebt = Duration.zero,
   }) {
-    final fresh = SimState.fresh(at: t0, constants: constants);
+    final fresh = SimState.fresh(at: t0, constants: constants, massKg: 80);
 
     return statusOf(
       state: fresh.copyWith(

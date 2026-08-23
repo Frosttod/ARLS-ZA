@@ -321,6 +321,25 @@ class L10nEn extends L10n {
   String get statusStarving => 'Starving';
 
   @override
+  String get statusWasting => 'Wasting';
+
+  @override
+  String get statusWastingEffect =>
+      'Everything is slower and the hands are unsteady. Weaker than it looks on a full stomach.';
+
+  @override
+  String get statusWastingFix =>
+      'Eat more than the day needs. It comes back slowly.';
+
+  @override
+  String get statusWastingWhere => 'Anything with calories in it. Tins keep.';
+
+  @override
+  String statusWastingLevel(int percent) {
+    return '−$percent% of body weight';
+  }
+
+  @override
   String get statusSleepDeprived => 'Sleep-deprived';
 
   @override

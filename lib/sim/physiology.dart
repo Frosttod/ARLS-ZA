@@ -57,6 +57,99 @@ HungerState hungerState({
   );
 }
 
+/// §2.3: how much of a kilogram of body a kilocalorie is worth.
+///
+/// ⚠️ Not the 7700 kcal of the fat-only figure. A body under a deficit does
+/// not burn pure fat — roughly three parts fat to one part lean tissue early
+/// on, and lean tissue is mostly water — so a kilogram off the scale is
+/// cheaper than a kilogram of adipose. Seven thousand is the middle of the
+/// range the literature gives, and it puts a total fast at about a third of a
+/// kilogram a day, which is what a total fast does.
+const double kKcalPerKgOfBody = 7000;
+
+/// §2.3: what a kilocalorie of surplus is worth going the other way.
+///
+/// Storing is lossy where burning is not, which is why a week of overeating
+/// does not undo a week of starving. It also means the surplus is worth
+/// *something*: before this, everything above the day's reserve was simply
+/// discarded, so four tins on a full stomach banked nothing at all and there
+/// was no reason ever to eat before a journey.
+const double kSurplusStorageEfficiency = 0.75;
+
+/// §2.3: how far below the starting weight a body gives out.
+///
+/// ⚠️ **An extension, and named as one.** §2.3 gives hunger exactly one lethal
+/// rule — a day at nought calories — and that rule is about a *reserve*, which
+/// is a day's worth of food and nothing to do with how long a person survives
+/// without eating. Taken alone it kills a healthy adult in forty-eight hours.
+///
+/// The real limit is the body, and the clinical one is well established: death
+/// from starvation arrives at roughly a third of body weight lost, which for
+/// an ordinary adult is six to ten weeks of a complete fast. That is the
+/// figure this game wants — "bez jedzenia da się funkcjonować dłuższy czas" —
+/// and it is a figure about mass rather than about a countdown.
+const double kFatalMassLoss = 0.30;
+
+/// §2.3: what wasting away costs before it kills.
+///
+/// Deliberately gentle at the top. A week without food is two and a half
+/// kilograms and should be an inconvenience; a month is eleven and should not
+/// be. The tiers are fractions of the starting weight, so they mean the same
+/// thing for a light character as for a heavy one.
+class StarvationState {
+  const StarvationState({
+    required this.lostFraction,
+    this.actionTimeMultiplier = 1.0,
+    this.extraMoa = 0,
+    this.fatal = false,
+  });
+
+  /// How much of the starting weight is gone, as a fraction.
+  final double lostFraction;
+
+  final double actionTimeMultiplier;
+
+  /// Added to `MOA_total` (§5.1.1). A wasted body is not a steady one.
+  final double extraMoa;
+
+  /// Past [kFatalMassLoss]. Nothing recovers from this in the field.
+  final bool fatal;
+
+  static const healthy = StarvationState(lostFraction: 0);
+}
+
+StarvationState starvationState({
+  required double massKg,
+  required double startingMassKg,
+}) {
+  if (startingMassKg <= 0 || massKg >= startingMassKg) {
+    return StarvationState.healthy;
+  }
+
+  final lost = (startingMassKg - massKg) / startingMassKg;
+
+  // Five per cent is a fortnight of eating badly and costs nothing: the point
+  // of this axis is that it takes weeks to matter.
+  if (lost < 0.05) return StarvationState(lostFraction: lost);
+  if (lost < 0.15) {
+    return StarvationState(lostFraction: lost, actionTimeMultiplier: 1.15);
+  }
+  if (lost < kFatalMassLoss) {
+    return StarvationState(
+      lostFraction: lost,
+      actionTimeMultiplier: 1.40,
+      extraMoa: 2.0,
+    );
+  }
+
+  return StarvationState(
+    lostFraction: lost,
+    actionTimeMultiplier: 1.40,
+    extraMoa: 2.0,
+    fatal: true,
+  );
+}
+
 /// Penalties from dehydration (§2.3).
 ///
 /// ⚠️ Deliberately harsher than hunger. Water is where the realism bites: two

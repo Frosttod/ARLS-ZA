@@ -8,6 +8,7 @@ const constants = SimConstants(
   caloriesDailyKcal: 2450,
   restingHeartRate: 70,
   maxHeartRate: 187,
+  startingMassKg: 80,
 );
 
 SimState freshState({
@@ -19,6 +20,7 @@ SimState freshState({
   waterMl: constants.waterDailyMl,
   caloriesKcal: constants.caloriesDailyKcal,
   heartRateBpm: heartRate,
+  bodyMassKg: 80,
   sleepDebtSeconds: 0,
   zone: zone,
   rngCursor: 0,

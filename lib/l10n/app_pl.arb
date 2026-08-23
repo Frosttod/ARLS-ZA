@@ -119,6 +119,18 @@
   "statusBleeding": "Krwawienie",
   "statusDehydrated": "Odwodnienie",
   "statusStarving": "Głód",
+  "statusWasting": "Wychudzenie",
+  "statusWastingEffect": "Wszystko idzie wolniej, ręce mniej pewne. Słabiej, niż się wydaje po najedzeniu.",
+  "statusWastingFix": "Jedz ponad dzienne zapotrzebowanie. Wraca powoli.",
+  "statusWastingWhere": "Cokolwiek z kaloriami. Konserwy się nie psują.",
+  "statusWastingLevel": "−{percent}% masy ciała",
+  "@statusWastingLevel": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "statusSleepDeprived": "Niewyspanie",
   "bleedSuperficial": "powierzchowne",
   "bleedModerate": "umiarkowane",
