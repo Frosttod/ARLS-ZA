@@ -9,8 +9,10 @@ import 'data/persistence/save_bootstrap.dart';
 import 'devtools/dev_mode.dart';
 import 'devtools/dev_overlay.dart';
 import 'devtools/dev_session.dart';
+import 'game/controllers/craft_controller.dart';
 import 'game/controllers/inventory_controller.dart';
 import 'game/controllers/loot_controller.dart';
+import 'game/controllers/shelter_controller.dart';
 import 'game/controllers/stash_controller.dart';
 import 'game/game_loop.dart';
 import 'inventory/body_slots.dart';
@@ -26,7 +28,6 @@ import 'combat/combat_session.dart';
 import 'combat/engagement.dart';
 import 'combat/magazine.dart';
 import 'craft/craft_job.dart';
-import 'craft/craft_store.dart';
 import 'craft/salvage_batch.dart';
 import 'craft/item_recipe.dart';
 import 'ui/action_strip.dart';
@@ -294,7 +295,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// pushed route, and a pushed route handed a list keeps showing the list it
   /// opened with. Starting a build then left the counter at zero until
   /// somebody backed out and came in again.
-  final ValueNotifier<List<Shelter>> _shelters = ValueNotifier(const []);
+  ValueNotifier<List<Shelter>> get _shelters => _places.shelters;
 
   /// §12: what the game has just said. Under the HUD, never over the menu.
   final ValueNotifier<List<Notice>> _notices = ValueNotifier(const []);
@@ -706,7 +707,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   RecipeBook _recipes = RecipeBook.empty;
 
   /// §2.1a.3: what is on the bench, or null. Reloaded whenever the shelter is.
-  final ValueNotifier<CraftJob?> _craftJob = ValueNotifier(null);
+  ValueNotifier<CraftJob?> get _craftJob => _bench2.job;
 
   /// §18.6: which piece is currently under the multitool.
   ///
@@ -720,11 +721,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// unusable — a rifle in a sitting cannot be worn, fired, dropped or
   /// shelved, which is the whole reason the pieces stay visible instead of
   /// vanishing for a quarter of an hour.
-  final ValueNotifier<List<CarriedItem>> _dismantling = ValueNotifier(const []);
+  ValueNotifier<List<CarriedItem>> get _dismantling => _bench2.sitting;
 
   /// Whether this piece is spoken for by the sitting on the bench.
-  bool _inSitting(CarriedItem line) =>
-      _dismantling.value.any((piece) => piece.isSame(line));
+  bool _inSitting(CarriedItem line) => _bench2.inSitting(line);
 
   Reload? _reload;
 
@@ -874,6 +874,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     // Narrowing that down to the widgets that actually care is a later change
     // and a separate one: a move that also changed which frames redraw would
     // be impossible to tell apart from a regression.
+    _places.shelters.addListener(_onInventoryChanged);
     _loot.boxes.addListener(_onInventoryChanged);
     _loot.remains.addListener(_onInventoryChanged);
     _loot.dropped.addListener(_onInventoryChanged);
@@ -1107,6 +1108,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       // the world itself plans, downloads and decodes, none of which is a
       // question about what is on the map right now.
       _loot.bind(profileId: character.profile.id);
+      _places.bind(profileId: character.profile.id);
+      _bench2.bind(profileId: character.profile.id);
 
       await _pack.load(catalogue);
       if (!mounted) return;
@@ -3265,15 +3268,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
   /// §8: what has been built, from the save.
   Future<void> _reloadShelters() async {
-    final character = _character;
-    if (character == null) return;
-
-    final places = await ShelterStore(
-      widget.session.db,
-    ).load(character.profile.id, DateTime.now().toUtc());
+    final places = await _places.reload(DateTime.now().toUtc());
     if (!mounted) return;
 
-    setState(() => _shelters.value = [...places]);
     _loop?.setShelters(places);
   }
 
@@ -3962,30 +3959,12 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       await _saveInventory();
     }
 
-    await CraftStore(widget.session.db).clear(character.profile.id);
+    await _bench2.clear();
     _craftJob.value = null;
     _dismantling.value = const [];
 
     if (!mounted) return;
     _say(L10n.of(context).craftStopped);
-  }
-
-  /// §18.6: the sitting on a job, whether it was written as one or as many.
-  ///
-  /// A job from before sittings existed has no list, and is a sitting of one.
-  /// Everything downstream reads this rather than [CraftJob.batch] so that the
-  /// two kinds of row never need telling apart again.
-  SalvageBatch _sittingOf(CraftJob job) {
-    if (job.batch.isNotEmpty) return job.batch;
-    if (!job.isSalvage) return SalvageBatch.empty;
-
-    return SalvageBatch([
-      SalvageStep(
-        itemId: job.salvageItemId!,
-        condition: job.salvageCondition ?? 100,
-        takes: job.readyAt.difference(job.startedAt),
-      ),
-    ]);
   }
 
   /// §11.1: finds the very piece a step names, in the pack or on the shelves.
@@ -4040,7 +4019,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       return;
     }
 
-    await CraftStore(widget.session.db).clear(character.profile.id);
+    await _bench2.clear();
     _craftJob.value = null;
 
     // §18.6: giving up hands the piece back whole. Nothing was taken out of
@@ -4135,8 +4114,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     // start a spear, spend the wood on a splint, and collect both.
     await _spendMaterials(recipe.materials);
 
-    await CraftStore(widget.session.db).beginCraft(
-      character.profile.id,
+    await _bench2.beginCraft(
       recipeId: recipe.id,
       now: DateTime.now().toUtc(),
       work: craftWork(
@@ -4228,11 +4206,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
     final batch = SalvageBatch([for (final offer in picked) offer.toStep()]);
 
-    await CraftStore(widget.session.db).beginBatchSalvage(
-      character.profile.id,
-      batch,
-      now: DateTime.now().toUtc(),
-    );
+    await _bench2.beginSalvage(batch, now: DateTime.now().toUtc());
 
     await _reloadCraftJob();
 
@@ -4308,8 +4282,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     // ⚠️ Started in the past by however long it has already had, so the bar
     // picks up where it was left rather than beginning again at nothing.
     final now = DateTime.now().toUtc();
-    await CraftStore(widget.session.db).beginSalvage(
-      character.profile.id,
+    await _bench2.beginSalvageOne(
       itemId: line.itemId,
       condition: condition,
       now: now.subtract(done),
@@ -4396,8 +4369,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final character = _character;
     if (character == null) return;
 
-    final store = CraftStore(widget.session.db);
-    final job = await store.load(character.profile.id);
+    final job = await _bench2.load();
 
     if (job == null || !job.isDoneAt(DateTime.now().toUtc())) {
       _craftJob.value = job;
@@ -4439,7 +4411,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final catalogue = _catalogue;
     if (character == null || catalogue == null) return;
 
-    await CraftStore(widget.session.db).clear(character.profile.id);
+    await _bench2.clear();
 
     if (job.isSalvage) {
       // §18.6: every piece of the sitting, in order. The whole job ran, so
@@ -4986,49 +4958,6 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
     return _packRefusal(line, action);
   }
-
-  /// §18.6: whether the glyph is worth drawing on this piece.
-  ///
-  /// ⚠️ Cached by what the answer actually depends on: the item and how worn
-  /// it is. Nothing else moves it — §18.6's share only changes with skills and
-  /// the workshop, and both are held in the key too.
-  ///
-  /// It is asked once per row of a list somebody is scrolling, and each answer
-  /// costs a recipe lookup, a material breakdown and a largest-remainder
-  /// allocation. The same rifle asked thirty times a second is thirty
-  /// identical answers.
-  bool _worthTakingApart(CarriedItem line) {
-    final catalogue = _catalogue;
-    if (catalogue == null) return false;
-    if (line.isPartlyDismantled) return true;
-
-    final bench = _bench();
-    final key =
-        '${line.itemId}.${(line.condition ?? 100).round()}'
-        '.${bench.workshopLevel}.${bench.engineering}';
-
-    final known = _salvageWorth[key];
-    if (known != null) return known;
-
-    final worth = salvagePreview(
-      line.itemId,
-      bench,
-      catalogue: catalogue,
-      book: _recipes,
-      condition: line.condition ?? 100,
-    ).isNotEmpty;
-
-    // Bounded, because condition is a continuum: a hundred and one distinct
-    // answers per item is more than the catalogue has items, and a pack is
-    // nowhere near that. Cleared wholesale rather than aged — the entries are
-    // booleans and rebuilding one is cheap.
-    if (_salvageWorth.length > 512) _salvageWorth.clear();
-    _salvageWorth[key] = worth;
-
-    return worth;
-  }
-
-  final Map<String, bool> _salvageWorth = {};
 
   /// §18.2: does something to a piece that is on a shelf.
   ///
@@ -6107,10 +6036,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     _benchTimer?.cancel();
     _actions?.dispose();
     _craftJob.removeListener(_onBenchChanged);
-    _craftJob.dispose();
-    _dismantling.dispose();
     _usingLine.dispose();
-    _shelters.dispose();
     _notices.dispose();
     _controllers.dispose();
     super.dispose();
@@ -6135,6 +6061,38 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   late final LootController _loot = _controllers.adopt(
     LootController(widget.session.db),
   );
+
+  /// §8.3, §8.4: the places this character has built.
+  late final ShelterController _places = _controllers.adopt(
+    ShelterController(widget.session.db),
+  );
+
+  /// §18.4, §18.6: what is on the bench, and what is coming apart on it.
+  late final CraftController _bench2 = _controllers.adopt(
+    CraftController(widget.session.db),
+  );
+
+  SalvageBatch _sittingOf(CraftJob job) => CraftController.sittingOf(job);
+
+  /// §18.6: whether anything would actually come out of this piece.
+  ///
+  /// ⚠️ What actually comes out, not what the thing is made of. Two different
+  /// questions, and the difference is most of the catalogue: an axe holds 0.86
+  /// units of metal and wood, which at §18.6's forty per cent rounds to
+  /// nothing. Lighting the glyph on everything with a material content lit it
+  /// on axes, knives and magazines and then refused every one of them on the
+  /// tap.
+  bool _worthTakingApart(CarriedItem line) {
+    final catalogue = _catalogue;
+    if (catalogue == null) return false;
+
+    return _bench2.worthTakingApart(
+      line,
+      bench: _bench(),
+      catalogue: catalogue,
+      book: _recipes,
+    );
+  }
 
   Future<void> _reloadDropped() => _loot.reloadDropped(DateTime.now().toUtc());
 
