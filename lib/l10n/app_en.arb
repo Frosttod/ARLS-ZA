@@ -1028,5 +1028,14 @@
   "crashCopy": "Copy the trace",
   "crashClear": "Clear",
   "crashCopied": "Copied. Paste it to me.",
-  "crashHung": "The game stopped answering"
+  "crashHung": "The game stopped answering",
+  "salvageWornFirst": "You are wearing it — take it off first.",
+  "salvageWaitingUntil": "Waiting its turn — in {time}",
+  "@salvageWaitingUntil": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  }
 }

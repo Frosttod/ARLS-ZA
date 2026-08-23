@@ -1906,4 +1906,12 @@ class L10nEn extends L10n {
 
   @override
   String get crashHung => 'The game stopped answering';
+
+  @override
+  String get salvageWornFirst => 'You are wearing it — take it off first.';
+
+  @override
+  String salvageWaitingUntil(String time) {
+    return 'Waiting its turn — in $time';
+  }
 }

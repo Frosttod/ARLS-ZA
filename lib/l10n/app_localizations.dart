@@ -3486,6 +3486,18 @@ abstract class L10n {
   /// In en, this message translates to:
   /// **'The game stopped answering'**
   String get crashHung;
+
+  /// No description provided for @salvageWornFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'You are wearing it — take it off first.'**
+  String get salvageWornFirst;
+
+  /// No description provided for @salvageWaitingUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting its turn — in {time}'**
+  String salvageWaitingUntil(String time);
 }
 
 class _L10nDelegate extends LocalizationsDelegate<L10n> {

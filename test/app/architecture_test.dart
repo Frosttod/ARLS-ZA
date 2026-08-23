@@ -151,11 +151,16 @@ void main() {
       //   phase 4 6767   the bench and the shelters out
       //   phase 5 6711   five clocks became one, and the action state with it
       //   phase 6 6667   the fight out
+      //           6659   the disassembly list became a function of the model
       //
-      // Lower it when a phase lands. Never raise it.
+      // ⚠️ Lower it when a phase lands. Never raise it — not for a phase, and
+      // not for a feature either. "It is a feature" is exactly the excuse that
+      // took this file to seven thousand lines: every one of those was a
+      // reasonable thing to add to the class that already had everything else.
+      // Something new that belongs to the model goes in the model.
       expect(
         lines,
-        lessThanOrEqualTo(6670),
+        lessThanOrEqualTo(6660),
         reason: 'main.dart grew; something went in that should have come out',
       );
     });

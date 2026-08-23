@@ -14,14 +14,17 @@
 /// only has twenty minutes can read off which of their five will be done.
 library;
 
+import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 
+import '../craft/craft_job.dart';
 import '../craft/salvage_batch.dart';
 import '../items/item.dart';
 import '../items/item_catalogue.dart';
 import '../l10n/app_localizations.dart';
 import 'fonts.dart';
 import 'hud.dart' show HudColors;
+import 'salvage_running_view.dart';
 import 'units.dart';
 
 class DisassembleScreen extends StatefulWidget {
@@ -30,8 +33,22 @@ class DisassembleScreen extends StatefulWidget {
     required this.catalogue,
     required this.nameOf,
     required this.onStart,
+    this.job,
+    this.onStop,
     super.key,
   });
+
+  /// §18.6: the sitting already on the bench, if there is one.
+  ///
+  /// ⚠️ **This screen used to refuse to open while one was running**, so the
+  /// only place a player could see their own sitting was the *making* screen —
+  /// a bar at the top of a list of recipes, which is the wrong list. Now the
+  /// screen shows whichever of its two jobs applies: pick a sitting, or watch
+  /// the one that is going.
+  final ValueListenable<CraftJob?>? job;
+
+  /// §12: every running action is stoppable, from where it is drawn.
+  final VoidCallback? onStop;
 
   /// Everything worth opening, pack and shelves together, already worked out
   /// by the caller against the same bench the single-item path uses.
@@ -68,7 +85,11 @@ class _DisassembleScreenState extends State<DisassembleScreen> {
 
   void _toggle(SalvageOffer offer) {
     final uid = offer.line.uid;
-    if (uid == null) return;
+
+    // ⚠️ Shown and refused, never hidden. A control that disappears cannot
+    // explain itself — a rifle in the player's hands is not an absent option,
+    // it is an option with one step in front of it.
+    if (uid == null || offer.isBlocked) return;
 
     setState(() {
       if (!_picked.remove(uid)) _picked.add(uid);
@@ -77,6 +98,63 @@ class _DisassembleScreenState extends State<DisassembleScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final job = widget.job;
+    if (job == null) return _picker(context);
+
+    return ValueListenableBuilder<CraftJob?>(
+      valueListenable: job,
+      builder: (context, running, _) => running == null || !running.isSalvage
+          ? _picker(context)
+          : _running(context, running),
+    );
+  }
+
+  /// §18.6, §12: the sitting that is going, with a bar for every piece of it.
+  Widget _running(BuildContext context, CraftJob job) {
+    final l10n = L10n.of(context);
+    final colours = HudColors.of(context);
+
+    return Scaffold(
+      appBar: AppBar(title: Text(l10n.salvageTitle)),
+      body: SalvageRunningView(
+        job: job,
+        nameOf: widget.nameOf,
+        onStop: widget.onStop,
+      ),
+      bottomNavigationBar: widget.onStop == null
+          ? null
+          : Material(
+              color: colours.panel,
+              child: SafeArea(
+                top: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed: widget.onStop,
+                        icon: const Icon(Icons.stop),
+                        label: Text(l10n.craftStop),
+                      ),
+                      const SizedBox(height: 4),
+                      // §12: said where the button is. Stopping here is not
+                      // what "cancel" means anywhere else in this game.
+                      Text(
+                        l10n.craftStopKeepsWork,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 11, color: colours.muted),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+    );
+  }
+
+  Widget _picker(BuildContext context) {
     final l10n = L10n.of(context);
     final colours = HudColors.of(context);
 
@@ -224,17 +302,25 @@ class _OfferRow extends StatelessWidget {
     final line = offer.line;
     final condition = line.condition;
 
+    final blocked = offer.isBlocked;
+
     return Card(
-      color: colours.panel,
+      // ⚠️ Dimmed rather than removed (§12). The player has to be able to see
+      // that the rifle *is* worth taking apart and that one step stands in
+      // front of it — a row that is simply not there teaches nothing.
+      color: blocked ? colours.panel.withValues(alpha: 0.5) : colours.panel,
       margin: const EdgeInsets.only(bottom: 6),
       child: InkWell(
-        onTap: onTap,
+        onTap: blocked ? null : onTap,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(6, 4, 12, 8),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Checkbox(value: picked, onChanged: (_) => onTap()),
+              Checkbox(
+                value: picked,
+                onChanged: blocked ? null : (_) => onTap(),
+              ),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -245,7 +331,10 @@ class _OfferRow extends StatelessWidget {
                         Expanded(
                           child: Text(
                             name,
-                            style: TextStyle(fontSize: 15, color: colours.text),
+                            style: TextStyle(
+                              fontSize: 15,
+                              color: blocked ? colours.muted : colours.text,
+                            ),
                           ),
                         ),
                         Text(
@@ -284,6 +373,15 @@ class _OfferRow extends StatelessWidget {
                       nameOf: nameOf,
                       colours: colours,
                     ),
+
+                    // §12: the reason goes under the thing it is about, not in
+                    // a message four seconds after a tap that did nothing.
+                    if (offer.blocked case final reason?) ...[
+                      const SizedBox(height: 4),
+                      Text(switch (reason) {
+                        SalvageBlock.worn => l10n.salvageWornFirst,
+                      }, style: TextStyle(fontSize: 11, color: colours.alert)),
+                    ],
                   ],
                 ),
               ),

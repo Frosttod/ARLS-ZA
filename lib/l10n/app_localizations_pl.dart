@@ -1907,4 +1907,12 @@ class L10nPl extends L10n {
 
   @override
   String get crashHung => 'Gra przestała odpowiadać';
+
+  @override
+  String get salvageWornFirst => 'Masz to na sobie — zdejmij najpierw.';
+
+  @override
+  String salvageWaitingUntil(String time) {
+    return 'Czeka na swoją kolej — za $time';
+  }
 }

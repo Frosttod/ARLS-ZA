@@ -87,16 +87,69 @@ void main() {
     });
   });
 
+  group('§12: one bar per piece, each telling the truth about itself', () {
+    // ⚠️ A single bar across the whole sitting answers the wrong question. What
+    // somebody standing at a bench with twenty minutes wants to know is
+    // *which of these will be finished* — and a bar at 40% of an hour does not
+    // say that.
+    test('nothing started: all at nought, each with its own turn', () {
+      final rows = sitting.progressAt(Duration.zero);
+
+      expect(rows.map((r) => r.fraction), [0, 0, 0]);
+      expect(rows.every((r) => r.waiting), isTrue);
+      expect(rows.map((r) => r.endsAfter.inSeconds), [600, 900, 1020]);
+    });
+
+    test('half way through the first, only the first has moved', () {
+      final rows = sitting.progressAt(const Duration(seconds: 300));
+
+      expect(rows[0].fraction, closeTo(0.5, 1e-9));
+      expect(rows[0].running, isTrue);
+      expect(rows[1].waiting, isTrue);
+      expect(rows[2].waiting, isTrue);
+    });
+
+    test('and a piece waiting shows its whole time, not a part of it', () {
+      final rows = sitting.progressAt(const Duration(seconds: 300));
+
+      expect(rows[1].left, const Duration(seconds: 300));
+      expect(rows[2].left, const Duration(seconds: 120));
+    });
+
+    test('a finished piece is full and owes nothing', () {
+      final rows = sitting.progressAt(const Duration(seconds: 750));
+
+      expect(rows[0].done, isTrue);
+      expect(rows[0].fraction, 1);
+      expect(rows[0].left, Duration.zero);
+
+      expect(rows[1].running, isTrue);
+      expect(rows[1].fraction, closeTo(0.5, 1e-9));
+      expect(rows[1].left, const Duration(seconds: 150));
+    });
+
+    test('running it out finishes every one of them', () {
+      final rows = sitting.progressAt(const Duration(hours: 9));
+
+      expect(rows.every((r) => r.done), isTrue);
+      expect(rows.every((r) => r.fraction == 1), isTrue);
+    });
+
+    test('a piece with nothing left to do is already done', () {
+      // §18.6: somebody may have all but finished it in an earlier sitting.
+      final nearly = SalvageBatch([step('vest', 0)]);
+
+      expect(nearly.progressAt(Duration.zero).single.done, isTrue);
+      expect(nearly.progressAt(Duration.zero).single.fraction, 1);
+    });
+  });
+
   group('what the row remembers (§11.1)', () {
     test('a sitting survives being written down and read back', () {
       final back = SalvageBatch.decode(sitting.encode());
 
       expect(back.length, 3);
-      expect([for (final s in back.steps) s.itemId], [
-        'rifle',
-        'vest',
-        'pack',
-      ]);
+      expect([for (final s in back.steps) s.itemId], ['rifle', 'vest', 'pack']);
       expect(back.total, sitting.total);
       expect(back.head?.uid, 'rifle');
     });

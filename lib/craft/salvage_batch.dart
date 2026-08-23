@@ -139,6 +139,56 @@ class SalvageBatch {
     return Duration.zero;
   }
 
+  /// §18.6, §12: where every piece of the sitting stands, right now.
+  ///
+  /// ⚠️ **One bar per piece, and each one tells the truth about itself.**
+  ///
+  /// A single bar across the whole sitting answers the wrong question. What a
+  /// player wants to know, standing at a bench with twenty minutes to spare,
+  /// is *which of these will be finished* — and a bar at 40% of an hour does
+  /// not say that. So each piece gets its own: finished ones are full, the one
+  /// under the multitool is where it actually is, and the ones waiting are at
+  /// nought with the time **their own turn** ends.
+  ///
+  /// The waiting ones are deliberately not left blank. Nought with a clock on
+  /// it is information — "yours is in eleven minutes" — where a blank row is
+  /// only an absence.
+  List<SalvageProgress> progressAt(Duration credited) {
+    final out = <SalvageProgress>[];
+
+    var before = Duration.zero;
+    for (final step in steps) {
+      final into = credited - before;
+      final done = into >= step.takes;
+
+      out.add(
+        SalvageProgress(
+          step: step,
+          done: done,
+          // Clamped at both ends: a piece nobody has started on is at nought,
+          // never at a negative fraction of itself.
+          fraction: step.takes <= Duration.zero
+              ? 1
+              : (into.inMilliseconds / step.takes.inMilliseconds).clamp(
+                  0.0,
+                  1.0,
+                ),
+          // What is left of *this* piece, at full rate.
+          left: done || into.isNegative
+              ? (done ? Duration.zero : step.takes)
+              : step.takes - into,
+          // When this one's own turn ends, measured from the start of the
+          // sitting. The answer to "will mine be done".
+          endsAfter: before + step.takes,
+        ),
+      );
+
+      before += step.takes;
+    }
+
+    return out;
+  }
+
   String encode() => jsonEncode([for (final step in steps) step.toJson()]);
 
   /// Reads a batch back off a row, and never throws on rubbish.
@@ -162,6 +212,55 @@ class SalvageBatch {
   }
 }
 
+/// Why a piece is on the list but cannot go into a sitting yet.
+///
+/// ⚠️ **On the list, not missing from it.** A control that disappears cannot
+/// explain itself — this codebase has now written that sentence three times,
+/// about the fire-away button, about the dismantle glyph, and here. A rifle
+/// that is worth taking apart and happens to be in the player's hands is not
+/// an absent option; it is an option with one step in front of it.
+enum SalvageBlock {
+  /// §18.1a: it is on the body. Take it off first.
+  ///
+  /// Deliberately not done for the player. A sitting that undressed somebody
+  /// on its own would be a second action inside the first (§2.1a) — and the
+  /// bad case is not hypothetical: the third piece of a sitting could be the
+  /// rucksack, which takes the carry limits down with it while the rest of the
+  /// pieces are still standing in it.
+  worn,
+}
+
+/// Where one piece of a running sitting stands.
+class SalvageProgress {
+  const SalvageProgress({
+    required this.step,
+    required this.done,
+    required this.fraction,
+    required this.left,
+    required this.endsAfter,
+  });
+
+  final SalvageStep step;
+
+  /// Whether this one is already apart.
+  final bool done;
+
+  /// 0–1 of **this piece**, not of the sitting.
+  final double fraction;
+
+  /// What is left of this piece at full rate — its whole time while it waits.
+  final Duration left;
+
+  /// How far into the sitting this one's own turn ends.
+  final Duration endsAfter;
+
+  /// Whether this is the one actually under the multitool.
+  bool get running => !done && fraction > 0;
+
+  /// Whether nobody has started on it yet.
+  bool get waiting => !done && fraction <= 0;
+}
+
 /// One thing the disassembly screen offers, with what it gives and what it
 /// costs.
 class SalvageOffer {
@@ -170,6 +269,7 @@ class SalvageOffer {
     required this.takes,
     required this.yields,
     required this.fromShelf,
+    this.blocked,
   });
 
   /// §11.1: the very piece, never the item id.
@@ -183,6 +283,11 @@ class SalvageOffer {
 
   /// §18.2: on the shelves rather than in the pack.
   final bool fromShelf;
+
+  /// Why it cannot be picked right now, or null when it can.
+  final SalvageBlock? blocked;
+
+  bool get isBlocked => blocked != null;
 
   SalvageStep toStep() => SalvageStep(
     uid: line.uid,
@@ -204,6 +309,7 @@ SalvageOffer? offerFor(
   required ItemCatalogue catalogue,
   required RecipeBook book,
   required bool fromShelf,
+  SalvageBlock? blocked,
 }) {
   final item = catalogue[line.itemId];
   if (item == null) return null;
@@ -229,7 +335,68 @@ SalvageOffer? offerFor(
     takes: takes.isNegative ? Duration.zero : takes,
     yields: yields,
     fromShelf: fromShelf,
+    blocked: blocked,
   );
+}
+
+/// §18.6, §18.2: everything the disassembly screen should offer, in order.
+///
+/// Three piles, and they are not interchangeable:
+///
+///   - the **pack**, which is what a bench is normally fed from;
+///   - what is **on the body**, offered but blocked — see below;
+///   - the **shelves**, because §18.2 makes those one pile with the pack at a
+///     bench, and making somebody carry their own scrap off their own shelf
+///     before it can be opened is bookkeeping rather than a decision.
+///
+/// ⚠️ **What is worn is shown and refused, never left out.**
+///
+/// The rifle is the one thing in this game most worth taking apart, and it is
+/// almost always in the player's hands rather than stowed — so a list that
+/// asked only the pack and the shelves did not work for the case it exists
+/// for. A control that disappears cannot explain itself; this codebase has now
+/// written that sentence three times.
+///
+/// It is not taken off automatically. A sitting that undressed somebody would
+/// be a second action inside the first (§2.1a), and the bad case is not
+/// hypothetical: the third piece could be the rucksack, which takes §18.1a's
+/// carry limits down with it while the rest of the sitting is still standing
+/// in it.
+List<SalvageOffer> offersFrom({
+  required Iterable<CarriedItem> carried,
+  required Iterable<CarriedItem> worn,
+  required Iterable<CarriedItem> shelved,
+  required CraftBench bench,
+  required ItemCatalogue catalogue,
+  required RecipeBook book,
+}) {
+  SalvageOffer? one(
+    CarriedItem line, {
+    required bool fromShelf,
+    SalvageBlock? blocked,
+  }) {
+    // ⚠️ Only pieces with a name of their own (§11.1). A sitting is written
+    // down and read back after a restart, and a piece it cannot name again is
+    // a piece it would find by guessing. The single-item path still opens
+    // those, and does not have to survive anything.
+    if (line.uid == null) return null;
+
+    return offerFor(
+      line,
+      bench: bench,
+      catalogue: catalogue,
+      book: book,
+      fromShelf: fromShelf,
+      blocked: blocked,
+    );
+  }
+
+  return [
+    for (final line in carried) ?one(line, fromShelf: false),
+    for (final line in worn)
+      ?one(line, fromShelf: false, blocked: SalvageBlock.worn),
+    for (final line in shelved) ?one(line, fromShelf: true),
+  ];
 }
 
 /// Everything a set of offers comes to, added up.

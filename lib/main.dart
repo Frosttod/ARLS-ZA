@@ -4123,37 +4123,25 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final catalogue = _catalogue;
     if (catalogue == null) return;
 
-    // §2.1a: one pair of hands. Asked before the screen opens rather than
-    // after something is picked, so nobody builds a sitting they cannot start.
-    final busy = _alreadyBusy();
-    if (busy != null) {
-      _say(L10n.of(context).actionBusy(busy));
-      return;
-    }
-
-    final bench = _bench();
-
-    SalvageOffer? offer(CarriedItem line, {required bool fromShelf}) {
-      // ⚠️ Only pieces with a name of their own (§11.1). A sitting is written
-      // down and read back after a restart, and a piece it cannot name again
-      // is a piece it would find by guessing. The single-item path still opens
-      // those, and does not have to survive anything.
-      if (line.uid == null) return null;
-
-      return offerFor(
-        line,
-        bench: bench,
-        catalogue: catalogue,
-        book: _recipes,
-        fromShelf: fromShelf,
-      );
-    }
-
-    final offers = <SalvageOffer>[
-      for (final line in _inventory.value.carried)
-        ?offer(line, fromShelf: false),
-      for (final line in _stash.value.lines) ?offer(line, fromShelf: true),
-    ];
+    // ⚠️ **Not refused while a sitting is running.**
+    //
+    // It used to be: §2.1a says one pair of hands, so the screen would not
+    // open at all. The effect on a walk was that the only place a player could
+    // watch their own dismantling was the *making* screen — a bar about taking
+    // things apart, at the top of a list of recipes. Right information, wrong
+    // list, and reported as exactly that.
+    //
+    // The screen now shows whichever of its two jobs applies. Starting a
+    // second sitting is still refused, by [_startSitting], which is where the
+    // refusal belongs — at the act, not at the door.
+    final offers = offersFrom(
+      carried: _inventory.value.carried,
+      worn: _inventory.value.worn,
+      shelved: _stash.value.lines,
+      bench: _bench(),
+      catalogue: catalogue,
+      book: _recipes,
+    );
 
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -4161,6 +4149,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
           offers: offers,
           catalogue: catalogue,
           nameOf: _nameOfId,
+          // §12: the sitting is watched where it was started, and stopped from
+          // the same place.
+          job: _craftJob,
+          onStop: () => unawaited(_cancelCraft()),
           onStart: (picked) {
             Navigator.of(context).pop();
             unawaited(_startSitting(picked));

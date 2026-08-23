@@ -896,5 +896,14 @@
   "crashCopy": "Kopiuj ślad",
   "crashClear": "Wyczyść",
   "crashCopied": "Skopiowane. Wklej mi to.",
-  "crashHung": "Gra przestała odpowiadać"
+  "crashHung": "Gra przestała odpowiadać",
+  "salvageWornFirst": "Masz to na sobie — zdejmij najpierw.",
+  "salvageWaitingUntil": "Czeka na swoją kolej — za {time}",
+  "@salvageWaitingUntil": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  }
 }
