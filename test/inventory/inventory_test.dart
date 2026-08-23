@@ -64,8 +64,18 @@ void main() {
   group('§18.1a\'s table, which is the point of having two limits', () {
     // The doc's worked figures: how many pieces fit inside 24 kg of comfort
     // carry, and inside a 65 l pack. Which of the two runs out first is what
-    // gives each material its character — metal is a mass problem, plastic and
-    // fabric are volume problems, wood pinches on both at once.
+    // gives each material its character.
+    //
+    // ⚠️ **Plastic used to be the volume problem and is not any more.** It was
+    // 0.4 kg in 2.0 l — a fifth of the density of the stuff itself, which is a
+    // piece of plastic that is four fifths air. Cut down to 0.8 l it is honest
+    // and it binds by mass like everything else.
+    //
+    // Fabric is now the only material that runs out of bulk first, and that
+    // matters: §18.1a has two limits so that both of them bite, and after this
+    // change exactly one material makes the second one bite. Wood comes close
+    // (12 against 16). If a third material is ever added, this is the gap it
+    // should fill.
     void expectLimits(
       String itemId, {
       required int byMass,
@@ -80,12 +90,14 @@ void main() {
       expectLimits('mat_wood', byMass: 12, byVolume: 16);
     });
 
-    test('metal: 16 by mass, 108 by volume — mass binds', () {
-      expectLimits('mat_metal', byMass: 16, byVolume: 108);
+    test('metal: 32 by mass, 216 by volume — mass binds', () {
+      // ⚠️ A hand-sized piece at 0.75 kg, not an armful at 1.5. Exactly half,
+      // so §18.2's build rows hold to the gram when their counts double.
+      expectLimits('mat_metal', byMass: 32, byVolume: 216);
     });
 
-    test('plastic: 60 by mass, 32 by volume — volume binds', () {
-      expectLimits('mat_plastic', byMass: 60, byVolume: 32);
+    test('plastic: 60 by mass, 81 by volume — mass binds now', () {
+      expectLimits('mat_plastic', byMass: 60, byVolume: 81);
     });
 
     test('fabric: 80 by mass, 65 by volume — volume binds', () {
@@ -107,8 +119,8 @@ void main() {
 
       // 36 + 12 kg of limit against 2.0 kg a piece, and 65 l against 4.0 l.
       expect(fits('mat_wood'), 16, reason: 'volume runs out first');
-      expect(fits('mat_plastic'), 32, reason: 'volume, well before mass');
-      expect(fits('mat_metal'), 30, reason: 'mass, well before volume');
+      expect(fits('mat_fabric'), 65, reason: 'volume, well before mass');
+      expect(fits('mat_metal'), 61, reason: 'mass, well before volume');
     });
   });
 
@@ -121,7 +133,7 @@ void main() {
         'mat_metal',
         catalogue,
         body: body,
-        count: 26,
+        count: 52,
       );
       inventory = result.inventory;
 
@@ -136,35 +148,37 @@ void main() {
         'mat_metal',
         catalogue,
         body: body,
-        count: 60,
+        count: 120,
       );
 
-      // 48 kg of limit, less the 1.8 kg pack, over 1.5 kg a piece.
+      // 48 kg of limit, less the 1.8 kg pack, over 0.75 kg a piece.
       expect(result.refusal, RefusalReason.tooHeavy);
-      expect(result.acceptedCount, 30);
+      expect(result.acceptedCount, 61);
     });
 
     test('what fits is taken, rather than the whole pile refused', () {
       // A player standing over forty rounds with room for twelve gets twelve.
       final result = withTrekking().add(
-        'mat_plastic',
+        'mat_fabric',
         catalogue,
         body: body,
         count: 100,
       );
 
+      // ⚠️ Fabric, not plastic. Plastic used to run out of room first and no
+      // longer does — see the note on §18.1a's table above.
       expect(result.refusal, RefusalReason.noRoom);
-      expect(result.acceptedCount, 32);
-      expect(result.inventory.countOf('mat_plastic'), 32);
+      expect(result.acceptedCount, 65);
+      expect(result.inventory.countOf('mat_fabric'), 65);
     });
 
     test('nothing fits at all is a refusal, not an empty acceptance', () {
       var inventory = withTrekking();
       inventory = inventory
-          .add('mat_plastic', catalogue, body: body, count: 32)
+          .add('mat_fabric', catalogue, body: body, count: 65)
           .inventory;
 
-      final result = inventory.add('mat_plastic', catalogue, body: body);
+      final result = inventory.add('mat_fabric', catalogue, body: body);
 
       expect(result.isAccepted, isFalse);
       expect(result.acceptedCount, 0);

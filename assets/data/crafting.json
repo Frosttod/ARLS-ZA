@@ -1,5 +1,5 @@
 {
-  "_comment": "Crafting materials (§4.7), and the five that §18.2 builds the shelter from. Their unit masses are not chosen here — they are solved out of §18.2's own table and reproduce all thirteen module rows exactly: wood 2.0 kg, metal 1.5, plastic 0.4, fabric 0.3, component 0.8. Camp = 12x2.0 + 4x1.5 + 6x0.3 = 31.8 kg, Workshop L3 = 121.4 kg, and the full build comes to the 731 kg of §18.2. Change one of these five and every build cost in the game moves with it.",
+  "_comment": "Crafting materials (§4.7), and the five that §18.2 builds the shelter from. ⚠ Their unit masses are NOT free: §18.2's thirteen module rows are stated in kilograms, and the full build is 731 kg — 'weeks, not a weekend', about thirty round trips with a full pack. That figure is the whole reason the Lounge competes with the Storage module instead of being a nicety. Change a unit mass and the shelter economy moves with it, so a change here is paid for in the counts on the recipe rows. Scrap metal went 1.5 -> 0.75 kg (a hand-sized piece, not an armful) and the counts in shelter/recipes.dart doubled to hold the kilograms; its volume went 0.60 -> 0.30 l to hold the packing density at 2.5 kg/l, because 0.75 kg in 0.6 l is scrap metal that nearly floats. Exactly half, so the doubled counts land on §18.2’s kilograms to the gram rather than near them. Plastic kept its mass and lost three quarters of its bulk: 0.4 kg in 2.0 l is 0.2 kg/l, a fifth of the density of the stuff itself. Wood 2.0 kg, fabric 0.3, component 0.8 are unchanged.",
   "schema": 1,
   "items": [
     {
@@ -17,8 +17,8 @@
       "id": "mat_metal",
       "type": "crafting",
       "name_key": "item.mat_metal.name",
-      "weight_kg": 1.5,
-      "volume_l": 0.6,
+      "weight_kg": 0.75,
+      "volume_l": 0.3,
       "stackable": true,
       "rarity": "common",
       "loot_tags": ["industrial", "garage", "vehicle", "shop"],
@@ -29,7 +29,7 @@
       "type": "crafting",
       "name_key": "item.mat_plastic.name",
       "weight_kg": 0.4,
-      "volume_l": 2.0,
+      "volume_l": 0.8,
       "stackable": true,
       "rarity": "common",
       "loot_tags": ["residential", "shop", "industrial", "warehouse"],

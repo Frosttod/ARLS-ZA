@@ -38,59 +38,59 @@ Liczby pochodzą z tego samego kodu, którego używa gra: §18.6 pyta `salvageOf
 | Nożyce do kłódek `tool_bolt_cutters` | Narzędzia | 1.90 | 2.40 | metal ×1 | 5.3 min |
 | Plecak trekkingowy `pack_trekking` | Plecaki | 1.80 | 3.50 | tkanina ×2 | 9.3 min |
 | Zestaw kluczy `tool_wrench_set` | Narzędzia | 1.80 | 2.40 | metal ×1 | 5.2 min |
-| Maczuga z okuciem `melee_club_studded` | Broń biała | 1.70 | 2.80 | metal ×2 | 7.8 min |
+| Maczuga z okuciem `melee_club_studded` | Broń biała | 1.70 | 2.80 | metal ×1 | 6.6 min |
 | Łom `melee_crowbar` | Broń biała | 1.60 | 1.80 | nic | 4.2 min |
 | Encyklopedia medyczna `lit_encyclopedia_medicine` | Literatura | 1.57 | 1.83 | — | — |
 | Encyklopedia przyrody `lit_encyclopedia_nature` | Literatura | 1.57 | 1.83 | — | — |
 | Encyklopedia techniki `lit_encyclopedia_engineering` | Literatura | 1.57 | 1.83 | — | — |
 | Encyklopedia broni `lit_encyclopedia_weapons` | Literatura | 1.57 | 1.83 | — | — |
 | Woda 1,5 l `drink_water_bottle_1500` | Żywność i napoje | 1.55 | 1.60 | — | — |
-| Złom metalowy `mat_metal` | Materiały | 1.50 | 0.60 | — | — |
 | Plecak taktyczny `pack_tactical` | Plecaki | 1.40 | 3.00 | tkanina ×2 | 7.9 min |
-| Siekiera `melee_axe` | Broń biała | 1.40 | 2.20 | nic | 4.0 min |
 | Hełm balistyczny `armor_helmet_ballistic` | Pancerz i odzież | 1.40 | 4.50 | tkanina ×1, plastik ×1 | 7.8 min |
-| Włócznia `melee_spear` | Broń biała | 1.30 | 3.20 | drewno ×1, tkanina ×1 | 7.8 min |
+| Siekiera `melee_axe` | Broń biała | 1.40 | 2.20 | nic | 4.0 min |
+| Włócznia `melee_spear` | Broń biała | 1.30 | 3.20 | tkanina ×1 | 6.6 min |
 | Kurtka zimowa `cloth_winter_jacket` | Pancerz i odzież | 1.20 | 6.00 | tkanina ×1 | 7.0 min |
 | Buty trekkingowe `cloth_boots` | Pancerz i odzież | 1.10 | 3.50 | leather ×1 | 5.8 min |
 | Woda niepewnego pochodzenia `drink_water_dirty` | Żywność i napoje | 1.05 | 1.10 | — | — |
 | Piła `tool_saw` | Narzędzia | 1.00 | 2.00 | nic | 4.2 min |
-| Rewolwer .38 `weapon_revolver_38` | Broń palna | 0.90 | 0.90 | nic | 3.9 min |
 | Kij bejsbolowy `melee_bat` | Broń biała | 0.90 | 2.60 | nic | 3.5 min |
 | Lina `mat_rope` | Materiały | 0.90 | 2.00 | — | — |
+| Rewolwer .38 `weapon_revolver_38` | Broń palna | 0.90 | 0.90 | nic | 3.9 min |
 | Plecak turystyczny `pack_daypack` | Plecaki | 0.90 | 2.50 | tkanina ×1 | 6.2 min |
-| Spodnie zimowe `cloth_winter_trousers` | Pancerz i odzież | 0.80 | 3.20 | tkanina ×1 | 5.7 min |
-| Zaostrzony kij `melee_spike` | Broń biała | 0.80 | 2.40 | nic | 4.2 min |
 | Komponent elektroniczny `mat_component` | Materiały | 0.80 | 0.40 | — | — |
-| Lornetka `tool_binoculars` | Narzędzia | 0.70 | 1.20 | nic | 4.3 min |
+| Zaostrzony kij `melee_spike` | Broń biała | 0.80 | 2.40 | nic | 4.2 min |
+| Spodnie zimowe `cloth_winter_trousers` | Pancerz i odzież | 0.80 | 3.20 | tkanina ×1 | 5.7 min |
+| Złom metalowy `mat_metal` | Materiały | 0.75 | 0.30 | — | — |
 | Młotek `melee_hammer` | Broń biała | 0.70 | 0.90 | nic | 3.5 min |
+| Prowizoryczny plecak `pack_improvised` | Plecaki | 0.70 | 3.00 | tkanina ×2 | 9.0 min |
+| Lornetka `tool_binoculars` | Narzędzia | 0.70 | 1.20 | nic | 4.3 min |
 | Pistolet 9 mm `weapon_pistol_9mm` | Broń palna | 0.70 | 0.80 | nic | 3.7 min |
-| Prowizoryczny plecak `pack_improvised` | Plecaki | 0.70 | 3.00 | tkanina ×3, metal ×1 | 15 min |
 | Magazynek bębnowy 5,45x39 (60) `mag_rifle_545_drum` | Pozostałe | 0.65 | 0.80 | nic | 3.9 min |
-| Apteczka `med_first_aid_kit` | Medykamenty | 0.60 | 1.60 | — | — |
 | Ochraniacze na przedramiona `armor_bite_sleeves` | Pancerz i odzież | 0.60 | 2.00 | tkanina ×1 | 4.7 min |
 | Plecak szkolny `pack_school` | Plecaki | 0.60 | 2.00 | tkanina ×1 | 5.1 min |
-| Maczeta `melee_machete` | Broń biała | 0.60 | 1.20 | nic | 3.5 min |
 | Skóra `mat_leather` | Materiały | 0.60 | 1.20 | — | — |
-| Kroplówka z solą fizjologiczną `med_saline` | Medykamenty | 0.55 | 0.60 | — | — |
+| Maczeta `melee_machete` | Broń biała | 0.60 | 1.20 | nic | 3.5 min |
+| Apteczka `med_first_aid_kit` | Medykamenty | 0.60 | 1.60 | — | — |
 | Spirytus `mat_alcohol` | Materiały | 0.55 | 0.60 | — | — |
+| Kroplówka z solą fizjologiczną `med_saline` | Medykamenty | 0.55 | 0.60 | — | — |
 | Woda 0,5 l `drink_water_bottle_500` | Żywność i napoje | 0.52 | 0.55 | — | — |
-| Gwoździe `mat_nails` | Materiały | 0.50 | 0.30 | — | — |
-| Radio na korbkę `tool_crank_radio` | Narzędzia | 0.50 | 1.00 | nic | 4.1 min |
 | Spodnie `cloth_trousers` | Pancerz i odzież | 0.50 | 2.00 | tkanina ×1 | 4.7 min |
+| Radio na korbkę `tool_crank_radio` | Narzędzia | 0.50 | 1.00 | nic | 4.1 min |
+| Gwoździe `mat_nails` | Materiały | 0.50 | 0.30 | — | — |
 | Podręcznik medycyny ratunkowej `lit_textbook_medicine` | Literatura | 0.49 | 0.52 | — | — |
+| Podręcznik terenoznawstwa `lit_textbook_fieldcraft` | Literatura | 0.49 | 0.52 | — | — |
 | Podręcznik balistyki `lit_textbook_ballistics` | Literatura | 0.49 | 0.52 | — | — |
 | Podręcznik techniczny `lit_textbook_engineering` | Literatura | 0.49 | 0.52 | — | — |
-| Podręcznik terenoznawstwa `lit_textbook_fieldcraft` | Literatura | 0.49 | 0.52 | — | — |
 | Polar `cloth_fleece` | Pancerz i odzież | 0.45 | 2.50 | tkanina ×1 | 4.5 min |
+| Drut `mat_wire` | Materiały | 0.40 | 0.40 | — | — |
+| Plastik `mat_plastic` | Materiały | 0.40 | 0.80 | — | — |
+| Kurtka przeciwdeszczowa `cloth_rain_shell` | Pancerz i odzież | 0.40 | 1.60 | nic | 4.3 min |
+| Szyna improwizowana `med_splint_improvised` | Medykamenty | 0.40 | 1.00 | tkanina ×1 | 5.4 min |
 | Konserwa mięsna `food_canned_meat` | Żywność i napoje | 0.40 | 0.40 | — | — |
 | Tłumik `tool_suppressor` | Dodatki do broni | 0.40 | 0.50 | nic | 3.6 min |
-| Drut `mat_wire` | Materiały | 0.40 | 0.40 | — | — |
 | Konserwa warzywna `food_canned_vegetables` | Żywność i napoje | 0.40 | 0.40 | — | — |
-| Plastik `mat_plastic` | Materiały | 0.40 | 2.00 | — | — |
-| Kurtka przeciwdeszczowa `cloth_rain_shell` | Pancerz i odzież | 0.40 | 1.60 | nic | 4.3 min |
-| Szyna improwizowana `med_splint_improvised` | Medykamenty | 0.40 | 1.00 | tkanina ×1, drewno ×1 | 9.0 min |
-| Bielizna termoaktywna `cloth_thermal_underwear` | Pancerz i odzież | 0.35 | 1.40 | nic | 4.2 min |
 | Zestaw do czyszczenia broni `tool_gun_cleaning_kit` | Narzędzia | 0.35 | 0.60 | nic | 3.4 min |
+| Bielizna termoaktywna `cloth_thermal_underwear` | Pancerz i odzież | 0.35 | 1.40 | nic | 4.2 min |
 | Szyna usztywniająca `med_splint` | Medykamenty | 0.35 | 1.20 | — | — |
 | Magazynek karabinkowy 7,62x39 (30) `mag_rifle_762x39` | Pozostałe | 0.33 | 0.40 | nic | 3.5 min |
 | Filtr do wody `tool_water_filter` | Narzędzia | 0.30 | 0.60 | nic | 3.7 min |
@@ -117,7 +117,7 @@ Liczby pochodzą z tego samego kodu, którego używa gra: §18.6 pyta `salvageOf
 | Kolimator `att_red_dot` | Dodatki do broni | 0.15 | 0.20 | nic | 3.1 min |
 | Zestaw do szycia ran `med_suture_kit` | Medykamenty | 0.15 | 0.30 | — | — |
 | Kanapka `food_sandwich` | Żywność i napoje | 0.15 | 0.40 | — | — |
-| Staza improwizowana `med_tourniquet_improvised` | Medykamenty | 0.14 | 0.25 | tkanina ×1 | 6.6 min |
+| Staza improwizowana `med_tourniquet_improvised` | Medykamenty | 0.14 | 0.25 | tkanina ×1 | 5.4 min |
 | Czasopismo łowieckie `lit_magazine_hunting` | Literatura | 0.12 | 0.13 | — | — |
 | Śrubokręt `melee_screwdriver` | Broń biała | 0.12 | 0.20 | nic | 3.1 min |
 | Czołówka `tool_headlamp` | Narzędzia | 0.12 | 0.25 | nic | 3.3 min |
@@ -132,14 +132,14 @@ Liczby pochodzą z tego samego kodu, którego używa gra: §18.6 pyta `salvageOf
 | Suszone mięso `food_dried_meat` | Żywność i napoje | 0.10 | 0.20 | — | — |
 | Celownik laserowy `att_laser` | Dodatki do broni | 0.10 | 0.15 | nic | 3.1 min |
 | Rękawice `cloth_gloves` | Pancerz i odzież | 0.10 | 0.50 | nic | 3.3 min |
-| Opatrunek uciskowy improwizowany `med_pressure_improvised` | Medykamenty | 0.10 | 0.20 | tkanina ×2 | 9.0 min |
+| Opatrunek uciskowy improwizowany `med_pressure_improvised` | Medykamenty | 0.10 | 0.20 | tkanina ×1 | 5.4 min |
 | Magazynek karabinkowy .22 LR (10) `mag_rifle_22lr` | Pozostałe | 0.10 | 0.12 | nic | 3.1 min |
 | Czapka `cloth_hat` | Pancerz i odzież | 0.08 | 0.60 | nic | 3.3 min |
 | Opatrunek uciskowy `med_pressure_dressing` | Medykamenty | 0.08 | 0.25 | — | — |
 | Otwieracz do konserw `tool_can_opener` | Narzędzia | 0.08 | 0.10 | — | — |
 | Zupa błyskawiczna `food_instant_soup` | Żywność i napoje | 0.07 | 0.35 | — | — |
 | Baton energetyczny `food_energy_bar` | Żywność i napoje | 0.06 | 0.08 | — | — |
-| Opatrunek improwizowany `med_bandage_improvised` | Medykamenty | 0.05 | 0.12 | tkanina ×1 | 6.6 min |
+| Opatrunek improwizowany `med_bandage_improvised` | Medykamenty | 0.05 | 0.12 | nic | 4.2 min |
 | Bateria `mat_battery` | Materiały | 0.05 | 0.03 | — | — |
 | Amunicja Brenneke 12 ga `ammo_12ga_slug` | Amunicja | 0.05 | 0.02 | — | — |
 | Amunicja śrutowa 12 ga `ammo_12ga_buck` | Amunicja | 0.04 | 0.02 | — | — |
@@ -455,11 +455,11 @@ Znajdowany: residential, shop, school
 | Hałas (m) | 30 |
 | `craft_only` | true |
 
-**Wytwarzanie:** Drewno ×1, Złom metalowy ×3 · 35 min · warsztat L1 · narzędzie: Młotek
+**Wytwarzanie:** Drewno ×1, Złom metalowy ×2 · 35 min · daje 2 szt. · warsztat L1 · narzędzie: Młotek
 
-**Zawartość:** Drewno 1.00, Złom metalowy 3.00
+**Zawartość:** Drewno 1.00, Złom metalowy 2.00
 
-**Rozbiórka:** Złom metalowy ×2 · z warsztatem: Złom metalowy ×2, Drewno ×1 · 7.8 min
+**Rozbiórka:** Złom metalowy ×1 · z warsztatem: Złom metalowy ×1, Drewno ×1 · 6.6 min
 
 ### Łom
 
@@ -620,11 +620,11 @@ Znajdowany: rural, garden, industrial
 | Hałas (m) | 26 |
 | `craft_only` | true |
 
-**Wytwarzanie:** Drewno ×2, Złom metalowy ×1, Materiał ×1 · 25 min · warsztat L1 · narzędzie: Młotek / Multitool
+**Wytwarzanie:** Drewno ×1, Złom metalowy ×1, Materiał ×1 · 25 min · daje 2 szt. · warsztat L1 · narzędzie: Młotek / Multitool
 
-**Zawartość:** Drewno 2.00, Złom metalowy 1.00, Materiał 1.00
+**Zawartość:** Drewno 1.00, Złom metalowy 1.00, Materiał 1.00
 
-**Rozbiórka:** Drewno ×1, Materiał ×1 · z warsztatem: Drewno ×1, Materiał ×1, Złom metalowy ×1 · 7.8 min
+**Rozbiórka:** Materiał ×1 · z warsztatem: Materiał ×1, Złom metalowy ×1 · 6.6 min
 
 ### Zaostrzony kij
 
@@ -642,7 +642,7 @@ Znajdowany: rural, garden, industrial
 | Hałas (m) | 22 |
 | `craft_only` | true |
 
-**Wytwarzanie:** Drewno ×1 · 8.0 min · narzędzie: Nóż / Multitool
+**Wytwarzanie:** Drewno ×1 · 8.0 min · daje 2 szt. · narzędzie: Nóż / Multitool
 
 **Zawartość:** Drewno 1.00
 
@@ -993,11 +993,11 @@ Znajdowany: residential, shop, sport
 | `craft_only` | true |
 | `note` | §18.4: eight of fabric and two of metal. Not as good as a daypack and available on a night when there is no daypack. |
 
-**Wytwarzanie:** Materiał ×8, Złom metalowy ×2 · 45 min · warsztat L1 · narzędzie: Zestaw do szycia / Multitool
+**Wytwarzanie:** Materiał ×4, Złom metalowy ×1 · 45 min · daje 2 szt. · warsztat L1 · narzędzie: Zestaw do szycia / Multitool
 
-**Zawartość:** Materiał 8.00, Złom metalowy 2.00
+**Zawartość:** Materiał 4.00, Złom metalowy 1.00
 
-**Rozbiórka:** Materiał ×3, Złom metalowy ×1 · z warsztatem: Materiał ×6, Złom metalowy ×1 · 15 min
+**Rozbiórka:** Materiał ×2 · z warsztatem: Materiał ×2, Złom metalowy ×1 · 9.0 min
 
 ### Plecak wojskowy
 
@@ -1423,11 +1423,11 @@ Znajdowany: pharmacy, residential, hospital, vehicle
 | `infection_risk_reduction` | 0.1 |
 | `craft_only` | true |
 
-**Wytwarzanie:** Materiał ×3 · 4.0 min
+**Wytwarzanie:** Materiał ×1 · 4.0 min · daje 4 szt.
 
-**Zawartość:** Materiał 3.00
+**Zawartość:** Materiał 1.00
 
-**Rozbiórka:** Materiał ×1 · z warsztatem: Materiał ×2 · 6.6 min
+**Rozbiórka:** **nic** · z warsztatem: Materiał ×1 · 4.2 min
 
 ### Apteczka
 
@@ -1498,11 +1498,11 @@ Znajdowany: pharmacy, hospital, military, police
 | `infection_risk_reduction` | 0.15 |
 | `craft_only` | true |
 
-**Wytwarzanie:** Materiał ×4, Plastik ×1 · 7.0 min
+**Wytwarzanie:** Materiał ×1, Plastik ×1 · 7.0 min · daje 4 szt.
 
-**Zawartość:** Materiał 4.00, Plastik 1.00
+**Zawartość:** Materiał 1.00, Plastik 1.00
 
-**Rozbiórka:** Materiał ×2 · z warsztatem: Materiał ×2, Plastik ×1 · 9.0 min
+**Rozbiórka:** Materiał ×1 · z warsztatem: Materiał ×1 · 5.4 min
 
 ### Kroplówka z solą fizjologiczną
 
@@ -1554,11 +1554,11 @@ Znajdowany: hospital, ambulance, sport
 | `requires_stationary` | true |
 | `craft_only` | true |
 
-**Wytwarzanie:** Drewno ×2, Materiał ×3 · 12 min
+**Wytwarzanie:** Drewno ×1, Materiał ×1 · 12 min · daje 4 szt.
 
-**Zawartość:** Drewno 2.00, Materiał 3.00
+**Zawartość:** Drewno 1.00, Materiał 1.00
 
-**Rozbiórka:** Materiał ×1, Drewno ×1 · z warsztatem: Drewno ×1, Materiał ×2 · 9.0 min
+**Rozbiórka:** Materiał ×1 · z warsztatem: Materiał ×1 · 5.4 min
 
 ### Zestaw do szycia ran
 
@@ -1614,11 +1614,11 @@ Znajdowany: military, police, hospital, ambulance
 | `craft_only` | true |
 | `note` | A stick and a strip of cloth. It works once, and taking it off is the part nobody rehearses. |
 
-**Wytwarzanie:** Materiał ×2, Drewno ×1 · 5.0 min
+**Wytwarzanie:** Materiał ×1, Drewno ×1 · 5.0 min · daje 6 szt.
 
-**Zawartość:** Materiał 2.00, Drewno 1.00
+**Zawartość:** Materiał 1.00, Drewno 1.00
 
-**Rozbiórka:** Materiał ×1 · z warsztatem: Materiał ×1, Drewno ×1 · 6.6 min
+**Rozbiórka:** Materiał ×1 · z warsztatem: Materiał ×1 · 5.4 min
 
 
 ## Literatura
@@ -2580,7 +2580,7 @@ Znajdowany: residential, shop, rural
 
 `mat_metal` · Scrap metal · pospolity
 
-**Masa** 1.50 kg · **Objętość** 0.60 l · **Stackowalny**
+**Masa** 0.75 kg · **Objętość** 0.30 l · **Stackowalny**
 
 Znajdowany: industrial, garage, vehicle, shop
 
@@ -2604,7 +2604,7 @@ Znajdowany: garage, industrial, shop
 
 `mat_plastic` · Plastic · pospolity
 
-**Masa** 0.40 kg · **Objętość** 2.00 l · **Stackowalny**
+**Masa** 0.40 kg · **Objętość** 0.80 l · **Stackowalny**
 
 Znajdowany: residential, shop, industrial, warehouse
 
@@ -2956,9 +2956,9 @@ Masy jednostkowe nie są wybrane — są rozwiązane z tabeli §18.2 i odtwarzaj
 | Kanister paliwa `mat_fuel` | 3.80 kg | 5.00 l |
 | Klej `mat_glue` | 0.15 kg | 0.20 l |
 | Skóra `mat_leather` | 0.60 kg | 1.20 l |
-| Złom metalowy `mat_metal` | 1.50 kg | 0.60 l |
+| Złom metalowy `mat_metal` | 0.75 kg | 0.30 l |
 | Gwoździe `mat_nails` | 0.50 kg | 0.30 l |
-| Plastik `mat_plastic` | 0.40 kg | 2.00 l |
+| Plastik `mat_plastic` | 0.40 kg | 0.80 l |
 | Lina `mat_rope` | 0.90 kg | 2.00 l |
 | Drut `mat_wire` | 0.40 kg | 0.40 l |
 | Drewno `mat_wood` | 2.00 kg | 4.00 l |

@@ -39,19 +39,19 @@ const List<ShelterRecipe> kShelterRecipes = [
   ShelterRecipe(
     module: ShelterModule.storage,
     level: 1,
-    materials: {'mat_wood': 20, 'mat_metal': 6},
+    materials: {'mat_wood': 20, 'mat_metal': 12},
     work: Duration(hours: 2),
   ),
   ShelterRecipe(
     module: ShelterModule.storage,
     level: 2,
-    materials: {'mat_wood': 28, 'mat_metal': 12, 'mat_plastic': 6},
+    materials: {'mat_wood': 28, 'mat_metal': 24, 'mat_plastic': 6},
     work: Duration(hours: 3, minutes: 30),
   ),
   ShelterRecipe(
     module: ShelterModule.storage,
     level: 3,
-    materials: {'mat_wood': 36, 'mat_metal': 18, 'mat_plastic': 10},
+    materials: {'mat_wood': 36, 'mat_metal': 36, 'mat_plastic': 10},
     work: Duration(hours: 5),
   ),
 
@@ -59,7 +59,7 @@ const List<ShelterRecipe> kShelterRecipes = [
   ShelterRecipe(
     module: ShelterModule.workshop,
     level: 1,
-    materials: {'mat_wood': 15, 'mat_metal': 20, 'mat_component': 2},
+    materials: {'mat_wood': 15, 'mat_metal': 40, 'mat_component': 2},
     work: Duration(hours: 4),
   ),
   ShelterRecipe(
@@ -67,7 +67,7 @@ const List<ShelterRecipe> kShelterRecipes = [
     level: 2,
     materials: {
       'mat_wood': 18,
-      'mat_metal': 30,
+      'mat_metal': 60,
       'mat_plastic': 10,
       'mat_component': 5,
     },
@@ -78,7 +78,7 @@ const List<ShelterRecipe> kShelterRecipes = [
     level: 3,
     materials: {
       'mat_wood': 22,
-      'mat_metal': 42,
+      'mat_metal': 84,
       'mat_plastic': 16,
       'mat_component': 10,
     },
@@ -109,19 +109,19 @@ const List<ShelterRecipe> kShelterRecipes = [
   ShelterRecipe(
     module: ShelterModule.laboratory,
     level: 1,
-    materials: {'mat_metal': 10, 'mat_plastic': 14, 'mat_component': 4},
+    materials: {'mat_metal': 20, 'mat_plastic': 14, 'mat_component': 4},
     work: Duration(hours: 3),
   ),
   ShelterRecipe(
     module: ShelterModule.laboratory,
     level: 2,
-    materials: {'mat_metal': 14, 'mat_plastic': 20, 'mat_component': 8},
+    materials: {'mat_metal': 28, 'mat_plastic': 20, 'mat_component': 8},
     work: Duration(hours: 5),
   ),
   ShelterRecipe(
     module: ShelterModule.laboratory,
     level: 3,
-    materials: {'mat_metal': 18, 'mat_plastic': 28, 'mat_component': 14},
+    materials: {'mat_metal': 36, 'mat_plastic': 28, 'mat_component': 14},
     work: Duration(hours: 8),
   ),
 ];
@@ -129,7 +129,7 @@ const List<ShelterRecipe> kShelterRecipes = [
 /// §18.2: a camp is twelve planks, four bits of metal and some cloth.
 const Map<String, int> kCampMaterials = {
   'mat_wood': 12,
-  'mat_metal': 4,
+  'mat_metal': 8,
   'mat_fabric': 6,
 };
 

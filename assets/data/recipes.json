@@ -4,8 +4,10 @@
     {
       "id": "craft_bandage_improvised",
       "output": "med_bandage_improvised",
-      "count": 1,
-      "materials": { "mat_fabric": 3 },
+      "count": 4,
+      "materials": {
+        "mat_fabric": 1
+      },
       "work_minutes": 4,
       "workshop_level": 0,
       "tools_any_of": []
@@ -13,8 +15,11 @@
     {
       "id": "craft_pressure_improvised",
       "output": "med_pressure_improvised",
-      "count": 1,
-      "materials": { "mat_fabric": 4, "mat_plastic": 1 },
+      "count": 4,
+      "materials": {
+        "mat_fabric": 1,
+        "mat_plastic": 1
+      },
       "work_minutes": 7,
       "workshop_level": 0,
       "tools_any_of": []
@@ -22,8 +27,11 @@
     {
       "id": "craft_tourniquet_improvised",
       "output": "med_tourniquet_improvised",
-      "count": 1,
-      "materials": { "mat_fabric": 2, "mat_wood": 1 },
+      "count": 6,
+      "materials": {
+        "mat_fabric": 1,
+        "mat_wood": 1
+      },
       "work_minutes": 5,
       "workshop_level": 0,
       "tools_any_of": []
@@ -31,8 +39,11 @@
     {
       "id": "craft_splint_improvised",
       "output": "med_splint_improvised",
-      "count": 1,
-      "materials": { "mat_wood": 2, "mat_fabric": 3 },
+      "count": 4,
+      "materials": {
+        "mat_wood": 1,
+        "mat_fabric": 1
+      },
       "work_minutes": 12,
       "workshop_level": 0,
       "tools_any_of": []
@@ -40,38 +51,62 @@
     {
       "id": "craft_spike",
       "output": "melee_spike",
-      "count": 1,
-      "materials": { "mat_wood": 1 },
+      "count": 2,
+      "materials": {
+        "mat_wood": 1
+      },
       "work_minutes": 8,
       "workshop_level": 0,
-      "tools_any_of": ["melee_knife", "tool_multitool"]
+      "tools_any_of": [
+        "melee_knife",
+        "tool_multitool"
+      ]
     },
     {
       "id": "craft_spear",
       "output": "melee_spear",
-      "count": 1,
-      "materials": { "mat_wood": 2, "mat_metal": 1, "mat_fabric": 1 },
+      "count": 2,
+      "materials": {
+        "mat_wood": 1,
+        "mat_metal": 1,
+        "mat_fabric": 1
+      },
       "work_minutes": 25,
       "workshop_level": 1,
-      "tools_any_of": ["melee_hammer", "tool_multitool"]
+      "tools_any_of": [
+        "melee_hammer",
+        "tool_multitool"
+      ]
     },
     {
       "id": "craft_club_studded",
       "output": "melee_club_studded",
-      "count": 1,
-      "materials": { "mat_wood": 1, "mat_metal": 3 },
+      "count": 2,
+      "materials": {
+        "mat_wood": 1,
+        "mat_metal": 2
+      },
       "work_minutes": 35,
       "workshop_level": 1,
-      "tools_any_of": ["melee_hammer"]
+      "tools_any_of": [
+        "melee_hammer"
+      ]
     },
     {
       "id": "craft_pack_improvised",
       "output": "pack_improvised",
-      "count": 1,
-      "materials": { "mat_fabric": 8, "mat_metal": 2 },
+      "count": 2,
+      "materials": {
+        "mat_fabric": 4,
+        "mat_metal": 1
+      },
       "work_minutes": 45,
       "workshop_level": 1,
-      "tools_any_of": ["tool_sewing_kit", "tool_multitool"]
+      "tools_any_of": [
+        "tool_sewing_kit",
+        "tool_multitool"
+      ]
     }
-  ]
+  ],
+  "_comment": "§18.4's recipes. ⚠ The count matters as much as the cost: every improvised row here makes something far lighter than the smallest unit the game has — a dressing is 50 g and the smallest thing anybody can pick up is a 0.3 kg bolt of cloth. A recipe cannot cost a fraction of a unit, so these used to cost a whole one and make one thing, and ninety-five per cent of the material vanished. One sitting now makes several, which is what a person actually does with a torn-up shirt. What is left over is offcuts, and offcuts are real: the rows land between forty and a hundred per cent of the mass that went in. The work time is per sitting, not per piece — you tear the shirt once."
 }

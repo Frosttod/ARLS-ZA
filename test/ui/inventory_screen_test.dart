@@ -158,8 +158,11 @@ void main() {
     tester,
   ) async {
     // §12: colour never carries information on its own.
+    //
+    // Thirty-six pieces at 0.75 kg is 27 kg, over a comfortable 24 with no
+    // pack (§18.1a). It took eighteen when a piece was 1.5 kg.
     final inventory = const Inventory()
-        .add('mat_metal', catalogue, body: body, count: 18)
+        .add('mat_metal', catalogue, body: body, count: 36)
         .inventory;
 
     await pump(tester, inventory);

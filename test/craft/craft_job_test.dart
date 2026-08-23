@@ -46,10 +46,14 @@ void main() {
     final dressing = book.making('med_bandage_improvised')!;
     final spear = book.making('melee_spear')!;
 
-    test('a dressing needs three of fabric and nothing else', () {
-      expect(refusalFor(dressing, bench(materials: {'mat_fabric': 3})), isNull);
+    test('dressings need one of fabric and nothing else', () {
+      // ⚠️ One, and the sitting makes four of them. A dressing is 50 g and the
+      // smallest thing anybody can pick up is a 0.3 kg bolt of cloth — a recipe
+      // cannot cost a fraction of a unit, so this used to cost three whole ones
+      // and make a single dressing, and 95% of the cloth vanished.
+      expect(refusalFor(dressing, bench(materials: {'mat_fabric': 1})), isNull);
       expect(
-        refusalFor(dressing, bench(materials: {'mat_fabric': 2})),
+        refusalFor(dressing, bench(materials: {})),
         CraftRefusal.noMaterials,
       );
     });

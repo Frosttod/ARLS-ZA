@@ -7,6 +7,7 @@ import 'package:arls_za/inventory/inventory.dart';
 import 'package:arls_za/inventory/item_use.dart';
 import 'package:arls_za/items/item.dart';
 import 'package:arls_za/items/item_catalogue.dart';
+import 'package:arls_za/shelter/recipes.dart';
 import 'package:arls_za/items/item_names.dart';
 import 'package:test/test.dart';
 
@@ -122,31 +123,62 @@ void main() {
     });
 
     test('build materials reproduce every row of §18.2', () {
-      // The five unit masses are solved out of that table, not chosen. If one
-      // of them moves, every shelter module costs something different.
-      double kg(String id) => catalogue[id]!.weightKg;
-      final wood = kg('mat_wood');
-      final metal = kg('mat_metal');
-      final plastic = kg('mat_plastic');
-      final fabric = kg('mat_fabric');
-      final component = kg('mat_component');
+      // ⚠️ **Read off the real recipes, never copied out beside them.**
+      //
+      // This used to hold thirteen rows of literal counts — `module(w: 12,
+      // m: 4, f: 6)` — transcribed from `shelter/recipes.dart`. Two copies of
+      // one truth, and they drifted the first time a unit mass moved: the
+      // recipes doubled their metal to hold §18.2's kilograms, and this test
+      // went on asserting the old counts against the new masses.
+      //
+      // The kilograms are the part §18.2 actually states — 731 for the full
+      // build, "weeks, not a weekend" — so those stay written down here. How
+      // many pieces make up each figure is the recipes' business.
+      const expected = {
+        'camp': 31.8,
+        'storage.1': 49.0,
+        'storage.2': 76.4,
+        'storage.3': 103.0,
+        'workshop.1': 61.6,
+        'workshop.2': 89.0,
+        'workshop.3': 121.4,
+        'lounge.1': 28.5,
+        'lounge.2': 41.0,
+        'lounge.3': 53.0,
+        'laboratory.1': 23.8,
+        'laboratory.2': 35.4,
+        'laboratory.3': 49.4,
+      };
 
-      double module({int w = 0, int m = 0, int p = 0, int f = 0, int c = 0}) =>
-          w * wood + m * metal + p * plastic + f * fabric + c * component;
+      double massOf(Map<String, int> materials) {
+        var total = 0.0;
+        for (final entry in materials.entries) {
+          total += catalogue[entry.key]!.weightKg * entry.value;
+        }
+        return total;
+      }
 
-      expect(module(w: 12, m: 4, f: 6), closeTo(31.8, 0.05), reason: 'camp');
-      expect(module(w: 20, m: 6), closeTo(49.0, 0.05), reason: 'store L1');
-      expect(module(w: 28, m: 12, p: 6), closeTo(76.4, 0.05));
-      expect(module(w: 36, m: 18, p: 10), closeTo(103.0, 0.05));
-      expect(module(w: 15, m: 20, c: 2), closeTo(61.6, 0.05));
-      expect(module(w: 18, m: 30, p: 10, c: 5), closeTo(89.0, 0.05));
-      expect(module(w: 22, m: 42, p: 16, c: 10), closeTo(121.4, 0.05));
-      expect(module(w: 12, f: 15), closeTo(28.5, 0.05));
-      expect(module(w: 16, p: 6, f: 22), closeTo(41.0, 0.05));
-      expect(module(w: 20, p: 10, f: 30), closeTo(53.0, 0.05));
-      expect(module(m: 10, p: 14, c: 4), closeTo(23.8, 0.05));
-      expect(module(m: 14, p: 20, c: 8), closeTo(35.4, 0.05));
-      expect(module(m: 18, p: 28, c: 14), closeTo(49.4, 0.05));
+      expect(
+        massOf(kCampMaterials),
+        closeTo(expected['camp']!, 0.05),
+        reason: 'camp',
+      );
+
+      for (final recipe in kShelterRecipes) {
+        final key = '${recipe.module!.name}.${recipe.level}';
+
+        expect(
+          massOf(recipe.materials),
+          closeTo(expected[key]!, 0.05),
+          reason: key,
+        );
+      }
+
+      expect(
+        expected.length,
+        kShelterRecipes.length + 1,
+        reason: 'a module row was added or removed without a figure for it',
+      );
     });
 
     test('a full combat kit leaves room for loot (§10.3.4)', () {

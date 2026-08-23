@@ -28,15 +28,18 @@ void main() {
     });
 
     test(
-      'a spear is two wood, one metal, one fabric and twenty-five minutes',
+      'a spear is one wood, one metal, one fabric — and makes two',
       () {
+        // ⚠️ One log gives two shafts. It used to take two logs and make one
+        // spear, so three quarters of the wood vanished at the bench.
         final spear = book.making('melee_spear')!;
 
         expect(spear.materials, {
-          'mat_wood': 2,
+          'mat_wood': 1,
           'mat_metal': 1,
           'mat_fabric': 1,
         });
+        expect(spear.count, 2);
         expect(spear.work, const Duration(minutes: 25));
         expect(spear.workshopLevel, 1);
       },
@@ -213,7 +216,7 @@ void main() {
       final spear = catalogue['melee_spear']!;
 
       expect(materialContent(spear, book), {
-        'mat_wood': 2.0,
+        'mat_wood': 1.0,
         'mat_metal': 1.0,
         'mat_fabric': 1.0,
       });

@@ -65,13 +65,13 @@ void main() {
     });
 
     test('mass refuses first when the thing is dense', () {
-      // Sixteen lengths of metal: 24 kg against a limit of 25, and 9,6 l
+      // Thirty-three pieces of metal: 24,75 kg against a limit of 25, and 9,9 l
       // against a limit of 75. There is bulk to spare and no weight.
       final stash = empty()
-          .put(const CarriedItem(itemId: 'mat_metal', count: 16), catalogue)
+          .put(const CarriedItem(itemId: 'mat_metal', count: 33), catalogue)
           .stash;
 
-      expect(stash.massKg(catalogue), closeTo(24, 0.001));
+      expect(stash.massKg(catalogue), closeTo(24.75, 0.001));
 
       final full = stash.put(const CarriedItem(itemId: 'mat_metal'), catalogue);
 
@@ -80,38 +80,42 @@ void main() {
     });
 
     test('and bulk refuses first when it is not (§18.1a)', () {
-      // ⚠️ Which limit bites is a question about density, and the first
-      // version of this test got it wrong: a shelf holds three litres to the
-      // kilogram, so anything heavier than 0,33 kg/l runs out of weight first
-      // and everything lighter runs out of room. Wood is 0,5 — it fails on
-      // mass like the metal above. Plastic is 0,2, and it is the one that
-      // shows §18.1a's asymmetry.
+      // ⚠️ Which limit bites is a question about density: a shelf holds three
+      // litres to the kilogram, so anything heavier than 0,33 kg/l runs out of
+      // weight first and everything lighter runs out of room.
       //
-      //   mat_plastic  0,4 kg · 2,0 l
+      // ⚠️ **Fabric is the only thing left on the other side of that line, and
+      // barely.** Plastic used to be — 0,4 kg in 2,0 l was 0,2 kg/l — but that
+      // was a piece of plastic four fifths made of air, and it was cut to 0,8 l
+      // for being unbelievable. At 0,5 kg/l it now fails on mass like metal and
+      // wood. Fabric sits at 0,30 against a threshold of 0,333: ten per cent of
+      // margin, and §18.1a's whole second limit rests on it.
+      //
+      //   mat_fabric  0,3 kg · 1,0 l
       const shed = Stash(capacityKg: 100);
 
       final stash = shed
-          .put(const CarriedItem(itemId: 'mat_plastic', count: 149), catalogue)
+          .put(const CarriedItem(itemId: 'mat_fabric', count: 299), catalogue)
           .stash;
 
-      expect(stash.volumeL(catalogue), closeTo(298, 0.001));
-      expect(stash.massKg(catalogue), closeTo(59.6, 0.001));
+      expect(stash.volumeL(catalogue), closeTo(299, 0.001));
+      expect(stash.massKg(catalogue), closeTo(89.7, 0.001));
 
-      // Two more is four litres against two left, while forty kilograms of
-      // the weight limit are still unused.
+      // Two more is two litres against one left, while ten kilograms of the
+      // weight limit are still unused.
       final full = stash.put(
-        const CarriedItem(itemId: 'mat_plastic', count: 2),
+        const CarriedItem(itemId: 'mat_fabric', count: 2),
         catalogue,
       );
 
       expect(full.moved, isFalse);
-      expect(shed.capacityL - stash.volumeL(catalogue), lessThan(4));
-      expect(shed.capacityKg - stash.massKg(catalogue), greaterThan(30));
+      expect(shed.capacityL - stash.volumeL(catalogue), lessThan(2));
+      expect(shed.capacityKg - stash.massKg(catalogue), greaterThan(10));
     });
 
     test('a refusal keeps the shelf exactly as it was', () {
       final stash = empty()
-          .put(const CarriedItem(itemId: 'mat_metal', count: 16), catalogue)
+          .put(const CarriedItem(itemId: 'mat_metal', count: 33), catalogue)
           .stash;
 
       final refused = stash.put(
