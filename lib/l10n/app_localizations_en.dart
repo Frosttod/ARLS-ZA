@@ -1861,6 +1861,16 @@ class L10nEn extends L10n {
   }
 
   @override
+  String salvageHowMany(int chosen, int total) {
+    return 'How many: $chosen of $total';
+  }
+
+  @override
+  String salvageOnePiece(int total) {
+    return 'One of $total. The rest stay as they are.';
+  }
+
+  @override
   String get salvageSummaryTitle => 'Before you start';
 
   @override

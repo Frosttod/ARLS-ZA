@@ -65,31 +65,46 @@ class DisassembleScreen extends StatefulWidget {
   final ItemCatalogue catalogue;
   final String Function(String itemId) nameOf;
 
-  /// The sitting, in the order it was agreed to.
-  final void Function(List<SalvageOffer> picked) onStart;
+  /// The sitting, in the order it was agreed to, with how many of each.
+  final void Function(List<SalvagePick> picked) onStart;
 
   @override
   State<DisassembleScreen> createState() => _DisassembleScreenState();
 }
 
 class _DisassembleScreenState extends State<DisassembleScreen> {
-  /// ⚠️ Held by uid, not by item id and not by index.
+  /// ⚠️ Held by uid, not by item id and not by index — and it holds a
+  /// **number**, not a tick.
   ///
   /// §11.1's lesson: two rifles are two rifles, and picking the worn one is a
   /// different decision from picking the good one. An index would be worse
   /// still — the lists behind this screen are rebuilt by anything that touches
   /// the pack.
-  final Set<String> _picked = {};
+  ///
+  /// ⚠️ The number is the second half of the same lesson, reported from a
+  /// walk: three of a thing are one row with a count on it, and a tick can
+  /// only ever ask for one of them. So a row that stands for several pieces
+  /// keeps how many of them were asked for.
+  final Map<String, int> _picked = {};
 
-  List<SalvageOffer> get _chosen => [
+  List<SalvagePick> get _chosen => [
     for (final offer in widget.offers)
-      if (_isPicked(offer)) offer,
+      if (_countOf(offer) case final count when count > 0)
+        SalvagePick(offer, count),
   ];
 
-  bool _isPicked(SalvageOffer offer) {
+  int _countOf(SalvageOffer offer) {
     final uid = offer.line.uid;
-    return uid != null && _picked.contains(uid);
+    if (uid == null) return 0;
+
+    // Clamped on the way out rather than on the way in: the pack behind this
+    // screen can shrink while it is open, and a number remembered from before
+    // that must never ask for more pieces than are there.
+    final asked = _picked[uid] ?? 0;
+    return asked > offer.available ? offer.available : asked;
   }
+
+  bool _isPicked(SalvageOffer offer) => _countOf(offer) > 0;
 
   void _toggle(SalvageOffer offer) {
     final uid = offer.line.uid;
@@ -100,7 +115,28 @@ class _DisassembleScreenState extends State<DisassembleScreen> {
     if (uid == null || offer.isBlocked) return;
 
     setState(() {
-      if (!_picked.remove(uid)) _picked.add(uid);
+      if (_countOf(offer) > 0) {
+        _picked.remove(uid);
+      } else {
+        _picked[uid] = 1;
+      }
+    });
+  }
+
+  /// §18.6: how many of a stack go into the sitting.
+  ///
+  /// Nought is the same as not picking it, so the tick and the stepper are one
+  /// control with two ends rather than two controls that can disagree.
+  void _setCount(SalvageOffer offer, int count) {
+    final uid = offer.line.uid;
+    if (uid == null || offer.isBlocked) return;
+
+    setState(() {
+      if (count <= 0) {
+        _picked.remove(uid);
+      } else {
+        _picked[uid] = count > offer.available ? offer.available : count;
+      }
     });
   }
 
@@ -209,11 +245,13 @@ class _DisassembleScreenState extends State<DisassembleScreen> {
                   for (final offer in fromPack)
                     _OfferRow(
                       offer: offer,
+                      count: _countOf(offer),
                       picked: _isPicked(offer),
                       definition: widget.catalogue[offer.line.itemId],
                       name: widget.nameOf(offer.line.itemId),
                       nameOf: widget.nameOf,
                       onTap: () => _toggle(offer),
+                      onCount: (value) => _setCount(offer, value),
                       colours: colours,
                       l10n: l10n,
                     ),
@@ -225,11 +263,13 @@ class _DisassembleScreenState extends State<DisassembleScreen> {
                   for (final offer in fromShelf)
                     _OfferRow(
                       offer: offer,
+                      count: _countOf(offer),
                       picked: _isPicked(offer),
                       definition: widget.catalogue[offer.line.itemId],
                       name: widget.nameOf(offer.line.itemId),
                       nameOf: widget.nameOf,
                       onTap: () => _toggle(offer),
+                      onCount: (value) => _setCount(offer, value),
                       colours: colours,
                       l10n: l10n,
                     ),
@@ -252,7 +292,7 @@ class _DisassembleScreenState extends State<DisassembleScreen> {
     );
   }
 
-  Future<void> _confirm(List<SalvageOffer> chosen) async {
+  Future<void> _confirm(List<SalvagePick> chosen) async {
     final go = await showDialog<bool>(
       context: context,
       builder: (context) => _SummaryDialog(
@@ -288,21 +328,29 @@ class _Heading extends StatelessWidget {
 class _OfferRow extends StatelessWidget {
   const _OfferRow({
     required this.offer,
+    required this.count,
     required this.picked,
     required this.definition,
     required this.name,
     required this.nameOf,
     required this.onTap,
+    required this.onCount,
     required this.colours,
     required this.l10n,
   });
 
   final SalvageOffer offer;
+
+  /// §18.6: how many of this line are going into the sitting. Nought when the
+  /// row is not picked at all.
+  final int count;
+
   final bool picked;
   final ItemDefinition? definition;
   final String name;
   final String Function(String itemId) nameOf;
   final VoidCallback onTap;
+  final ValueChanged<int> onCount;
   final HudColors colours;
   final L10n l10n;
 
@@ -312,6 +360,11 @@ class _OfferRow extends StatelessWidget {
     final condition = line.condition;
 
     final blocked = offer.isBlocked;
+
+    // §18.6: what this row actually costs and gives — one piece, or all the
+    // pieces asked for. A row quoting the price of one while three of them go
+    // into the sitting is the bug this was reported as.
+    final pick = SalvagePick(offer, count < 1 ? 1 : count);
 
     return Card(
       // ⚠️ Dimmed rather than removed (§12). The player has to be able to see
@@ -339,7 +392,11 @@ class _OfferRow extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Text(
-                            name,
+                            // ⚠️ The count is on the name, because that is
+                            // where a player reads "how many have I got".
+                            offer.available > 1
+                                ? '$name  ×${offer.available}'
+                                : name,
                             style: TextStyle(
                               fontSize: 15,
                               color: blocked ? colours.muted : colours.text,
@@ -347,7 +404,7 @@ class _OfferRow extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          remaining(offer.takes),
+                          remaining(pick.takes),
                           style: TextStyle(
                             fontSize: 13,
                             color: colours.muted,
@@ -378,10 +435,27 @@ class _OfferRow extends StatelessWidget {
 
                     const SizedBox(height: 4),
                     SalvageYields(
-                      yields: offer.yields,
+                      yields: pick.yields,
                       nameOf: nameOf,
                       colours: colours,
                     ),
+
+                    // §18.6, §12: how many of the stack, where the stack is.
+                    //
+                    // ⚠️ Only where there is a choice to make — a stepper
+                    // beside a single vest is a control with one setting, and
+                    // §12's rule about controls that cannot do anything is the
+                    // same rule that hid the dead buttons elsewhere.
+                    if (!blocked && offer.available > 1) ...[
+                      const SizedBox(height: 6),
+                      _HowMany(
+                        value: count,
+                        max: offer.available,
+                        onChanged: onCount,
+                        colours: colours,
+                        l10n: l10n,
+                      ),
+                    ],
 
                     // §12: the reason goes under the thing it is about, not in
                     // a message four seconds after a tap that did nothing.
@@ -402,6 +476,90 @@ class _OfferRow extends StatelessWidget {
   }
 }
 
+/// §18.6: how many of a stack go into the sitting.
+///
+/// ⚠️ **A row that stands for three pieces needs a number, not a tick.**
+/// Reported from a walk: three of a thing showed as one row reading "×3", the
+/// row quoted the time for one, and there was no way to ask for the other two.
+///
+/// Nought is not a setting here — dropping to nought unticks the row, so the
+/// checkbox and this control are two ends of one decision rather than two
+/// controls that can disagree about whether the thing is in the sitting.
+class _HowMany extends StatelessWidget {
+  const _HowMany({
+    required this.value,
+    required this.max,
+    required this.onChanged,
+    required this.colours,
+    required this.l10n,
+  });
+
+  final int value;
+  final int max;
+  final ValueChanged<int> onChanged;
+  final HudColors colours;
+  final L10n l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    // Unticked rows read as one, because one is what the next tap asks for.
+    final shown = value < 1 ? 1 : value;
+
+    return Row(
+      children: [
+        _Step(
+          icon: Icons.remove,
+          onPressed: value <= 0 ? null : () => onChanged(value - 1),
+          colours: colours,
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: Text(
+            l10n.salvageHowMany(shown, max),
+            style: TextStyle(
+              fontSize: 12,
+              color: value > 0 ? colours.data : colours.muted,
+              fontFamily: kDataFont,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+        ),
+        _Step(
+          icon: Icons.add,
+          onPressed: shown >= max ? null : () => onChanged(shown + 1),
+          colours: colours,
+        ),
+      ],
+    );
+  }
+}
+
+class _Step extends StatelessWidget {
+  const _Step({
+    required this.icon,
+    required this.onPressed,
+    required this.colours,
+  });
+
+  final IconData icon;
+  final VoidCallback? onPressed;
+  final HudColors colours;
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    width: 32,
+    height: 32,
+    child: IconButton(
+      padding: EdgeInsets.zero,
+      iconSize: 18,
+      onPressed: onPressed,
+      icon: Icon(icon),
+      color: colours.text,
+      disabledColor: colours.muted.withValues(alpha: 0.4),
+    ),
+  );
+}
+
 /// The running total, and the way out of the screen.
 class _Total extends StatelessWidget {
   const _Total({
@@ -412,7 +570,7 @@ class _Total extends StatelessWidget {
     required this.l10n,
   });
 
-  final List<SalvageOffer> chosen;
+  final List<SalvagePick> chosen;
   final String Function(String itemId) nameOf;
   final VoidCallback? onConfirm;
   final HudColors colours;
@@ -420,7 +578,11 @@ class _Total extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final work = chosen.fold(Duration.zero, (sum, offer) => sum + offer.takes);
+    // ⚠️ Pieces, not rows. One row asking for three of a stack is three
+    // pieces, three lots of minutes and three lots of materials — quoting it
+    // as one is exactly what was reported from a walk.
+    final work = totalTime(chosen);
+    final pieces = chosen.fold(0, (sum, pick) => sum + pick.count);
 
     return Material(
       color: colours.panel,
@@ -436,7 +598,7 @@ class _Total extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      l10n.salvageChosen(chosen.length),
+                      l10n.salvageChosen(pieces),
                       style: TextStyle(fontSize: 13, color: colours.text),
                     ),
                   ),
@@ -485,7 +647,7 @@ class _SummaryDialog extends StatelessWidget {
     required this.l10n,
   });
 
-  final List<SalvageOffer> chosen;
+  final List<SalvagePick> chosen;
   final String Function(String itemId) nameOf;
   final HudColors colours;
   final L10n l10n;
@@ -495,11 +657,18 @@ class _SummaryDialog extends StatelessWidget {
     // ⚠️ Worked out first, not inside the list. A running total accumulated
     // during build is a total that doubles the second time Flutter builds the
     // same frame, and it will.
-    final byThen = <Duration>[];
+    //
+    // ⚠️ One entry per **piece**, not per row. Three of a stack come apart one
+    // after another and the summary is where somebody with twenty minutes
+    // reads off how far they will get — a single line saying "×3" with one
+    // clock beside it hides two of the three answers.
+    final lines = <({String name, Duration byThen})>[];
     var running = Duration.zero;
-    for (final offer in chosen) {
-      running += offer.takes;
-      byThen.add(running);
+    for (final pick in chosen) {
+      for (var i = 0; i < pick.count; i++) {
+        running += pick.offer.takes;
+        lines.add((name: nameOf(pick.offer.line.itemId), byThen: running));
+      }
     }
 
     return AlertDialog(
@@ -518,7 +687,7 @@ class _SummaryDialog extends StatelessWidget {
             // ⚠️ Numbered, and the number is the order it happens in. The
             // clock beside each is when *that one* is done, so somebody with
             // twenty minutes can read off where they will get to.
-            for (final (index, offer) in chosen.indexed)
+            for (final (index, line) in lines.indexed)
               Padding(
                 padding: const EdgeInsets.only(bottom: 4),
                 child: Row(
@@ -536,12 +705,12 @@ class _SummaryDialog extends StatelessWidget {
                     ),
                     Expanded(
                       child: Text(
-                        nameOf(offer.line.itemId),
+                        line.name,
                         style: const TextStyle(fontSize: 13),
                       ),
                     ),
                     Text(
-                      remaining(byThen[index]),
+                      remaining(line.byThen),
                       style: TextStyle(
                         fontSize: 12,
                         color: colours.muted,
@@ -596,4 +765,44 @@ class _SummaryDialog extends StatelessWidget {
       ],
     );
   }
+}
+
+/// §18.6: the price of one piece, read before it is paid.
+///
+/// ⚠️ **Which of them, when the row stands for several.** Reported from a
+/// walk: a pack row reading "×3" opened a dialog quoting the minutes for one,
+/// with nothing on it to say that the other two were staying put. The glyph
+/// takes one piece — [DisassembleScreen] is where a whole stack is asked for
+/// — and the dialog says so now.
+Future<bool> askDismantle(
+  BuildContext context, {
+  required String name,
+  required String gives,
+  required Duration work,
+  required int inStack,
+}) async {
+  final l10n = L10n.of(context);
+  final warning = l10n.craftDismantleWarning(gives, work.inMinutes);
+
+  final answer = await showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text(l10n.craftTakingApart(name)),
+      content: Text(
+        inStack > 1 ? '$warning\n\n${l10n.salvageOnePiece(inStack)}' : warning,
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(false),
+          child: Text(l10n.shelterCancelKeep),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(true),
+          child: Text(l10n.craftMake),
+        ),
+      ],
+    ),
+  );
+
+  return answer ?? false;
 }

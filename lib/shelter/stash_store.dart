@@ -31,28 +31,51 @@ class StashStore {
   ) async {
     final rows = await _db.stashFor(profileId, shelter.id);
 
-    return Stash(
-      capacityKg: shelter.storageKg,
-      lines: [
-        for (final row in rows)
-          if (catalogue[row.itemId] != null)
-            CarriedItem(
-              itemId: row.itemId,
-              count: row.count,
-              condition: row.condition,
-              pagesTotal: row.pagesTotal,
-              pagesRead: row.pagesRead,
-              noteId: row.noteId,
-              portion: row.portion,
-              attachments: row.attachments.isEmpty
-                  ? const []
-                  : row.attachments.split(','),
-              rounds: row.rounds,
-              salvageSeconds: row.salvageSeconds,
-              uid: row.uid ?? newLineId(),
-            ),
-      ],
-    );
+    final lines = <CarriedItem>[];
+
+    for (final row in rows) {
+      final definition = catalogue[row.itemId];
+      if (definition == null) continue;
+
+      final line = CarriedItem(
+        itemId: row.itemId,
+        count: row.count,
+        condition: row.condition,
+        pagesTotal: row.pagesTotal,
+        pagesRead: row.pagesRead,
+        noteId: row.noteId,
+        portion: row.portion,
+        attachments: row.attachments.isEmpty
+            ? const []
+            : row.attachments.split(','),
+        rounds: row.rounds,
+        salvageSeconds: row.salvageSeconds,
+        uid: row.uid ?? newLineId(),
+      );
+
+      // ⚠️ §11.1: heaps written by an older shelf come apart on the way in.
+      //
+      // [Stash.put] used to stack anything whose *history* was blank, without
+      // ever asking the item whether it stacks at all — so two bare rifles at
+      // the same condition became one row reading "×2" and one of the two uids
+      // went with it. Rows like that are already on disk, and a save that
+      // heals only when somebody happens to take the pile down is a save that
+      // does not heal.
+      //
+      // The first piece keeps the name the row had; the rest are named now.
+      if (line.count > 1 && !definition.stackable) {
+        for (var i = 0; i < line.count; i++) {
+          lines.add(
+            line.copyWith(count: 1, uid: i == 0 ? line.uid : newLineId()),
+          );
+        }
+        continue;
+      }
+
+      lines.add(line);
+    }
+
+    return Stash(capacityKg: shelter.storageKg, lines: lines);
   }
 
   Future<void> save(int profileId, int shelterId, Stash stash) =>

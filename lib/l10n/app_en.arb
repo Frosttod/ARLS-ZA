@@ -992,6 +992,25 @@
       }
     }
   },
+  "salvageHowMany": "How many: {chosen} of {total}",
+  "@salvageHowMany": {
+    "placeholders": {
+      "chosen": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "salvageOnePiece": "One of {total}. The rest stay as they are.",
+  "@salvageOnePiece": {
+    "placeholders": {
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "salvageSummaryTitle": "Before you start",
   "salvageGone": "This will not come back. What is left of it is materials.",
   "salvageYouGet": "You get",

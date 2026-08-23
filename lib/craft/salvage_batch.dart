@@ -305,6 +305,22 @@ class SalvageOffer {
 
   bool get isBlocked => blocked != null;
 
+  /// §18.6: how many of this line a sitting may be given.
+  ///
+  /// ⚠️ **A stack is several pieces, and the screen used to offer one.**
+  /// Reported from a walk: three improvised tourniquets are one row reading
+  /// "×3", the row quoted the time for one, and there was no way to ask for
+  /// the other two. So the row now carries how many there are, and the picker
+  /// asks how many of them to open.
+  ///
+  /// Capped at one where somebody has already started on the line. §18.6's
+  /// partial progress is written on the *line*, not on a piece of it, so a
+  /// stack that is half undone cannot say which of its three is the half —
+  /// and the honest answer is to finish the one that is open before splitting
+  /// hairs about the rest.
+  int get available =>
+      line.isPartlyDismantled ? 1 : (line.count < 1 ? 1 : line.count);
+
   SalvageStep toStep() => SalvageStep(
     uid: line.uid,
     itemId: line.itemId,
@@ -312,6 +328,17 @@ class SalvageOffer {
     takes: takes,
     fromShelf: fromShelf,
   );
+
+  /// [count] pieces of this line, in the order they come apart.
+  ///
+  /// ⚠️ They share a uid, because they share a row: the pack holds one entry
+  /// with a count, not three entries. Each step takes one off that entry as
+  /// its turn finishes, which is what [SalvageBatch]'s ordering already
+  /// promises — half way through, one is gone and two are exactly as they
+  /// were.
+  List<SalvageStep> toSteps(int count) => [
+    for (var i = 0; i < count.clamp(1, available); i++) toStep(),
+  ];
 }
 
 /// §18.6: what one piece is worth to this player, or null when it is worth
@@ -434,16 +461,108 @@ Map<String, int> yieldOf(
   condition: step.condition,
 );
 
-/// Everything a set of offers comes to, added up.
+/// One line of a sitting as it was picked: the thing, and how many of it.
+///
+/// ⚠️ **How many, because a stack is not a piece.** Everything downstream —
+/// the running total, the summary, the batch itself — has to multiply by this
+/// or it quotes the price of one and destroys three.
+class SalvagePick {
+  const SalvagePick(this.offer, this.count);
+
+  final SalvageOffer offer;
+
+  /// How many of [SalvageOffer.line] go into the sitting. Never above
+  /// [SalvageOffer.available].
+  final int count;
+
+  /// What these pieces cost, all of them.
+  Duration get takes => offer.takes * count;
+
+  /// What these pieces give back, all of them.
+  Map<String, int> get yields => {
+    for (final entry in offer.yields.entries) entry.key: entry.value * count,
+  };
+}
+
+/// Everything a set of picks comes to, added up.
 ///
 /// The number the summary screen shows, and the one the player will count in
 /// their pack afterwards.
-Map<String, int> totalYield(Iterable<SalvageOffer> offers) {
+Map<String, int> totalYield(Iterable<SalvagePick> picks) {
   final out = <String, int>{};
-  for (final offer in offers) {
-    for (final entry in offer.yields.entries) {
+  for (final pick in picks) {
+    for (final entry in pick.yields.entries) {
       out[entry.key] = (out[entry.key] ?? 0) + entry.value;
     }
   }
   return out;
+}
+
+/// Every minute of a sitting, all pieces of every line.
+Duration totalTime(Iterable<SalvagePick> picks) =>
+    picks.fold(Duration.zero, (sum, pick) => sum + pick.takes);
+
+/// §18.6: the sitting a set of picks becomes, in the order it was agreed to.
+SalvageBatch batchOf(Iterable<SalvagePick> picks) =>
+    SalvageBatch([for (final pick in picks) ...pick.offer.toSteps(pick.count)]);
+
+/// Where a step's piece actually is: the row, which pile, and where in it.
+typedef SalvagePiece = ({CarriedItem line, bool fromShelf, int index});
+
+/// §11.1: finds the very piece a step names, in the pack or on the shelves.
+///
+/// ⚠️ By uid first, because that is what a step stores and what survives a
+/// restart. The fall back to the item id is for rows written before uids
+/// existed: two of a thing are interchangeable until one is worn or partly
+/// undone, and a partly undone one is never interchangeable — which is why the
+/// fall back looks for the most-undone one rather than the first.
+SalvagePiece? pieceOf(
+  SalvageStep step, {
+  required List<CarriedItem> carried,
+  required List<CarriedItem> shelved,
+}) {
+  final uid = step.uid;
+
+  if (uid != null) {
+    for (final line in carried) {
+      if (line.uid == uid) return (line: line, fromShelf: false, index: -1);
+    }
+    for (final (index, line) in shelved.indexed) {
+      if (line.uid == uid) return (line: line, fromShelf: true, index: index);
+    }
+    return null;
+  }
+
+  final matches = carried.where((line) => line.itemId == step.itemId).toList()
+    ..sort((a, b) => (b.salvageSeconds ?? 0).compareTo(a.salvageSeconds ?? 0));
+
+  final line = matches.firstOrNull;
+  return line == null ? null : (line: line, fromShelf: false, index: -1);
+}
+
+/// §18.6: the pack rows a running sitting has locked, one entry each.
+///
+/// ⚠️ **One entry per row, not per step.** A stack of three asked for whole is
+/// three steps sharing one uid, and three copies of the same row would draw
+/// three bars under one line — which is the shape of a bug this project has
+/// already had once, with three knives sharing a name between them.
+///
+/// Only the pack, deliberately. A piece waiting its turn on a shelf is locked
+/// by the shelf refusing to hand it over; putting it in this list would draw a
+/// bar under a row on a screen it does not belong to.
+List<CarriedItem> lockedByBatch(
+  SalvageBatch batch, {
+  required List<CarriedItem> carried,
+  required List<CarriedItem> shelved,
+}) {
+  final locked = <String, CarriedItem>{};
+
+  for (final step in batch.steps) {
+    final piece = pieceOf(step, carried: carried, shelved: shelved);
+    if (piece == null || piece.fromShelf) continue;
+
+    locked[piece.line.uid ?? piece.line.itemId] = piece.line;
+  }
+
+  return locked.values.toList();
 }

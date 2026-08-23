@@ -153,6 +153,7 @@ void main() {
       //   phase 6 6667   the fight out
       //           6659   the disassembly list became a function of the model
       //           6658   the bench refusal stopped being written twice
+      //           6638   finding a step's piece, and asking the price of one
       //
       // ⚠️ Lower it when a phase lands. Never raise it — not for a phase, and
       // not for a feature either. "It is a feature" is exactly the excuse that
@@ -161,7 +162,7 @@ void main() {
       // Something new that belongs to the model goes in the model.
       expect(
         lines,
-        lessThanOrEqualTo(6659),
+        lessThanOrEqualTo(6638),
         reason: 'main.dart grew; something went in that should have come out',
       );
     });

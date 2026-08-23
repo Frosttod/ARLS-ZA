@@ -860,6 +860,25 @@
       }
     }
   },
+  "salvageHowMany": "Ile: {chosen} z {total}",
+  "@salvageHowMany": {
+    "placeholders": {
+      "chosen": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "salvageOnePiece": "Jedna z {total}. Reszta zostaje.",
+  "@salvageOnePiece": {
+    "placeholders": {
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "salvageSummaryTitle": "Zanim zaczniesz",
   "salvageGone": "To nie wróci. Zostaną z tego materiały.",
   "salvageYouGet": "Dostaniesz",

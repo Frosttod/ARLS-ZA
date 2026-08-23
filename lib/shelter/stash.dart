@@ -96,8 +96,18 @@ class Stash {
     final next = [...lines];
     final at = next.indexWhere((other) => _sameAs(other, line));
 
-    if (at >= 0 && _stackable(line)) {
+    if (at >= 0 && _stackable(line, catalogue)) {
       next[at] = next[at].copyWith(count: next[at].count + line.count);
+    } else if (line.count > 1 && !_stackable(line, catalogue)) {
+      // ⚠️ One entry per piece, and a name each (§11.1).
+      //
+      // The pack learned this the hard way — three knives sharing one uid, so
+      // any per-piece act on one of them found all three — and the shelf never
+      // did. Anything arriving here in a heap has to come apart into pieces
+      // the shelf can tell from one another.
+      for (var i = 0; i < line.count; i++) {
+        next.add(line.copyWith(count: 1, uid: i == 0 ? line.uid : newLineId()));
+      }
     } else {
       next.add(line);
     }
@@ -145,11 +155,26 @@ class Stash {
 
   /// A part-used piece is its own line for ever (§4.7), and so is anything
   /// carrying a history somebody could tell apart.
-  static bool _stackable(CarriedItem line) =>
-      line.portion >= 1 &&
-      line.pagesTotal == null &&
-      line.noteId == null &&
-      line.attachments.isEmpty;
+  ///
+  /// ⚠️ **The item's own answer first.** This used to ask only about the
+  /// history a piece was carrying and never about the item itself, so a shelf
+  /// stacked things the pack refuses to stack: two bare rifles at the same
+  /// condition became one line reading "×2", and one of the two uids went with
+  /// it. Everything that works piece by piece — §18.6's dismantling most of
+  /// all — could then only ever reach one of them.
+  ///
+  /// [Inventory] has asked `definition.stackable` since it was written. The
+  /// shelf is the same pile at a bench (§18.2) and has to answer the same way.
+  static bool _stackable(CarriedItem line, ItemCatalogue catalogue) {
+    final definition = catalogue[line.itemId];
+    if (definition == null || !definition.stackable) return false;
+    if (definition.hasInstanceState) return false;
+
+    return line.portion >= 1 &&
+        line.pagesTotal == null &&
+        line.noteId == null &&
+        line.attachments.isEmpty;
+  }
 
   static bool _sameAs(CarriedItem a, CarriedItem b) =>
       a.itemId == b.itemId &&

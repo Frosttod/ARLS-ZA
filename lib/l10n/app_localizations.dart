@@ -3409,6 +3409,18 @@ abstract class L10n {
   /// **'Picked: {count}'**
   String salvageChosen(int count);
 
+  /// No description provided for @salvageHowMany.
+  ///
+  /// In en, this message translates to:
+  /// **'How many: {chosen} of {total}'**
+  String salvageHowMany(int chosen, int total);
+
+  /// No description provided for @salvageOnePiece.
+  ///
+  /// In en, this message translates to:
+  /// **'One of {total}. The rest stay as they are.'**
+  String salvageOnePiece(int total);
+
   /// No description provided for @salvageSummaryTitle.
   ///
   /// In en, this message translates to:

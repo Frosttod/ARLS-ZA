@@ -73,11 +73,38 @@ void main() {
       'void _startReload()',
       'void _startAreaSearch()',
       'void _startObjectSearch(SearchDepth depth)',
+      // ⚠️ §19.3. Reported from a walk: a dismantling at the bench refused a
+      // quick search and waved a locked car straight through, because this
+      // one asked whether another *search* was running and nothing else.
+      // Forcing a door is not a lesser act than looking in a bin — it is
+      // twenty seconds of both hands on a crowbar.
+      'void _startBreach(BarrierBreach breach)',
     ]) {
       expect(
         bodyOf(start).contains('_alreadyBusy()'),
         isTrue,
         reason: '$start starts without asking whether the hands are free',
+      );
+    }
+  });
+
+  test('and none of them settles for asking about its own clock', () {
+    // ⚠️ The shape of the reported bug, held rather than described. Every
+    // start below used to have a private version of the rule — "is another
+    // search running", "is another job on the bench" — and a private version
+    // of a shared rule is a rule with holes in it. The holes are not
+    // hypothetical: forcing a door had one for as long as the check existed.
+    for (final start in [
+      'void _startAreaSearch()',
+      'void _startObjectSearch(SearchDepth depth)',
+      'void _startBreach(BarrierBreach breach)',
+    ]) {
+      final body = bodyOf(start);
+
+      expect(
+        body.contains('_search.value != null) return'),
+        isFalse,
+        reason: '$start still has its own private idea of busy',
       );
     }
   });

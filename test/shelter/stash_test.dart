@@ -175,6 +175,64 @@ void main() {
       expect(stash.lines, hasLength(2));
     });
 
+    test('nor do two bare rifles, because rifles do not stack (§11.1)', () {
+      // ⚠️ **The shelf used to ask only about history, never about the item.**
+      //
+      // Two rifles at the same condition with nothing bolted to them have no
+      // history to tell apart, so they became one row reading ×2 — and one
+      // of the two uids went with it. Everything that works piece by piece
+      // could then reach only one of them: §18.6's dismantling offered one
+      // rifle where there were two, and the second was unreachable without
+      // taking the pile down.
+      //
+      // The pack has asked `definition.stackable` since it was written. §18.2
+      // makes the shelf the same pile at a bench, so it answers the same way.
+      final stash = empty()
+          .put(
+            const CarriedItem(itemId: 'weapon_rifle_545').copyWith(uid: 'a.1'),
+            catalogue,
+          )
+          .stash
+          .put(
+            const CarriedItem(itemId: 'weapon_rifle_545').copyWith(uid: 'a.2'),
+            catalogue,
+          )
+          .stash;
+
+      expect(stash.lines, hasLength(2));
+      expect(stash.lines.map((line) => line.uid), ['a.1', 'a.2']);
+    });
+
+    test('and a heap of them arrives as pieces with a name each', () {
+      // Anything that hands the shelf a count of three has to come apart into
+      // three things the shelf can tell from one another — the same rule the
+      // pack learned after three knives shared one name between them.
+      final stash = empty()
+          .put(
+            const CarriedItem(
+              itemId: 'weapon_rifle_545',
+              count: 3,
+            ).copyWith(uid: 'a.1'),
+            catalogue,
+          )
+          .stash;
+
+      expect(stash.lines, hasLength(3));
+      expect(stash.lines.every((line) => line.count == 1), isTrue);
+      expect(stash.lines.map((line) => line.uid).toSet(), hasLength(3));
+    });
+
+    test('a stackable thing still stacks, or the fix broke the shelf', () {
+      final stash = empty()
+          .put(const CarriedItem(itemId: 'med_bandage', count: 2), catalogue)
+          .stash
+          .put(const CarriedItem(itemId: 'med_bandage'), catalogue)
+          .stash;
+
+      expect(stash.lines, hasLength(1));
+      expect(stash.lines.single.count, 3);
+    });
+
     test('and a fitted rifle weighs what it weighs on the shelf', () {
       final stash = empty()
           .put(
@@ -255,6 +313,61 @@ void main() {
     });
 
     tearDown(() => db.close());
+
+    test(
+      'a heap written by an older shelf comes apart on the way in',
+      () async {
+        // ⚠️ **Rows like this are already on disk.**
+        //
+        // The shelf used to stack anything whose history was blank without ever
+        // asking the item whether it stacks at all, so two bare rifles became
+        // one row with a count of two and one of the two uids was lost. Fixing
+        // [Stash.put] stops it happening again and does nothing at all for the
+        // saves it already happened to — and a save that heals only when
+        // somebody happens to take the pile down is a save that does not heal.
+        //
+        // Built by hand rather than through [Stash.put], because [Stash.put] is
+        // exactly what will no longer produce it.
+        await store.save(
+          profileId,
+          house.id,
+          Stash(
+            capacityKg: 25,
+            lines: [
+              const CarriedItem(
+                itemId: 'weapon_rifle_545',
+                count: 3,
+              ).copyWith(uid: 'old.1'),
+            ],
+          ),
+        );
+
+        final back = await store.load(profileId, house, catalogue);
+
+        expect(back.lines, hasLength(3));
+        expect(back.lines.every((line) => line.count == 1), isTrue);
+        expect(back.lines.map((line) => line.uid).toSet(), hasLength(3));
+
+        // The first keeps the name the row had — a thing put down and picked up
+        // again is the same thing — and the rest are named now.
+        expect(back.lines.first.uid, 'old.1');
+      },
+    );
+
+    test('and a real stack is still one row after a restart', () async {
+      await store.save(
+        profileId,
+        house.id,
+        const Stash(capacityKg: 25)
+            .put(const CarriedItem(itemId: 'mat_metal', count: 5), catalogue)
+            .stash,
+      );
+
+      final back = await store.load(profileId, house, catalogue);
+
+      expect(back.lines, hasLength(1));
+      expect(back.lines.single.count, 5);
+    });
 
     test('what was left on the shelf is there in the morning', () async {
       final stash = const Stash(capacityKg: 25)

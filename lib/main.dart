@@ -3928,13 +3928,24 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final piece = head == null ? null : _pieceOf(head);
     if (head != null && piece != null && !piece.fromShelf) {
       final into = batch.creditedOn(kept);
-      final already = piece.line.salvageSeconds ?? 0;
 
-      _inventory.value = _inventory.value.withLine(
-        piece.line,
+      // ⚠️ §11.1: one piece out of the stack first, and the progress goes on
+      // that one.
+      //
+      // §18.6's partial progress is written on a *line*, and a line can stand
+      // for three pieces. Writing it straight on would mark all three as
+      // half undone when the multitool had only ever been on one of them —
+      // three ruined vests for one interrupted sitting. §4.7 already settled
+      // the same question about a stack of tins: opening one is what splits
+      // it off.
+      final split = _inventory.value.openOne(piece.line);
+      final already = split.line.salvageSeconds ?? 0;
+
+      _inventory.value = split.inventory.withLine(
+        split.line,
         // Never nought: a piece that has been opened at all is a piece that
         // no longer works, and a zero here would read as untouched.
-        piece.line.copyWith(
+        split.line.copyWith(
           salvageSeconds: into.inSeconds + already < 1
               ? 1
               : into.inSeconds + already,
@@ -3951,41 +3962,12 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     _say(L10n.of(context).craftStopped);
   }
 
-  /// §11.1: finds the very piece a step names, in the pack or on the shelves.
-  ///
-  /// ⚠️ By uid first, because that is what a step stores and what survives a
-  /// restart. The fall back to the item id is for rows written before uids
-  /// existed: two of a thing are interchangeable until one is worn or partly
-  /// undone, and a partly undone one is never interchangeable — which is why
-  /// the fall back looks for the most-undone one rather than the first.
-  ({CarriedItem line, bool fromShelf, int index})? _pieceOf(SalvageStep step) {
-    final uid = step.uid;
-
-    if (uid != null) {
-      for (final line in _inventory.value.carried) {
-        if (line.uid == uid) {
-          return (line: line, fromShelf: false, index: -1);
-        }
-      }
-      for (final (index, line) in _stash.value.lines.indexed) {
-        if (line.uid == uid) {
-          return (line: line, fromShelf: true, index: index);
-        }
-      }
-      return null;
-    }
-
-    final matches =
-        _inventory.value.carried
-            .where((line) => line.itemId == step.itemId)
-            .toList()
-          ..sort(
-            (a, b) => (b.salvageSeconds ?? 0).compareTo(a.salvageSeconds ?? 0),
-          );
-
-    final line = matches.firstOrNull;
-    return line == null ? null : (line: line, fromShelf: false, index: -1);
-  }
+  /// §11.1: the piece a step names, against the pack and shelves as they are.
+  SalvagePiece? _pieceOf(SalvageStep step) => pieceOf(
+    step,
+    carried: _inventory.value.carried,
+    shelved: _stash.value.lines,
+  );
 
   /// §18.4: gives up on whatever is on the bench.
   ///
@@ -4178,7 +4160,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// they are, locked, and go one at a time as their turn finishes — which is
   /// what makes stopping half way honest: everything is either apart or
   /// exactly as it was.
-  Future<void> _startSitting(List<SalvageOffer> picked) async {
+  Future<void> _startSitting(List<SalvagePick> picked) async {
     final character = _character;
     if (character == null || picked.isEmpty) return;
 
@@ -4188,7 +4170,11 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       return;
     }
 
-    final batch = SalvageBatch([for (final offer in picked) offer.toStep()]);
+    // ⚠️ One step per **piece**, not per row. A stack of three that was asked
+    // for whole is three steps sharing one uid — the pack holds one entry with
+    // a count, and each step takes one off it as its turn finishes.
+    final batch = batchOf(picked);
+    if (batch.isEmpty) return;
 
     await _bench2.beginSalvage(batch, now: DateTime.now().toUtc());
 
@@ -4284,31 +4270,15 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final catalogue = _catalogue;
     if (catalogue == null) return false;
 
-    final l10n = L10n.of(context);
-    final name = _nameOfItem(catalogue[line.itemId]!);
-    final gives = back.entries
-        .map((entry) => '${_nameOfId(entry.key)} ×${entry.value}')
-        .join(', ');
-
-    final answer = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.craftTakingApart(name)),
-        content: Text(l10n.craftDismantleWarning(gives, work.inMinutes)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(l10n.shelterCancelKeep),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text(l10n.craftMake),
-          ),
-        ],
-      ),
+    return askDismantle(
+      context,
+      name: _nameOfItem(catalogue[line.itemId]!),
+      gives: back.entries
+          .map((entry) => '${_nameOfId(entry.key)} ×${entry.value}')
+          .join(', '),
+      work: work,
+      inStack: line.count,
     );
-
-    return answer ?? false;
   }
 
   String _nameOfId(String itemId) {
@@ -4349,15 +4319,11 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       // list would draw a bar under a row on a screen it does not belong to.
       _dismantling.value = job == null || !job.isSalvage
           ? const []
-          : [
-              for (final step in _sittingOf(job).steps)
-                if (_pieceOf(step) case (
-                  line: final line,
-                  fromShelf: false,
-                  index: _,
-                ))
-                  line,
-            ];
+          : lockedByBatch(
+              _sittingOf(job),
+              carried: _inventory.value.carried,
+              shelved: _stash.value.lines,
+            );
       return;
     }
 
@@ -5484,7 +5450,20 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     // cannot search the car from my shelter" survived a fix to the search.
     final at = _standingAt.value;
     final box = _boxInReach();
-    if (at == null || box == null || _search.value != null) return;
+    if (at == null || box == null) return;
+
+    // ⚠️ §2.1a: one pair of hands, and this is the third place that had
+    // to learn it. Both searches asked [_alreadyBusy] and this did not — it
+    // asked only whether another *search* was running — so a dismantling at
+    // the bench refused a quick search and waved a locked car straight
+    // through. Reported from a walk as exactly that inconsistency, and the
+    // inconsistency was the tell: forcing a door is not a lesser act than
+    // looking in a bin, it is twenty seconds of both hands on a crowbar.
+    final busy = _alreadyBusy();
+    if (busy != null) {
+      _say(L10n.of(context).actionBusy(busy));
+      return;
+    }
 
     setState(() {
       _search.value = Search.breach(
