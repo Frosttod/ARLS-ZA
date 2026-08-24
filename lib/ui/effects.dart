@@ -55,3 +55,18 @@ String plusPercent(double fraction) {
   final rounded = (fraction * 100).round();
   return rounded >= 0 ? '+$rounded%' : '$rounded%';
 }
+
+/// §4.8, §12: what is under the player's feet, in one line.
+///
+/// ⚠️ The nearest pile by name, and how many others there are — never a count
+/// on its own. "Three piles" is a number a player cannot act on; "Bandaż ×2
+/// +2" says whether the walk over is worth it.
+String? groundLabel<T>(
+  List<T> piles, {
+  required String? Function(T pile) nameOf,
+}) {
+  if (piles.isEmpty) return null;
+
+  final nearest = nameOf(piles.first);
+  return piles.length == 1 ? nearest : '$nearest  +${piles.length - 1}';
+}

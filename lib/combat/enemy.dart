@@ -190,6 +190,18 @@ const double kWanderTurnPerSecond = 12;
 /// Walker notices you at eighty-four metres instead of a hundred and twenty.
 const double kScoutingStealth = 0.30;
 
+/// §17.4: how much better they notice in the dark.
+///
+/// ⚠️ **§2.5.2's whole argument for a night raid rests on this**, and it was
+/// not implemented — "przeciwnicy wykrywają lepiej (+20%)" was a line in the
+/// document and nothing else, so walking a town at midnight was strictly
+/// safer than at noon once the noise rule is set aside.
+///
+/// Not because they see better: §6.2 gives a Walker eyes that barely work.
+/// A person moving at night is louder, slower and lit by a phone screen, and
+/// §6.2's radius is the only place this game has to put any of that.
+const double kNightDetection = 0.20;
+
 /// One of them, at one moment.
 class Enemy {
   const Enemy({
@@ -315,8 +327,10 @@ class Enemy {
   /// A radius rather than a roll, because §6.2 gives detection as a radius and
   /// nothing else. Making stealth a dice roll here would put a coin flip
   /// between the player and a fight they thought they had avoided.
-  double sightAgainst(double scouting) =>
-      sightM * (1 - kScoutingStealth * scouting.clamp(0.0, 1.0));
+  double sightAgainst(double scouting, {double darkness = 0}) =>
+      sightM *
+      (1 - kScoutingStealth * scouting.clamp(0.0, 1.0)) *
+      (1 + kNightDetection * darkness.clamp(0.0, 1.0));
 
   bool get isDead => bloodLostMl >= bloodMl * kind.deathAtLoss;
 
@@ -448,6 +462,7 @@ Enemy advanceEnemy(
   bool heardShot = false,
   SpawnFilter? ground,
   double scouting = 0,
+  double darkness = 0,
 }) {
   if (enemy.isDead || elapsed <= Duration.zero) return enemy;
 
@@ -479,6 +494,7 @@ Enemy advanceEnemy(
     beyondLeash: beyondLeash,
     lostContact: lostContact,
     scouting: scouting,
+    darkness: darkness,
   );
 
   // §6.1: the stopwatch. Spent only while sprinting, given back while walking.
@@ -501,7 +517,7 @@ Enemy advanceEnemy(
   // the player is not the nearer answer — something in front of you beats
   // something you heard.
   final noise = enemy.heardAt;
-  final seen = distance <= enemy.sightAgainst(scouting);
+  final seen = distance <= enemy.sightAgainst(scouting, darkness: darkness);
   final investigating = noise != null && !seen && state != EnemyState.returning;
 
   var left = enemy.investigateLeft;
@@ -592,6 +608,7 @@ EnemyState _nextState(
   required bool beyondLeash,
   required bool lostContact,
   double scouting = 0,
+  double darkness = 0,
 }) {
   // ⚠️ §6.1a's contact rule and §5.6.2's search would otherwise contradict
   // each other: an enemy sent to a noise is *supposed* to be somewhere the
@@ -611,7 +628,8 @@ EnemyState _nextState(
         : EnemyState.returning;
   }
 
-  final noticed = heardShot || distance <= enemy.sightAgainst(scouting);
+  final noticed =
+      heardShot || distance <= enemy.sightAgainst(scouting, darkness: darkness);
   if (!noticed) {
     // §5.6.2: a sound already heard is still worth walking to, so it stays
     // alert rather than forgetting the moment the player is out of sight.

@@ -121,24 +121,34 @@ class _SettingsScreenState extends State<SettingsScreen>
 
           const Divider(),
           _Heading(l10n.themeTitle),
-          RadioGroup<ThemeMode>(
-            groupValue: settings.themeMode,
-            onChanged: (mode) {
-              if (mode == null) return;
-              unawaited(settings.setThemeMode(mode));
+          RadioGroup<ThemeChoice>(
+            groupValue: settings.theme,
+            onChanged: (choice) {
+              if (choice == null) return;
+              unawaited(settings.setTheme(choice));
             },
             child: Column(
               children: [
-                RadioListTile<ThemeMode>(
-                  value: ThemeMode.dark,
+                // §17.2: first and default. The other three are preferences;
+                // this one is the sky.
+                RadioListTile<ThemeChoice>(
+                  value: ThemeChoice.daylight,
+                  title: Text(l10n.themeDaylight),
+                  subtitle: Text(
+                    l10n.themeDaylightHint,
+                    style: const TextStyle(fontSize: 11),
+                  ),
+                ),
+                RadioListTile<ThemeChoice>(
+                  value: ThemeChoice.dark,
                   title: Text(l10n.themeDark),
                 ),
-                RadioListTile<ThemeMode>(
-                  value: ThemeMode.light,
+                RadioListTile<ThemeChoice>(
+                  value: ThemeChoice.light,
                   title: Text(l10n.themeLight),
                 ),
-                RadioListTile<ThemeMode>(
-                  value: ThemeMode.system,
+                RadioListTile<ThemeChoice>(
+                  value: ThemeChoice.system,
                   title: Text(l10n.themeSystem),
                 ),
               ],

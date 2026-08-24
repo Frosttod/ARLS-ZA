@@ -506,3 +506,31 @@ double searchBoundaryM<T>({
   final reach = searchReachFor(sizeOf(place) ?? PlaceSize.normal);
   return reach > kStillnessM ? reach : kStillnessM;
 }
+
+/// §10.3.5, §7: what each depth of search costs at this place, in this body.
+///
+/// ⚠️ **The caption and the clock have to agree.** The icon under the thumb
+/// says how many seconds a thorough search takes, and once §7's Scouting
+/// started taking thirty per cent off the real one, the caption went on
+/// quoting the full figure — a countdown that finishes early reads as the game
+/// having lost track of it.
+Map<SearchDepth, Duration> searchTimesFor({
+  PlaceSize? sizeOf,
+  double scouting = 0,
+}) {
+  final size = sizeOf ?? PlaceSize.normal;
+
+  return {
+    for (final depth in SearchDepth.values)
+      depth: searchTimeWith(_atSize(depth, size), scouting),
+  };
+}
+
+/// §10.3.5: the same floor [LootTable.searchTime] keeps.
+///
+/// Never less than five seconds: below that it stops being an action somebody
+/// decided to take and becomes a button with a flicker on it.
+Duration _atSize(SearchDepth depth, PlaceSize size) {
+  final seconds = (depth.seconds * size.timeScale).round();
+  return Duration(seconds: seconds < 5 ? 5 : seconds);
+}

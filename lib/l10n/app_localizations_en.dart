@@ -1171,6 +1171,13 @@ class L10nEn extends L10n {
   String get themeTitle => 'Appearance';
 
   @override
+  String get themeDaylight => 'Day and night';
+
+  @override
+  String get themeDaylightHint =>
+      'Light between dawn and dusk, dark between dusk and dawn, from where you are standing.';
+
+  @override
   String get themeDark => 'Dark';
 
   @override

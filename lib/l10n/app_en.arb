@@ -647,6 +647,8 @@
   "languagePolish": "Polski",
   "languageEnglish": "English",
   "themeTitle": "Appearance",
+  "themeDaylight": "Day and night",
+  "themeDaylightHint": "Light between dawn and dusk, dark between dusk and dawn, from where you are standing.",
   "themeDark": "Dark",
   "themeLight": "Light",
   "themeSystem": "Match the system",

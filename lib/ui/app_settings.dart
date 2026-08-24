@@ -64,6 +64,39 @@ class MemorySettingsStore implements SettingsStore {
   Future<void> write(String key, String value) async => _values[key] = value;
 }
 
+/// §12, §17.2: which palette the game shows, and what decides it.
+///
+/// ⚠️ [daylight] is the one that is not a preference. The other three answer
+/// "what do I like"; this one answers "what is it like outside", from the
+/// player's own position — light between dawn and dusk, dark between dusk and
+/// dawn. It is the default because this game is played by walking around, and
+/// a black map under a June noon is not legible at arm's length (§12) while a
+/// white one at midnight ruins the night vision the player is using to watch
+/// where their feet go.
+/// §12, §17.2: how dark it has to be before the map turns dark.
+///
+/// ⚠️ Half way through civil twilight — the sun three degrees under — rather
+/// than at the first hint of it. Dusk takes a good half hour at this latitude,
+/// and a palette that flipped at the first degree would turn the map black
+/// while the street outside was still perfectly bright.
+const double kDarkPaletteAt = 0.5;
+
+enum ThemeChoice {
+  daylight,
+  dark,
+  light,
+  system;
+
+  static ThemeChoice fromWire(String? name) {
+    for (final choice in values) {
+      if (choice.name == name) return choice;
+    }
+    // ⚠️ Not `dark`. An unknown value is a downgrade or a hand-edited row, and
+    // the honest answer for both is the default the game ships with.
+    return ThemeChoice.daylight;
+  }
+}
+
 /// Reads and writes the two settings, and tells the app when they change.
 class AppSettings extends ChangeNotifier {
   AppSettings(this._store);
@@ -71,13 +104,29 @@ class AppSettings extends ChangeNotifier {
   final SettingsStore _store;
 
   Locale? _locale;
-  ThemeMode _themeMode = ThemeMode.dark;
+  ThemeChoice _theme = ThemeChoice.daylight;
+
+  /// §17.2: whether it is dark where the player is standing.
+  ///
+  /// ⚠️ Told, never worked out here. The sun's altitude needs a position and a
+  /// clock, and this class has neither — it holds settings. The game loop
+  /// already computes it for §10.2.2 and §17.4 and hands the same figure over,
+  /// so the map and the search radius can never disagree about whether it is
+  /// night.
+  bool _darkOutside = true;
 
   /// Null until the player has chosen. The app then follows the system, and
   /// the first-run screen is shown.
   Locale? get locale => _locale;
 
-  ThemeMode get themeMode => _themeMode;
+  ThemeChoice get theme => _theme;
+
+  ThemeMode get themeMode => switch (_theme) {
+    ThemeChoice.daylight => _darkOutside ? ThemeMode.dark : ThemeMode.light,
+    ThemeChoice.dark => ThemeMode.dark,
+    ThemeChoice.light => ThemeMode.light,
+    ThemeChoice.system => ThemeMode.system,
+  };
 
   /// Whether the language has ever been chosen. A first run stops here.
   bool get languageChosen => _locale != null;
@@ -87,8 +136,18 @@ class AppSettings extends ChangeNotifier {
     final theme = await _store.read(kThemeSettingKey);
 
     _locale = _localeFrom(language);
-    _themeMode = _themeFrom(theme);
+    _theme = ThemeChoice.fromWire(theme);
     notifyListeners();
+  }
+
+  /// §17.2: the game reporting the sky. Silent unless it actually changed and
+  /// unless anybody is looking at it — a notification per tick would rebuild
+  /// the whole application once a second.
+  void setDarkOutside(bool dark) {
+    if (dark == _darkOutside) return;
+
+    _darkOutside = dark;
+    if (_theme == ThemeChoice.daylight) notifyListeners();
   }
 
   Future<void> setLocale(Locale value) async {
@@ -97,8 +156,8 @@ class AppSettings extends ChangeNotifier {
     await _store.write(kLocaleSettingKey, value.languageCode);
   }
 
-  Future<void> setThemeMode(ThemeMode value) async {
-    _themeMode = value;
+  Future<void> setTheme(ThemeChoice value) async {
+    _theme = value;
     notifyListeners();
     await _store.write(kThemeSettingKey, value.name);
   }
@@ -116,14 +175,6 @@ Locale? _localeFrom(String? code) {
   }
   return null;
 }
-
-ThemeMode _themeFrom(String? name) => switch (name) {
-  'light' => ThemeMode.light,
-  'system' => ThemeMode.system,
-  // Dark is the default and the fallback: the game is designed to be read at
-  // night, and §3.6's map is drawn for it.
-  _ => ThemeMode.dark,
-};
 
 /// The two palettes.
 ///

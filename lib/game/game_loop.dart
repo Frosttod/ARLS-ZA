@@ -56,6 +56,7 @@ class GameSnapshot {
     required this.signal,
     required this.speedKmh,
     required this.isNight,
+    this.darkness = 0,
     required this.occupation,
     this.sleepCountdown,
     this.fix,
@@ -86,6 +87,16 @@ class GameSnapshot {
   final PositionSignal signal;
   final double speedKmh;
   final bool isNight;
+
+  /// §17.4, §12: how dark it is right now, 0 for full day and 1 for night.
+  ///
+  /// ⚠️ Not the same question as [isNight], and the two boundaries are an hour
+  /// apart in summer. [isNight] is sunset to sunrise, which is what §2.5.1
+  /// puts a character to bed on — nobody waits for pitch black to go to sleep.
+  /// This is dusk to dawn, civil twilight, which is when a person actually
+  /// cannot see: it drives the search radius (§10.2.2), what carries (§5.6.1),
+  /// what notices you (§17.4) and the colour of the map.
+  final double darkness;
   final Occupation? occupation;
   final Duration? sleepCountdown;
 
@@ -891,6 +902,13 @@ class GameLoop {
         isNight: fix == null
             ? false
             : isNightAt(
+                momentUtc: _state.lastUpdate,
+                latitude: fix.latitude,
+                longitude: fix.longitude,
+              ),
+        darkness: fix == null
+            ? 0
+            : darknessAt(
                 momentUtc: _state.lastUpdate,
                 latitude: fix.latitude,
                 longitude: fix.longitude,

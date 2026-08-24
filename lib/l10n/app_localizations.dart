@@ -2131,6 +2131,18 @@ abstract class L10n {
   /// **'Appearance'**
   String get themeTitle;
 
+  /// No description provided for @themeDaylight.
+  ///
+  /// In en, this message translates to:
+  /// **'Day and night'**
+  String get themeDaylight;
+
+  /// No description provided for @themeDaylightHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Light between dawn and dusk, dark between dusk and dawn, from where you are standing.'**
+  String get themeDaylightHint;
+
   /// No description provided for @themeDark.
   ///
   /// In en, this message translates to:

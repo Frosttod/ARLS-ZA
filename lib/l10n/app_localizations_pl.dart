@@ -1173,6 +1173,13 @@ class L10nPl extends L10n {
   String get themeTitle => 'Wygląd';
 
   @override
+  String get themeDaylight => 'Dzień i noc';
+
+  @override
+  String get themeDaylightHint =>
+      'Jasny od świtu do zmierzchu, ciemny od zmierzchu do świtu — według Twojej pozycji.';
+
+  @override
   String get themeDark => 'Ciemny';
 
   @override

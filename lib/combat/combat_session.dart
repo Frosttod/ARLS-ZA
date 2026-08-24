@@ -76,6 +76,8 @@ class CombatSession {
     // §7: how well this player moves. Nothing here rolls for it — see
     // [Enemy.sightAgainst].
     double scouting = 0,
+    // §17.4: they notice a fifth further in the dark.
+    double darkness = 0,
     void Function(Enemy dead)? onDeath,
   }) {
     // §3.5's features are what a person may not be sent through; most of them
@@ -101,6 +103,7 @@ class CombatSession {
         elapsed: elapsed,
         ground: ground,
         scouting: scouting,
+        darkness: darkness,
       );
 
       if (after.isDead) {

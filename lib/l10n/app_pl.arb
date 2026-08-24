@@ -571,6 +571,8 @@
   "languagePolish": "Polski",
   "languageEnglish": "English",
   "themeTitle": "Wygląd",
+  "themeDaylight": "Dzień i noc",
+  "themeDaylightHint": "Jasny od świtu do zmierzchu, ciemny od zmierzchu do świtu — według Twojej pozycji.",
   "themeDark": "Ciemny",
   "themeLight": "Jasny",
   "themeSystem": "Jak w systemie",

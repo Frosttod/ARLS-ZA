@@ -109,6 +109,7 @@ import 'ui/app_settings.dart';
 import 'ui/character_creator.dart';
 import 'ui/language_picker.dart';
 import 'ui/safety_briefing.dart';
+import 'ui/effects.dart';
 import 'ui/hud.dart';
 import 'ui/status_notes.dart';
 import 'ui/inventory_screen.dart';
@@ -1186,6 +1187,11 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       // Both the snapshot and the sticky rule, in one call. The rule itself
       // lives in [PositionController.accept] now.
       setState(() => _position.accept(snapshot));
+
+      // §17.2, §12: the sky, reported once — the same figure §10.2.2 and
+      // §17.4 are already using, so the map and the search radius can never
+      // disagree about whether it is dark.
+      widget.settings.setDarkOutside(snapshot.darkness >= kDarkPaletteAt);
       // §3.3: the same moment animations stop is the moment smoothness does.
       unawaited(_refresh.want(economy: snapshot.economy));
 
@@ -1939,28 +1945,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
   /// What the panel says is underfoot: the nearest pile, and how much else
   /// there is behind it.
-  String? _groundLabel() {
-    final piles = _pilesInReach();
-    if (piles.isEmpty) return null;
-
-    final nearest = _labelFor(piles.first);
-    return piles.length == 1 ? nearest : '$nearest  +${piles.length - 1}';
-  }
-
-  String? _labelFor(GroundPile pile) {
-    final catalogue = _catalogue;
-    if (catalogue == null || !mounted) return null;
-
-    final definition = catalogue[pile.itemId];
-    if (definition == null) return pile.itemId;
-
-    final language = Localizations.localeOf(context).languageCode;
-    final name = definition.name.resolve(
-      language: language,
-      lookup: (_names ?? ItemNames.empty).forLanguage(language),
-    );
-    return pile.count > 1 ? '$name ×${pile.count}' : name;
-  }
+  /// §4.8: what is underfoot, named.
+  String? _groundLabel() =>
+      groundLabel(_pilesInReach(), nameOf: (pile) => _nameOfId(pile.itemId));
 
   /// A tap on the map (§3.6): what the player wants to know about that dot.
   ///
@@ -2385,6 +2372,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         denseUrban: _world?.denseUrban ?? false,
         // §7: somebody who knows how to move is noticed later.
         scouting: _learned.scouting,
+        // §17.4: and everybody is noticed sooner after dark.
+        darkness: snapshot.darkness,
       );
 
       final here = GeoPoint(fix.latitude, fix.longitude);
@@ -2539,7 +2528,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       random: Random(),
       // §5.6.1: a built-up street in daylight takes a third off what is heard.
       denseUrban: _world?.denseUrban ?? false,
-      night: false,
+      // ⚠️ This read `false` outright, so a shot fired at midnight pulled
+      // enemies from a *daytime* radius while the ring drawn on the map used
+      // the real one — the picture and the consequence disagreed.
+      night: _snapshot?.isNight ?? false,
     );
 
     // The round is gone whatever happened to the shot.
@@ -5246,14 +5238,11 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   List<Enemy> _visibleEnemies() => _fight.visible(_standingAt.value);
 
   /// §10.3.5: how long each depth takes at this place.
-  Map<SearchDepth, Duration> _searchTimesAt(LootBox? box) {
-    final table = box == null ? null : _world?.tables[box.tableId];
-
-    return {
-      for (final depth in SearchDepth.values)
-        depth: table?.searchTime(depth) ?? Duration(seconds: depth.seconds),
-    };
-  }
+  /// §10.3.5, §7: what each depth costs *here*, at this character's hands.
+  Map<SearchDepth, Duration> _searchTimesAt(LootBox? box) => searchTimesFor(
+    sizeOf: box == null ? null : _world?.tables[box.tableId]?.size,
+    scouting: _learned.scouting,
+  );
 
   /// Advances whatever search is running, once a second.
   ///
@@ -5582,6 +5571,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       // which is four times the area looked over. §10.2.2 warns about exactly
       // this, which is why nothing else on the list comes close.
       scouting: _learned.scouting,
+      // §10.2.2: half the radius in the dark, and nobody was passing it.
+      darkness: _snapshot?.darkness ?? 0,
       binoculars:
           _inventory.value.countOf('tool_binoculars') > 0 ||
           _inventory.value.worn.any((line) => line.itemId == 'tool_binoculars'),

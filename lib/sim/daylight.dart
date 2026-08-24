@@ -116,6 +116,79 @@ DaylightInfo daylightAt({
   );
 }
 
+/// §17.2: how high the sun is at [momentUtc], in degrees above the horizon.
+///
+/// Negative below it. The same declination and equation of time [daylightAt]
+/// already computes, read at an instant rather than integrated over a day:
+///
+/// ```
+/// sin(alt) = sin δ · sin φ + cos δ · cos φ · cos H
+/// ```
+///
+/// where H is the hour angle, fifteen degrees to the hour from solar noon.
+double sunAltitudeDeg({
+  required DateTime momentUtc,
+  required double latitude,
+  double longitude = 0,
+}) {
+  final moment = momentUtc.toUtc();
+  final date = DateTime.utc(moment.year, moment.month, moment.day);
+  final n = _dayOfYear(date);
+
+  final declination = 23.45 * math.sin(_radians(360 / 365 * (284 + n)));
+  final solarNoonUtc = 12 - longitude / 15 - _equationOfTimeHours(n);
+
+  final hours =
+      moment.difference(date).inMicroseconds / Duration.microsecondsPerHour;
+
+  final hourAngleDeg = 15 * (hours - solarNoonUtc);
+
+  final sinAlt =
+      math.sin(_radians(declination)) * math.sin(_radians(latitude)) +
+      math.cos(_radians(declination)) *
+          math.cos(_radians(latitude)) *
+          math.cos(_radians(hourAngleDeg));
+
+  return _degrees(math.asin(sinAlt.clamp(-1.0, 1.0)));
+}
+
+/// §17.4: the sun below the horizon by this much is night to a human eye.
+///
+/// Civil twilight. ⚠️ **This is the "od zmierzchu do świtu" the day-and-night
+/// mode runs on, and it is not the same boundary [isNightAt] uses.** Sunset is
+/// the sun's centre crossing the horizon and there is still plenty of light
+/// after it — nobody switches a lamp on at sunset. Six degrees below is where
+/// print stops being readable outdoors, and it is the standard the rest of the
+/// world calls dusk.
+const double kCivilTwilightDeg = -6;
+
+/// §17.4, §12: how dark it is right now, 0 for full day and 1 for night.
+///
+/// ⚠️ **Continuous rather than a second boolean**, and that is the point of
+/// having it at all. Dusk is not an instant: the half hour after sunset is
+/// darker than noon and lighter than midnight, and a rule that flips would
+/// have a search radius halving between one GPS fix and the next.
+///
+/// [DaylightInfo.darknessIndex] answers a different question — how short the
+/// *days* are this month — and feeds §17.4's seasonal modifiers. This one is
+/// about the sky overhead at this minute.
+double darknessAt({
+  required DateTime momentUtc,
+  required double latitude,
+  double longitude = 0,
+}) {
+  final altitude = sunAltitudeDeg(
+    momentUtc: momentUtc,
+    latitude: latitude,
+    longitude: longitude,
+  );
+
+  if (altitude >= 0) return 0;
+  if (altitude <= kCivilTwilightDeg) return 1;
+
+  return altitude / kCivilTwilightDeg;
+}
+
 /// Whether it is night at [momentUtc].
 ///
 /// Night is what unlocks sleep (§2.5.1) and what widens the noise radius
