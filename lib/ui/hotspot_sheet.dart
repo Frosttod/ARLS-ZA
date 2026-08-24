@@ -1,16 +1,12 @@
 /// What a circle on the map actually is (§6.5.6, §12).
 ///
 /// ⚠️ **A red ring is a warning and not an explanation.** It says the ground is
-/// hostile and nothing else — not how hostile, not how many are in there, not
-/// whether walking in is a fight or an afternoon, and above all not what to do
-/// about it. §6.5.4's whole operation is a sequence a player has to be told
-/// once: kill what it sends, watch the wall come down, survive ten minutes of
-/// something worse, repeat.
+/// hostile and nothing else — not how many are in there, not what it costs to
+/// pull one down, and not that the wall grows back while nobody is on it.
 ///
-/// So this is the only screen in the game that explains a mechanic in prose.
-/// Everything else says what a thing is worth and lets the player work out the
-/// rest, because everything else is a number they can compare. A hotspot is a
-/// procedure, and a procedure nobody has been told is a wall.
+/// Said the way every other sheet in this game says things: a label and a
+/// number. §6.5.4 is a procedure, but a procedure written as a paragraph is a
+/// paragraph nobody reads standing in a street at dusk.
 library;
 
 import 'package:flutter/material.dart';
@@ -90,6 +86,12 @@ class HotspotSheet extends StatelessWidget {
     final kinds = spot.compositionNow(now).toSet().toList()
       ..sort((a, b) => a.index.compareTo(b.index));
 
+    final (restLow, restHigh) = kRestAfterClearing;
+    // §6.5.4: what agitation is worth, read off the table rather than written
+    // down twice. The rows above already show the raised numbers; this says by
+    // how much they are raised, which is the part that decides whether to run.
+    final calm = levelRow(spot.level);
+
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 18, 20, 16),
@@ -116,12 +118,12 @@ class HotspotSheet extends StatelessWidget {
                 ),
               ),
 
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               Text(
                 l10n.hotspotWhat,
                 style: TextStyle(
                   fontSize: 12,
-                  height: 1.45,
+                  height: 1.4,
                   color: colours.muted,
                 ),
               ),
@@ -173,11 +175,22 @@ class HotspotSheet extends StatelessWidget {
               // window where withdrawing is the correct move and the interface
               // has to make that obvious while it is happening.
               if (agitated) ...[
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
                 _Warning(
-                  text: l10n.hotspotAgitated(
+                  title: l10n.hotspotAgitated(
                     remaining(spot.agitatedUntil!.difference(now)),
                   ),
+                  detail: effects([
+                    l10n.hotspotAgitatedSorts,
+                    l10n.hotspotAgitatedMore(
+                      (spot.enemyCapAt(now) / calm.enemyCap * 100 - 100)
+                          .round(),
+                    ),
+                    l10n.hotspotAgitatedRespawn(
+                      (calm.respawn.inSeconds / spot.respawnAt(now).inSeconds)
+                          .round(),
+                    ),
+                  ]),
                   colours: colours,
                 ),
               ],
@@ -191,29 +204,56 @@ class HotspotSheet extends StatelessWidget {
                   color: colours.muted,
                 ),
               ),
-              const SizedBox(height: 6),
-              Text(
-                l10n.hotspotHowToBody(
+              const SizedBox(height: 8),
+
+              // §6.5.4's whole trade, as numbers rather than a paragraph: a
+              // body inside is worth twice one lured out, the wall costs a
+              // level, the level costs ten minutes of something worse, and
+              // everything comes back at five per cent an hour to anybody who
+              // walks off half way through.
+              _Line(
+                label: l10n.hotspotKillInside,
+                value: l10n.hotspotPoints(
                   killPoints(EnemyKind.walker, insideRadius: true),
+                ),
+                colours: colours,
+              ),
+              _Line(
+                label: l10n.hotspotKillOutside,
+                value: l10n.hotspotPoints(
                   killPoints(EnemyKind.walker, insideRadius: false),
                 ),
-                style: TextStyle(
-                  fontSize: 12,
-                  height: 1.5,
-                  color: colours.text,
-                ),
+                colours: colours,
               ),
-              const SizedBox(height: 8),
-              Text(
-                effects([
-                  l10n.hotspotEscape(kAgitationEscapeM.round()),
-                  l10n.hotspotHealing((kIntegrityRegenPerHour * 100).round()),
-                ]),
-                style: TextStyle(
-                  fontSize: 12,
-                  height: 1.5,
-                  color: colours.muted,
+              _Line(
+                label: l10n.hotspotAtZero,
+                value: l10n.hotspotAtZeroValue,
+                colours: colours,
+              ),
+              _Line(
+                label: l10n.hotspotThen,
+                value: l10n.hotspotThenValue(kAgitationLength.inMinutes),
+                colours: colours,
+              ),
+              _Line(
+                label: l10n.hotspotRegen,
+                value: l10n.hotspotRegenValue(
+                  (kIntegrityRegenPerHour * 100).round(),
                 ),
+                colours: colours,
+              ),
+              _Line(
+                label: l10n.hotspotEscape,
+                value: l10n.hotspotEscapeValue(kAgitationEscapeM.round()),
+                colours: colours,
+              ),
+              _Line(
+                label: l10n.hotspotCleared,
+                value: l10n.hotspotClearedValue(
+                  restLow.inHours,
+                  restHigh.inHours,
+                ),
+                colours: colours,
               ),
             ],
           ),
@@ -312,9 +352,14 @@ class _Bar extends StatelessWidget {
 }
 
 class _Warning extends StatelessWidget {
-  const _Warning({required this.text, required this.colours});
+  const _Warning({
+    required this.title,
+    required this.detail,
+    required this.colours,
+  });
 
-  final String text;
+  final String title;
+  final String detail;
   final HudColors colours;
 
   @override
@@ -330,9 +375,20 @@ class _Warning extends StatelessWidget {
         Icon(Icons.warning_amber_outlined, size: 16, color: colours.alert),
         const SizedBox(width: 8),
         Expanded(
-          child: Text(
-            text,
-            style: TextStyle(fontSize: 12, height: 1.45, color: colours.alert),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: TextStyle(fontSize: 13, color: colours.alert)),
+              const SizedBox(height: 2),
+              Text(
+                detail,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: colours.alert.withValues(alpha: 0.8),
+                  fontFamily: kDataFont,
+                ),
+              ),
+            ],
           ),
         ),
       ],

@@ -1169,51 +1169,98 @@ class L10nPl extends L10n {
 
   @override
   String get hotspotWhat =>
-      'Rośnie samo, niezależnie od tego, czy otwierasz grę. Każdy awans poszerza okrąg i wsadza w niego więcej sztuk.';
+      'Rośnie bez ciebie. Każdy poziom to szerszy okrąg i więcej sztuk.';
+
+  @override
+  String get hotspotIntegrity => 'Mur';
+
+  @override
+  String get hotspotEnemies => 'Sztuk naraz';
+
+  @override
+  String get hotspotRespawn => 'Wraca co';
+
+  @override
+  String get hotspotComposition => 'Skład';
 
   @override
   String get hotspotRadius => 'Promień';
 
   @override
-  String get hotspotEnemies => 'Naraz na zewnątrz';
-
-  @override
-  String get hotspotRespawn => 'Jedna wraca co';
-
-  @override
-  String get hotspotComposition => 'Co wysyła';
-
-  @override
-  String get hotspotIntegrity => 'Integralność';
-
-  @override
-  String hotspotAgitated(String time) {
-    return 'Wściekłe jeszcze $time — wszystko o szczebel gorsze, o połowę więcej sztuk, respawn trzy razy szybszy.';
-  }
-
-  @override
-  String get hotspotHowTo => 'Jak je zneutralizować';
-
-  @override
-  String hotspotHowToBody(int inside, int outside) {
-    return 'Zabijaj to, co wysyła. Ciało w okręgu kosztuje je $inside punktów, wywabione na zewnątrz — $outside. Na zerze traci poziom, odbudowuje mur na nowym i wścieka się na dziesięć minut. Zbij je do zera, a teren odpoczywa dobę lub dwie.';
-  }
-
-  @override
-  String hotspotEscape(int metres) {
-    return 'Odejdź $metres m i furia gaśnie razem z Tobą.';
-  }
-
-  @override
-  String hotspotHealing(int percent) {
-    return 'Goi $percent% muru na godzinę, dopóki nikt przy nim nie pracuje.';
-  }
-
-  @override
   String get hotspotDistance => 'Odległość';
 
   @override
-  String get hotspotInside => 'Stoisz w środku.';
+  String get hotspotInside => 'w środku';
+
+  @override
+  String hotspotAgitated(String time) {
+    return 'Wściekłe jeszcze $time';
+  }
+
+  @override
+  String get hotspotAgitatedSorts => 'gorszy skład';
+
+  @override
+  String hotspotAgitatedMore(int percent) {
+    return '+$percent% sztuk';
+  }
+
+  @override
+  String hotspotAgitatedRespawn(int times) {
+    return 'nawroty ×$times';
+  }
+
+  @override
+  String get hotspotHowTo => 'Jak je zdjąć';
+
+  @override
+  String get hotspotKillInside => 'Ciało w okręgu';
+
+  @override
+  String get hotspotKillOutside => 'Wywabione';
+
+  @override
+  String hotspotPoints(int points) {
+    return '$points pkt';
+  }
+
+  @override
+  String get hotspotAtZero => 'Mur na zerze';
+
+  @override
+  String get hotspotAtZeroValue => 'poziom w dół';
+
+  @override
+  String get hotspotThen => 'Potem';
+
+  @override
+  String hotspotThenValue(int minutes) {
+    return '$minutes min furii';
+  }
+
+  @override
+  String get hotspotRegen => 'Odrost muru';
+
+  @override
+  String hotspotRegenValue(int percent) {
+    return '$percent%/h';
+  }
+
+  @override
+  String get hotspotEscape => 'Furia gaśnie';
+
+  @override
+  String hotspotEscapeValue(int metres) {
+    return '$metres m stąd';
+  }
+
+  @override
+  String get hotspotCleared => 'Ostatni poziom';
+
+  @override
+  String hotspotClearedValue(int low, int high) {
+    return 'cisza $low–$high h';
+  }
 
   @override
   String hotspotLevel(int level) {

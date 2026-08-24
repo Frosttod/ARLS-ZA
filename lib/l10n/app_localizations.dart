@@ -2122,14 +2122,14 @@ abstract class L10n {
   /// No description provided for @hotspotWhat.
   ///
   /// In en, this message translates to:
-  /// **'It grows on its own, whether or not you open the game. Every promotion widens the circle and puts more of them in it.'**
+  /// **'It grows without you. Every level widens the circle and adds bodies.'**
   String get hotspotWhat;
 
-  /// No description provided for @hotspotRadius.
+  /// No description provided for @hotspotIntegrity.
   ///
   /// In en, this message translates to:
-  /// **'Radius'**
-  String get hotspotRadius;
+  /// **'Wall'**
+  String get hotspotIntegrity;
 
   /// No description provided for @hotspotEnemies.
   ///
@@ -2140,50 +2140,20 @@ abstract class L10n {
   /// No description provided for @hotspotRespawn.
   ///
   /// In en, this message translates to:
-  /// **'One replaced every'**
+  /// **'Replaced every'**
   String get hotspotRespawn;
 
   /// No description provided for @hotspotComposition.
   ///
   /// In en, this message translates to:
-  /// **'What it sends'**
+  /// **'Sorts'**
   String get hotspotComposition;
 
-  /// No description provided for @hotspotIntegrity.
+  /// No description provided for @hotspotRadius.
   ///
   /// In en, this message translates to:
-  /// **'Integrity'**
-  String get hotspotIntegrity;
-
-  /// No description provided for @hotspotAgitated.
-  ///
-  /// In en, this message translates to:
-  /// **'Furious for another {time} — everything one rung worse, half again as many, three times the respawn.'**
-  String hotspotAgitated(String time);
-
-  /// No description provided for @hotspotHowTo.
-  ///
-  /// In en, this message translates to:
-  /// **'How to take it down'**
-  String get hotspotHowTo;
-
-  /// No description provided for @hotspotHowToBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Kill what it sends. A body dropped inside the circle costs it {inside} points; one lured outside costs {outside}. At nought it loses a level, rebuilds the wall at the new one, and turns furious for ten minutes. Take it to nothing and the ground rests for a day or two.'**
-  String hotspotHowToBody(int inside, int outside);
-
-  /// No description provided for @hotspotEscape.
-  ///
-  /// In en, this message translates to:
-  /// **'Walk {metres} m out and the fury goes out with you.'**
-  String hotspotEscape(int metres);
-
-  /// No description provided for @hotspotHealing.
-  ///
-  /// In en, this message translates to:
-  /// **'It heals {percent}% of the wall an hour while nobody is working on it.'**
-  String hotspotHealing(int percent);
+  /// **'Radius'**
+  String get hotspotRadius;
 
   /// No description provided for @hotspotDistance.
   ///
@@ -2194,8 +2164,116 @@ abstract class L10n {
   /// No description provided for @hotspotInside.
   ///
   /// In en, this message translates to:
-  /// **'You are inside it.'**
+  /// **'inside'**
   String get hotspotInside;
+
+  /// No description provided for @hotspotAgitated.
+  ///
+  /// In en, this message translates to:
+  /// **'Furious for another {time}'**
+  String hotspotAgitated(String time);
+
+  /// No description provided for @hotspotAgitatedSorts.
+  ///
+  /// In en, this message translates to:
+  /// **'worse sorts'**
+  String get hotspotAgitatedSorts;
+
+  /// No description provided for @hotspotAgitatedMore.
+  ///
+  /// In en, this message translates to:
+  /// **'+{percent}% out'**
+  String hotspotAgitatedMore(int percent);
+
+  /// No description provided for @hotspotAgitatedRespawn.
+  ///
+  /// In en, this message translates to:
+  /// **'returns ×{times}'**
+  String hotspotAgitatedRespawn(int times);
+
+  /// No description provided for @hotspotHowTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Taking it down'**
+  String get hotspotHowTo;
+
+  /// No description provided for @hotspotKillInside.
+  ///
+  /// In en, this message translates to:
+  /// **'Body in the circle'**
+  String get hotspotKillInside;
+
+  /// No description provided for @hotspotKillOutside.
+  ///
+  /// In en, this message translates to:
+  /// **'Lured out'**
+  String get hotspotKillOutside;
+
+  /// No description provided for @hotspotPoints.
+  ///
+  /// In en, this message translates to:
+  /// **'{points} pts'**
+  String hotspotPoints(int points);
+
+  /// No description provided for @hotspotAtZero.
+  ///
+  /// In en, this message translates to:
+  /// **'Wall at nought'**
+  String get hotspotAtZero;
+
+  /// No description provided for @hotspotAtZeroValue.
+  ///
+  /// In en, this message translates to:
+  /// **'a level off'**
+  String get hotspotAtZeroValue;
+
+  /// No description provided for @hotspotThen.
+  ///
+  /// In en, this message translates to:
+  /// **'Then'**
+  String get hotspotThen;
+
+  /// No description provided for @hotspotThenValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min of fury'**
+  String hotspotThenValue(int minutes);
+
+  /// No description provided for @hotspotRegen.
+  ///
+  /// In en, this message translates to:
+  /// **'Wall regrows'**
+  String get hotspotRegen;
+
+  /// No description provided for @hotspotRegenValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{percent}%/h'**
+  String hotspotRegenValue(int percent);
+
+  /// No description provided for @hotspotEscape.
+  ///
+  /// In en, this message translates to:
+  /// **'Fury goes out'**
+  String get hotspotEscape;
+
+  /// No description provided for @hotspotEscapeValue.
+  ///
+  /// In en, this message translates to:
+  /// **'{metres} m away'**
+  String hotspotEscapeValue(int metres);
+
+  /// No description provided for @hotspotCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'Last level'**
+  String get hotspotCleared;
+
+  /// No description provided for @hotspotClearedValue.
+  ///
+  /// In en, this message translates to:
+  /// **'quiet for {low}–{high} h'**
+  String hotspotClearedValue(int low, int high);
 
   /// No description provided for @hotspotLevel.
   ///

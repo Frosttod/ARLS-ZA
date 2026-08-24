@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:arls_za/combat/hotspot.dart';
@@ -163,6 +164,35 @@ void main() {
       markers.contains('hotspotMarkerId('),
       isTrue,
       reason: 'the map and the tap would name the same hotspot differently',
+    );
+  });
+  test('§12: it says things the way every other sheet says them', () {
+    // ⚠️ The first version of this sheet answered "what is a hotspot" with
+    // three paragraphs of prose, and read like a manual dropped into a game
+    // that never explains anything twice. A player standing in a street at
+    // dusk reads a label and a number, or reads nothing.
+    final pl = jsonDecode(File('lib/l10n/app_pl.arb').readAsStringSync());
+
+    final wordy = <String>[];
+    for (final entry in (pl as Map<String, dynamic>).entries) {
+      if (!entry.key.startsWith('hotspot')) continue;
+      if (entry.key.startsWith('@')) continue;
+      // The one line of prose the sheet keeps: what the circle *is*.
+      if (entry.key == 'hotspotWhat') continue;
+
+      final text = entry.value as String;
+      if (text.length > 40) wordy.add('${entry.key}: $text');
+
+      // And nobody builds a separator by hand — §12's convention lives in
+      // effects.dart, and a string that bakes one in is a string that
+      // disagrees about the spacing the moment either is edited.
+      expect(text.contains('·'), isFalse, reason: entry.key);
+    }
+
+    expect(
+      wordy,
+      isEmpty,
+      reason: 'these are paragraphs, not rows: ${wordy.join("; ")}',
     );
   });
 }

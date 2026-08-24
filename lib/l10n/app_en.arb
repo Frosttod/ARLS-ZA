@@ -655,13 +655,15 @@
       }
     }
   },
-  "hotspotWhat": "It grows on its own, whether or not you open the game. Every promotion widens the circle and puts more of them in it.",
-  "hotspotRadius": "Radius",
+  "hotspotWhat": "It grows without you. Every level widens the circle and adds bodies.",
+  "hotspotIntegrity": "Wall",
   "hotspotEnemies": "Out at once",
-  "hotspotRespawn": "One replaced every",
-  "hotspotComposition": "What it sends",
-  "hotspotIntegrity": "Integrity",
-  "hotspotAgitated": "Furious for another {time} — everything one rung worse, half again as many, three times the respawn.",
+  "hotspotRespawn": "Replaced every",
+  "hotspotComposition": "Sorts",
+  "hotspotRadius": "Radius",
+  "hotspotDistance": "Distance",
+  "hotspotInside": "inside",
+  "hotspotAgitated": "Furious for another {time}",
   "@hotspotAgitated": {
     "placeholders": {
       "time": {
@@ -669,36 +671,75 @@
       }
     }
   },
-  "hotspotHowTo": "How to take it down",
-  "hotspotHowToBody": "Kill what it sends. A body dropped inside the circle costs it {inside} points; one lured outside costs {outside}. At nought it loses a level, rebuilds the wall at the new one, and turns furious for ten minutes. Take it to nothing and the ground rests for a day or two.",
-  "@hotspotHowToBody": {
-    "placeholders": {
-      "inside": {
-        "type": "int"
-      },
-      "outside": {
-        "type": "int"
-      }
-    }
-  },
-  "hotspotEscape": "Walk {metres} m out and the fury goes out with you.",
-  "@hotspotEscape": {
-    "placeholders": {
-      "metres": {
-        "type": "int"
-      }
-    }
-  },
-  "hotspotHealing": "It heals {percent}% of the wall an hour while nobody is working on it.",
-  "@hotspotHealing": {
+  "hotspotAgitatedSorts": "worse sorts",
+  "hotspotAgitatedMore": "+{percent}% out",
+  "@hotspotAgitatedMore": {
     "placeholders": {
       "percent": {
         "type": "int"
       }
     }
   },
-  "hotspotDistance": "Distance",
-  "hotspotInside": "You are inside it.",
+  "hotspotAgitatedRespawn": "returns ×{times}",
+  "@hotspotAgitatedRespawn": {
+    "placeholders": {
+      "times": {
+        "type": "int"
+      }
+    }
+  },
+  "hotspotHowTo": "Taking it down",
+  "hotspotKillInside": "Body in the circle",
+  "hotspotKillOutside": "Lured out",
+  "hotspotPoints": "{points} pts",
+  "@hotspotPoints": {
+    "placeholders": {
+      "points": {
+        "type": "int"
+      }
+    }
+  },
+  "hotspotAtZero": "Wall at nought",
+  "hotspotAtZeroValue": "a level off",
+  "hotspotThen": "Then",
+  "hotspotThenValue": "{minutes} min of fury",
+  "@hotspotThenValue": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "hotspotRegen": "Wall regrows",
+  "hotspotRegenValue": "{percent}%/h",
+  "@hotspotRegenValue": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "hotspotEscape": "Fury goes out",
+  "hotspotEscapeValue": "{metres} m away",
+  "@hotspotEscapeValue": {
+    "placeholders": {
+      "metres": {
+        "type": "int"
+      }
+    }
+  },
+  "hotspotCleared": "Last level",
+  "hotspotClearedValue": "quiet for {low}–{high} h",
+  "@hotspotClearedValue": {
+    "placeholders": {
+      "low": {
+        "type": "int"
+      },
+      "high": {
+        "type": "int"
+      }
+    }
+  },
   "hotspotLevel": "Hotspot, level {level}",
   "@hotspotLevel": {
     "placeholders": {

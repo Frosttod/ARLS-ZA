@@ -579,13 +579,15 @@
       }
     }
   },
-  "hotspotWhat": "Rośnie samo, niezależnie od tego, czy otwierasz grę. Każdy awans poszerza okrąg i wsadza w niego więcej sztuk.",
+  "hotspotWhat": "Rośnie bez ciebie. Każdy poziom to szerszy okrąg i więcej sztuk.",
+  "hotspotIntegrity": "Mur",
+  "hotspotEnemies": "Sztuk naraz",
+  "hotspotRespawn": "Wraca co",
+  "hotspotComposition": "Skład",
   "hotspotRadius": "Promień",
-  "hotspotEnemies": "Naraz na zewnątrz",
-  "hotspotRespawn": "Jedna wraca co",
-  "hotspotComposition": "Co wysyła",
-  "hotspotIntegrity": "Integralność",
-  "hotspotAgitated": "Wściekłe jeszcze {time} — wszystko o szczebel gorsze, o połowę więcej sztuk, respawn trzy razy szybszy.",
+  "hotspotDistance": "Odległość",
+  "hotspotInside": "w środku",
+  "hotspotAgitated": "Wściekłe jeszcze {time}",
   "@hotspotAgitated": {
     "placeholders": {
       "time": {
@@ -593,36 +595,75 @@
       }
     }
   },
-  "hotspotHowTo": "Jak je zneutralizować",
-  "hotspotHowToBody": "Zabijaj to, co wysyła. Ciało w okręgu kosztuje je {inside} punktów, wywabione na zewnątrz — {outside}. Na zerze traci poziom, odbudowuje mur na nowym i wścieka się na dziesięć minut. Zbij je do zera, a teren odpoczywa dobę lub dwie.",
-  "@hotspotHowToBody": {
-    "placeholders": {
-      "inside": {
-        "type": "int"
-      },
-      "outside": {
-        "type": "int"
-      }
-    }
-  },
-  "hotspotEscape": "Odejdź {metres} m i furia gaśnie razem z Tobą.",
-  "@hotspotEscape": {
-    "placeholders": {
-      "metres": {
-        "type": "int"
-      }
-    }
-  },
-  "hotspotHealing": "Goi {percent}% muru na godzinę, dopóki nikt przy nim nie pracuje.",
-  "@hotspotHealing": {
+  "hotspotAgitatedSorts": "gorszy skład",
+  "hotspotAgitatedMore": "+{percent}% sztuk",
+  "@hotspotAgitatedMore": {
     "placeholders": {
       "percent": {
         "type": "int"
       }
     }
   },
-  "hotspotDistance": "Odległość",
-  "hotspotInside": "Stoisz w środku.",
+  "hotspotAgitatedRespawn": "nawroty ×{times}",
+  "@hotspotAgitatedRespawn": {
+    "placeholders": {
+      "times": {
+        "type": "int"
+      }
+    }
+  },
+  "hotspotHowTo": "Jak je zdjąć",
+  "hotspotKillInside": "Ciało w okręgu",
+  "hotspotKillOutside": "Wywabione",
+  "hotspotPoints": "{points} pkt",
+  "@hotspotPoints": {
+    "placeholders": {
+      "points": {
+        "type": "int"
+      }
+    }
+  },
+  "hotspotAtZero": "Mur na zerze",
+  "hotspotAtZeroValue": "poziom w dół",
+  "hotspotThen": "Potem",
+  "hotspotThenValue": "{minutes} min furii",
+  "@hotspotThenValue": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "hotspotRegen": "Odrost muru",
+  "hotspotRegenValue": "{percent}%/h",
+  "@hotspotRegenValue": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "hotspotEscape": "Furia gaśnie",
+  "hotspotEscapeValue": "{metres} m stąd",
+  "@hotspotEscapeValue": {
+    "placeholders": {
+      "metres": {
+        "type": "int"
+      }
+    }
+  },
+  "hotspotCleared": "Ostatni poziom",
+  "hotspotClearedValue": "cisza {low}–{high} h",
+  "@hotspotClearedValue": {
+    "placeholders": {
+      "low": {
+        "type": "int"
+      },
+      "high": {
+        "type": "int"
+      }
+    }
+  },
   "hotspotLevel": "Ognisko, poziom {level}",
   "@hotspotLevel": {
     "placeholders": {
