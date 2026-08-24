@@ -2322,26 +2322,17 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       // written down — not the fighters, just the fact, the place and the
       // number. Closing the app in the middle of one used to be a perfect
       // escape, and nothing in §5 costs anything if the way out is free.
-      final engaged = [
-        for (final enemy in _combat.near(GeoPoint(fix.latitude, fix.longitude)))
-          if (!enemy.isDead &&
-              enemy.state != EnemyState.idle &&
-              enemy.state != EnemyState.returning)
-            enemy,
-      ].length;
+      final here = GeoPoint(fix.latitude, fix.longitude);
 
-      if (engaged > 0) {
-        _loop?.setPursuit(
-          stirredUp(
-            at: GeoPoint(fix.latitude, fix.longitude),
-            now: now,
-            engaged: engaged,
-          ),
-        );
-      } else if (_loop?.pursuit != null && !_loop!.pursuit!.isWarmAt(now)) {
-        // Gone cold on its own: a walk round the block genuinely loses them.
-        _loop?.setPursuit(null);
-      }
+      // §5.6.2: how warm the street is, after this second of it.
+      final hunt = pursuitAfter(
+        current: _loop?.pursuit,
+        near: _combat.near(here),
+        at: here,
+        now: now,
+        darkness: snapshot.darkness,
+      );
+      if (hunt != _loop?.pursuit) _loop?.setPursuit(hunt);
       _combat = _combat.advance(
         playerAt: GeoPoint(fix.latitude, fix.longitude),
         elapsed: elapsed,
@@ -2364,7 +2355,6 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         darkness: snapshot.darkness,
       );
 
-      final here = GeoPoint(fix.latitude, fix.longitude);
       for (final gone in before.values) {
         if (_combat.enemies.any((enemy) => enemy.id == gone.id)) continue;
         if (gone.position.distanceTo(here) > kActiveRadiusM) continue;

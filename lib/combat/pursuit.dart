@@ -18,6 +18,7 @@
 library;
 
 import '../map/geometry.dart';
+import 'enemy.dart';
 
 /// How long a street stays stirred up after the player stops feeding it.
 ///
@@ -65,6 +66,39 @@ class Pursuit {
     final left = (count * 0.6).round();
     return left.clamp(1, 4);
   }
+}
+
+/// §5.6.2: how warm the street is after one more second of it.
+///
+/// ⚠️ **Fed by who is *onto* the player, never by who is merely stirred up.**
+///
+/// This lived in the interface and counted anything that was not idle and not
+/// going home — which includes a body walking towards a noise three streets
+/// away. So the hunt was refreshed on every tick, [Pursuit.until] was pushed
+/// fifteen minutes into the future for ever, and the street never went cold.
+/// Coming back into the game then put hunters back, every time.
+///
+/// Reported from a walk as exactly that: shoot from a distance, close the app,
+/// reopen it, and they are still looking.
+Pursuit? pursuitAfter({
+  required Pursuit? current,
+  required List<Enemy> near,
+  required GeoPoint at,
+  required DateTime now,
+  double scouting = 0,
+  double darkness = 0,
+}) {
+  final engaged = [
+    for (final enemy in near)
+      if (!enemy.isDead &&
+          enemy.isOnto(at, scouting: scouting, darkness: darkness))
+        enemy,
+  ].length;
+
+  if (engaged > 0) return stirredUp(at: at, now: now, engaged: engaged);
+
+  // Gone cold on its own: a walk round the block genuinely loses them.
+  return current == null || current.isWarmAt(now) ? current : null;
 }
 
 /// The fight as it stands after the player has been seen or heard again.

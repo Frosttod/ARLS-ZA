@@ -164,6 +164,25 @@ const double kSpentSpeedFraction = 0.4;
 /// player the ground, which is the whole point of §5.6.3.
 const Duration kInvestigateFor = Duration(seconds: 30);
 
+/// §5.6.2: the longest anything will walk towards a sound before losing it.
+///
+/// ⚠️ **Without this, a distant shot made a permanent hunter.**
+///
+/// [kInvestigateFor] counts down only once the body has *arrived* at the
+/// noise, which is right for searching a street corner and catastrophic for
+/// getting there. A gunshot carries seven hundred metres (§5.6.1) and a Walker
+/// covers about three kilometres an hour, so the walk alone is a quarter of an
+/// hour — and anything whose leash (§6.1a) will not let it reach the sound
+/// never arrives at all. It walks out, gets pulled home, goes idle, hears the
+/// same remembered noise, and sets off again. For ever.
+///
+/// Reported from a walk as exactly that: shoot from a distance, and they are
+/// still looking after closing and reopening the game.
+///
+/// Three minutes is the walk a sound is worth. Past it the trail is cold —
+/// which is what §5.6.2 means by a noise being a place rather than a person.
+const Duration kWalkToNoiseFor = Duration(minutes: 3);
+
 /// §6.1a: how much longer a hurt one keeps looking.
 ///
 /// Something that has been shot does not wander home on the same schedule as
@@ -218,6 +237,7 @@ class Enemy {
     this.sinceContact = Duration.zero,
     this.heardAt,
     this.investigateLeft = Duration.zero,
+    this.walkedToNoise = Duration.zero,
     this.hurrying = false,
     this.headingDeg,
     this.sightFactor = 1,
@@ -279,6 +299,14 @@ class Enemy {
   /// §5.6.2: how much turning the place over is left before it gives up.
   final Duration investigateLeft;
 
+  /// §5.6.2: how long it has been walking towards the noise.
+  ///
+  /// ⚠️ Separate from [investigateLeft], which is the search *at* the place
+  /// and only starts once the body has arrived. Something that cannot arrive —
+  /// too far to walk, or held back by §6.1a's leash — never started that clock
+  /// at all, so it never forgot the sound. See [kWalkToNoiseFor].
+  final Duration walkedToNoise;
+
   /// §5.6.2: whether it is on its way to something startling.
   ///
   /// Only ever true while investigating: once it arrives, or gives up, it is
@@ -316,6 +344,23 @@ class Enemy {
 
   /// §6.1a: it charges inside sixty per cent of what it can see.
   double get chaseM => sightM * 0.6;
+
+  /// §5.6.2, §6.1a: whether this one is actually onto the player.
+  ///
+  /// ⚠️ **Not the same as "not idle".** Something walking towards a noise
+  /// three streets away is busy, is not idle, and is not on anybody — and
+  /// counting it as a pursuer kept §5.6.2's hunt warm on every tick, so the
+  /// street never went cold and a restart put hunters back for ever.
+  ///
+  /// Onto means one of two things: coming for the player, or close enough to
+  /// see them. A sound is neither.
+  bool isOnto(GeoPoint playerAt, {double scouting = 0, double darkness = 0}) {
+    if (state == EnemyState.chase || state == EnemyState.spent) return true;
+
+    return state == EnemyState.alert &&
+        position.distanceTo(playerAt) <=
+            sightAgainst(scouting, darkness: darkness);
+  }
 
   /// §6.2, §7: how far this one notices **this** player.
   ///
@@ -378,6 +423,7 @@ class Enemy {
     GeoPoint? heardAt,
     bool forgetNoise = false,
     Duration? investigateLeft,
+    Duration? walkedToNoise,
     bool? hurrying,
     double? headingDeg,
     double? sightFactor,
@@ -396,6 +442,9 @@ class Enemy {
     sinceContact: sinceContact ?? this.sinceContact,
     heardAt: forgetNoise ? null : heardAt ?? this.heardAt,
     hurrying: forgetNoise ? false : (hurrying ?? this.hurrying),
+    walkedToNoise: forgetNoise
+        ? Duration.zero
+        : walkedToNoise ?? this.walkedToNoise,
     investigateLeft: forgetNoise
         ? Duration.zero
         : investigateLeft ?? this.investigateLeft,
@@ -443,6 +492,9 @@ class Enemy {
       copyWith(
         heardAt: at,
         investigateLeft: kInvestigateFor,
+        // A fresh sound is a fresh walk. Without this a body that gave up on
+        // one noise would give up on the next one instantly.
+        walkedToNoise: Duration.zero,
         hurrying: hurrying,
         state: chasing && budget > Duration.zero
             ? EnemyState.chase
@@ -521,9 +573,9 @@ Enemy advanceEnemy(
   final investigating = noise != null && !seen && state != EnemyState.returning;
 
   var left = enemy.investigateLeft;
+  var walked = enemy.walkedToNoise;
   var forget = false;
   if (investigating) {
-    // Only once it has arrived: the search is of the place, not of the walk.
     // Ten metres, because what it is searching is a street corner rather than
     // a point, and because §6.1a has it milling about while it looks.
     if (enemy.position.distanceTo(noise) <= 10) {
@@ -533,9 +585,26 @@ Enemy advanceEnemy(
         forget = true;
         state = EnemyState.returning;
       }
+    } else {
+      // ⚠️ The walk has a clock of its own, and it did not. A sound it cannot
+      // reach — too far, or past the leash — left it walking out and being
+      // pulled back for the rest of the session.
+      walked += elapsed;
+      if (walked >= kWalkToNoiseFor) {
+        forget = true;
+        state = EnemyState.returning;
+      }
     }
   } else if (seen) {
     forget = true;
+  }
+
+  // ⚠️ Also while it is being pulled home. `investigating` is false in the
+  // returning state, so without this the walk clock stops the moment the leash
+  // takes hold — and the leash is exactly the case this exists for.
+  if (state == EnemyState.returning && noise != null && !forget) {
+    walked += elapsed;
+    if (walked >= kWalkToNoiseFor) forget = true;
   }
 
   // §6.1a: idle is random movement about its own patch, not standing to
@@ -597,6 +666,7 @@ Enemy advanceEnemy(
     sinceContact: sinceContact,
     forgetNoise: forget,
     investigateLeft: left,
+    walkedToNoise: walked,
   );
 }
 
