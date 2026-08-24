@@ -243,6 +243,10 @@ void main() {
       expect(kMarkerColours[MarkerKind.loot], 0xFFE8B33A);
       expect(kMarkerColours[MarkerKind.dropped], 0xFF8C8F92);
       expect(kMarkerColours[MarkerKind.shelter], 0xFF3A7BD9);
+
+      // §6.5.6: a shade past the enemy's, because the dots inside it are the
+      // enemy colour and the ground has to read as related and darker.
+      expect(kMarkerColours[MarkerKind.hotspot], 0xFF8C1F14);
       expect(kMarkerColours.values, isNot(contains(kPlayerColour)));
     });
   });

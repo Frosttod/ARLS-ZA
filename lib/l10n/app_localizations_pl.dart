@@ -1157,6 +1157,14 @@ class L10nPl extends L10n {
       'Nikt tu nie zaglądał. Podejdź na wyciągnięcie ręki, aby przeszukać.';
 
   @override
+  String get mapMarkerHotspot => 'Ognisko';
+
+  @override
+  String hotspotLevel(int level) {
+    return 'Ognisko, poziom $level';
+  }
+
+  @override
   String get mapMarkerShelter => 'Schron';
 
   @override

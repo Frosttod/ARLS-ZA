@@ -566,6 +566,15 @@
   "remainsSearched": "Kieszenie przeszukane.",
   "remainsEmptied": "Już przeszukane.",
   "remainsUnsearched": "Nikt tu nie zaglądał. Podejdź na wyciągnięcie ręki, aby przeszukać.",
+  "mapMarkerHotspot": "Ognisko",
+  "hotspotLevel": "Ognisko, poziom {level}",
+  "@hotspotLevel": {
+    "placeholders": {
+      "level": {
+        "type": "int"
+      }
+    }
+  },
   "mapMarkerShelter": "Schron",
   "mapPlayerLabel": "Ty",
   "regionPlayNow": "Graj teraz",

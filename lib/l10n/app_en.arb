@@ -642,6 +642,15 @@
   "remainsSearched": "Pockets turned out.",
   "remainsEmptied": "Already turned out.",
   "remainsUnsearched": "Nobody has been through it. Come within arm’s reach to search it.",
+  "mapMarkerHotspot": "Hotspot",
+  "hotspotLevel": "Hotspot, level {level}",
+  "@hotspotLevel": {
+    "placeholders": {
+      "level": {
+        "type": "int"
+      }
+    }
+  },
   "mapMarkerShelter": "Shelter",
   "mapPlayerLabel": "You",
   "regionPlayNow": "Play now",

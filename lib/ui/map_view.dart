@@ -309,4 +309,5 @@ String markerLabel(L10n l10n, MapMarker marker) =>
       MarkerKind.dropped => l10n.mapMarkerDropped,
       MarkerKind.remains => l10n.mapMarkerRemains,
       MarkerKind.shelter => l10n.mapMarkerShelter,
+      MarkerKind.hotspot => l10n.mapMarkerHotspot,
     };

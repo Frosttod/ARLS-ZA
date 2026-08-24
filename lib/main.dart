@@ -11,6 +11,7 @@ import 'devtools/dev_overlay.dart';
 import 'devtools/dev_session.dart';
 import 'game/controllers/action_controller.dart';
 import 'game/controllers/combat_controller.dart';
+import 'game/controllers/hotspot_controller.dart';
 import 'game/controllers/skill_controller.dart';
 import 'game/controllers/craft_controller.dart';
 import 'game/controllers/inventory_controller.dart';
@@ -102,6 +103,7 @@ import 'sim/body.dart';
 import 'sim/death.dart';
 import 'sim/physiology.dart';
 import 'sim/occupation.dart';
+import 'sim/play_habit.dart';
 import 'sim/player_stats.dart';
 import 'sim/player_stats_store.dart';
 import 'ui/profile_screen.dart';
@@ -1107,6 +1109,13 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
       // §7: what this character has learned, before anything can ask.
       await _learned.load(character.profile.id);
+
+      // §6.5: the three slots, seeded from the character so a run is the same
+      // world every time it is opened (§11).
+      _fires.bind(
+        profileId: character.profile.id,
+        seed: character.profile.rngSeed,
+      );
 
       await _pack.load(catalogue);
       if (!mounted) return;
@@ -2341,6 +2350,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         // that went down under the sights does.
         onDeath: _remember,
         obstacles: _world?.obstacles ?? const [],
+        // §6.5: what each hotspot is sending out. The ambient trickle of
+        // §6.4 is added underneath, never replaced by these.
+        origins: _fires.originsAt(now),
         // §8.1: they wait at the edge of what the player built.
         sanctuaries: _sanctuaries,
         shelterAt: _shelters.value
@@ -3241,6 +3253,35 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     if (!mounted) return;
 
     _loop?.setShelters(places);
+    await _reloadHotspots();
+  }
+
+  /// §6.5: brings the three slots up to date, and fills any that are empty.
+  ///
+  /// ⚠️ Anchored to the shelter (§6.5.1), so nothing is placed until there is
+  /// one — a pressure point measured from nowhere would move the first time
+  /// the player built a door.
+  Future<void> _reloadHotspots() async {
+    final home = _shelters.value
+        .where((place) => place.kind == ShelterKind.main)
+        .firstOrNull;
+
+    await _fires.reload(
+      now: DateTime.now().toUtc(),
+      // §16.4: the world grows at the pace this player actually plays at.
+      //
+      // ⚠️ Not measured yet — §16.4's daily figure has nowhere on disk to live
+      // (schema, stage 6 faza B). An empty habit reads as the floor, which is
+      // the slow end: a world that grows too slowly is a world somebody can
+      // still play, and one that grows too fast is not.
+      habit: const PlayHabit([]),
+      shelterAt: home?.position,
+      // §3.5: never on a motorway, a railway, private land or a hospital car
+      // park. The same filter the loot spawner and the bodies use.
+      allows: (at) =>
+          SpawnFilter(_world?.obstacles ?? const []).refuse(at) == null,
+    );
+    if (mounted) setState(() {});
   }
 
   /// Re-reads them when something they depend on has moved on.
@@ -5066,6 +5107,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       dropped: _loot.dropped.value,
       remains: _loot.remains.value,
       shelters: _shelters.value,
+      hotspots: _fires.hotspots.value,
       at: _standingAt.value,
       // §5.5.6: the fight moves every tick, so this is what actually decides
       // whether the answer can be reused.
@@ -5084,118 +5126,20 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
   ({MarkerInputs inputs, List<MapMarker> markers})? _markerCache;
 
-  List<MapMarker> _lootMarkers() {
-    final now = _snapshot?.state.lastUpdate ?? DateTime.now().toUtc();
-    final here = _standingAt.value;
-
-    /// §10.2: the reach ring, but only once the place is nearly underfoot.
-    ///
-    /// A circle per place is honest and, at any distance, a smear — fifteen
-    /// of them overlapping say nothing. The question a ring answers is "can I
-    /// open *this* one", and that is only asked about somewhere the player is
-    /// nearly at.
-    double? ringFor(GeoPoint at, double radiusM, double visibleWithinM) {
-      if (here == null) return null;
-      return at.distanceTo(here) <= visibleWithinM ? radiusM : null;
-    }
-
-    return [
-      // §10.2.1: what is there, and what was there. A place the player
-      // emptied keeps its dot in grey for a week — "I have been here" is the
-      // difference between a street they have worked and one they have not,
-      // and it costs nothing to say.
-      for (final box in _boxes)
-        if (box.isKnownAt(now) && _isVisible(box))
-          MapMarker(
-            id: box.poiId,
-            kind: MarkerKind.loot,
-            at: box.position,
-            spent: !box.isActiveAt(now),
-            // ⚠️ OSM's name where there is one, and what the place *is* where
-            // there is not. Everything generated by §10.1 has no name at all,
-            // so every car and every bin read "Skrzynia" — on a map whose
-            // icons exist precisely so a player can tell them apart.
-            label: box.name ?? placeName(L10n.of(context), box.tableId),
-            // §10.2: how close is close enough to search *this* place.
-            // Judging thirty or fifty metres by eye on a map that zooms is
-            // guesswork, and the two are now different numbers.
-            reachM: ringFor(
-              box.position,
-              searchReachFor(
-                _world?.tables[box.tableId]?.size ?? PlaceSize.normal,
-              ),
-              kReachRingVisibleM,
-            ),
-            // §3.6: what kind of place it is. A dot that only says "something
-            // to search" sends a player three hundred metres to a florist —
-            // the decision they are making is which errand is worth the walk.
-            icon: placeIconFor(box.tableId),
-          ),
-
-      // §3.6: red, and only what is near enough to be part of the fight
-      // (§5.5.6). Seeing every Walker in the district would answer the one
-      // question §7's Reconnaissance is there to ask.
-      // ⚠️ The last place the player was, never a default of nought — an
-      // island off Africa is further than the forget radius from everything,
-      // so a single fix without a position wiped every enemy off the map.
-      for (final enemy in _visibleEnemies())
-        MapMarker(
-          id: enemy.id,
-          kind: MarkerKind.enemy,
-          at: enemy.position,
-          // §3.6: which way it is walking. Not a field of view — §6.2 gives
-          // them a radius and nothing directional — but knowing that one of
-          // them has turned towards you is the whole of the warning.
-          headingDeg: enemy.headingDeg,
-          // §6.2: what it can see, drawn only once it is near enough for that
-          // to be a decision. The question is how close a player can get
-          // before it notices, and it is answered well before they are on
-          // top of it — so this ring shows twice as far out as a reach ring.
-          reachM: ringFor(enemy.position, enemy.sightM, kSightRingVisibleM),
-          alert: switch (enemy.state) {
-            EnemyState.chase || EnemyState.spent => MarkerAlert.hunting,
-            EnemyState.alert => MarkerAlert.searching,
-            EnemyState.idle || EnemyState.returning => MarkerAlert.calm,
-          },
-        ),
-
-      // §3.6: blue, and there is only ever one of them plus the camps.
-      for (final place in _shelters.value)
-        MapMarker(
-          id: 'shelter.${place.id}',
-          kind: MarkerKind.shelter,
-          at: place.position,
-          reachM: place.kind.safeRadiusM,
-          icon: PlaceIcon.home,
-        ),
-
-      // §10.3: bone white, with a skull on it. Stays until it is not worth
-      // walking back to.
-      for (final body in _remains)
-        MapMarker(
-          id: 'remains.${body.id}',
-          kind: MarkerKind.remains,
-          at: body.position,
-          reachM: kStillnessM,
-        ),
-
-      // §4.8: grey, and gone after a day.
-      for (final item in _dropped.value)
-        MapMarker(
-          id: 'dropped.${item.id}',
-          kind: MarkerKind.dropped,
-          at: item.position,
-          // §4.8: a pile the player dropped is picked up from arm's reach.
-          //
-          // ⚠️ But §10.2 gives a shop fifty metres *because its door is not
-          // where the dot is*, and a search drops what it found at the dot.
-          // Drawing a fifteen-metre ring round that pile drew a promise the
-          // pickup rule does not make — reported from a school, where the
-          // find could be taken but the ring said it could not.
-          reachM: _reachForPilesAt(item.position),
-        ),
-    ];
-  }
+  List<MapMarker> _lootMarkers() => markersFrom(
+    l10n: L10n.of(context),
+    now: _snapshot?.state.lastUpdate ?? DateTime.now().toUtc(),
+    here: _standingAt.value,
+    boxes: _boxes,
+    enemies: _visibleEnemies(),
+    shelters: _shelters.value,
+    hotspots: _fires.hotspots.value,
+    remains: _remains,
+    dropped: _dropped.value,
+    isVisible: _isVisible,
+    sizeOf: (box) => _world?.tables[box.tableId]?.size ?? PlaceSize.normal,
+    pileReachM: _reachForPilesAt,
+  );
 
   /// §10.2.1: whether this place can be seen without going and looking.
   ///
@@ -5958,6 +5902,12 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
   /// §5.5, §6.1a: everything hostile that is out there.
   late final CombatController _fight = _controllers.adopt(CombatController());
+
+  /// §6.5: the three pressure points, and the only thing in this game that
+  /// happens without the player.
+  late final HotspotController _fires = _controllers.adopt(
+    HotspotController(widget.session.db),
+  );
 
   /// §7: what this character has learned.
   ///

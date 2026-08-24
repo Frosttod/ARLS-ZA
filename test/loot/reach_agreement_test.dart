@@ -132,17 +132,21 @@ void main() {
     test('and the ring on the map says the same number', () {
       // A ring is a promise. One drawn tighter than the rule that actually
       // applies is a promise to refuse something that would in fact work.
-      final markers = bodyOf('List<MapMarker> _lootMarkers() {');
+      //
+      // ⚠️ Read from `map_markers.dart` rather than from the screen. Which
+      // dots exist and how far their rings reach is §3.6 and §10.2 — a rule,
+      // not a widget concern — and it moved there when the hotspots landed.
+      final markers = File('lib/ui/map_markers.dart').readAsStringSync();
 
       expect(
         markers.contains("id: 'dropped.\${item.id}'"),
         isTrue,
         reason: 'the dropped marker moved; check this test still looks at it',
       );
-      expect(
-        markers.contains('reachM: _reachForPilesAt(item.position)'),
-        isTrue,
-      );
+      expect(markers.contains('reachM: pileReachM(item.position)'), isTrue);
+
+      // And the screen hands it the same function the hand uses.
+      expect(main.contains('pileReachM: _reachForPilesAt'), isTrue);
     });
   });
 

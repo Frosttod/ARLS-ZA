@@ -1154,6 +1154,14 @@ class L10nEn extends L10n {
       'Nobody has been through it. Come within arm’s reach to search it.';
 
   @override
+  String get mapMarkerHotspot => 'Hotspot';
+
+  @override
+  String hotspotLevel(int level) {
+    return 'Hotspot, level $level';
+  }
+
+  @override
   String get mapMarkerShelter => 'Shelter';
 
   @override

@@ -2101,6 +2101,18 @@ abstract class L10n {
   /// **'Nobody has been through it. Come within arm’s reach to search it.'**
   String get remainsUnsearched;
 
+  /// No description provided for @mapMarkerHotspot.
+  ///
+  /// In en, this message translates to:
+  /// **'Hotspot'**
+  String get mapMarkerHotspot;
+
+  /// No description provided for @hotspotLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Hotspot, level {level}'**
+  String hotspotLevel(int level);
+
   /// No description provided for @mapMarkerShelter.
   ///
   /// In en, this message translates to:

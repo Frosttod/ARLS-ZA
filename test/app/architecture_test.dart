@@ -158,6 +158,7 @@ void main() {
       //           6627   the cancel dialog stopped being written twice
       //           6611   one busy guard instead of ten copies of it
       //           6601   how warm the street is became a rule, not a screen
+      //           6551   what goes on the map became a rule too (§6.5)
       //
       // ⚠️ Lower it when a phase lands. Never raise it — not for a phase, and
       // not for a feature either. "It is a feature" is exactly the excuse that
@@ -166,7 +167,7 @@ void main() {
       // Something new that belongs to the model goes in the model.
       expect(
         lines,
-        lessThanOrEqualTo(6601),
+        lessThanOrEqualTo(6551),
         reason: 'main.dart grew; something went in that should have come out',
       );
     });

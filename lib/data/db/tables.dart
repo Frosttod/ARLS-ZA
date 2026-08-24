@@ -223,6 +223,55 @@ class ChronicleEntries extends Table {
   ];
 }
 
+/// Warm layer: §6.5's three pressure points, one row each.
+///
+/// ⚠️ **A slot is a row, and an empty slot is still a row.** After a hotspot
+/// is cleared its place rests for a day or two (§6.5.4) before another appears
+/// somewhere else. Modelling that as the *absence* of a record would make "no
+/// hotspot here yet" and "this one was just cleared" the same state, and they
+/// are opposites: one is the game starting up, the other is a reward the
+/// player earned and is owed the quiet for.
+class HotspotRows extends Table {
+  @override
+  String get tableName => 'hotspots';
+
+  IntColumn get profileId => integer()();
+
+  /// 0, 1, 2 — §6.5.1 allows three. The slot outlives the hotspot in it.
+  IntColumn get slot => integer()();
+
+  /// What the radius is drawn from, stable for the life of this hotspot.
+  IntColumn get seed => integer()();
+
+  RealColumn get latitude => real()();
+  RealColumn get longitude => real()();
+
+  /// 1–10 while it exists, 0 while the slot is resting.
+  IntColumn get level => integer()();
+
+  RealColumn get integrity => real()();
+
+  DateTimeColumn get bornAt => dateTime()();
+
+  /// §6.5.3: when it grows next. Against the clock — a hotspot promotes with
+  /// the app shut, which is the whole point of it being pressure.
+  DateTimeColumn get nextLevelAt => dateTime()();
+
+  /// §6.5.4: furious until this moment, or null.
+  DateTimeColumn get agitatedUntil => dateTime().nullable()();
+
+  /// §6.5.4: the slot is empty until this moment, or null.
+  DateTimeColumn get restingUntil => dateTime().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {profileId, slot};
+
+  @override
+  List<String> get customConstraints => [
+    'FOREIGN KEY (profile_id) REFERENCES profiles (id) ON DELETE CASCADE',
+  ];
+}
+
 /// Warm layer: §7's four skills, one row each.
 ///
 /// ⚠️ A row per skill rather than a JSON blob on the profile, and the reason

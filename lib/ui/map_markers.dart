@@ -15,10 +15,13 @@ import 'dart:ui' show Offset;
 import '../l10n/app_localizations.dart';
 import '../map/geometry.dart';
 import '../combat/enemy.dart';
+import '../combat/hotspot.dart';
 import '../combat/noise.dart';
 import '../combat/remains.dart';
 import '../loot/dropped_items.dart';
 import '../loot/loot_spawner.dart';
+import '../loot/loot_table.dart';
+import '../loot/search.dart';
 import '../shelter/shelter.dart';
 
 /// The kinds of thing §3.6 puts on the map.
@@ -40,6 +43,14 @@ enum MarkerKind {
 
   /// §3.6: blue. There is only ever one (§8).
   shelter,
+
+  /// §6.5.6: the circle that grows on its own.
+  ///
+  /// ⚠️ Not a dot with a ring round it — the *circle* is the marker. A hotspot
+  /// has no body to point at: what the player needs to know is where the
+  /// ground turns hostile and how far it reaches, and that is an area rather
+  /// than a place.
+  hotspot,
 }
 
 /// How much attention a marker is paying to the player (§6.1a).
@@ -112,6 +123,7 @@ class MarkerInputs {
     required this.dropped,
     required this.remains,
     required this.shelters,
+    required this.hotspots,
     required this.at,
     required this.enemies,
     required this.revealed,
@@ -122,6 +134,13 @@ class MarkerInputs {
   final List<DroppedItem> dropped;
   final List<Remains> remains;
   final List<Shelter> shelters;
+
+  /// §6.5.6: the circles. ⚠️ Left out when hotspots landed, which would have
+  /// left the cache holding a map with no hotspot on it until something else
+  /// happened to move — and a hotspot appearing is exactly the moment a player
+  /// needs the map redrawn.
+  final List<Hotspot> hotspots;
+
   final GeoPoint? at;
   final List<Enemy> enemies;
   final int revealed;
@@ -134,6 +153,7 @@ class MarkerInputs {
       identical(other.dropped, dropped) &&
       identical(other.remains, remains) &&
       identical(other.shelters, shelters) &&
+      identical(other.hotspots, hotspots) &&
       identical(other.at, at) &&
       identical(other.enemies, enemies) &&
       other.revealed == revealed &&
@@ -145,6 +165,7 @@ class MarkerInputs {
     identityHashCode(dropped),
     identityHashCode(remains),
     identityHashCode(shelters),
+    identityHashCode(hotspots),
     identityHashCode(at),
     identityHashCode(enemies),
     revealed,
@@ -258,6 +279,11 @@ const Map<MarkerKind, int> kMarkerColours = {
   MarkerKind.dropped: 0xFF8C8F92,
   MarkerKind.remains: 0xFFE6E1D6,
   MarkerKind.shelter: 0xFF3A7BD9,
+
+  // §6.5.6: deep red, a shade past the enemy's. The dots inside it are the
+  // enemy colour, so the ground has to read as related and darker — the same
+  // thing, but the place rather than the body.
+  MarkerKind.hotspot: 0xFF8C1F14,
 };
 
 /// The player's own colour. Green, and not one of [kMarkerColours] — the player
@@ -274,6 +300,10 @@ const Map<MarkerKind, double> kMarkerRadius = {
   MarkerKind.dropped: 5,
   MarkerKind.remains: 6,
   MarkerKind.shelter: 9,
+
+  // ⚠️ Small on purpose: the circle is the marker (§6.5.6), and a fat dot at
+  // its centre would compete with the bodies actually standing in it.
+  MarkerKind.hotspot: 4,
 };
 
 /// §3.6: how far the camera leans back from straight down.
@@ -513,7 +543,13 @@ List<({GeoPoint at, double radiusM, bool danger})> zonesOf(
       (
         at: marker.at,
         radiusM: marker.reachM!,
-        danger: marker.kind == MarkerKind.enemy,
+        // ⚠️ §6.5.6's circle is the strongest warning on the map and would
+        // otherwise be drawn as an *invitation* — the same colour as a shop
+        // you can reach. Being wrong about that one is being wrong about the
+        // only area in the game that gets harder while you look at it.
+        danger:
+            marker.kind == MarkerKind.enemy ||
+            marker.kind == MarkerKind.hotspot,
       ),
 ];
 
@@ -691,3 +727,146 @@ const double kMapTiltDeg = 0;
 /// The tilt for a map [viewportHeightPx] logical pixels tall.
 MapTilt mapTilt(double viewportHeightPx) =>
     MapTilt(degrees: kMapTiltDeg, viewportHeightPx: viewportHeightPx);
+
+/// §3.6: everything that goes on the map, in one pass.
+///
+/// ⚠️ A rule rather than a widget concern. Which dots exist, what they are
+/// called and how far their rings reach comes out of §3.6, §10.2, §6.2 and
+/// §6.5.6 — none of which is about how a canvas is painted, and all of which
+/// was being decided inside the screen that paints it.
+///
+/// Everything it needs arrives explicitly. The list is cached against
+/// [MarkerInputs] by the caller, and a hidden dependency is a cache that goes
+/// stale without anybody noticing.
+List<MapMarker> markersFrom({
+  required L10n l10n,
+  required DateTime now,
+  required GeoPoint? here,
+  required List<LootBox> boxes,
+  required List<Enemy> enemies,
+  required List<Shelter> shelters,
+  required List<Hotspot> hotspots,
+  required List<Remains> remains,
+  required List<DroppedItem> dropped,
+  required bool Function(LootBox box) isVisible,
+  required PlaceSize Function(LootBox box) sizeOf,
+  required double Function(GeoPoint at) pileReachM,
+}) {
+  /// §10.2: the reach ring, but only once the place is nearly underfoot.
+  ///
+  /// A circle per place is honest and, at any distance, a smear — fifteen
+  /// of them overlapping say nothing. The question a ring answers is "can I
+  /// open *this* one", and that is only asked about somewhere the player is
+  /// nearly at.
+  double? ringFor(GeoPoint at, double radiusM, double visibleWithinM) {
+    if (here == null) return null;
+    return at.distanceTo(here) <= visibleWithinM ? radiusM : null;
+  }
+
+  return [
+    // §10.2.1: what is there, and what was there. A place the player
+    // emptied keeps its dot in grey for a week — "I have been here" is the
+    // difference between a street they have worked and one they have not,
+    // and it costs nothing to say.
+    for (final box in boxes)
+      if (box.isKnownAt(now) && isVisible(box))
+        MapMarker(
+          id: box.poiId,
+          kind: MarkerKind.loot,
+          at: box.position,
+          spent: !box.isActiveAt(now),
+          // ⚠️ OSM's name where there is one, and what the place *is* where
+          // there is not. Everything generated by §10.1 has no name at all,
+          // so every car and every bin read "Skrzynia" — on a map whose
+          // icons exist precisely so a player can tell them apart.
+          label: box.name ?? placeName(l10n, box.tableId),
+          // §10.2: how close is close enough to search *this* place.
+          // Judging thirty or fifty metres by eye on a map that zooms is
+          // guesswork, and the two are now different numbers.
+          reachM: ringFor(
+            box.position,
+            searchReachFor(sizeOf(box)),
+            kReachRingVisibleM,
+          ),
+          // §3.6: what kind of place it is. A dot that only says "something
+          // to search" sends a player three hundred metres to a florist —
+          // the decision they are making is which errand is worth the walk.
+          icon: placeIconFor(box.tableId),
+        ),
+
+    // §3.6: red, and only what is near enough to be part of the fight
+    // (§5.5.6). Seeing every Walker in the district would answer the one
+    // question §7's Reconnaissance is there to ask.
+    // ⚠️ The last place the player was, never a default of nought — an
+    // island off Africa is further than the forget radius from everything,
+    // so a single fix without a position wiped every enemy off the map.
+    for (final enemy in enemies)
+      MapMarker(
+        id: enemy.id,
+        kind: MarkerKind.enemy,
+        at: enemy.position,
+        // §3.6: which way it is walking. Not a field of view — §6.2 gives
+        // them a radius and nothing directional — but knowing that one of
+        // them has turned towards you is the whole of the warning.
+        headingDeg: enemy.headingDeg,
+        // §6.2: what it can see, drawn only once it is near enough for that
+        // to be a decision. The question is how close a player can get
+        // before it notices, and it is answered well before they are on
+        // top of it — so this ring shows twice as far out as a reach ring.
+        reachM: ringFor(enemy.position, enemy.sightM, kSightRingVisibleM),
+        alert: switch (enemy.state) {
+          EnemyState.chase || EnemyState.spent => MarkerAlert.hunting,
+          EnemyState.alert => MarkerAlert.searching,
+          EnemyState.idle || EnemyState.returning => MarkerAlert.calm,
+        },
+      ),
+
+    // §3.6: blue, and there is only ever one of them plus the camps.
+    for (final place in shelters)
+      MapMarker(
+        id: 'shelter.${place.id}',
+        kind: MarkerKind.shelter,
+        at: place.position,
+        reachM: place.kind.safeRadiusM,
+        icon: PlaceIcon.home,
+      ),
+
+    // §6.5.6: the circle *is* the marker. A hotspot has no body to point
+    // at — what a player needs is where the ground turns hostile and how
+    // far that reaches, which is an area rather than a place.
+    for (final fire in hotspots)
+      MapMarker(
+        id: 'hotspot.${fire.id}',
+        kind: MarkerKind.hotspot,
+        at: fire.centre,
+        reachM: fire.radiusM,
+        label: l10n.hotspotLevel(fire.level),
+      ),
+
+    // §10.3: bone white, with a skull on it. Stays until it is not worth
+    // walking back to.
+    for (final body in remains)
+      MapMarker(
+        id: 'remains.${body.id}',
+        kind: MarkerKind.remains,
+        at: body.position,
+        reachM: kStillnessM,
+      ),
+
+    // §4.8: grey, and gone after a day.
+    for (final item in dropped)
+      MapMarker(
+        id: 'dropped.${item.id}',
+        kind: MarkerKind.dropped,
+        at: item.position,
+        // §4.8: a pile the player dropped is picked up from arm's reach.
+        //
+        // ⚠️ But §10.2 gives a shop fifty metres *because its door is not
+        // where the dot is*, and a search drops what it found at the dot.
+        // Drawing a fifteen-metre ring round that pile drew a promise the
+        // pickup rule does not make — reported from a school, where the
+        // find could be taken but the ring said it could not.
+        reachM: pileReachM(item.position),
+      ),
+  ];
+}

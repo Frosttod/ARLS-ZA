@@ -10596,6 +10596,692 @@ class SkillRowsCompanion extends UpdateCompanion<SkillRow> {
   }
 }
 
+class $HotspotRowsTable extends HotspotRows
+    with TableInfo<$HotspotRowsTable, HotspotRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $HotspotRowsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _profileIdMeta = const VerificationMeta(
+    'profileId',
+  );
+  @override
+  late final GeneratedColumn<int> profileId = GeneratedColumn<int>(
+    'profile_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _slotMeta = const VerificationMeta('slot');
+  @override
+  late final GeneratedColumn<int> slot = GeneratedColumn<int>(
+    'slot',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _seedMeta = const VerificationMeta('seed');
+  @override
+  late final GeneratedColumn<int> seed = GeneratedColumn<int>(
+    'seed',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _latitudeMeta = const VerificationMeta(
+    'latitude',
+  );
+  @override
+  late final GeneratedColumn<double> latitude = GeneratedColumn<double>(
+    'latitude',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _longitudeMeta = const VerificationMeta(
+    'longitude',
+  );
+  @override
+  late final GeneratedColumn<double> longitude = GeneratedColumn<double>(
+    'longitude',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _levelMeta = const VerificationMeta('level');
+  @override
+  late final GeneratedColumn<int> level = GeneratedColumn<int>(
+    'level',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _integrityMeta = const VerificationMeta(
+    'integrity',
+  );
+  @override
+  late final GeneratedColumn<double> integrity = GeneratedColumn<double>(
+    'integrity',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _bornAtMeta = const VerificationMeta('bornAt');
+  @override
+  late final GeneratedColumn<DateTime> bornAt = GeneratedColumn<DateTime>(
+    'born_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _nextLevelAtMeta = const VerificationMeta(
+    'nextLevelAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> nextLevelAt = GeneratedColumn<DateTime>(
+    'next_level_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _agitatedUntilMeta = const VerificationMeta(
+    'agitatedUntil',
+  );
+  @override
+  late final GeneratedColumn<DateTime> agitatedUntil =
+      GeneratedColumn<DateTime>(
+        'agitated_until',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _restingUntilMeta = const VerificationMeta(
+    'restingUntil',
+  );
+  @override
+  late final GeneratedColumn<DateTime> restingUntil = GeneratedColumn<DateTime>(
+    'resting_until',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    profileId,
+    slot,
+    seed,
+    latitude,
+    longitude,
+    level,
+    integrity,
+    bornAt,
+    nextLevelAt,
+    agitatedUntil,
+    restingUntil,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'hotspots';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<HotspotRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('profile_id')) {
+      context.handle(
+        _profileIdMeta,
+        profileId.isAcceptableOrUnknown(data['profile_id']!, _profileIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_profileIdMeta);
+    }
+    if (data.containsKey('slot')) {
+      context.handle(
+        _slotMeta,
+        slot.isAcceptableOrUnknown(data['slot']!, _slotMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_slotMeta);
+    }
+    if (data.containsKey('seed')) {
+      context.handle(
+        _seedMeta,
+        seed.isAcceptableOrUnknown(data['seed']!, _seedMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_seedMeta);
+    }
+    if (data.containsKey('latitude')) {
+      context.handle(
+        _latitudeMeta,
+        latitude.isAcceptableOrUnknown(data['latitude']!, _latitudeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_latitudeMeta);
+    }
+    if (data.containsKey('longitude')) {
+      context.handle(
+        _longitudeMeta,
+        longitude.isAcceptableOrUnknown(data['longitude']!, _longitudeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_longitudeMeta);
+    }
+    if (data.containsKey('level')) {
+      context.handle(
+        _levelMeta,
+        level.isAcceptableOrUnknown(data['level']!, _levelMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_levelMeta);
+    }
+    if (data.containsKey('integrity')) {
+      context.handle(
+        _integrityMeta,
+        integrity.isAcceptableOrUnknown(data['integrity']!, _integrityMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_integrityMeta);
+    }
+    if (data.containsKey('born_at')) {
+      context.handle(
+        _bornAtMeta,
+        bornAt.isAcceptableOrUnknown(data['born_at']!, _bornAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_bornAtMeta);
+    }
+    if (data.containsKey('next_level_at')) {
+      context.handle(
+        _nextLevelAtMeta,
+        nextLevelAt.isAcceptableOrUnknown(
+          data['next_level_at']!,
+          _nextLevelAtMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_nextLevelAtMeta);
+    }
+    if (data.containsKey('agitated_until')) {
+      context.handle(
+        _agitatedUntilMeta,
+        agitatedUntil.isAcceptableOrUnknown(
+          data['agitated_until']!,
+          _agitatedUntilMeta,
+        ),
+      );
+    }
+    if (data.containsKey('resting_until')) {
+      context.handle(
+        _restingUntilMeta,
+        restingUntil.isAcceptableOrUnknown(
+          data['resting_until']!,
+          _restingUntilMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {profileId, slot};
+  @override
+  HotspotRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return HotspotRow(
+      profileId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}profile_id'],
+      )!,
+      slot: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}slot'],
+      )!,
+      seed: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}seed'],
+      )!,
+      latitude: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}latitude'],
+      )!,
+      longitude: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}longitude'],
+      )!,
+      level: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}level'],
+      )!,
+      integrity: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}integrity'],
+      )!,
+      bornAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}born_at'],
+      )!,
+      nextLevelAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}next_level_at'],
+      )!,
+      agitatedUntil: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}agitated_until'],
+      ),
+      restingUntil: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}resting_until'],
+      ),
+    );
+  }
+
+  @override
+  $HotspotRowsTable createAlias(String alias) {
+    return $HotspotRowsTable(attachedDatabase, alias);
+  }
+}
+
+class HotspotRow extends DataClass implements Insertable<HotspotRow> {
+  final int profileId;
+
+  /// 0, 1, 2 — §6.5.1 allows three. The slot outlives the hotspot in it.
+  final int slot;
+
+  /// What the radius is drawn from, stable for the life of this hotspot.
+  final int seed;
+  final double latitude;
+  final double longitude;
+
+  /// 1–10 while it exists, 0 while the slot is resting.
+  final int level;
+  final double integrity;
+  final DateTime bornAt;
+
+  /// §6.5.3: when it grows next. Against the clock — a hotspot promotes with
+  /// the app shut, which is the whole point of it being pressure.
+  final DateTime nextLevelAt;
+
+  /// §6.5.4: furious until this moment, or null.
+  final DateTime? agitatedUntil;
+
+  /// §6.5.4: the slot is empty until this moment, or null.
+  final DateTime? restingUntil;
+  const HotspotRow({
+    required this.profileId,
+    required this.slot,
+    required this.seed,
+    required this.latitude,
+    required this.longitude,
+    required this.level,
+    required this.integrity,
+    required this.bornAt,
+    required this.nextLevelAt,
+    this.agitatedUntil,
+    this.restingUntil,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['profile_id'] = Variable<int>(profileId);
+    map['slot'] = Variable<int>(slot);
+    map['seed'] = Variable<int>(seed);
+    map['latitude'] = Variable<double>(latitude);
+    map['longitude'] = Variable<double>(longitude);
+    map['level'] = Variable<int>(level);
+    map['integrity'] = Variable<double>(integrity);
+    map['born_at'] = Variable<DateTime>(bornAt);
+    map['next_level_at'] = Variable<DateTime>(nextLevelAt);
+    if (!nullToAbsent || agitatedUntil != null) {
+      map['agitated_until'] = Variable<DateTime>(agitatedUntil);
+    }
+    if (!nullToAbsent || restingUntil != null) {
+      map['resting_until'] = Variable<DateTime>(restingUntil);
+    }
+    return map;
+  }
+
+  HotspotRowsCompanion toCompanion(bool nullToAbsent) {
+    return HotspotRowsCompanion(
+      profileId: Value(profileId),
+      slot: Value(slot),
+      seed: Value(seed),
+      latitude: Value(latitude),
+      longitude: Value(longitude),
+      level: Value(level),
+      integrity: Value(integrity),
+      bornAt: Value(bornAt),
+      nextLevelAt: Value(nextLevelAt),
+      agitatedUntil: agitatedUntil == null && nullToAbsent
+          ? const Value.absent()
+          : Value(agitatedUntil),
+      restingUntil: restingUntil == null && nullToAbsent
+          ? const Value.absent()
+          : Value(restingUntil),
+    );
+  }
+
+  factory HotspotRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return HotspotRow(
+      profileId: serializer.fromJson<int>(json['profileId']),
+      slot: serializer.fromJson<int>(json['slot']),
+      seed: serializer.fromJson<int>(json['seed']),
+      latitude: serializer.fromJson<double>(json['latitude']),
+      longitude: serializer.fromJson<double>(json['longitude']),
+      level: serializer.fromJson<int>(json['level']),
+      integrity: serializer.fromJson<double>(json['integrity']),
+      bornAt: serializer.fromJson<DateTime>(json['bornAt']),
+      nextLevelAt: serializer.fromJson<DateTime>(json['nextLevelAt']),
+      agitatedUntil: serializer.fromJson<DateTime?>(json['agitatedUntil']),
+      restingUntil: serializer.fromJson<DateTime?>(json['restingUntil']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'profileId': serializer.toJson<int>(profileId),
+      'slot': serializer.toJson<int>(slot),
+      'seed': serializer.toJson<int>(seed),
+      'latitude': serializer.toJson<double>(latitude),
+      'longitude': serializer.toJson<double>(longitude),
+      'level': serializer.toJson<int>(level),
+      'integrity': serializer.toJson<double>(integrity),
+      'bornAt': serializer.toJson<DateTime>(bornAt),
+      'nextLevelAt': serializer.toJson<DateTime>(nextLevelAt),
+      'agitatedUntil': serializer.toJson<DateTime?>(agitatedUntil),
+      'restingUntil': serializer.toJson<DateTime?>(restingUntil),
+    };
+  }
+
+  HotspotRow copyWith({
+    int? profileId,
+    int? slot,
+    int? seed,
+    double? latitude,
+    double? longitude,
+    int? level,
+    double? integrity,
+    DateTime? bornAt,
+    DateTime? nextLevelAt,
+    Value<DateTime?> agitatedUntil = const Value.absent(),
+    Value<DateTime?> restingUntil = const Value.absent(),
+  }) => HotspotRow(
+    profileId: profileId ?? this.profileId,
+    slot: slot ?? this.slot,
+    seed: seed ?? this.seed,
+    latitude: latitude ?? this.latitude,
+    longitude: longitude ?? this.longitude,
+    level: level ?? this.level,
+    integrity: integrity ?? this.integrity,
+    bornAt: bornAt ?? this.bornAt,
+    nextLevelAt: nextLevelAt ?? this.nextLevelAt,
+    agitatedUntil: agitatedUntil.present
+        ? agitatedUntil.value
+        : this.agitatedUntil,
+    restingUntil: restingUntil.present ? restingUntil.value : this.restingUntil,
+  );
+  HotspotRow copyWithCompanion(HotspotRowsCompanion data) {
+    return HotspotRow(
+      profileId: data.profileId.present ? data.profileId.value : this.profileId,
+      slot: data.slot.present ? data.slot.value : this.slot,
+      seed: data.seed.present ? data.seed.value : this.seed,
+      latitude: data.latitude.present ? data.latitude.value : this.latitude,
+      longitude: data.longitude.present ? data.longitude.value : this.longitude,
+      level: data.level.present ? data.level.value : this.level,
+      integrity: data.integrity.present ? data.integrity.value : this.integrity,
+      bornAt: data.bornAt.present ? data.bornAt.value : this.bornAt,
+      nextLevelAt: data.nextLevelAt.present
+          ? data.nextLevelAt.value
+          : this.nextLevelAt,
+      agitatedUntil: data.agitatedUntil.present
+          ? data.agitatedUntil.value
+          : this.agitatedUntil,
+      restingUntil: data.restingUntil.present
+          ? data.restingUntil.value
+          : this.restingUntil,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HotspotRow(')
+          ..write('profileId: $profileId, ')
+          ..write('slot: $slot, ')
+          ..write('seed: $seed, ')
+          ..write('latitude: $latitude, ')
+          ..write('longitude: $longitude, ')
+          ..write('level: $level, ')
+          ..write('integrity: $integrity, ')
+          ..write('bornAt: $bornAt, ')
+          ..write('nextLevelAt: $nextLevelAt, ')
+          ..write('agitatedUntil: $agitatedUntil, ')
+          ..write('restingUntil: $restingUntil')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    profileId,
+    slot,
+    seed,
+    latitude,
+    longitude,
+    level,
+    integrity,
+    bornAt,
+    nextLevelAt,
+    agitatedUntil,
+    restingUntil,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is HotspotRow &&
+          other.profileId == this.profileId &&
+          other.slot == this.slot &&
+          other.seed == this.seed &&
+          other.latitude == this.latitude &&
+          other.longitude == this.longitude &&
+          other.level == this.level &&
+          other.integrity == this.integrity &&
+          other.bornAt == this.bornAt &&
+          other.nextLevelAt == this.nextLevelAt &&
+          other.agitatedUntil == this.agitatedUntil &&
+          other.restingUntil == this.restingUntil);
+}
+
+class HotspotRowsCompanion extends UpdateCompanion<HotspotRow> {
+  final Value<int> profileId;
+  final Value<int> slot;
+  final Value<int> seed;
+  final Value<double> latitude;
+  final Value<double> longitude;
+  final Value<int> level;
+  final Value<double> integrity;
+  final Value<DateTime> bornAt;
+  final Value<DateTime> nextLevelAt;
+  final Value<DateTime?> agitatedUntil;
+  final Value<DateTime?> restingUntil;
+  final Value<int> rowid;
+  const HotspotRowsCompanion({
+    this.profileId = const Value.absent(),
+    this.slot = const Value.absent(),
+    this.seed = const Value.absent(),
+    this.latitude = const Value.absent(),
+    this.longitude = const Value.absent(),
+    this.level = const Value.absent(),
+    this.integrity = const Value.absent(),
+    this.bornAt = const Value.absent(),
+    this.nextLevelAt = const Value.absent(),
+    this.agitatedUntil = const Value.absent(),
+    this.restingUntil = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  HotspotRowsCompanion.insert({
+    required int profileId,
+    required int slot,
+    required int seed,
+    required double latitude,
+    required double longitude,
+    required int level,
+    required double integrity,
+    required DateTime bornAt,
+    required DateTime nextLevelAt,
+    this.agitatedUntil = const Value.absent(),
+    this.restingUntil = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : profileId = Value(profileId),
+       slot = Value(slot),
+       seed = Value(seed),
+       latitude = Value(latitude),
+       longitude = Value(longitude),
+       level = Value(level),
+       integrity = Value(integrity),
+       bornAt = Value(bornAt),
+       nextLevelAt = Value(nextLevelAt);
+  static Insertable<HotspotRow> custom({
+    Expression<int>? profileId,
+    Expression<int>? slot,
+    Expression<int>? seed,
+    Expression<double>? latitude,
+    Expression<double>? longitude,
+    Expression<int>? level,
+    Expression<double>? integrity,
+    Expression<DateTime>? bornAt,
+    Expression<DateTime>? nextLevelAt,
+    Expression<DateTime>? agitatedUntil,
+    Expression<DateTime>? restingUntil,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (profileId != null) 'profile_id': profileId,
+      if (slot != null) 'slot': slot,
+      if (seed != null) 'seed': seed,
+      if (latitude != null) 'latitude': latitude,
+      if (longitude != null) 'longitude': longitude,
+      if (level != null) 'level': level,
+      if (integrity != null) 'integrity': integrity,
+      if (bornAt != null) 'born_at': bornAt,
+      if (nextLevelAt != null) 'next_level_at': nextLevelAt,
+      if (agitatedUntil != null) 'agitated_until': agitatedUntil,
+      if (restingUntil != null) 'resting_until': restingUntil,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  HotspotRowsCompanion copyWith({
+    Value<int>? profileId,
+    Value<int>? slot,
+    Value<int>? seed,
+    Value<double>? latitude,
+    Value<double>? longitude,
+    Value<int>? level,
+    Value<double>? integrity,
+    Value<DateTime>? bornAt,
+    Value<DateTime>? nextLevelAt,
+    Value<DateTime?>? agitatedUntil,
+    Value<DateTime?>? restingUntil,
+    Value<int>? rowid,
+  }) {
+    return HotspotRowsCompanion(
+      profileId: profileId ?? this.profileId,
+      slot: slot ?? this.slot,
+      seed: seed ?? this.seed,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+      level: level ?? this.level,
+      integrity: integrity ?? this.integrity,
+      bornAt: bornAt ?? this.bornAt,
+      nextLevelAt: nextLevelAt ?? this.nextLevelAt,
+      agitatedUntil: agitatedUntil ?? this.agitatedUntil,
+      restingUntil: restingUntil ?? this.restingUntil,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (profileId.present) {
+      map['profile_id'] = Variable<int>(profileId.value);
+    }
+    if (slot.present) {
+      map['slot'] = Variable<int>(slot.value);
+    }
+    if (seed.present) {
+      map['seed'] = Variable<int>(seed.value);
+    }
+    if (latitude.present) {
+      map['latitude'] = Variable<double>(latitude.value);
+    }
+    if (longitude.present) {
+      map['longitude'] = Variable<double>(longitude.value);
+    }
+    if (level.present) {
+      map['level'] = Variable<int>(level.value);
+    }
+    if (integrity.present) {
+      map['integrity'] = Variable<double>(integrity.value);
+    }
+    if (bornAt.present) {
+      map['born_at'] = Variable<DateTime>(bornAt.value);
+    }
+    if (nextLevelAt.present) {
+      map['next_level_at'] = Variable<DateTime>(nextLevelAt.value);
+    }
+    if (agitatedUntil.present) {
+      map['agitated_until'] = Variable<DateTime>(agitatedUntil.value);
+    }
+    if (restingUntil.present) {
+      map['resting_until'] = Variable<DateTime>(restingUntil.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HotspotRowsCompanion(')
+          ..write('profileId: $profileId, ')
+          ..write('slot: $slot, ')
+          ..write('seed: $seed, ')
+          ..write('latitude: $latitude, ')
+          ..write('longitude: $longitude, ')
+          ..write('level: $level, ')
+          ..write('integrity: $integrity, ')
+          ..write('bornAt: $bornAt, ')
+          ..write('nextLevelAt: $nextLevelAt, ')
+          ..write('agitatedUntil: $agitatedUntil, ')
+          ..write('restingUntil: $restingUntil, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$SaveDatabase extends GeneratedDatabase {
   _$SaveDatabase(QueryExecutor e) : super(e);
   $SaveDatabaseManager get managers => $SaveDatabaseManager(this);
@@ -10619,6 +11305,7 @@ abstract class _$SaveDatabase extends GeneratedDatabase {
   late final $CraftJobsTable craftJobs = $CraftJobsTable(this);
   late final $ActiveActionsTable activeActions = $ActiveActionsTable(this);
   late final $SkillRowsTable skillRows = $SkillRowsTable(this);
+  late final $HotspotRowsTable hotspotRows = $HotspotRowsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -10640,6 +11327,7 @@ abstract class _$SaveDatabase extends GeneratedDatabase {
     craftJobs,
     activeActions,
     skillRows,
+    hotspotRows,
   ];
   @override
   DriftDatabaseOptions get options =>
@@ -15572,6 +16260,326 @@ typedef $$SkillRowsTableProcessedTableManager =
       SkillRow,
       PrefetchHooks Function()
     >;
+typedef $$HotspotRowsTableCreateCompanionBuilder =
+    HotspotRowsCompanion Function({
+      required int profileId,
+      required int slot,
+      required int seed,
+      required double latitude,
+      required double longitude,
+      required int level,
+      required double integrity,
+      required DateTime bornAt,
+      required DateTime nextLevelAt,
+      Value<DateTime?> agitatedUntil,
+      Value<DateTime?> restingUntil,
+      Value<int> rowid,
+    });
+typedef $$HotspotRowsTableUpdateCompanionBuilder =
+    HotspotRowsCompanion Function({
+      Value<int> profileId,
+      Value<int> slot,
+      Value<int> seed,
+      Value<double> latitude,
+      Value<double> longitude,
+      Value<int> level,
+      Value<double> integrity,
+      Value<DateTime> bornAt,
+      Value<DateTime> nextLevelAt,
+      Value<DateTime?> agitatedUntil,
+      Value<DateTime?> restingUntil,
+      Value<int> rowid,
+    });
+
+class $$HotspotRowsTableFilterComposer
+    extends Composer<_$SaveDatabase, $HotspotRowsTable> {
+  $$HotspotRowsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get profileId => $composableBuilder(
+    column: $table.profileId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get slot => $composableBuilder(
+    column: $table.slot,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get seed => $composableBuilder(
+    column: $table.seed,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get latitude => $composableBuilder(
+    column: $table.latitude,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get longitude => $composableBuilder(
+    column: $table.longitude,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get level => $composableBuilder(
+    column: $table.level,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get integrity => $composableBuilder(
+    column: $table.integrity,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get bornAt => $composableBuilder(
+    column: $table.bornAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get nextLevelAt => $composableBuilder(
+    column: $table.nextLevelAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get agitatedUntil => $composableBuilder(
+    column: $table.agitatedUntil,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get restingUntil => $composableBuilder(
+    column: $table.restingUntil,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$HotspotRowsTableOrderingComposer
+    extends Composer<_$SaveDatabase, $HotspotRowsTable> {
+  $$HotspotRowsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get profileId => $composableBuilder(
+    column: $table.profileId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get slot => $composableBuilder(
+    column: $table.slot,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get seed => $composableBuilder(
+    column: $table.seed,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get latitude => $composableBuilder(
+    column: $table.latitude,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get longitude => $composableBuilder(
+    column: $table.longitude,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get level => $composableBuilder(
+    column: $table.level,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get integrity => $composableBuilder(
+    column: $table.integrity,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get bornAt => $composableBuilder(
+    column: $table.bornAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get nextLevelAt => $composableBuilder(
+    column: $table.nextLevelAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get agitatedUntil => $composableBuilder(
+    column: $table.agitatedUntil,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get restingUntil => $composableBuilder(
+    column: $table.restingUntil,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$HotspotRowsTableAnnotationComposer
+    extends Composer<_$SaveDatabase, $HotspotRowsTable> {
+  $$HotspotRowsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get profileId =>
+      $composableBuilder(column: $table.profileId, builder: (column) => column);
+
+  GeneratedColumn<int> get slot =>
+      $composableBuilder(column: $table.slot, builder: (column) => column);
+
+  GeneratedColumn<int> get seed =>
+      $composableBuilder(column: $table.seed, builder: (column) => column);
+
+  GeneratedColumn<double> get latitude =>
+      $composableBuilder(column: $table.latitude, builder: (column) => column);
+
+  GeneratedColumn<double> get longitude =>
+      $composableBuilder(column: $table.longitude, builder: (column) => column);
+
+  GeneratedColumn<int> get level =>
+      $composableBuilder(column: $table.level, builder: (column) => column);
+
+  GeneratedColumn<double> get integrity =>
+      $composableBuilder(column: $table.integrity, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get bornAt =>
+      $composableBuilder(column: $table.bornAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get nextLevelAt => $composableBuilder(
+    column: $table.nextLevelAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get agitatedUntil => $composableBuilder(
+    column: $table.agitatedUntil,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get restingUntil => $composableBuilder(
+    column: $table.restingUntil,
+    builder: (column) => column,
+  );
+}
+
+class $$HotspotRowsTableTableManager
+    extends
+        RootTableManager<
+          _$SaveDatabase,
+          $HotspotRowsTable,
+          HotspotRow,
+          $$HotspotRowsTableFilterComposer,
+          $$HotspotRowsTableOrderingComposer,
+          $$HotspotRowsTableAnnotationComposer,
+          $$HotspotRowsTableCreateCompanionBuilder,
+          $$HotspotRowsTableUpdateCompanionBuilder,
+          (
+            HotspotRow,
+            BaseReferences<_$SaveDatabase, $HotspotRowsTable, HotspotRow>,
+          ),
+          HotspotRow,
+          PrefetchHooks Function()
+        > {
+  $$HotspotRowsTableTableManager(_$SaveDatabase db, $HotspotRowsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$HotspotRowsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$HotspotRowsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$HotspotRowsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> profileId = const Value.absent(),
+                Value<int> slot = const Value.absent(),
+                Value<int> seed = const Value.absent(),
+                Value<double> latitude = const Value.absent(),
+                Value<double> longitude = const Value.absent(),
+                Value<int> level = const Value.absent(),
+                Value<double> integrity = const Value.absent(),
+                Value<DateTime> bornAt = const Value.absent(),
+                Value<DateTime> nextLevelAt = const Value.absent(),
+                Value<DateTime?> agitatedUntil = const Value.absent(),
+                Value<DateTime?> restingUntil = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => HotspotRowsCompanion(
+                profileId: profileId,
+                slot: slot,
+                seed: seed,
+                latitude: latitude,
+                longitude: longitude,
+                level: level,
+                integrity: integrity,
+                bornAt: bornAt,
+                nextLevelAt: nextLevelAt,
+                agitatedUntil: agitatedUntil,
+                restingUntil: restingUntil,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required int profileId,
+                required int slot,
+                required int seed,
+                required double latitude,
+                required double longitude,
+                required int level,
+                required double integrity,
+                required DateTime bornAt,
+                required DateTime nextLevelAt,
+                Value<DateTime?> agitatedUntil = const Value.absent(),
+                Value<DateTime?> restingUntil = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => HotspotRowsCompanion.insert(
+                profileId: profileId,
+                slot: slot,
+                seed: seed,
+                latitude: latitude,
+                longitude: longitude,
+                level: level,
+                integrity: integrity,
+                bornAt: bornAt,
+                nextLevelAt: nextLevelAt,
+                agitatedUntil: agitatedUntil,
+                restingUntil: restingUntil,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$HotspotRowsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$SaveDatabase,
+      $HotspotRowsTable,
+      HotspotRow,
+      $$HotspotRowsTableFilterComposer,
+      $$HotspotRowsTableOrderingComposer,
+      $$HotspotRowsTableAnnotationComposer,
+      $$HotspotRowsTableCreateCompanionBuilder,
+      $$HotspotRowsTableUpdateCompanionBuilder,
+      (
+        HotspotRow,
+        BaseReferences<_$SaveDatabase, $HotspotRowsTable, HotspotRow>,
+      ),
+      HotspotRow,
+      PrefetchHooks Function()
+    >;
 
 class $SaveDatabaseManager {
   final _$SaveDatabase _db;
@@ -15608,4 +16616,6 @@ class $SaveDatabaseManager {
       $$ActiveActionsTableTableManager(_db, _db.activeActions);
   $$SkillRowsTableTableManager get skillRows =>
       $$SkillRowsTableTableManager(_db, _db.skillRows);
+  $$HotspotRowsTableTableManager get hotspotRows =>
+      $$HotspotRowsTableTableManager(_db, _db.hotspotRows);
 }

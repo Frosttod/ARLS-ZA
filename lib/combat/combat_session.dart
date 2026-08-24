@@ -130,9 +130,18 @@ class CombatSession {
     final spawn = spawnEnemies(
       playerAt: playerAt,
       existing: held,
-      origins: origins.isEmpty
-          ? [SpawnOrigin.ambient(centre: playerAt, radiusM: kAmbientRadiusM)]
-          : origins,
+      // ⚠️ **Hotspots *and* the trickle, never one instead of the other.**
+      //
+      // This read `origins.isEmpty ? [ambient] : origins`, so the moment §6.5
+      // put a hotspot on the map §6.4's two-Walkers-a-square-kilometre stopped
+      // existing — and an empty street between hotspots would have been
+      // genuinely, permanently empty. The trickle is what makes walking
+      // anywhere cost attention; the hotspots are what make somewhere cost
+      // more than that.
+      origins: [
+        ...origins,
+        SpawnOrigin.ambient(centre: playerAt, radiusM: kAmbientRadiusM),
+      ],
       // The hour is in the seed so the street repopulates as the day goes on
       // without reshuffling every time the app is opened (§10, §11).
       seed: seed ^ now.hour ^ (now.day << 5),

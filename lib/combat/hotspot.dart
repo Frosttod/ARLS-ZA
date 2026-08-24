@@ -478,3 +478,110 @@ class Hotspot {
     restingUntil: clearResting ? null : (restingUntil ?? this.restingUntil),
   );
 }
+
+/// §6.5.1: somewhere to put a new one, or null if there is nowhere.
+///
+/// ⚠️ **Rejection sampling rather than arithmetic**, and deliberately. The
+/// constraints are a ring around the shelter, a minimum distance from every
+/// other centre, and §3.5's exclusions — which are polygons, not circles.
+/// Solving that in closed form would be a geometry library; drawing points and
+/// throwing away the ones that fail is twenty lines and obviously correct.
+///
+/// Null rather than a forced placement when nothing fits. A hotspot on a
+/// motorway or in a hospital car park is worse than one hotspot fewer: §3.5's
+/// exclusions exist because this game sends real people to real places.
+GeoPoint? placeHotspot({
+  required GeoPoint shelterAt,
+  required List<GeoPoint> taken,
+  required Random random,
+  bool Function(GeoPoint at)? allows,
+  int attempts = 60,
+}) {
+  for (var attempt = 0; attempt < attempts; attempt++) {
+    final bearing = random.nextDouble() * 2 * pi;
+
+    // ⚠️ Square-rooted, so the points are spread evenly over the *ring* rather
+    // than bunched against its inner edge. A uniform radius puts half of them
+    // in the first third of the area.
+    final inner = kHotspotMinFromShelterM * kHotspotMinFromShelterM;
+    final outer = kHotspotMaxFromShelterM * kHotspotMaxFromShelterM;
+    final metres = sqrt(inner + random.nextDouble() * (outer - inner));
+
+    final at = shelterAt.offsetBy(
+      metres: metres,
+      bearingDeg: bearing * 180 / pi,
+    );
+
+    if (taken.any((other) => other.distanceTo(at) < kHotspotMinApartM)) {
+      continue;
+    }
+    if (allows != null && !allows(at)) continue;
+
+    return at;
+  }
+
+  return null;
+}
+
+/// §6.5.3: everything that has happened to this slot since [from].
+///
+/// ⚠️ **Settled on read, never by a timer.** A hotspot grows on the clock and
+/// the clock runs with the app shut (§6.5.3) — so coming back after two days
+/// has to produce the same hotspot as playing through them. Promotions are
+/// applied one at a time rather than in a lump, because each one draws its own
+/// interval from [nextPromotionIn] and a single jump would lose the jitter.
+///
+/// [habit] is §16.4's measured pace: the world grows at the rate this player
+/// actually plays at, not at wall-clock speed.
+Hotspot settleHotspot(
+  Hotspot spot, {
+  required DateTime now,
+  required Random random,
+  required PlayHabit habit,
+  GeoPoint? shelterAt,
+  bool Function(GeoPoint at)? allows,
+}) {
+  var current = spot;
+
+  // The rest is over: somewhere else, level one.
+  final resting = current.restingUntil;
+  if (current.isResting) {
+    if (resting == null || now.isBefore(resting)) return current;
+    if (shelterAt == null) return current;
+
+    final where = placeHotspot(
+      shelterAt: shelterAt,
+      taken: const [],
+      random: random,
+      allows: allows,
+    );
+    if (where == null) return current;
+
+    return current.reborn(
+      centre: where,
+      seed: random.nextInt(1 << 30),
+      at: resting,
+      until: promotionDelay(survivalDay: 1, habit: habit, random: random),
+    );
+  }
+
+  // ⚠️ Bounded. A save from a fortnight ago must not turn into a loop that
+  // runs ten thousand times — and cannot legitimately need more than the nine
+  // promotions there are.
+  for (var step = 0; step < 12; step++) {
+    if (current.level >= kHotspotLevels.length) break;
+    if (now.isBefore(current.nextLevelAt)) break;
+
+    final at = current.nextLevelAt;
+    current = current.promoted(
+      at: at,
+      until: promotionDelay(
+        survivalDay: at.difference(current.bornAt).inDays + 1,
+        habit: habit,
+        random: random,
+      ),
+    );
+  }
+
+  return current;
+}

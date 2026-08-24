@@ -29,7 +29,7 @@ import 'tables.dart';
 part 'database.g.dart';
 
 /// Bumped only alongside a migration step in [_migration]. Never reused.
-const int kSchemaVersion = 31;
+const int kSchemaVersion = 32;
 
 /// Keys used in [MetaEntries].
 abstract final class MetaKeys {
@@ -64,6 +64,7 @@ abstract final class MetaKeys {
     CraftJobs,
     ActiveActions,
     SkillRows,
+    HotspotRows,
   ],
 )
 class SaveDatabase extends _$SaveDatabase {
@@ -76,7 +77,7 @@ class SaveDatabase extends _$SaveDatabase {
   /// follow a constant reference. `schema_test.dart` keeps it in step with
   /// [kSchemaVersion].
   @override
-  int get schemaVersion => 31;
+  int get schemaVersion => 32;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -352,6 +353,11 @@ class SaveDatabase extends _$SaveDatabase {
         await m.addColumn(shelters, shelters.paused);
       }
 
+      // §6.5: the three pressure points. A new table, so every character that
+      // existed before this starts with three empty slots — which is what they
+      // had, since nothing in the game could make one (§11.1.4).
+      if (from < 32) await m.createTable(hotspotRows);
+
       await _writeSchemaVersion(to);
     },
     beforeOpen: (details) async {
@@ -580,6 +586,14 @@ class SaveDatabase extends _$SaveDatabase {
   /// Rewritten whole rather than diffed, exactly as the pack is: a stash is a
   /// handful of rows, and half-applied contents would be worse than a rewrite
   /// that costs nothing measurable.
+  /// §6.5: the three slots as they stand, live or resting.
+  Future<List<HotspotRow>> hotspotsFor(int profileId) =>
+      (select(hotspotRows)..where((t) => t.profileId.equals(profileId))).get();
+
+  /// §6.5: one slot, written outright.
+  Future<void> writeHotspot(HotspotRowsCompanion row) =>
+      into(hotspotRows).insertOnConflictUpdate(row);
+
   /// §7: everything this character has earned, by skill wire name.
   Future<Map<String, int>> skillsFor(int profileId) async {
     final rows = await (select(
