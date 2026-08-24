@@ -32,28 +32,40 @@ enum JournalKind {
   treated('opatrunek'),
 
   /// §2.5: the long ones.
-  slept('sen'),
-  woke('pobudka'),
+  slept('sen', wakes: false),
+  woke('pobudka', wakes: false),
   read('lektura'),
 
   /// §8.3, §18: work.
-  built('budowa'),
+  built('budowa', wakes: false),
   crafted('wytworzone'),
   salvaged('rozbiórka'),
 
   /// §8.1: the door, in both directions.
-  cameHome('powrót'),
+  cameHome('powrót', wakes: false),
   wentOut('wyjście'),
 
   /// §7, §9.2: the two things worth remembering that nobody chose.
-  learned('umiejętność'),
-  blackout('utrata przytomności');
+  learned('umiejętność', wakes: false),
+  blackout('utrata przytomności', wakes: false);
 
-  const JournalKind(this.wire);
+  const JournalKind(this.wire, {this.wakes = true});
 
   /// ⚠️ Fixed by what is on disk. Renaming one silently reclassifies every
   /// entry a player has ever written — the same rule §7's skills keep.
   final String wire;
+
+  /// §2.5.1: whether doing this means the character is no longer asleep.
+  ///
+  /// ⚠️ **Reaching for a bottle in the night is waking up.** The sim only
+  /// notices on its next tick, so an entry written the moment the player taps
+  /// would sit above a night that had not ended yet — the journal would read
+  /// "sen, picie, pobudka", which is not what happened and not what anybody
+  /// would write down.
+  ///
+  /// False for the things that happen *to* a sleeping character or without
+  /// them: a module finishing on its own clock (§8.3), a blackout, a level.
+  final bool wakes;
 
   static JournalKind? byWire(String wire) {
     for (final kind in JournalKind.values) {
@@ -90,6 +102,14 @@ class JournalEntry {
 /// nobody past its first screen.
 const int kJournalKeep = 400;
 
+/// §3.6.1: how many days of it a screen shows at once.
+///
+/// ⚠️ A week, not the run. Four hundred entries is what is *kept* — a month of
+/// them on one screen is a list nobody scrolls to the bottom of, and the days
+/// past the last seven are history rather than a thing anybody is about to act
+/// on.
+const int kJournalDays = 7;
+
 /// Which day of the run [at] fell on, counting the first as day one.
 ///
 /// ⚠️ Local dates on both sides, and dates rather than elapsed time. A player
@@ -125,6 +145,7 @@ class JournalDay {
 List<JournalDay> journalDays(
   List<JournalEntry> entries, {
   required DateTime startedAt,
+  int? days = kJournalDays,
 }) {
   final byDay = <int, List<JournalEntry>>{};
   for (final entry in entries) {
@@ -133,10 +154,11 @@ List<JournalDay> journalDays(
         .add(entry);
   }
 
-  final days = byDay.keys.toList()..sort((a, b) => b.compareTo(a));
+  final found = byDay.keys.toList()..sort((a, b) => b.compareTo(a));
+  final kept = days == null ? found : found.take(days);
 
   return [
-    for (final day in days)
+    for (final day in kept)
       JournalDay(
         day: day,
         entries: byDay[day]!..sort((a, b) => b.at.compareTo(a.at)),

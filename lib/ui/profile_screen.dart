@@ -17,6 +17,8 @@
 /// fight is a bad moment to study a table.
 library;
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'fonts.dart';
@@ -39,7 +41,7 @@ import '../sim/player_stats.dart';
 import '../sim/tick.dart';
 import 'combat_panel.dart' show errorName, hitLocationName;
 import 'hud.dart' show HudColors;
-import 'journal_view.dart';
+import 'journal_screen.dart';
 import 'names.dart';
 
 /// Opens it as a pushed route.
@@ -139,7 +141,26 @@ class ProfileScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
         children: [
-          _Streak(name: name, aliveFor: aliveFor, colours: colours),
+          _Streak(
+            name: name,
+            aliveFor: aliveFor,
+            // §3.6.1: the same number the journal heads its days with, so the
+            // two cannot appear to disagree. DZIEŃ 1 is the day the run
+            // started, which puts a character seven full days old in DZIEŃ 8.
+            day: journalDay(startedAt.add(aliveFor), startedAt: startedAt),
+            colours: colours,
+            // §3.6.1: next to the name, because the log is what a player opens
+            // after a walk and it was six sections down.
+            onJournal: () => unawaited(
+              showJournal(
+                context,
+                entries: journal,
+                startedAt: startedAt,
+                catalogue: catalogue,
+                names: names,
+              ),
+            ),
+          ),
           const SizedBox(height: 20),
 
           // ⚠️ §1.3's four inputs, first. Everything below is derived from
@@ -305,20 +326,6 @@ class ProfileScreen extends StatelessWidget {
                 total: stats.hitsCounted,
                 colours: colours,
               ),
-
-          // §3.6.1: and what that actually looked like, hour by hour. The
-          // tally above says how many; this says what happened, which is the
-          // question a player asks after a walk and the one a counter cannot
-          // answer.
-          const SizedBox(height: 20),
-          _Section(label: l10n.journalTitle, colours: colours),
-          ...journalRows(
-            context,
-            entries: journal,
-            startedAt: startedAt,
-            catalogue: catalogue,
-            names: names,
-          ),
         ],
       ),
     );
@@ -330,12 +337,16 @@ class _Streak extends StatelessWidget {
   const _Streak({
     required this.name,
     required this.aliveFor,
+    required this.day,
     required this.colours,
+    required this.onJournal,
   });
 
   final String name;
   final Duration aliveFor;
+  final int day;
   final HudColors colours;
+  final VoidCallback onJournal;
 
   @override
   Widget build(BuildContext context) {
@@ -343,23 +354,39 @@ class _Streak extends StatelessWidget {
     final days = aliveFor.inDays;
     final hours = aliveFor.inHours % 24;
 
-    return Column(
+    return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          name,
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: colours.text,
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                name,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: colours.text,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                effects([
+                  l10n.journalDay(day),
+                  days > 0
+                      ? l10n.profileAliveDays(days, hours)
+                      : l10n.profileAliveHours(hours),
+                ]),
+                style: TextStyle(fontSize: 14, color: colours.data),
+              ),
+            ],
           ),
         ),
-        const SizedBox(height: 2),
-        Text(
-          days > 0
-              ? l10n.profileAliveDays(days, hours)
-              : l10n.profileAliveHours(hours),
-          style: TextStyle(fontSize: 14, color: colours.data),
+        IconButton(
+          onPressed: onJournal,
+          icon: const Icon(Icons.history_edu_outlined),
+          color: colours.data,
+          tooltip: l10n.journalTitle,
         ),
       ],
     );

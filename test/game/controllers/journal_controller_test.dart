@@ -168,6 +168,107 @@ void main() {
     });
   });
 
+  group('§2.5.1: reaching for something in the night is waking up', () {
+    test('the pobudka comes first, and the drink after it', () async {
+      // ⚠️ The order the player actually lived. The sim only leaves the sleep
+      // zone on its next tick, so an entry written the moment they tap would
+      // sit above a night that had not ended — "sen, picie, pobudka".
+      await diary.noteZone(MetabolicZone.shelter, at: t0);
+      await diary.noteZone(
+        MetabolicZone.sleep,
+        at: t0.add(const Duration(hours: 1)),
+      );
+
+      await diary.add(
+        JournalKind.drank,
+        subject: 'water_bottle',
+        at: t0.add(const Duration(hours: 4)),
+      );
+
+      expect(diary.entries.value.map((each) => each.kind), [
+        JournalKind.drank,
+        JournalKind.woke,
+        JournalKind.slept,
+      ]);
+    });
+
+    test('and it is said once, however many things they get up for', () async {
+      await diary.noteZone(MetabolicZone.sleep, at: t0);
+      await diary.noteZone(
+        MetabolicZone.sleep,
+        at: t0.add(const Duration(hours: 1)),
+      );
+
+      await diary.add(JournalKind.drank, subject: 'water', at: t0);
+      await diary.add(JournalKind.ate, subject: 'tin', at: t0);
+
+      final woke = diary.entries.value.where(
+        (each) => each.kind == JournalKind.woke,
+      );
+
+      expect(woke, hasLength(1));
+    });
+
+    test('a module finishing on its own clock does not wake anybody', () async {
+      // §8.3 builds run with the app shut. Waking the character up for one
+      // would be the journal inventing a night nobody had.
+      await diary.noteZone(MetabolicZone.shelter, at: t0);
+      await diary.noteZone(MetabolicZone.sleep, at: t0);
+      await diary.add(JournalKind.built, subject: 'lounge', at: t0);
+
+      expect(
+        diary.entries.value.map((each) => each.kind),
+        isNot(contains(JournalKind.woke)),
+      );
+    });
+
+    test('going back down afterwards is a new night', () async {
+      await diary.noteZone(MetabolicZone.sleep, at: t0);
+      await diary.add(
+        JournalKind.drank,
+        subject: 'water',
+        at: t0.add(const Duration(hours: 3)),
+      );
+      await diary.noteZone(
+        MetabolicZone.sleep,
+        at: t0.add(const Duration(hours: 3, minutes: 5)),
+      );
+
+      expect(diary.entries.value.first.kind, JournalKind.slept);
+    });
+
+    test('but not on the tick a second into the drink', () async {
+      // ⚠️ The tick fires every second. Without a window the journal would
+      // end the night the drink interrupted before the drink was swallowed.
+      await diary.noteZone(MetabolicZone.sleep, at: t0);
+      await diary.add(
+        JournalKind.drank,
+        subject: 'water',
+        at: t0.add(const Duration(hours: 3)),
+      );
+      await diary.noteZone(
+        MetabolicZone.sleep,
+        at: t0.add(const Duration(hours: 3, seconds: 1)),
+      );
+
+      expect(diary.entries.value.first.kind, JournalKind.drank);
+    });
+
+    test('and the zone catching up does not say pobudka twice', () async {
+      await diary.noteZone(MetabolicZone.sleep, at: t0);
+      await diary.add(JournalKind.drank, subject: 'water', at: t0);
+      await diary.noteZone(
+        MetabolicZone.shelter,
+        at: t0.add(const Duration(seconds: 30)),
+      );
+
+      expect(
+        diary.entries.value.where((each) => each.kind == JournalKind.woke),
+        hasLength(1),
+      );
+    });
+  });
+
   test('§11.1: it is on disk before the process can be killed', () async {
     await diary.add(JournalKind.killed, subject: 'brute', at: t0);
 

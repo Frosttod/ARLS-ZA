@@ -61,6 +61,18 @@ class JournalController extends ChangeNotifier {
     if (profileId == null) return;
 
     final when = at ?? DateTime.now().toUtc();
+
+    // §2.5.1: reaching for a bottle in the night is waking up, and it happened
+    // first. The sim only notices on its next tick, so without this the log
+    // reads "sen, picie, pobudka" — an order nobody lived through.
+    if (kind.wakes && _zone == MetabolicZone.sleep && _wokeAt == null) {
+      _wokeAt = when;
+      await add(
+        JournalKind.woke,
+        at: when.subtract(const Duration(seconds: 1)),
+      );
+    }
+
     final entry = JournalEntry(at: when, kind: kind, subject: subject);
 
     final last = entries.value.firstOrNull;
@@ -133,13 +145,29 @@ class JournalController extends ChangeNotifier {
   Future<void> noteZone(MetabolicZone zone, {required DateTime at}) async {
     final before = _zone;
     _zone = zone;
+
+    // ⚠️ Still asleep as far as the zone is concerned, but the journal has
+    // already said otherwise — the character got up for something. Once that
+    // something is over, going back down is a new night and worth a line.
+    // Guarded by the same window [add] dedupes on, so the tick that arrives a
+    // second into a drink does not end the night the drink interrupted.
+    final woke = _wokeAt;
+    if (zone == MetabolicZone.sleep && woke != null) {
+      if (at.difference(woke) < const Duration(minutes: 2)) return;
+
+      _wokeAt = null;
+      return add(JournalKind.slept, at: at);
+    }
+    if (zone != MetabolicZone.sleep) _wokeAt = null;
+
     if (before == null || before == zone) return;
 
     if (zone == MetabolicZone.sleep) {
       return add(JournalKind.slept, at: at);
     }
     if (before == MetabolicZone.sleep) {
-      return add(JournalKind.woke, at: at);
+      // Already said, the moment the character reached for something.
+      return woke == null ? add(JournalKind.woke, at: at) : null;
     }
     if (zone.isSheltered != before.isSheltered) {
       return add(
@@ -150,6 +178,10 @@ class JournalController extends ChangeNotifier {
   }
 
   MetabolicZone? _zone;
+
+  /// §2.5.1: when the journal decided the character was up, while the zone
+  /// still said asleep. Null whenever the two agree.
+  DateTime? _wokeAt;
 
   /// A count map as the subject of one entry: `bandage,bandage,knife`.
   ///

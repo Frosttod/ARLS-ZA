@@ -523,8 +523,14 @@ Zasady:
 | **Od najnowszego**, w obie strony | Log na telefonie czyta się jak listę połączeń |
 | To samo dwa razy w ciągu 2 minut = **jeden wpis** | Trzy strzały do tego samego szwędacza to jedna walka |
 | Limit **400 wpisów** | Spacer pisze wpis co kilka minut, a passa ma trwać miesiącami (§13.1) |
+| Ekran pokazuje **ostatnie 7 dni** | 400 wpisów to ile się *trzyma*; miesiąc na jednej liście to coś, do czego nikt nie doscrolluje |
+| Sięgnięcie po coś w nocy to **najpierw pobudka** | Symulacja zauważa dopiero na następnym ticku, więc bez tego log czyta się „sen, picie, pobudka" — kolejność, której nikt nie przeżył. Rzeczy dziejące się *bez* postaci (moduł na własnym zegarze §8.3, utrata przytomności, awans) nie budzą |
 | Łup to **jedna linia z licznikami** | Przeszukanie sklepu potrafi dać kilkanaście rzeczy naraz |
 | Łóżko i drzwi czytane **ze stanu**, nie z przycisku | W tej grze nie ma komendy „śpij" (§2.5.1) — dziennik, który czekałby na polecenie, nigdy nie zapisałby nocy |
+
+Dziennik ma **własny ekran** (ikona obok imienia postaci w PROFILU) — log jest tym, co gracz otwiera po spacerze, a leżał sześć sekcji niżej.
+
+⚠️ **DZIEŃ 1 to dzień, w którym passa się zaczęła** — postać z 7 pełnymi dniami jest w DNIU 8. Numer dnia stoi także przy passie w PROFILU, żeby dwa ekrany nie mówiły różnych liczb.
 
 Co trafia do dziennika: przeszukanie i łup, otwarcie zamka, walka i zabicie, obrażenia, jedzenie/picie/opatrunek, sen i pobudka, lektura, budowa modułu, wytwarzanie i rozbiórka, wejście i wyjście ze schronu, awans umiejętności, utrata przytomności.
 

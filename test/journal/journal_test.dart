@@ -66,8 +66,67 @@ void main() {
       },
     );
 
+    test('a week of it, and no more (§3.6.1)', () {
+      // ⚠️ Four hundred entries is what is *kept*; a month of them on one
+      // list is something nobody reaches the bottom of.
+      final entries = [
+        for (var day = 0; day < 20; day++)
+          JournalEntry(
+            at: t0.add(Duration(days: day)),
+            kind: JournalKind.woke,
+          ),
+      ];
+
+      final days = journalDays(entries, startedAt: t0);
+
+      expect(days, hasLength(kJournalDays));
+      expect(days.first.day, 20);
+      expect(days.last.day, 20 - kJournalDays + 1);
+    });
+
+    test('and the whole run when something asks for it', () {
+      final entries = [
+        for (var day = 0; day < 20; day++)
+          JournalEntry(
+            at: t0.add(Duration(days: day)),
+            kind: JournalKind.woke,
+          ),
+      ];
+
+      expect(journalDays(entries, startedAt: t0, days: null), hasLength(20));
+    });
+
     test('an empty log is no days at all', () {
       expect(journalDays(const [], startedAt: t0), isEmpty);
+    });
+  });
+
+  group('§2.5.1: which kinds mean the character is up', () {
+    test('anything they chose to do wakes them', () {
+      for (final kind in [
+        JournalKind.drank,
+        JournalKind.ate,
+        JournalKind.treated,
+        JournalKind.searched,
+        JournalKind.wentOut,
+        JournalKind.fought,
+      ]) {
+        expect(kind.wakes, isTrue, reason: kind.name);
+      }
+    });
+
+    test('and the things that happen without them do not', () {
+      // ⚠️ §8.3's builds run with the app shut. Waking a character up for one
+      // would be the journal inventing a night nobody had.
+      for (final kind in [
+        JournalKind.built,
+        JournalKind.blackout,
+        JournalKind.learned,
+        JournalKind.slept,
+        JournalKind.woke,
+      ]) {
+        expect(kind.wakes, isFalse, reason: kind.name);
+      }
     });
   });
 
