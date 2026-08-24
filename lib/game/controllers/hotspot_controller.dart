@@ -20,9 +20,12 @@ import 'package:flutter/foundation.dart';
 
 import '../../combat/enemy_spawner.dart';
 import '../../combat/hotspot.dart';
+import '../../combat/enemy.dart';
 import '../../combat/hotspot_store.dart';
 import '../../data/db/database.dart';
 import '../../map/geometry.dart';
+import '../../safety/spawn_exclusion.dart';
+import '../../shelter/shelter.dart';
 import '../../sim/play_habit.dart';
 
 class HotspotController extends ChangeNotifier {
@@ -148,14 +151,121 @@ class HotspotController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Replaces one slot and writes it down.
-  Future<void> replace(Hotspot spot) async {
-    final slot = _slots.entries
-        .where((entry) => entry.value.id == spot.id)
-        .map((entry) => entry.key)
+  /// §6.5.1: the same, from the two things the game already has to hand.
+  ///
+  /// ⚠️ Anchored to the shelter, so nothing is placed until there is one — a
+  /// pressure point measured from nowhere would move the first time the player
+  /// built a door. And never on a motorway, a railway, private land or a
+  /// hospital car park: §3.5's exclusions exist because this game sends real
+  /// people to real places, and the same filter the loot and the bodies use
+  /// answers it here.
+  Future<void> reloadFor({
+    required DateTime now,
+    required List<Shelter> shelters,
+    required List<MapFeature> obstacles,
+  }) {
+    final home = shelters
+        .where((place) => place.kind == ShelterKind.main)
         .firstOrNull;
-    if (slot == null) return;
 
+    final filter = SpawnFilter(obstacles);
+
+    return reload(
+      now: now,
+      // §16.4: the world grows at the pace this player actually plays at.
+      //
+      // ⚠️ Not measured yet — §16.4's daily figure has nowhere on disk to live
+      // (stage 6, faza B). An empty habit reads as the floor, which is the
+      // slow end: a world that grows too slowly is one somebody can still
+      // play, and one that grows too fast is not.
+      habit: const PlayHabit([]),
+      shelterAt: home?.position,
+      allows: (at) => filter.refuse(at) == null,
+    );
+  }
+
+  /// §6.5.4: one of theirs went down, and the ground it came from pays.
+  ///
+  /// ⚠️ Matched by where the body **came from**, never by where it fell. The
+  /// spawner stamps a hotspot's centre onto everything it makes as that
+  /// enemy's home, so a Leaper lured three streets away still belongs to the
+  /// circle that produced it — which is the whole of §6.5.4's trade: pulling
+  /// them out is safer and pays exactly half.
+  Future<void> killed(Enemy enemy, {required DateTime now}) async {
+    final owner = _slots.entries
+        .where(
+          (entry) =>
+              !entry.value.isResting &&
+              entry.value.centre.distanceTo(enemy.home) < 1,
+        )
+        .firstOrNull;
+    if (owner == null) return;
+
+    final hurt = owner.value.damagedBy(enemy.kind, at: enemy.position);
+
+    // §6.5.4: through the wall. One level off, the fury that comes with it,
+    // and a rest for the slot if that was the last one.
+    final after = hurt.integrity <= 0
+        ? hurt.demoted(at: now, restFor: _restFor(owner.key))
+        : hurt;
+
+    await _write(owner.key, after);
+  }
+
+  /// §6.5.4: what the clock does to them, called once a tick.
+  ///
+  /// ⚠️ Two rules, and neither is about the player doing anything. Integrity
+  /// comes back at five per cent an hour — walking away half way through a
+  /// hotspot is possible and expensive, which is the point — and fury does not
+  /// follow somebody who left (§6.5.4's own valve, the one rule there that
+  /// exists to let a player lose).
+  Future<void> settle({required DateTime now, GeoPoint? playerAt}) async {
+    final since = _settledAt;
+    _settledAt = now;
+    if (since == null || !now.isAfter(since)) return;
+
+    final elapsed = now.difference(since);
+    for (final entry in _slots.entries.toList()) {
+      final before = entry.value;
+
+      var spot = before.regenerated(elapsed);
+      if (playerAt != null) spot = spot.settledIfAbandoned(playerAt);
+
+      // ⚠️ **Only when it is worth a write.** Regeneration is five per cent an
+      // hour, so a per-tick comparison by reference is always "changed" — and
+      // three hotspots written to flash once a second for the length of a walk
+      // is the same mistake §8.3's build progress made and fixed.
+      //
+      // A whole point of integrity, or the fury going out. Both are things the
+      // player can see; anything smaller is arithmetic nobody is watching.
+      final moved = (spot.integrity - before.integrity).abs() >= 1;
+      final calmed = before.agitatedUntil != null && spot.agitatedUntil == null;
+
+      if (!moved && !calmed) continue;
+
+      _slots[entry.key] = spot;
+      hotspots.value = live;
+      notifyListeners();
+
+      final profileId = _profileId;
+      if (profileId != null) {
+        await HotspotStore(_db).save(profileId, entry.key, spot);
+      }
+    }
+  }
+
+  DateTime? _settledAt;
+
+  /// §6.5.4: how long a cleared slot stays empty, drawn from its own seed so
+  /// the same run rests for the same time.
+  Duration _restFor(int slot) {
+    final (low, high) = kRestAfterClearing;
+    final random = Random(_seed ^ (slot * 40503));
+
+    return low + (high - low) * random.nextDouble();
+  }
+
+  Future<void> _write(int slot, Hotspot spot) async {
     _slots[slot] = spot;
     hotspots.value = live;
     notifyListeners();
@@ -164,6 +274,40 @@ class HotspotController extends ChangeNotifier {
     if (profileId != null) {
       await HotspotStore(_db).save(profileId, slot, spot);
     }
+  }
+
+  /// Replaces one slot and writes it down.
+  Future<void> replace(Hotspot spot) async {
+    final slot = _slots.entries
+        .where((entry) => entry.value.id == spot.id)
+        .map((entry) => entry.key)
+        .firstOrNull;
+    if (slot == null) return;
+
+    await _write(slot, spot);
+  }
+
+  /// Sets one hotspot's level outright. Development only (§15.3).
+  ///
+  /// ⚠️ §6.5.3's growth is measured in real days, so without this the whole of
+  /// stage 6 would be untestable in the field until somebody had played for a
+  /// week — and a level-one hotspot is one Walker, which is not a thing
+  /// anybody can tell apart from §6.4's ordinary street.
+  Future<void> setLevel(int slot, int level, DateTime now) async {
+    final spot = _slots[slot];
+    if (spot == null) return;
+
+    await _write(
+      slot,
+      spot.copyWith(
+        level: level.clamp(1, kHotspotLevels.length),
+        integrity: integrityMaxAt(
+          level.clamp(1, kHotspotLevels.length),
+        ).toDouble(),
+        nextLevelAt: now.add(const Duration(hours: 8)),
+        clearResting: true,
+      ),
+    );
   }
 
   @override

@@ -50,11 +50,20 @@ class DevOverlay extends StatelessWidget {
     required this.console,
     required this.snapshot,
     this.onSetSkill,
+    this.onSetHotspot,
     super.key,
   });
 
   final DevConsole console;
   final DevSnapshot snapshot;
+
+  /// §6.5, §15.3: sets one hotspot's level outright.
+  ///
+  /// ⚠️ §6.5.3's growth is measured in real days, and a level-one hotspot is
+  /// one Walker — which nobody can tell apart from §6.4's ordinary street. So
+  /// without this the whole of stage 6 is untestable in the field until
+  /// somebody has played for a week.
+  final void Function(int slot, int level)? onSetHotspot;
 
   /// §7, §15.3: sets one skill outright.
   ///
@@ -170,12 +179,14 @@ class DevPanel extends StatefulWidget {
     required this.console,
     required this.snapshot,
     this.onSetSkill,
+    this.onSetHotspot,
     super.key,
   });
 
   final DevConsole console;
   final DevSnapshot snapshot;
   final void Function(Skill skill, int level)? onSetSkill;
+  final void Function(int slot, int level)? onSetHotspot;
 
   @override
   State<DevPanel> createState() => _DevPanelState();
@@ -341,6 +352,34 @@ class _DevPanelState extends State<DevPanel> {
                     FilledButton(onPressed: _jump, child: const Text('Skocz')),
                   ],
                 ),
+
+                if (widget.onSetHotspot case final set?) ...[
+                  const _Heading('Ogniska (§6.5)'),
+                  for (var slot = 0; slot < 3; slot++)
+                    Row(
+                      children: [
+                        SizedBox(
+                          width: 96,
+                          child: Text(
+                            'slot $slot',
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                        for (final level in const [1, 3, 5, 8, 10])
+                          Padding(
+                            padding: const EdgeInsets.only(right: 6),
+                            child: OutlinedButton(
+                              onPressed: () => set(slot, level),
+                              child: Text('$level'),
+                            ),
+                          ),
+                      ],
+                    ),
+                  const SizedBox(height: 8),
+                ],
 
                 if (widget.onSetSkill case final set?) ...[
                   const _Heading('Umiejętności (§7)'),

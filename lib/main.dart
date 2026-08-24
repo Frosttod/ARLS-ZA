@@ -103,7 +103,6 @@ import 'sim/body.dart';
 import 'sim/death.dart';
 import 'sim/physiology.dart';
 import 'sim/occupation.dart';
-import 'sim/play_habit.dart';
 import 'sim/player_stats.dart';
 import 'sim/player_stats_store.dart';
 import 'ui/profile_screen.dart';
@@ -2333,6 +2332,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       // escape, and nothing in §5 costs anything if the way out is free.
       final here = GeoPoint(fix.latitude, fix.longitude);
 
+      // §6.5.4: integrity back, fury dropped for somebody who left. Neither
+      // is about the player doing anything, so it rides the tick.
+      unawaited(_fires.settle(now: now, playerAt: here));
+
       // §5.6.2: how warm the street is, after this second of it.
       final hunt = pursuitAfter(
         current: _loop?.pursuit,
@@ -3257,29 +3260,11 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   }
 
   /// §6.5: brings the three slots up to date, and fills any that are empty.
-  ///
-  /// ⚠️ Anchored to the shelter (§6.5.1), so nothing is placed until there is
-  /// one — a pressure point measured from nowhere would move the first time
-  /// the player built a door.
   Future<void> _reloadHotspots() async {
-    final home = _shelters.value
-        .where((place) => place.kind == ShelterKind.main)
-        .firstOrNull;
-
-    await _fires.reload(
+    await _fires.reloadFor(
       now: DateTime.now().toUtc(),
-      // §16.4: the world grows at the pace this player actually plays at.
-      //
-      // ⚠️ Not measured yet — §16.4's daily figure has nowhere on disk to live
-      // (schema, stage 6 faza B). An empty habit reads as the floor, which is
-      // the slow end: a world that grows too slowly is a world somebody can
-      // still play, and one that grows too fast is not.
-      habit: const PlayHabit([]),
-      shelterAt: home?.position,
-      // §3.5: never on a motorway, a railway, private land or a hospital car
-      // park. The same filter the loot spawner and the bodies use.
-      allows: (at) =>
-          SpawnFilter(_world?.obstacles ?? const []).refuse(at) == null,
+      shelters: _shelters.value,
+      obstacles: _world?.obstacles ?? const [],
     );
     if (mounted) setState(() {});
   }
@@ -4580,6 +4565,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// §10.3: marks where something went down, for as long as it is worth
   /// coming back to.
   void _remember(Enemy enemy) {
+    // §6.5.4: the ground it came from pays, wherever it actually fell.
+    unawaited(_fires.killed(enemy, now: DateTime.now().toUtc()));
+
     final body = Remains(
       id: enemy.id,
       kind: enemy.kind,
@@ -4959,6 +4947,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     // meaningful experience, so without this the whole feature is untestable
     // in the field until reading lands.
     onSetSkill: (skill, level) => unawaited(_learned.setLevel(skill, level)),
+    onSetHotspot: (slot, level) =>
+        unawaited(_fires.setLevel(slot, level, DateTime.now().toUtc())),
     snapshot: DevSnapshot(
       state: snapshot?.state,
       fix: snapshot?.fix,
