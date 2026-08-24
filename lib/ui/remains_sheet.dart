@@ -9,7 +9,11 @@ library;
 
 import 'package:flutter/material.dart';
 
+import '../combat/remains.dart';
 import '../l10n/app_localizations.dart';
+import '../loot/search.dart' show kStillnessM;
+import '../map/geometry.dart';
+import 'combat_panel.dart' show enemyKindName;
 import 'effects.dart';
 import 'hud.dart' show HudColors;
 
@@ -28,6 +32,44 @@ Future<void> showRemains(
     onSearch: onSearch,
   ),
 );
+
+/// §10.3: the same, found by the marker the player actually tapped.
+///
+/// ⚠️ The lookup and the reach rule belong here rather than on the screen. How
+/// a body's marker id is spelled is a fact about how these markers are made,
+/// and how close is close enough to go through the pockets is §4.8's arm's
+/// length — neither is something a screen should be holding a copy of.
+Future<void> showRemainsFor(
+  BuildContext context, {
+  required List<Remains> bodies,
+  required String markerId,
+  required GeoPoint standingAt,
+  required void Function(Remains body) onSearch,
+}) async {
+  final id = markerId.startsWith('remains.')
+      ? markerId.substring('remains.'.length)
+      : markerId;
+
+  final body = bodies.where((each) => each.id == id).firstOrNull;
+  if (body == null) return;
+
+  final metres = body.position.distanceTo(standingAt);
+
+  await showRemains(
+    context,
+    kindName: enemyKindName(L10n.of(context), body.kind),
+    distanceM: metres,
+    searched: body.searched,
+    // §4.8: arm's length, and nothing offered from further than that.
+    onSearch: body.searched || metres > kStillnessM
+        ? null
+        : () => onSearch(body),
+  );
+}
+
+/// The id a body's marker carries, written once so the map and the tap cannot
+/// disagree about it.
+String remainsMarkerId(Remains body) => 'remains.${body.id}';
 
 class RemainsSheet extends StatelessWidget {
   const RemainsSheet({

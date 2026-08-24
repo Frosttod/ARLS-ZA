@@ -16,6 +16,8 @@ import '../l10n/app_localizations.dart';
 import '../map/geometry.dart';
 import '../combat/enemy.dart';
 import '../combat/hotspot.dart';
+import 'hotspot_sheet.dart' show hotspotMarkerId;
+import 'remains_sheet.dart' show remainsMarkerId;
 import '../combat/noise.dart';
 import '../combat/remains.dart';
 import '../loot/dropped_items.dart';
@@ -436,7 +438,25 @@ MapMarker? markerAtOffset(
     best = marker;
     bestDistance = distance;
   }
-  return best;
+  if (best != null) return best;
+
+  // ⚠️ §6.5.6: a hotspot is an **area**, and its dot is four pixels at the
+  // middle of a circle up to two hundred metres across. Nothing else on this
+  // map works that way, so nothing else needed this — but a ring the player
+  // cannot tap is a ring that cannot explain itself, and §6.5.4's operation is
+  // the one thing in the game that has to be explained rather than compared.
+  //
+  // Last, deliberately. Anything standing *in* the circle wins the tap: a
+  // Walker three metres from a finger is a more specific answer than the
+  // ground it is standing on.
+  for (final marker in markers) {
+    if (marker.kind != MarkerKind.hotspot) continue;
+
+    final radius = marker.reachM;
+    if (radius != null && marker.at.distanceTo(at) <= radius) return marker;
+  }
+
+  return null;
 }
 
 /// Folds markers that sit on top of each other into one (§4.8).
@@ -836,7 +856,7 @@ List<MapMarker> markersFrom({
     // far that reaches, which is an area rather than a place.
     for (final fire in hotspots)
       MapMarker(
-        id: 'hotspot.${fire.id}',
+        id: hotspotMarkerId(fire),
         kind: MarkerKind.hotspot,
         at: fire.centre,
         reachM: fire.radiusM,
@@ -847,7 +867,7 @@ List<MapMarker> markersFrom({
     // walking back to.
     for (final body in remains)
       MapMarker(
-        id: 'remains.${body.id}',
+        id: remainsMarkerId(body),
         kind: MarkerKind.remains,
         at: body.position,
         reachM: kStillnessM,

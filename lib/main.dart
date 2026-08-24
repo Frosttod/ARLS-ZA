@@ -111,6 +111,7 @@ import 'ui/character_creator.dart';
 import 'ui/language_picker.dart';
 import 'ui/safety_briefing.dart';
 import 'ui/effects.dart';
+import 'ui/hotspot_sheet.dart';
 import 'ui/hud.dart';
 import 'ui/status_notes.dart';
 import 'ui/inventory_screen.dart';
@@ -1109,8 +1110,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       // §7: what this character has learned, before anything can ask.
       await _learned.load(character.profile.id);
 
-      // §6.5: the three slots, seeded from the character so a run is the same
-      // world every time it is opened (§11).
+      // §6.5: seeded from the character, so a run is the same world every
+      // time it is opened (§11).
       _fires.bind(
         profileId: character.profile.id,
         seed: character.profile.rngSeed,
@@ -1951,8 +1952,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// same walk, which makes none of them a decision.
   void _showMarker(MapMarker? marker) {
     final catalogue = _catalogue;
-    // Sticky: tapping a dot from indoors did nothing at all.
-    final at = _standingAt.value;
+    final at = _standingAt.value; // Sticky: a tap from indoors did nothing.
     if (catalogue == null || at == null) return;
 
     // §5.5.1: a tap on empty street lets the target go. Aiming is where the
@@ -1974,6 +1974,20 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
           table: _world?.tables[box.tableId],
           standingAt: _standingAt,
           catalogue: catalogue,
+          now: _snapshot?.state.lastUpdate ?? DateTime.now().toUtc(),
+        ),
+      );
+      return;
+    }
+
+    // §6.5.6: a ring is a warning, never an explanation.
+    if (marker.kind == MarkerKind.hotspot) {
+      unawaited(
+        showHotspotFor(
+          context,
+          hotspots: _fires.hotspots.value,
+          markerId: marker.id,
+          standingAt: at,
           now: _snapshot?.state.lastUpdate ?? DateTime.now().toUtc(),
         ),
       );
@@ -2003,19 +2017,13 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     }
 
     if (marker.kind == MarkerKind.remains) {
-      final id = marker.id.substring('remains.'.length);
-      final body = _remains.where((b) => b.id == id).firstOrNull;
-      if (body == null) return;
-
       unawaited(
-        showRemains(
+        showRemainsFor(
           context,
-          kindName: enemyKindName(L10n.of(context), body.kind),
-          distanceM: body.position.distanceTo(at),
-          searched: body.searched,
-          onSearch: body.searched || body.position.distanceTo(at) > kStillnessM
-              ? null
-              : () => unawaited(_searchRemains(body)),
+          bodies: _remains,
+          markerId: marker.id,
+          standingAt: at,
+          onSearch: (body) => unawaited(_searchRemains(body)),
         ),
       );
       return;
@@ -2332,8 +2340,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       // escape, and nothing in §5 costs anything if the way out is free.
       final here = GeoPoint(fix.latitude, fix.longitude);
 
-      // §6.5.4: integrity back, fury dropped for somebody who left. Neither
-      // is about the player doing anything, so it rides the tick.
+      // §6.5.4: integrity back, fury dropped for somebody who left.
       unawaited(_fires.settle(now: now, playerAt: here));
 
       // §5.6.2: how warm the street is, after this second of it.
@@ -2353,8 +2360,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         // that went down under the sights does.
         onDeath: _remember,
         obstacles: _world?.obstacles ?? const [],
-        // §6.5: what each hotspot is sending out. The ambient trickle of
-        // §6.4 is added underneath, never replaced by these.
+        // §6.5: what each hotspot sends. §6.4's trickle is added underneath.
         origins: _fires.originsAt(now),
         // §8.1: they wait at the edge of what the player built.
         sanctuaries: _sanctuaries,
@@ -3256,14 +3262,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     if (!mounted) return;
 
     _loop?.setShelters(places);
-    await _reloadHotspots();
-  }
-
-  /// §6.5: brings the three slots up to date, and fills any that are empty.
-  Future<void> _reloadHotspots() async {
+    // §6.5.1: measured from the shelter, and never on ground §3.5 refuses.
     await _fires.reloadFor(
       now: DateTime.now().toUtc(),
-      shelters: _shelters.value,
+      shelters: places,
       obstacles: _world?.obstacles ?? const [],
     );
     if (mounted) setState(() {});
@@ -5893,8 +5895,6 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// §5.5, §6.1a: everything hostile that is out there.
   late final CombatController _fight = _controllers.adopt(CombatController());
 
-  /// §6.5: the three pressure points, and the only thing in this game that
-  /// happens without the player.
   late final HotspotController _fires = _controllers.adopt(
     HotspotController(widget.session.db),
   );

@@ -2107,6 +2107,96 @@ abstract class L10n {
   /// **'Hotspot'**
   String get mapMarkerHotspot;
 
+  /// No description provided for @hotspotTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Hotspot'**
+  String get hotspotTitle;
+
+  /// No description provided for @hotspotLevelOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Level {level} of {max}'**
+  String hotspotLevelOf(int level, int max);
+
+  /// No description provided for @hotspotWhat.
+  ///
+  /// In en, this message translates to:
+  /// **'It grows on its own, whether or not you open the game. Every promotion widens the circle and puts more of them in it.'**
+  String get hotspotWhat;
+
+  /// No description provided for @hotspotRadius.
+  ///
+  /// In en, this message translates to:
+  /// **'Radius'**
+  String get hotspotRadius;
+
+  /// No description provided for @hotspotEnemies.
+  ///
+  /// In en, this message translates to:
+  /// **'Out at once'**
+  String get hotspotEnemies;
+
+  /// No description provided for @hotspotRespawn.
+  ///
+  /// In en, this message translates to:
+  /// **'One replaced every'**
+  String get hotspotRespawn;
+
+  /// No description provided for @hotspotComposition.
+  ///
+  /// In en, this message translates to:
+  /// **'What it sends'**
+  String get hotspotComposition;
+
+  /// No description provided for @hotspotIntegrity.
+  ///
+  /// In en, this message translates to:
+  /// **'Integrity'**
+  String get hotspotIntegrity;
+
+  /// No description provided for @hotspotAgitated.
+  ///
+  /// In en, this message translates to:
+  /// **'Furious for another {time} — everything one rung worse, half again as many, three times the respawn.'**
+  String hotspotAgitated(String time);
+
+  /// No description provided for @hotspotHowTo.
+  ///
+  /// In en, this message translates to:
+  /// **'How to take it down'**
+  String get hotspotHowTo;
+
+  /// No description provided for @hotspotHowToBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Kill what it sends. A body dropped inside the circle costs it {inside} points; one lured outside costs {outside}. At nought it loses a level, rebuilds the wall at the new one, and turns furious for ten minutes. Take it to nothing and the ground rests for a day or two.'**
+  String hotspotHowToBody(int inside, int outside);
+
+  /// No description provided for @hotspotEscape.
+  ///
+  /// In en, this message translates to:
+  /// **'Walk {metres} m out and the fury goes out with you.'**
+  String hotspotEscape(int metres);
+
+  /// No description provided for @hotspotHealing.
+  ///
+  /// In en, this message translates to:
+  /// **'It heals {percent}% of the wall an hour while nobody is working on it.'**
+  String hotspotHealing(int percent);
+
+  /// No description provided for @hotspotDistance.
+  ///
+  /// In en, this message translates to:
+  /// **'Distance'**
+  String get hotspotDistance;
+
+  /// No description provided for @hotspotInside.
+  ///
+  /// In en, this message translates to:
+  /// **'You are inside it.'**
+  String get hotspotInside;
+
   /// No description provided for @hotspotLevel.
   ///
   /// In en, this message translates to:

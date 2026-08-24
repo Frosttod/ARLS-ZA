@@ -1157,6 +1157,62 @@ class L10nEn extends L10n {
   String get mapMarkerHotspot => 'Hotspot';
 
   @override
+  String get hotspotTitle => 'Hotspot';
+
+  @override
+  String hotspotLevelOf(int level, int max) {
+    return 'Level $level of $max';
+  }
+
+  @override
+  String get hotspotWhat =>
+      'It grows on its own, whether or not you open the game. Every promotion widens the circle and puts more of them in it.';
+
+  @override
+  String get hotspotRadius => 'Radius';
+
+  @override
+  String get hotspotEnemies => 'Out at once';
+
+  @override
+  String get hotspotRespawn => 'One replaced every';
+
+  @override
+  String get hotspotComposition => 'What it sends';
+
+  @override
+  String get hotspotIntegrity => 'Integrity';
+
+  @override
+  String hotspotAgitated(String time) {
+    return 'Furious for another $time — everything one rung worse, half again as many, three times the respawn.';
+  }
+
+  @override
+  String get hotspotHowTo => 'How to take it down';
+
+  @override
+  String hotspotHowToBody(int inside, int outside) {
+    return 'Kill what it sends. A body dropped inside the circle costs it $inside points; one lured outside costs $outside. At nought it loses a level, rebuilds the wall at the new one, and turns furious for ten minutes. Take it to nothing and the ground rests for a day or two.';
+  }
+
+  @override
+  String hotspotEscape(int metres) {
+    return 'Walk $metres m out and the fury goes out with you.';
+  }
+
+  @override
+  String hotspotHealing(int percent) {
+    return 'It heals $percent% of the wall an hour while nobody is working on it.';
+  }
+
+  @override
+  String get hotspotDistance => 'Distance';
+
+  @override
+  String get hotspotInside => 'You are inside it.';
+
+  @override
   String hotspotLevel(int level) {
     return 'Hotspot, level $level';
   }

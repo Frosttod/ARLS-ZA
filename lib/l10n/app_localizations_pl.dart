@@ -1160,6 +1160,62 @@ class L10nPl extends L10n {
   String get mapMarkerHotspot => 'Ognisko';
 
   @override
+  String get hotspotTitle => 'Ognisko';
+
+  @override
+  String hotspotLevelOf(int level, int max) {
+    return 'Poziom $level z $max';
+  }
+
+  @override
+  String get hotspotWhat =>
+      'Rośnie samo, niezależnie od tego, czy otwierasz grę. Każdy awans poszerza okrąg i wsadza w niego więcej sztuk.';
+
+  @override
+  String get hotspotRadius => 'Promień';
+
+  @override
+  String get hotspotEnemies => 'Naraz na zewnątrz';
+
+  @override
+  String get hotspotRespawn => 'Jedna wraca co';
+
+  @override
+  String get hotspotComposition => 'Co wysyła';
+
+  @override
+  String get hotspotIntegrity => 'Integralność';
+
+  @override
+  String hotspotAgitated(String time) {
+    return 'Wściekłe jeszcze $time — wszystko o szczebel gorsze, o połowę więcej sztuk, respawn trzy razy szybszy.';
+  }
+
+  @override
+  String get hotspotHowTo => 'Jak je zneutralizować';
+
+  @override
+  String hotspotHowToBody(int inside, int outside) {
+    return 'Zabijaj to, co wysyła. Ciało w okręgu kosztuje je $inside punktów, wywabione na zewnątrz — $outside. Na zerze traci poziom, odbudowuje mur na nowym i wścieka się na dziesięć minut. Zbij je do zera, a teren odpoczywa dobę lub dwie.';
+  }
+
+  @override
+  String hotspotEscape(int metres) {
+    return 'Odejdź $metres m i furia gaśnie razem z Tobą.';
+  }
+
+  @override
+  String hotspotHealing(int percent) {
+    return 'Goi $percent% muru na godzinę, dopóki nikt przy nim nie pracuje.';
+  }
+
+  @override
+  String get hotspotDistance => 'Odległość';
+
+  @override
+  String get hotspotInside => 'Stoisz w środku.';
+
+  @override
   String hotspotLevel(int level) {
     return 'Ognisko, poziom $level';
   }
