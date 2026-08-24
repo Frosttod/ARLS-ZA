@@ -2379,4 +2379,19 @@ class L10nEn extends L10n {
   String journalCount(String name, int count) {
     return '$name ×$count';
   }
+
+  @override
+  String journalStartedBuild(String what) {
+    return 'Started building: $what';
+  }
+
+  @override
+  String journalStartedCraft(String what) {
+    return 'Started making: $what';
+  }
+
+  @override
+  String journalStartedSalvage(String what) {
+    return 'Started stripping: $what';
+  }
 }

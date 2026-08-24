@@ -251,6 +251,26 @@ class GameLoop {
     _publish();
   }
 
+  /// §2.1a, §8.3, §18: long work — a build, a bench, a sitting at the vice.
+  ///
+  /// ⚠️ **Reported separately from [setActing], and with no timeout.** §4.7's
+  /// short actions get a five-minute guard because a stuck flag there would
+  /// keep somebody awake for ever; a dismantling runs for half an hour by
+  /// design (§18.6), and that guard turned it into a character asleep at their
+  /// own workbench — sleep debt paying itself off while the vice was turning.
+  ///
+  /// Safe without a timeout because the interface recomputes it from live
+  /// state on every tick: nothing can leave it stuck on.
+  bool _working = false;
+
+  void setWorking({required bool working}) {
+    if (_working == working) return;
+
+    _working = working;
+    _applyShelter();
+    _publish();
+  }
+
   PositionFix? _lastFix;
   double _speedKmh = 0;
 
@@ -375,7 +395,9 @@ class GameLoop {
     }
 
     final busy =
-        _acting || (_occupation != null && !_occupation!.kind.isDefault);
+        _acting ||
+        _working ||
+        (_occupation != null && !_occupation!.kind.isDefault);
 
     // How long they have been under this roof with nothing on. Reset by
     // leaving and by starting anything — those are the two ways a person stops

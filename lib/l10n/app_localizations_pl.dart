@@ -2381,4 +2381,19 @@ class L10nPl extends L10n {
   String journalCount(String name, int count) {
     return '$name ×$count';
   }
+
+  @override
+  String journalStartedBuild(String what) {
+    return 'Rozpoczęto budowę: $what';
+  }
+
+  @override
+  String journalStartedCraft(String what) {
+    return 'Rozpoczęto: $what';
+  }
+
+  @override
+  String journalStartedSalvage(String what) {
+    return 'Rozpoczęto rozbiórkę: $what';
+  }
 }

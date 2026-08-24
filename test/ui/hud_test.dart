@@ -1,4 +1,5 @@
 import 'package:arls_za/l10n/app_localizations.dart';
+import 'package:arls_za/l10n/app_localizations_pl.dart';
 import 'package:arls_za/sim/body.dart';
 import 'package:arls_za/sim/physiology.dart';
 import 'package:arls_za/sim/tick.dart';
@@ -32,6 +33,7 @@ void main() {
     Locale locale = const Locale('pl'),
     Size surface = const Size(800, 600),
     ThreatReading? threat,
+    ({Duration left, bool untilDark})? twilight,
   }) async {
     tester.view.physicalSize = surface;
     tester.view.devicePixelRatio = 1;
@@ -56,6 +58,7 @@ void main() {
             warnings: warnings,
             bleeding: bleeding,
             threat: threat,
+            twilight: twilight,
             carryComfortKg: profile.carryComfortKg,
             carryMaxKg: profile.carryMaxKg,
             carriedKg: carriedKg,
@@ -590,6 +593,59 @@ void main() {
         ),
       );
       expect(find.text('−12:00'), findsOneWidget);
+    });
+  });
+
+  group('§17.2, §12: the sky, in the panel', () {
+    testWidgets('the clock is local, and the player own watch', (tester) async {
+      // §16.4: this is real time and their real evening. A game clock would be
+      // a second time of day to keep track of, in a game whose whole premise
+      // is that there is only the one.
+      await pumpHud(tester, healthy());
+
+      final local = t0.toLocal();
+      final shown =
+          '${local.hour.toString().padLeft(2, '0')}:'
+          '${local.minute.toString().padLeft(2, '0')}';
+
+      expect(find.text(shown), findsOneWidget);
+    });
+
+    testWidgets('and how long is left of it (§17.2)', (tester) async {
+      // ⚠️ **The night rules arrive all at once and a map cannot show them
+      // coming.** §10.2.2 halves the reconnaissance radius, §17.4 gives every
+      // Walker a fifth more reach and §5.6.1 carries a shot a third further.
+      // The snapshot has carried this figure since the day/night work landed
+      // and nothing drew it — the same defect twice over.
+      await pumpHud(
+        tester,
+        healthy(),
+        twilight: (
+          left: const Duration(hours: 1, minutes: 32),
+          untilDark: true,
+        ),
+      );
+
+      expect(find.text(L10nPl().hudUntilDusk), findsOneWidget);
+      expect(find.byIcon(Icons.wb_sunny_outlined), findsOneWidget);
+    });
+
+    testWidgets('and which way the sky is going', (tester) async {
+      await pumpHud(
+        tester,
+        healthy(),
+        twilight: (left: const Duration(hours: 4), untilDark: false),
+      );
+
+      expect(find.text(L10nPl().hudUntilDawn), findsOneWidget);
+      expect(find.byIcon(Icons.nightlight_outlined), findsOneWidget);
+    });
+
+    testWidgets('nothing to say before the first fix', (tester) async {
+      await pumpHud(tester, healthy());
+
+      expect(find.text(L10nPl().hudUntilDusk), findsNothing);
+      expect(find.text(L10nPl().hudUntilDawn), findsNothing);
     });
   });
 }

@@ -179,13 +179,16 @@ void main() {
 
     for (final wiring in [
       'skill: _learned.weapons', // §5.1.1 and §5.4
-      'weaponSkill: _learned.weapons', // §5.5.1's target switch
-      'weapons: _learned.weapons', // reload and settling
+      // §5.5.1's target switch, the reload and the settling. The switch used
+      // to read `weaponSkill:` here; it moved into aimedAt() with the rest of
+      // §5.1's inputs, so the screen can no longer forget one of them.
+      'weapons: _learned.weapons',
       'scouting: _learned.scouting', // radius, rare share, search time, stealth
       'medicine: _learned.medicine', // §4.7's dressings
       'engineering: _learned.engineering', // §8.3, §18.4, §18.6
       'loop.medicine = _learned.medicine', // §2.6's regeneration
       'await _learned.load(', // or none of it is there at boot
+      'aimedAt(', // §5.5.1: and the switch still goes through the model
     ]) {
       expect(
         main.contains(wiring),

@@ -311,6 +311,8 @@ Postać śpi, gdy **jednocześnie**:
 
 Sen jest **stanem domyślnym**, nie akcją. Gracz nic nie klika — postać kładzie się spać, bo jest noc i jest pod dachem.
 
+⚠️ **Punkt 3 obejmuje pracę długą, nie tylko akcje z §4.7.** Krótkie akcje (jedzenie, opatrunek, przeszukanie) mają pięciominutowe zabezpieczenie przed zawieszoną flagą — rozbiórka trwa pół godziny (§18.6), a moduł schronu dni, więc to samo zabezpieczenie robiło z postaci przy imadle postać śpiącą przed imadłem, spłacającą dług senny, gdy imadło się kręciło. Praca długa jest raportowana osobno i bez limitu czasu: interfejs wylicza ją ze stanu na każdym ticku, więc nic nie może jej zostawić włączonej. **Praca odłożona na pauzę (§8.3) nie liczy się** — to postać stojąca w schronie, która nic nie robi.
+
 #### 2.5.2. Kiedy postać nie śpi
 
 | Sytuacja | Skutek |
@@ -485,6 +487,7 @@ Gra zachęca do biegania po mieście, często po zmroku, z telefonem w ręku. Le
 
 **Górny pasek (HUD)** — zawsze widoczny, minimalistyczny:
 
+- **Godzina (lokalna) i ile zostało do zmierzchu/świtu** — §17.2. ⚠️ Zasady nocy wchodzą naraz: §10.2.2 połowi promień zwiadu, §17.4 daje każdemu szwędaczowi piątą część zasięgu więcej, §5.6.1 niesie strzał o jedną trzecią dalej. Nic z tego nie widać, dopóki się nie stanie — półtorej godziny ostrzeżenia to różnica między powrotem do domu a złapaniem w terenie
 - Poziom krwi (% + ikona, zmiana koloru przy klasie II+)
 - Aktywne statusy (krwawienie, zmęczenie, odwodnienie) — ikony
 - Woda / kalorie — dwa cienkie paski
@@ -524,6 +527,7 @@ Zasady:
 | To samo dwa razy w ciągu 2 minut = **jeden wpis** | Trzy strzały do tego samego szwędacza to jedna walka |
 | Limit **400 wpisów** | Spacer pisze wpis co kilka minut, a passa ma trwać miesiącami (§13.1) |
 | Ekran pokazuje **ostatnie 7 dni** | 400 wpisów to ile się *trzyma*; miesiąc na jednej liście to coś, do czego nikt nie doscrolluje |
+| Praca zapisuje się **na starcie i na końcu** | Rozbiórka trwa pół godziny, moduł schronu — dni. Log, który zapisywał tylko ukończenie, nic nie mówił o wieczorze, w którym gracz je zaczął |
 | Sięgnięcie po coś w nocy to **najpierw pobudka** | Symulacja zauważa dopiero na następnym ticku, więc bez tego log czyta się „sen, picie, pobudka" — kolejność, której nikt nie przeżył. Rzeczy dziejące się *bez* postaci (moduł na własnym zegarze §8.3, utrata przytomności, awans) nie budzą |
 | Łup to **jedna linia z licznikami** | Przeszukanie sklepu potrafi dać kilkanaście rzeczy naraz |
 | Łóżko i drzwi czytane **ze stanu**, nie z przycisku | W tej grze nie ma komendy „śpij" (§2.5.1) — dziennik, który czekałby na polecenie, nigdy nie zapisałby nocy |

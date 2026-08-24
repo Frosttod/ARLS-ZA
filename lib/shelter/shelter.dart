@@ -485,6 +485,18 @@ CampRefusal? campRefusalAt(
   return null;
 }
 
+/// §2.1a, §8.3: whether any of these is being built right now.
+///
+/// ⚠️ Work put down on purpose does not count (§8.3). A paused build is a
+/// character standing in their own shelter with nothing on, which is exactly
+/// the state §2.5.1 lets them fall asleep in.
+bool anyBuilding(List<Shelter> places) => places.any(
+  (place) =>
+      place.building != null &&
+      !place.paused &&
+      (place.buildingLeft ?? Duration.zero) > Duration.zero,
+);
+
 /// The place the player is standing in, or null for the open (§2.1, §8.1).
 ///
 /// The main shelter wins a tie, which it can only do if a camp was somehow put

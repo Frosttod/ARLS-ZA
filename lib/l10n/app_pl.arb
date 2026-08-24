@@ -1379,5 +1379,29 @@
         "type": "int"
       }
     }
+  },
+  "journalStartedBuild": "Rozpoczęto budowę: {what}",
+  "@journalStartedBuild": {
+    "placeholders": {
+      "what": {
+        "type": "String"
+      }
+    }
+  },
+  "journalStartedCraft": "Rozpoczęto: {what}",
+  "@journalStartedCraft": {
+    "placeholders": {
+      "what": {
+        "type": "String"
+      }
+    }
+  },
+  "journalStartedSalvage": "Rozpoczęto rozbiórkę: {what}",
+  "@journalStartedSalvage": {
+    "placeholders": {
+      "what": {
+        "type": "String"
+      }
+    }
   }
 }

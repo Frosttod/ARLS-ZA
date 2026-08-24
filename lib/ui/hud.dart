@@ -238,6 +238,8 @@ class Hud extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 6),
+              _Sky(at: state.lastUpdate, twilight: twilight, colours: colours),
+              const SizedBox(height: 6),
               _StatusRow(
                 status: status,
                 warnings: warnings,
@@ -266,6 +268,71 @@ class Hud extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// §17.2, §12: the time, and how long the sky has left.
+///
+/// ⚠️ **The night rules arrive all at once and a map cannot show them
+/// coming.** §10.2.2 halves the reconnaissance radius, §17.4 gives every
+/// Walker a fifth more reach and §5.6.1 carries a shot a third further — none
+/// of it is visible until it has already happened. An hour and a half of
+/// warning is the difference between walking home and being caught out.
+///
+/// The clock is local and the run is real time (§16.4), so this is the
+/// player's own watch — which is the point. It is their evening being spent.
+class _Sky extends StatelessWidget {
+  const _Sky({required this.at, required this.twilight, required this.colours});
+
+  final DateTime at;
+  final ({Duration left, bool untilDark})? twilight;
+  final HudColors colours;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = L10n.of(context);
+    final local = at.toLocal();
+    final sky = twilight;
+
+    return Row(
+      children: [
+        Icon(
+          sky == null || sky.untilDark
+              ? Icons.wb_sunny_outlined
+              : Icons.nightlight_outlined,
+          size: 13,
+          color: colours.muted,
+        ),
+        const SizedBox(width: 6),
+        Text(
+          '${local.hour.toString().padLeft(2, '0')}:'
+          '${local.minute.toString().padLeft(2, '0')}',
+          style: TextStyle(
+            fontSize: 13,
+            color: colours.text,
+            fontFamily: kDataFont,
+            fontFeatures: const [FontFeature.tabularFigures()],
+          ),
+        ),
+        if (sky != null) ...[
+          const Spacer(),
+          Text(
+            remaining(sky.left),
+            style: TextStyle(
+              fontSize: 13,
+              color: colours.data,
+              fontFamily: kDataFont,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            sky.untilDark ? l10n.hudUntilDusk : l10n.hudUntilDawn,
+            style: TextStyle(fontSize: 12, color: colours.muted),
+          ),
+        ],
+      ],
     );
   }
 }

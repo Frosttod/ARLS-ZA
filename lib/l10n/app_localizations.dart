@@ -4242,6 +4242,24 @@ abstract class L10n {
   /// In en, this message translates to:
   /// **'{name} ×{count}'**
   String journalCount(String name, int count);
+
+  /// No description provided for @journalStartedBuild.
+  ///
+  /// In en, this message translates to:
+  /// **'Started building: {what}'**
+  String journalStartedBuild(String what);
+
+  /// No description provided for @journalStartedCraft.
+  ///
+  /// In en, this message translates to:
+  /// **'Started making: {what}'**
+  String journalStartedCraft(String what);
+
+  /// No description provided for @journalStartedSalvage.
+  ///
+  /// In en, this message translates to:
+  /// **'Started stripping: {what}'**
+  String journalStartedSalvage(String what);
 }
 
 class _L10nDelegate extends LocalizationsDelegate<L10n> {

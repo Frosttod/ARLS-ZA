@@ -36,9 +36,17 @@ enum JournalKind {
   woke('pobudka', wakes: false),
   read('lektura'),
 
-  /// §8.3, §18: work.
+  /// §8.3, §18: work, in both halves.
+  ///
+  /// ⚠️ **Both ends, not just the finish.** A dismantling runs half an hour
+  /// and a shelter module runs for days — a log that only wrote them down on
+  /// completion said nothing about the evening they were started in, which is
+  /// the evening the player actually spent.
+  startedBuild('start budowy'),
   built('budowa', wakes: false),
+  startedCraft('start wytwarzania'),
   crafted('wytworzone'),
+  startedSalvage('start rozbiórki'),
   salvaged('rozbiórka'),
 
   /// §8.1: the door, in both directions.

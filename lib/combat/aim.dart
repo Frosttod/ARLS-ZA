@@ -79,6 +79,33 @@ class Aim {
   bool get hasTarget => targetId != null;
 }
 
+/// §5.5.1, §7: takes a new target, at what this character's pulse and skill
+/// make of it.
+///
+/// ⚠️ Here rather than on the screen. Which of §5.1's inputs go into picking
+/// somebody up is a fact about aiming, and a screen assembling them by hand is
+/// a screen that will forget one — the weapons skill was added to two of the
+/// three call sites and missed on the third.
+Aim aimedAt(
+  Aim aim,
+  String targetId, {
+  required DateTime now,
+  required double weapons,
+  required double heartRate,
+  required double restingHeartRate,
+  required double maxHeartRate,
+}) => aim.at(
+  targetId,
+  now: now,
+  weaponSkill: weapons,
+  settle: settleTime(
+    heartRate: heartRate,
+    rest: restingHeartRate,
+    max: maxHeartRate,
+    weapons: weapons,
+  ),
+);
+
 /// §5.3: how long the sights take to settle, given the pulse.
 ///
 /// Two seconds rested, four at the ceiling — the same fraction §5.1.1 squares

@@ -903,6 +903,13 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   void _tellLoopWhatWeAreDoing() {
     final action = _search.value;
     _loop?.setActing(acting: action != null && action.isRunning);
+
+    // §2.1a: and the long work. A dismantling runs half an hour (§18.6) and
+    // the loop could not see it — so the character fell asleep at their own
+    // vice, paying off sleep debt while it turned.
+    _loop?.setWorking(
+      working: _bench2.job.value != null || anyBuilding(_shelters.value),
+    );
   }
 
   Future<void> _boot() async {
@@ -1113,7 +1120,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       // §7: what this character has learned, before anything can ask.
       await _learned.load(character.profile.id);
 
-      // §3.6.1: read back, so a run reopens on the evening it left.
+      // §3.6.1: read back, so a run reopens where it left off.
       await _diary.bind(
         profileId: character.profile.id,
         startedAt: character.profile.createdAt,
@@ -1955,16 +1962,14 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     unawaited(showNote(context, note: note, names: _placeNames));
   }
 
-  /// What the panel says is underfoot: the nearest pile, and how much else
-  /// there is behind it.
   /// §4.8: what is underfoot, named.
   String? _groundLabel() =>
       groundLabel(_pilesInReach(), nameOf: (pile) => _nameOfId(pile.itemId));
 
   /// A tap on the map (§3.6): what the player wants to know about that dot.
   ///
-  /// A yellow dot that says only "something is here" makes every dot worth the
-  /// same walk, which makes none of them a decision.
+  /// A dot that says only "something is here" makes every dot worth the same
+  /// walk, which makes none of them a decision.
   void _showMarker(MapMarker? marker) {
     final catalogue = _catalogue;
     final at = _standingAt.value; // Sticky: a tap from indoors did nothing.
@@ -2009,21 +2014,16 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
     if (marker.kind == MarkerKind.enemy) {
       // §5.5.1: one tap, one target, and it costs the sight picture. The rest
-      // of them carry on running — aiming is where attention goes, not a
-      // pause button.
+      // carry on running — aiming is where attention goes, not a pause button.
       setState(() {
-        _aim = _aim.at(
+        _aim = aimedAt(
+          _aim,
           marker.id,
           now: DateTime.now(),
-          // §7: −30% on the time it takes to pick a new target up.
-          weaponSkill: _learned.weapons,
-          settle: settleTime(
-            heartRate: _snapshot?.state.heartRateBpm ?? 70,
-            rest: _character?.constants.restingHeartRate ?? 70,
-            max: _character?.constants.maxHeartRate ?? 190,
-            // §7: the sights come back faster.
-            weapons: _learned.weapons,
-          ),
+          weapons: _learned.weapons,
+          heartRate: _snapshot?.state.heartRateBpm ?? 70,
+          restingHeartRate: _character?.constants.restingHeartRate ?? 70,
+          maxHeartRate: _character?.constants.maxHeartRate ?? 190,
         );
       });
       return;
@@ -2077,14 +2077,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         onDetails: (pile) => unawaited(
           showItemDetails(
             context,
-            line: CarriedItem(
-              itemId: pile.itemId,
-              count: pile.count,
-              condition: pile.condition,
-              pagesTotal: pile.pagesTotal,
-              pagesRead: pile.pagesRead,
-              attachments: pile.attachments,
-            ),
+            line: pile.asCarried,
             inventory: _inventory,
             catalogue: catalogue,
             names: _names ?? ItemNames.empty,
@@ -2154,14 +2147,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         onDetails: (pile) => unawaited(
           showItemDetails(
             context,
-            line: CarriedItem(
-              itemId: pile.itemId,
-              count: pile.count,
-              condition: pile.condition,
-              pagesTotal: pile.pagesTotal,
-              pagesRead: pile.pagesRead,
-              attachments: pile.attachments,
-            ),
+            line: pile.asCarried,
             inventory: _inventory,
             catalogue: _catalogue!,
             names: _names ?? ItemNames.empty,
@@ -3640,6 +3626,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     );
 
     await _spendMaterials(recipe.materials);
+    unawaited(_diary.add(JournalKind.startedBuild, subject: module.name));
     await ShelterStore(widget.session.db).beginModule(
       shelter.id,
       module: module,
@@ -4090,6 +4077,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     // start a spear, spend the wood on a splint, and collect both.
     await _spendMaterials(recipe.materials);
 
+    unawaited(_diary.made(JournalKind.startedCraft, {recipe.output: 1}));
     await _bench2.beginCraft(
       recipeId: recipe.id,
       now: DateTime.now().toUtc(),
@@ -4182,6 +4170,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final batch = batchOf(picked);
     if (batch.isEmpty) return;
 
+    unawaited(_diary.salvaged(batch.steps, started: true));
     await _bench2.beginSalvage(batch, now: DateTime.now().toUtc());
 
     await _reloadCraftJob();
@@ -4258,6 +4247,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     // ⚠️ Started in the past by however long it has already had, so the bar
     // picks up where it was left rather than beginning again at nothing.
     final now = DateTime.now().toUtc();
+    unawaited(_diary.made(JournalKind.startedSalvage, {line.itemId: 1}));
     await _bench2.beginSalvageOne(
       itemId: line.itemId,
       condition: condition,

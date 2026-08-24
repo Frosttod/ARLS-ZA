@@ -1511,5 +1511,29 @@
         "type": "int"
       }
     }
+  },
+  "journalStartedBuild": "Started building: {what}",
+  "@journalStartedBuild": {
+    "placeholders": {
+      "what": {
+        "type": "String"
+      }
+    }
+  },
+  "journalStartedCraft": "Started making: {what}",
+  "@journalStartedCraft": {
+    "placeholders": {
+      "what": {
+        "type": "String"
+      }
+    }
+  },
+  "journalStartedSalvage": "Started stripping: {what}",
+  "@journalStartedSalvage": {
+    "placeholders": {
+      "what": {
+        "type": "String"
+      }
+    }
   }
 }

@@ -11,6 +11,7 @@
 /// carpeted in a fortnight of abandoned bandages.
 library;
 
+import '../inventory/inventory.dart';
 import '../map/geometry.dart';
 
 /// §4.8: how long a dropped thing waits.
@@ -139,6 +140,21 @@ class GroundPile {
     this.pagesRead = 0,
     this.attachments = const [],
   });
+
+  /// The pile as a line, for anything that shows an item's details (§4.2).
+  ///
+  /// ⚠️ A pile on the ground and a line in the pack are the same seven fields,
+  /// and the screen that wanted to show one as the other was copying them out
+  /// by hand — which is a list that goes stale the next time a field is added
+  /// to either side.
+  CarriedItem get asCarried => CarriedItem(
+    itemId: itemId,
+    count: count,
+    condition: condition,
+    pagesTotal: pagesTotal,
+    pagesRead: pagesRead,
+    attachments: attachments,
+  );
 
   final String itemId;
 

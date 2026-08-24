@@ -109,8 +109,10 @@ class JournalController extends ChangeNotifier {
   /// ⚠️ The pieces that went in, not the parts that came out. "Rozbiórka:
   /// kamizelka ×3" is what the player did; the screws are what they now have,
   /// and the pack already says that.
-  Future<void> salvaged(List<SalvageStep> steps) =>
-      made(JournalKind.salvaged, {for (final step in steps) step.itemId: 1});
+  Future<void> salvaged(List<SalvageStep> steps, {bool started = false}) =>
+      made(started ? JournalKind.startedSalvage : JournalKind.salvaged, {
+        for (final step in steps) step.itemId: 1,
+      });
 
   /// §18: what came off a bench, as one line with counts on it.
   Future<void> made(JournalKind kind, Map<String, int> items) =>

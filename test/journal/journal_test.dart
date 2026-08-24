@@ -115,6 +115,16 @@ void main() {
       }
     });
 
+    test('starting work is something they chose to do', () {
+      for (final kind in [
+        JournalKind.startedBuild,
+        JournalKind.startedCraft,
+        JournalKind.startedSalvage,
+      ]) {
+        expect(kind.wakes, isTrue, reason: kind.name);
+      }
+    });
+
     test('and the things that happen without them do not', () {
       // ⚠️ §8.3's builds run with the app shut. Waking a character up for one
       // would be the journal inventing a night nobody had.
@@ -260,6 +270,9 @@ void main() {
       '_diary.searched(', // a place, and what came out of it
       '_diary.used(', // eating, drinking, a dressing
       '_diary.salvaged(', // the bench
+      'JournalKind.startedSalvage', // §18.6, the moment the vice starts
+      'JournalKind.startedCraft', // §18.4
+      'JournalKind.startedBuild', // §8.3
       'JournalKind.killed', // a body
       'JournalKind.built', // a module
       'JournalKind.blackout', // §9.2
