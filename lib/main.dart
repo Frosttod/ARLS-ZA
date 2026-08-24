@@ -554,11 +554,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final catalogue = _catalogue;
     if (catalogue == null) return;
 
-    final busy = _alreadyBusy();
-    if (busy != null) {
-      _say(L10n.of(context).actionBusy(busy));
-      return;
-    }
+    if (_refuseIfBusy()) return;
 
     final item = catalogue[line.itemId];
     if (item == null) return;
@@ -602,11 +598,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final catalogue = _catalogue;
     if (catalogue == null) return;
 
-    final busy = _alreadyBusy();
-    if (busy != null) {
-      _say(L10n.of(context).actionBusy(busy));
-      return;
-    }
+    if (_refuseIfBusy()) return;
 
     final item = catalogue[line.itemId];
     if (item == null) return;
@@ -1710,11 +1702,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     if (catalogue == null || character == null || loop == null) return;
 
     // §2.1a: one pair of hands.
-    final busy = _alreadyBusy();
-    if (busy != null) {
-      _say(L10n.of(context).actionBusy(busy));
-      return;
-    }
+    if (_refuseIfBusy()) return;
 
     // ⚠️ §18.6: a piece somebody has already opened up does not work any
     // more. The row and the sheet both hide the control, and this is the
@@ -2812,11 +2800,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
     // §2.1a: one pair of hands. §5.5.4's seconds are hands doing something,
     // and hands that are already eating are not free to change a magazine.
-    final busy = _alreadyBusy();
-    if (busy != null) {
-      _say(L10n.of(context).actionBusy(busy));
-      return;
-    }
+    if (_refuseIfBusy()) return;
 
     // ⚠️ Asked before the seconds are spent, not after.
     //
@@ -3429,11 +3413,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final at = _standingAt.value;
     if (character == null || at == null) return;
 
-    final busy = _alreadyBusy();
-    if (busy != null) {
-      _say(L10n.of(context).actionBusy(busy));
-      return;
-    }
+    if (_refuseIfBusy()) return;
 
     if (kind == ShelterKind.camp) {
       final refusal = campRefusalAt(at, existing: _shelters.value);
@@ -3460,7 +3440,14 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   }
 
   /// §2.1a, §8.3: puts the work down, or picks it back up. Nothing is lost.
+  ///
+  /// ⚠️ **Asked in one direction only.** Putting work down must never be
+  /// refused — it is the way *out* of an occupation. Picking it up is a start
+  /// like any other and asks like any other: reported from a walk, eating and
+  /// pressing "back to work" put a meal and a workshop on one pair of hands.
   Future<void> _pauseBuild(Shelter place) async {
+    if (place.paused && _refuseIfBusy()) return;
+
     _shelterBusy = true;
     await _places.setPaused(place, DateTime.now().toUtc());
     _shelterBusy = false;
@@ -3615,11 +3602,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         .firstOrNull;
     if (shelter == null || shelter.building != null) return;
 
-    final busy = _alreadyBusy();
-    if (busy != null) {
-      _say(L10n.of(context).actionBusy(busy));
-      return;
-    }
+    if (_refuseIfBusy()) return;
 
     final recipe = nextLevelOf(module, have: shelter.levelOf(module));
     if (recipe == null) return;
@@ -3704,6 +3687,20 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// other's.
   ///
   /// Everything with a duration goes through here before it starts.
+  /// §2.1a: one pair of hands, asked and answered in one line.
+  ///
+  /// ⚠️ **The guard was written out ten times** — five lines each, and each
+  /// copy an opportunity to forget the `return`. Every start in this file goes
+  /// through here now, so adding an eleventh is one line rather than five, and
+  /// the budget in `one_action_test` has one name to hold rather than a shape.
+  bool _refuseIfBusy() {
+    final busy = _alreadyBusy();
+    if (busy == null) return false;
+
+    _say(L10n.of(context).actionBusy(busy));
+    return true;
+  }
+
   String? _alreadyBusy() {
     final l10n = L10n.of(context);
 
@@ -4061,8 +4058,11 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       workshopLevel: main?.levelOf(ShelterModule.workshop) ?? 0,
       atHand: counts.keys.toSet(),
       materials: counts,
-      // §2.1a: anything at all, not just another bench job.
-      busy: _search.value != null || _reload != null || _craftJob.value != null,
+      // ⚠️ §2.1a: **the** busy check, not a hand-written second copy of it.
+      // The old one missed the action row and every shelter build, so a
+      // workshop could be started while a camp was going up. A private version
+      // of a shared rule is a rule with holes in it.
+      busy: _alreadyBusy() != null,
       // §7: −30% on building, making and taking apart at full mastery, and a
       // better share back from §18.6.
       engineering: _learned.engineering,
@@ -4169,11 +4169,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final character = _character;
     if (character == null || picked.isEmpty) return;
 
-    final busy = _alreadyBusy();
-    if (busy != null) {
-      _say(L10n.of(context).actionBusy(busy));
-      return;
-    }
+    if (_refuseIfBusy()) return;
 
     // ⚠️ One step per **piece**, not per row. A stack of three that was asked
     // for whole is three steps sharing one uid — the pack holds one entry with
@@ -5398,11 +5394,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
     // §2.1a: one pair of hands. A reload or a dismantling running is a
     // character with something in them.
-    final busy = _alreadyBusy();
-    if (busy != null) {
-      _say(L10n.of(context).actionBusy(busy));
-      return;
-    }
+    if (_refuseIfBusy()) return;
 
     final now = DateTime.now().toUtc();
     final refusal = _scoutRefusal(at, now);
@@ -5428,11 +5420,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final box = _boxInReach();
     if (at == null || box == null) return;
 
-    final busy = _alreadyBusy();
-    if (busy != null) {
-      _say(L10n.of(context).actionBusy(busy));
-      return;
-    }
+    if (_refuseIfBusy()) return;
 
     setState(() {
       _search.value = Search.object(
@@ -5474,11 +5462,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     // through. Reported from a walk as exactly that inconsistency, and the
     // inconsistency was the tell: forcing a door is not a lesser act than
     // looking in a bin, it is twenty seconds of both hands on a crowbar.
-    final busy = _alreadyBusy();
-    if (busy != null) {
-      _say(L10n.of(context).actionBusy(busy));
-      return;
-    }
+    if (_refuseIfBusy()) return;
 
     setState(() {
       _search.value = Search.breach(

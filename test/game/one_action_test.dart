@@ -79,13 +79,70 @@ void main() {
       // Forcing a door is not a lesser act than looking in a bin — it is
       // twenty seconds of both hands on a crowbar.
       'void _startBreach(BarrierBreach breach)',
+      // §2.1a, §8.3: picking a build back up is a start like any other.
+      // Reported from a walk: eating and pressing "back to work" put a meal
+      // and a workshop on the same pair of hands.
+      'Future<void> _pauseBuild(Shelter place)',
+      'Future<void> _buildShelter(ShelterKind kind)',
+      'Future<void> _buildModule(ShelterModule module)',
+      'Future<void> _startSitting(List<SalvagePick> picked)',
     ]) {
       expect(
-        bodyOf(start).contains('_alreadyBusy()'),
+        bodyOf(start).contains('_refuseIfBusy()'),
         isTrue,
         reason: '$start starts without asking whether the hands are free',
       );
     }
+  });
+
+  test('there is one guard, and every start uses it', () {
+    // ⚠️ **The guard was written out ten times**, five lines each, and each
+    // copy was an opportunity to forget the `return`. One name is a name the
+    // budget above can hold; a shape is not.
+    expect(
+      main.contains('bool _refuseIfBusy()'),
+      isTrue,
+      reason: 'the one guard is gone',
+    );
+
+    // ⚠️ The first line of the old five-line version. A regex was written
+    // here first and matched nothing at all — a raw Dart string treats `\(`
+    // as two characters, so the test passed by being vacuous, which is the
+    // worst way for a budget to pass.
+    // ⚠️ The two lines that opened the old five, in that order. Asking for
+    // the first alone is too crude: `_refuseIfBusy` itself has it, and so
+    // does the pack's refusal, which *returns* the reason rather than saying
+    // it — a different shape and a correct one.
+    final lines = File(
+      'lib/main.dart',
+    ).readAsLinesSync().map((line) => line.trim()).toList();
+    final handWritten = [
+      for (var i = 0; i < lines.length - 1; i++)
+        if (lines[i] == 'final busy = _alreadyBusy();' &&
+            lines[i + 1] == 'if (busy != null) {')
+          i,
+    ];
+
+    expect(
+      handWritten,
+      isEmpty,
+      reason: 'the guard is being written out by hand again',
+    );
+  });
+
+  test('§18.4: and the bench does not keep a second opinion', () {
+    // ⚠️ It kept one. `CraftBench.busy` read `_search.value != null ||
+    // _reload != null || _craftJob.value != null` — a hand-written copy of the
+    // rule, missing the action row and every shelter build, so a workshop
+    // could be started while a camp was going up.
+    //
+    // The same defect as forcing a door, in a different file: a private
+    // version of a shared rule is a rule with holes in it.
+    expect(
+      main.contains('busy: _alreadyBusy() != null'),
+      isTrue,
+      reason: 'the bench is deciding for itself what busy means again',
+    );
   });
 
   test('and none of them settles for asking about its own clock', () {
