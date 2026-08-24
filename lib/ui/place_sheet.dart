@@ -25,6 +25,34 @@ import '../loot/obstacle.dart';
 import 'hud.dart' show HudColors;
 import 'inventory_screen.dart' show kindName;
 
+/// The same, found by the marker the player actually tapped.
+///
+/// ⚠️ The lookup belongs here rather than on the screen, for the reason every
+/// other sheet's does: which box a marker id names is a fact about how
+/// [MarkerKind.loot] markers are built, and a screen that had to know the
+/// shape of the id is a screen that breaks when the id changes.
+Future<void> showPlaceFor(
+  BuildContext context, {
+  required List<LootBox> boxes,
+  required String markerId,
+  required LootTableSet? tables,
+  required ValueListenable<GeoPoint?> standingAt,
+  required ItemCatalogue catalogue,
+  required DateTime now,
+}) async {
+  final box = boxes.where((each) => each.poiId == markerId).firstOrNull;
+  if (box == null) return;
+
+  await showPlaceDetails(
+    context,
+    box: box,
+    table: tables?[box.tableId],
+    standingAt: standingAt,
+    catalogue: catalogue,
+    now: now,
+  );
+}
+
 Future<void> showPlaceDetails(
   BuildContext context, {
   required LootBox box,

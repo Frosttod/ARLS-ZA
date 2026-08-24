@@ -11282,6 +11282,349 @@ class HotspotRowsCompanion extends UpdateCompanion<HotspotRow> {
   }
 }
 
+class $JournalRowsTable extends JournalRows
+    with TableInfo<$JournalRowsTable, JournalRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $JournalRowsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _profileIdMeta = const VerificationMeta(
+    'profileId',
+  );
+  @override
+  late final GeneratedColumn<int> profileId = GeneratedColumn<int>(
+    'profile_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _atMeta = const VerificationMeta('at');
+  @override
+  late final GeneratedColumn<DateTime> at = GeneratedColumn<DateTime>(
+    'at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  @override
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+    'kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _subjectMeta = const VerificationMeta(
+    'subject',
+  );
+  @override
+  late final GeneratedColumn<String> subject = GeneratedColumn<String>(
+    'subject',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, profileId, at, kind, subject];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'journal';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<JournalRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('profile_id')) {
+      context.handle(
+        _profileIdMeta,
+        profileId.isAcceptableOrUnknown(data['profile_id']!, _profileIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_profileIdMeta);
+    }
+    if (data.containsKey('at')) {
+      context.handle(_atMeta, at.isAcceptableOrUnknown(data['at']!, _atMeta));
+    } else if (isInserting) {
+      context.missing(_atMeta);
+    }
+    if (data.containsKey('kind')) {
+      context.handle(
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_kindMeta);
+    }
+    if (data.containsKey('subject')) {
+      context.handle(
+        _subjectMeta,
+        subject.isAcceptableOrUnknown(data['subject']!, _subjectMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  JournalRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return JournalRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      profileId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}profile_id'],
+      )!,
+      at: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}at'],
+      )!,
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kind'],
+      )!,
+      subject: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}subject'],
+      ),
+    );
+  }
+
+  @override
+  $JournalRowsTable createAlias(String alias) {
+    return $JournalRowsTable(attachedDatabase, alias);
+  }
+}
+
+class JournalRow extends DataClass implements Insertable<JournalRow> {
+  final int id;
+  final int profileId;
+  final DateTime at;
+
+  /// [JournalKind.wire]. Text rather than an index, so adding a kind in the
+  /// middle of the enum does not rewrite everything already on disk.
+  final String kind;
+  final String? subject;
+  const JournalRow({
+    required this.id,
+    required this.profileId,
+    required this.at,
+    required this.kind,
+    this.subject,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['profile_id'] = Variable<int>(profileId);
+    map['at'] = Variable<DateTime>(at);
+    map['kind'] = Variable<String>(kind);
+    if (!nullToAbsent || subject != null) {
+      map['subject'] = Variable<String>(subject);
+    }
+    return map;
+  }
+
+  JournalRowsCompanion toCompanion(bool nullToAbsent) {
+    return JournalRowsCompanion(
+      id: Value(id),
+      profileId: Value(profileId),
+      at: Value(at),
+      kind: Value(kind),
+      subject: subject == null && nullToAbsent
+          ? const Value.absent()
+          : Value(subject),
+    );
+  }
+
+  factory JournalRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return JournalRow(
+      id: serializer.fromJson<int>(json['id']),
+      profileId: serializer.fromJson<int>(json['profileId']),
+      at: serializer.fromJson<DateTime>(json['at']),
+      kind: serializer.fromJson<String>(json['kind']),
+      subject: serializer.fromJson<String?>(json['subject']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'profileId': serializer.toJson<int>(profileId),
+      'at': serializer.toJson<DateTime>(at),
+      'kind': serializer.toJson<String>(kind),
+      'subject': serializer.toJson<String?>(subject),
+    };
+  }
+
+  JournalRow copyWith({
+    int? id,
+    int? profileId,
+    DateTime? at,
+    String? kind,
+    Value<String?> subject = const Value.absent(),
+  }) => JournalRow(
+    id: id ?? this.id,
+    profileId: profileId ?? this.profileId,
+    at: at ?? this.at,
+    kind: kind ?? this.kind,
+    subject: subject.present ? subject.value : this.subject,
+  );
+  JournalRow copyWithCompanion(JournalRowsCompanion data) {
+    return JournalRow(
+      id: data.id.present ? data.id.value : this.id,
+      profileId: data.profileId.present ? data.profileId.value : this.profileId,
+      at: data.at.present ? data.at.value : this.at,
+      kind: data.kind.present ? data.kind.value : this.kind,
+      subject: data.subject.present ? data.subject.value : this.subject,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('JournalRow(')
+          ..write('id: $id, ')
+          ..write('profileId: $profileId, ')
+          ..write('at: $at, ')
+          ..write('kind: $kind, ')
+          ..write('subject: $subject')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, profileId, at, kind, subject);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is JournalRow &&
+          other.id == this.id &&
+          other.profileId == this.profileId &&
+          other.at == this.at &&
+          other.kind == this.kind &&
+          other.subject == this.subject);
+}
+
+class JournalRowsCompanion extends UpdateCompanion<JournalRow> {
+  final Value<int> id;
+  final Value<int> profileId;
+  final Value<DateTime> at;
+  final Value<String> kind;
+  final Value<String?> subject;
+  const JournalRowsCompanion({
+    this.id = const Value.absent(),
+    this.profileId = const Value.absent(),
+    this.at = const Value.absent(),
+    this.kind = const Value.absent(),
+    this.subject = const Value.absent(),
+  });
+  JournalRowsCompanion.insert({
+    this.id = const Value.absent(),
+    required int profileId,
+    required DateTime at,
+    required String kind,
+    this.subject = const Value.absent(),
+  }) : profileId = Value(profileId),
+       at = Value(at),
+       kind = Value(kind);
+  static Insertable<JournalRow> custom({
+    Expression<int>? id,
+    Expression<int>? profileId,
+    Expression<DateTime>? at,
+    Expression<String>? kind,
+    Expression<String>? subject,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (profileId != null) 'profile_id': profileId,
+      if (at != null) 'at': at,
+      if (kind != null) 'kind': kind,
+      if (subject != null) 'subject': subject,
+    });
+  }
+
+  JournalRowsCompanion copyWith({
+    Value<int>? id,
+    Value<int>? profileId,
+    Value<DateTime>? at,
+    Value<String>? kind,
+    Value<String?>? subject,
+  }) {
+    return JournalRowsCompanion(
+      id: id ?? this.id,
+      profileId: profileId ?? this.profileId,
+      at: at ?? this.at,
+      kind: kind ?? this.kind,
+      subject: subject ?? this.subject,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (profileId.present) {
+      map['profile_id'] = Variable<int>(profileId.value);
+    }
+    if (at.present) {
+      map['at'] = Variable<DateTime>(at.value);
+    }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
+    }
+    if (subject.present) {
+      map['subject'] = Variable<String>(subject.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('JournalRowsCompanion(')
+          ..write('id: $id, ')
+          ..write('profileId: $profileId, ')
+          ..write('at: $at, ')
+          ..write('kind: $kind, ')
+          ..write('subject: $subject')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$SaveDatabase extends GeneratedDatabase {
   _$SaveDatabase(QueryExecutor e) : super(e);
   $SaveDatabaseManager get managers => $SaveDatabaseManager(this);
@@ -11306,6 +11649,7 @@ abstract class _$SaveDatabase extends GeneratedDatabase {
   late final $ActiveActionsTable activeActions = $ActiveActionsTable(this);
   late final $SkillRowsTable skillRows = $SkillRowsTable(this);
   late final $HotspotRowsTable hotspotRows = $HotspotRowsTable(this);
+  late final $JournalRowsTable journalRows = $JournalRowsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -11328,6 +11672,7 @@ abstract class _$SaveDatabase extends GeneratedDatabase {
     activeActions,
     skillRows,
     hotspotRows,
+    journalRows,
   ];
   @override
   DriftDatabaseOptions get options =>
@@ -16580,6 +16925,200 @@ typedef $$HotspotRowsTableProcessedTableManager =
       HotspotRow,
       PrefetchHooks Function()
     >;
+typedef $$JournalRowsTableCreateCompanionBuilder =
+    JournalRowsCompanion Function({
+      Value<int> id,
+      required int profileId,
+      required DateTime at,
+      required String kind,
+      Value<String?> subject,
+    });
+typedef $$JournalRowsTableUpdateCompanionBuilder =
+    JournalRowsCompanion Function({
+      Value<int> id,
+      Value<int> profileId,
+      Value<DateTime> at,
+      Value<String> kind,
+      Value<String?> subject,
+    });
+
+class $$JournalRowsTableFilterComposer
+    extends Composer<_$SaveDatabase, $JournalRowsTable> {
+  $$JournalRowsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get profileId => $composableBuilder(
+    column: $table.profileId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get at => $composableBuilder(
+    column: $table.at,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get subject => $composableBuilder(
+    column: $table.subject,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$JournalRowsTableOrderingComposer
+    extends Composer<_$SaveDatabase, $JournalRowsTable> {
+  $$JournalRowsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get profileId => $composableBuilder(
+    column: $table.profileId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get at => $composableBuilder(
+    column: $table.at,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get subject => $composableBuilder(
+    column: $table.subject,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$JournalRowsTableAnnotationComposer
+    extends Composer<_$SaveDatabase, $JournalRowsTable> {
+  $$JournalRowsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get profileId =>
+      $composableBuilder(column: $table.profileId, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get at =>
+      $composableBuilder(column: $table.at, builder: (column) => column);
+
+  GeneratedColumn<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
+
+  GeneratedColumn<String> get subject =>
+      $composableBuilder(column: $table.subject, builder: (column) => column);
+}
+
+class $$JournalRowsTableTableManager
+    extends
+        RootTableManager<
+          _$SaveDatabase,
+          $JournalRowsTable,
+          JournalRow,
+          $$JournalRowsTableFilterComposer,
+          $$JournalRowsTableOrderingComposer,
+          $$JournalRowsTableAnnotationComposer,
+          $$JournalRowsTableCreateCompanionBuilder,
+          $$JournalRowsTableUpdateCompanionBuilder,
+          (
+            JournalRow,
+            BaseReferences<_$SaveDatabase, $JournalRowsTable, JournalRow>,
+          ),
+          JournalRow,
+          PrefetchHooks Function()
+        > {
+  $$JournalRowsTableTableManager(_$SaveDatabase db, $JournalRowsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$JournalRowsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$JournalRowsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$JournalRowsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> profileId = const Value.absent(),
+                Value<DateTime> at = const Value.absent(),
+                Value<String> kind = const Value.absent(),
+                Value<String?> subject = const Value.absent(),
+              }) => JournalRowsCompanion(
+                id: id,
+                profileId: profileId,
+                at: at,
+                kind: kind,
+                subject: subject,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int profileId,
+                required DateTime at,
+                required String kind,
+                Value<String?> subject = const Value.absent(),
+              }) => JournalRowsCompanion.insert(
+                id: id,
+                profileId: profileId,
+                at: at,
+                kind: kind,
+                subject: subject,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$JournalRowsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$SaveDatabase,
+      $JournalRowsTable,
+      JournalRow,
+      $$JournalRowsTableFilterComposer,
+      $$JournalRowsTableOrderingComposer,
+      $$JournalRowsTableAnnotationComposer,
+      $$JournalRowsTableCreateCompanionBuilder,
+      $$JournalRowsTableUpdateCompanionBuilder,
+      (
+        JournalRow,
+        BaseReferences<_$SaveDatabase, $JournalRowsTable, JournalRow>,
+      ),
+      JournalRow,
+      PrefetchHooks Function()
+    >;
 
 class $SaveDatabaseManager {
   final _$SaveDatabase _db;
@@ -16618,4 +17157,6 @@ class $SaveDatabaseManager {
       $$SkillRowsTableTableManager(_db, _db.skillRows);
   $$HotspotRowsTableTableManager get hotspotRows =>
       $$HotspotRowsTableTableManager(_db, _db.hotspotRows);
+  $$JournalRowsTableTableManager get journalRows =>
+      $$JournalRowsTableTableManager(_db, _db.journalRows);
 }

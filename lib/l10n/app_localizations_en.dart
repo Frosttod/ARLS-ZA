@@ -2275,4 +2275,108 @@ class L10nEn extends L10n {
   String salvageStartsIn(String time) {
     return 'Starts in $time';
   }
+
+  @override
+  String get journalTitle => 'Journal';
+
+  @override
+  String get journalEmpty => 'Nothing here yet.';
+
+  @override
+  String journalDay(int day) {
+    return 'Day $day';
+  }
+
+  @override
+  String journalSearched(String what) {
+    return 'Searched: $what';
+  }
+
+  @override
+  String journalFound(String what) {
+    return 'Found: $what';
+  }
+
+  @override
+  String get journalFoundNothing => 'Found nothing';
+
+  @override
+  String journalOpened(String what) {
+    return 'Opened: $what';
+  }
+
+  @override
+  String journalFought(String what) {
+    return 'Fought: $what';
+  }
+
+  @override
+  String journalKilled(String what) {
+    return 'Killed: $what';
+  }
+
+  @override
+  String journalHurt(String what) {
+    return 'Hit by: $what';
+  }
+
+  @override
+  String journalAte(String what) {
+    return 'Eating: $what';
+  }
+
+  @override
+  String journalDrank(String what) {
+    return 'Drinking: $what';
+  }
+
+  @override
+  String journalTreated(String what) {
+    return 'Dressing: $what';
+  }
+
+  @override
+  String get journalSlept => 'Asleep';
+
+  @override
+  String get journalWoke => 'Awake';
+
+  @override
+  String journalRead(String what) {
+    return 'Reading: $what';
+  }
+
+  @override
+  String journalBuilt(String what) {
+    return 'Building: $what';
+  }
+
+  @override
+  String journalCrafted(String what) {
+    return 'Made: $what';
+  }
+
+  @override
+  String journalSalvaged(String what) {
+    return 'Stripped: $what';
+  }
+
+  @override
+  String get journalCameHome => 'Back at the shelter';
+
+  @override
+  String get journalWentOut => 'Left the shelter';
+
+  @override
+  String journalLearned(String what) {
+    return 'Skill: $what';
+  }
+
+  @override
+  String get journalBlackout => 'Blacked out';
+
+  @override
+  String journalCount(String name, int count) {
+    return '$name ×$count';
+  }
 }

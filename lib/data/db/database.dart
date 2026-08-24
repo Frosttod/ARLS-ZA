@@ -29,7 +29,7 @@ import 'tables.dart';
 part 'database.g.dart';
 
 /// Bumped only alongside a migration step in [_migration]. Never reused.
-const int kSchemaVersion = 32;
+const int kSchemaVersion = 33;
 
 /// Keys used in [MetaEntries].
 abstract final class MetaKeys {
@@ -65,6 +65,7 @@ abstract final class MetaKeys {
     ActiveActions,
     SkillRows,
     HotspotRows,
+    JournalRows,
   ],
 )
 class SaveDatabase extends _$SaveDatabase {
@@ -77,7 +78,7 @@ class SaveDatabase extends _$SaveDatabase {
   /// follow a constant reference. `schema_test.dart` keeps it in step with
   /// [kSchemaVersion].
   @override
-  int get schemaVersion => 32;
+  int get schemaVersion => 33;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -358,6 +359,11 @@ class SaveDatabase extends _$SaveDatabase {
       // had, since nothing in the game could make one (§11.1.4).
       if (from < 32) await m.createTable(hotspotRows);
 
+      // §3.6.1: the log of what the character did. A new table, so a save from
+      // before this opens on an empty journal — which is honest: nothing that
+      // happened before it existed was written down (§11.1.4).
+      if (from < 33) await m.createTable(journalRows);
+
       await _writeSchemaVersion(to);
     },
     beforeOpen: (details) async {
@@ -593,6 +599,40 @@ class SaveDatabase extends _$SaveDatabase {
   /// §6.5: one slot, written outright.
   Future<void> writeHotspot(HotspotRowsCompanion row) =>
       into(hotspotRows).insertOnConflictUpdate(row);
+
+  /// §3.6.1: the log, newest first and no more than [limit] of it.
+  Future<List<JournalRow>> journalFor(int profileId, {required int limit}) =>
+      (select(journalRows)
+            ..where((t) => t.profileId.equals(profileId))
+            ..orderBy([(t) => OrderingTerm.desc(t.at)])
+            ..limit(limit))
+          .get();
+
+  /// §3.6.1: one thing that happened, appended.
+  Future<void> addJournalRow(JournalRowsCompanion row) =>
+      into(journalRows).insert(row);
+
+  /// §3.6.1: drops everything past the newest [keep] entries.
+  ///
+  /// ⚠️ By id rather than by date. Two entries can share a second — a search
+  /// that finishes and the list of what came out of it — and a cut made on the
+  /// clock would take one of a pair and leave the other.
+  Future<void> trimJournal(int profileId, {required int keep}) async {
+    final rows =
+        await (select(journalRows)
+              ..where((t) => t.profileId.equals(profileId))
+              ..orderBy([(t) => OrderingTerm.desc(t.id)])
+              ..limit(1, offset: keep - 1))
+            .get();
+    if (rows.isEmpty) return;
+
+    await (delete(journalRows)..where(
+          (t) =>
+              t.profileId.equals(profileId) &
+              t.id.isSmallerThanValue(rows.first.id),
+        ))
+        .go();
+  }
 
   /// §7: everything this character has earned, by skill wire name.
   Future<Map<String, int>> skillsFor(int profileId) async {

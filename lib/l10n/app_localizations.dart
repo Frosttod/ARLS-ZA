@@ -4098,6 +4098,150 @@ abstract class L10n {
   /// In en, this message translates to:
   /// **'Starts in {time}'**
   String salvageStartsIn(String time);
+
+  /// No description provided for @journalTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Journal'**
+  String get journalTitle;
+
+  /// No description provided for @journalEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing here yet.'**
+  String get journalEmpty;
+
+  /// No description provided for @journalDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Day {day}'**
+  String journalDay(int day);
+
+  /// No description provided for @journalSearched.
+  ///
+  /// In en, this message translates to:
+  /// **'Searched: {what}'**
+  String journalSearched(String what);
+
+  /// No description provided for @journalFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Found: {what}'**
+  String journalFound(String what);
+
+  /// No description provided for @journalFoundNothing.
+  ///
+  /// In en, this message translates to:
+  /// **'Found nothing'**
+  String get journalFoundNothing;
+
+  /// No description provided for @journalOpened.
+  ///
+  /// In en, this message translates to:
+  /// **'Opened: {what}'**
+  String journalOpened(String what);
+
+  /// No description provided for @journalFought.
+  ///
+  /// In en, this message translates to:
+  /// **'Fought: {what}'**
+  String journalFought(String what);
+
+  /// No description provided for @journalKilled.
+  ///
+  /// In en, this message translates to:
+  /// **'Killed: {what}'**
+  String journalKilled(String what);
+
+  /// No description provided for @journalHurt.
+  ///
+  /// In en, this message translates to:
+  /// **'Hit by: {what}'**
+  String journalHurt(String what);
+
+  /// No description provided for @journalAte.
+  ///
+  /// In en, this message translates to:
+  /// **'Eating: {what}'**
+  String journalAte(String what);
+
+  /// No description provided for @journalDrank.
+  ///
+  /// In en, this message translates to:
+  /// **'Drinking: {what}'**
+  String journalDrank(String what);
+
+  /// No description provided for @journalTreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Dressing: {what}'**
+  String journalTreated(String what);
+
+  /// No description provided for @journalSlept.
+  ///
+  /// In en, this message translates to:
+  /// **'Asleep'**
+  String get journalSlept;
+
+  /// No description provided for @journalWoke.
+  ///
+  /// In en, this message translates to:
+  /// **'Awake'**
+  String get journalWoke;
+
+  /// No description provided for @journalRead.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading: {what}'**
+  String journalRead(String what);
+
+  /// No description provided for @journalBuilt.
+  ///
+  /// In en, this message translates to:
+  /// **'Building: {what}'**
+  String journalBuilt(String what);
+
+  /// No description provided for @journalCrafted.
+  ///
+  /// In en, this message translates to:
+  /// **'Made: {what}'**
+  String journalCrafted(String what);
+
+  /// No description provided for @journalSalvaged.
+  ///
+  /// In en, this message translates to:
+  /// **'Stripped: {what}'**
+  String journalSalvaged(String what);
+
+  /// No description provided for @journalCameHome.
+  ///
+  /// In en, this message translates to:
+  /// **'Back at the shelter'**
+  String get journalCameHome;
+
+  /// No description provided for @journalWentOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Left the shelter'**
+  String get journalWentOut;
+
+  /// No description provided for @journalLearned.
+  ///
+  /// In en, this message translates to:
+  /// **'Skill: {what}'**
+  String journalLearned(String what);
+
+  /// No description provided for @journalBlackout.
+  ///
+  /// In en, this message translates to:
+  /// **'Blacked out'**
+  String get journalBlackout;
+
+  /// No description provided for @journalCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} ×{count}'**
+  String journalCount(String name, int count);
 }
 
 class _L10nDelegate extends LocalizationsDelegate<L10n> {

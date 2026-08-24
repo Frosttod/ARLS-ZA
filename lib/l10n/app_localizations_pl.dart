@@ -2277,4 +2277,108 @@ class L10nPl extends L10n {
   String salvageStartsIn(String time) {
     return 'Zacznie się za $time';
   }
+
+  @override
+  String get journalTitle => 'Dziennik';
+
+  @override
+  String get journalEmpty => 'Jeszcze nic tu nie ma.';
+
+  @override
+  String journalDay(int day) {
+    return 'Dzień $day';
+  }
+
+  @override
+  String journalSearched(String what) {
+    return 'Przeszukanie: $what';
+  }
+
+  @override
+  String journalFound(String what) {
+    return 'Znalezione: $what';
+  }
+
+  @override
+  String get journalFoundNothing => 'Nic nie znaleziono';
+
+  @override
+  String journalOpened(String what) {
+    return 'Otwarcie: $what';
+  }
+
+  @override
+  String journalFought(String what) {
+    return 'Walka: $what';
+  }
+
+  @override
+  String journalKilled(String what) {
+    return 'Zabity: $what';
+  }
+
+  @override
+  String journalHurt(String what) {
+    return 'Trafiony przez: $what';
+  }
+
+  @override
+  String journalAte(String what) {
+    return 'Jesz: $what';
+  }
+
+  @override
+  String journalDrank(String what) {
+    return 'Pijesz: $what';
+  }
+
+  @override
+  String journalTreated(String what) {
+    return 'Opatrunek: $what';
+  }
+
+  @override
+  String get journalSlept => 'Sen';
+
+  @override
+  String get journalWoke => 'Pobudka';
+
+  @override
+  String journalRead(String what) {
+    return 'Lektura: $what';
+  }
+
+  @override
+  String journalBuilt(String what) {
+    return 'Budowa: $what';
+  }
+
+  @override
+  String journalCrafted(String what) {
+    return 'Wytworzone: $what';
+  }
+
+  @override
+  String journalSalvaged(String what) {
+    return 'Rozbiórka: $what';
+  }
+
+  @override
+  String get journalCameHome => 'Powrót do schronu';
+
+  @override
+  String get journalWentOut => 'Wyjście ze schronu';
+
+  @override
+  String journalLearned(String what) {
+    return 'Umiejętność: $what';
+  }
+
+  @override
+  String get journalBlackout => 'Utrata przytomności';
+
+  @override
+  String journalCount(String name, int count) {
+    return '$name ×$count';
+  }
 }

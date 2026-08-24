@@ -1240,5 +1240,144 @@
         "type": "String"
       }
     }
+  },
+  "journalTitle": "Dziennik",
+  "journalEmpty": "Jeszcze nic tu nie ma.",
+  "journalDay": "Dzień {day}",
+  "@journalDay": {
+    "placeholders": {
+      "day": {
+        "type": "int"
+      }
+    }
+  },
+  "journalSearched": "Przeszukanie: {what}",
+  "@journalSearched": {
+    "placeholders": {
+      "what": {
+        "type": "String"
+      }
+    }
+  },
+  "journalFound": "Znalezione: {what}",
+  "@journalFound": {
+    "placeholders": {
+      "what": {
+        "type": "String"
+      }
+    }
+  },
+  "journalFoundNothing": "Nic nie znaleziono",
+  "journalOpened": "Otwarcie: {what}",
+  "@journalOpened": {
+    "placeholders": {
+      "what": {
+        "type": "String"
+      }
+    }
+  },
+  "journalFought": "Walka: {what}",
+  "@journalFought": {
+    "placeholders": {
+      "what": {
+        "type": "String"
+      }
+    }
+  },
+  "journalKilled": "Zabity: {what}",
+  "@journalKilled": {
+    "placeholders": {
+      "what": {
+        "type": "String"
+      }
+    }
+  },
+  "journalHurt": "Trafiony przez: {what}",
+  "@journalHurt": {
+    "placeholders": {
+      "what": {
+        "type": "String"
+      }
+    }
+  },
+  "journalAte": "Jesz: {what}",
+  "@journalAte": {
+    "placeholders": {
+      "what": {
+        "type": "String"
+      }
+    }
+  },
+  "journalDrank": "Pijesz: {what}",
+  "@journalDrank": {
+    "placeholders": {
+      "what": {
+        "type": "String"
+      }
+    }
+  },
+  "journalTreated": "Opatrunek: {what}",
+  "@journalTreated": {
+    "placeholders": {
+      "what": {
+        "type": "String"
+      }
+    }
+  },
+  "journalSlept": "Sen",
+  "journalWoke": "Pobudka",
+  "journalRead": "Lektura: {what}",
+  "@journalRead": {
+    "placeholders": {
+      "what": {
+        "type": "String"
+      }
+    }
+  },
+  "journalBuilt": "Budowa: {what}",
+  "@journalBuilt": {
+    "placeholders": {
+      "what": {
+        "type": "String"
+      }
+    }
+  },
+  "journalCrafted": "Wytworzone: {what}",
+  "@journalCrafted": {
+    "placeholders": {
+      "what": {
+        "type": "String"
+      }
+    }
+  },
+  "journalSalvaged": "Rozbiórka: {what}",
+  "@journalSalvaged": {
+    "placeholders": {
+      "what": {
+        "type": "String"
+      }
+    }
+  },
+  "journalCameHome": "Powrót do schronu",
+  "journalWentOut": "Wyjście ze schronu",
+  "journalLearned": "Umiejętność: {what}",
+  "@journalLearned": {
+    "placeholders": {
+      "what": {
+        "type": "String"
+      }
+    }
+  },
+  "journalBlackout": "Utrata przytomności",
+  "journalCount": "{name} ×{count}",
+  "@journalCount": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
   }
 }

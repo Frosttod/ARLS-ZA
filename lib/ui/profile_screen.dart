@@ -31,11 +31,54 @@ import '../sim/physiology.dart';
 import '../l10n/app_localizations.dart';
 import '../skills/skill.dart';
 import 'effects.dart';
+import '../items/item_catalogue.dart';
+import '../items/item_names.dart';
+import '../journal/journal.dart';
 import '../sim/body.dart';
 import '../sim/player_stats.dart';
 import '../sim/tick.dart';
 import 'combat_panel.dart' show errorName, hitLocationName;
 import 'hud.dart' show HudColors;
+import 'journal_view.dart';
+import 'names.dart';
+
+/// Opens it as a pushed route.
+///
+/// ⚠️ The route belongs here rather than on the screen that calls it, for the
+/// same reason every sheet's does: how the profile is presented is a fact
+/// about the profile, and the caller's only business is what to put in it.
+Future<void> showProfile(
+  BuildContext context, {
+  required String name,
+  required BodyProfile body,
+  required SimState state,
+  required SimStatus status,
+  required SkillSet skills,
+  required PlayerStats stats,
+  required Duration aliveFor,
+  required double? weaponMoa,
+  required List<JournalEntry> journal,
+  required DateTime startedAt,
+  required ItemCatalogue? catalogue,
+  required ItemNames names,
+}) => Navigator.of(context).push(
+  MaterialPageRoute<void>(
+    builder: (_) => ProfileScreen(
+      name: name,
+      body: body,
+      state: state,
+      status: status,
+      skills: skills,
+      stats: stats,
+      aliveFor: aliveFor,
+      weaponMoa: weaponMoa,
+      journal: journal,
+      startedAt: startedAt,
+      catalogue: catalogue,
+      names: names,
+    ),
+  ),
+);
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({
@@ -47,6 +90,10 @@ class ProfileScreen extends StatelessWidget {
     required this.stats,
     required this.aliveFor,
     required this.weaponMoa,
+    required this.journal,
+    required this.startedAt,
+    required this.catalogue,
+    required this.names,
     super.key,
   });
 
@@ -69,6 +116,18 @@ class ProfileScreen extends StatelessWidget {
 
   /// §5.1.1: what the weapon in hand contributes, or null with empty hands.
   final double? weaponMoa;
+
+  /// §3.6.1: what the character did, newest first.
+  final List<JournalEntry> journal;
+
+  /// When the run began, so an entry knows which day it fell on.
+  final DateTime startedAt;
+
+  /// ⚠️ Nullable, because the profile opens before the catalogue is loaded on
+  /// a cold start and an entry named by its raw item id is still a true entry.
+  final ItemCatalogue? catalogue;
+
+  final ItemNames names;
 
   @override
   Widget build(BuildContext context) {
@@ -246,6 +305,20 @@ class ProfileScreen extends StatelessWidget {
                 total: stats.hitsCounted,
                 colours: colours,
               ),
+
+          // §3.6.1: and what that actually looked like, hour by hour. The
+          // tally above says how many; this says what happened, which is the
+          // question a player asks after a walk and the one a counter cannot
+          // answer.
+          const SizedBox(height: 20),
+          _Section(label: l10n.journalTitle, colours: colours),
+          ...journalRows(
+            context,
+            entries: journal,
+            startedAt: startedAt,
+            catalogue: catalogue,
+            names: names,
+          ),
         ],
       ),
     );
@@ -500,12 +573,7 @@ class _SkillRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final fraction = progress.fraction;
 
-    final name = switch (progress.skill) {
-      Skill.scouting => l10n.profileSkillScouting,
-      Skill.weapons => l10n.profileSkillWeapons,
-      Skill.medicine => l10n.profileSkillMedicine,
-      Skill.engineering => l10n.profileSkillEngineering,
-    };
+    final name = skillName(l10n, progress.skill);
 
     // §12: the same shape the shelter modules use — a label, a number, one
     // separator. Three screens were each inventing their own.

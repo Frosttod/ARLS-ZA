@@ -223,6 +223,36 @@ class ChronicleEntries extends Table {
   ];
 }
 
+/// Warm layer: §3.6.1's log of what the character did.
+///
+/// ⚠️ **A kind and a subject, never a sentence.** The words go around it when
+/// it is drawn (§1.1), so a player who changes the language does not end up
+/// with a diary half in Polish. The subject is data — an item id, an enemy
+/// kind, a shop's name off the map — or null where the kind says everything.
+///
+/// Capped rather than kept forever: a walk writes an entry every few minutes
+/// and a streak is measured in months (§13.1).
+class JournalRows extends Table {
+  @override
+  String get tableName => 'journal';
+
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get profileId => integer()();
+
+  DateTimeColumn get at => dateTime()();
+
+  /// [JournalKind.wire]. Text rather than an index, so adding a kind in the
+  /// middle of the enum does not rewrite everything already on disk.
+  TextColumn get kind => text()();
+
+  TextColumn get subject => text().nullable()();
+
+  @override
+  List<String> get customConstraints => [
+    'FOREIGN KEY (profile_id) REFERENCES profiles (id) ON DELETE CASCADE',
+  ];
+}
+
 /// Warm layer: §6.5's three pressure points, one row each.
 ///
 /// ⚠️ **A slot is a row, and an empty slot is still a row.** After a hotspot

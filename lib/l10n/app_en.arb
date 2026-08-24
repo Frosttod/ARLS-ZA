@@ -1372,5 +1372,144 @@
         "type": "String"
       }
     }
+  },
+  "journalTitle": "Journal",
+  "journalEmpty": "Nothing here yet.",
+  "journalDay": "Day {day}",
+  "@journalDay": {
+    "placeholders": {
+      "day": {
+        "type": "int"
+      }
+    }
+  },
+  "journalSearched": "Searched: {what}",
+  "@journalSearched": {
+    "placeholders": {
+      "what": {
+        "type": "String"
+      }
+    }
+  },
+  "journalFound": "Found: {what}",
+  "@journalFound": {
+    "placeholders": {
+      "what": {
+        "type": "String"
+      }
+    }
+  },
+  "journalFoundNothing": "Found nothing",
+  "journalOpened": "Opened: {what}",
+  "@journalOpened": {
+    "placeholders": {
+      "what": {
+        "type": "String"
+      }
+    }
+  },
+  "journalFought": "Fought: {what}",
+  "@journalFought": {
+    "placeholders": {
+      "what": {
+        "type": "String"
+      }
+    }
+  },
+  "journalKilled": "Killed: {what}",
+  "@journalKilled": {
+    "placeholders": {
+      "what": {
+        "type": "String"
+      }
+    }
+  },
+  "journalHurt": "Hit by: {what}",
+  "@journalHurt": {
+    "placeholders": {
+      "what": {
+        "type": "String"
+      }
+    }
+  },
+  "journalAte": "Eating: {what}",
+  "@journalAte": {
+    "placeholders": {
+      "what": {
+        "type": "String"
+      }
+    }
+  },
+  "journalDrank": "Drinking: {what}",
+  "@journalDrank": {
+    "placeholders": {
+      "what": {
+        "type": "String"
+      }
+    }
+  },
+  "journalTreated": "Dressing: {what}",
+  "@journalTreated": {
+    "placeholders": {
+      "what": {
+        "type": "String"
+      }
+    }
+  },
+  "journalSlept": "Asleep",
+  "journalWoke": "Awake",
+  "journalRead": "Reading: {what}",
+  "@journalRead": {
+    "placeholders": {
+      "what": {
+        "type": "String"
+      }
+    }
+  },
+  "journalBuilt": "Building: {what}",
+  "@journalBuilt": {
+    "placeholders": {
+      "what": {
+        "type": "String"
+      }
+    }
+  },
+  "journalCrafted": "Made: {what}",
+  "@journalCrafted": {
+    "placeholders": {
+      "what": {
+        "type": "String"
+      }
+    }
+  },
+  "journalSalvaged": "Stripped: {what}",
+  "@journalSalvaged": {
+    "placeholders": {
+      "what": {
+        "type": "String"
+      }
+    }
+  },
+  "journalCameHome": "Back at the shelter",
+  "journalWentOut": "Left the shelter",
+  "journalLearned": "Skill: {what}",
+  "@journalLearned": {
+    "placeholders": {
+      "what": {
+        "type": "String"
+      }
+    }
+  },
+  "journalBlackout": "Blacked out",
+  "journalCount": "{name} ×{count}",
+  "@journalCount": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
   }
 }

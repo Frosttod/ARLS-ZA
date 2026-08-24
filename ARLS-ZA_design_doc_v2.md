@@ -498,6 +498,36 @@ Gra zachęca do biegania po mieście, często po zmroku, z telefonem w ręku. Le
 
 **Dolne menu:** PROFIL · EKWIPUNEK · SCHRON · USTAWIENIA
 
+### 3.6.1. Dziennik
+
+Ekran PROFILU kończy się **dziennikiem** — co postać robiła, w kolejności, pogrupowane po dniach przetrwania:
+
+DZIEŃ 2
+
+06:30 Wyjście ze schronu
+
+06:52 Przeszukanie: Żabka
+
+06:52 Znalezione: Bandaż ×2, Nóż
+
+07:41 Zabity: Szwędacz
+
+**Statystyki (§13.1) mówią ile; dziennik mówi co.** Licznik odpowiada na „oddano 340 strzałów" i na żadne z pytań, które gracz naprawdę zadaje po spacerze: co wyszło z tej apteki, o której wróciłem, ile spałem, co mnie ugryzło.
+
+Zasady:
+
+| Zasada | Dlaczego |
+| :---- | :---- |
+| Wpis to **rodzaj + podmiot**, nigdy zdanie | id przedmiotu, rodzaj przeciwnika, nazwa sklepu z mapy. Słowa dokładane przy rysowaniu (§1.1) — inaczej zmiana języka zostawia pamiętnik do połowy po polsku |
+| **Dzień = data z telefonu** | Gracz, który zaczął o 20:00, jest w DNIU 2, gdy rano wstaje — nie „jedenaście godzin w dniu 1" |
+| **Od najnowszego**, w obie strony | Log na telefonie czyta się jak listę połączeń |
+| To samo dwa razy w ciągu 2 minut = **jeden wpis** | Trzy strzały do tego samego szwędacza to jedna walka |
+| Limit **400 wpisów** | Spacer pisze wpis co kilka minut, a passa ma trwać miesiącami (§13.1) |
+| Łup to **jedna linia z licznikami** | Przeszukanie sklepu potrafi dać kilkanaście rzeczy naraz |
+| Łóżko i drzwi czytane **ze stanu**, nie z przycisku | W tej grze nie ma komendy „śpij" (§2.5.1) — dziennik, który czekałby na polecenie, nigdy nie zapisałby nocy |
+
+Co trafia do dziennika: przeszukanie i łup, otwarcie zamka, walka i zabicie, obrażenia, jedzenie/picie/opatrunek, sen i pobudka, lektura, budowa modułu, wytwarzanie i rozbiórka, wejście i wyjście ze schronu, awans umiejętności, utrata przytomności.
+
 ---
 
 ## 4. Przedmioty

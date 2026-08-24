@@ -15,6 +15,7 @@ import 'game/controllers/hotspot_controller.dart';
 import 'game/controllers/skill_controller.dart';
 import 'game/controllers/craft_controller.dart';
 import 'game/controllers/inventory_controller.dart';
+import 'game/controllers/journal_controller.dart';
 import 'game/controllers/loot_controller.dart';
 import 'game/controllers/shelter_controller.dart';
 import 'game/controllers/stash_controller.dart';
@@ -22,6 +23,7 @@ import 'game/game_loop.dart';
 import 'inventory/body_slots.dart';
 import 'inventory/inventory.dart';
 import 'inventory/item_use.dart';
+import 'inventory/wake_loss.dart';
 import 'items/item_assets.dart';
 import 'items/item.dart';
 import 'items/item_catalogue.dart';
@@ -103,6 +105,7 @@ import 'sim/body.dart';
 import 'sim/death.dart';
 import 'sim/physiology.dart';
 import 'sim/occupation.dart';
+import 'journal/journal.dart';
 import 'sim/player_stats.dart';
 import 'sim/player_stats_store.dart';
 import 'ui/profile_screen.dart';
@@ -1110,6 +1113,12 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       // §7: what this character has learned, before anything can ask.
       await _learned.load(character.profile.id);
 
+      // §3.6.1: read back, so a run reopens on the evening it left.
+      await _diary.bind(
+        profileId: character.profile.id,
+        startedAt: character.profile.createdAt,
+      );
+
       // §6.5: seeded from the character, so a run is the same world every
       // time it is opened (§11).
       _fires.bind(
@@ -1196,6 +1205,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       // §3.3: the same moment animations stop is the moment smoothness does.
       unawaited(_refresh.want(economy: snapshot.economy));
 
+      // §3.6.1: the bed and the door, read off the zone (§2.5.1).
+      unawaited(
+        _diary.noteZone(snapshot.state.zone, at: snapshot.state.lastUpdate),
+      );
       unawaited(_checkRelocation(snapshot));
       unawaited(_settleShelters(snapshot));
 
@@ -1790,6 +1803,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
     CrashLog.note('use.row:${use.action.name}:${takes.inSeconds}s');
 
+    unawaited(_diary.used(use.action, line.itemId));
+
     await _actions?.start(
       TimedAction(
         kind: use.action.name,
@@ -1964,14 +1979,12 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     }
 
     if (marker.kind == MarkerKind.loot) {
-      final box = _boxes.where((b) => b.poiId == marker.id).firstOrNull;
-      if (box == null) return;
-
       unawaited(
-        showPlaceDetails(
+        showPlaceFor(
           context,
-          box: box,
-          table: _world?.tables[box.tableId],
+          boxes: _boxes,
+          markerId: marker.id,
+          tables: _world?.tables,
           standingAt: _standingAt,
           catalogue: catalogue,
           now: _snapshot?.state.lastUpdate ?? DateTime.now().toUtc(),
@@ -3136,6 +3149,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
           now: snapshot.state.lastUpdate,
         );
       } else {
+        unawaited(_diary.add(JournalKind.blackout));
         await _scatterKit(snapshot);
       }
     }
@@ -3159,56 +3173,24 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final fix = snapshot.displayFix;
     if (character == null || catalogue == null || fix == null) return;
 
-    final at = GeoPoint(fix.latitude, fix.longitude);
-    final random = Random(
-      character.profile.rngSeed ^ snapshot.state.lastUpdate.hashCode,
+    final loss = scatterKit(
+      _inventory.value,
+      catalogue: catalogue,
+      at: GeoPoint(fix.latitude, fix.longitude),
+      now: DateTime.now().toUtc(),
+      // Seeded, so a blackout scatters the same kit however often the
+      // process dies working through it.
+      random: Random(
+        character.profile.rngSeed ^ snapshot.state.lastUpdate.hashCode,
+      ),
     );
+
     final store = DroppedStore(widget.session.db);
-
-    var pack = _inventory.value;
-
-    // Whatever was in the hands is simply gone, and it does not turn up in a
-    // cache either. §9.2 is explicit, and it is what stops a deliberate death
-    // from being a cheap way home.
-    for (final line in [...pack.worn]) {
-      final item = catalogue[line.itemId];
-      if (item == null) continue;
-      if (item.kind == ItemKind.firearm || item.kind == ItemKind.melee) {
-        pack = pack.removeLine(line, count: line.count) ?? pack;
-      }
+    for (final cache in loss.caches) {
+      await store.drop(character.profile.id, cache);
     }
 
-    // ⚠️ Worn as well as carried. §9.2 says "the rest of the kit worn", and
-    // taking only what was in the pack meant a character woke up in the same
-    // boots, coat and vest they went down in — the entire cost of a blackout
-    // fell on whatever happened to be loose.
-    //
-    // Half of it, by the piece: losing three of five bandages and keeping two
-    // is what §9.2 describes, and a stack is one piece.
-    for (final line in [...pack.worn, ...pack.carried]) {
-      if (random.nextDouble() >= kWakeLossFraction) continue;
-
-      pack = pack.removeLine(line, count: line.count) ?? pack;
-      await store.drop(
-        character.profile.id,
-        DroppedItem(
-          id: 0,
-          itemId: line.itemId,
-          count: line.count,
-          condition: line.condition,
-          attachments: line.attachments,
-          // Two or three caches in thirty to a hundred metres, so getting it
-          // back is a walk rather than a button.
-          position: at.offsetBy(
-            metres: 30 + random.nextDouble() * 70,
-            bearingDeg: random.nextDouble() * 360,
-          ),
-          droppedAt: DateTime.now().toUtc(),
-        ),
-      );
-    }
-
-    _inventory.value = pack;
+    _inventory.value = loss.kept;
     await _saveInventory();
     await _reloadDropped();
   }
@@ -3342,11 +3324,16 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
         // Only a finished job is worth re-reading the table for: that is when
         // a module turns into a level and the row has to be settled.
-        wrote =
-            wrote ||
-            (place.isReadyAt(now) != worked.isReadyAt(now)) ||
-            (place.building != null &&
-                (worked.buildingLeft ?? Duration.zero) <= Duration.zero);
+        final up =
+            place.building != null &&
+            (worked.buildingLeft ?? Duration.zero) <= Duration.zero;
+        if (up) {
+          unawaited(
+            _diary.add(JournalKind.built, subject: place.building!.name),
+          );
+        }
+
+        wrote = wrote || (place.isReadyAt(now) != worked.isReadyAt(now)) || up;
       }
       if (wrote) await _reloadShelters();
     }
@@ -4362,6 +4349,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     if (job.isSalvage) {
       // §18.6: every piece of the sitting, in order. The whole job ran, so
       // every one of them is apart.
+      unawaited(_diary.salvaged(_sittingOf(job).steps));
       await _paySalvage(_sittingOf(job).steps);
       _dismantling.value = const [];
 
@@ -4375,6 +4363,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         .firstOrNull;
     if (recipe == null) return;
 
+    unawaited(_diary.made(JournalKind.crafted, {recipe.output: recipe.count}));
     await _grant({recipe.output: recipe.count});
 
     if (!mounted) return;
@@ -4569,6 +4558,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   void _remember(Enemy enemy) {
     // §6.5.4: the ground it came from pays, wherever it actually fell.
     unawaited(_fires.killed(enemy, now: DateTime.now().toUtc()));
+    unawaited(_diary.add(JournalKind.killed, subject: enemy.kind.name));
 
     final body = Remains(
       id: enemy.id,
@@ -4968,29 +4958,30 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
     final weapon = _weapon;
 
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => ProfileScreen(
-          name: character.profile.name,
-          body: character.body,
-          // §2: the raw figures, so the screen can account for a penalty.
-          state: snapshot.state,
-          status: snapshot.status,
-          skills: _learned.set,
-          stats: _stats,
-          // §16.4: from the game's own clock, so a character created under
-          // the simulator ages at the same rate as everything else about them.
-          aliveFor: snapshot.state.lastUpdate.difference(
-            character.profile.createdAt,
-          ),
-          weaponMoa: weapon == null
-              ? null
-              : FittedWeapon(
-                  weapon: weapon,
-                  attachments: _attachmentsFor(weapon),
-                ).moa,
-        ),
+    await showProfile(
+      context,
+      name: character.profile.name,
+      body: character.body,
+      // §2: the raw figures, so the screen can account for a penalty.
+      state: snapshot.state,
+      status: snapshot.status,
+      skills: _learned.set,
+      stats: _stats,
+      // §16.4: from the game's own clock, so a character created under the
+      // simulator ages at the same rate as everything else about them.
+      aliveFor: snapshot.state.lastUpdate.difference(
+        character.profile.createdAt,
       ),
+      journal: _diary.entries.value,
+      startedAt: character.profile.createdAt,
+      catalogue: _catalogue,
+      names: _names ?? ItemNames.empty,
+      weaponMoa: weapon == null
+          ? null
+          : FittedWeapon(
+              weapon: weapon,
+              attachments: _attachmentsFor(weapon),
+            ).moa,
     );
   }
 
@@ -5672,6 +5663,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     await _reloadDropped();
     if (!mounted) return;
 
+    // §3.6.1: where the evening went, and what came of it.
+    unawaited(_diary.searched(box.name ?? table.id, found: found, at: now));
+
     if (found.isEmpty) {
       _say(L10n.of(context).searchFoundNothing);
       return;
@@ -5906,6 +5900,11 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// never on their own.
   late final SkillController _learned = _controllers.adopt(
     SkillController(widget.session.db),
+  );
+
+  /// §3.6.1: what the character did, in order.
+  late final JournalController _diary = _controllers.adopt(
+    JournalController(widget.session.db),
   );
 
   /// §2.1a, §3.3: the one clock everything with a bar runs on.
