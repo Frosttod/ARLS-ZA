@@ -189,6 +189,47 @@ double darknessAt({
   return altitude / kCivilTwilightDeg;
 }
 
+/// §12, §17.2: how long until the sky changes, and which way.
+///
+/// ⚠️ **The one number a player planning an evening actually wants.** The
+/// night rules are not subtle — §10.2.2 halves the reconnaissance radius,
+/// §17.4 gives everything a fifth more reach, §5.6.1 carries a shot a third
+/// further — and all of them arrive at once, at a moment nobody can see
+/// coming from a map. An hour and a half of warning is the difference between
+/// walking home and being caught out.
+///
+/// Counted to **full civil dark** rather than to sunset, because that is when
+/// those rules are fully on. The map turning at dusk is the earlier warning.
+///
+/// Null where there is no crossing in the next day at all: a polar summer has
+/// no dusk to count to, and a countdown that never arrives is worse than none.
+({Duration left, bool untilDark})? twilightAhead({
+  required DateTime fromUtc,
+  required double latitude,
+  double longitude = 0,
+  Duration within = const Duration(hours: 24),
+  Duration resolution = const Duration(minutes: 5),
+}) {
+  final start = fromUtc.toUtc();
+
+  bool darkAt(DateTime moment) =>
+      darknessAt(momentUtc: moment, latitude: latitude, longitude: longitude) >=
+      1;
+
+  final darkNow = darkAt(start);
+
+  // Sampled rather than solved. The crossing moves every day, the equation of
+  // time is not invertible in closed form, and five minutes is far below
+  // anything a player reads off a countdown.
+  for (var ahead = resolution; ahead <= within; ahead += resolution) {
+    if (darkAt(start.add(ahead)) != darkNow) {
+      return (left: ahead, untilDark: !darkNow);
+    }
+  }
+
+  return null;
+}
+
 /// Whether it is night at [momentUtc].
 ///
 /// Night is what unlocks sleep (§2.5.1) and what widens the noise radius

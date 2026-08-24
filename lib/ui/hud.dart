@@ -94,6 +94,7 @@ class Hud extends StatelessWidget {
     this.carriedKg = 0,
     this.carriedVolumeL = 0,
     this.capacityL = kPocketCapacityL,
+    this.twilight,
     super.key,
   });
 
@@ -106,6 +107,16 @@ class Hud extends StatelessWidget {
   /// because from the player's side they are the same kind of thing — a reason
   /// the game is not behaving as they expect.
   final List<String> warnings;
+
+  /// §12, §17.2: how long until the sky changes, and which way.
+  ///
+  /// ⚠️ **The night rules arrive all at once and a map cannot show them
+  /// coming.** §10.2.2 halves the reconnaissance radius, §17.4 gives every
+  /// Walker a fifth more reach and §5.6.1 carries a shot a third further —
+  /// none of that is visible until it has already happened. An hour and a
+  /// half of warning is the difference between walking home and being caught
+  /// out, and this is the only place in the game that can give it.
+  final ({Duration left, bool untilDark})? twilight;
 
   /// §2.6: what is still open. Its own chip rather than part of the blood
   /// readout, because it is the only status on the HUD with a clock on it —

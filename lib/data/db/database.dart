@@ -29,7 +29,7 @@ import 'tables.dart';
 part 'database.g.dart';
 
 /// Bumped only alongside a migration step in [_migration]. Never reused.
-const int kSchemaVersion = 30;
+const int kSchemaVersion = 31;
 
 /// Keys used in [MetaEntries].
 abstract final class MetaKeys {
@@ -76,7 +76,7 @@ class SaveDatabase extends _$SaveDatabase {
   /// follow a constant reference. `schema_test.dart` keeps it in step with
   /// [kSchemaVersion].
   @override
-  int get schemaVersion => 30;
+  int get schemaVersion => 31;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -340,6 +340,17 @@ class SaveDatabase extends _$SaveDatabase {
       // before this reads back as a complete novice — which is exactly what
       // they were, since nothing in the game could grow a skill (§11.1.4).
       if (from < 30) await m.createTable(skillRows);
+
+      // §2.1a, §8.3: work put down on purpose. False everywhere on an older
+      // save, which is a save where nothing was ever put down.
+      //
+      // ⚠️ Guarded from 13, not from nothing. `shelters` is *created* by this
+      // migration for anything older than v13, and `createTable` builds the
+      // current shape — column and all — so adding it again is a duplicate.
+      // The same trap the buildLeftSeconds pair fell into at v14.
+      if (from >= 13 && from < 31) {
+        await m.addColumn(shelters, shelters.paused);
+      }
 
       await _writeSchemaVersion(to);
     },

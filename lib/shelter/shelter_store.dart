@@ -44,6 +44,9 @@ class ShelterStore {
             building: const Value(null),
             buildingReadyAt: const Value(null),
             buildingLeftSeconds: const Value(null),
+            // Nothing is going up here any more, so there is nothing left to
+            // have put down.
+            paused: const Value(false),
           ),
         );
       }
@@ -157,8 +160,28 @@ class ShelterStore {
       building: Value(null),
       buildingReadyAt: Value(null),
       buildingLeftSeconds: Value(null),
+      // Nothing is going up, so there is nothing left to have put down.
+      paused: Value(false),
     ),
   );
+
+  /// §2.1a, §8.3: puts the work down, or picks it back up.
+  ///
+  /// ⚠️ Only the flag moves. The materials stay in the walls and the hours
+  /// already spent stay on the row — that is the whole difference between this
+  /// and [cancelModule], which hands the timber back and throws the hours
+  /// away.
+  ///
+  /// [now] restarts the crediting clock on resuming, so the stretch the player
+  /// spent doing something else is not paid in as work.
+  Future<void> setPaused(int id, {required bool paused, DateTime? now}) =>
+      _db.updateShelter(
+        id,
+        SheltersCompanion(
+          paused: Value(paused),
+          workedAt: Value(now ?? DateTime.now().toUtc()),
+        ),
+      );
 
   Future<void> remove(int id) => _db.removeShelter(id);
 
@@ -183,6 +206,7 @@ class ShelterStore {
         ? null
         : Duration(seconds: row.buildingLeftSeconds!),
     workedAt: row.workedAt,
+    paused: row.paused,
   );
 }
 

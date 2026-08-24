@@ -204,6 +204,12 @@ class L10nPl extends L10n {
   String get hudBlood => 'Krew';
 
   @override
+  String get hudUntilDusk => 'do zmierzchu';
+
+  @override
+  String get hudUntilDawn => 'do świtu';
+
+  @override
   String get hudWater => 'Woda';
 
   @override
@@ -894,6 +900,22 @@ class L10nPl extends L10n {
 
   @override
   String get shelterBuildHere => 'Buduj tutaj';
+
+  @override
+  String get shelterPause => 'Odłóż';
+
+  @override
+  String get shelterResume => 'Wróć do pracy';
+
+  @override
+  String get shelterPaused =>
+      'Praca odłożona. Nic nie przepada — godziny i materiały zostają.';
+
+  @override
+  String get shelterResumed => 'Z powrotem do pracy.';
+
+  @override
+  String get shelterOnHold => 'Odłożone';
 
   @override
   String get shelterCancel => 'Przerwij';

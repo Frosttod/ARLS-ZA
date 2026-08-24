@@ -83,6 +83,17 @@ class ShelterController extends ChangeNotifier {
   ///
   /// By id rather than by position: a reload can land between a build being
   /// worked on and the work being written down.
+  /// §2.1a, §8.3: puts the work down here, or picks it back up.
+  ///
+  /// ⚠️ Only the flag moves. The materials stay in the walls and the hours
+  /// already spent stay on the row — that is the whole difference between this
+  /// and cancelling, which hands the timber back and throws the hours away.
+  ///
+  /// [now] restarts the crediting clock on the way back, so the stretch spent
+  /// doing something else is not paid in as work.
+  Future<void> setPaused(Shelter place, DateTime now) =>
+      ShelterStore(_db).setPaused(place.id, paused: !place.paused, now: now);
+
   void replace(Shelter place) {
     places = [
       for (final other in shelters.value)

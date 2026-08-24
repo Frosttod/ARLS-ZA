@@ -602,6 +602,21 @@ class Shelters extends Table {
   /// §2.1a.3 again, for the module: work left, spent only on site.
   IntColumn get buildingLeftSeconds => integer().nullable()();
 
+  // --------------------------------------------------------- schema v31 ---
+
+  /// §2.1a, §8.3: whether the work here has been put down on purpose.
+  ///
+  /// ⚠️ **Not the same as not being on site.** Walking away already stops the
+  /// clock (§2.1a.3) and starts it again on the way back, which is right. This
+  /// is the player standing on their own site and saying *not now* — because a
+  /// build in progress is an occupation (§2.1a) and blocks every other one, so
+  /// without it the only way to search a house while a workshop was half up
+  /// was to cancel the workshop.
+  ///
+  /// Nought is a save from before this existed, which is a save where nothing
+  /// was ever put down (§11.1.4).
+  BoolColumn get paused => boolean().withDefault(const Constant(false))();
+
   @override
   List<String> get customConstraints => [
     'FOREIGN KEY (profile_id) REFERENCES profiles (id) ON DELETE CASCADE',

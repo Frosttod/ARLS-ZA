@@ -427,6 +427,18 @@ abstract class L10n {
   /// **'Blood'**
   String get hudBlood;
 
+  /// No description provided for @hudUntilDusk.
+  ///
+  /// In en, this message translates to:
+  /// **'to dusk'**
+  String get hudUntilDusk;
+
+  /// No description provided for @hudUntilDawn.
+  ///
+  /// In en, this message translates to:
+  /// **'to dawn'**
+  String get hudUntilDawn;
+
   /// No description provided for @hudWater.
   ///
   /// In en, this message translates to:
@@ -1614,6 +1626,36 @@ abstract class L10n {
   /// In en, this message translates to:
   /// **'Build here'**
   String get shelterBuildHere;
+
+  /// No description provided for @shelterPause.
+  ///
+  /// In en, this message translates to:
+  /// **'Put down'**
+  String get shelterPause;
+
+  /// No description provided for @shelterResume.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick up'**
+  String get shelterResume;
+
+  /// No description provided for @shelterPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'Work put down. Nothing lost — the hours and the materials stay.'**
+  String get shelterPaused;
+
+  /// No description provided for @shelterResumed.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to work.'**
+  String get shelterResumed;
+
+  /// No description provided for @shelterOnHold.
+  ///
+  /// In en, this message translates to:
+  /// **'Put down'**
+  String get shelterOnHold;
 
   /// No description provided for @shelterCancel.
   ///

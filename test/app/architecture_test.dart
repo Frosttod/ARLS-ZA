@@ -155,6 +155,7 @@ void main() {
       //           6658   the bench refusal stopped being written twice
       //           6638   finding a step's piece, and asking the price of one
       //           6629   the strip's warnings, the labels, the search rules
+      //           6627   the cancel dialog stopped being written twice
       //
       // ⚠️ Lower it when a phase lands. Never raise it — not for a phase, and
       // not for a feature either. "It is a feature" is exactly the excuse that
@@ -163,7 +164,7 @@ void main() {
       // Something new that belongs to the model goes in the model.
       expect(
         lines,
-        lessThanOrEqualTo(6629),
+        lessThanOrEqualTo(6627),
         reason: 'main.dart grew; something went in that should have come out',
       );
     });

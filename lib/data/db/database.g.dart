@@ -6294,6 +6294,19 @@ class $SheltersTable extends Shelters
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _pausedMeta = const VerificationMeta('paused');
+  @override
+  late final GeneratedColumn<bool> paused = GeneratedColumn<bool>(
+    'paused',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("paused" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -6310,6 +6323,7 @@ class $SheltersTable extends Shelters
     building,
     buildingReadyAt,
     buildingLeftSeconds,
+    paused,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -6428,6 +6442,12 @@ class $SheltersTable extends Shelters
         ),
       );
     }
+    if (data.containsKey('paused')) {
+      context.handle(
+        _pausedMeta,
+        paused.isAcceptableOrUnknown(data['paused']!, _pausedMeta),
+      );
+    }
     return context;
   }
 
@@ -6493,6 +6513,10 @@ class $SheltersTable extends Shelters
         DriftSqlType.int,
         data['${effectivePrefix}building_left_seconds'],
       ),
+      paused: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}paused'],
+      )!,
     );
   }
 
@@ -6550,6 +6574,19 @@ class ShelterRow extends DataClass implements Insertable<ShelterRow> {
 
   /// §2.1a.3 again, for the module: work left, spent only on site.
   final int? buildingLeftSeconds;
+
+  /// §2.1a, §8.3: whether the work here has been put down on purpose.
+  ///
+  /// ⚠️ **Not the same as not being on site.** Walking away already stops the
+  /// clock (§2.1a.3) and starts it again on the way back, which is right. This
+  /// is the player standing on their own site and saying *not now* — because a
+  /// build in progress is an occupation (§2.1a) and blocks every other one, so
+  /// without it the only way to search a house while a workshop was half up
+  /// was to cancel the workshop.
+  ///
+  /// Nought is a save from before this existed, which is a save where nothing
+  /// was ever put down (§11.1.4).
+  final bool paused;
   const ShelterRow({
     required this.id,
     required this.profileId,
@@ -6565,6 +6602,7 @@ class ShelterRow extends DataClass implements Insertable<ShelterRow> {
     this.building,
     this.buildingReadyAt,
     this.buildingLeftSeconds,
+    required this.paused,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -6595,6 +6633,7 @@ class ShelterRow extends DataClass implements Insertable<ShelterRow> {
     if (!nullToAbsent || buildingLeftSeconds != null) {
       map['building_left_seconds'] = Variable<int>(buildingLeftSeconds);
     }
+    map['paused'] = Variable<bool>(paused);
     return map;
   }
 
@@ -6626,6 +6665,7 @@ class ShelterRow extends DataClass implements Insertable<ShelterRow> {
       buildingLeftSeconds: buildingLeftSeconds == null && nullToAbsent
           ? const Value.absent()
           : Value(buildingLeftSeconds),
+      paused: Value(paused),
     );
   }
 
@@ -6651,6 +6691,7 @@ class ShelterRow extends DataClass implements Insertable<ShelterRow> {
       buildingLeftSeconds: serializer.fromJson<int?>(
         json['buildingLeftSeconds'],
       ),
+      paused: serializer.fromJson<bool>(json['paused']),
     );
   }
   @override
@@ -6671,6 +6712,7 @@ class ShelterRow extends DataClass implements Insertable<ShelterRow> {
       'building': serializer.toJson<String?>(building),
       'buildingReadyAt': serializer.toJson<DateTime?>(buildingReadyAt),
       'buildingLeftSeconds': serializer.toJson<int?>(buildingLeftSeconds),
+      'paused': serializer.toJson<bool>(paused),
     };
   }
 
@@ -6689,6 +6731,7 @@ class ShelterRow extends DataClass implements Insertable<ShelterRow> {
     Value<String?> building = const Value.absent(),
     Value<DateTime?> buildingReadyAt = const Value.absent(),
     Value<int?> buildingLeftSeconds = const Value.absent(),
+    bool? paused,
   }) => ShelterRow(
     id: id ?? this.id,
     profileId: profileId ?? this.profileId,
@@ -6710,6 +6753,7 @@ class ShelterRow extends DataClass implements Insertable<ShelterRow> {
     buildingLeftSeconds: buildingLeftSeconds.present
         ? buildingLeftSeconds.value
         : this.buildingLeftSeconds,
+    paused: paused ?? this.paused,
   );
   ShelterRow copyWithCompanion(SheltersCompanion data) {
     return ShelterRow(
@@ -6735,6 +6779,7 @@ class ShelterRow extends DataClass implements Insertable<ShelterRow> {
       buildingLeftSeconds: data.buildingLeftSeconds.present
           ? data.buildingLeftSeconds.value
           : this.buildingLeftSeconds,
+      paused: data.paused.present ? data.paused.value : this.paused,
     );
   }
 
@@ -6754,7 +6799,8 @@ class ShelterRow extends DataClass implements Insertable<ShelterRow> {
           ..write('visitedAt: $visitedAt, ')
           ..write('building: $building, ')
           ..write('buildingReadyAt: $buildingReadyAt, ')
-          ..write('buildingLeftSeconds: $buildingLeftSeconds')
+          ..write('buildingLeftSeconds: $buildingLeftSeconds, ')
+          ..write('paused: $paused')
           ..write(')'))
         .toString();
   }
@@ -6775,6 +6821,7 @@ class ShelterRow extends DataClass implements Insertable<ShelterRow> {
     building,
     buildingReadyAt,
     buildingLeftSeconds,
+    paused,
   );
   @override
   bool operator ==(Object other) =>
@@ -6793,7 +6840,8 @@ class ShelterRow extends DataClass implements Insertable<ShelterRow> {
           other.visitedAt == this.visitedAt &&
           other.building == this.building &&
           other.buildingReadyAt == this.buildingReadyAt &&
-          other.buildingLeftSeconds == this.buildingLeftSeconds);
+          other.buildingLeftSeconds == this.buildingLeftSeconds &&
+          other.paused == this.paused);
 }
 
 class SheltersCompanion extends UpdateCompanion<ShelterRow> {
@@ -6811,6 +6859,7 @@ class SheltersCompanion extends UpdateCompanion<ShelterRow> {
   final Value<String?> building;
   final Value<DateTime?> buildingReadyAt;
   final Value<int?> buildingLeftSeconds;
+  final Value<bool> paused;
   const SheltersCompanion({
     this.id = const Value.absent(),
     this.profileId = const Value.absent(),
@@ -6826,6 +6875,7 @@ class SheltersCompanion extends UpdateCompanion<ShelterRow> {
     this.building = const Value.absent(),
     this.buildingReadyAt = const Value.absent(),
     this.buildingLeftSeconds = const Value.absent(),
+    this.paused = const Value.absent(),
   });
   SheltersCompanion.insert({
     this.id = const Value.absent(),
@@ -6842,6 +6892,7 @@ class SheltersCompanion extends UpdateCompanion<ShelterRow> {
     this.building = const Value.absent(),
     this.buildingReadyAt = const Value.absent(),
     this.buildingLeftSeconds = const Value.absent(),
+    this.paused = const Value.absent(),
   }) : profileId = Value(profileId),
        kind = Value(kind),
        latitude = Value(latitude),
@@ -6863,6 +6914,7 @@ class SheltersCompanion extends UpdateCompanion<ShelterRow> {
     Expression<String>? building,
     Expression<DateTime>? buildingReadyAt,
     Expression<int>? buildingLeftSeconds,
+    Expression<bool>? paused,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -6880,6 +6932,7 @@ class SheltersCompanion extends UpdateCompanion<ShelterRow> {
       if (buildingReadyAt != null) 'building_ready_at': buildingReadyAt,
       if (buildingLeftSeconds != null)
         'building_left_seconds': buildingLeftSeconds,
+      if (paused != null) 'paused': paused,
     });
   }
 
@@ -6898,6 +6951,7 @@ class SheltersCompanion extends UpdateCompanion<ShelterRow> {
     Value<String?>? building,
     Value<DateTime?>? buildingReadyAt,
     Value<int?>? buildingLeftSeconds,
+    Value<bool>? paused,
   }) {
     return SheltersCompanion(
       id: id ?? this.id,
@@ -6914,6 +6968,7 @@ class SheltersCompanion extends UpdateCompanion<ShelterRow> {
       building: building ?? this.building,
       buildingReadyAt: buildingReadyAt ?? this.buildingReadyAt,
       buildingLeftSeconds: buildingLeftSeconds ?? this.buildingLeftSeconds,
+      paused: paused ?? this.paused,
     );
   }
 
@@ -6962,6 +7017,9 @@ class SheltersCompanion extends UpdateCompanion<ShelterRow> {
     if (buildingLeftSeconds.present) {
       map['building_left_seconds'] = Variable<int>(buildingLeftSeconds.value);
     }
+    if (paused.present) {
+      map['paused'] = Variable<bool>(paused.value);
+    }
     return map;
   }
 
@@ -6981,7 +7039,8 @@ class SheltersCompanion extends UpdateCompanion<ShelterRow> {
           ..write('visitedAt: $visitedAt, ')
           ..write('building: $building, ')
           ..write('buildingReadyAt: $buildingReadyAt, ')
-          ..write('buildingLeftSeconds: $buildingLeftSeconds')
+          ..write('buildingLeftSeconds: $buildingLeftSeconds, ')
+          ..write('paused: $paused')
           ..write(')'))
         .toString();
   }
@@ -13439,6 +13498,7 @@ typedef $$SheltersTableCreateCompanionBuilder =
       Value<String?> building,
       Value<DateTime?> buildingReadyAt,
       Value<int?> buildingLeftSeconds,
+      Value<bool> paused,
     });
 typedef $$SheltersTableUpdateCompanionBuilder =
     SheltersCompanion Function({
@@ -13456,6 +13516,7 @@ typedef $$SheltersTableUpdateCompanionBuilder =
       Value<String?> building,
       Value<DateTime?> buildingReadyAt,
       Value<int?> buildingLeftSeconds,
+      Value<bool> paused,
     });
 
 class $$SheltersTableFilterComposer
@@ -13534,6 +13595,11 @@ class $$SheltersTableFilterComposer
 
   ColumnFilters<int> get buildingLeftSeconds => $composableBuilder(
     column: $table.buildingLeftSeconds,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get paused => $composableBuilder(
+    column: $table.paused,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -13616,6 +13682,11 @@ class $$SheltersTableOrderingComposer
     column: $table.buildingLeftSeconds,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get paused => $composableBuilder(
+    column: $table.paused,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$SheltersTableAnnotationComposer
@@ -13676,6 +13747,9 @@ class $$SheltersTableAnnotationComposer
     column: $table.buildingLeftSeconds,
     builder: (column) => column,
   );
+
+  GeneratedColumn<bool> get paused =>
+      $composableBuilder(column: $table.paused, builder: (column) => column);
 }
 
 class $$SheltersTableTableManager
@@ -13723,6 +13797,7 @@ class $$SheltersTableTableManager
                 Value<String?> building = const Value.absent(),
                 Value<DateTime?> buildingReadyAt = const Value.absent(),
                 Value<int?> buildingLeftSeconds = const Value.absent(),
+                Value<bool> paused = const Value.absent(),
               }) => SheltersCompanion(
                 id: id,
                 profileId: profileId,
@@ -13738,6 +13813,7 @@ class $$SheltersTableTableManager
                 building: building,
                 buildingReadyAt: buildingReadyAt,
                 buildingLeftSeconds: buildingLeftSeconds,
+                paused: paused,
               ),
           createCompanionCallback:
               ({
@@ -13755,6 +13831,7 @@ class $$SheltersTableTableManager
                 Value<String?> building = const Value.absent(),
                 Value<DateTime?> buildingReadyAt = const Value.absent(),
                 Value<int?> buildingLeftSeconds = const Value.absent(),
+                Value<bool> paused = const Value.absent(),
               }) => SheltersCompanion.insert(
                 id: id,
                 profileId: profileId,
@@ -13770,6 +13847,7 @@ class $$SheltersTableTableManager
                 building: building,
                 buildingReadyAt: buildingReadyAt,
                 buildingLeftSeconds: buildingLeftSeconds,
+                paused: paused,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

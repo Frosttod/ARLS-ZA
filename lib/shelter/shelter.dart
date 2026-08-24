@@ -175,6 +175,7 @@ class Shelter {
     this.buildLeft,
     this.buildingLeft,
     this.workedAt,
+    this.paused = false,
   });
 
   final int id;
@@ -225,6 +226,25 @@ class Shelter {
   /// morning as it had been at bedtime.
   final DateTime? workedAt;
 
+  /// §2.1a, §8.3: the work here has been put down on purpose.
+  ///
+  /// ⚠️ **Not the same as being away from the site.** Walking off already
+  /// stops the clock and walking back starts it again (§2.1a.3), and that is
+  /// right — a barricade is not built from the other side of town. This is
+  /// somebody standing on their own site and saying *not now*.
+  ///
+  /// It exists because a build is an occupation (§2.1a) and an occupation
+  /// blocks every other one. Without it, the only way to search a house while
+  /// a nine-hour workshop was half up was to cancel the workshop — which cost
+  /// the hours even though the timber came back.
+  ///
+  /// Nothing is lost by it. The materials stay in the walls and
+  /// [buildingLeft] stays exactly where it was; what stops is the clock.
+  final bool paused;
+
+  /// §8.3: whether anything is actually being worked on here right now.
+  bool get isWorking => !paused && (buildLeft != null || building != null);
+
   DateTime get readyAt => startedAt.add(buildTime);
 
   /// §2.1a.3: a stretch of [elapsed] spent standing on the site.
@@ -236,6 +256,9 @@ class Shelter {
   /// in a pocket and go and make dinner, not walk to the next district and
   /// come back to a finished workshop.
   Shelter worked(Duration elapsed, {DateTime? at}) {
+    // §2.1a: put down on purpose. The clock stops; nothing else changes.
+    if (paused) return copyWith(workedAt: at);
+
     if (elapsed <= Duration.zero) return copyWith(workedAt: at);
 
     final onPlace = buildLeft;
@@ -279,6 +302,10 @@ class Shelter {
       visitedAt: visitedAt,
       buildLeft: buildLeft,
       workedAt: workedAt,
+      // Whatever was going up has gone up, so there is nothing left to have
+      // put down. Carrying the flag through would leave a finished shelter
+      // marked as paused for ever.
+      paused: buildLeft == null ? false : paused,
     );
   }
 
@@ -303,7 +330,9 @@ class Shelter {
   Duration _live(Duration? stored, DateTime now, {required bool onSite}) {
     final left = stored ?? Duration.zero;
     final since = workedAt;
-    if (!onSite || since == null || !now.isAfter(since)) return left;
+    // ⚠️ Paused counts the same as being away: the figure on screen has to
+    // stand still, or a player who put the work down would watch it finish.
+    if (paused || !onSite || since == null || !now.isAfter(since)) return left;
 
     // Never past done, and never counting the place's own hours twice: a
     // module only starts moving once the walls are up.
@@ -390,6 +419,7 @@ class Shelter {
     Duration? buildLeft,
     Duration? buildingLeft,
     DateTime? workedAt,
+    bool? paused,
   }) => Shelter(
     id: id,
     kind: kind,
@@ -404,6 +434,7 @@ class Shelter {
     buildLeft: buildLeft ?? this.buildLeft,
     buildingLeft: buildingLeft ?? this.buildingLeft,
     workedAt: workedAt ?? this.workedAt,
+    paused: paused ?? this.paused,
   );
 }
 

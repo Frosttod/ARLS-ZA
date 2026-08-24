@@ -36,6 +36,7 @@ class ShelterScreen extends StatefulWidget {
     required this.onBuildModule,
     this.onDemolishModule,
     required this.onCancelBuild,
+    this.onPauseBuild,
     required this.onShelves,
     required this.onCraft,
     required this.craftJob,
@@ -76,6 +77,14 @@ class ShelterScreen extends StatefulWidget {
   /// §8.3: gives up on whatever is going up. Asked about first, because the
   /// materials are already in the walls and the work starts again from zero.
   final void Function(Shelter place) onCancelBuild;
+
+  /// §2.1a, §8.3: puts the work down without losing it, or picks it back up.
+  ///
+  /// ⚠️ The button this screen was missing. A build blocks every other
+  /// occupation, and the only way out was cancelling — which handed the
+  /// materials back and threw the hours away, so nine hours into a workshop
+  /// there was no way to search the house you were standing in.
+  final void Function(Shelter place)? onPauseBuild;
 
   /// §18.2: opening the shelves of a finished place.
   final void Function(Shelter place) onShelves;
@@ -163,6 +172,9 @@ class _ShelterScreenState extends State<ShelterScreen>
               now: now,
               away: at == null || !shelter.atSite(at),
               onCancel: () => _confirmCancel(context, shelter),
+              onPause: widget.onPauseBuild == null
+                  ? null
+                  : () => widget.onPauseBuild!(shelter),
               colours: colours,
             ),
             const SizedBox(height: 16),
@@ -215,6 +227,9 @@ class _ShelterScreenState extends State<ShelterScreen>
                       ? null
                       : () => widget.onDemolishModule!(module),
                   onCancel: () => _confirmCancel(context, shelter),
+                  onPause: widget.onPauseBuild == null
+                      ? null
+                      : () => widget.onPauseBuild!(shelter),
                   colours: colours,
                 ),
           ],
@@ -260,33 +275,7 @@ class _ShelterScreenState extends State<ShelterScreen>
   /// hours start again from nothing. A confirmation is not friction — it is
   /// the only place the player is ever told that.
   Future<void> _confirmCancel(BuildContext context, Shelter place) async {
-    final l10n = L10n.of(context);
-
-    final sure = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.shelterCancelTitle),
-        content: Text(
-          place.building != null
-              ? l10n.shelterCancelModuleWhat
-              : place.kind == ShelterKind.main
-              ? l10n.shelterCancelShelterWhat
-              : l10n.shelterCancelCampWhat,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(l10n.shelterCancelKeep),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text(l10n.shelterCancelConfirm),
-          ),
-        ],
-      ),
-    );
-
-    if (sure ?? false) widget.onCancelBuild(place);
+    if (await askCancelBuild(context, place)) widget.onCancelBuild(place);
   }
 
   String? _campRefusal(L10n l10n, List<Shelter> shelters, GeoPoint? at) {
@@ -324,6 +313,7 @@ class _Standing extends StatelessWidget {
     required this.now,
     required this.away,
     required this.onCancel,
+    this.onPause,
     required this.colours,
   });
 
@@ -335,6 +325,10 @@ class _Standing extends StatelessWidget {
 
   /// §8.3: gives up on it. Only offered while something is actually going up.
   final VoidCallback onCancel;
+
+  /// §2.1a, §8.3: puts the work down and picks it back up. Null where the
+  /// screen was not given one.
+  final VoidCallback? onPause;
 
   final HudColors colours;
 
@@ -375,7 +369,11 @@ class _Standing extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               Text(
-                away
+                // Three states: put down by the player, stopped by walking
+                // off (§2.1a.3), or running.
+                shelter.paused
+                    ? l10n.shelterOnHold
+                    : away
                     ? l10n.shelterWorkStopped
                     : l10n.shelterBuildingLeft(
                         _short(
@@ -386,15 +384,28 @@ class _Standing extends StatelessWidget {
                       ),
                 style: TextStyle(
                   fontSize: 13,
-                  color: away ? const Color(0xFFE8B33A) : colours.text,
+                  color: shelter.paused
+                      ? colours.muted
+                      : away
+                      ? const Color(0xFFE8B33A)
+                      : colours.text,
                 ),
               ),
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: onCancel,
-                  child: Text(l10n.shelterCancel),
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  if (onPause != null)
+                    TextButton(
+                      onPressed: onPause,
+                      child: Text(
+                        shelter.paused ? l10n.shelterResume : l10n.shelterPause,
+                      ),
+                    ),
+                  TextButton(
+                    onPressed: onCancel,
+                    child: Text(l10n.shelterCancel),
+                  ),
+                ],
               ),
             ] else ...[
               _Line(
@@ -459,6 +470,7 @@ class _ModuleRow extends StatelessWidget {
     required this.onBuild,
     this.onDemolish,
     required this.onCancel,
+    this.onPause,
     required this.colours,
     this.panel,
   });
@@ -491,6 +503,10 @@ class _ModuleRow extends StatelessWidget {
 
   /// §8.3: gives up on the level going up right now.
   final VoidCallback onCancel;
+
+  /// §2.1a, §8.3: puts the work down and picks it back up. Null where the
+  /// screen was not given one.
+  final VoidCallback? onPause;
 
   final HudColors colours;
 
@@ -613,7 +629,13 @@ class _ModuleRow extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      away
+                      // ⚠️ Three states, not two. Away is the clock stopping
+                      // on its own (§2.1a.3); put down is the player stopping
+                      // it, and reads differently because it is a decision
+                      // they can undo from this row.
+                      shelter.paused
+                          ? l10n.shelterOnHold
+                          : away
                           ? l10n.shelterWorkStopped
                           : l10n.shelterBuildingLeft(
                               _short(
@@ -622,10 +644,21 @@ class _ModuleRow extends StatelessWidget {
                             ),
                       style: TextStyle(
                         fontSize: 13,
-                        color: away ? const Color(0xFFE8B33A) : colours.data,
+                        color: shelter.paused
+                            ? colours.muted
+                            : away
+                            ? const Color(0xFFE8B33A)
+                            : colours.data,
                       ),
                     ),
                   ),
+                  if (onPause != null)
+                    TextButton(
+                      onPressed: onPause,
+                      child: Text(
+                        shelter.paused ? l10n.shelterResume : l10n.shelterPause,
+                      ),
+                    ),
                   TextButton(
                     onPressed: onCancel,
                     child: Text(l10n.shelterCancel),
@@ -875,6 +908,7 @@ class BuildProgress extends StatelessWidget {
     required this.shelter,
     required this.now,
     this.onStop,
+    this.onPause,
     super.key,
   });
 
@@ -887,19 +921,33 @@ class BuildProgress extends StatelessWidget {
   /// already in the frame and nothing gives them back.
   final void Function(Shelter place)? onStop;
 
+  /// §2.1a, §8.3: puts the work down without losing it, or picks it back up.
+  ///
+  /// ⚠️ Beside the stop, not instead of it, and it is the one a player wants
+  /// far more often. Stopping hands the materials back and throws the hours
+  /// away; this throws away neither, and it is the only way to do anything
+  /// else while a nine-hour workshop is half up (§2.1a).
+  final void Function(Shelter place)? onPause;
+
   /// The bar worth drawing here, or null when nothing is going up.
   static BuildProgress? of(
     List<Shelter> shelters,
     GeoPoint? at,
     DateTime now, {
     void Function(Shelter place)? onStop,
+    void Function(Shelter place)? onPause,
   }) {
     if (at == null) return null;
 
     for (final place in shelters) {
       if (!place.atSite(at)) continue;
       if (!place.isReadyAt(now) || place.building != null) {
-        return BuildProgress(shelter: place, now: now, onStop: onStop);
+        return BuildProgress(
+          shelter: place,
+          now: now,
+          onStop: onStop,
+          onPause: onPause,
+        );
       }
     }
     return null;
@@ -952,6 +1000,25 @@ class BuildProgress extends StatelessWidget {
                     fontFeatures: const [FontFeature.tabularFigures()],
                   ),
                 ),
+                // §2.1a: put it down and pick it back up, from the bar.
+                if (onPause != null)
+                  IconButton(
+                    onPressed: () => onPause!(shelter),
+                    icon: Icon(
+                      shelter.paused
+                          ? Icons.play_arrow_outlined
+                          : Icons.pause_outlined,
+                      size: 18,
+                    ),
+                    tooltip: shelter.paused
+                        ? l10n.shelterResume
+                        : l10n.shelterPause,
+                    color: colours.text,
+                    visualDensity: VisualDensity.compact,
+                    constraints: const BoxConstraints(),
+                    padding: const EdgeInsets.only(left: 8),
+                  ),
+
                 // §12: a way out of this, from the screen the player is on.
                 if (onStop != null)
                   IconButton(
@@ -1180,4 +1247,45 @@ class _CraftRow extends StatelessWidget {
       ],
     );
   }
+}
+
+/// §8.3, §12: the price of giving up on a build, read before it is paid.
+///
+/// ⚠️ **This was written out twice**, once here and once on the map, and the
+/// two copies were identical — which means the next change to the wording
+/// would have landed on whichever one somebody happened to open. The map has
+/// the bar with the stop on it and this screen has the card; both need the
+/// same sentence.
+///
+/// Cancelling hands the materials back and throws the hours away. Putting the
+/// work down (§2.1a) throws away neither and needs no dialog at all, which is
+/// why there is only one of these.
+Future<bool> askCancelBuild(BuildContext context, Shelter place) async {
+  final l10n = L10n.of(context);
+
+  final sure = await showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text(l10n.shelterCancelTitle),
+      content: Text(
+        place.building != null
+            ? l10n.shelterCancelModuleWhat
+            : place.kind == ShelterKind.main
+            ? l10n.shelterCancelShelterWhat
+            : l10n.shelterCancelCampWhat,
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(false),
+          child: Text(l10n.shelterCancelKeep),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(true),
+          child: Text(l10n.shelterCancelConfirm),
+        ),
+      ],
+    ),
+  );
+
+  return sure ?? false;
 }

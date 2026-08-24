@@ -3413,6 +3413,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
           onDisassemble: () => unawaited(_openDisassemble()),
           craftJob: _craftJob,
           onCancelBuild: (place) => unawaited(_cancelBuild(place)),
+          onPauseBuild: (place) => unawaited(_pauseBuild(place)),
         ),
       ),
     );
@@ -3456,6 +3457,19 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     await _reloadShelters();
     if (!mounted) return;
     _say(L10n.of(context).shelterBuildStarted);
+  }
+
+  /// §2.1a, §8.3: puts the work down, or picks it back up. Nothing is lost.
+  Future<void> _pauseBuild(Shelter place) async {
+    _shelterBusy = true;
+    await _places.setPaused(place, DateTime.now().toUtc());
+    _shelterBusy = false;
+
+    await _reloadShelters();
+    if (!mounted) return;
+
+    final l10n = L10n.of(context);
+    _say(place.paused ? l10n.shelterResumed : l10n.shelterPaused);
   }
 
   /// §8.3: gives up on whatever is going up here.
@@ -3719,8 +3733,13 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final job = _craftJob.value;
     if (job != null) return _jobLabel(job);
 
+    // ⚠️ §2.1a, §8.3: work *put down* is not an occupation. A build blocks
+    // everything else, and the only way out used to be cancelling — which
+    // threw the hours away even though the timber came back.
     final now = DateTime.now().toUtc();
     for (final place in _shelters.value) {
+      if (place.paused) continue;
+
       if (!place.isReadyAt(now)) {
         return place.kind == ShelterKind.main
             ? l10n.shelterTitle
@@ -3828,6 +3847,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       _standingAt.value,
       DateTime.now().toUtc(),
       onStop: (place) => unawaited(_confirmCancelBuild(place)),
+      onPause: (place) => unawaited(_pauseBuild(place)),
     );
 
     if (search == null || !search.isRunning) {
@@ -3863,33 +3883,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// destroyed three hours of work and a pack of timber would be worse than
   /// no stop at all.
   Future<void> _confirmCancelBuild(Shelter place) async {
-    final l10n = L10n.of(context);
-
-    final sure = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.shelterCancelTitle),
-        content: Text(
-          place.building != null
-              ? l10n.shelterCancelModuleWhat
-              : place.kind == ShelterKind.main
-              ? l10n.shelterCancelShelterWhat
-              : l10n.shelterCancelCampWhat,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(l10n.shelterCancelKeep),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text(l10n.shelterCancelConfirm),
-          ),
-        ],
-      ),
-    );
-
-    if (sure ?? false) await _cancelBuild(place);
+    if (await askCancelBuild(context, place)) await _cancelBuild(place);
   }
 
   /// What the bench is doing, in the player's words.
@@ -6364,6 +6358,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
                     status: snapshot.status,
                     constants: character.constants,
                     warnings: _warnings(l10n, snapshot),
+                    twilight: snapshot.twilight,
                     bleeding: _loop?.bleeding ?? BleedTier.none,
                     carryComfortKg: character.body.carryComfortKg,
                     carryMaxKg: character.body.carryMaxKg,
@@ -6410,6 +6405,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
                     status: snapshot.status,
                     constants: character.constants,
                     warnings: _warnings(l10n, snapshot),
+                    twilight: snapshot.twilight,
                     carryComfortKg: character.body.carryComfortKg,
                     carryMaxKg: character.body.carryMaxKg,
                     carriedKg: _carriedKg,
@@ -6434,6 +6430,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
                   status: snapshot.status,
                   constants: character.constants,
                   warnings: _warnings(l10n, snapshot),
+                  // §12, §17.2: how long the light has left.
+                  twilight: snapshot.twilight,
                   carryComfortKg: character.body.carryComfortKg,
                   carryMaxKg: character.body.carryMaxKg,
                   carriedKg: _carriedKg,

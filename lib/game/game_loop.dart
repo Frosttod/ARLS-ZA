@@ -57,6 +57,7 @@ class GameSnapshot {
     required this.speedKmh,
     required this.isNight,
     this.darkness = 0,
+    this.twilight,
     required this.occupation,
     this.sleepCountdown,
     this.fix,
@@ -97,6 +98,10 @@ class GameSnapshot {
   /// cannot see: it drives the search radius (§10.2.2), what carries (§5.6.1),
   /// what notices you (§17.4) and the colour of the map.
   final double darkness;
+
+  /// §12, §17.2: how long until the sky changes, and which way. Null where
+  /// there is no crossing in the next day — a polar summer has no dusk.
+  final ({Duration left, bool untilDark})? twilight;
   final Occupation? occupation;
   final Duration? sleepCountdown;
 
@@ -910,6 +915,13 @@ class GameLoop {
             ? 0
             : darknessAt(
                 momentUtc: _state.lastUpdate,
+                latitude: fix.latitude,
+                longitude: fix.longitude,
+              ),
+        twilight: fix == null
+            ? null
+            : twilightAhead(
+                fromUtc: _state.lastUpdate,
                 latitude: fix.latitude,
                 longitude: fix.longitude,
               ),

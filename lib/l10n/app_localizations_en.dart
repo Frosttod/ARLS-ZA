@@ -202,6 +202,12 @@ class L10nEn extends L10n {
   String get hudBlood => 'Blood';
 
   @override
+  String get hudUntilDusk => 'to dusk';
+
+  @override
+  String get hudUntilDawn => 'to dawn';
+
+  @override
   String get hudWater => 'Water';
 
   @override
@@ -890,6 +896,22 @@ class L10nEn extends L10n {
 
   @override
   String get shelterBuildHere => 'Build here';
+
+  @override
+  String get shelterPause => 'Put down';
+
+  @override
+  String get shelterResume => 'Pick up';
+
+  @override
+  String get shelterPaused =>
+      'Work put down. Nothing lost — the hours and the materials stay.';
+
+  @override
+  String get shelterResumed => 'Back to work.';
+
+  @override
+  String get shelterOnHold => 'Put down';
 
   @override
   String get shelterCancel => 'Give up';
