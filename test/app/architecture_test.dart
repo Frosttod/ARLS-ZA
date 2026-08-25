@@ -164,6 +164,8 @@ void main() {
       //           6530   the journal, and the pile that knew how to be a line
       //           6526   one way onto a shelf, and one name for home; and
       //                  the sky says when, not only how long (§17.2)
+      //           6463   the fight panel became a reading, not forty
+      //                  arguments assembled in a build method (§5.5.1)
       //
       // ⚠️ Lower it when a phase lands. Never raise it — not for a phase, and
       // not for a feature either. "It is a feature" is exactly the excuse that
@@ -172,7 +174,7 @@ void main() {
       // Something new that belongs to the model goes in the model.
       expect(
         lines,
-        lessThanOrEqualTo(6526),
+        lessThanOrEqualTo(6463),
         reason: 'main.dart grew; something went in that should have come out',
       );
     });

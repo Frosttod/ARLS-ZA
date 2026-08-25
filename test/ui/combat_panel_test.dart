@@ -1,6 +1,8 @@
 import 'package:arls_za/combat/ballistics.dart';
 import 'package:arls_za/combat/enemy.dart';
+import 'package:arls_za/combat/target_reading.dart';
 import 'package:arls_za/l10n/app_localizations.dart';
+import 'package:arls_za/l10n/app_localizations_pl.dart';
 import 'package:arls_za/ui/combat_panel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -30,7 +32,9 @@ void main() {
     int loaded = 0,
     int magazine = 0,
     bool reloading = false,
-    String? refusal,
+    CombatRefusal? refusal,
+    bool canReload = true,
+    bool canStrike = true,
   }) async {
     await tester.pumpWidget(
       MaterialApp(
@@ -44,23 +48,29 @@ void main() {
         supportedLocales: L10n.supportedLocales,
         home: Scaffold(
           body: CombatPanel(
-            targetName: 'Przeciwnik',
-            distanceM: 84,
-            chance: chance,
-            dominant: dominant,
-            state: state,
-            condition: condition,
-            sprintLeft: sprintLeft,
-            bloodLeft: bloodLeft,
-            bleeding: bleeding,
-            weaponName: weaponName,
-            refusal: refusal,
-            onFire: canFire ? onFire ?? () {} : null,
+            reading: TargetReading(
+              targetName: 'Przeciwnik',
+              distanceM: 84,
+              chance: chance,
+              dominant: dominant,
+              state: state,
+              condition: condition,
+              sprintLeft: sprintLeft,
+              bloodLeft: bloodLeft,
+              bleeding: bleeding,
+              weaponName: weaponName,
+              refusal: refusal,
+              loaded: loaded,
+              magazine: magazine,
+              reloading: reloading,
+              settling: false,
+              canFire: canFire,
+              canReload: canReload && onReload != null,
+              canStrike: canStrike && onStrike != null,
+            ),
+            onFire: onFire ?? () {},
             onStrike: onStrike,
             onReload: onReload,
-            loaded: loaded,
-            magazine: magazine,
-            reloading: reloading,
           ),
         ),
       ),
@@ -97,11 +107,11 @@ void main() {
 
   testWidgets('nothing in hand refuses the shot, and says why', (tester) async {
     // A dead button teaches nothing.
-    await pump(tester, canFire: false, refusal: 'Nic w ręku.');
+    await pump(tester, canFire: false, refusal: CombatRefusal.noWeapon);
 
     final button = tester.widget<FilledButton>(find.byType(FilledButton));
     expect(button.onPressed, isNull);
-    expect(find.text('Nic w ręku.'), findsOneWidget);
+    expect(find.text(L10nPl().combatNoWeapon), findsOneWidget);
   });
 
   testWidgets('the trigger fires exactly once per press', (tester) async {
@@ -282,11 +292,11 @@ void main() {
         chance: null,
         dominant: null,
         canFire: false,
-        refusal: 'Nic w ręku.',
+        refusal: CombatRefusal.noWeapon,
       );
 
       expect(find.textContaining('Przeciwnik'), findsOneWidget);
-      expect(find.text('Nic w ręku.'), findsOneWidget);
+      expect(find.text(L10nPl().combatNoWeapon), findsOneWidget);
     });
 
     testWidgets('and shows a dash rather than an invented chance', (

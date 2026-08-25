@@ -51,6 +51,7 @@ import 'combat/enemy.dart';
 import 'combat/noise.dart';
 import 'combat/enemy_spawner.dart';
 import 'combat/pursuit.dart';
+import 'combat/target_reading.dart';
 import 'combat/remains.dart';
 import 'combat/remains_store.dart';
 import 'combat/attachment.dart';
@@ -6178,102 +6179,38 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
                           children: [
                             _actionPanel(context),
                             CombatPanel(
-                              targetName: enemyKindName(
-                                L10n.of(context),
-                                target.kind,
-                              ),
-                              state: target.state,
-                              weaponName: weapon == null
-                                  ? null
-                                  : _nameOfItem(weapon),
-                              distanceM: target.position.distanceTo(
-                                GeoPoint(
+                              reading: readTarget(
+                                target: target,
+                                from: GeoPoint(
                                   snapshot.displayFix?.latitude ?? 0,
                                   snapshot.displayFix?.longitude ?? 0,
                                 ),
-                              ),
-                              chance: error == null
-                                  ? null
-                                  : hitChance(
-                                      moa: error.total,
-                                      distanceM: target.position.distanceTo(
-                                        GeoPoint(
-                                          snapshot.displayFix?.latitude ?? 0,
-                                          snapshot.displayFix?.longitude ?? 0,
-                                        ),
+                                targetName: enemyKindName(
+                                  L10n.of(context),
+                                  target.kind,
+                                ),
+                                error: error,
+                                weaponName: weapon == null
+                                    ? null
+                                    : _nameOfItem(weapon),
+                                magazine: weapon == null
+                                    ? 0
+                                    : magazineSize(
+                                        weapon,
+                                        attachments: _attachmentsFor(weapon),
                                       ),
-                                    ),
-                              dominant: error?.dominant,
-                              settling:
-                                  _aim.spreadMultiplierAt(DateTime.now()) >
-                                  1.02,
-                              condition: target.condition,
-                              sprintLeft: target.sprintLeftFraction,
-                              bloodLeft: target.bloodLeft,
-                              bleeding: target.isBleeding,
-                              loaded: _loaded,
-                              magazine: weapon == null
-                                  ? 0
-                                  : magazineSize(
-                                      weapon,
-                                      attachments: _attachmentsFor(weapon),
-                                    ),
-                              reloading: _reload != null,
-                              // §8.1: the same fifty metres that keeps them
-                              // out keeps the player's fire in. Two different
-                              // numbers would make a ring nobody can win in.
-                              refusal: _inOwnZone()
-                                  ? L10n.of(context).shelterInside
-                                  : _loop?.down == DownState.grace
-                                  ? L10n.of(context).downGrace
-                                  : weapon == null
-                                  ? L10n.of(context).combatNoWeapon
-                                  : _loaded <= 0 && round == null
-                                  ? L10n.of(context).combatNoAmmo
-                                  : null,
-                              onReload:
-                                  weapon == null ||
-                                      round == null ||
-                                      _reload != null ||
-                                      // Nothing to do: §5.3's seconds are for
-                                      // filling a magazine, and a full one has
-                                      // no room to fill.
-                                      _loaded >=
-                                          magazineSize(
-                                            weapon,
-                                            attachments: _attachmentsFor(
-                                              weapon,
-                                            ),
-                                          )
-                                  ? null
-                                  : _startReload,
-                              onFire:
-                                  weapon == null ||
-                                      _loaded <= 0 ||
-                                      _reload != null ||
-                                      // §9.2: the grace window cuts both ways.
-                                      _loop?.down == DownState.grace ||
-                                      _inOwnZone()
-                                  ? null
-                                  : () => unawaited(_fire()),
-                              // §5.2: below twenty metres the receiver has nothing
-                              // useful to say about anybody's position, so the
-                              // fight stops being about distance and becomes about
-                              // what is in your hands.
-                              onStrike:
-                                  !_inOwnZone() &&
-                                      _loop?.down != DownState.grace &&
-                                      target.position.distanceTo(
-                                            GeoPoint(
-                                              snapshot.displayFix?.latitude ??
-                                                  0,
-                                              snapshot.displayFix?.longitude ??
-                                                  0,
-                                            ),
-                                          ) <=
-                                          kMeleeM
-                                  ? () => unawaited(_strike())
-                                  : null,
+                                loaded: _loaded,
+                                hasRound: round != null,
+                                reloading: _reload != null,
+                                settling:
+                                    _aim.spreadMultiplierAt(DateTime.now()) >
+                                    1.02,
+                                inOwnZone: _inOwnZone(),
+                                inGrace: _loop?.down == DownState.grace,
+                              ),
+                              onReload: _startReload,
+                              onFire: () => unawaited(_fire()),
+                              onStrike: () => unawaited(_strike()),
                             ),
                           ],
                         );

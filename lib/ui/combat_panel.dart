@@ -13,6 +13,8 @@ library;
 
 import 'package:flutter/material.dart';
 
+import '../combat/target_reading.dart';
+
 import 'fonts.dart';
 import '../combat/ballistics.dart';
 import '../combat/enemy.dart';
@@ -22,98 +24,37 @@ import 'hud.dart' show HudColors;
 
 class CombatPanel extends StatelessWidget {
   const CombatPanel({
-    required this.targetName,
-    required this.distanceM,
-    required this.chance,
-    required this.dominant,
-    required this.state,
-    this.weaponName,
-    this.settling = false,
-    required this.condition,
-    required this.sprintLeft,
-    required this.bloodLeft,
-    this.bleeding = false,
+    required this.reading,
     required this.onFire,
     this.onStrike,
     this.onReload,
-    this.loaded = 0,
-    this.magazine = 0,
-    this.reloading = false,
-    this.refusal,
     super.key,
   });
 
-  /// What is being aimed at, in words (§5.5.1).
-  final String targetName;
+  /// ⚠️ **One value, not forty arguments.** Everything drawn here is decided
+  /// in [readTarget] and tested there: the distance, the odds, what can be
+  /// fired or swung at, and why not. The panel used to be assembled inline in
+  /// the largest build method in the codebase, recomputing the distance four
+  /// times and the safe-zone rule three, which is four distances and three
+  /// rules the next time one of them is edited.
+  final TargetReading reading;
 
-  final double distanceM;
-
-  /// §5.1.4: 0–1, and shown as a whole percentage. Null with nothing in hand
-  /// to fire — there is no chance to state, and stating one anyway would be a
-  /// number about a shot nobody can take.
-  final double? chance;
-
-  /// §5.1.4: the largest component of the error. Null for the same reason.
-  final ErrorSource? dominant;
-
-  /// §6.1a, in the player's words: it has not seen you, it is looking for
-  /// you, or it is coming.
-  ///
-  /// ⚠️ Not drawn any more. §12 already carries it twice — the `?` or `!` over
-  /// the dot and the threat line on the HUD — and a third copy pushed the one
-  /// thing the panel was missing off the row. Kept on the widget because the
-  /// screen reader still reads it (§12) and because removing a field to save a
-  /// line is how a state stops being modelled at all.
-  final EnemyState state;
-
-  /// §5.5.4: what is in the player's hands, by name. Null with empty hands.
-  final String? weaponName;
-
-  /// §5.5.1: how badly hurt it looks. Three words, because that is all anybody
-  /// could honestly tell at two hundred metres.
-  final EnemyCondition condition;
-
-  /// §2.6: how much blood it has left against what kills it, 0–1.
-  final double bloodLeft;
-
-  /// §2.6: whether something opened is still costing it.
-  final bool bleeding;
-
-  /// §5.5.2: how much sprint it has left, 0–1. The tactical fact of a group
-  /// fight — one that has burned its budget can be walked away from.
-  final double sprintLeft;
-
-  /// Null while there is nothing to fire — no weapon in hand, or no round for
-  /// it. The reason is said in [refusal] rather than left to a dead button.
+  /// §5.5.4: what pulling the trigger does. Null when it may not be pulled;
+  /// the reason is in [TargetReading.refusal] rather than left to a dead
+  /// button.
   final VoidCallback? onFire;
 
-  /// §5.2, §5.4: hands, once something is inside twenty metres. Null while it
-  /// is further off than a person can reach.
+  /// §5.4: and what swinging does, inside §5.2's twenty metres.
   final VoidCallback? onStrike;
 
-  /// §5.5.4: puts a magazine in, and can be interrupted by anything closing
-  /// inside five metres. Null while there is nothing to load or no room.
+  /// §5.5.4: puts a magazine in, and can be interrupted by anything closing.
   final VoidCallback? onReload;
-
-  /// §5.3: what is in the weapon against what it holds.
-  final int loaded;
-  final int magazine;
-
-  /// True while a magazine is going in — the trigger is not available and the
-  /// panel says why.
-  final bool reloading;
-
-  /// §5.5.1, §5.3: true while the sight picture is still being recovered, so
-  /// the rising percentage beside it is explained rather than mysterious.
-  final bool settling;
-
-  final String? refusal;
 
   @override
   Widget build(BuildContext context) {
     final colours = HudColors.of(context);
     final l10n = L10n.of(context);
-    final odds = chance;
+    final odds = reading.chance;
     final percent = odds == null ? null : (odds * 100).round();
 
     // §12: never colour alone. The percentage is the information; the colour
@@ -145,18 +86,19 @@ class CombatPanel extends StatelessWidget {
                     // saying it twice cost the line the weapon needed.
                     Text(
                       effects([
-                        targetName,
-                        l10n.combatDistance(distanceM.round()),
-                        conditionName(l10n, condition),
-                        if (bleeding) l10n.enemyBleeding,
+                        reading.targetName,
+                        l10n.combatDistance(reading.distanceM.round()),
+                        conditionName(l10n, reading.condition),
+                        if (reading.bleeding) l10n.enemyBleeding,
                       ]),
                       style: TextStyle(fontSize: 12, color: colours.text),
                     ),
-                    if (weaponName != null)
+                    if (reading.weaponName != null)
                       Text(
                         effects([
-                          weaponName!,
-                          if (magazine > 0) l10n.combatRounds(loaded, magazine),
+                          reading.weaponName!,
+                          if (reading.magazine > 0)
+                            l10n.combatRounds(reading.loaded, reading.magazine),
                         ]),
                         style: TextStyle(fontSize: 12, color: colours.data),
                       ),
@@ -179,11 +121,13 @@ class CombatPanel extends StatelessWidget {
                           child: SizedBox(
                             height: 4,
                             child: LinearProgressIndicator(
-                              value: bloodLeft.clamp(0.0, 1.0),
+                              value: reading.bloodLeft.clamp(0.0, 1.0),
                               backgroundColor: colours.muted.withValues(
                                 alpha: 0.25,
                               ),
-                              color: bleeding ? colours.alert : colours.data,
+                              color: reading.bleeding
+                                  ? colours.alert
+                                  : colours.data,
                             ),
                           ),
                         ),
@@ -209,11 +153,11 @@ class CombatPanel extends StatelessWidget {
                           child: SizedBox(
                             height: 4,
                             child: LinearProgressIndicator(
-                              value: sprintLeft.clamp(0.0, 1.0),
+                              value: reading.sprintLeft.clamp(0.0, 1.0),
                               backgroundColor: colours.muted.withValues(
                                 alpha: 0.25,
                               ),
-                              color: sprintLeft > 0.1
+                              color: reading.sprintLeft > 0.1
                                   ? colours.alert
                                   : colours.data,
                             ),
@@ -238,18 +182,24 @@ class CombatPanel extends StatelessWidget {
                         Text(
                           // §5.3: a number that climbs on its own needs
                           // saying, or it reads as the game changing its mind.
-                          settling ? l10n.combatAiming : l10n.combatOnTarget,
+                          reading.settling
+                              ? l10n.combatAiming
+                              : l10n.combatOnTarget,
                           style: TextStyle(
                             fontSize: 10,
                             letterSpacing: 1.2,
-                            color: settling ? colours.alert : colours.data,
+                            color: reading.settling
+                                ? colours.alert
+                                : colours.data,
                           ),
                         ),
                         const SizedBox(width: 8),
                         Text(
                           // What is costing the shot, so a miss can be
                           // answered rather than resented.
-                          dominant == null ? '' : errorName(l10n, dominant!),
+                          reading.dominant == null
+                              ? ''
+                              : errorName(l10n, reading.dominant!),
                           style: TextStyle(
                             fontSize: 10,
                             letterSpacing: 1.2,
@@ -258,17 +208,17 @@ class CombatPanel extends StatelessWidget {
                         ),
                       ],
                     ),
-                    if (refusal != null) ...[
+                    if (reading.refusal != null) ...[
                       const SizedBox(height: 2),
                       Text(
-                        refusal!,
+                        refusalName(l10n, reading.refusal!),
                         style: TextStyle(fontSize: 11, color: colours.alert),
                       ),
                     ],
                   ],
                 ),
               ),
-              if (reloading)
+              if (reading.reloading)
                 Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: Text(
@@ -276,21 +226,29 @@ class CombatPanel extends StatelessWidget {
                     style: TextStyle(fontSize: 11, color: colours.muted),
                   ),
                 )
-              else if (onReload != null) ...[
+              // ⚠️ Gated on the reading, never on the callback being null.
+              // Whether a magazine may go in is §5.3's rule and it is decided
+              // in [readTarget]; a widget that inferred it from an absent
+              // callback would be a second copy of the rule, in the one place
+              // it cannot be tested.
+              else if (reading.canReload && onReload != null) ...[
                 OutlinedButton(
                   onPressed: onReload,
                   child: Text(l10n.combatReload),
                 ),
                 const SizedBox(width: 8),
               ],
-              if (onStrike != null) ...[
+              if (reading.canStrike && onStrike != null) ...[
                 OutlinedButton(
                   onPressed: onStrike,
                   child: Text(l10n.combatStrike),
                 ),
                 const SizedBox(width: 8),
               ],
-              FilledButton(onPressed: onFire, child: Text(l10n.combatFire)),
+              FilledButton(
+                onPressed: reading.canFire ? onFire : null,
+                child: Text(l10n.combatFire),
+              ),
             ],
           ),
         ),
@@ -328,6 +286,18 @@ String conditionName(L10n l10n, EnemyCondition condition) =>
       EnemyCondition.wounded => l10n.enemyWounded,
       EnemyCondition.critical => l10n.enemyCritical,
     };
+
+/// §5.5.4, §8.1: why the trigger is not available, in the player's language.
+///
+/// ⚠️ Named here rather than decided here. Which refusal applies is a rule of
+/// §5 and §8.1 and lives in [readTarget]; four localised strings chosen inline
+/// put Polish in the middle of a decision about ammunition.
+String refusalName(L10n l10n, CombatRefusal refusal) => switch (refusal) {
+  CombatRefusal.insideOwnZone => l10n.shelterInside,
+  CombatRefusal.grace => l10n.downGrace,
+  CombatRefusal.noWeapon => l10n.combatNoWeapon,
+  CombatRefusal.noAmmo => l10n.combatNoAmmo,
+};
 
 /// §5.1.4's word beside the percentage.
 String errorName(L10n l10n, ErrorSource source) => switch (source) {
