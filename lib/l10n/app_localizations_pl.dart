@@ -204,12 +204,6 @@ class L10nPl extends L10n {
   String get hudBlood => 'Krew';
 
   @override
-  String get hudUntilDusk => 'do zmierzchu';
-
-  @override
-  String get hudUntilDawn => 'do świtu';
-
-  @override
   String get hudWater => 'Woda';
 
   @override
@@ -2396,4 +2390,10 @@ class L10nPl extends L10n {
   String journalStartedSalvage(String what) {
     return 'Rozpoczęto rozbiórkę: $what';
   }
+
+  @override
+  String get hudSunrise => 'Świt';
+
+  @override
+  String get hudSunset => 'Zmierzch';
 }

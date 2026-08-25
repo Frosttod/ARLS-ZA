@@ -427,18 +427,6 @@ abstract class L10n {
   /// **'Blood'**
   String get hudBlood;
 
-  /// No description provided for @hudUntilDusk.
-  ///
-  /// In en, this message translates to:
-  /// **'to dusk'**
-  String get hudUntilDusk;
-
-  /// No description provided for @hudUntilDawn.
-  ///
-  /// In en, this message translates to:
-  /// **'to dawn'**
-  String get hudUntilDawn;
-
   /// No description provided for @hudWater.
   ///
   /// In en, this message translates to:
@@ -4260,6 +4248,18 @@ abstract class L10n {
   /// In en, this message translates to:
   /// **'Started stripping: {what}'**
   String journalStartedSalvage(String what);
+
+  /// No description provided for @hudSunrise.
+  ///
+  /// In en, this message translates to:
+  /// **'Dawn'**
+  String get hudSunrise;
+
+  /// No description provided for @hudSunset.
+  ///
+  /// In en, this message translates to:
+  /// **'Dusk'**
+  String get hudSunset;
 }
 
 class _L10nDelegate extends LocalizationsDelegate<L10n> {

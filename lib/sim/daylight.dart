@@ -210,6 +210,41 @@ double darknessAt({
   Duration within = const Duration(hours: 24),
   Duration resolution = const Duration(minutes: 5),
 }) {
+  final change = skyChangeAfter(
+    fromUtc: fromUtc,
+    latitude: latitude,
+    longitude: longitude,
+    within: within,
+    resolution: resolution,
+  );
+  if (change == null) return null;
+
+  return (
+    left: change.at.difference(fromUtc.toUtc()),
+    untilDark: change.untilDark,
+  );
+}
+
+/// §17.2: the moment the sky next changes, to the second.
+///
+/// ⚠️ **A moment, not a duration.** A countdown is a duration a second old the
+/// instant it is read, so anything drawing one has to be handed the time it
+/// counts to and subtract for itself — otherwise every clock in the interface
+/// has to be told again each time it ticks, and they drift apart between the
+/// telling.
+///
+/// Sampled coarsely and then halved down, because the crossing moves every day
+/// and the equation of time is not invertible in closed form. The coarse pass
+/// is what makes it cheap; the halving is what makes "Świt za 00:14:37" mean
+/// what it says.
+({DateTime at, bool untilDark})? skyChangeAfter({
+  required DateTime fromUtc,
+  required double latitude,
+  double longitude = 0,
+  Duration within = const Duration(hours: 24),
+  Duration resolution = const Duration(minutes: 5),
+  Duration precision = const Duration(seconds: 10),
+}) {
   final start = fromUtc.toUtc();
 
   bool darkAt(DateTime moment) =>
@@ -218,16 +253,64 @@ double darknessAt({
 
   final darkNow = darkAt(start);
 
-  // Sampled rather than solved. The crossing moves every day, the equation of
-  // time is not invertible in closed form, and five minutes is far below
-  // anything a player reads off a countdown.
   for (var ahead = resolution; ahead <= within; ahead += resolution) {
-    if (darkAt(start.add(ahead)) != darkNow) {
-      return (left: ahead, untilDark: !darkNow);
+    final after = start.add(ahead);
+    if (darkAt(after) == darkNow) continue;
+
+    // Between the last sample and this one. Halving is exact enough in a dozen
+    // turns and costs nothing beside the coarse pass that found the window.
+    var low = after.subtract(resolution);
+    var high = after;
+    while (high.difference(low) > precision) {
+      final middle = low.add(
+        Duration(microseconds: high.difference(low).inMicroseconds ~/ 2),
+      );
+      if (darkAt(middle) == darkNow) {
+        low = middle;
+      } else {
+        high = middle;
+      }
     }
+
+    return (at: high, untilDark: !darkNow);
   }
 
   return null;
+}
+
+/// §17.2, §12: when the light goes and when it comes back — the two clock
+/// times an evening is planned against.
+///
+/// ⚠️ **Both, and always the next of each.** A player at four in the afternoon
+/// wants tonight's dusk and tomorrow's dawn; one at three in the morning wants
+/// this dawn and tomorrow's dusk. Reporting only "the next change" answers
+/// half the question and leaves the other half to be guessed at.
+///
+/// Either may be null at high latitude, where §17.2's polar cases give a day
+/// with no crossing at all in it — and a time that never arrives is worse than
+/// no time.
+({DateTime? dusk, DateTime? dawn}) skyTimes({
+  required DateTime fromUtc,
+  required double latitude,
+  double longitude = 0,
+}) {
+  final first = skyChangeAfter(
+    fromUtc: fromUtc,
+    latitude: latitude,
+    longitude: longitude,
+  );
+  if (first == null) return (dusk: null, dawn: null);
+
+  final second = skyChangeAfter(
+    // Past the crossing, so the scan does not find the same one again.
+    fromUtc: first.at.add(const Duration(minutes: 1)),
+    latitude: latitude,
+    longitude: longitude,
+  );
+
+  return first.untilDark
+      ? (dusk: first.at, dawn: second?.at)
+      : (dawn: first.at, dusk: second?.at);
 }
 
 /// Whether it is night at [momentUtc].

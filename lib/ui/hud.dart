@@ -95,7 +95,7 @@ class Hud extends StatelessWidget {
     this.carriedKg = 0,
     this.carriedVolumeL = 0,
     this.capacityL = kPocketCapacityL,
-    this.twilight,
+    this.sky = const (dusk: null, dawn: null),
     super.key,
   });
 
@@ -109,15 +109,13 @@ class Hud extends StatelessWidget {
   /// the game is not behaving as they expect.
   final List<String> warnings;
 
-  /// §12, §17.2: how long until the sky changes, and which way.
+  /// §17.2: when the light goes and when it comes back, as clock times.
   ///
-  /// ⚠️ **The night rules arrive all at once and a map cannot show them
-  /// coming.** §10.2.2 halves the reconnaissance radius, §17.4 gives every
-  /// Walker a fifth more reach and §5.6.1 carries a shot a third further —
-  /// none of that is visible until it has already happened. An hour and a
-  /// half of warning is the difference between walking home and being caught
-  /// out, and this is the only place in the game that can give it.
-  final ({Duration left, bool untilDark})? twilight;
+  /// ⚠️ Moments, never durations. A countdown drawn from a duration is a
+  /// second out the instant it is read, and the widget would have to be handed
+  /// a fresh one on every tick of its own clock — which is two clocks that
+  /// disagree. Given the moment, it subtracts for itself and stays exact.
+  final ({DateTime? dusk, DateTime? dawn}) sky;
 
   /// §2.6: what is still open. Its own chip rather than part of the blood
   /// readout, because it is the only status on the HUD with a clock on it —
@@ -239,7 +237,7 @@ class Hud extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 6),
-              _Sky(twilight: twilight, colours: colours),
+              _Sky(sky: sky, colours: colours),
               const SizedBox(height: 6),
               _StatusRow(
                 status: status,
@@ -284,9 +282,9 @@ class Hud extends StatelessWidget {
 /// The clock is local and the run is real time (§16.4), so this is the
 /// player's own watch — which is the point. It is their evening being spent.
 class _Sky extends StatefulWidget {
-  const _Sky({required this.twilight, required this.colours});
+  const _Sky({required this.sky, required this.colours});
 
-  final ({Duration left, bool untilDark})? twilight;
+  final ({DateTime? dusk, DateTime? dawn}) sky;
   final HudColors colours;
 
   @override
@@ -305,59 +303,171 @@ class _SkyState extends State<_Sky> with WidgetsBindingObserver, Ticking {
   @override
   bool get ticking => true;
 
-  /// A minute is the resolution on screen; twenty seconds keeps it close
-  /// enough to the phone without waking the app every second for a digit that
-  /// moves once in sixty.
+  /// A minute is the resolution on screen, so twenty seconds keeps the clock
+  /// close enough to the phone without waking the app for a digit that moves
+  /// once in sixty.
+  ///
+  /// ⚠️ **A second, but only inside the last half hour.** §17.2's rules all
+  /// arrive at one moment, and the half hour before it is the window where a
+  /// player is deciding whether to start the walk home — that is worth a
+  /// second hand. The other twenty-three and a half hours are not, and a
+  /// panel that ticked every second all day would be §3.3's own example of
+  /// what not to do.
   @override
-  Duration get tickEvery => const Duration(seconds: 20);
+  Duration get tickEvery =>
+      _soon() ? const Duration(seconds: 1) : const Duration(seconds: 20);
+
+  /// §12: when the sky is close enough that seconds matter.
+  static const Duration kCountdownFrom = Duration(minutes: 30);
+
+  bool _soon() {
+    final left = _leftOf(_next()?.at);
+    return left != null && left <= kCountdownFrom;
+  }
+
+  /// Whichever of the two comes first, and which one it is.
+  ({DateTime at, bool dusk})? _next() {
+    final dusk = widget.sky.dusk;
+    final dawn = widget.sky.dawn;
+
+    if (dusk == null && dawn == null) return null;
+    if (dawn == null) return (at: dusk!, dusk: true);
+    if (dusk == null) return (at: dawn, dusk: false);
+
+    return dusk.isBefore(dawn)
+        ? (at: dusk, dusk: true)
+        : (at: dawn, dusk: false);
+  }
+
+  Duration? _leftOf(DateTime? at) {
+    if (at == null) return null;
+
+    final left = at.difference(DateTime.now().toUtc());
+    return left.isNegative ? Duration.zero : left;
+  }
+
+  /// A clock time, in the player's own local time.
+  String _clock(DateTime at) {
+    final local = at.toLocal();
+    return '${local.hour.toString().padLeft(2, '0')}:'
+        '${local.minute.toString().padLeft(2, '0')}';
+  }
 
   @override
   Widget build(BuildContext context) {
     final colours = widget.colours;
     final l10n = L10n.of(context);
-    final local = DateTime.now();
-    final sky = widget.twilight;
+    final now = DateTime.now();
+
+    final next = _next();
+    final left = _leftOf(next?.at);
+    final soon = left != null && left <= kCountdownFrom;
 
     return Row(
       children: [
         Icon(
-          sky == null || sky.untilDark
+          next == null || next.dusk
               ? Icons.wb_sunny_outlined
               : Icons.nightlight_outlined,
           size: 13,
           color: colours.muted,
         ),
         const SizedBox(width: 6),
-        Text(
-          '${local.hour.toString().padLeft(2, '0')}:'
-          '${local.minute.toString().padLeft(2, '0')}',
-          style: TextStyle(
-            fontSize: 13,
-            color: colours.text,
-            fontFamily: kDataFont,
-            fontFeatures: const [FontFeature.tabularFigures()],
-          ),
+        _Figure(
+          '${now.hour.toString().padLeft(2, '0')}:'
+          '${now.minute.toString().padLeft(2, '0')}',
+          colour: colours.text,
         ),
-        if (sky != null) ...[
-          const Spacer(),
-          Text(
-            remaining(sky.left),
-            style: TextStyle(
-              fontSize: 13,
-              color: colours.data,
-              fontFamily: kDataFont,
-              fontFeatures: const [FontFeature.tabularFigures()],
-            ),
+
+        const Spacer(),
+
+        // ⚠️ Both times, always, and the countdown beside the one it counts
+        // to. A player at four in the afternoon wants tonight's dusk *and*
+        // tomorrow's dawn — "the next change" answers half the question and
+        // leaves the other half to be guessed at. A timer floating at the end
+        // of the row would leave a third half.
+        if (widget.sky.dawn case final dawn?)
+          _Moment(
+            label: l10n.hudSunrise,
+            clock: _clock(dawn),
+            left: next != null && !next.dusk && soon ? left : null,
+            colours: colours,
           ),
-          const SizedBox(width: 6),
-          Text(
-            sky.untilDark ? l10n.hudUntilDusk : l10n.hudUntilDawn,
-            style: TextStyle(fontSize: 12, color: colours.muted),
+        if (widget.sky.dusk case final dusk?) ...[
+          const SizedBox(width: 12),
+          _Moment(
+            label: l10n.hudSunset,
+            clock: _clock(dusk),
+            left: next != null && next.dusk && soon ? left : null,
+            colours: colours,
           ),
         ],
       ],
     );
   }
+}
+
+/// §17.2, §12: one of the two moments an evening is planned against.
+///
+/// The clock time always; the seconds only while [left] is given, which is the
+/// half hour before it (§12) — the window where a player is deciding whether
+/// to start the walk home.
+class _Moment extends StatelessWidget {
+  const _Moment({
+    required this.label,
+    required this.clock,
+    required this.left,
+    required this.colours,
+  });
+
+  final String label;
+  final String clock;
+  final Duration? left;
+  final HudColors colours;
+
+  @override
+  Widget build(BuildContext context) {
+    final soon = left != null;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            color: soon ? colours.alert : colours.muted,
+          ),
+        ),
+        const SizedBox(width: 4),
+        _Figure(clock, colour: soon ? colours.alert : colours.data),
+        if (soon) ...[
+          const SizedBox(width: 6),
+          _Figure(span(left!, seconds: true), colour: colours.alert),
+        ],
+      ],
+    );
+  }
+}
+
+/// A number on the panel: tabular, so a countdown does not shuffle its own
+/// digits sideways once a second.
+class _Figure extends StatelessWidget {
+  const _Figure(this.text, {required this.colour});
+
+  final String text;
+  final Color colour;
+
+  @override
+  Widget build(BuildContext context) => Text(
+    text,
+    style: TextStyle(
+      fontSize: 13,
+      color: colour,
+      fontFamily: kDataFont,
+      fontFeatures: const [FontFeature.tabularFigures()],
+    ),
+  );
 }
 
 /// §2.5: an hour of sleep ahead, as a share of the night §2.5.3 wants.

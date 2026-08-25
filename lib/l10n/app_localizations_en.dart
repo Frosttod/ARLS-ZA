@@ -202,12 +202,6 @@ class L10nEn extends L10n {
   String get hudBlood => 'Blood';
 
   @override
-  String get hudUntilDusk => 'to dusk';
-
-  @override
-  String get hudUntilDawn => 'to dawn';
-
-  @override
   String get hudWater => 'Water';
 
   @override
@@ -2394,4 +2388,10 @@ class L10nEn extends L10n {
   String journalStartedSalvage(String what) {
     return 'Started stripping: $what';
   }
+
+  @override
+  String get hudSunrise => 'Dawn';
+
+  @override
+  String get hudSunset => 'Dusk';
 }

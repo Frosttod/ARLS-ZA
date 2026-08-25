@@ -131,8 +131,6 @@
   "errBmiTooLow": "These figures do not describe a body the model can work with. Check the height and weight.",
   "errBmiTooHigh": "These figures do not describe a body the model can work with. Check the height and weight.",
   "hudBlood": "Blood",
-  "hudUntilDusk": "to dusk",
-  "hudUntilDawn": "to dawn",
   "hudWater": "Water",
   "hudCalories": "Calories",
   "hudSleep": "Rest",
@@ -1535,5 +1533,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "hudSunrise": "Dawn",
+  "hudSunset": "Dusk"
 }

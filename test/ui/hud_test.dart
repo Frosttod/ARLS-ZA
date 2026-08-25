@@ -33,7 +33,7 @@ void main() {
     Locale locale = const Locale('pl'),
     Size surface = const Size(800, 600),
     ThreatReading? threat,
-    ({Duration left, bool untilDark})? twilight,
+    ({DateTime? dusk, DateTime? dawn}) sky = const (dusk: null, dawn: null),
   }) async {
     tester.view.physicalSize = surface;
     tester.view.devicePixelRatio = 1;
@@ -58,7 +58,7 @@ void main() {
             warnings: warnings,
             bleeding: bleeding,
             threat: threat,
-            twilight: twilight,
+            sky: sky,
             carryComfortKg: profile.carryComfortKg,
             carryMaxKg: profile.carryMaxKg,
             carriedKg: carriedKg,
@@ -617,41 +617,115 @@ void main() {
       expect(find.text(shown), findsOneWidget);
     });
 
-    testWidgets('and how long is left of it (§17.2)', (tester) async {
-      // ⚠️ **The night rules arrive all at once and a map cannot show them
-      // coming.** §10.2.2 halves the reconnaissance radius, §17.4 gives every
-      // Walker a fifth more reach and §5.6.1 carries a shot a third further.
-      // The snapshot has carried this figure since the day/night work landed
-      // and nothing drew it — the same defect twice over.
+    testWidgets('and both times an evening is planned against (§17.2)', (
+      tester,
+    ) async {
+      // ⚠️ Both, always. A player at four in the afternoon wants tonight's
+      // dusk *and* tomorrow's dawn; "the next change" answers half the
+      // question and leaves the other half to be guessed at.
+      final dawn = DateTime(2026, 8, 11, 5, 12);
+      final dusk = DateTime(2026, 8, 10, 20, 41);
+
+      await pumpHud(tester, healthy(), sky: (dusk: dusk, dawn: dawn));
+
+      expect(find.text(L10nPl().hudSunrise), findsOneWidget);
+      expect(find.text(L10nPl().hudSunset), findsOneWidget);
+      expect(find.text('05:12'), findsOneWidget);
+      expect(find.text('20:41'), findsOneWidget);
+    });
+
+    testWidgets('a countdown only inside the last half hour (§12)', (
+      tester,
+    ) async {
+      // §17.2's rules all arrive at one moment, and the half hour before it is
+      // where a player decides whether to start the walk home. The rest of the
+      // day is not worth a second hand, and a panel ticking every second all
+      // day is §3.3's own example of what not to do.
       await pumpHud(
         tester,
         healthy(),
-        twilight: (
-          left: const Duration(hours: 1, minutes: 32),
-          untilDark: true,
+        sky: (
+          dusk: DateTime.now().add(const Duration(hours: 3)),
+          dawn: DateTime.now().add(const Duration(hours: 11)),
         ),
       );
 
-      expect(find.text(L10nPl().hudUntilDusk), findsOneWidget);
-      expect(find.byIcon(Icons.wb_sunny_outlined), findsOneWidget);
+      expect(find.byType(Icon), findsWidgets);
+      expect(find.textContaining(':').evaluate().length, greaterThan(0));
+      expect(
+        find.textContaining('02:5'),
+        findsNothing,
+        reason: 'three hours out is a clock time, not a countdown',
+      );
     });
 
-    testWidgets('and which way the sky is going', (tester) async {
+    testWidgets('and the seconds appear once it is close', (tester) async {
       await pumpHud(
         tester,
         healthy(),
-        twilight: (left: const Duration(hours: 4), untilDark: false),
+        sky: (
+          dusk: DateTime.now().add(const Duration(minutes: 14, seconds: 37)),
+          dawn: DateTime.now().add(const Duration(hours: 9)),
+        ),
       );
 
-      expect(find.text(L10nPl().hudUntilDawn), findsOneWidget);
-      expect(find.byIcon(Icons.nightlight_outlined), findsOneWidget);
+      expect(
+        find.textContaining('14:3'),
+        findsOneWidget,
+        reason: 'a live countdown, in minutes and seconds',
+      );
+    });
+
+    testWidgets('the countdown sits beside the time it counts to', (
+      tester,
+    ) async {
+      // ⚠️ A timer floating at the end of the row says how long until
+      // *something*. Which of the two it means is the whole point of it.
+      final soon = DateTime.now().add(const Duration(minutes: 12));
+
+      await pumpHud(
+        tester,
+        healthy(),
+        sky: (dusk: soon, dawn: DateTime.now().add(const Duration(hours: 9))),
+      );
+
+      int figuresUnder(String label) => find
+          .descendant(
+            of: find
+                .ancestor(of: find.text(label), matching: find.byType(Row))
+                .first,
+            matching: find.byType(Text),
+          )
+          .evaluate()
+          .length;
+
+      // The label, the clock time and the countdown on the one that is close;
+      // the label and the clock time on the one that is not.
+      expect(figuresUnder(L10nPl().hudSunset), 3);
+      expect(figuresUnder(L10nPl().hudSunrise), 2);
     });
 
     testWidgets('nothing to say before the first fix', (tester) async {
+      // ⚠️ §17.2 is computed from the player's own position. With nothing
+      // through the accuracy gate yet there is no answer, and a time invented
+      // from a default latitude would be a lie somebody plans an evening on.
       await pumpHud(tester, healthy());
 
-      expect(find.text(L10nPl().hudUntilDusk), findsNothing);
-      expect(find.text(L10nPl().hudUntilDawn), findsNothing);
+      expect(find.text(L10nPl().hudSunrise), findsNothing);
+      expect(find.text(L10nPl().hudSunset), findsNothing);
+    });
+
+    testWidgets('and a polar summer says only what it knows', (tester) async {
+      // §17.2: no crossing in the next day at all. One of the two is null and
+      // the other still stands.
+      await pumpHud(
+        tester,
+        healthy(),
+        sky: (dusk: null, dawn: DateTime(2026, 8, 11, 2, 30)),
+      );
+
+      expect(find.text(L10nPl().hudSunrise), findsOneWidget);
+      expect(find.text(L10nPl().hudSunset), findsNothing);
     });
   });
 }

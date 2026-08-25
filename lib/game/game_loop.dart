@@ -57,7 +57,7 @@ class GameSnapshot {
     required this.speedKmh,
     required this.isNight,
     this.darkness = 0,
-    this.twilight,
+    this.sky = const (dusk: null, dawn: null),
     required this.occupation,
     this.sleepCountdown,
     this.fix,
@@ -99,9 +99,14 @@ class GameSnapshot {
   /// what notices you (§17.4) and the colour of the map.
   final double darkness;
 
-  /// §12, §17.2: how long until the sky changes, and which way. Null where
-  /// there is no crossing in the next day — a polar summer has no dusk.
-  final ({Duration left, bool untilDark})? twilight;
+  /// §17.2, §12: when the light goes and when it comes back, as clock times.
+  ///
+  /// ⚠️ Moments rather than durations, so anything drawing a countdown
+  /// subtracts for itself. A duration handed to a widget is a second old the
+  /// moment it is read, and every clock in the interface would have to be told
+  /// again on each tick — which is how two of them drift apart.
+  final ({DateTime? dusk, DateTime? dawn}) sky;
+
   final Occupation? occupation;
   final Duration? sleepCountdown;
 
@@ -940,13 +945,7 @@ class GameLoop {
                 latitude: fix.latitude,
                 longitude: fix.longitude,
               ),
-        twilight: fix == null
-            ? null
-            : twilightAhead(
-                fromUtc: _state.lastUpdate,
-                latitude: fix.latitude,
-                longitude: fix.longitude,
-              ),
+        sky: _skyTimes(fix),
         occupation: _occupation,
         sleepCountdown: countdown,
         fix: fix,
@@ -1165,6 +1164,41 @@ class GameLoop {
   /// that kept running would credit the player with standing still — so the
   /// loop stops and the time away is replayed under the offline valve of
   /// §2.1.1 instead.
+  ({DateTime? dusk, DateTime? dawn}) _sky = const (dusk: null, dawn: null);
+  DateTime? _skyFor;
+
+  /// §17.2: when the light next goes and next comes back, cached.
+  ///
+  /// ⚠️ **Not on every publish.** Finding a crossing is a scan of a day at
+  /// five-minute steps and then a halving down to ten seconds, and this is
+  /// published as often as once a second — which is a few hundred solar
+  /// position calculations a second for two clock times that move by about
+  /// four minutes a day. Recomputed when one of them passes, or hourly, and
+  /// the countdown drawn from it is exact in between because it is a moment
+  /// rather than a duration.
+  ({DateTime? dusk, DateTime? dawn}) _skyTimes(PositionFix? fix) {
+    if (fix == null) return const (dusk: null, dawn: null);
+
+    final now = _state.lastUpdate;
+    final since = _skyFor;
+    final passed =
+        (_sky.dusk?.isBefore(now) ?? false) ||
+        (_sky.dawn?.isBefore(now) ?? false);
+
+    if (since != null &&
+        !passed &&
+        now.difference(since).abs() < const Duration(hours: 1)) {
+      return _sky;
+    }
+
+    _skyFor = now;
+    return _sky = skyTimes(
+      fromUtc: now,
+      latitude: fix.latitude,
+      longitude: fix.longitude,
+    );
+  }
+
   Future<void> onPaused(DateTime now) async {
     _appForeground = false;
     _tracking = source.tracksInBackground;

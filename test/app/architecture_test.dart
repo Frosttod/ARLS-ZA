@@ -162,7 +162,8 @@ void main() {
       //           6541   the hotspots settle themselves, and a circle says
       //                  what it is and how to take it down (§6.5.6)
       //           6530   the journal, and the pile that knew how to be a line
-      //           6526   one way onto a shelf, and one name for home
+      //           6526   one way onto a shelf, and one name for home; and
+      //                  the sky says when, not only how long (§17.2)
       //
       // ⚠️ Lower it when a phase lands. Never raise it — not for a phase, and
       // not for a feature either. "It is a feature" is exactly the excuse that

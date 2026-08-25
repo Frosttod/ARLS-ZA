@@ -229,4 +229,94 @@ void main() {
       expect(winter.darknessIndex, closeTo(0.77, 0.06));
     });
   });
+
+  group('§17.2: the moment the sky changes, not just how long', () {
+    // Poznań, a clear August day. The exact minute is the model's business;
+    // what these hold is that a moment comes back at all, that it is precise
+    // enough for a second hand, and that the duration everything already used
+    // still agrees with it.
+    const poznan = (lat: 52.4064, lon: 16.9252);
+    final afternoon = DateTime.utc(2026, 8, 10, 14);
+
+    test('it comes back to the second, not to the five minutes', () {
+      final change = skyChangeAfter(
+        fromUtc: afternoon,
+        latitude: poznan.lat,
+        longitude: poznan.lon,
+      );
+
+      expect(change, isNotNull);
+      expect(change!.untilDark, isTrue, reason: 'dusk is what comes next');
+
+      // ⚠️ The reason for the halving. A countdown reading "Zmierzch za
+      // 00:14:37" off a five-minute grid would be wrong by up to five minutes
+      // and would jump in steps a player can see.
+      final coarse = change.at.difference(afternoon).inSeconds % 300;
+      expect(
+        coarse,
+        isNot(0),
+        reason: 'landing exactly on the grid every time is the grid, not a sun',
+      );
+    });
+
+    test('and the duration everything already draws agrees with it', () {
+      final change = skyChangeAfter(
+        fromUtc: afternoon,
+        latitude: poznan.lat,
+        longitude: poznan.lon,
+      );
+      final ahead = twilightAhead(
+        fromUtc: afternoon,
+        latitude: poznan.lat,
+        longitude: poznan.lon,
+      );
+
+      expect(ahead!.untilDark, change!.untilDark);
+      expect(
+        (ahead.left - change.at.difference(afternoon)).inSeconds.abs(),
+        lessThan(2),
+      );
+    });
+
+    test('both times come back, and in the right order', () {
+      final sky = skyTimes(
+        fromUtc: afternoon,
+        latitude: poznan.lat,
+        longitude: poznan.lon,
+      );
+
+      expect(sky.dusk, isNotNull);
+      expect(sky.dawn, isNotNull);
+      expect(
+        sky.dusk!.isBefore(sky.dawn!),
+        isTrue,
+        reason: 'an afternoon reaches dusk before it reaches dawn',
+      );
+      expect(sky.dusk!.isAfter(afternoon), isTrue);
+    });
+
+    test('and at night it is dawn that comes first', () {
+      final night = DateTime.utc(2026, 8, 10, 23, 30);
+      final sky = skyTimes(
+        fromUtc: night,
+        latitude: poznan.lat,
+        longitude: poznan.lon,
+      );
+
+      expect(sky.dawn!.isBefore(sky.dusk!), isTrue);
+    });
+
+    test('a polar summer has no dusk to count to (§17.2)', () {
+      // ⚠️ Null rather than a guess. A time that never arrives is worse than
+      // no time — and this is a real place a real player can be standing in.
+      final sky = skyTimes(
+        fromUtc: DateTime.utc(2026, 6, 21, 12),
+        latitude: 78.22,
+        longitude: 15.65,
+      );
+
+      expect(sky.dusk, isNull);
+      expect(sky.dawn, isNull);
+    });
+  });
 }
