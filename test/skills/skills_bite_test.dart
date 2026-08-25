@@ -186,7 +186,10 @@ void main() {
       'scouting: _learned.scouting', // radius, rare share, search time, stealth
       'medicine: _learned.medicine', // §4.7's dressings
       'engineering: _learned.engineering', // §8.3, §18.4, §18.6
-      'loop.medicine = _learned.medicine', // §2.6's regeneration
+      // §2.6's regeneration. Was a closure over the loop, added on every
+      // entry and never removed — a second character meant two listeners, and
+      // the first still wrote into a loop that had been disposed.
+      '_loop?.medicine = _learned.medicine',
       'await _learned.load(', // or none of it is there at boot
       'aimedAt(', // §5.5.1: and the switch still goes through the model
     ]) {

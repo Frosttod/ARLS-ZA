@@ -906,6 +906,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     if (at != null) _loop?.setStandingAt(at);
   }
 
+  /// §7, §2.6: what Medicine is worth to the night's regeneration.
+  void _tellLoopWhatWeKnow() => _loop?.medicine = _learned.medicine;
+
   void _tellLoopWhatWeAreDoing() {
     final action = _search.value;
     _loop?.setActing(acting: action != null && action.isRunning);
@@ -1255,8 +1258,13 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
       // §7, §2.6: kept in step rather than read once — a level earned
       // tonight has to reach tonight's regeneration, not tomorrow's boot.
-      loop.medicine = _learned.medicine;
-      _learned.skills.addListener(() => loop.medicine = _learned.medicine);
+      //
+      // ⚠️ Named, and removed before it is added. As a closure over `loop` it
+      // was added on every [_enter] and never taken off — a second character
+      // meant two, and the first wrote into a loop that was finished with.
+      _learned.skills.removeListener(_tellLoopWhatWeKnow);
+      _learned.skills.addListener(_tellLoopWhatWeKnow);
+      _tellLoopWhatWeKnow();
       _blocked = null;
       _loading = false;
     });
@@ -3175,50 +3183,43 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
     return ValueListenableBuilder<Search?>(
       valueListenable: _search,
-      builder: (context, searchVal, _) {
-        return SearchPanel(
-          search: searchVal,
-          targetName: box?.name,
-          canSearchHere: box != null,
-          // §10.3.5: how much of this place is left to turn over, so the panel can
-          // grey out a pass there is no longer room for.
-          searchUnitsLeft: box?.searchUnitsLeft ?? 0,
-          // §10.3.5: what each depth costs in seconds, here. A bin is not a
-          // supermarket, and the caption is where the player finds that out.
-          searchTimes: _searchTimesAt(box),
-          barrier: _barrierOn(box),
-          carried: _carriedIds(),
-          onSearchArea: _startAreaSearch,
-          onSearchHere: _startObjectSearch,
-          onBreach: _startBreach,
-          droppedLabel: _groundLabel(),
-          // Only with something actually underfoot. Found on a walk: the glyph
-          // stayed on the panel from anywhere, so "can I pick that up from here"
-          // was answered by pressing it and finding out.
-          onTakeDropped: _catalogue == null || _pilesInReach().isEmpty
-              ? null
-              : _openGround,
-          // §5.6.2: a round into the air.
-          //
-          // ⚠️ Offered whenever anything is in hand, and refused *out loud*. It
-          // used to vanish on any of four conditions, which read on a walk as "the
-          // button does not work" — the commonest cause being an unloaded weapon
-          // after a restart, since §8.4's magazines are not saved yet. A control
-          // that disappears cannot explain itself.
-          onFireAway: _weapon == null ? null : () => unawaited(_fireAway()),
+      builder: (context, searchVal, _) => SearchPanel(
+        search: searchVal,
+        targetName: box?.name,
+        canSearchHere: box != null,
+        // §10.3.5: how much of this place is left to turn over, so the panel can
+        // grey out a pass there is no longer room for.
+        searchUnitsLeft: box?.searchUnitsLeft ?? 0,
+        // §10.3.5: what each depth costs in seconds, here. A bin is not a
+        // supermarket, and the caption is where the player finds that out.
+        searchTimes: _searchTimesAt(box),
+        barrier: _barrierOn(box),
+        carried: _carriedIds(),
+        onSearchArea: _startAreaSearch,
+        onSearchHere: _startObjectSearch,
+        onBreach: _startBreach,
+        droppedLabel: _groundLabel(),
+        // Only with something actually underfoot. Found on a walk: the glyph
+        // stayed on the panel from anywhere, so "can I pick that up from here"
+        // was answered by pressing it and finding out.
+        onTakeDropped: _catalogue == null || _pilesInReach().isEmpty
+            ? null
+            : _openGround,
+        // §5.6.2: a round into the air. Offered whenever anything is in hand
+        // and refused *out loud* — it used to vanish on any of four
+        // conditions, which reads on a walk as "the button does not work".
+        onFireAway: _weapon == null ? null : () => unawaited(_fireAway()),
 
-          // §5.3, §4.2: what is in hand and what is in it, on the panel that is
-          // always there. Preparing a weapon is something done before anything is
-          // in front of you, and until now there was nowhere to do it.
-          weapon: _weapon == null ? null : _nameOfItem(_weapon!),
-          rounds: _loaded,
-          capacity: _weaponCapacity,
-          onReload: _weapon == null ? null : _startReload,
-          fittings: _weaponFittings(),
-          reload: _reloadProgress(),
-          onCancel: _cancelSearch,
-        );
-      },
+        // §5.3, §4.2: what is in hand and what is in it. Preparing a weapon
+        // happens before anything is in front of you.
+        weapon: _weapon == null ? null : _nameOfItem(_weapon!),
+        rounds: _loaded,
+        capacity: _weaponCapacity,
+        onReload: _weapon == null ? null : _startReload,
+        fittings: _weaponFittings(),
+        reload: _reloadProgress(),
+        onCancel: _cancelSearch,
+      ),
     );
   }
 
@@ -3357,13 +3358,18 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
   /// §9.1: a new character in the same body.
   Future<void> _startOver(ActiveCharacter dead) async {
+    // ⚠️ Held before the field is cleared. `_loop = null` and then
+    // `await _loop?.dispose()` disposed nothing: every restart leaked a whole
+    // GameLoop, timer and fix subscription still running beside the new one.
+    final dying = _loop;
+
     // The creator keeps height, weight, age and sex — it is still the player's
     // own body, and sitting through the measurements again would be theatre.
     setState(() {
       _character = null;
       _loop = null;
     });
-    await _loop?.dispose();
+    await dying?.dispose();
     if (mounted) await _boot();
   }
 
@@ -4016,22 +4022,15 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       onPause: (place) => unawaited(_pauseBuild(place)),
     );
 
-    if (search == null || !search.isRunning) {
-      if (lines.isEmpty && build == null) return null;
-
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (lines.isNotEmpty) ActionStrip(actions: lines),
-          ?build,
-        ],
-      );
-    }
+    // ⚠️ One column, not two nearly identical ones — the strip and the build
+    // bar were written out twice, which is two lists to keep in step.
+    final running = search != null && search.isRunning;
+    if (!running && lines.isEmpty && build == null) return null;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        ActionProgress(search: search, onCancel: _cancelSearch),
+        if (running) ActionProgress(search: search, onCancel: _cancelSearch),
         if (lines.isNotEmpty) ActionStrip(actions: lines),
         ?build,
       ],
@@ -6021,6 +6020,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     _position.dispose();
     _actions?.dispose();
     _craftJob.removeListener(_onBenchChanged);
+    _learned.skills.removeListener(_tellLoopWhatWeKnow);
     _notices.dispose();
     _controllers.dispose();
     super.dispose();
