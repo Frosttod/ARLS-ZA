@@ -1433,6 +1433,11 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final catalogue = _catalogue;
     if (character == null || catalogue == null) return;
 
+    // §18.2: read the shelves in while standing at them, so "full" is an
+    // answer this screen can give before the tap rather than after it.
+    if (_shelvesInReach()) await _loadShelvesOfMain();
+    if (!mounted) return;
+
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => InventoryScreen(
@@ -3351,8 +3356,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     if (character == null || catalogue == null) return;
 
     // §18.2: the shelves, before the screen rather than behind a tap. What is
-    // on them decides whether a module can be started, so the screen that
-    // offers the module has to know.
+    // on them decides whether a module can be started.
     await _loadShelvesOfMain();
     if (!mounted) return;
 
@@ -3494,9 +3498,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// apart with a multitool — the ratio is the point, not the number. Pulling a
   /// workshop down to build a lounge should be possible and should hurt.
   Future<void> _demolishModule(ShelterModule module) async {
-    final shelter = _shelters.value
-        .where((place) => place.kind == ShelterKind.main)
-        .firstOrNull;
+    final shelter = _mainShelter();
     if (shelter == null || shelter.building != null) return;
 
     final level = shelter.levelOf(module);
@@ -3589,9 +3591,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
   /// §8.4, §18.2: one level onto one module, against the clock.
   Future<void> _buildModule(ShelterModule module) async {
-    final shelter = _shelters.value
-        .where((place) => place.kind == ShelterKind.main)
-        .firstOrNull;
+    final shelter = _mainShelter();
     if (shelter == null || shelter.building != null) return;
 
     if (_refuseIfBusy()) return;
@@ -3777,6 +3777,13 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       case PackAction.stash:
         // §18.2: the one the player asked about. The shelves fill up, and
         // "full" is something they can answer by taking something off them.
+        //
+        // ⚠️ Only once they have actually been read. Unopened shelves hold
+        // nothing and have a capacity of nought, and "nought" reads as full —
+        // which refused every item on the pack screen while the shelves
+        // screen took the same one.
+        if (_shelf.openAt == null) return null;
+
         return _stash.value.fits(line, catalogue) ? null : l10n.stashFull;
 
       case PackAction.dismantle:
@@ -4033,9 +4040,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   ({_BenchInputs inputs, CraftBench bench, DateTime madeAt})? _benchCache;
 
   CraftBench _computeBench(DateTime now) {
-    final main = _shelters.value
-        .where((place) => place.kind == ShelterKind.main)
-        .firstOrNull;
+    final main = _mainShelter();
     final at = _standingAt.value;
 
     final counts = {..._carriedCounts()};
@@ -4518,9 +4523,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// §18.2: reads the shelves of the main shelter in.
   Future<void> _loadShelvesOfMain() async {
     final catalogue = _catalogue;
-    final main = _shelters.value
-        .where((place) => place.kind == ShelterKind.main)
-        .firstOrNull;
+    final main = _mainShelter();
 
     if (catalogue == null || main == null) {
       // ⚠️ Closed rather than emptied. With no shelter open there is nothing
@@ -4629,12 +4632,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// the shelter to put four things away meant four trips through the shelves
   /// screen, and the shelves screen exists to *take things out*.
   Future<void> _quickShelve(CarriedItem line) async {
-    final character = _character;
     final catalogue = _catalogue;
-    final main = _shelters.value
-        .where((place) => place.kind == ShelterKind.main)
-        .firstOrNull;
-    if (character == null || catalogue == null || main == null) return;
+    final main = _mainShelter();
+    if (catalogue == null || main == null) return;
 
     final at = _standingAt.value;
     if (at == null || !main.atSite(at)) {
@@ -4642,26 +4642,25 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       return;
     }
 
-    final moved = _stash.value.put(line, catalogue);
-    if (!moved.moved) {
-      _say(L10n.of(context).stashFull);
+    final left = await _shelf.shelve(
+      line,
+      place: main,
+      catalogue: catalogue,
+      from: _inventory.value,
+    );
+    if (left == null) {
+      if (mounted) _say(L10n.of(context).stashFull);
       return;
     }
 
-    final left = _inventory.value.removeLine(line, count: line.count);
-    if (left == null) return;
-
-    // Off the pack only once it is on the shelf: a half-applied move is an
-    // item that exists twice or not at all.
-    _stash.value = moved.stash;
     _inventory.value = left;
-
-    // ⚠️ Against the main shelter rather than [StashController.openAt]: this
-    // is reached from the pack screen, where the shelves themselves were
-    // never opened.
-    await _shelf.saveTo(main);
     await _saveInventory();
   }
+
+  /// §8.1: the one shelter a run has, or null before it is built.
+  Shelter? _mainShelter() => _shelters.value
+      .where((place) => place.kind == ShelterKind.main)
+      .firstOrNull;
 
   /// Whether the shelves are within arm's reach right now (§18.2).
   bool _shelvesInReach() {
@@ -4679,24 +4678,23 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final place = _openShelves;
     if (catalogue == null || place == null) return;
 
-    final moved = _stash.value.put(line, catalogue);
-    if (!moved.moved) {
+    // ⚠️ The copy that was pointed at, not any copy with that id — two knives
+    // at different conditions are two different things to own, exactly as
+    // §4.8's dropping already treats them. The same one move [_quickShelve]
+    // makes: two screens each running their own put() is two screens that
+    // disagree the next time either is edited.
+    final left = await _shelf.shelve(
+      line,
+      place: place,
+      catalogue: catalogue,
+      from: _inventory.value,
+    );
+    if (left == null) {
       if (mounted) _say(L10n.of(context).stashFull);
       return;
     }
 
-    // ⚠️ The copy that was pointed at, not any copy with that id — two knives
-    // at different conditions are two different things to own, exactly as
-    // §4.8's dropping already treats them.
-    final left = _inventory.value.removeLine(line, count: line.count);
-    if (left == null) return;
-
-    // ⚠️ Off the shelf only once it is on it. The two lists are one decision,
-    // and a half-applied move is an item that exists twice or not at all.
-    _stash.value = moved.stash;
     _inventory.value = left;
-
-    await _saveShelf();
     await _saveInventory();
   }
 
@@ -6005,9 +6003,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// §18.1a: puts what would not fit onto the shelves of the main shelter.
   Future<void> _shelveSpill(Map<String, int> spill) async {
     final catalogue = _catalogue;
-    final main = _shelters.value
-        .where((place) => place.kind == ShelterKind.main)
-        .firstOrNull;
+    final main = _mainShelter();
     if (catalogue == null || main == null) return;
 
     await _shelf.spill(spill, main, catalogue);

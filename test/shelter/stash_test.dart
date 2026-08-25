@@ -435,4 +435,20 @@ void main() {
       expect(await db.stashFor(profileId, house.id), isEmpty);
     });
   });
+
+  test('§18.2: an unopened shelf is empty, and empty is not full', () {
+    // ⚠️ The reading that produced the field report. A controller starts with
+    // `Stash(capacityKg: 0)` — correct, because it has not read anything yet —
+    // and [Stash.fits] against nought is quite properly false. The bug was
+    // never here: it was every screen that asked this question before the
+    // shelves had been read, and then showed the answer as a rule about space.
+    const unread = Stash(capacityKg: 0);
+
+    expect(unread.lines, isEmpty);
+    expect(
+      unread.fits(const CarriedItem(itemId: 'mat_metal', count: 1), catalogue),
+      isFalse,
+      reason: 'nought capacity is full, and that is why nobody may ask yet',
+    );
+  });
 }

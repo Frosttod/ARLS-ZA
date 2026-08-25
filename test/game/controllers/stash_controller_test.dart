@@ -174,4 +174,112 @@ void main() {
 
     expect(identical(shelf.stash, notifier), isTrue);
   });
+
+  group('§18.2: onto the shelves from a screen that never opened them', () {
+    // ⚠️ **The asymmetry reported from the field.** Magazyn → Ekwipunek worked
+    // and Ekwipunek → Magazyn did not, while the *same item* moved happily
+    // from the shelves screen. The shelves screen had opened the shelves; the
+    // pack screen had not, so it was asking questions of the empty stash a
+    // controller starts with — capacity nought, which [Stash.fits] correctly
+    // reads as full. Every item, refused, with a message that looked like a
+    // rule about space.
+    const spanner = CarriedItem(itemId: 'tool_multitool', count: 1);
+
+    test('the shelves are read in first, whoever asks', () async {
+      expect(shelf.openAt, isNull, reason: 'nobody has opened them');
+
+      final left = await shelf.shelve(
+        spanner,
+        place: home,
+        catalogue: catalogue,
+        from: const Inventory(carried: [spanner]),
+      );
+
+      expect(left?.carried, isEmpty);
+      expect(shelf.shelves.lines.single.itemId, 'tool_multitool');
+    });
+
+    test('and what was already on them is still there afterwards', () async {
+      // ⚠️ The half of this that was never a refusal but a loss. Had a move
+      // got past the capacity of nought, `saveTo` would have written the empty
+      // stash plus one item back over the real shelves as their contents.
+      await shelf.open(home, catalogue);
+      await shelf.shelve(
+        const CarriedItem(itemId: 'mat_metal', count: 3),
+        place: home,
+        catalogue: catalogue,
+        from: const Inventory(
+          carried: [CarriedItem(itemId: 'mat_metal', count: 3)],
+        ),
+      );
+      shelf.close();
+
+      await shelf.shelve(
+        spanner,
+        place: home,
+        catalogue: catalogue,
+        from: const Inventory(carried: [spanner]),
+      );
+
+      expect(
+        shelf.shelves.lines.map((line) => line.itemId),
+        containsAll(<String>['mat_metal', 'tool_multitool']),
+      );
+      expect(await db.stashFor(profileId, home.id), hasLength(2));
+    });
+
+    test('it is on disk before the pack is told anything', () async {
+      await shelf.shelve(
+        spanner,
+        place: home,
+        catalogue: catalogue,
+        from: const Inventory(carried: [spanner]),
+      );
+
+      expect(await db.stashFor(profileId, home.id), hasLength(1));
+    });
+
+    test('a shelf with no room refuses, and takes nothing', () async {
+      await shelf.open(home, catalogue);
+      shelf.shelves = const Stash(capacityKg: 0);
+
+      final left = await shelf.shelve(
+        spanner,
+        place: home,
+        catalogue: catalogue,
+        from: const Inventory(carried: [spanner]),
+      );
+
+      expect(left, isNull, reason: 'null is the refusal');
+      expect(shelf.shelves.lines, isEmpty);
+    });
+
+    test('and the game actually goes through it', () {
+      // ⚠️ Source-level, because [shelve] could be perfect and the pack screen
+      // still put things away against its own copy of an empty stash — which
+      // is exactly what it was doing.
+      final main = File('lib/main.dart').readAsStringSync();
+
+      expect(main.contains('_shelf.shelve('), isTrue);
+      expect(
+        main.contains('_stash.value.put('),
+        isFalse,
+        reason: 'a screen is moving things onto shelves it never opened',
+      );
+      expect(
+        main.contains('if (_shelf.openAt == null) return null;'),
+        isTrue,
+        reason: 'unread shelves are answering "full" again',
+      );
+    });
+
+    test('opening the same shelves twice does not read them twice', () async {
+      await shelf.open(home, catalogue);
+      final before = shelf.shelves;
+
+      await shelf.ensureOpen(home, catalogue);
+
+      expect(identical(shelf.shelves, before), isTrue);
+    });
+  });
 }

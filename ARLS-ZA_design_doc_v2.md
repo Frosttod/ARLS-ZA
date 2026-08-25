@@ -714,6 +714,8 @@ XP = strony × XP_na_stronę
 - **Craftingowe:** materiały ze zwłok i lootboxów
 - **Użytkowe:** realistyczne czasy — kanapka 60–90 s, 500 ml wody 25 s, staza 45 s, opatrunek uciskowy 90 s, szycie rany 12–20 min
 
+⚠️ **Półki trzeba wczytać, zanim się o nie zapyta.** `StashController` startuje z pustym magazynem o pojemności 0 — to poprawny domyślny stan, bo nic jeszcze nie odczytał — ale `Stash.fits` przy pojemności 0 słusznie zwraca `false`, czyli „pełny". Ekran ekwipunku pytał o to, nie otwarłszy półek, i odrzucał **każdy** przedmiot komunikatem wyglądającym jak reguła o miejscu, podczas gdy ekran półek brał ten sam przedmiot bez problemu. Każde przeniesienie na półkę idzie teraz jedną drogą — `StashController.shelve()` — która sama je otwiera.
+
 ### 4.8. Porzucone przedmioty
 
 Widoczne na mapie, znikają po 24 h. Limit 50 aktywnych znaczników — po przekroczeniu usuwane są najstarsze (ochrona przed zaśmieceniem bazy i mapy).

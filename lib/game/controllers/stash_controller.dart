@@ -72,6 +72,55 @@ class StashController extends ChangeNotifier {
     shelves = await StashStore(_db).load(profileId, place, catalogue);
   }
 
+  /// Reads them in unless these very shelves are already open.
+  ///
+  /// ⚠️ **The shelves are empty and hold nothing until somebody opens them.**
+  /// That is the right default — a controller that guessed at what is on a
+  /// shelf it has not read would be worse — but it makes every question asked
+  /// before the read come back wrong, and wrong in the direction that looks
+  /// like a rule: [Stash.fits] against a capacity of nought is "full", so the
+  /// pack screen refused to shelve anything at all while the shelves screen
+  /// took the same item happily. Anything that acts on the shelves without
+  /// having opened them asks for this first.
+  Future<void> ensureOpen(Shelter place, ItemCatalogue catalogue) async {
+    if (_openAt?.id == place.id) return;
+
+    await open(place, catalogue);
+  }
+
+  /// §18.2: out of a pack and onto [place]'s shelves, written down.
+  ///
+  /// Returns what is left in the pack, or null when the shelves refuse it.
+  ///
+  /// ⚠️ **Opens them first, whether or not the caller did.** The pack screen
+  /// offers this without ever having been through the shelves screen, and a
+  /// move made against the empty stash a controller starts with would have
+  /// been saved back over the real shelves as their only contents.
+  ///
+  /// The pack side comes back rather than being changed here: [Inventory] has
+  /// a body behind it (§18.1a) and belongs to whoever owns that.
+  Future<Inventory?> shelve(
+    CarriedItem line, {
+    required Shelter place,
+    required ItemCatalogue catalogue,
+    required Inventory from,
+  }) async {
+    await ensureOpen(place, catalogue);
+
+    final moved = stash.value.put(line, catalogue);
+    if (!moved.moved) return null;
+
+    final left = from.removeLine(line, count: line.count);
+    if (left == null) return null;
+
+    // On the shelf before it is off the pack: a half-applied move is an item
+    // that exists twice or not at all.
+    shelves = moved.stash;
+    await saveTo(place);
+
+    return left;
+  }
+
   /// Forgets which shelves are open, leaving nothing to write to.
   void close() {
     _openAt = null;
