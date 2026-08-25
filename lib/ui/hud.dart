@@ -17,6 +17,7 @@ import '../inventory/inventory.dart' show kPocketCapacityL;
 import '../l10n/app_localizations.dart';
 import 'effects.dart';
 import 'status_notes.dart';
+import 'ticking.dart';
 import '../sim/physiology.dart';
 import '../sim/tick.dart';
 import '../game/game_loop.dart' show GameSnapshot;
@@ -238,7 +239,7 @@ class Hud extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 6),
-              _Sky(at: state.lastUpdate, twilight: twilight, colours: colours),
+              _Sky(twilight: twilight, colours: colours),
               const SizedBox(height: 6),
               _StatusRow(
                 status: status,
@@ -282,18 +283,40 @@ class Hud extends StatelessWidget {
 ///
 /// The clock is local and the run is real time (§16.4), so this is the
 /// player's own watch — which is the point. It is their evening being spent.
-class _Sky extends StatelessWidget {
-  const _Sky({required this.at, required this.twilight, required this.colours});
+class _Sky extends StatefulWidget {
+  const _Sky({required this.twilight, required this.colours});
 
-  final DateTime at;
   final ({Duration left, bool untilDark})? twilight;
   final HudColors colours;
 
   @override
+  State<_Sky> createState() => _SkyState();
+}
+
+class _SkyState extends State<_Sky> with WidgetsBindingObserver, Ticking {
+  /// ⚠️ **The device clock, not `state.lastUpdate`.** The simulation's stamp
+  /// is the last *trusted* tick: §2.1.1 clamps an absurd gap and holds the
+  /// stamp outright when the system clock goes backwards, and §3.3 throttles
+  /// the cadence to a minute in economy mode. All three are right for
+  /// physiology and all three make a wall clock wrong — a panel reading it
+  /// drifted behind the phone's own clock and never caught up.
+  ///
+  /// So the time of day is read straight off the device, on its own tick.
+  @override
+  bool get ticking => true;
+
+  /// A minute is the resolution on screen; twenty seconds keeps it close
+  /// enough to the phone without waking the app every second for a digit that
+  /// moves once in sixty.
+  @override
+  Duration get tickEvery => const Duration(seconds: 20);
+
+  @override
   Widget build(BuildContext context) {
+    final colours = widget.colours;
     final l10n = L10n.of(context);
-    final local = at.toLocal();
-    final sky = twilight;
+    final local = DateTime.now();
+    final sky = widget.twilight;
 
     return Row(
       children: [

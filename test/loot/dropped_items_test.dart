@@ -1,5 +1,8 @@
+import 'dart:io';
+import 'dart:math';
 import 'package:arls_za/data/db/database.dart';
 import 'package:arls_za/loot/dropped_items.dart';
+import 'package:arls_za/loot/search.dart' show kStillnessM;
 import 'package:arls_za/loot/dropped_store.dart';
 import 'package:arls_za/map/geometry.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -203,6 +206,64 @@ void main() {
     });
   });
 
+  test('§10.2: and the game actually scatters what a search turns up', () {
+    // ⚠️ Source-level, because scatteredFrom() could be perfect and the search
+    // still drop everything on the pin — which is the defect this project
+    // keeps finding: a function that works and nothing calls.
+    final main = File('lib/main.dart').readAsStringSync();
+
+    expect(main.contains('store.dropScattered('), isTrue);
+    expect(
+      main.contains('position: box.position,'),
+      isFalse,
+      reason: 'a haul is still landing on one point',
+    );
+  });
+
+  group('§10.2: a search scatters what it turns up', () {
+    const box = GeoPoint(52.4084, 16.9342);
+
+    test('never onto the point the place is drawn at', () {
+      // ⚠️ Everything a place gave up used to land on the box's own
+      // coordinates, so fourteen things shared one position — the map drew a
+      // single dot with a number on it and the ground read like a vending
+      // machine tray.
+      for (var seed = 0; seed < 50; seed++) {
+        final at = scatteredFrom(box, Random(seed));
+
+        expect(at.distanceTo(box), greaterThan(0.5), reason: 'seed $seed');
+      }
+    });
+
+    test('a metre to three, and never further', () {
+      final (near, far) = kSearchScatterM;
+
+      for (var seed = 0; seed < 200; seed++) {
+        final metres = scatteredFrom(box, Random(seed)).distanceTo(box);
+
+        expect(metres, greaterThanOrEqualTo(near - 0.01));
+        expect(metres, lessThanOrEqualTo(far + 0.01));
+      }
+    });
+
+    test('and everything it scatters is still within arm reach (§4.8)', () {
+      // The scatter has to separate them without putting any of them out of
+      // range of the player standing where they searched.
+      final (_, far) = kSearchScatterM;
+
+      expect(far, lessThan(kStillnessM));
+    });
+
+    test('in a direction nobody chose', () {
+      final bearings = {
+        for (var seed = 0; seed < 40; seed++)
+          (scatteredFrom(box, Random(seed)).latitude > box.latitude),
+      };
+
+      expect(bearings, hasLength(2), reason: 'they all went the same way');
+    });
+  });
+
   group('what is underfoot, as one list (§4.8)', () {
     // A player standing where they emptied their pack has a heap, and the
     // panel could only ever offer them the nearest thing in it. Getting the
@@ -227,7 +288,12 @@ void main() {
       droppedAt: DateTime.utc(2026, 8, 15, 12),
     );
 
-    test('three drops of one thing read as one pile of three', () {
+    test('three drops of one thing are three things on the ground', () {
+      // ⚠️ They used to be merged into "Bandaż ×3", and that was written when
+      // a search dropped everything on a single point — where merging was the
+      // only thing that made the list readable. Now §10.2 scatters a haul over
+      // a metre to three, and merging hides exactly what the scatter is for:
+      // which of them is two metres away and which is fourteen.
       final piles = pilesWithin(
         [
           lying('med_bandage', id: 1),
@@ -238,9 +304,13 @@ void main() {
         reachM: 15,
       );
 
-      expect(piles, hasLength(1));
-      expect(piles.single.count, 3);
-      expect(piles.single.parts, hasLength(3));
+      expect(piles, hasLength(3));
+      expect(piles.map((pile) => pile.count), everyElement(1));
+      expect(
+        piles.map((pile) => pile.distanceM.round()),
+        [0, 2, 4],
+        reason: 'each keeps the coordinates it was dropped at',
+      );
     });
 
     test('a stack counts as what is in it, not as one row', () {
@@ -285,7 +355,7 @@ void main() {
       expect(piles.first.distanceM, lessThan(2));
     });
 
-    test('and a pile is as far away as its nearest piece', () {
+    test('and each says how far away it actually is', () {
       final piles = pilesWithin(
         [
           lying('med_bandage', id: 1, metres: 10),
@@ -295,8 +365,23 @@ void main() {
         reachM: 15,
       );
 
-      expect(piles.single.distanceM, closeTo(3, 0.5));
-      expect(piles.single.parts.first.id, 2, reason: 'nearest is taken first');
+      expect(piles, hasLength(2));
+      expect(piles.first.distanceM, closeTo(3, 0.5));
+      expect(piles.first.parts.single.id, 2, reason: 'nearest first');
+      expect(piles.last.distanceM, closeTo(10, 0.5));
+    });
+
+    test('and nothing past the fifteen metres §10.2.1 reaches', () {
+      final piles = pilesWithin(
+        [
+          lying('med_bandage', id: 1, metres: 14),
+          lying('med_bandage', id: 2, metres: 16),
+        ],
+        here,
+        reachM: 15,
+      );
+
+      expect(piles.single.parts.single.id, 1);
     });
 
     test('what is out of reach is not on the list', () {
@@ -348,7 +433,7 @@ void main() {
       expect(piles, hasLength(2));
     });
 
-    test('and two identical ones are one', () {
+    test('and two identical ones are still two things two metres apart', () {
       final piles = pilesWithin(
         [
           rifle(attachments: const ['att_red_dot']),
@@ -358,9 +443,11 @@ void main() {
         reachM: 20,
       );
 
-      expect(piles, hasLength(1));
-      expect(piles.single.count, 2);
-      expect(piles.single.attachments, ['att_red_dot']);
+      expect(piles, hasLength(2));
+      expect(
+        piles.map((pile) => pile.attachments),
+        everyElement(['att_red_dot']),
+      );
     });
 
     test('a pile carries what is on it', () {

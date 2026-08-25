@@ -2062,15 +2062,16 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final catalogue = _catalogue;
     if (catalogue == null) return;
 
-    final here = ValueNotifier(where);
+    // §4.8: measured from the player, never from the dot — the question is
+    // "what can I reach from here", not "what is near that pin".
+    final here = ValueNotifier(_standingAt.value ?? where);
     try {
       await showGroundItems(
         context,
         dropped: _dropped,
         at: here,
-        // The same radius §4.8 gathers a dot from, so the list holds exactly
-        // what the dot stands for.
-        reachM: kClusterM,
+        // §10.2.1's own radius, so what is listed is what can be picked up.
+        reachM: kStillnessM,
         catalogue: catalogue,
         names: _names ?? ItemNames.empty,
         onTake: (pile) => unawaited(_takePileFrom(pile, where)),
@@ -5626,15 +5627,14 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         continue;
       }
 
-      await store.drop(
+      // §10.2: a metre to three from the place, never all on its pin.
+      await store.dropScattered(
         character.profile.id,
-        DroppedItem(
-          id: 0,
-          itemId: entry.key,
-          count: entry.value,
-          position: box.position,
-          droppedAt: now,
-        ),
+        itemId: entry.key,
+        count: entry.value,
+        from: box.position,
+        random: random,
+        now: now,
       );
       found[entry.key] = entry.value;
     }
@@ -5654,7 +5654,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     if (!mounted) return;
 
     // §3.6.1: where the evening went, and what came of it.
-    unawaited(_diary.searched(box.name ?? table.id, found: found, at: now));
+    unawaited(_diary.searched(table.id, name: box.name, found: found, at: now));
 
     if (found.isEmpty) {
       _say(L10n.of(context).searchFoundNothing);

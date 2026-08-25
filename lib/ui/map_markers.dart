@@ -483,10 +483,12 @@ List<MapMarker> clusterMarkers(
     if (taken[i]) continue;
     final first = markers[i];
 
-    // ⚠️ Never enemies. A pile of kit is one thing to pick up; two Walkers
-    // are two things to shoot, and folding them into one dot with a "2" on it
-    // takes away the only way to aim at either.
-    if (first.kind == MarkerKind.enemy) {
+    // ⚠️ Never enemies, and never dropped kit. Two Walkers are two things to
+    // shoot, and folding them into one dot with a "2" on it takes away the
+    // only way to aim at either. §10.2 scatters a haul over a metre to three
+    // for the same reason: a dot standing for fourteen things says where none
+    // of them is, and the walk to each of them is the game.
+    if (first.kind == MarkerKind.enemy || first.kind == MarkerKind.dropped) {
       clustered.add(first);
       continue;
     }

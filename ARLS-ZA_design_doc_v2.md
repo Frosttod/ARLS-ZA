@@ -487,7 +487,7 @@ Gra zachęca do biegania po mieście, często po zmroku, z telefonem w ręku. Le
 
 **Górny pasek (HUD)** — zawsze widoczny, minimalistyczny:
 
-- **Godzina (lokalna) i ile zostało do zmierzchu/świtu** — §17.2. ⚠️ Zasady nocy wchodzą naraz: §10.2.2 połowi promień zwiadu, §17.4 daje każdemu szwędaczowi piątą część zasięgu więcej, §5.6.1 niesie strzał o jedną trzecią dalej. Nic z tego nie widać, dopóki się nie stanie — półtorej godziny ostrzeżenia to różnica między powrotem do domu a złapaniem w terenie
+- **Godzina (lokalna, prosto z zegara urządzenia) i ile zostało do zmierzchu/świtu** — §17.2. ⚠️ **Nie `state.lastUpdate`** — stempel symulacji to ostatni *zaufany* tick: §2.1.1 obcina absurdalną przerwę i **trzyma** stempel, gdy zegar systemowy cofnie się, a §3.3 dławi kadencję do minuty w trybie oszczędnym. Wszystkie trzy są słuszne dla fizjologii i wszystkie trzy psują zegar ścienny — panel czytający stempel dryfował za telefonem i nigdy nie nadrabiał. ⚠️ Zasady nocy wchodzą naraz: §10.2.2 połowi promień zwiadu, §17.4 daje każdemu szwędaczowi piątą część zasięgu więcej, §5.6.1 niesie strzał o jedną trzecią dalej. Nic z tego nie widać, dopóki się nie stanie — półtorej godziny ostrzeżenia to różnica między powrotem do domu a złapaniem w terenie
 - Poziom krwi (% + ikona, zmiana koloru przy klasie II+)
 - Aktywne statusy (krwawienie, zmęczenie, odwodnienie) — ikony
 - Woda / kalorie — dwa cienkie paski
@@ -526,6 +526,7 @@ Zasady:
 | **Od najnowszego**, w obie strony | Log na telefonie czyta się jak listę połączeń |
 | To samo dwa razy w ciągu 2 minut = **jeden wpis** | Trzy strzały do tego samego szwędacza to jedna walka |
 | Limit **400 wpisów** | Spacer pisze wpis co kilka minut, a passa ma trwać miesiącami (§13.1) |
+| Miejsce ma **id tabeli i własną nazwę**, obie na dysku | OSM nazywa większość sklepów i nic poza tym. Zapis samej istniejącej połówki wstawiał `poi_school` do pamiętnika gracza; zapis *wyrenderowanej* nazwy wstawiłby polszczyznę na dysk (§1.1). Ekran decyduje |
 | Ekran pokazuje **ostatnie 7 dni** | 400 wpisów to ile się *trzyma*; miesiąc na jednej liście to coś, do czego nikt nie doscrolluje |
 | Praca zapisuje się **na starcie i na końcu** | Rozbiórka trwa pół godziny, moduł schronu — dni. Log, który zapisywał tylko ukończenie, nic nie mówił o wieczorze, w którym gracz je zaczął |
 | Sięgnięcie po coś w nocy to **najpierw pobudka** | Symulacja zauważa dopiero na następnym ticku, więc bez tego log czyta się „sen, picie, pobudka" — kolejność, której nikt nie przeżył. Rzeczy dziejące się *bez* postaci (moduł na własnym zegarze §8.3, utrata przytomności, awans) nie budzą |
@@ -716,6 +717,16 @@ XP = strony × XP_na_stronę
 ### 4.8. Porzucone przedmioty
 
 Widoczne na mapie, znikają po 24 h. Limit 50 aktywnych znaczników — po przekroczeniu usuwane są najstarsze (ochrona przed zaśmieceniem bazy i mapy).
+
+**Każdy przedmiot ma własne współrzędne i własny znacznik.**
+
+| Zasada | Wartość | Dlaczego |
+| :---- | :---- | :---- |
+| Rozrzut po przeszukaniu | **1–3 m** od punktu miejsca, losowy azymut | ⚠️ Wszystko, co miejsce oddało, lądowało na jednym punkcie: mapa rysowała jedną kropkę z liczbą, a ziemia czytała się jak taca automatu. Metr do trzech kładzie rzeczy tam, gdzie faktycznie leżały — na półce, pod ladą, w bagażniku |
+| Agregacja | **brak** | Rzędy scalały się po tym, czym były („Bandaż ×3"). Miało to sens, gdy przeszukanie zrzucało wszystko w jeden punkt — teraz scalanie ukrywa dokładnie to, po co jest rozrzut: który z nich leży pod nogami, a który czternaście metrów dalej |
+| Stos z licznikiem | rozbijany na sztuki przy zrzucie z przeszukania | Rząd z licznikiem to jedna pozycja dla iluś rzeczy — czyli dokładnie ten kształt, który rozrzut ma łamać |
+| Promień listy | **15 m** (`kStillnessM`), mierzone **od gracza** | Lista zbierana wokół znacznika odpowiadała na „co jest blisko tamtej pinezki". Pytanie osoby stojącej na ulicy brzmi „co stąd dosięgnę" — i to ten sam promień, w którym podnoszenie jest dozwolone |
+| Scalanie znaczników na mapie | nigdy dla porzuconych rzeczy (jak dla przeciwników) | Kropka stojąca za czternaście rzeczy nie mówi, gdzie jest żadna z nich, a marsz do każdej z osobna jest grą |
 
 ---
 

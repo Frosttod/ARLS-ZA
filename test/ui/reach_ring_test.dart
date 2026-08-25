@@ -80,23 +80,29 @@ void main() {
       at: GeoPoint(at.latitude + metres / metresPerDegreeLat, at.longitude),
     );
 
-    test('things on top of each other become one dot with a number', () {
+    test('dropped kit is never folded together (§10.2)', () {
+      // ⚠️ It used to be: fourteen rows in one place made fourteen overlapping
+      // circles, which is a smear rather than a map. That was written when a
+      // search dropped everything on the box's own pin. §10.2 scatters a haul
+      // over a metre to three now, and a dot standing for all of it says where
+      // none of them is — while the walk to each is the game.
       final clustered = clusterMarkers([
         dropped('a', 0),
         dropped('b', 4),
         dropped('c', 9),
       ]);
 
-      expect(clustered, hasLength(1));
-      expect(clustered.single.count, 3);
+      expect(clustered, hasLength(3));
+      expect(clustered.every((marker) => marker.count == 1), isTrue);
     });
 
-    test('and the dot stays on one of them, not between them', () {
+    test('and each dot stays exactly where its thing is', () {
       // A marker that drifts to the average of a group ends up in the middle
       // of a road, pointing at nothing.
       final clustered = clusterMarkers([dropped('a', 0), dropped('b', 10)]);
 
-      expect(clustered.single.at.latitude, closeTo(at.latitude, 1e-9));
+      expect(clustered.first.at.latitude, closeTo(at.latitude, 1e-9));
+      expect(clustered.last.at.latitude, greaterThan(at.latitude));
     });
 
     test('things a street apart stay apart', () {
@@ -141,14 +147,15 @@ void main() {
     });
 
     test('the reach ring survives the fold', () {
+      // Places still fold — a row of shelves in one shop is one dot — and the
+      // ring that says how far a search reaches has to come through with it.
       final clustered = clusterMarkers([
+        MapMarker(id: 'a', kind: MarkerKind.loot, at: at, reachM: kStillnessM),
         MapMarker(
-          id: 'a',
-          kind: MarkerKind.dropped,
-          at: at,
-          reachM: kStillnessM,
+          id: 'b',
+          kind: MarkerKind.loot,
+          at: GeoPoint(at.latitude + 3 / metresPerDegreeLat, at.longitude),
         ),
-        dropped('b', 3),
       ]);
 
       expect(clustered.single.reachM, kStillnessM);

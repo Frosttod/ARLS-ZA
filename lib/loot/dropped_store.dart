@@ -5,6 +5,8 @@ import '../inventory/inventory.dart';
 import 'package:drift/drift.dart' show Value;
 
 import '../data/db/database.dart';
+import 'dart:math';
+
 import '../map/geometry.dart';
 import 'dropped_items.dart';
 
@@ -46,6 +48,35 @@ class DroppedStore {
   }
 
   /// Puts something on the ground where the player is standing.
+  /// §10.2: what a search turned up, one piece at a time and none of them on
+  /// the same spot.
+  ///
+  /// ⚠️ **A piece, not a stack.** A row with a count on it is one position for
+  /// however many things are in it — which is the shape [kSearchScatterM]
+  /// exists to break. Three bandages out of a chemist are three places to
+  /// walk to.
+  Future<void> dropScattered(
+    int profileId, {
+    required String itemId,
+    required int count,
+    required GeoPoint from,
+    required Random random,
+    required DateTime now,
+  }) async {
+    for (var piece = 0; piece < count; piece++) {
+      await drop(
+        profileId,
+        DroppedItem(
+          id: 0,
+          itemId: itemId,
+          count: 1,
+          position: scatteredFrom(from, random),
+          droppedAt: now,
+        ),
+      );
+    }
+  }
+
   Future<void> drop(int profileId, DroppedItem item) => _db.addGroundItem(
     GroundItemsCompanion.insert(
       profileId: profileId,

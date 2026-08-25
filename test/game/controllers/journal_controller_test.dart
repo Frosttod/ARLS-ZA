@@ -121,7 +121,8 @@ void main() {
   group('§10.2, §4.7: what the game hands it', () {
     test('a search is two entries: the place, and the haul', () async {
       await diary.searched(
-        'Żabka',
+        'poi_grocery',
+        name: 'Żabka',
         found: {'med_bandage': 2, 'tool_knife': 1},
         at: t0,
       );
@@ -132,7 +133,8 @@ void main() {
         JournalKind.found,
         JournalKind.searched,
       ]);
-      expect(entries.last.subject, 'Żabka');
+      expect(placeSubject(entries.last.subject).name, 'Żabka');
+      expect(placeSubject(entries.last.subject).tableId, 'poi_grocery');
       expect(entries.first.subjects, [
         'med_bandage',
         'med_bandage',
@@ -140,8 +142,20 @@ void main() {
       ]);
     });
 
+    test('a place with no name of its own keeps its kind', () async {
+      // ⚠️ Reported from the field: "Przeszukanie: proc_waste". OSM names most
+      // shops and nothing else — a procedural spot has only the table it was
+      // drawn from, and that is an identifier, not a word.
+      await diary.searched('proc_waste', found: const {}, at: t0);
+
+      final found = placeSubject(diary.entries.value.last.subject);
+
+      expect(found.tableId, 'proc_waste');
+      expect(found.name, isNull);
+    });
+
     test('a place that gave up nothing is still a place walked into', () async {
-      await diary.searched('Żabka', found: const {}, at: t0);
+      await diary.searched('proc_waste', found: const {}, at: t0);
 
       expect(diary.entries.value, hasLength(2));
     });

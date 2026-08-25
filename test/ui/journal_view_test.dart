@@ -50,6 +50,37 @@ void main() {
       expect(lineFor(JournalKind.blackout), l10n.journalBlackout);
     });
 
+    test('a place is named, never printed as its table id', () {
+      // ⚠️ Reported from the field: "Przeszukanie: poi_school". The id is what
+      // the loot table is called; it is not a word in anybody's language.
+      final line = lineFor(
+        JournalKind.searched,
+        subject: 'poi_school$kPlaceSplit',
+      );
+
+      expect(line, isNot(contains('poi_school')));
+      expect(line, contains(l10n.placeSchool));
+    });
+
+    test('and its own name off the map wins when it has one', () {
+      final line = lineFor(
+        JournalKind.searched,
+        subject: 'poi_grocery$kPlaceSplitŻabka',
+      );
+
+      expect(line, contains('Żabka'));
+      expect(line, isNot(contains(l10n.placeGrocery)));
+    });
+
+    test('a comma in a shop name does not split it (§4.8)', () {
+      final line = lineFor(
+        JournalKind.searched,
+        subject: 'poi_grocery${kPlaceSplit}Groszek, Sklep',
+      );
+
+      expect(line, contains('Groszek, Sklep'));
+    });
+
     test('an enemy is named, not printed as its wire name', () {
       expect(lineFor(JournalKind.killed, subject: 'walker'), isNot('walker'));
     });

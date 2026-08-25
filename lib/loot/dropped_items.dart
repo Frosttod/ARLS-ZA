@@ -11,6 +11,8 @@
 /// carpeted in a fortnight of abandoned bandages.
 library;
 
+import 'dart:math';
+
 import '../inventory/inventory.dart';
 import '../map/geometry.dart';
 
@@ -121,7 +123,27 @@ DropSweep sweepDropped(List<DroppedItem> items, DateTime now) {
   );
 }
 
-/// One kind of thing lying within reach, however many rows of it there are.
+/// §10.2, §4.8: how far a search scatters what it turns up.
+///
+/// ⚠️ **Not one point.** Everything a place gave up used to land on the box's
+/// own coordinates, so fourteen things shared a single position — the map drew
+/// one dot with a number on it and the ground read like a vending machine
+/// tray. A metre to three puts them where they were actually found: on a
+/// shelf, under a counter, in a boot. Far enough to be separate things,
+/// near enough that §4.8's arm's length still reaches every one of them.
+const (double, double) kSearchScatterM = (1, 3);
+
+/// A point [kSearchScatterM] from [centre], in a direction nobody chose.
+GeoPoint scatteredFrom(GeoPoint centre, Random random) {
+  final (near, far) = kSearchScatterM;
+
+  return centre.offsetBy(
+    metres: near + random.nextDouble() * (far - near),
+    bearingDeg: random.nextDouble() * 360,
+  );
+}
+
+/// One thing lying within reach.
 ///
 /// §4.8 stores a row per drop, so three bandages put down on three walks are
 /// three rows in one spot. To the player standing over them that is one pile
@@ -177,47 +199,30 @@ class GroundPile {
   final List<String> attachments;
 }
 
-/// Everything within [reachM] of [at], gathered into piles, nearest first.
+/// Everything within [reachM] of [at], nearest first.
+///
+/// ⚠️ **One row, one entry.** Rows used to be merged by what they were — three
+/// bandages in one spot became "Bandaż ×3" — and that was written when a
+/// search dropped everything on a single point, where merging was the only
+/// thing that made the list readable. Now that a search scatters
+/// ([kSearchScatterM]), merging hides exactly what the scatter is for: which
+/// of them is two metres away and which is fourteen. Each keeps its own
+/// coordinates and its own line.
 List<GroundPile> pilesWithin(
   List<DroppedItem> items,
   GeoPoint at, {
   required double reachM,
-}) {
-  final near =
-      items
-          .map((item) => (item: item, distance: item.position.distanceTo(at)))
-          .where((entry) => entry.distance <= reachM)
-          .toList()
-        ..sort((a, b) => a.distance.compareTo(b.distance));
-
-  final piles = <String, List<({DroppedItem item, double distance})>>{};
-  for (final entry in near) {
-    // Anything that tells one piece from another keeps them apart: condition,
-    // and how far through a book somebody is.
-    final key = [
-      entry.item.itemId,
-      entry.item.condition ?? '',
-      entry.item.pagesTotal ?? '',
-      entry.item.pagesRead,
-      // §5.6.3: a suppressed rifle and a bare one are two piles, however alike
-      // the rest of them is. Merging them would let a player pick up the wrong
-      // one, which for the rarest things in the game is not a small mistake.
-      entry.item.attachments.join(','),
-    ].join('|');
-    piles.putIfAbsent(key, () => []).add(entry);
-  }
-
-  return [
-    for (final group in piles.values)
+}) => [
+  for (final item in items)
+    if (item.position.distanceTo(at) <= reachM)
       GroundPile(
-        itemId: group.first.item.itemId,
-        count: group.fold(0, (sum, entry) => sum + entry.item.count),
-        parts: [for (final entry in group) entry.item],
-        distanceM: group.first.distance,
-        condition: group.first.item.condition,
-        pagesTotal: group.first.item.pagesTotal,
-        pagesRead: group.first.item.pagesRead,
-        attachments: group.first.item.attachments,
+        itemId: item.itemId,
+        count: item.count,
+        parts: [item],
+        distanceM: item.position.distanceTo(at),
+        condition: item.condition,
+        pagesTotal: item.pagesTotal,
+        pagesRead: item.pagesRead,
+        attachments: item.attachments,
       ),
-  ]..sort((a, b) => a.distanceM.compareTo(b.distanceM));
-}
+]..sort((a, b) => a.distanceM.compareTo(b.distanceM));

@@ -597,16 +597,22 @@ void main() {
   });
 
   group('§17.2, §12: the sky, in the panel', () {
-    testWidgets('the clock is local, and the player own watch', (tester) async {
-      // §16.4: this is real time and their real evening. A game clock would be
-      // a second time of day to keep track of, in a game whose whole premise
-      // is that there is only the one.
+    testWidgets('the clock is the phone own, not the simulation stamp', (
+      tester,
+    ) async {
+      // ⚠️ Reported from the field: the panel drifted behind the phone. The
+      // simulation's stamp is the last *trusted* tick — §2.1.1 clamps an
+      // absurd gap and holds the stamp outright when the system clock goes
+      // backwards, and §3.3 throttles the cadence to a minute in economy mode.
+      // All three are right for physiology and all three make a wall clock
+      // wrong. The state here is stamped 12:00 UTC on a day in August; the
+      // panel must still say what the device says.
       await pumpHud(tester, healthy());
 
-      final local = t0.toLocal();
+      final now = DateTime.now();
       final shown =
-          '${local.hour.toString().padLeft(2, '0')}:'
-          '${local.minute.toString().padLeft(2, '0')}';
+          '${now.hour.toString().padLeft(2, '0')}:'
+          '${now.minute.toString().padLeft(2, '0')}';
 
       expect(find.text(shown), findsOneWidget);
     });

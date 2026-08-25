@@ -95,12 +95,23 @@ class JournalController extends ChangeNotifier {
   /// bandaż ×2" answer different questions — where the evening went, and what
   /// there is to show for it — and a player who found nothing still walked
   /// into a shop.
+  /// ⚠️ **Both halves of what the place is called, and neither of them is
+  /// words.** A shop off the map has a name of its own ("Żabka") and a
+  /// procedural spot has none at all — only the table it was drawn from
+  /// (`poi_school`, `proc_waste`). Storing whichever one existed put table ids
+  /// in the player's diary; storing the *rendered* name would have put Polish
+  /// on disk (§1.1). So both go down, and the screen decides.
   Future<void> searched(
-    String place, {
+    String tableId, {
+    String? name,
     required Map<String, int> found,
     required DateTime at,
   }) async {
-    await add(JournalKind.searched, subject: place, at: at);
+    await add(
+      JournalKind.searched,
+      subject: '$tableId$kPlaceSplit${name ?? ''}',
+      at: at,
+    );
     await add(JournalKind.found, subject: _list(found), at: at);
   }
 

@@ -102,6 +102,20 @@ class JournalEntry {
       subject == null || subject!.isEmpty ? const [] : subject!.split(',');
 }
 
+/// What separates a place's table id from its own name in a subject.
+///
+/// ⚠️ Not a comma: [JournalEntry.subjects] splits hauls on those, and a shop
+/// called "Groszek, Sklep" would otherwise become two items.
+const String kPlaceSplit = '';
+
+/// A searched place, as the two things a screen needs to name it.
+({String tableId, String? name}) placeSubject(String? subject) {
+  final parts = (subject ?? '').split(kPlaceSplit);
+  final name = parts.length < 2 || parts[1].isEmpty ? null : parts[1];
+
+  return (tableId: parts.first, name: name);
+}
+
 /// §3.6.1: how many entries a run keeps.
 ///
 /// ⚠️ A cap rather than everything. A walk writes an entry every few minutes,

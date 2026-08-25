@@ -95,9 +95,13 @@ void main() {
     expect(find.text('Drewno'), findsOneWidget);
   });
 
-  testWidgets('three drops of one thing are one row, not three', (
+  testWidgets('three drops of one thing are three rows (§10.2)', (
     tester,
   ) async {
+    // ⚠️ They used to be one row reading "Bandaż ×3", and that was right when
+    // a search dropped everything on the same point. §10.2 scatters a haul
+    // over a metre to three now, and one row would hide which of them is at
+    // the player's feet and which is fourteen metres up the street.
     await open(
       tester,
       dropped: ValueNotifier([
@@ -107,8 +111,9 @@ void main() {
       ]),
     );
 
-    expect(find.text('Bandaż  ×3'), findsOneWidget);
-    expect(find.text('Podnieś'), findsOneWidget);
+    expect(find.text('Bandaż'), findsNWidgets(3));
+    expect(find.text('Bandaż  ×3'), findsNothing);
+    expect(find.text('Podnieś'), findsNWidgets(3));
   });
 
   testWidgets('each row says how far off and how worn it is', (tester) async {

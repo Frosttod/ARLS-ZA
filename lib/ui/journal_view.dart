@@ -22,6 +22,7 @@ import '../skills/skill.dart';
 import 'combat_panel.dart' show enemyKindName;
 import 'fonts.dart';
 import 'hud.dart' show HudColors;
+import 'map_markers.dart' show placeName;
 import 'names.dart';
 import 'shelter_screen.dart' show moduleName;
 
@@ -60,6 +61,14 @@ String journalLine(
     return parts.length < 2 ? name : '$name ${parts[1]}';
   }
 
+  /// §10.2: what the place is called — its own name off the map when it has
+  /// one, and what kind of place it is when it has not. The table id is never
+  /// shown: "Przeszukanie: proc_waste" is a defect report, not a diary.
+  String place() {
+    final found = placeSubject(entry.subject);
+    return found.name ?? placeName(l10n, found.tableId);
+  }
+
   /// §10.2: a haul is a list with counts on it, never fourteen separate lines.
   String haul() {
     final counted = <String, int>{};
@@ -77,7 +86,7 @@ String journalLine(
   }
 
   return switch (entry.kind) {
-    JournalKind.searched => l10n.journalSearched(entry.subject ?? ''),
+    JournalKind.searched => l10n.journalSearched(place()),
     JournalKind.found => counted(l10n, haul()),
     JournalKind.opened => l10n.journalOpened(entry.subject ?? ''),
     JournalKind.fought => l10n.journalFought(enemy()),
