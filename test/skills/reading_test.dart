@@ -178,6 +178,47 @@ void main() {
     });
   });
 
+  test('§4.6, §2.1a: and a book can actually be opened', () {
+    // ⚠️ Source-level, and this is the whole of faza C. `literature.json`
+    // has shipped eighteen titles since stage 4, `OccupationKind.reading` has
+    // existed as long, and nothing in the game ever started one: the path up
+    // §7's curve was dead weight in a pack. These are the five joints.
+    final main = File('lib/main.dart').readAsStringSync();
+    final pack = File('lib/ui/inventory_screen.dart').readAsStringSync();
+
+    // The pack offers it for a book, not only for §19.1's found paper.
+    expect(pack.contains('line.pagesTotal != null'), isTrue);
+
+    expect(main.contains('_readBook('), isTrue);
+    expect(main.contains('ActionKind.reading.name'), isTrue);
+
+    // §4.6.1: a page at a time, credited as it is read.
+    expect(main.contains('readOne(line)'), isTrue);
+    expect(main.contains('book.xpFor(1, copiesRead:'), isTrue);
+
+    // §4.6.3: and a finished copy is counted against the next one.
+    expect(main.contains('_read.finished('), isTrue);
+    expect(main.contains('_read.copiesOf('), isTrue);
+  });
+
+  test('§4.6.4: and the game actually rolls a copy its own length', () {
+    // ⚠️ Source-level, and this one was live for four stages. [CarriedItem]
+    // has computed a book's mass and bulk from `pagesTotal` since stage 4 —
+    // pages x g_per_page + cover_g, which is how an encyclopedia reaches two
+    // kilograms — and nothing in the game ever set the field. Every book found
+    // in the world weighed its catalogue's middling copy, and §4.6.4's whole
+    // "biore te ksiazke czy zostawiam" decision did not exist.
+    final store = File('lib/loot/dropped_store.dart').readAsStringSync();
+    final main = File('lib/main.dart').readAsStringSync();
+
+    expect(store.contains('book?.rollPages(random)'), isTrue);
+    expect(
+      main.contains('catalogue: catalogue,'),
+      isTrue,
+      reason: 'the drop cannot roll pages without knowing what it is dropping',
+    );
+  });
+
   test('§7.2.2: and the whole climb is still five hundred hours', () {
     // The figure §13.1 rests on: a maximum that is a myth rather than a
     // target. Read entirely off the shipped data, so a generous edit to a

@@ -635,6 +635,8 @@ Tempo bazowe: 220 słów/min, ~280 słów na stronę.
 
 ⚠️ Wartości XP odnoszą się do krzywej z §7.2 (`70 × p`, suma 353 500).
 
+⚠️ **Czytanie jest zajęciem (§2.1a) rozliczanym po jednej stronie.** Jedna strona to jeden `TimedAction` na dysku: proces ubity w połowie zdania kosztuje minutę, nie wieczór, a następna strona startuje sama. Strona jest jednocześnie jednostką pracy i jednostką informacji zwrotnej. Zaczyna się z ekwipunku — ta sama ikona, którą czyta się notatki (§19.1), pojawia się dla każdego egzemplarza z liczbą stron.
+
 #### 4.6.1. Przyrost ciągły — umiejętność rośnie w trakcie czytania
 
 ⚠️ **Nagroda dopiero po ukończeniu 40-godzinnej encyklopedii byłaby okrutna i nieczytelna.** Gracz musiałby przez wiele nocy inwestować czas bez żadnego sygnału zwrotnego.

@@ -69,6 +69,15 @@ enum ActionKind {
   tourniquet('staza', Duration(seconds: 45)),
   suturing('szycie rany', Duration(minutes: 16)),
   searching('przeszukanie', Duration(seconds: 45)),
+
+  /// §4.6.1: one page, about seventy-six seconds of it.
+  ///
+  /// ⚠️ A page rather than a book, and that is the whole design. §4.6.1
+  /// credits experience as it is read because a reward arriving only at the
+  /// end of a forty-hour encyclopedia is many nights with no signal at all —
+  /// so the unit of work is the unit of feedback, one page is one row on disk,
+  /// and a process killed mid-sentence costs a minute rather than an evening.
+  reading('lektura', Duration(seconds: 76)),
   reloading('przeładowanie', Duration(milliseconds: 3500)),
   shooting('strzał', Duration(milliseconds: 500));
 
@@ -83,6 +92,14 @@ enum ActionKind {
     ActionKind.searching || ActionKind.shooting || ActionKind.reloading => true,
     _ => false,
   };
+
+  /// §2.1a.3: whether this goes on with the app shut.
+  ///
+  /// Only reading. Everything else here needs hands or a place, and §2.1a.3 is
+  /// explicit that time nobody observed cannot be credited to either — but a
+  /// book read in a shelter is the shelter occupation §2.1a names, and a night
+  /// of it must survive the screen going off.
+  bool get ticksWhileClosed => this == ActionKind.reading;
 
   /// §4.7, §10.2: what the character's feet do to this.
   ///
@@ -104,6 +121,9 @@ enum ActionKind {
     ActionKind.searching ||
     ActionKind.reloading ||
     ActionKind.shooting => ActionPace.onTheSpot,
+
+    // §2.1a.3: a book goes on being read with the phone face down.
+    ActionKind.reading => ActionPace.unattended,
   };
 
   /// §4.7, §7.2.1: whether this is somebody working on a wound.

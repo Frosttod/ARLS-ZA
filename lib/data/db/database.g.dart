@@ -11625,6 +11625,270 @@ class JournalRowsCompanion extends UpdateCompanion<JournalRow> {
   }
 }
 
+class $ReadTitlesTable extends ReadTitles
+    with TableInfo<$ReadTitlesTable, ReadTitle> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ReadTitlesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _profileIdMeta = const VerificationMeta(
+    'profileId',
+  );
+  @override
+  late final GeneratedColumn<int> profileId = GeneratedColumn<int>(
+    'profile_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _itemIdMeta = const VerificationMeta('itemId');
+  @override
+  late final GeneratedColumn<String> itemId = GeneratedColumn<String>(
+    'item_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _copiesMeta = const VerificationMeta('copies');
+  @override
+  late final GeneratedColumn<int> copies = GeneratedColumn<int>(
+    'copies',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [profileId, itemId, copies];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'read_titles';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ReadTitle> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('profile_id')) {
+      context.handle(
+        _profileIdMeta,
+        profileId.isAcceptableOrUnknown(data['profile_id']!, _profileIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_profileIdMeta);
+    }
+    if (data.containsKey('item_id')) {
+      context.handle(
+        _itemIdMeta,
+        itemId.isAcceptableOrUnknown(data['item_id']!, _itemIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_itemIdMeta);
+    }
+    if (data.containsKey('copies')) {
+      context.handle(
+        _copiesMeta,
+        copies.isAcceptableOrUnknown(data['copies']!, _copiesMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {profileId, itemId};
+  @override
+  ReadTitle map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ReadTitle(
+      profileId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}profile_id'],
+      )!,
+      itemId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}item_id'],
+      )!,
+      copies: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}copies'],
+      )!,
+    );
+  }
+
+  @override
+  $ReadTitlesTable createAlias(String alias) {
+    return $ReadTitlesTable(attachedDatabase, alias);
+  }
+}
+
+class ReadTitle extends DataClass implements Insertable<ReadTitle> {
+  final int profileId;
+
+  /// The catalogue id, so a title outlives any rename of the thing it names.
+  final String itemId;
+
+  /// How many copies of it have been read to the last page.
+  final int copies;
+  const ReadTitle({
+    required this.profileId,
+    required this.itemId,
+    required this.copies,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['profile_id'] = Variable<int>(profileId);
+    map['item_id'] = Variable<String>(itemId);
+    map['copies'] = Variable<int>(copies);
+    return map;
+  }
+
+  ReadTitlesCompanion toCompanion(bool nullToAbsent) {
+    return ReadTitlesCompanion(
+      profileId: Value(profileId),
+      itemId: Value(itemId),
+      copies: Value(copies),
+    );
+  }
+
+  factory ReadTitle.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ReadTitle(
+      profileId: serializer.fromJson<int>(json['profileId']),
+      itemId: serializer.fromJson<String>(json['itemId']),
+      copies: serializer.fromJson<int>(json['copies']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'profileId': serializer.toJson<int>(profileId),
+      'itemId': serializer.toJson<String>(itemId),
+      'copies': serializer.toJson<int>(copies),
+    };
+  }
+
+  ReadTitle copyWith({int? profileId, String? itemId, int? copies}) =>
+      ReadTitle(
+        profileId: profileId ?? this.profileId,
+        itemId: itemId ?? this.itemId,
+        copies: copies ?? this.copies,
+      );
+  ReadTitle copyWithCompanion(ReadTitlesCompanion data) {
+    return ReadTitle(
+      profileId: data.profileId.present ? data.profileId.value : this.profileId,
+      itemId: data.itemId.present ? data.itemId.value : this.itemId,
+      copies: data.copies.present ? data.copies.value : this.copies,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ReadTitle(')
+          ..write('profileId: $profileId, ')
+          ..write('itemId: $itemId, ')
+          ..write('copies: $copies')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(profileId, itemId, copies);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ReadTitle &&
+          other.profileId == this.profileId &&
+          other.itemId == this.itemId &&
+          other.copies == this.copies);
+}
+
+class ReadTitlesCompanion extends UpdateCompanion<ReadTitle> {
+  final Value<int> profileId;
+  final Value<String> itemId;
+  final Value<int> copies;
+  final Value<int> rowid;
+  const ReadTitlesCompanion({
+    this.profileId = const Value.absent(),
+    this.itemId = const Value.absent(),
+    this.copies = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ReadTitlesCompanion.insert({
+    required int profileId,
+    required String itemId,
+    this.copies = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : profileId = Value(profileId),
+       itemId = Value(itemId);
+  static Insertable<ReadTitle> custom({
+    Expression<int>? profileId,
+    Expression<String>? itemId,
+    Expression<int>? copies,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (profileId != null) 'profile_id': profileId,
+      if (itemId != null) 'item_id': itemId,
+      if (copies != null) 'copies': copies,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ReadTitlesCompanion copyWith({
+    Value<int>? profileId,
+    Value<String>? itemId,
+    Value<int>? copies,
+    Value<int>? rowid,
+  }) {
+    return ReadTitlesCompanion(
+      profileId: profileId ?? this.profileId,
+      itemId: itemId ?? this.itemId,
+      copies: copies ?? this.copies,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (profileId.present) {
+      map['profile_id'] = Variable<int>(profileId.value);
+    }
+    if (itemId.present) {
+      map['item_id'] = Variable<String>(itemId.value);
+    }
+    if (copies.present) {
+      map['copies'] = Variable<int>(copies.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ReadTitlesCompanion(')
+          ..write('profileId: $profileId, ')
+          ..write('itemId: $itemId, ')
+          ..write('copies: $copies, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$SaveDatabase extends GeneratedDatabase {
   _$SaveDatabase(QueryExecutor e) : super(e);
   $SaveDatabaseManager get managers => $SaveDatabaseManager(this);
@@ -11650,6 +11914,7 @@ abstract class _$SaveDatabase extends GeneratedDatabase {
   late final $SkillRowsTable skillRows = $SkillRowsTable(this);
   late final $HotspotRowsTable hotspotRows = $HotspotRowsTable(this);
   late final $JournalRowsTable journalRows = $JournalRowsTable(this);
+  late final $ReadTitlesTable readTitles = $ReadTitlesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -11673,6 +11938,7 @@ abstract class _$SaveDatabase extends GeneratedDatabase {
     skillRows,
     hotspotRows,
     journalRows,
+    readTitles,
   ];
   @override
   DriftDatabaseOptions get options =>
@@ -17119,6 +17385,165 @@ typedef $$JournalRowsTableProcessedTableManager =
       JournalRow,
       PrefetchHooks Function()
     >;
+typedef $$ReadTitlesTableCreateCompanionBuilder =
+    ReadTitlesCompanion Function({
+      required int profileId,
+      required String itemId,
+      Value<int> copies,
+      Value<int> rowid,
+    });
+typedef $$ReadTitlesTableUpdateCompanionBuilder =
+    ReadTitlesCompanion Function({
+      Value<int> profileId,
+      Value<String> itemId,
+      Value<int> copies,
+      Value<int> rowid,
+    });
+
+class $$ReadTitlesTableFilterComposer
+    extends Composer<_$SaveDatabase, $ReadTitlesTable> {
+  $$ReadTitlesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get profileId => $composableBuilder(
+    column: $table.profileId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get itemId => $composableBuilder(
+    column: $table.itemId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get copies => $composableBuilder(
+    column: $table.copies,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ReadTitlesTableOrderingComposer
+    extends Composer<_$SaveDatabase, $ReadTitlesTable> {
+  $$ReadTitlesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get profileId => $composableBuilder(
+    column: $table.profileId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get itemId => $composableBuilder(
+    column: $table.itemId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get copies => $composableBuilder(
+    column: $table.copies,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ReadTitlesTableAnnotationComposer
+    extends Composer<_$SaveDatabase, $ReadTitlesTable> {
+  $$ReadTitlesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get profileId =>
+      $composableBuilder(column: $table.profileId, builder: (column) => column);
+
+  GeneratedColumn<String> get itemId =>
+      $composableBuilder(column: $table.itemId, builder: (column) => column);
+
+  GeneratedColumn<int> get copies =>
+      $composableBuilder(column: $table.copies, builder: (column) => column);
+}
+
+class $$ReadTitlesTableTableManager
+    extends
+        RootTableManager<
+          _$SaveDatabase,
+          $ReadTitlesTable,
+          ReadTitle,
+          $$ReadTitlesTableFilterComposer,
+          $$ReadTitlesTableOrderingComposer,
+          $$ReadTitlesTableAnnotationComposer,
+          $$ReadTitlesTableCreateCompanionBuilder,
+          $$ReadTitlesTableUpdateCompanionBuilder,
+          (
+            ReadTitle,
+            BaseReferences<_$SaveDatabase, $ReadTitlesTable, ReadTitle>,
+          ),
+          ReadTitle,
+          PrefetchHooks Function()
+        > {
+  $$ReadTitlesTableTableManager(_$SaveDatabase db, $ReadTitlesTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ReadTitlesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ReadTitlesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ReadTitlesTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> profileId = const Value.absent(),
+                Value<String> itemId = const Value.absent(),
+                Value<int> copies = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ReadTitlesCompanion(
+                profileId: profileId,
+                itemId: itemId,
+                copies: copies,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required int profileId,
+                required String itemId,
+                Value<int> copies = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ReadTitlesCompanion.insert(
+                profileId: profileId,
+                itemId: itemId,
+                copies: copies,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ReadTitlesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$SaveDatabase,
+      $ReadTitlesTable,
+      ReadTitle,
+      $$ReadTitlesTableFilterComposer,
+      $$ReadTitlesTableOrderingComposer,
+      $$ReadTitlesTableAnnotationComposer,
+      $$ReadTitlesTableCreateCompanionBuilder,
+      $$ReadTitlesTableUpdateCompanionBuilder,
+      (ReadTitle, BaseReferences<_$SaveDatabase, $ReadTitlesTable, ReadTitle>),
+      ReadTitle,
+      PrefetchHooks Function()
+    >;
 
 class $SaveDatabaseManager {
   final _$SaveDatabase _db;
@@ -17159,4 +17584,6 @@ class $SaveDatabaseManager {
       $$HotspotRowsTableTableManager(_db, _db.hotspotRows);
   $$JournalRowsTableTableManager get journalRows =>
       $$JournalRowsTableTableManager(_db, _db.journalRows);
+  $$ReadTitlesTableTableManager get readTitles =>
+      $$ReadTitlesTableTableManager(_db, _db.readTitles);
 }

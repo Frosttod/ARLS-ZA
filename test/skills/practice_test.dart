@@ -127,7 +127,7 @@ void main() {
     // not to.
     expect(main.contains('Future<void> _practise(Practice what)'), isTrue);
     expect(
-      '_learned.practised('.allMatches(main).length,
+      '_learned.award('.allMatches(main).length,
       1,
       reason: 'something is paying experience around the funnel',
     );

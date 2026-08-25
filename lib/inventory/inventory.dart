@@ -720,6 +720,35 @@ class Inventory {
   /// and dropping "the knife" has to drop the one that was pointed at. Falls
   /// back to [remove] for a line that is no longer in the pack, so a stale tap
   /// still does something sensible rather than nothing.
+  /// §4.6.1: one more page of [line] read.
+  ///
+  /// ⚠️ **This copy, not any copy with that id.** §4.6.3 makes a part-read
+  /// book its own instance — two manuals of one title are two different things
+  /// to own, and crediting a page to whichever happened to be first in the
+  /// list would move somebody's progress between books in their own pack.
+  ///
+  /// Null when the line is not here at all, or when it has no pages to turn.
+  ({Inventory inventory, CarriedItem line, bool finished})? readOne(
+    CarriedItem line,
+  ) {
+    final pages = line.pagesTotal;
+    if (pages == null || line.pagesRead >= pages) return null;
+
+    final index = carried.indexWhere((entry) => entry.isSame(line));
+    if (index < 0) return null;
+
+    final turned = carried[index].copyWith(
+      pagesRead: carried[index].pagesRead + 1,
+    );
+    final lines = [...carried]..[index] = turned;
+
+    return (
+      inventory: Inventory(carried: lines, worn: worn, packId: packId),
+      line: turned,
+      finished: turned.pagesRead >= pages,
+    );
+  }
+
   Inventory? removeLine(CarriedItem line, {int count = 1}) {
     final index = carried.indexWhere((entry) => entry.isSame(line));
     if (index < 0) return remove(line.itemId, count: count);

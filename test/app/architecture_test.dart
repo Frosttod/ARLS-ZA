@@ -166,6 +166,8 @@ void main() {
       //                  the sky says when, not only how long (§17.2)
       //           6463   the fight panel became a reading, not forty
       //                  arguments assembled in a build method (§5.5.1)
+      //           6463   the start screen and the game screen out, and
+      //                  a book can finally be opened (§4.6, faza 8)
       //
       // ⚠️ Lower it when a phase lands. Never raise it — not for a phase, and
       // not for a feature either. "It is a feature" is exactly the excuse that

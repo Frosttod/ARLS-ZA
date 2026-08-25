@@ -4,7 +4,6 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'data/db/snapshot_store.dart';
 import 'data/persistence/save_bootstrap.dart';
 import 'devtools/dev_mode.dart';
 import 'devtools/dev_overlay.dart';
@@ -17,6 +16,7 @@ import 'game/controllers/craft_controller.dart';
 import 'game/controllers/inventory_controller.dart';
 import 'game/controllers/journal_controller.dart';
 import 'game/controllers/loot_controller.dart';
+import 'game/controllers/reading_controller.dart';
 import 'game/controllers/shelter_controller.dart';
 import 'game/controllers/stash_controller.dart';
 import 'game/game_loop.dart';
@@ -43,7 +43,6 @@ import 'app/game_scope.dart';
 import 'app/crash_log.dart';
 import 'ui/craft_screen.dart';
 import 'ui/intro_screen.dart';
-import 'ui/location_gate.dart';
 import 'ui/disassemble_screen.dart';
 import 'combat/magazine_item.dart';
 import 'combat/weapon_load.dart';
@@ -116,16 +115,20 @@ import 'ui/language_picker.dart';
 import 'ui/safety_briefing.dart';
 import 'ui/effects.dart';
 import 'ui/hotspot_sheet.dart';
+import 'ui/game_screen.dart';
 import 'ui/hud.dart';
 import 'ui/status_notes.dart';
 import 'ui/inventory_screen.dart';
 import 'skills/practice.dart';
+import 'skills/skill.dart';
+import 'skills/reading.dart';
 import 'ui/map_markers.dart';
 import 'ui/map_view.dart';
 import 'ui/names.dart';
 import 'ui/maplibre_surface.dart';
 import 'ui/region_picker.dart';
 import 'ui/settings_screen.dart';
+import 'ui/start_screen.dart';
 
 /// ⚠️ **What is left here is the door, not the house.**
 ///
@@ -1123,6 +1126,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       // §7: what this character has learned, before anything can ask.
       await _learned.load(character.profile.id);
 
+      await _read.load(character.profile.id);
+
       // §3.6.1: read back, so a run reopens where it left off.
       await _diary.bind(
         profileId: character.profile.id,
@@ -1471,7 +1476,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
           // everything with a material content lit it on axes, knives and
           // magazines and then refused every one of them on the tap.
           canDismantle: _worthTakingApart,
-          onRead: _readNote,
+          onRead: (line) => unawaited(_readBook(line)),
           onDetails: (line) => unawaited(_showItemDetails(line)),
           action: _search,
           // Which piece, not which item: a half-eaten tin beside three whole
@@ -1880,6 +1885,14 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final loop = _loop;
     final itemId = action.usingItemId;
     if (catalogue == null || loop == null || itemId == null) return;
+
+    // §4.6: a page is not a use — nothing is swallowed and §2.2's absorption
+    // has no opinion about it.
+    if (_reading != null) {
+      _usingLine.value = null;
+      await _finishPage();
+      return;
+    }
 
     // §4.2: a magazine being filled is an action with a clock, not a use —
     // nothing is swallowed and §2.2's absorption has no opinion about it.
@@ -2613,22 +2626,151 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     );
   }
 
+  void _onMenu(MapMenuEntry entry) {
+    switch (entry) {
+      case MapMenuEntry.settings:
+        unawaited(_openSettings());
+      case MapMenuEntry.inventory:
+        unawaited(_openInventory());
+      case MapMenuEntry.shelter:
+        unawaited(_openShelter());
+      case MapMenuEntry.profile:
+        unawaited(_openProfile());
+    }
+  }
+
+  /// §5.1.4: what the fight panel says, or null with nothing in the sights.
+  TargetReading? _readingFor(BuildContext context, GameSnapshot snapshot) {
+    final target = _target;
+    if (target == null) return null;
+
+    final weapon = _weapon;
+
+    return readTarget(
+      target: target,
+      from: GeoPoint(
+        snapshot.displayFix?.latitude ?? 0,
+        snapshot.displayFix?.longitude ?? 0,
+      ),
+      targetName: enemyKindName(L10n.of(context), target.kind),
+      error: _aimError(target),
+      weaponName: weapon == null ? null : _nameOfItem(weapon),
+      magazine: weapon == null
+          ? 0
+          : magazineSize(weapon, attachments: _attachmentsFor(weapon)),
+      loaded: _loaded,
+      hasRound: weapon != null && _roundFor(weapon) != null,
+      reloading: _reload != null,
+      settling: _aim.spreadMultiplierAt(DateTime.now()) > 1.02,
+      inOwnZone: _inOwnZone(),
+      inGrace: _loop?.down == DownState.grace,
+    );
+  }
+
+  /// §4.6: opens a book, one page at a time.
+  ///
+  /// ⚠️ **A page is the unit of work and of feedback.** §4.6.1 credits as it
+  /// is read — a reward at the end of a forty-hour encyclopedia is many nights
+  /// with nothing to show — so each page is its own row on disk (§11.1) and a
+  /// process killed mid-sentence costs a minute rather than an evening.
+  Future<void> _readBook(CarriedItem line) async {
+    final catalogue = _catalogue;
+    final book = Book.of(catalogue?[line.itemId]);
+    final pages = line.pagesTotal;
+    if (book == null || pages == null) return;
+
+    // §19.1: a note is read, not studied — its own sheet, no clock.
+    if (book.xpPerPage <= 0) return _readNote(line);
+    if (line.pagesRead >= pages) return;
+
+    if (_refuseIfBusy()) return;
+
+    await _turnPage(line, book);
+  }
+
+  /// One page of [line], started and put on disk.
+  Future<void> _turnPage(CarriedItem line, Book book) async {
+    final lounge = _mainShelter()?.levelOf(ShelterModule.lounge) ?? 0;
+    final takes = book.pageTime(lounge: lounge);
+
+    await _actions?.start(
+      TimedAction(
+        kind: ActionKind.reading.name,
+        subjectUid: line.uid,
+        startedAt: DateTime.now().toUtc(),
+        total: takes,
+      ),
+    );
+    if (!mounted) return;
+
+    _reading = line;
+    setState(() {
+      _usingLine.value = line;
+      _search.value = Search.using(
+        at: _standingAt.value ?? const GeoPoint(0, 0),
+        now: DateTime.now().toUtc(),
+        itemId: line.itemId,
+        duration: takes,
+        label: L10n.of(context).actionReading(_nameOfId(line.itemId)),
+      );
+    });
+    _startSearchTimer();
+  }
+
+  /// §4.6.1: a page is read. Credit it, write it down, and turn the next one.
+  Future<void> _finishPage() async {
+    final line = _reading;
+    final catalogue = _catalogue;
+    _reading = null;
+    if (line == null) return;
+
+    final book = Book.of(catalogue?[line.itemId]);
+    if (book == null) return;
+
+    final read = _inventory.value.readOne(line);
+    if (read == null) return;
+
+    _inventory.value = read.inventory;
+    await _saveInventory();
+
+    // §4.6.3: the second copy of a title is worth a quarter and the third
+    // nothing, or a player maxes Medicine by walking into ten chemists.
+    await _learn(
+      Skill.fromWire(book.skill),
+      book.xpFor(1, copiesRead: _read.copiesOf(line.itemId)),
+    );
+
+    if (read.finished) {
+      await _read.finished(line.itemId);
+      if (mounted) {
+        _say(L10n.of(context).actionReadDone(_nameOfId(line.itemId)));
+      }
+      return;
+    }
+
+    // The next page turns itself: §2.1a still has one occupation running, and
+    // anything the player starts instead simply replaces it.
+    if (mounted) await _turnPage(read.line, book);
+  }
+
   /// §7.2.1: pays for having done something, and says so if it was a level.
   ///
   /// ⚠️ **One funnel, for the same reason [_note] is one.** A level is the
   /// slowest reward in the game — §7.2.2 puts the climb at five hundred hours
   /// — so the one that arrives is said out loud (§12) and written down.
-  Future<void> _practise(Practice what) async {
-    if (!await _learned.practised(what)) return;
+  Future<void> _practise(Practice what) => _learn(what.skill, what.xp);
+
+  /// §7.2: experience into one skill, and a level said out loud if it crossed.
+  Future<void> _learn(Skill? skill, int xp) async {
+    if (skill == null || xp <= 0) return;
+    if (!await _learned.award(skill, xp)) return;
     if (!mounted) return;
 
-    final level = _learned.set.levelOf(what.skill);
+    final level = _learned.set.levelOf(skill);
     final l10n = L10n.of(context);
 
-    unawaited(
-      _diary.add(JournalKind.learned, subject: '${what.skill.wire}:$level'),
-    );
-    _say(l10n.skillLevelUp(skillName(l10n, what.skill), level));
+    unawaited(_diary.add(JournalKind.learned, subject: '${skill.wire}:$level'));
+    _say(l10n.skillLevelUp(skillName(l10n, skill), level));
   }
 
   /// §13.1: adds to the tally and puts it on disk.
@@ -5648,7 +5790,14 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
           seed: character.profile.rngSeed ^ poiId.hashCode,
         );
         inventory = inventory
-            .add(entry.key, catalogue, body: character.body, noteId: note?.id)
+            .add(
+              entry.key,
+              catalogue,
+              body: character.body,
+              noteId: note?.id,
+              // §4.6.4: a note is one to three pages, and it weighs them.
+              pagesTotal: Book.of(catalogue[entry.key])?.rollPages(random),
+            )
             .inventory;
         found[entry.key] = 1;
         continue;
@@ -5662,6 +5811,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         from: box.position,
         random: random,
         now: now,
+        catalogue: catalogue,
       );
       found[entry.key] = entry.value;
     }
@@ -5919,6 +6069,14 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     SkillController(widget.session.db),
   );
 
+  /// §4.6.3: which titles are already behind this character.
+  late final ReadingController _read = _controllers.adopt(
+    ReadingController(widget.session.db),
+  );
+
+  /// §4.6: the copy being read. Null when nothing is open.
+  CarriedItem? _reading;
+
   /// §3.6.1: what the character did, in order.
   late final JournalController _diary = _controllers.adopt(
     JournalController(widget.session.db),
@@ -6118,132 +6276,37 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     }
 
     if (source != null && character != null) {
-      return Stack(
-        children: [
-          MapScreen(
-            tileBuilder: tilesFrom(source, fallbackCentre: _packCentre),
-            fix: snapshot?.displayFix,
-            // §4.8: a pack emptied on a corner is fourteen rows in one place,
-            // and fourteen overlapping circles is a smear rather than a map.
-            markers: _markers(),
-            onMarkerTap: _showMarker,
-            // §5.6.5: what the last shot woke up, drawn at the radius it
-            // actually carried.
-            noise: _combat.open == null
-                ? null
-                : NoiseWave(
-                    at: _combat.open!.at,
-                    radiusM: _combat.open!.radiusM,
-                    startedAt: _combat.open!.startedAt.toLocal(),
-                  ),
-            // §4.6, §10.2, §8.3: the bar for whatever is running, at the top.
-            // Eating and building are the same thing from the player's side —
-            // something they are waiting on — so they share the one slot.
-            // ⚠️ Everything running, stacked, and every line with a way out.
-            //
-            // It used to be one slot showing whichever of two things it liked
-            // best. A magazine change had its bar at the bottom of the screen
-            // and a dismantling had one on a screen the player was not looking
-            // at — which is the same failure three field reports have already
-            // described as "it does not work": it was working, and there was
-            // no way to tell.
-            progress: _running(),
-            searchPanel: snapshot == null
-                ? null
-                : Builder(
-                    builder: (context) {
-                      // §5.1.4: while something is being aimed at, the panel
-                      // is the odds and the trigger. Searching a shop with a
-                      // Walker in the sights is not a thing to offer.
-                      // ⚠️ Whenever something is aimed at, weapon or no
-                      // weapon. Found on a phone: tapping an enemy with
-                      // nothing in hand looked like the tap had missed,
-                      // because the panel only appeared when a shot could be
-                      // worked out — so the one case where a player most
-                      // needs to be told what they are looking at showed them
-                      // nothing at all.
-                      final target = _target;
-                      final error = target == null ? null : _aimError(target);
-                      if (target != null) {
-                        // §5.5.1 and §10.2 at once: what can be done standing
-                        // here sits *above* the fight, not behind it. Found on
-                        // a phone: taking a target buried the search and
-                        // pick-up glyphs under the combat panel, so a body at
-                        // the player's feet could not be gone through until
-                        // the fight was over.
-                        final weapon = _weapon;
-                        final round = weapon == null ? null : _roundFor(weapon);
-
-                        return Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            _actionPanel(context),
-                            CombatPanel(
-                              reading: readTarget(
-                                target: target,
-                                from: GeoPoint(
-                                  snapshot.displayFix?.latitude ?? 0,
-                                  snapshot.displayFix?.longitude ?? 0,
-                                ),
-                                targetName: enemyKindName(
-                                  L10n.of(context),
-                                  target.kind,
-                                ),
-                                error: error,
-                                weaponName: weapon == null
-                                    ? null
-                                    : _nameOfItem(weapon),
-                                magazine: weapon == null
-                                    ? 0
-                                    : magazineSize(
-                                        weapon,
-                                        attachments: _attachmentsFor(weapon),
-                                      ),
-                                loaded: _loaded,
-                                hasRound: round != null,
-                                reloading: _reload != null,
-                                settling:
-                                    _aim.spreadMultiplierAt(DateTime.now()) >
-                                    1.02,
-                                inOwnZone: _inOwnZone(),
-                                inGrace: _loop?.down == DownState.grace,
-                              ),
-                              onReload: _startReload,
-                              onFire: () => unawaited(_fire()),
-                              onStrike: () => unawaited(_strike()),
-                            ),
-                          ],
-                        );
-                      }
-
-                      return _actionPanel(context);
-                    },
-                  ),
-            headingDeg: snapshot?.fix?.headingDeg,
-            economy: snapshot?.economy ?? false,
-            // There is always a map here — this branch only runs with a
-            // source. Whether the player has walked off its *edge* is the
-            // coverage question of §16.6, and it arrives with 3.12.
-            hasPack: true,
-            hud: snapshot == null
-                ? null
-                : _hud(snapshot, character, l10n, inTheField: true),
-            notices: NoticeStack(notices: _notices),
-            onMenu: (entry) {
-              switch (entry) {
-                case MapMenuEntry.settings:
-                  unawaited(_openSettings());
-                case MapMenuEntry.inventory:
-                  unawaited(_openInventory());
-                case MapMenuEntry.shelter:
-                  unawaited(_openShelter());
-                case MapMenuEntry.profile:
-                  unawaited(_openProfile());
-              }
-            },
-          ),
-          if (dev != null) _devOverlay(dev, snapshot),
-        ],
+      return GameScreen(
+        tileBuilder: tilesFrom(source, fallbackCentre: _packCentre),
+        fix: snapshot?.displayFix,
+        markers: _markers(),
+        onMarkerTap: _showMarker,
+        noise: _combat.open == null
+            ? null
+            : NoiseWave(
+                at: _combat.open!.at,
+                radiusM: _combat.open!.radiusM,
+                startedAt: _combat.open!.startedAt.toLocal(),
+              ),
+        progress: _running(),
+        searchPanel: snapshot == null
+            ? null
+            : Builder(
+                builder: (context) => fightOrActions(
+                  actions: _actionPanel(context),
+                  reading: _readingFor(context, snapshot),
+                  onFire: () => unawaited(_fire()),
+                  onStrike: () => unawaited(_strike()),
+                  onReload: _startReload,
+                ),
+              ),
+        economy: snapshot?.economy ?? false,
+        hud: snapshot == null
+            ? null
+            : _hud(snapshot, character, l10n, inTheField: true),
+        notices: _notices,
+        onMenu: _onMenu,
+        overlay: dev == null ? null : _devOverlay(dev, snapshot),
       );
     }
 
@@ -6251,85 +6314,22 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       // A character exists, so the game is running; the map is simply not
       // resolved yet. Showing the title screen here would put a logo over a
       // live simulation and read as something having gone wrong.
-      return Scaffold(
-        body: Stack(
-          children: [
-            const Center(child: CircularProgressIndicator()),
-            if (snapshot != null)
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                child: SafeArea(child: _hud(snapshot, character, l10n)),
-              ),
-          ],
-        ),
+      return WaitingForMapScreen(
+        hud: snapshot == null ? null : _hud(snapshot, character, l10n),
       );
     }
 
-    return Scaffold(
-      body: Stack(
-        children: [
-          Column(
-            children: [
-              if (snapshot != null && character != null)
-                _hud(snapshot, character, l10n),
-              Expanded(
-                child: SafeArea(
-                  child: Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(32),
-                      child: _loading
-                          ? const CircularProgressIndicator()
-                          : Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Image.asset('assets/icon.png', width: 120),
-                                const SizedBox(height: 24),
-                                Text(
-                                  character?.profile.name ?? l10n.appTitle,
-                                  style: Theme.of(
-                                    context,
-                                  ).textTheme.headlineMedium,
-                                ),
-                                Text(
-                                  l10n.appTagline,
-                                  style: Theme.of(context).textTheme.bodySmall,
-                                ),
-                                const SizedBox(height: 32),
-                                if (recovery.health == SaveHealth.restored)
-                                  BlockedPanel(
-                                    title: l10n.saveRestoredTitle,
-                                    body: l10n.saveRestoredBody(
-                                      recovery.timeLost?.inMinutes ?? 0,
-                                    ),
-                                  ),
-                                if (recovery.health == SaveHealth.lost)
-                                  BlockedPanel(
-                                    title: l10n.saveLostTitle,
-                                    body: l10n.saveLostBody,
-                                  ),
-                                if (blocked != null)
-                                  LocationGate(
-                                    access: blocked,
-                                    onRetry: _retryAccess,
-                                  ),
-                                if (character == null)
-                                  FilledButton(
-                                    onPressed: _openCreator,
-                                    child: Text(l10n.newCharacter),
-                                  ),
-                              ],
-                            ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          if (dev != null) _devOverlay(dev, snapshot),
-        ],
-      ),
+    return StartScreen(
+      loading: _loading,
+      playerName: character?.profile.name,
+      recovery: recovery,
+      blocked: blocked,
+      onRetry: _retryAccess,
+      onNewCharacter: _openCreator,
+      hud: snapshot == null || character == null
+          ? null
+          : _hud(snapshot, character, l10n),
+      overlay: dev == null ? null : _devOverlay(dev, snapshot),
     );
   }
 

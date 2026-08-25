@@ -1091,4 +1091,65 @@ void main() {
       expect(back.inventory.carried.single.pagesRead, 120);
     });
   });
+
+  group('§4.6.1: one page at a time', () {
+    // ⚠️ This copy, not any copy with that id. §4.6.3 makes a part-read book
+    // its own instance — two manuals of one title are two different things to
+    // own, and crediting a page to whichever happened to be first in the list
+    // would move somebody's progress between books in their own pack.
+    const book = CarriedItem(
+      itemId: 'lit_guide_survival',
+      count: 1,
+      pagesTotal: 160,
+      uid: 'a',
+    );
+
+    test('a page turns, and the copy remembers', () {
+      const pack = Inventory(carried: [book]);
+
+      final read = pack.readOne(book)!;
+
+      expect(read.line.pagesRead, 1);
+      expect(read.finished, isFalse);
+      expect(read.inventory.carried.single.pagesRead, 1);
+    });
+
+    test('the last page says so', () {
+      final nearly = book.copyWith(pagesRead: 159);
+      final pack = Inventory(carried: [nearly]);
+
+      expect(pack.readOne(nearly)!.finished, isTrue);
+    });
+
+    test('and a finished copy turns no more', () {
+      final done = book.copyWith(pagesRead: 160);
+
+      expect(Inventory(carried: [done]).readOne(done), isNull);
+    });
+
+    test('anything with no pages is not a book', () {
+      const bandage = CarriedItem(itemId: 'med_bandage', count: 1);
+
+      expect(const Inventory(carried: [bandage]).readOne(bandage), isNull);
+    });
+
+    test('a copy that is not in the pack turns nothing', () {
+      expect(const Inventory().readOne(book), isNull);
+    });
+
+    test('and the other copy of the same title is untouched', () {
+      const other = CarriedItem(
+        itemId: 'lit_guide_survival',
+        count: 1,
+        pagesTotal: 220,
+        uid: 'b',
+      );
+      const pack = Inventory(carried: [book, other]);
+
+      final read = pack.readOne(other)!;
+
+      expect(read.inventory.carried.first.pagesRead, 0);
+      expect(read.inventory.carried.last.pagesRead, 1);
+    });
+  });
 }

@@ -1415,5 +1415,21 @@
       }
     }
   },
-  "moduleLoungeReading": "czytanie"
+  "moduleLoungeReading": "czytanie",
+  "actionReading": "Czytasz: {what}",
+  "@actionReading": {
+    "placeholders": {
+      "what": {
+        "type": "String"
+      }
+    }
+  },
+  "actionReadDone": "Przeczytane: {what}",
+  "@actionReadDone": {
+    "placeholders": {
+      "what": {
+        "type": "String"
+      }
+    }
+  }
 }

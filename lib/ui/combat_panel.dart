@@ -22,6 +22,42 @@ import '../l10n/app_localizations.dart';
 import 'effects.dart';
 import 'hud.dart' show HudColors;
 
+/// §5.5.1, §10.2: what can be done standing here, and the fight if there is
+/// one.
+///
+/// ⚠️ **The actions sit *above* the fight, not behind it.** Found on a
+/// phone: taking a target buried the search and pick-up glyphs under the
+/// combat panel, so a body at the player's feet could not be gone through
+/// until the fight was over.
+///
+/// [reading] is null when nothing is being aimed at — and the panel appears
+/// whenever something *is*, weapon or no weapon. Also found on a phone:
+/// tapping an enemy with empty hands looked like the tap had missed, because
+/// the panel only appeared once a shot could be worked out. The one moment a
+/// player most needs to be told what they are looking at showed them nothing.
+Widget fightOrActions({
+  required Widget actions,
+  required TargetReading? reading,
+  required VoidCallback onFire,
+  required VoidCallback onStrike,
+  required VoidCallback onReload,
+}) {
+  if (reading == null) return actions;
+
+  return Column(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      actions,
+      CombatPanel(
+        reading: reading,
+        onFire: onFire,
+        onStrike: onStrike,
+        onReload: onReload,
+      ),
+    ],
+  );
+}
+
 class CombatPanel extends StatelessWidget {
   const CombatPanel({
     required this.reading,

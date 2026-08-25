@@ -170,7 +170,12 @@ void main() {
     final main = File('lib/main.dart').readAsStringSync();
     final panel = File('lib/ui/combat_panel.dart').readAsStringSync();
 
-    expect(main.contains('reading: readTarget('), isTrue);
+    expect(main.contains('return readTarget('), isTrue);
+    expect(
+      main.contains('reading: _readingFor('),
+      isTrue,
+      reason: 'the panel is handed the reading, not built from parts',
+    );
     expect(
       main.contains('hitChance('),
       isFalse,

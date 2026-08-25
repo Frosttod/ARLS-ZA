@@ -4272,6 +4272,18 @@ abstract class L10n {
   /// In en, this message translates to:
   /// **'reading'**
   String get moduleLoungeReading;
+
+  /// No description provided for @actionReading.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading: {what}'**
+  String actionReading(String what);
+
+  /// No description provided for @actionReadDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Finished: {what}'**
+  String actionReadDone(String what);
 }
 
 class _L10nDelegate extends LocalizationsDelegate<L10n> {

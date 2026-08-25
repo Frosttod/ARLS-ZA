@@ -223,6 +223,36 @@ class ChronicleEntries extends Table {
   ];
 }
 
+/// Warm layer: §4.6.3's guard against the tenth copy of the same manual.
+///
+/// ⚠️ **A count of copies, not of pages.** Without it a player walks into
+/// ten chemists, reads the tenth first-aid manual and has maxed Medicine
+/// without reading anything: the first copy is worth full price, the second a
+/// quarter, and the third and every one after it nothing at all.
+///
+/// Counted per title rather than per skill, because that is the exploit — a
+/// second *different* manual is a second book and pays in full.
+class ReadTitles extends Table {
+  @override
+  String get tableName => 'read_titles';
+
+  IntColumn get profileId => integer()();
+
+  /// The catalogue id, so a title outlives any rename of the thing it names.
+  TextColumn get itemId => text()();
+
+  /// How many copies of it have been read to the last page.
+  IntColumn get copies => integer().withDefault(const Constant(0))();
+
+  @override
+  Set<Column> get primaryKey => {profileId, itemId};
+
+  @override
+  List<String> get customConstraints => [
+    'FOREIGN KEY (profile_id) REFERENCES profiles (id) ON DELETE CASCADE',
+  ];
+}
+
 /// Warm layer: §3.6.1's log of what the character did.
 ///
 /// ⚠️ **A kind and a subject, never a sentence.** The words go around it when

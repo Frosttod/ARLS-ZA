@@ -2404,4 +2404,14 @@ class L10nPl extends L10n {
 
   @override
   String get moduleLoungeReading => 'czytanie';
+
+  @override
+  String actionReading(String what) {
+    return 'Czytasz: $what';
+  }
+
+  @override
+  String actionReadDone(String what) {
+    return 'Przeczytane: $what';
+  }
 }

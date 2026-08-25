@@ -29,7 +29,7 @@ import 'tables.dart';
 part 'database.g.dart';
 
 /// Bumped only alongside a migration step in [_migration]. Never reused.
-const int kSchemaVersion = 33;
+const int kSchemaVersion = 34;
 
 /// Keys used in [MetaEntries].
 abstract final class MetaKeys {
@@ -66,6 +66,7 @@ abstract final class MetaKeys {
     SkillRows,
     HotspotRows,
     JournalRows,
+    ReadTitles,
   ],
 )
 class SaveDatabase extends _$SaveDatabase {
@@ -78,7 +79,7 @@ class SaveDatabase extends _$SaveDatabase {
   /// follow a constant reference. `schema_test.dart` keeps it in step with
   /// [kSchemaVersion].
   @override
-  int get schemaVersion => 33;
+  int get schemaVersion => 34;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -364,6 +365,11 @@ class SaveDatabase extends _$SaveDatabase {
       // happened before it existed was written down (§11.1.4).
       if (from < 33) await m.createTable(journalRows);
 
+      // §4.6.3: which titles have been read, and how many copies of each. A
+      // new table, so a save from before this has read nothing — which is
+      // true: nothing in the game could read a book (§11.1.4).
+      if (from < 34) await m.createTable(readTitles);
+
       await _writeSchemaVersion(to);
     },
     beforeOpen: (details) async {
@@ -611,6 +617,25 @@ class SaveDatabase extends _$SaveDatabase {
   /// §3.6.1: one thing that happened, appended.
   Future<void> addJournalRow(JournalRowsCompanion row) =>
       into(journalRows).insert(row);
+
+  /// §4.6.3: how many copies of each title this character has finished.
+  Future<Map<String, int>> readTitlesFor(int profileId) async {
+    final rows = await (select(
+      readTitles,
+    )..where((t) => t.profileId.equals(profileId))).get();
+
+    return {for (final row in rows) row.itemId: row.copies};
+  }
+
+  /// §4.6.3: one more copy of a title read to the last page.
+  Future<void> writeReadTitle(int profileId, String itemId, int copies) =>
+      into(readTitles).insertOnConflictUpdate(
+        ReadTitlesCompanion.insert(
+          profileId: profileId,
+          itemId: itemId,
+          copies: Value(copies),
+        ),
+      );
 
   /// §3.6.1: drops everything past the newest [keep] entries.
   ///

@@ -1110,7 +1110,14 @@ class _ItemRowState extends State<_ItemRow> {
                                 refusal: _no(PackAction.wear),
                                 onRefused: _sayNo,
                               ),
-                            if (line.noteId != null && widget.onRead != null)
+                            // ⚠️ §4.6: a book as well as a note. Reading was
+                            // offered only for §19.1's found paper, so the
+                            // eighteen titles of `literature.json` — the whole
+                            // path up §7's curve — could be carried, weighed
+                            // and dropped and never opened.
+                            if ((line.noteId != null ||
+                                    line.pagesTotal != null) &&
+                                widget.onRead != null)
                               _RowAction(
                                 icon: Icons.description_outlined,
                                 tooltip: l10n.noteRead,

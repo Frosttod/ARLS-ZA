@@ -7,7 +7,9 @@ import 'package:drift/drift.dart' show Value;
 import '../data/db/database.dart';
 import 'dart:math';
 
+import '../items/item_catalogue.dart';
 import '../map/geometry.dart';
+import '../skills/reading.dart';
 import 'dropped_items.dart';
 
 class DroppedStore {
@@ -62,7 +64,16 @@ class DroppedStore {
     required GeoPoint from,
     required Random random,
     required DateTime now,
+    ItemCatalogue? catalogue,
   }) async {
+    // ⚠️ §4.6.4: a book's length is rolled per *copy*, here, because here is
+    // where a copy comes into existence. Two manuals of one title may be 180
+    // and 340 pages — they weigh differently, read for different lengths and
+    // are worth different amounts, and [CarriedItem.massKg] has been scaling
+    // off this figure since stage 4 while nothing ever set it. Every book
+    // found in the world weighed its catalogue's middling copy.
+    final book = catalogue == null ? null : Book.of(catalogue[itemId]);
+
     for (var piece = 0; piece < count; piece++) {
       await drop(
         profileId,
@@ -70,6 +81,7 @@ class DroppedStore {
           id: 0,
           itemId: itemId,
           count: 1,
+          pagesTotal: book?.rollPages(random),
           position: scatteredFrom(from, random),
           droppedAt: now,
         ),

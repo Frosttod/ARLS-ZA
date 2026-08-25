@@ -2402,4 +2402,14 @@ class L10nEn extends L10n {
 
   @override
   String get moduleLoungeReading => 'reading';
+
+  @override
+  String actionReading(String what) {
+    return 'Reading: $what';
+  }
+
+  @override
+  String actionReadDone(String what) {
+    return 'Finished: $what';
+  }
 }
