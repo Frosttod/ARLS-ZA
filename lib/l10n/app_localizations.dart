@@ -4284,6 +4284,12 @@ abstract class L10n {
   /// In en, this message translates to:
   /// **'Finished: {what}'**
   String actionReadDone(String what);
+
+  /// No description provided for @actionReadingPage.
+  ///
+  /// In en, this message translates to:
+  /// **'{what} — page {page}/{pages}'**
+  String actionReadingPage(String what, int page, int pages);
 }
 
 class _L10nDelegate extends LocalizationsDelegate<L10n> {

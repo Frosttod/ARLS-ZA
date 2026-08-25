@@ -913,8 +913,13 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     // §2.1a: and the long work. A dismantling runs half an hour (§18.6) and
     // the loop could not see it — so the character fell asleep at their own
     // vice, paying off sleep debt while it turned.
+    // ⚠️ Reading too: a page is its own action, so between two of them
+    // `acting` fell to false and §2.5.1 wrote a night — one per page.
     _loop?.setWorking(
-      working: _bench2.job.value != null || anyBuilding(_shelters.value),
+      working:
+          _read.open != null ||
+          _bench2.job.value != null ||
+          anyBuilding(_shelters.value),
     );
   }
 
@@ -1888,7 +1893,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
     // §4.6: a page is not a use — nothing is swallowed and §2.2's absorption
     // has no opinion about it.
-    if (_reading != null) {
+    if (_read.open != null) {
       _usingLine.value = null;
       await _finishPage();
       return;
@@ -2667,24 +2672,17 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     );
   }
 
-  /// §4.6: opens a book, one page at a time.
-  ///
-  /// ⚠️ **A page is the unit of work and of feedback.** §4.6.1 credits as it
-  /// is read — a reward at the end of a forty-hour encyclopedia is many nights
-  /// with nothing to show — so each page is its own row on disk (§11.1) and a
-  /// process killed mid-sentence costs a minute rather than an evening.
+  /// §4.6: opens a book, a page at a time — §4.6.1 credits as it is read.
   Future<void> _readBook(CarriedItem line) async {
-    final catalogue = _catalogue;
-    final book = Book.of(catalogue?[line.itemId]);
+    final book = Book.of(_catalogue?[line.itemId]);
     final pages = line.pagesTotal;
-    if (book == null || pages == null) return;
+    if (book == null || pages == null || line.pagesRead >= pages) return;
 
     // §19.1: a note is read, not studied — its own sheet, no clock.
     if (book.xpPerPage <= 0) return _readNote(line);
-    if (line.pagesRead >= pages) return;
-
     if (_refuseIfBusy()) return;
 
+    unawaited(_diary.add(JournalKind.read, subject: _nameOfId(line.itemId)));
     await _turnPage(line, book);
   }
 
@@ -2692,6 +2690,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   Future<void> _turnPage(CarriedItem line, Book book) async {
     final lounge = _mainShelter()?.levelOf(ShelterModule.lounge) ?? 0;
     final takes = book.pageTime(lounge: lounge);
+
+    // ⚠️ Set before the awaited write: a tick inside it with nothing
+    // running is a night in the log.
+    _read.open = line;
 
     await _actions?.start(
       TimedAction(
@@ -2703,7 +2705,6 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     );
     if (!mounted) return;
 
-    _reading = line;
     setState(() {
       _usingLine.value = line;
       _search.value = Search.using(
@@ -2711,36 +2712,39 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         now: DateTime.now().toUtc(),
         itemId: line.itemId,
         duration: takes,
-        label: L10n.of(context).actionReading(_nameOfId(line.itemId)),
+        label: L10n.of(context).actionReadingPage(
+          _nameOfId(line.itemId),
+          line.pagesRead + 1,
+          line.pagesTotal ?? 0,
+        ),
       );
     });
     _startSearchTimer();
   }
 
-  /// §4.6.1: a page is read. Credit it, write it down, and turn the next one.
+  /// §4.6.1: a page read. Credit it, write it down, turn the next one.
   Future<void> _finishPage() async {
-    final line = _reading;
-    final catalogue = _catalogue;
-    _reading = null;
-    if (line == null) return;
+    final line = _read.open;
+    final book = line == null ? null : Book.of(_catalogue?[line.itemId]);
 
-    final book = Book.of(catalogue?[line.itemId]);
-    if (book == null) return;
-
-    final read = _inventory.value.readOne(line);
-    if (read == null) return;
+    // ⚠️ The open copy stays set until the book is closed — clearing it
+    // between two pages tells the loop nothing is running (§2.5.1).
+    final read = book == null ? null : _inventory.value.readOne(line!);
+    if (line == null || book == null || read == null) {
+      _read.open = null;
+      return;
+    }
 
     _inventory.value = read.inventory;
     await _saveInventory();
 
-    // §4.6.3: the second copy of a title is worth a quarter and the third
-    // nothing, or a player maxes Medicine by walking into ten chemists.
     await _learn(
       Skill.fromWire(book.skill),
       book.xpFor(1, copiesRead: _read.copiesOf(line.itemId)),
     );
 
     if (read.finished) {
+      _read.open = null;
       await _read.finished(line.itemId);
       if (mounted) {
         _say(L10n.of(context).actionReadDone(_nameOfId(line.itemId)));
@@ -2748,8 +2752,6 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       return;
     }
 
-    // The next page turns itself: §2.1a still has one occupation running, and
-    // anything the player starts instead simply replaces it.
     if (mounted) await _turnPage(read.line, book);
   }
 
@@ -5573,6 +5575,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
     _stopSearchTimer();
     _search.value = null;
+    _read.open = null;
     unawaited(_interruptUse(running));
   }
 
@@ -6073,9 +6076,6 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   late final ReadingController _read = _controllers.adopt(
     ReadingController(widget.session.db),
   );
-
-  /// §4.6: the copy being read. Null when nothing is open.
-  CarriedItem? _reading;
 
   /// §3.6.1: what the character did, in order.
   late final JournalController _diary = _controllers.adopt(

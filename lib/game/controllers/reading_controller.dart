@@ -13,6 +13,7 @@ library;
 import 'package:flutter/foundation.dart';
 
 import '../../data/db/database.dart';
+import '../../inventory/inventory.dart';
 
 class ReadingController extends ChangeNotifier {
   ReadingController(this._db);
@@ -21,6 +22,14 @@ class ReadingController extends ChangeNotifier {
 
   /// How many copies of each title have been read to the last page.
   final ValueNotifier<Map<String, int>> titles = ValueNotifier(const {});
+
+  /// §4.6: the copy being read, page by page. Null when nothing is open.
+  ///
+  /// ⚠️ Held across the page boundary on purpose. A page is its own action
+  /// (§4.6.1), and a screen that cleared this between two of them told the
+  /// loop nothing was running — §2.5.1 put the character to sleep in their
+  /// chair and the next page woke them, once per page, in the log.
+  CarriedItem? open;
 
   int? _profileId;
 

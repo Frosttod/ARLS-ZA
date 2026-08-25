@@ -1431,5 +1431,19 @@
         "type": "String"
       }
     }
+  },
+  "actionReadingPage": "{what} — strona {page}/{pages}",
+  "@actionReadingPage": {
+    "placeholders": {
+      "what": {
+        "type": "String"
+      },
+      "page": {
+        "type": "int"
+      },
+      "pages": {
+        "type": "int"
+      }
+    }
   }
 }

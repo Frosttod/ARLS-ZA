@@ -190,6 +190,17 @@ class JournalController extends ChangeNotifier {
     if (before == null || before == zone) return;
 
     if (zone == MetabolicZone.sleep) {
+      // ⚠️ A night that lasted under two minutes was not a night. Whatever
+      // makes the zone flicker — and a page of a book once did, every page —
+      // the log is a record of an evening, and an evening does not contain
+      // forty of them.
+      final up = entries.value.firstOrNull;
+      if (up != null &&
+          up.kind == JournalKind.woke &&
+          at.difference(up.at).abs() < const Duration(minutes: 2)) {
+        return;
+      }
+
       return add(JournalKind.slept, at: at);
     }
     if (before == MetabolicZone.sleep) {

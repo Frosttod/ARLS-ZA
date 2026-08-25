@@ -2412,4 +2412,9 @@ class L10nEn extends L10n {
   String actionReadDone(String what) {
     return 'Finished: $what';
   }
+
+  @override
+  String actionReadingPage(String what, int page, int pages) {
+    return '$what — page $page/$pages';
+  }
 }

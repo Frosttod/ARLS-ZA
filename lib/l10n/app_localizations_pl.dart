@@ -2414,4 +2414,9 @@ class L10nPl extends L10n {
   String actionReadDone(String what) {
     return 'Przeczytane: $what';
   }
+
+  @override
+  String actionReadingPage(String what, int page, int pages) {
+    return '$what — strona $page/$pages';
+  }
 }

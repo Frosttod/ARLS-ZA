@@ -350,6 +350,45 @@ void main() {
     });
   });
 
+  group('§3.6.1: a night that lasted two minutes was not a night', () {
+    // ⚠️ Photographed from a phone: forty lines of "Sen" and "Pobudka"
+    // alternating over seven minutes. A page of a book is its own action
+    // (§4.6.1), so between two of them nothing was running, §2.5.1 put the
+    // character to sleep in their chair and the next page woke them up. The
+    // root is fixed where it belongs — reading is long work now — and this is
+    // the log refusing to be made ridiculous by whatever flickers next.
+
+    test('a sleep that follows a waking too closely is not written', () async {
+      await diary.noteZone(MetabolicZone.sleep, at: t0);
+      await diary.noteZone(
+        MetabolicZone.shelter,
+        at: t0.add(const Duration(hours: 1)),
+      );
+
+      final before = diary.entries.value.length;
+      await diary.noteZone(
+        MetabolicZone.sleep,
+        at: t0.add(const Duration(hours: 1, seconds: 30)),
+      );
+
+      expect(diary.entries.value, hasLength(before));
+    });
+
+    test('but going back to bed after a while is a night again', () async {
+      await diary.noteZone(MetabolicZone.sleep, at: t0);
+      await diary.noteZone(
+        MetabolicZone.shelter,
+        at: t0.add(const Duration(hours: 1)),
+      );
+      await diary.noteZone(
+        MetabolicZone.sleep,
+        at: t0.add(const Duration(hours: 1, minutes: 20)),
+      );
+
+      expect(diary.entries.value.first.kind, JournalKind.slept);
+    });
+  });
+
   test('§11.1: it is on disk before the process can be killed', () async {
     await diary.add(JournalKind.killed, subject: 'brute', at: t0);
 

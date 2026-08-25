@@ -193,8 +193,17 @@ void main() {
     expect(main.contains('ActionKind.reading.name'), isTrue);
 
     // §4.6.1: a page at a time, credited as it is read.
-    expect(main.contains('readOne(line)'), isTrue);
+    expect(main.contains('.readOne(line!)'), isTrue);
     expect(main.contains('book.xpFor(1, copiesRead:'), isTrue);
+
+    // §2.1a, §2.5.1: reading is *long work*, not forty short ones. A page is
+    // its own action, so without this the zone fell out of sleep and back into
+    // it between every pair of them — the log filled with a Sen and a Pobudka
+    // per page, photographed from a phone.
+    expect(main.contains('_read.open != null ||'), isTrue);
+
+    // §12: and the strip says where in the book somebody is.
+    expect(main.contains('actionReadingPage('), isTrue);
 
     // §4.6.3: and a finished copy is counted against the next one.
     expect(main.contains('_read.finished('), isTrue);
