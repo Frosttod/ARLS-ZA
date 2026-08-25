@@ -153,9 +153,8 @@ class JournalController extends ChangeNotifier {
     final kind = switch (action) {
       ActionKind.eating => JournalKind.ate,
       ActionKind.drinking => JournalKind.drank,
-      ActionKind.dressing ||
-      ActionKind.tourniquet ||
-      ActionKind.suturing => JournalKind.treated,
+      // §7.2.1 pays for exactly these three, off the same list.
+      _ when action.isTreatment => JournalKind.treated,
       _ => null,
     };
     if (kind == null) return;

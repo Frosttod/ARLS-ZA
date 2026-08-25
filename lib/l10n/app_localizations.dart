@@ -4260,6 +4260,12 @@ abstract class L10n {
   /// In en, this message translates to:
   /// **'Dusk'**
   String get hudSunset;
+
+  /// No description provided for @skillLevelUp.
+  ///
+  /// In en, this message translates to:
+  /// **'{skill}: level {level}'**
+  String skillLevelUp(String skill, int level);
 }
 
 class _L10nDelegate extends LocalizationsDelegate<L10n> {

@@ -118,8 +118,10 @@ import 'ui/hotspot_sheet.dart';
 import 'ui/hud.dart';
 import 'ui/status_notes.dart';
 import 'ui/inventory_screen.dart';
+import 'skills/practice.dart';
 import 'ui/map_markers.dart';
 import 'ui/map_view.dart';
+import 'ui/names.dart';
 import 'ui/maplibre_surface.dart';
 import 'ui/region_picker.dart';
 import 'ui/settings_screen.dart';
@@ -1816,6 +1818,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     CrashLog.note('use.row:${use.action.name}:${takes.inSeconds}s');
 
     unawaited(_diary.used(use.action, line.itemId));
+    if (use.action.isTreatment) unawaited(_practise(Practice.dressing));
 
     await _actions?.start(
       TimedAction(
@@ -2210,6 +2213,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     // when two of five pieces fitted — would be the game destroying something
     // on the player's behalf.
     final taken = result.acceptedCount ?? item.count;
+    unawaited(_practise(Practice.looted));
     await DroppedStore(
       widget.session.db,
     ).takeSome(item.id, left: item.count - taken);
@@ -2587,6 +2591,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         bloodMl: outcome.hit ? outcome.bloodLossMl : 0,
       ),
     );
+    unawaited(_practise(Practice.shot));
 
     // §2.6: where it landed and what it opened. A head shot that ends it is
     // worth saying as an execution; a leg that keeps bleeding is worth saying
@@ -2605,6 +2610,24 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
             ),
       remember: true,
     );
+  }
+
+  /// §7.2.1: pays for having done something, and says so if it was a level.
+  ///
+  /// ⚠️ **One funnel, for the same reason [_note] is one.** A level is the
+  /// slowest reward in the game — §7.2.2 puts the climb at five hundred hours
+  /// — so the one that arrives is said out loud (§12) and written down.
+  Future<void> _practise(Practice what) async {
+    if (!await _learned.practised(what)) return;
+    if (!mounted) return;
+
+    final level = _learned.set.levelOf(what.skill);
+    final l10n = L10n.of(context);
+
+    unawaited(
+      _diary.add(JournalKind.learned, subject: '${what.skill.wire}:$level'),
+    );
+    _say(l10n.skillLevelUp(skillName(l10n, what.skill), level));
   }
 
   /// §13.1: adds to the tally and puts it on disk.
@@ -3320,6 +3343,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
             place.building != null &&
             (worked.buildingLeft ?? Duration.zero) <= Duration.zero;
         if (up) {
+          unawaited(_practise(Practice.moduleBuilt));
           unawaited(
             _diary.add(JournalKind.built, subject: place.building!.name),
           );
@@ -4359,6 +4383,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         .firstOrNull;
     if (recipe == null) return;
 
+    unawaited(_practise(Practice.crafted));
     unawaited(_diary.made(JournalKind.crafted, {recipe.output: recipe.count}));
     await _grant({recipe.output: recipe.count});
 
@@ -4573,6 +4598,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       // gone. [addRemains] is what settles which of them was first, so it is
       // also the only place a kill can be counted exactly once.
       _note((stats) => stats.killed());
+      unawaited(_practise(Practice.kill));
 
       final character = _character;
       if (character != null) {
@@ -4985,6 +5011,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     if (body.position.distanceTo(at) > kStillnessM) return;
 
     _note((stats) => stats.searchedSomething());
+    unawaited(_practise(Practice.searched));
 
     _loot.replaceBody(body.emptied);
 
@@ -5577,6 +5604,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     if (!box.canSearchAt(depth)) return;
 
     _note((stats) => stats.searchedSomething());
+    unawaited(_practise(Practice.searched));
 
     // Seeded from the place, the character and how far into this place the
     // player already is, so the same search of the same shop gives the same
@@ -6023,6 +6051,32 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
   final GameControllers _controllers = GameControllers();
 
+  /// §3.6: the panel, wherever it is being drawn.
+  /// ⚠️ **One construction, three places.** The map, the loading screen and
+  /// the fallback layout each built their own with fifteen arguments apiece —
+  /// so §17.2's clock had to be added to all three, and the next reading would
+  /// have to be too, or one of them quietly stops saying it. [inTheField] is
+  /// what a HUD over a live map has that one over a spinner does not.
+  Widget _hud(
+    GameSnapshot snapshot,
+    ActiveCharacter character,
+    L10n l10n, {
+    bool inTheField = false,
+  }) => Hud(
+    state: snapshot.state,
+    status: snapshot.status,
+    constants: character.constants,
+    warnings: _warnings(l10n, snapshot),
+    sky: snapshot.sky,
+    bleeding: inTheField ? (_loop?.bleeding ?? BleedTier.none) : BleedTier.none,
+    carryComfortKg: character.body.carryComfortKg,
+    carryMaxKg: character.body.carryMaxKg,
+    carriedKg: _carriedKg,
+    carriedVolumeL: _carriedVolumeL,
+    capacityL: _capacityL(character.body),
+    threat: inTheField ? _threat(snapshot) : null,
+  );
+
   Widget _buildGame(BuildContext context) {
     if (_needsLanguage) {
       return LanguagePickerScreen(
@@ -6066,23 +6120,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       return Stack(
         children: [
           MapScreen(
-            tileBuilder:
-                (
-                  context, {
-                  required centre,
-                  required markers,
-                  required economy,
-                  onMarkerTap,
-                  noise,
-                }) => MapLibreSurface(
-                  source: source,
-                  centre: centre,
-                  markers: markers,
-                  economy: economy,
-                  onMarkerTap: onMarkerTap,
-                  noise: noise,
-                  fallbackCentre: _packCentre,
-                ),
+            tileBuilder: tilesFrom(source, fallbackCentre: _packCentre),
             fix: snapshot?.displayFix,
             // §4.8: a pack emptied on a corner is fourteen rows in one place,
             // and fourteen overlapping circles is a smear rather than a map.
@@ -6252,20 +6290,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
             hasPack: true,
             hud: snapshot == null
                 ? null
-                : Hud(
-                    state: snapshot.state,
-                    status: snapshot.status,
-                    constants: character.constants,
-                    warnings: _warnings(l10n, snapshot),
-                    sky: snapshot.sky,
-                    bleeding: _loop?.bleeding ?? BleedTier.none,
-                    carryComfortKg: character.body.carryComfortKg,
-                    carryMaxKg: character.body.carryMaxKg,
-                    carriedKg: _carriedKg,
-                    carriedVolumeL: _carriedVolumeL,
-                    capacityL: _capacityL(character.body),
-                    threat: _threat(snapshot),
-                  ),
+                : _hud(snapshot, character, l10n, inTheField: true),
             notices: NoticeStack(notices: _notices),
             onMenu: (entry) {
               switch (entry) {
@@ -6298,20 +6323,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
                 top: 0,
                 left: 0,
                 right: 0,
-                child: SafeArea(
-                  child: Hud(
-                    state: snapshot.state,
-                    status: snapshot.status,
-                    constants: character.constants,
-                    warnings: _warnings(l10n, snapshot),
-                    sky: snapshot.sky,
-                    carryComfortKg: character.body.carryComfortKg,
-                    carryMaxKg: character.body.carryMaxKg,
-                    carriedKg: _carriedKg,
-                    carriedVolumeL: _carriedVolumeL,
-                    capacityL: _capacityL(character.body),
-                  ),
-                ),
+                child: SafeArea(child: _hud(snapshot, character, l10n)),
               ),
           ],
         ),
@@ -6324,19 +6336,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
           Column(
             children: [
               if (snapshot != null && character != null)
-                Hud(
-                  state: snapshot.state,
-                  status: snapshot.status,
-                  constants: character.constants,
-                  warnings: _warnings(l10n, snapshot),
-                  // §12, §17.2: how long the light has left.
-                  sky: snapshot.sky,
-                  carryComfortKg: character.body.carryComfortKg,
-                  carryMaxKg: character.body.carryMaxKg,
-                  carriedKg: _carriedKg,
-                  carriedVolumeL: _carriedVolumeL,
-                  capacityL: _capacityL(character.body),
-                ),
+                _hud(snapshot, character, l10n),
               Expanded(
                 child: SafeArea(
                   child: Center(

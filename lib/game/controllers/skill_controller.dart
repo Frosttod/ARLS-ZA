@@ -15,6 +15,7 @@ library;
 import 'package:flutter/foundation.dart';
 
 import '../../data/db/database.dart';
+import '../../skills/practice.dart';
 import '../../skills/skill.dart';
 
 class SkillController extends ChangeNotifier {
@@ -74,6 +75,14 @@ class SkillController extends ChangeNotifier {
 
     return result.levelled;
   }
+
+  /// §7.2.1: pays for having done something.
+  ///
+  /// The one door the game actually knocks on. [award] takes a figure and
+  /// would let any caller invent one; this takes the *thing that happened* and
+  /// looks the figure up in §7.2.1's own table, so the balance lives in one
+  /// place and a call site cannot quietly be generous.
+  Future<bool> practised(Practice what) => award(what.skill, what.xp);
 
   /// Sets a skill outright. Development only (§15.3).
   ///

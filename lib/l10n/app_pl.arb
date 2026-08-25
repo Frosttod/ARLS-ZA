@@ -1403,5 +1403,16 @@
     }
   },
   "hudSunrise": "Świt",
-  "hudSunset": "Zmierzch"
+  "hudSunset": "Zmierzch",
+  "skillLevelUp": "{skill}: poziom {level}",
+  "@skillLevelUp": {
+    "placeholders": {
+      "skill": {
+        "type": "String"
+      },
+      "level": {
+        "type": "int"
+      }
+    }
+  }
 }

@@ -1535,5 +1535,16 @@
     }
   },
   "hudSunrise": "Dawn",
-  "hudSunset": "Dusk"
+  "hudSunset": "Dusk",
+  "skillLevelUp": "{skill}: level {level}",
+  "@skillLevelUp": {
+    "placeholders": {
+      "skill": {
+        "type": "String"
+      },
+      "level": {
+        "type": "int"
+      }
+    }
+  }
 }

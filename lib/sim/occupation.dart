@@ -106,6 +106,16 @@ enum ActionKind {
     ActionKind.shooting => ActionPace.onTheSpot,
   };
 
+  /// §4.7, §7.2.1: whether this is somebody working on a wound.
+  ///
+  /// The three that teach medicine. Eating and drinking are not treatment and
+  /// searching is somebody else's skill — a single list, so the journal and
+  /// the experience table cannot come to disagree about what a dressing is.
+  bool get isTreatment =>
+      this == ActionKind.dressing ||
+      this == ActionKind.tourniquet ||
+      this == ActionKind.suturing;
+
   /// §4.7: whether running ends this rather than pausing it.
   ///
   /// ⚠️ One exception, and it is a decision rather than a rule: sixteen

@@ -24,6 +24,8 @@ import 'dart:math' as math;
 import 'package:flutter/foundation.dart' show Factory;
 import 'package:flutter/gestures.dart' show OneSequenceGestureRecognizer;
 import 'package:flutter/material.dart';
+
+import 'map_view.dart' show TileSurfaceBuilder;
 import 'package:maplibre_gl/maplibre_gl.dart';
 
 import '../location/position_fix.dart';
@@ -77,6 +79,31 @@ double widestGameZoom({
   pixelWidth: logicalWidth,
   latitude: latitude,
 );
+
+/// The surface, as the builder [MapView] asks for.
+///
+/// ⚠️ Here rather than on the screen that pushes the map. Which arguments a
+/// tile surface needs is a fact about the surface, and a nine-line closure in
+/// the middle of a widget tree is nine lines nobody reads — it was sitting in
+/// the largest build method in the codebase, which is the one place a reader
+/// is already lost.
+TileSurfaceBuilder tilesFrom(MapSource source, {GeoPoint? fallbackCentre}) =>
+    (
+      context, {
+      required centre,
+      required markers,
+      required economy,
+      onMarkerTap,
+      noise,
+    }) => MapLibreSurface(
+      source: source,
+      centre: centre,
+      markers: markers,
+      economy: economy,
+      onMarkerTap: onMarkerTap,
+      noise: noise,
+      fallbackCentre: fallbackCentre,
+    );
 
 class MapLibreSurface extends StatefulWidget {
   const MapLibreSurface({

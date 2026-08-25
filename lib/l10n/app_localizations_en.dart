@@ -2394,4 +2394,9 @@ class L10nEn extends L10n {
 
   @override
   String get hudSunset => 'Dusk';
+
+  @override
+  String skillLevelUp(String skill, int level) {
+    return '$skill: level $level';
+  }
 }
