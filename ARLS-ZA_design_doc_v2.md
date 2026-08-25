@@ -354,7 +354,7 @@ Dług senny liczony wobec zapotrzebowania z §1.3:
 | 12–24 h | +50% czasu wszystkich czynności, +3 MOA, −20% tempa nauki |
 | > 24 h | mikrosny — losowe 5–15 s zablokowania interfejsu |
 
-Moduł Salon (§8.4) podnosi tempo regeneracji, co realnie oznacza: **mniej godzin snu na pokrycie tego samego zapotrzebowania, czyli więcej czasu na lekturę i budowę.** To czyni Salon modułem konkurencyjnym wobec Magazynu, a nie „miłym dodatkiem".
+Moduł Salon (§8.4) podnosi tempo regeneracji, co realnie oznacza: **mniej godzin snu na pokrycie tego samego zapotrzebowania, czyli więcej czasu na lekturę i budowę.** Skraca też sam czas czytania — o 4% na poziom, maksymalnie **12%** (§4.6). Pokój z fotelem i lampą kupuje czas dwa razy. To czyni Salon modułem konkurencyjnym wobec Magazynu, a nie „miłym dodatkiem".
 
 #### 2.5.5. Deprywacja przewlekła — drugi zegar
 
@@ -1311,7 +1311,7 @@ Z narzędziami (młotek + siekiera): −35%. Z Inżynierią 100%: −30%. Minimu
 | :---- | :---- | :---- | :---- |
 | Magazyn | 3 | +50 kg | 150 kg |
 | Warsztat | 3 | ⚠️ patrz niżej | — |
-| Salon | 3 | +15% tempa regeneracji ze snu | +45% |
+| Salon | 3 | +15% tempa regeneracji ze snu **oraz +4% tempa czytania** (§4.6) | +45% / **+12%** |
 | Laboratorium | 3 | +3% skuteczności posiłków i napojów | +9% |
 
 ⚠️ **Warsztat jest niezbalansowany.** 3% na poziom (max 9%) to nagroda nieproporcjonalna do kosztu trzech poziomów rozbudowy — gracz nigdy tego nie zbuduje.

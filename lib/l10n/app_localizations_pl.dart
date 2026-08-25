@@ -2401,4 +2401,7 @@ class L10nPl extends L10n {
   String skillLevelUp(String skill, int level) {
     return '$skill: poziom $level';
   }
+
+  @override
+  String get moduleLoungeReading => 'czytanie';
 }

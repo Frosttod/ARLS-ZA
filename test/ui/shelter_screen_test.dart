@@ -164,11 +164,20 @@ void main() {
       );
 
       expect(find.textContaining('/ 150.00 kg'), findsOneWidget);
-      expect(find.text('×1.15'), findsOneWidget);
+
+      // §2.5, §4.6: the Lounge buys time back twice — a shorter night, and a
+      // faster evening in a chair with a lamp.
+      expect(find.textContaining('×1.15'), findsWidgets);
+      expect(
+        find.textContaining('-4%'),
+        findsWidgets,
+        reason: 'twelve per cent off reading at the third level (§8.4)',
+      );
 
       // §8.4, §12: and the card says what the next level makes it, which is
       // the question "ile bonusu daje salon" was actually asking.
-      expect(find.textContaining('×1.15 → ×1.30'), findsOneWidget);
+      expect(find.textContaining('×1.15'), findsWidgets);
+      expect(find.textContaining('×1.30'), findsWidgets);
     });
   });
 

@@ -326,9 +326,19 @@ class _SkyState extends State<_Sky> with WidgetsBindingObserver, Ticking {
   }
 
   /// Whichever of the two comes first, and which one it is.
+  ///
+  /// ⚠️ **Only moments still ahead.** Reported from a walk: the countdown
+  /// reached 00:00 and stayed there. A moment that has passed clamped to zero,
+  /// zero is inside the half-hour window, and so the panel went on offering a
+  /// countdown to something that had already happened — until the loop next
+  /// recomputed the pair, which on a throttled cadence (§3.3) is not soon.
+  ///
+  /// Dropping a passed moment here makes the panel right whatever the snapshot
+  /// says: the dusk countdown disappears the second dusk arrives, and the dawn
+  /// one appears on its own half hour later.
   ({DateTime at, bool dusk})? _next() {
-    final dusk = widget.sky.dusk;
-    final dawn = widget.sky.dawn;
+    final dusk = _leftOf(widget.sky.dusk) == null ? null : widget.sky.dusk;
+    final dawn = _leftOf(widget.sky.dawn) == null ? null : widget.sky.dawn;
 
     if (dusk == null && dawn == null) return null;
     if (dawn == null) return (at: dusk!, dusk: true);
@@ -339,11 +349,12 @@ class _SkyState extends State<_Sky> with WidgetsBindingObserver, Ticking {
         : (at: dawn, dusk: false);
   }
 
+  /// How long until [at], or null when it is null or already behind us.
   Duration? _leftOf(DateTime? at) {
     if (at == null) return null;
 
     final left = at.difference(DateTime.now().toUtc());
-    return left.isNegative ? Duration.zero : left;
+    return left <= Duration.zero ? null : left;
   }
 
   /// A clock time, in the player's own local time.

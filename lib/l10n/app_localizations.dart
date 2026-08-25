@@ -4266,6 +4266,12 @@ abstract class L10n {
   /// In en, this message translates to:
   /// **'{skill}: level {level}'**
   String skillLevelUp(String skill, int level);
+
+  /// No description provided for @moduleLoungeReading.
+  ///
+  /// In en, this message translates to:
+  /// **'reading'**
+  String get moduleLoungeReading;
 }
 
 class _L10nDelegate extends LocalizationsDelegate<L10n> {

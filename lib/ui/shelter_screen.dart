@@ -17,6 +17,7 @@ import 'effects.dart';
 import '../map/geometry.dart';
 import '../shelter/recipes.dart';
 import '../shelter/shelter.dart';
+import '../skills/reading.dart';
 import 'fonts.dart';
 import '../craft/craft_job.dart';
 import 'hud.dart' show HudColors;
@@ -875,7 +876,14 @@ String moduleEffectAt(
     _ => percent(1.0),
   },
 
-  ShelterModule.lounge => times(1 + kLoungeSleepPerLevel * level),
+  // §2.5, §4.6: the room that buys time back twice — a shorter night, and a
+  // faster evening in a chair with a lamp.
+  ShelterModule.lounge =>
+    level == 0
+        ? times(1)
+        : '${times(1 + kLoungeSleepPerLevel * level)}$kEffectGap'
+              '${l10n.moduleLoungeReading} '
+              '${percent(-kLoungeReadingSpeed * level)}',
   ShelterModule.laboratory => times(1 + kLabNutritionPerLevel * level),
 };
 

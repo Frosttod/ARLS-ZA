@@ -705,6 +705,59 @@ void main() {
       expect(figuresUnder(L10nPl().hudSunrise), 2);
     });
 
+    testWidgets('a countdown that reached nought is gone, not nought', (
+      tester,
+    ) async {
+      // ⚠️ Reported from a walk: "odliczanie do zmierzchu stanelo na 00:00".
+      // A moment that has passed used to clamp to zero, zero is inside the
+      // half-hour window, and so the panel went on offering a countdown to
+      // something that had already happened — until the loop next recomputed
+      // the pair, which on a throttled cadence (§3.3) is not soon.
+      await pumpHud(
+        tester,
+        healthy(),
+        sky: (
+          dusk: DateTime.now().subtract(const Duration(minutes: 2)),
+          dawn: DateTime.now().add(const Duration(hours: 9)),
+        ),
+      );
+
+      expect(find.text('00:00'), findsNothing);
+      expect(
+        find.textContaining(':').evaluate().length,
+        greaterThan(0),
+        reason: 'the clock times themselves still stand',
+      );
+    });
+
+    testWidgets('and the next one turns up on its own half hour', (
+      tester,
+    ) async {
+      // Dusk gone, dawn twenty minutes out: nothing to count to at dusk, and
+      // seconds at dawn.
+      await pumpHud(
+        tester,
+        healthy(),
+        sky: (
+          dusk: DateTime.now().subtract(const Duration(hours: 6)),
+          dawn: DateTime.now().add(const Duration(minutes: 20)),
+        ),
+      );
+
+      int figuresUnder(String label) => find
+          .descendant(
+            of: find
+                .ancestor(of: find.text(label), matching: find.byType(Row))
+                .first,
+            matching: find.byType(Text),
+          )
+          .evaluate()
+          .length;
+
+      expect(figuresUnder(L10nPl().hudSunrise), 3);
+      expect(figuresUnder(L10nPl().hudSunset), 2);
+    });
+
     testWidgets('nothing to say before the first fix', (tester) async {
       // ⚠️ §17.2 is computed from the player's own position. With nothing
       // through the accuracy gate yet there is no answer, and a time invented

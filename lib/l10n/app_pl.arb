@@ -1414,5 +1414,6 @@
         "type": "int"
       }
     }
-  }
+  },
+  "moduleLoungeReading": "czytanie"
 }

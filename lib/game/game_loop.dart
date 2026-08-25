@@ -1181,9 +1181,14 @@ class GameLoop {
 
     final now = _state.lastUpdate;
     final since = _skyFor;
+    // ⚠️ Recomputed a minute *before* a moment rather than after it. A pair
+    // whose next entry is already behind us is a pair the panel has to guess
+    // its way around (see `_Sky._next`), and the guess only ever gets it as
+    // far as saying nothing.
+    final soon = now.add(const Duration(minutes: 1));
     final passed =
-        (_sky.dusk?.isBefore(now) ?? false) ||
-        (_sky.dawn?.isBefore(now) ?? false);
+        (_sky.dusk?.isBefore(soon) ?? false) ||
+        (_sky.dawn?.isBefore(soon) ?? false);
 
     if (since != null &&
         !passed &&
