@@ -101,17 +101,24 @@ void main() {
     });
   });
 
-  test('a shelter is the only activity that turns the radio off (§3.3)', () {
-    // The cost of getting this wrong is the whole bug: everything downstream
-    // treats `unavailable` as "we do not know where you are", so any activity
-    // that reached for `off` by mistake would refuse every action in the game.
+  test('no activity turns the radio off any more (§3.3, §2.1a.4)', () {
+    // ⚠️ **The deadlock reported from a walk.** §2.1a.4 asks for the receiver
+    // to stop while a character stands still under their own roof, and it was
+    // taken literally — but the *zone* is decided from the position, so with
+    // the receiver off no position ever arrived, nothing could observe the
+    // player leaving, and the pin sat on the shelter for the rest of the
+    // session. Walking out of the door could not bring it back, because
+    // walking out is a thing only a fix can tell anybody about.
+    //
+    // Everything downstream also treats `unavailable` as "we do not know where
+    // you are", so it refused every action in the game along with it.
     final policy = File('lib/location/sampling_policy.dart').readAsStringSync();
 
     final offRows = RegExp(
       r'Activity\.(\w+) => PositionCadence\.off',
     ).allMatches(policy).map((m) => m.group(1)).toList();
 
-    expect(offRows, ['sheltered']);
+    expect(offRows, isEmpty);
   });
 
   test('and only a zero interval means off at all', () {
@@ -121,6 +128,9 @@ void main() {
     expect(PositionCadence.combat.interval, const Duration(seconds: 1));
     expect(PositionCadence.moving.interval, const Duration(seconds: 5));
     expect(PositionCadence.resting.interval, const Duration(seconds: 10));
+    // Fifteen in a shelter: a third of standing in a street, and still often
+    // enough that the door being opened is noticed within a quarter minute.
+    expect(PositionCadence.sheltered.interval, const Duration(seconds: 15));
     expect(PositionCadence.off.interval, Duration.zero);
 
     for (final cadence in PositionCadence.values) {

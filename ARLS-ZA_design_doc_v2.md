@@ -198,7 +198,7 @@ To jest sedno rozgrywki w schronie. Doba ma stałą liczbę godzin, a noc — wy
 
 - **Zamknięcie aplikacji nie przerywa zajęcia schronowego**, ale zmiana strefy tak. Jeśli GPS wykryje opuszczenie schronu — zajęcie anulowane, postęp zapisany.
 - **Przy zamkniętej aplikacji obowiązuje ostatnia znana strefa** (§2.1.1). Gracz, który zadeklaruje lekturę i wyjdzie z domu, oszuka wyłącznie siebie — gra jednoosobowa, brak rankingów wymagających uczciwości.
-- **GPS wyłączony podczas zajęć schronowych** — postać jest nieruchoma, lokalizacja niepotrzebna. Realna oszczędność baterii w najdłuższym stanie gry.
+- **GPS zwolniony podczas zajęć schronowych do 1 odczytu / 15 s**, nigdy wyłączony. Postać jest nieruchoma, więc pełna kadencja jest zbędna — realna oszczędność baterii w najdłuższym stanie gry (jedna trzecia kosztu stania na ulicy). ⚠️ **„Wyłączony" to zakleszczenie.** Strefa jest wyliczana *z pozycji*: przy wyłączonym odbiorniku żaden odczyt nie przychodzi, więc nikt nie może zaobserwować, że gracz wyszedł — kadencja zostaje wyłączona, a pinezka siedzi na schronie do końca sesji. Wyjście za próg tego nie naprawia, bo o wyjściu za próg może donieść wyłącznie odczyt. Piętnaście sekund trzyma odbiornik ciepły; pierwszy odczyt poza promieniem bezpieczeństwa przełącza strefę i przywraca pełną kadencję §3.3 bez żadnej histerezy.
 - Zajęcie rozpoczęte poza schronem (np. opatrywanie w terenie) podlega regule terenowej i **jest anulowane** przy zamknięciu aplikacji.
 
 ### 2.2. Model wydatku energetycznego 📐
@@ -310,6 +310,8 @@ Postać śpi, gdy **jednocześnie**:
 3. **nie wykonuje innego zajęcia** (§2.1a).
 
 Sen jest **stanem domyślnym**, nie akcją. Gracz nic nie klika — postać kładzie się spać, bo jest noc i jest pod dachem.
+
+⚠️ **Sen jest rozliczany przy zamkniętej aplikacji** (§2.1a.3, §2.1.1). Po powrocie `onResumed()` liczy deltę względem `last_update` i stosuje ją do całej fizjologii — noc spędzona z telefonem w szufladzie przychodzi już przespana. **Dziennik (§3.6.1) czytał to inaczej:** jego pierwszy odczyt po restarcie celowo nie jest przejściem, żeby otwarcie gry w domu nie zapisywało „powrotu", którego nikt nie przeszedł — i ta zasada połykała razem z tym pobudkę, więc log kończył się na „Sen 18:39" na zawsze. Strefa jest teraz zasiewana ostatnim słowem samego logu: jeśli ostatni wpis to `sen`, następny odczyt spoza łóżka zapisuje pobudkę.
 
 ⚠️ **Punkt 3 obejmuje pracę długą, nie tylko akcje z §4.7.** Krótkie akcje (jedzenie, opatrunek, przeszukanie) mają pięciominutowe zabezpieczenie przed zawieszoną flagą — rozbiórka trwa pół godziny (§18.6), a moduł schronu dni, więc to samo zabezpieczenie robiło z postaci przy imadle postać śpiącą przed imadłem, spłacającą dług senny, gdy imadło się kręciło. Praca długa jest raportowana osobno i bez limitu czasu: interfejs wylicza ją ze stanu na każdym ticku, więc nic nie może jej zostawić włączonej. **Praca odłożona na pauzę (§8.3) nie liczy się** — to postać stojąca w schronie, która nic nie robi.
 

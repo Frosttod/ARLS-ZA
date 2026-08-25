@@ -911,6 +911,55 @@ void main() {
       );
     });
 
+    test('a night asleep is paid off across a closed app (§2.5.1)', () async {
+      // The field report: "ostatnia akcja to Sen 18:39" and the game comes
+      // back holding the same figure. §2.1a.3 says a shelter occupation ticks
+      // with the app shut, and sleep is the default one of them — so the whole
+      // of a night away has to arrive already slept.
+      // Six hours owed, and the phone goes in a drawer for eight of night.
+      final tired = SimState.fresh(
+        at: midnight,
+        constants: constants,
+        massKg: 80,
+      ).copyWith(sleepDebtSeconds: const Duration(hours: 6).inSeconds);
+
+      final rig = await buildLoop(initial: tired, startAt: midnight);
+      addTearDown(() async {
+        await rig.loop.dispose();
+        await rig.source.dispose();
+        await rig.session.close();
+      });
+
+      await rig.loop.start();
+
+      // In their own doorway, in the dark: §2.5.1's conditions, met.
+      rig.source.jumpTo(52.4064, 16.9252);
+      rig.source.step();
+      await pump();
+      rig.loop.setShelters([
+        Shelter(
+          id: 1,
+          kind: ShelterKind.main,
+          position: const GeoPoint(52.4064, 16.9252),
+          startedAt: midnight.subtract(const Duration(days: 1)),
+          buildTime: kShelterBuildTime,
+          buildLeft: Duration.zero,
+        ),
+      ]);
+      expect(rig.loop.state.zone, MetabolicZone.sleep);
+
+      await rig.loop.onPaused(rig.wall.nowUtc());
+
+      rig.wall.advance(const Duration(hours: 8));
+      await rig.loop.onResumed();
+
+      expect(
+        rig.loop.state.sleepDebt,
+        Duration.zero,
+        reason: 'eight hours of night pays off six hours of debt',
+      );
+    });
+
     test('a fortnight away leaves the character alive (§2.1.1)', () async {
       final rig = await buildLoop();
       addTearDown(() async {
@@ -1534,6 +1583,41 @@ void main() {
       await rig.loop.onPaused(rig.wall.nowUtc());
 
       expect(rig.loop.state.zone, MetabolicZone.sleep);
+    });
+
+    test('a shelter slows the receiver and never stops it (§2.1a.4)', () async {
+      // ⚠️ **The deadlock reported from a walk.** §2.1a.4 asks for the radio
+      // to stop while a character stands still under their own roof, and it
+      // was taken literally. But the zone is decided *from* the position: with
+      // the receiver off no fix ever arrived, nothing could observe the player
+      // leaving, the cadence stayed off and the pin sat on the shelter for the
+      // rest of the session. Opening the door could not fix it, because
+      // opening the door is a thing only a fix can report.
+      final rig = await buildLoop();
+      addTearDown(() async {
+        await rig.loop.dispose();
+        await rig.source.dispose();
+        await rig.session.close();
+      });
+
+      await rig.loop.start();
+      await arrive((loop: rig.loop, source: rig.source, wall: rig.wall));
+
+      rig.wall.advance(const Duration(minutes: 1));
+      rig.source.step();
+      await pump();
+
+      expect(rig.loop.state.zone.isSheltered, isTrue);
+      expect(
+        rig.source.currentCadence,
+        PositionCadence.sheltered,
+        reason: 'slow, and never off - off is a door nobody can walk out of',
+      );
+      expect(
+        rig.source.currentCadence.interval,
+        greaterThan(Duration.zero),
+        reason: 'a radio that is off can never notice the door being opened',
+      );
     });
 
     test('a short action keeps them awake too (§2.1a.2)', () async {

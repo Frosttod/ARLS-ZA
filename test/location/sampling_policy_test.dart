@@ -62,8 +62,10 @@ void main() {
       );
       expect(
         decide(policy, activity: Activity.sheltered).cadence,
-        PositionCadence.off,
-        reason: 'the radio is the most expensive thing on the device',
+        PositionCadence.sheltered,
+        reason:
+            'the radio is the most expensive thing on the device — but a '
+            'radio that is off can never notice the door being opened',
       );
     });
 
@@ -228,7 +230,21 @@ void main() {
 
       expect(
         decide(policy, activity: Activity.sheltered).cadence,
-        PositionCadence.off,
+        PositionCadence.sheltered,
+      );
+    });
+
+    test('and coming back out of one is immediate as well', () {
+      // ⚠️ The half that matters more. A minute of hysteresis on the way *out*
+      // is a minute of a player walking down a street while the game still
+      // believes they are sitting at home — which is every rule in §10.2 and
+      // §5 answering the wrong question.
+      final policy = SamplingPolicy();
+      settled(policy, activity: Activity.sheltered);
+
+      expect(
+        decide(policy, activity: Activity.walking).cadence,
+        PositionCadence.moving,
       );
     });
   });

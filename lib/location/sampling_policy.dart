@@ -137,6 +137,7 @@ class SamplingPolicy {
     // combat is decided on distance — waiting a minute either to reach 1 Hz or
     // to leave it would be the same as not having the rate at all (§5.2).
     final deliberate =
+        wanted == PositionCadence.sheltered ||
         wanted == PositionCadence.off ||
         wanted == PositionCadence.combat ||
         _current == PositionCadence.combat;
@@ -177,7 +178,7 @@ class SamplingPolicy {
       Activity.combat => PositionCadence.combat,
       Activity.walking => PositionCadence.moving,
       Activity.standing => PositionCadence.resting,
-      Activity.sheltered => PositionCadence.off,
+      Activity.sheltered => PositionCadence.sheltered,
     };
 
     if (!economy) return base;
@@ -190,6 +191,9 @@ class SamplingPolicy {
       PositionCadence.combat => PositionCadence.combat,
       PositionCadence.moving => PositionCadence.resting,
       PositionCadence.resting => PositionCadence.resting,
+      // Already the cheapest thing a running game asks for, and making it
+      // cheaper would be switching it off — see [PositionCadence.sheltered].
+      PositionCadence.sheltered => PositionCadence.sheltered,
       PositionCadence.off => PositionCadence.off,
     };
   }

@@ -283,6 +283,73 @@ void main() {
     });
   });
 
+  group('§11.1: the app closed on a sleeping character', () {
+    // ⚠️ Reported from the field: "ostatnia akcja to Sen 18:39" and the log
+    // still says so hours later. §2.1a.3 runs the night with the app shut and
+    // the simulation credits every hour of it — but the journal's first
+    // reading after a restart is deliberately not a transition, so that
+    // opening the app at home does not write a "powrót" nobody walked. That
+    // rule swallowed the waking with it.
+
+    test(
+      'the pobudka is written when the game comes back to a waking',
+      () async {
+        await diary.noteZone(MetabolicZone.shelter, at: t0);
+        await diary.noteZone(
+          MetabolicZone.sleep,
+          at: t0.add(const Duration(hours: 1)),
+        );
+
+        // The process dies here. Eight hours later, a fresh controller.
+        final morning = JournalController(db);
+        addTearDown(morning.dispose);
+        await morning.bind(profileId: profileId, startedAt: t0);
+
+        await morning.noteZone(
+          MetabolicZone.shelter,
+          at: t0.add(const Duration(hours: 9)),
+        );
+
+        expect(morning.entries.value.first.kind, JournalKind.woke);
+      },
+    );
+
+    test('and stays quiet while they are still under the covers', () async {
+      await diary.noteZone(MetabolicZone.sleep, at: t0);
+
+      final same = JournalController(db);
+      addTearDown(same.dispose);
+      await same.bind(profileId: profileId, startedAt: t0);
+
+      final before = same.entries.value.length;
+      await same.noteZone(
+        MetabolicZone.sleep,
+        at: t0.add(const Duration(hours: 3)),
+      );
+
+      expect(same.entries.value, hasLength(before));
+    });
+
+    test('a restart anywhere else still writes no powrót', () async {
+      // The rule the seeding must not weaken. Opening the app at home is not
+      // coming home.
+      await diary.noteZone(MetabolicZone.open, at: t0);
+      await diary.noteZone(MetabolicZone.shelter, at: t0);
+
+      final later = JournalController(db);
+      addTearDown(later.dispose);
+      await later.bind(profileId: profileId, startedAt: t0);
+
+      final before = later.entries.value.length;
+      await later.noteZone(
+        MetabolicZone.shelter,
+        at: t0.add(const Duration(hours: 2)),
+      );
+
+      expect(later.entries.value, hasLength(before));
+    });
+  });
+
   test('§11.1: it is on disk before the process can be killed', () async {
     await diary.add(JournalKind.killed, subject: 'brute', at: t0);
 

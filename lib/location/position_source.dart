@@ -33,8 +33,25 @@ enum PositionCadence {
   /// receiver is already warm — and removes both.
   resting(Duration(seconds: 10), 'resting'),
 
-  /// Shelter occupations run with GPS off entirely — the character is not
-  /// moving, so the position is not needed (§2.1a.4).
+  /// In the shelter zone. One reading every fifteen seconds.
+  ///
+  /// ⚠️ **Slow, never off — and that distinction is a deadlock.** §2.1a.4 asks
+  /// for the receiver to stop while a character stands still under their own
+  /// roof, and it was taken literally: [PositionCadence.off]. But the *zone* is
+  /// decided from the position, and with the receiver off no position ever
+  /// arrives — so nothing could ever observe the player leaving, the cadence
+  /// stayed off, and the pin sat on the shelter for the rest of the session.
+  /// Walking out of the door did not bring it back, because walking out is a
+  /// thing only a fix can tell anybody about.
+  ///
+  /// Fifteen seconds is a third of what standing in a street costs and keeps
+  /// the receiver warm, so the moment a reading lands outside the safe radius
+  /// the zone flips and §3.3's full rate comes straight back.
+  sheltered(Duration(seconds: 15), 'sheltered'),
+
+  /// Not running at all. What a stopped source reports, never a policy's
+  /// answer — see [sheltered] for why nothing may ask for this while a game is
+  /// being played.
   off(Duration.zero, 'off');
 
   const PositionCadence(this.interval, this.wire);

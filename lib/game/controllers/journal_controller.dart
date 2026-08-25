@@ -41,6 +41,21 @@ class JournalController extends ChangeNotifier {
     _startedAt = startedAt;
 
     entries.value = await JournalStore(_db).load(profileId);
+
+    // §2.5.1, §11.1: the app closed on a sleeping character, and the night
+    // went on without it (§2.1a.3). The first reading after a restart is
+    // otherwise not treated as a transition at all — deliberately, so that
+    // opening the app at home does not write a "powrót" nobody walked — and
+    // that rule swallowed the waking with it: the log read "Sen 18:39" and
+    // then nothing, for ever, however long the character had been up.
+    //
+    // Seeding the zone from the log's own last word restores the transition
+    // without weakening the rule: the next reading writes a pobudka if they
+    // are up, and stays quiet if they are still under the covers.
+    if (entries.value.firstOrNull?.kind == JournalKind.slept) {
+      _zone = MetabolicZone.sleep;
+    }
+
     notifyListeners();
   }
 
