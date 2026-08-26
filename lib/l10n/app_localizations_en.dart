@@ -2417,4 +2417,9 @@ class L10nEn extends L10n {
   String actionReadingPage(String what, int page, int pages) {
     return '$what — page $page/$pages';
   }
+
+  @override
+  String combatHurtAway(int blows) {
+    return 'They were on you while the screen was off: $blows blows';
+  }
 }

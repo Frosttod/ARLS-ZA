@@ -1280,6 +1280,12 @@ To realizuje założenie z §13.1: **maksymalny poziom umiejętności ma być mi
 - Strefa bezpieczna: **50 m** — przeciwnicy nie wchodzą
 - Blokada ataku gracza: **50 m** (ten sam promień)
 
+⚠️ **Zamknięcie aplikacji w zwarciu nie jest ucieczką (§5.5.3, §9.2).** Ciosy z §5.5.3 naliczały się wyłącznie na żywym ticku, więc gracz z trzema szwędaczami na wyciągnięcie ręki mógł zgasić ekran, wrócić do domu i obudzić się bez zadrapania. Nic w §5 ani §6 nie kosztuje, jeśli wyjście jest darmowe.
+
+Okno to te same **pięć minut**, po których ulica przestaje być pamiętana (§11.1.2) — dalej nie wiadomo, co robił szwędacz, ale pierwsze pięć minut wiadomo: stał tam. Naliczane **zanim** ulica zostanie wyrzucona.
+
+⚠️ **I nigdy nie zabija.** Pięć minut w tłumie jest arytmetycznie śmiertelne kilka razy — realistycznie i nie do grania: gracz, który schował telefon w złym momencie, straciłby miesięczną passę na coś, czego nie zobaczył. Suma jest więc zaciskana na krawędzi klasy IV (§2.6). W softcore ta krawędź to miejsce, gdzie przejmuje §9.2 — postać pada, gubi połowę sprzętu i budzi się na 65%. W hardcore ta sama krawędź to śmierć, więc hardcore zatrzymuje się **przed** nią: ciężko ranny, na nogach, wciąż z problemem na karku.
+
 ⚠️ **Postać w strefie schronu nie idzie.** Zgłoszone po nocy: odbiornik dryfował po kilka metrów przez osiem godzin, `bandForSpeed` uznaje **każdą** prędkość powyżej zera za co najmniej wolny marsz (MET 2,0), a pot doliczany jest zawsze, gdy MET > 1 — gracz obudził się z nocą wody wypitą przez kogoś śpiącego w fotelu. Strefa ma pięćdziesiąt metrów, a współczynnik strefy z §2.1 **już** wycenia przebywanie pod dachem jako odpoczynek: doliczanie ruchu na wierzchu to płacenie dwa razy za tę samą godzinę, z odczytu, którego nikt nie wykonał. Reguła (`countedSpeedKmh`) wymienia trzy sposoby na obciążenie za marsz, którego nie było: utracony sygnał, zawieszony przebieg (§3.4) i własny dach.
 
 ⚠️ **Oba promienie muszą być równe.** Przy różnych wartościach powstaje pierścień, w którym przeciwnik może atakować gracza, a gracz nie może się bronić — co wprost karze przebywanie pod schronem.

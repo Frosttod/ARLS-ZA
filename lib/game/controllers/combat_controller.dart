@@ -17,9 +17,12 @@
 ///     after a walk: *"I do not know how I died."*
 library;
 
+import 'dart:math';
+
 import 'package:flutter/foundation.dart';
 
 import '../../combat/combat_session.dart';
+import '../../combat/blows_away.dart';
 import '../../combat/enemy.dart';
 import '../../combat/enemy_spawner.dart' show kActiveRadiusM;
 
@@ -65,6 +68,35 @@ class CombatController extends ChangeNotifier {
 
   /// Nothing is in reach any more, so nobody is mid-swing.
   void noneInReach() => _lastBlow.clear();
+
+  /// §5.5.3, §9.2: what everything at arm's length did while the screen was
+  /// off, and a clean slate afterwards.
+  ///
+  /// ⚠️ The cooldowns are cleared whatever the answer. They were taken before
+  /// the gap and mean nothing after it — leaving them would let a crowd that
+  /// had just been charged for five minutes swing again on the first tick.
+  BlowsAway settleAway({
+    required Duration away,
+    required GeoPoint at,
+    required double bloodMl,
+    required double bloodMaxMl,
+    required double protection,
+    required bool mayGoDown,
+    required int seed,
+  }) {
+    final hurt = blowsWhileAway(
+      inReach: enemiesInReach(enemies, at),
+      away: away,
+      bloodMl: bloodMl,
+      bloodMaxMl: bloodMaxMl,
+      protection: protection,
+      mayGoDown: mayGoDown,
+      random: Random(seed ^ away.inSeconds),
+    );
+
+    _lastBlow.clear();
+    return hurt;
+  }
 
   List<Enemy> get enemies => _session.enemies;
 

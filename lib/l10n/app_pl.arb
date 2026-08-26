@@ -1445,5 +1445,13 @@
         "type": "int"
       }
     }
+  },
+  "combatHurtAway": "Dopadli Cię, gdy ekran był zgaszony: {blows} ciosów",
+  "@combatHurtAway": {
+    "placeholders": {
+      "blows": {
+        "type": "int"
+      }
+    }
   }
 }

@@ -4290,6 +4290,12 @@ abstract class L10n {
   /// In en, this message translates to:
   /// **'{what} — page {page}/{pages}'**
   String actionReadingPage(String what, int page, int pages);
+
+  /// No description provided for @combatHurtAway.
+  ///
+  /// In en, this message translates to:
+  /// **'They were on you while the screen was off: {blows} blows'**
+  String combatHurtAway(int blows);
 }
 
 class _L10nDelegate extends LocalizationsDelegate<L10n> {

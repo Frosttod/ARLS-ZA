@@ -37,6 +37,41 @@ const double kForgetEnemiesM = 900;
 /// the street is simply repopulated.
 const Duration kCombatGapForgotten = Duration(minutes: 5);
 
+/// §11.1.2: what a gap in the tick means for the street.
+enum CombatGap {
+  /// No time passed. A snapshot can be published without the simulation clock
+  /// having moved — a position update does it — and treating that as a gap
+  /// wiped the street out from under the player every few seconds.
+  none,
+
+  /// The first tick of a session: nothing to walk through, but the street is
+  /// whatever it already was rather than nothing.
+  first,
+
+  /// Time to walk through.
+  step,
+
+  /// Longer than anybody can account for. §11.1.2: what a Walker did over
+  /// eight hours is not knowable, so the street is repopulated rather than
+  /// guessed at — after whatever was already bleeding has been settled, and
+  /// after whatever was at arm's length has had its five minutes (§5.5.3).
+  forgotten,
+}
+
+/// Which of the four this tick is.
+///
+/// ⚠️ A function rather than three conditions in a build-adjacent method,
+/// because two of the four were found on a phone rather than reasoned out and
+/// the difference between them is one comparison nobody can see the shape of.
+CombatGap gapBetween({DateTime? since, required DateTime now}) {
+  if (since == null) return CombatGap.first;
+
+  final elapsed = now.difference(since);
+  if (elapsed <= Duration.zero) return CombatGap.none;
+
+  return elapsed > kCombatGapForgotten ? CombatGap.forgotten : CombatGap.step;
+}
+
 /// §6.4: how far out the ambient trickle is kept stocked.
 ///
 /// Wider than §5.5.6's three-hundred-metre cap so that something can walk in

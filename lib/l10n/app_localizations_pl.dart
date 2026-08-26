@@ -2419,4 +2419,9 @@ class L10nPl extends L10n {
   String actionReadingPage(String what, int page, int pages) {
     return '$what — strona $page/$pages';
   }
+
+  @override
+  String combatHurtAway(int blows) {
+    return 'Dopadli Cię, gdy ekran był zgaszony: $blows ciosów';
+  }
 }

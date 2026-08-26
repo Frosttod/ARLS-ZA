@@ -29,6 +29,7 @@ import 'items/item.dart';
 import 'items/item_catalogue.dart';
 import 'items/item_names.dart';
 import 'combat/aim.dart';
+import 'combat/blows_away.dart';
 import 'combat/ballistics.dart';
 import 'combat/combat_session.dart';
 import 'combat/engagement.dart';
@@ -2297,17 +2298,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     _combatAt = now;
 
     final elapsed = since == null ? Duration.zero : now.difference(since);
+    final gap = gapBetween(since: since, now: now);
 
-    // ⚠️ No time passed is not the same as a gap. Found on a phone: the
-    // enemies kept vanishing, because a snapshot can be published without the
-    // simulation clock having moved — a position update does it — and the two
-    // cases were treated alike. Emptying the street on those wiped everything
-    // out from under the player every few seconds.
-    if (elapsed <= Duration.zero) {
-      if (since != null) return;
-
-      // A first tick: nothing to walk through, but the street is whatever it
-      // already was rather than nothing.
+    if (gap == CombatGap.none) return;
+    if (gap == CombatGap.first) {
       setState(() {
         _combat = CombatSession(
           seed: character.profile.rngSeed,
@@ -2318,20 +2312,19 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       return;
     }
 
-    // One after the app was away. §11.1.2 replays a gap for the body, because
-    // a body keeps burning calories in a pocket; a street does not. What a
-    // Walker did during eight hours of sleep is not knowable, so the street is
-    // emptied and made again rather than guessed at.
-    if (elapsed > kCombatGapForgotten) {
+    final here = GeoPoint(fix.latitude, fix.longitude);
+
+    // §5.5.3: whatever was at arm's length got free swings while the screen
+    // was off. Charged before the street is judged — see [CombatGap].
+    if (elapsed > kAwayGap) _settleBlowsAway(elapsed, here);
+
+    if (gap == CombatGap.forgotten) {
       setState(() {
-        // ⚠️ Settle what was already bleeding before throwing the street away.
-        //
-        // §11.1.2 is right that what a Walker *did* over a gap is not
-        // knowable — but a wound is not a walk. Reported three times as "the
-        // skull does not always appear when it bleeds out", and this was the
-        // last of it: shoot something, watch it run, put the phone in a
-        // pocket, and five minutes later the session was discarded with the
-        // death still pending. No body, no kill, no evidence it happened.
+        // ⚠️ Settle what was already bleeding before throwing the street
+        // away. §11.1.2 is right that what a Walker *did* is not knowable —
+        // but a wound is not a walk. Reported three times as "the skull does
+        // not always appear when it bleeds out": shoot something, watch it
+        // run, pocket the phone, and the death was discarded still pending.
         for (final dying in _combat.bledOutOver(elapsed)) {
           _remember(dying);
         }
@@ -2346,35 +2339,22 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     // and nothing swings for ten minutes after they get up — which is the
     // valve against waking inside a hotspot and going straight back down.
     if ((_loop?.down ?? DownState.none) == DownState.none) {
-      _takeBlows(GeoPoint(fix.latitude, fix.longitude), now);
+      _takeBlows(here, now);
     }
-    _advanceReload(GeoPoint(fix.latitude, fix.longitude));
+    _advanceReload(here);
 
     setState(() {
       // §10.3: bodies nobody came back for stop being worth drawing.
       _loot.sweep(now);
 
-      // ⚠️ The safety net, and it is here because a death can be missed. The
-      // session reports the ones it kills during a tick, and the shot reports
-      // the one under the sights — but a thing can also leave the list because
-      // the tick that killed it ran while the fix was stale, or because two
-      // paths both thought the other had it. Anything that was standing here a
-      // moment ago and is gone now, without having walked out of range, died.
-      final before = {
-        for (final enemy in _combat.enemies)
-          if (!enemy.isDead) enemy.id: enemy,
-      };
-
-      // §5.6.2: while anything is actually after the player, the fight is
-      // written down — not the fighters, just the fact, the place and the
-      // number. Closing the app in the middle of one used to be a perfect
-      // escape, and nothing in §5 costs anything if the way out is free.
-      final here = GeoPoint(fix.latitude, fix.longitude);
+      // §10.3: the safety net — see [vanishedNear].
+      final before = _combat.enemies;
 
       // §6.5.4: integrity back, fury dropped for somebody who left.
       unawaited(_fires.settle(now: now, playerAt: here));
 
-      // §5.6.2: how warm the street is, after this second of it.
+      // §5.6.2: how warm the street is after this second — the fact, the
+      // place and the number, never the fighters.
       final hunt = pursuitAfter(
         current: _loop?.pursuit,
         near: _combat.near(here),
@@ -2384,7 +2364,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       );
       if (hunt != _loop?.pursuit) _loop?.setPursuit(hunt);
       _combat = _combat.advance(
-        playerAt: GeoPoint(fix.latitude, fix.longitude),
+        playerAt: here,
         elapsed: elapsed,
         now: now,
         // §10.3: whatever bled out on the way leaves a body, exactly as one
@@ -2395,10 +2375,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         origins: _fires.originsAt(now),
         // §8.1: they wait at the edge of what the player built.
         sanctuaries: _sanctuaries,
-        shelterAt: _shelters.value
-            .where((s) => s.kind == ShelterKind.main)
-            .firstOrNull
-            ?.position,
+        shelterAt: _mainShelter()?.position,
         // §5.6.1: walls that swallow a shot swallow a silhouette too.
         denseUrban: _world?.denseUrban ?? false,
         // §7: somebody who knows how to move is noticed later.
@@ -2407,10 +2384,12 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         darkness: snapshot.darkness,
       );
 
-      for (final gone in before.values) {
-        if (_combat.enemies.any((enemy) => enemy.id == gone.id)) continue;
-        if (gone.position.distanceTo(here) > kActiveRadiusM) continue;
-
+      for (final gone in vanishedNear(
+        before,
+        _combat.enemies,
+        here,
+        withinM: kActiveRadiusM,
+      )) {
         _remember(gone);
       }
     });
@@ -2850,73 +2829,94 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     _say(L10n.of(context).combatFiredAway, remember: true);
   }
 
+  /// §5.5.3, §9.2: what the crowd did while the screen was off. Closing the
+  /// app in a clinch was a perfect escape — see [blowsWhileAway].
+  void _settleBlowsAway(Duration away, GeoPoint at) {
+    final loop = _loop;
+    final catalogue = _catalogue;
+    final character = _character;
+    if (loop == null || catalogue == null || character == null) return;
+
+    final hurt = _fight.settleAway(
+      away: away,
+      at: at,
+      bloodMl: loop.state.bloodMl,
+      bloodMaxMl: character.constants.bloodMaxMl,
+      // §4.4: the same plate was on for the whole window.
+      protection: _armourNow(catalogue),
+      // §9.2: softcore may be taken down; hardcore stops short.
+      mayGoDown: character.deathMode != DeathMode.hardcore,
+      seed: character.profile.rngSeed,
+    );
+    if (!hurt.any) return;
+
+    _wounded(loop, hurt);
+    unawaited(_diary.add(JournalKind.hurt, subject: '${hurt.blows}'));
+    if (mounted) _say(L10n.of(context).combatHurtAway(hurt.blows));
+  }
+
   /// §5.2, §5.5.3: everything in reach swings, and being surrounded hurts.
-  ///
   /// Below twenty metres §5.2 stops pretending GPS knows where anybody is
-  /// standing and settles it abstractly, which is what this is: no positions,
-  /// no facing, just how many of them are on you and how often each can swing.
+  /// standing: no positions, no facing, just how many are on you.
   void _takeBlows(GeoPoint at, DateTime now) {
     final loop = _loop;
     final catalogue = _catalogue;
     if (loop == null || catalogue == null) return;
 
-    final inReach = [
-      for (final enemy in _combat.enemies)
-        if (!enemy.isDead && enemy.position.distanceTo(at) <= kMeleeM) enemy,
-    ];
+    final inReach = enemiesInReach(_combat.enemies, at);
     if (inReach.isEmpty) {
       _fight.noneInReach();
       return;
     }
 
-    // §5.5.3: the player answers one of them and the rest swing freely, which
-    // is why letting a group close is very nearly a sentence.
-    final crowding = flankingMultiplier(inReach.length);
-    var taken = 0.0;
-    HitLocation? worst;
-
-    for (final enemy in inReach) {
-      if (!_fight.mayStrike(enemy.id, now, enemy.kind.attackInterval)) continue;
+    // §5.5.3: who is due a swing — what one costs is the same arithmetic the
+    // gap uses (§9.2).
+    final swinging = [
+      for (final enemy in inReach)
+        if (_fight.mayStrike(enemy.id, now, enemy.kind.attackInterval)) enemy,
+    ];
+    for (final enemy in swinging) {
       _fight.struck(enemy.id, now);
+    }
 
-      // §2.6: teeth and hands land where they land. A bite to the arm the
-      // player put up is not the bite that takes them down, and the log is
-      // where the difference gets said.
-      final where = rollHitLocation(Random().nextDouble());
-      if (worst == null || where.multiplier > worst.multiplier) worst = where;
+    final hurt = oneSwingEach(
+      swinging: swinging,
+      crowdSize: inReach.length,
+      protection: _armourNow(catalogue),
+      random: Random(),
+    );
+    if (!hurt.any || hurt.worst == null) return;
 
-      // §4.4: armour reduces a blow only where it covers, and a bite is blunt.
-      final protection = _inventory.value.protectionAgainst(
+    _wounded(loop, hurt);
+    _say(
+      L10n.of(context).combatHurtAt(
+        hitLocationName(L10n.of(context), hurt.worst!),
+        hurt.bloodMl.round(),
+      ),
+    );
+  }
+
+  /// §4.4: what is on the torso right now, as a share.
+  double _armourNow(ItemCatalogue catalogue) =>
+      _inventory.value.protectionAgainst(
         catalogue: catalogue,
         slot: 'torso_armor',
         hitRoll: Random().nextDouble(),
         blunt: true,
       );
 
-      taken +=
-          enemy.kind.damageMl *
-          crowding *
-          where.multiplier *
-          (1 - protection.clamp(0, 1) / 5);
-    }
-
-    if (taken <= 0 || worst == null) return;
-
-    // §2.6: teeth and nails leave something open. A moderate bleed is what a
-    // pressure dressing answers — which is the whole reason to carry one, and
-    // the reason walking away from a clinch is not the end of the fight.
+  /// §2.6: teeth and nails leave something open. A moderate bleed is what a
+  /// pressure dressing answers — which is the whole reason to carry one, and
+  /// the reason walking away from a clinch is not the end of the fight.
+  void _wounded(GameLoop loop, BlowsAway hurt) {
     loop.applyWound(
-      taken,
-      bleeding: worst == HitLocation.head || worst == HitLocation.torso
+      hurt.bloodMl,
+      bleeding:
+          hurt.worst == HitLocation.head || hurt.worst == HitLocation.torso
           ? BleedTier.moderate
           : BleedTier.superficial,
     );
-    _note((stats) => stats.hurt(taken));
-    _say(
-      L10n.of(
-        context,
-      ).combatHurtAt(hitLocationName(L10n.of(context), worst), taken.round()),
-    );
+    _note((stats) => stats.hurt(hurt.bloodMl));
   }
 
   /// §5.5.4: the magazine goes in, unless something gets to the player first.
