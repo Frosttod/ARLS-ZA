@@ -1,7 +1,7 @@
 # ARLS-ZA — lista kontrolna systemów
 
 Stan na dzień **2026-08-26**. Wygenerowana po przejściu pełnego zestawu
-testów: **2398 testów, `flutter analyze` czysty, schemat bazy v34**.
+testów: **2404 testów, `flutter analyze` czysty, schemat bazy v34**.
 
 ⚠️ Liczby poniżej są zliczone z suite'a, nie przepisane z pamięci. Suma
 obszarów musi się zgadzać z ogółem — jeśli się nie zgadza, ten plik jest
@@ -25,7 +25,7 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 | :---- | ----: | :---- |
 | `ui` | 428 | HUD, ekwipunek, panele, arkusze, geometria dotknięć i pierścieni, notatki stanu, dziennik, niebo w panelu |
 | `combat` | 412 | tabela kalibracyjna §5.1.2 wiersz po wierszu, obrażenia §5.1.5, budżet sprintu, maszyna stanów, hałas, spawn, magazynek, dodatki, **odczyt panelu ognia** |
-| `sim` | 321 | tick, metabolizm, tętno, wchłanianie, **dwa zegary snu**, **masa ciała i wychudzenie**, **osiągalność zgonu z głodu i pragnienia**, **kary za stan docierające do zegarów**, nawyk gry, świt i zmierzch |
+| `sim` | 327 | tick, metabolizm, tętno, wchłanianie, **dwa zegary snu**, **masa ciała i wychudzenie**, **osiągalność zgonu z głodu i pragnienia**, **kary za stan docierające do zegarów**, nawyk gry, świt i zmierzch |
 | `game` | 213 | pętla, kontrolery, jedna para rąk, integracja pozycji, dziennik |
 | `loot` | 182 | tabele, spawner, przeszukanie, rzeczy na ziemi, rozrzut §10.2, przeszkody |
 | `inventory` | 128 | dwa limity §18.1a, sloty, porcje, dodatki, trwałość, **strony książki** |
@@ -45,7 +45,7 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 | `notes` | 14 | notatki i lektura |
 | `l10n` | 7 | kolizje kluczy, brak twardej polszczyzny w kodzie |
 
-**Razem 2398.**
+**Razem 2404.**
 
 ### Rzeczy, które testy trzymają jako liczby, a nie jako intencje
 

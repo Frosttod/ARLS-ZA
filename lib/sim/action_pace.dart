@@ -31,6 +31,31 @@ const double kPaceBrisk = 2.5;
 /// for a search, reused so that one speed does not mean two things).
 const double kStillKmh = 0.5;
 
+/// §2.2, §3.2, §8.1: what the tick is allowed to call movement.
+///
+/// ⚠️ **Three ways to be charged for a walk nobody took**, and all three
+/// have been found on a phone:
+///
+/// * a lost signal — the position cannot be trusted at all, so nothing is
+///   counted (§3.2)
+/// * a mocked or impossible fix — §3.4 suspends the run, and a suspended run
+///   charges nothing
+/// * **a character under their own roof.** Reported after a night: the
+///   receiver wandered a few metres at a time for eight hours, [bandForSpeed]
+///   calls any speed above zero at least a slow walk, and the player woke to a
+///   night's water drunk by somebody asleep in a chair. §8.1's zone is fifty
+///   metres across and §2.1's zone factor already prices being indoors at
+///   rest — charging movement on top of it pays twice for the same hour, out
+///   of a reading nobody made.
+///
+/// Movement outdoors is paid at full price wherever it happens; this is only
+/// about what counts as movement in the first place.
+double countedSpeedKmh({
+  required double reported,
+  required bool sheltered,
+  required bool trusted,
+}) => sheltered || !trusted ? 0 : reported;
+
 /// §2.3's ordinary walking pace.
 const double kWalkingKmh = 5;
 

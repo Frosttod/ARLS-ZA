@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:arls_za/sim/action_pace.dart';
+import 'package:arls_za/sim/metabolism.dart';
 import 'package:arls_za/sim/occupation.dart';
 import 'package:test/test.dart';
 
@@ -201,6 +204,61 @@ void main() {
         atThisRate(ActionKind.eating.baseDuration, walking)!.inSeconds,
         120,
       );
+    });
+  });
+
+  group('§2.2, §3.2, §8.1: what counts as movement at all', () {
+    // ⚠️ **Three ways to be charged for a walk nobody took, all three found
+    // on a phone.** The last of them is the reason this function exists: after
+    // a night in a shelter the receiver had wandered a few metres at a time
+    // for eight hours, [bandForSpeed] calls any speed above zero at least a
+    // slow walk, and the player woke to a night's water drunk by somebody
+    // asleep in a chair.
+
+    test('a walk outdoors is a walk', () {
+      expect(
+        countedSpeedKmh(reported: 4.5, sheltered: false, trusted: true),
+        4.5,
+      );
+    });
+
+    test('but under your own roof it is scatter (§8.1)', () {
+      // ⚠️ §2.1's zone factor already prices being indoors at rest. Charging
+      // movement on top of it pays twice for the same hour.
+      expect(countedSpeedKmh(reported: 4.5, sheltered: true, trusted: true), 0);
+    });
+
+    test('and a reading nobody can trust is not movement either (§3.2)', () {
+      expect(
+        countedSpeedKmh(reported: 4.5, sheltered: false, trusted: false),
+        0,
+      );
+    });
+
+    test('standing still outdoors stays nought', () {
+      expect(countedSpeedKmh(reported: 0, sheltered: false, trusted: true), 0);
+    });
+
+    test('and the loop actually asks (§2.2)', () {
+      // ⚠️ Source-level, because this rule spent the whole of stage 8 written
+      // out inline in `_buildInput` where two of its three clauses lived and
+      // the third did not — which is how a night's water went missing.
+      final loop = File('lib/game/game_loop.dart').readAsStringSync();
+
+      expect(loop.contains('speedKmh: countedSpeedKmh('), isTrue);
+      expect(
+        loop.contains('sheltered: sheltered'),
+        isTrue,
+        reason: 'the roof clause is the one that was missing',
+      );
+    });
+
+    test('and the smallest scatter indoors is nought, not a slow walk', () {
+      // The exact shape of the report: 0.3 km/h is below anybody's idea of
+      // walking and above [bandForSpeed]'s only test, which is "more than
+      // nought".
+      expect(bandForSpeed(0.3), isNot(ActivityBand.standing));
+      expect(countedSpeedKmh(reported: 0.3, sheltered: true, trusted: true), 0);
     });
   });
 }

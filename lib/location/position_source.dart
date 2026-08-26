@@ -64,6 +64,19 @@ enum PositionCadence {
   /// position, and a receiver that stops is a door nobody can walk out of.
   settled(Duration(seconds: 30), 'settled'),
 
+  /// Asleep in a shelter. One reading a minute.
+  ///
+  /// ⚠️ **The cheapest thing a running game asks for, and it runs all night.**
+  /// Eight hours is the longest single state in the game (§2.5.3) and the one
+  /// where the position is least likely to have changed — a character cannot
+  /// leave a shelter without leaving the zone, and leaving is a walk, which a
+  /// minute is quick enough to catch.
+  ///
+  /// Reported from a night: at thirty seconds the receiver scattered enough to
+  /// be charged as walking. The cadence is half the answer; the other half is
+  /// that §8.1's zone is not a place anybody walks (see `GameLoop._buildInput`).
+  asleep(Duration(minutes: 1), 'asleep'),
+
   /// Not running at all. What a stopped source reports, never a policy's
   /// answer — see [sheltered] for why nothing may ask for this while a game is
   /// being played.

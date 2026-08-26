@@ -650,13 +650,15 @@ class GameLoop {
     final asleep = _state.zone == MetabolicZone.sleep;
 
     return TickInput(
-      // A lost signal means the position cannot be trusted, so movement is not
-      // counted at all — the alternative is charging the player for GPS drift
-      // (§3.2).
-      speedKmh:
-          source.currentSignal == PositionSignal.good && !_integrity.isSuspended
-          ? _speedKmh
-          : 0,
+      // §2.2, §3.2, §8.1: the three ways a walk nobody took gets charged for,
+      // decided in one place where they can be tested.
+      speedKmh: countedSpeedKmh(
+        reported: _speedKmh,
+        sheltered: sheltered,
+        trusted:
+            source.currentSignal == PositionSignal.good &&
+            !_integrity.isSuspended,
+      ),
       loadKg: 0, // inventory arrives in stage 4
       bleedTier: _bleeding,
       sleeping: asleep && sheltered,
@@ -833,6 +835,7 @@ class GameLoop {
         // Combat arrives in stage 5; until then nothing asks for 1 Hz.
         inCombat: false,
         sheltered: _state.zone.isSheltered,
+        asleep: _state.zone == MetabolicZone.sleep,
         speedKmh: _speedKmh,
       ),
       batteryPercent: _power.percent,
@@ -1170,21 +1173,17 @@ class GameLoop {
   /// §17.2: when the light next goes and next comes back, cached.
   ///
   /// ⚠️ **Not on every publish.** Finding a crossing is a scan of a day at
-  /// five-minute steps and then a halving down to ten seconds, and this is
-  /// published as often as once a second — which is a few hundred solar
-  /// position calculations a second for two clock times that move by about
-  /// four minutes a day. Recomputed when one of them passes, or hourly, and
-  /// the countdown drawn from it is exact in between because it is a moment
-  /// rather than a duration.
+  /// five-minute steps, halved down to ten seconds — a few hundred solar
+  /// calculations a second for two times that move four minutes a day.
+  /// Recomputed when one passes, or hourly; the countdown stays exact in
+  /// between because it is a moment rather than a duration.
   ({DateTime? dusk, DateTime? dawn}) _skyTimes(PositionFix? fix) {
     if (fix == null) return const (dusk: null, dawn: null);
 
     final now = _state.lastUpdate;
     final since = _skyFor;
-    // ⚠️ Recomputed a minute *before* a moment rather than after it. A pair
-    // whose next entry is already behind us is a pair the panel has to guess
-    // its way around (see `_Sky._next`), and the guess only ever gets it as
-    // far as saying nothing.
+    // ⚠️ Recomputed a minute *before* a moment lapses rather than after: a
+    // pair whose next entry is behind us is one the panel has to guess around.
     final soon = now.add(const Duration(minutes: 1));
     final passed =
         (_sky.dusk?.isBefore(soon) ?? false) ||

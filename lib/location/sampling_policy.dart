@@ -34,8 +34,11 @@ enum Activity {
   /// Not moving, but outdoors and able to start at any moment.
   standing,
 
-  /// Under their own roof and staying there — asleep, reading, building.
+  /// Under their own roof and staying there — reading, building, sitting.
   settled,
+
+  /// Asleep (§2.5.1). The longest state in the game and the stillest.
+  asleep,
 
   /// A shelter occupation. The character is not going anywhere, and the radio
   /// is the single most expensive thing on the device (§2.1a.4).
@@ -127,6 +130,13 @@ class SamplingPolicy {
   /// seconds is worth the battery. Past that they are asleep, reading or
   /// building, and half the rate is plenty.
   Activity _staying(Activity activity, DateTime now) {
+    // Sleep is already the final answer: nothing is stiller and nothing lasts
+    // longer, so there is no promotion left to make.
+    if (activity == Activity.asleep) {
+      _indoorsSince ??= now;
+      return activity;
+    }
+
     if (activity != Activity.sheltered && activity != Activity.settled) {
       _indoorsSince = null;
       return activity;
@@ -166,6 +176,7 @@ class SamplingPolicy {
     final deliberate =
         wanted == PositionCadence.sheltered ||
         wanted == PositionCadence.settled ||
+        wanted == PositionCadence.asleep ||
         wanted == PositionCadence.off ||
         wanted == PositionCadence.combat ||
         _current == PositionCadence.combat;
@@ -208,6 +219,7 @@ class SamplingPolicy {
       Activity.standing => PositionCadence.resting,
       Activity.sheltered => PositionCadence.sheltered,
       Activity.settled => PositionCadence.settled,
+      Activity.asleep => PositionCadence.asleep,
     };
 
     if (!economy) return base;
@@ -224,6 +236,7 @@ class SamplingPolicy {
       // cheaper would be switching it off — see [PositionCadence.sheltered].
       PositionCadence.sheltered => PositionCadence.sheltered,
       PositionCadence.settled => PositionCadence.settled,
+      PositionCadence.asleep => PositionCadence.asleep,
       PositionCadence.off => PositionCadence.off,
     };
   }
@@ -240,8 +253,10 @@ Activity activityFrom({
   required bool inCombat,
   required bool sheltered,
   required double speedKmh,
+  bool asleep = false,
 }) {
   if (inCombat) return Activity.combat;
+  if (asleep) return Activity.asleep;
   if (sheltered) return Activity.sheltered;
   return speedKmh > 0.5 ? Activity.walking : Activity.standing;
 }
