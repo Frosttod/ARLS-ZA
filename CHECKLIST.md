@@ -1,7 +1,11 @@
 # ARLS-ZA — lista kontrolna systemów
 
-Stan na dzień **2026-08-23**. Wygenerowana po przejściu pełnego zestawu
-testów: **2121 testów, `flutter analyze` czysty, schemat bazy v29**.
+Stan na dzień **2026-08-26**. Wygenerowana po przejściu pełnego zestawu
+testów: **2398 testów, `flutter analyze` czysty, schemat bazy v34**.
+
+⚠️ Liczby poniżej są zliczone z suite'a, nie przepisane z pamięci. Suma
+obszarów musi się zgadzać z ogółem — jeśli się nie zgadza, ten plik jest
+nieaktualny i nie należy mu wierzyć.
 
 Opis wszystkich mechanik z liczbami: [MECHANICS.md](MECHANICS.md).
 
@@ -19,27 +23,29 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 
 | Obszar | Testy | Co jest tam pilnowane |
 | :---- | ----: | :---- |
-| `ui` | 389 | HUD, ekwipunek, panele, arkusze, geometria dotknięć i pierścieni, notatki stanu |
-| `combat` | 352 | tabela kalibracyjna §5.1.2 wiersz po wierszu, obrażenia §5.1.5, budżet sprintu, maszyna stanów, hałas, spawn, magazynek, dodatki |
-| `sim` | 306 | tick, metabolizm, tętno, wchłanianie, **dwa zegary snu**, **masa ciała i wychudzenie**, **osiągalność zgonu z głodu i pragnienia**, **kary za stan docierające do zegarów**, nawyk gry |
-| `loot` | 176 | tabele, spawner, przeszukanie, rzeczy na ziemi, przeszkody |
-| `game` | 172 | pętla, kontrolery, jedna para rąk, integracja pozycji |
-| `inventory` | 122 | dwa limity §18.1a, sloty, porcje, dodatki, trwałość |
+| `ui` | 428 | HUD, ekwipunek, panele, arkusze, geometria dotknięć i pierścieni, notatki stanu, dziennik, niebo w panelu |
+| `combat` | 412 | tabela kalibracyjna §5.1.2 wiersz po wierszu, obrażenia §5.1.5, budżet sprintu, maszyna stanów, hałas, spawn, magazynek, dodatki, **odczyt panelu ognia** |
+| `sim` | 321 | tick, metabolizm, tętno, wchłanianie, **dwa zegary snu**, **masa ciała i wychudzenie**, **osiągalność zgonu z głodu i pragnienia**, **kary za stan docierające do zegarów**, nawyk gry, świt i zmierzch |
+| `game` | 213 | pętla, kontrolery, jedna para rąk, integracja pozycji, dziennik |
+| `loot` | 182 | tabele, spawner, przeszukanie, rzeczy na ziemi, rozrzut §10.2, przeszkody |
+| `inventory` | 128 | dwa limity §18.1a, sloty, porcje, dodatki, trwałość, **strony książki** |
+| `shelter` | 100 | budowa, moduły, półka, stackowanie |
 | `map` | 88 | PMTiles, MVT, geometria, namiary, pakiety regionów |
 | `craft` | 84 | recepty, rozbiórka wsadowa, ilości ze stosu, bilans §18.2 |
-| `shelter` | 80 | budowa, moduły, półka, stackowanie |
 | `items` | 76 | katalog jako dane: bilans, nazwy, sloty, użycia |
-| `location` | 60 | bramka dokładności, filtr Kalmana, martwa strefa, anty-cheat, powrót odbiornika |
-| `db` | 50 | migracje v1→v29, integralność, warstwa gorąca i ciepła |
+| `location` | 67 | bramka dokładności, filtr Kalmana, martwa strefa, anty-cheat, powrót odbiornika, kadencja w schronie |
+| `skills` | 61 | §7.2.1 praktyka, §4.6 literatura, §7.2.2 krzywa, wpięcie w grę |
+| `db` | 50 | migracje v1→v34, integralność, warstwa gorąca i ciepła |
 | `devtools` | 44 | konsola, rejestrator sesji |
 | `safety` | 34 | §1.2, blokady na prędkości |
 | `core` | 30 | zegar gry, jeden timer |
-| `app` | 20 | bootstrap, granica awarii, **zapadka rozmiaru main.dart** |
+| `app` | 23 | bootstrap, granica awarii, **zapadki rozmiaru** main.dart, ekwipunku i pętli |
+| `journal` | 19 | §3.6.1: dzień jako data, limit wpisów, nazwy wire |
 | `actions` | 17 | wiersz akcji przeżywający zabicie procesu |
 | `notes` | 14 | notatki i lektura |
 | `l10n` | 7 | kolizje kluczy, brak twardej polszczyzny w kodzie |
 
-**Razem 2121.**
+**Razem 2398.**
 
 ### Rzeczy, które testy trzymają jako liczby, a nie jako intencje
 
@@ -52,7 +58,7 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 - **§6.2** — parametry przeciwników, w tym progi śmierci.
 - **§5.6.1** — promienie hałasu i modyfikatory otoczenia.
 - **Migracje** — każda wydana wersja schematu daje się otworzyć i podnieść do
-  v29, z danymi.
+  v34, z danymi.
 - **§2.3, §2.5.4, §5.1.1** — trzy kary za stan trzymane **przy konsumencie**,
   nie przy wzorze. Wada nie była złą liczbą, tylko parametrem z nieszkodliwą
   wartością domyślną, którego nikt nie wypełniał — czego żaden test samej
@@ -62,6 +68,15 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
   w przebraniu ciała.
 - **§2.5.5** — jedna zarwana noc 0,25 · cztery pod rząd 2,0 · dwa tygodnie po
   6 h 3,5. I to, że po dobrej nocy pasek jest pełny, a liczby dalej złe.
+- **§7.2.1** — siedem wierszy praktyki co do punktu, i to, że ciężki dzień
+  chodzenia to poniżej pół procenta drogi na szczyt. Praktyka nagradza styl
+  gry; drogą jest literatura.
+- **§4.6** — XP za stronę a nie za tytuł, brak premii za ukończenie, drugi
+  egzemplarz 25% i trzeci 0%, oraz to, że cała wspinaczka nadal kosztuje
+  ~500 godzin czytania (§7.2.2).
+- **§5.1.4, §8.1** — kolejność odmów panelu ognia: własna strefa przed oknem
+  łaski przed pustymi rękami przed pustym magazynkiem. Gracz z pełnym
+  magazynkiem we własnych drzwiach ma usłyszeć o drzwiach.
 
 ---
 

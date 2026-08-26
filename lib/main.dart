@@ -712,7 +712,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   RecipeBook _recipes = RecipeBook.empty;
 
   /// §2.1a.3: what is on the bench, or null. Reloaded whenever the shelter is.
-  ValueNotifier<CraftJob?> get _craftJob => _bench2.job;
+  ValueNotifier<CraftJob?> get _craftJob => _workbench.job;
 
   /// §18.6: which piece is currently under the multitool.
   ///
@@ -726,10 +726,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// unusable — a rifle in a sitting cannot be worn, fired, dropped or
   /// shelved, which is the whole reason the pieces stay visible instead of
   /// vanishing for a quarter of an hour.
-  ValueNotifier<List<CarriedItem>> get _dismantling => _bench2.sitting;
+  ValueNotifier<List<CarriedItem>> get _dismantling => _workbench.sitting;
 
   /// Whether this piece is spoken for by the sitting on the bench.
-  bool _inSitting(CarriedItem line) => _bench2.inSitting(line);
+  bool _inSitting(CarriedItem line) => _workbench.inSitting(line);
 
   Reload? _reload;
 
@@ -920,8 +920,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     // `acting` fell to false and §2.5.1 wrote a night — one per page.
     _loop?.setWorking(
       working:
-          _read.open != null ||
-          _bench2.job.value != null ||
+          _books.open != null ||
+          _workbench.job.value != null ||
           anyBuilding(_shelters.value),
     );
   }
@@ -1129,12 +1129,12 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       // question about what is on the map right now.
       _loot.bind(profileId: character.profile.id);
       _places.bind(profileId: character.profile.id);
-      _bench2.bind(profileId: character.profile.id);
+      _workbench.bind(profileId: character.profile.id);
 
       // §7: what this character has learned, before anything can ask.
       await _learned.load(character.profile.id);
 
-      await _read.load(character.profile.id);
+      await _books.load(character.profile.id);
 
       // §3.6.1: read back, so a run reopens where it left off.
       await _diary.bind(
@@ -1901,7 +1901,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
     // §4.6: a page is not a use — nothing is swallowed and §2.2's absorption
     // has no opinion about it.
-    if (_read.open != null) {
+    if (_books.open != null) {
       _usingLine.value = null;
       await _finishPage();
       return;
@@ -2701,7 +2701,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
     // ⚠️ Set before the awaited write: a tick inside it with nothing
     // running is a night in the log.
-    _read.open = line;
+    _books.open = line;
 
     await _actions?.start(
       TimedAction(
@@ -2732,14 +2732,14 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
   /// §4.6.1: a page read. Credit it, write it down, turn the next one.
   Future<void> _finishPage() async {
-    final line = _read.open;
+    final line = _books.open;
     final book = line == null ? null : Book.of(_catalogue?[line.itemId]);
 
     // ⚠️ The open copy stays set until the book is closed — clearing it
     // between two pages tells the loop nothing is running (§2.5.1).
     final read = book == null ? null : _inventory.value.readOne(line!);
     if (line == null || book == null || read == null) {
-      _read.open = null;
+      _books.open = null;
       return;
     }
 
@@ -2748,12 +2748,12 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
     await _learn(
       Skill.fromWire(book.skill),
-      book.xpFor(1, copiesRead: _read.copiesOf(line.itemId)),
+      book.xpFor(1, copiesRead: _books.copiesOf(line.itemId)),
     );
 
     if (read.finished) {
-      _read.open = null;
-      await _read.finished(line.itemId);
+      _books.open = null;
+      await _books.finished(line.itemId);
       if (mounted) {
         _say(L10n.of(context).actionReadDone(_nameOfId(line.itemId)));
       }
@@ -4124,7 +4124,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       await _saveInventory();
     }
 
-    await _bench2.clear();
+    await _workbench.clear();
     _craftJob.value = null;
     _dismantling.value = const [];
 
@@ -4155,7 +4155,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       return;
     }
 
-    await _bench2.clear();
+    await _workbench.clear();
     _craftJob.value = null;
 
     // §18.6: giving up hands the piece back whole. Nothing was taken out of
@@ -4252,7 +4252,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     await _spendMaterials(recipe.materials);
 
     unawaited(_diary.made(JournalKind.startedCraft, {recipe.output: 1}));
-    await _bench2.beginCraft(
+    await _workbench.beginCraft(
       recipeId: recipe.id,
       now: DateTime.now().toUtc(),
       work: craftWork(
@@ -4345,7 +4345,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     if (batch.isEmpty) return;
 
     unawaited(_diary.salvaged(batch.steps, started: true));
-    await _bench2.beginSalvage(batch, now: DateTime.now().toUtc());
+    await _workbench.beginSalvage(batch, now: DateTime.now().toUtc());
 
     await _reloadCraftJob();
 
@@ -4422,7 +4422,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     // picks up where it was left rather than beginning again at nothing.
     final now = DateTime.now().toUtc();
     unawaited(_diary.made(JournalKind.startedSalvage, {line.itemId: 1}));
-    await _bench2.beginSalvageOne(
+    await _workbench.beginSalvageOne(
       itemId: line.itemId,
       condition: condition,
       now: now.subtract(done),
@@ -4470,7 +4470,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final character = _character;
     if (character == null) return;
 
-    final job = await _bench2.load();
+    final job = await _workbench.load();
 
     if (job == null || !job.isDoneAt(DateTime.now().toUtc())) {
       _craftJob.value = job;
@@ -4508,7 +4508,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final catalogue = _catalogue;
     if (character == null || catalogue == null) return;
 
-    await _bench2.clear();
+    await _workbench.clear();
 
     if (job.isSalvage) {
       // §18.6: every piece of the sitting, in order. The whole job ran, so
@@ -5574,7 +5574,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
     _stopSearchTimer();
     _search.value = null;
-    _read.open = null;
+    _books.open = null;
     unawaited(_interruptUse(running));
   }
 
@@ -6052,7 +6052,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   );
 
   /// §18.4, §18.6: what is on the bench, and what is coming apart on it.
-  late final CraftController _bench2 = _controllers.adopt(
+  late final CraftController _workbench = _controllers.adopt(
     CraftController(widget.session.db),
   );
 
@@ -6073,7 +6073,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   );
 
   /// §4.6.3: which titles are already behind this character.
-  late final ReadingController _read = _controllers.adopt(
+  late final ReadingController _books = _controllers.adopt(
     ReadingController(widget.session.db),
   );
 
@@ -6147,7 +6147,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final catalogue = _catalogue;
     if (catalogue == null) return false;
 
-    return _bench2.worthTakingApart(
+    return _workbench.worthTakingApart(
       line,
       bench: _bench(),
       catalogue: catalogue,

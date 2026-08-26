@@ -200,14 +200,14 @@ void main() {
     // its own action, so without this the zone fell out of sleep and back into
     // it between every pair of them — the log filled with a Sen and a Pobudka
     // per page, photographed from a phone.
-    expect(main.contains('_read.open != null ||'), isTrue);
+    expect(main.contains('_books.open != null ||'), isTrue);
 
     // §12: and the strip says where in the book somebody is.
     expect(main.contains('actionReadingPage('), isTrue);
 
     // §4.6.3: and a finished copy is counted against the next one.
-    expect(main.contains('_read.finished('), isTrue);
-    expect(main.contains('_read.copiesOf('), isTrue);
+    expect(main.contains('_books.finished('), isTrue);
+    expect(main.contains('_books.copiesOf('), isTrue);
   });
 
   test('§4.6.4: and the game actually rolls a copy its own length', () {

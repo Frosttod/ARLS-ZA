@@ -234,6 +234,17 @@ void main() {
       );
     });
 
+    test('and the settled rate is half the shelter one (§3.3)', () {
+      // ⚠️ The first two minutes indoors are not wasted: somebody who has just
+      // walked in may be about to walk out again. Past that they are staying,
+      // and half the rate is plenty — the promotion itself is timed by the
+      // policy and tested below.
+      expect(
+        PositionCadence.settled.interval,
+        PositionCadence.sheltered.interval * 2,
+      );
+    });
+
     test('and coming back out of one is immediate as well', () {
       // ⚠️ The half that matters more. A minute of hysteresis on the way *out*
       // is a minute of a player walking down a street while the game still
@@ -245,6 +256,79 @@ void main() {
       expect(
         decide(policy, activity: Activity.walking).cadence,
         PositionCadence.moving,
+      );
+    });
+  });
+
+  group('§3.3: how long they have been indoors', () {
+    // ⚠️ Timed by the policy, not by the loop, because the clock this needs is
+    // the one the policy already keeps for its hysteresis. Putting a second
+    // one in the loop cost twelve lines there and bought nothing.
+    final t0 = DateTime.utc(2026, 8, 26, 20);
+
+    SamplingDecision at(
+      SamplingPolicy policy,
+      Activity activity,
+      Duration in_,
+    ) => policy.decide(
+      activity: activity,
+      batteryPercent: 90,
+      charging: false,
+      at: t0.add(in_),
+    );
+
+    test('the first two minutes are still the fast shelter rate', () {
+      final policy = SamplingPolicy();
+
+      expect(
+        at(policy, Activity.sheltered, Duration.zero).cadence,
+        PositionCadence.sheltered,
+      );
+      expect(
+        at(policy, Activity.sheltered, const Duration(seconds: 90)).cadence,
+        PositionCadence.sheltered,
+      );
+    });
+
+    test('and past two minutes they are staying', () {
+      final policy = SamplingPolicy();
+      at(policy, Activity.sheltered, Duration.zero);
+
+      expect(
+        at(policy, Activity.sheltered, kSettledAfter).cadence,
+        PositionCadence.settled,
+      );
+    });
+
+    test('walking out puts the fast rate back at once', () {
+      // ⚠️ The half that must never lag. A player who has been reading for
+      // eight hours and steps outside is walking, immediately.
+      final policy = SamplingPolicy();
+      at(policy, Activity.sheltered, Duration.zero);
+      at(policy, Activity.sheltered, const Duration(hours: 8));
+
+      expect(
+        at(policy, Activity.walking, const Duration(hours: 8)).cadence,
+        PositionCadence.moving,
+      );
+    });
+
+    test('and coming back in starts the two minutes again', () {
+      final policy = SamplingPolicy();
+      at(policy, Activity.sheltered, Duration.zero);
+      at(policy, Activity.sheltered, const Duration(hours: 8));
+      at(policy, Activity.walking, const Duration(hours: 8));
+
+      expect(
+        at(policy, Activity.sheltered, const Duration(hours: 8)).cadence,
+        PositionCadence.sheltered,
+      );
+    });
+
+    test('a fight indoors is still a fight', () {
+      expect(
+        activityFrom(inCombat: true, sheltered: true, speedKmh: 0),
+        Activity.combat,
       );
     });
   });

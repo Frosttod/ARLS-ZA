@@ -34,6 +34,9 @@ enum Activity {
   /// Not moving, but outdoors and able to start at any moment.
   standing,
 
+  /// Under their own roof and staying there — asleep, reading, building.
+  settled,
+
   /// A shelter occupation. The character is not going anywhere, and the radio
   /// is the single most expensive thing on the device (§2.1a.4).
   sheltered,
@@ -103,15 +106,39 @@ class SamplingPolicy {
     if (warn) _warned = true;
     if (!low) _warned = false;
 
+    final now = at ?? DateTime.now().toUtc();
+
     return SamplingDecision(
       cadence: _settled(
-        _cadenceFor(activity, economy: low),
-        at ?? DateTime.now().toUtc(),
+        _cadenceFor(_staying(activity, now), economy: low),
+        now,
       ),
       economy: low,
       warnLowBattery: warn,
     );
   }
+
+  /// §3.3: two minutes under a roof and the character is staying.
+  ///
+  /// ⚠️ Timed here rather than in the loop, because the clock this needs is
+  /// the one this class already keeps. The first two minutes indoors are
+  /// somebody who may be about to walk out again — a search finished, a bag
+  /// dropped, straight back to the street — and noticing that within fifteen
+  /// seconds is worth the battery. Past that they are asleep, reading or
+  /// building, and half the rate is plenty.
+  Activity _staying(Activity activity, DateTime now) {
+    if (activity != Activity.sheltered && activity != Activity.settled) {
+      _indoorsSince = null;
+      return activity;
+    }
+
+    _indoorsSince ??= now;
+    return now.difference(_indoorsSince!) >= kSettledAfter
+        ? Activity.settled
+        : Activity.sheltered;
+  }
+
+  DateTime? _indoorsSince;
 
   /// Holds a *slower* rate until it has been wanted for [settleFor]. Speeding
   /// up is immediate.
@@ -138,6 +165,7 @@ class SamplingPolicy {
     // to leave it would be the same as not having the rate at all (§5.2).
     final deliberate =
         wanted == PositionCadence.sheltered ||
+        wanted == PositionCadence.settled ||
         wanted == PositionCadence.off ||
         wanted == PositionCadence.combat ||
         _current == PositionCadence.combat;
@@ -179,6 +207,7 @@ class SamplingPolicy {
       Activity.walking => PositionCadence.moving,
       Activity.standing => PositionCadence.resting,
       Activity.sheltered => PositionCadence.sheltered,
+      Activity.settled => PositionCadence.settled,
     };
 
     if (!economy) return base;
@@ -194,6 +223,7 @@ class SamplingPolicy {
       // Already the cheapest thing a running game asks for, and making it
       // cheaper would be switching it off — see [PositionCadence.sheltered].
       PositionCadence.sheltered => PositionCadence.sheltered,
+      PositionCadence.settled => PositionCadence.settled,
       PositionCadence.off => PositionCadence.off,
     };
   }
@@ -215,3 +245,6 @@ Activity activityFrom({
   if (sheltered) return Activity.sheltered;
   return speedKmh > 0.5 ? Activity.walking : Activity.standing;
 }
+
+/// §3.3: how long under a roof before somebody counts as staying.
+const Duration kSettledAfter = Duration(minutes: 2);

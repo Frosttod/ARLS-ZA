@@ -189,4 +189,62 @@ void main() {
       expect(main.contains('runGuarded('), isTrue);
     });
   });
+
+  test('the checklist does not lie about the schema (§11.1.4)', () {
+    // ⚠️ **A document nobody can check is a document that drifts.** The
+    // checklist is pointed at as the source of truth for what is covered, and
+    // it spent five schema versions claiming v29. The test count in it cannot
+    // be checked from inside the suite — a test does not know the total — but
+    // the schema version can, and it is the half that matters: it says which
+    // migrations are proven.
+    final checklist = File('CHECKLIST.md').readAsStringSync();
+    final database = File('lib/data/db/database.dart').readAsStringSync();
+
+    final version = RegExp(
+      r'const int kSchemaVersion = (\d+);',
+    ).firstMatch(database)!.group(1);
+
+    expect(
+      checklist.contains('schemat bazy v$version'),
+      isTrue,
+      reason: 'CHECKLIST.md is behind the schema; it now says v$version',
+    );
+    expect(
+      checklist.contains('v$version, z danymi'),
+      isTrue,
+      reason: 'the migration line in CHECKLIST.md is behind as well',
+    );
+  });
+
+  group('and the next one is stopped before it starts', () {
+    // ⚠️ **A file with no brake becomes main.dart.** The entry point did not
+    // reach seven thousand lines because anybody decided it should; it grew a
+    // field at a time, every one of them reasonable, and by the time it was
+    // obviously a problem it was a fortnight of work to undo. These two are
+    // the biggest files left, and this is the only cheap moment to say so.
+    //
+    // ⚠️ Same rule as the ratchet above: lower these when something lands.
+    // Never raise them. "It is a feature" is the excuse that built the first
+    // one.
+    for (final (path, cap) in [
+      // The pack: rows, actions, the disassembly list, the stepper, the
+      // details sheet's neighbour. A screen, but five screens' worth of one.
+      ('lib/ui/inventory_screen.dart', 1679),
+
+      // The loop is coherent and earns its length — the clock, the zone, the
+      // sampling policy and §11.1's writer all meet here. It is on the list
+      // because coherent files grow too.
+      ('lib/game/game_loop.dart', 1256),
+    ]) {
+      test('$path is not the next main.dart', () {
+        final lines = File(path).readAsLinesSync().length;
+
+        expect(
+          lines,
+          lessThanOrEqualTo(cap),
+          reason: '$path grew; something in it belongs somewhere else',
+        );
+      });
+    }
+  });
 }

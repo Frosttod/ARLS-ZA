@@ -49,6 +49,21 @@ enum PositionCadence {
   /// the zone flips and §3.3's full rate comes straight back.
   sheltered(Duration(seconds: 15), 'sheltered'),
 
+  /// In the shelter zone, and settled there. One reading every thirty
+  /// seconds.
+  ///
+  /// ⚠️ **The second half of [sheltered], and it exists for the battery.**
+  /// The first two minutes under a roof are somebody who may be about to walk
+  /// out again — a search finished, a bag dropped, straight back to the
+  /// street. Past that they are staying: sleeping, reading, building. Half the
+  /// cost of [sheltered] and a quarter of standing outdoors, and leaving is
+  /// still noticed inside half a minute.
+  ///
+  /// ⚠️ Not slower than this, and never off. §8.1 keeps enemies out of the
+  /// zone, so nothing here is dangerous — but the zone is decided *from* the
+  /// position, and a receiver that stops is a door nobody can walk out of.
+  settled(Duration(seconds: 30), 'settled'),
+
   /// Not running at all. What a stopped source reports, never a policy's
   /// answer — see [sheltered] for why nothing may ask for this while a game is
   /// being played.
