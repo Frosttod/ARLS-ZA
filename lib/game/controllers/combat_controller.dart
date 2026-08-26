@@ -46,12 +46,33 @@ class CombatController extends ChangeNotifier {
   /// their walk rather than a jump.
   DateTime? steppedAt;
 
+  /// §6.2: when each of them last swung, so the interval between blows is the
+  /// one on the table rather than one a frame.
+  ///
+  /// ⚠️ Here rather than on the screen. It is a fact about the fight, it has
+  /// to be forgotten when the fight ends, and a map of timestamps living on a
+  /// widget is a map nobody clears when the character dies.
+  final Map<String, DateTime> _lastBlow = {};
+
+  /// Whether [id] may swing at [now], given how long the kind takes.
+  bool mayStrike(String id, DateTime now, Duration interval) {
+    final last = _lastBlow[id];
+    return last == null || now.difference(last) >= interval;
+  }
+
+  /// Records that [id] just swung.
+  void struck(String id, DateTime now) => _lastBlow[id] = now;
+
+  /// Nothing is in reach any more, so nobody is mid-swing.
+  void noneInReach() => _lastBlow.clear();
+
   List<Enemy> get enemies => _session.enemies;
 
   /// Starts a fresh street for this character.
   void reseed(int seed) {
     session = CombatSession(seed: seed);
     _shown.clear();
+    _lastBlow.clear();
   }
 
   // ------------------------------------------------------------- drawing ---

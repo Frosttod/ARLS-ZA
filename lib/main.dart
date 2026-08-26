@@ -321,13 +321,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
   set _combatAt(DateTime? next) => _fight.steppedAt = next;
 
-  /// §5.5.1: the one being aimed at. One target for a firearm, and nothing
-  /// takes its place when it dies.
+  /// §5.5.1: the one being aimed at. Nothing takes its place when it dies.
   Aim _aim = const Aim();
-
-  /// §6.2: when each of them last swung, so the interval between blows is the
-  /// one on the table rather than one a frame.
-  final Map<String, DateTime> _lastBlow = {};
 
   /// §5.4: when the player last swung. A blade has a swing time and swinging
   /// faster than the blade allows is not a thing a person can do.
@@ -1217,9 +1212,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       if (!mounted) return;
       _sessionStart ??= snapshot.state.lastUpdate;
 
-      // Both the snapshot and the sticky rule, in one call. The rule itself
-      // lives in [PositionController.accept] now.
-      setState(() => _position.accept(snapshot));
+      // The snapshot and the sticky rule in one call; the notifier it sets is
+      // what the interface listens to (§3.3), so no `setState` here.
+      _position.accept(snapshot);
 
       // §17.2, §12: the sky, reported once — the same figure §10.2.2 and
       // §17.4 are already using, so the map and the search radius can never
@@ -2870,7 +2865,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         if (!enemy.isDead && enemy.position.distanceTo(at) <= kMeleeM) enemy,
     ];
     if (inReach.isEmpty) {
-      _lastBlow.clear();
+      _fight.noneInReach();
       return;
     }
 
@@ -2881,11 +2876,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     HitLocation? worst;
 
     for (final enemy in inReach) {
-      final last = _lastBlow[enemy.id];
-      if (last != null && now.difference(last) < enemy.kind.attackInterval) {
-        continue;
-      }
-      _lastBlow[enemy.id] = now;
+      if (!_fight.mayStrike(enemy.id, now, enemy.kind.attackInterval)) continue;
+      _fight.struck(enemy.id, now);
 
       // §2.6: teeth and hands land where they land. A bite to the arm the
       // player put up is not the bite that takes them down, and the log is
@@ -6247,10 +6239,18 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       return SafetyBriefingScreen(onAccept: () => unawaited(_acceptBriefing()));
     }
 
+    // ⚠️ §3.3: the tick no longer rebuilds the root — a snapshot a second,
+    // each marking the whole state dirty, for hours. Below is what listens.
+    return ValueListenableBuilder<GameSnapshot?>(
+      valueListenable: _position.snapshot,
+      builder: (context, snapshot, _) => _gameWith(context, snapshot),
+    );
+  }
+
+  Widget _gameWith(BuildContext context, GameSnapshot? snapshot) {
     final l10n = L10n.of(context);
     final recovery = widget.session.recovery;
     final dev = _dev;
-    final snapshot = _snapshot;
     final character = _character;
     final blocked = _blocked;
 

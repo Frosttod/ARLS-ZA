@@ -495,6 +495,8 @@ Gra zachęca do biegania po mieście, często po zmroku, z telefonem w ręku. Le
 - Woda / kalorie — dwa cienkie paski
 - Udźwig: wykorzystany / maksymalny
 
+⚠️ **Tick nie przebudowuje korzenia.** Pętla publikuje snapshot co sekundę przez wiele godzin (§3.3). Dopóki interfejs wisiał na `setState` w klasie stanu, każdy taki tick brudził całe drzewo — ekran tytułowy, bramkę uprawnień i mapę naraz — niezależnie od tego, czy cokolwiek się zmieniło. Snapshot jest `ValueNotifier`-em na `PositionController` i zawsze nim był; zmieniło się to, że interfejs go **słucha**, zamiast być informowanym.
+
 **Widok mapy:**
 
 - Rzut z góry, zielona kropka = gracz, stożek = kierunek ruchu
