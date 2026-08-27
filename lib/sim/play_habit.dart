@@ -58,6 +58,41 @@ class PlayDay {
   final int activeMinutes;
 }
 
+/// A local calendar day, as the habit writes it down: `YYYY-MM-DD`.
+///
+/// ⚠️ Local, never UTC. A habit is formed in evenings, and the evening of the
+/// 4th is the 4th to everybody except a timezone.
+String dayKey(DateTime local) =>
+    '${local.year.toString().padLeft(4, '0')}-'
+    '${local.month.toString().padLeft(2, '0')}-'
+    '${local.day.toString().padLeft(2, '0')}';
+
+/// Whole minutes between [from] and [to], split at midnight.
+///
+/// ⚠️ Split rather than attributed to whichever end. A session that runs from
+/// half past eleven to one in the morning is an hour and a half of two
+/// different days, and handing all of it to one of them puts a day in the
+/// window that never happened.
+Map<String, int> minutesByDay(DateTime from, DateTime to) {
+  if (!to.isAfter(from)) return const {};
+
+  final byDay = <String, int>{};
+  var start = from;
+
+  while (start.isBefore(to)) {
+    final midnight = DateTime(start.year, start.month, start.day + 1);
+    final end = midnight.isBefore(to) ? midnight : to;
+    final minutes = end.difference(start).inMinutes;
+
+    if (minutes > 0) {
+      byDay[dayKey(start)] = (byDay[dayKey(start)] ?? 0) + minutes;
+    }
+    start = end;
+  }
+
+  return byDay;
+}
+
 /// What the last week says about somebody (§16.4).
 class PlayHabit {
   const PlayHabit(this.days);

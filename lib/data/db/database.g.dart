@@ -11889,6 +11889,278 @@ class ReadTitlesCompanion extends UpdateCompanion<ReadTitle> {
   }
 }
 
+class $PlayDaysTable extends PlayDays
+    with TableInfo<$PlayDaysTable, PlayDayRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PlayDaysTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _profileIdMeta = const VerificationMeta(
+    'profileId',
+  );
+  @override
+  late final GeneratedColumn<int> profileId = GeneratedColumn<int>(
+    'profile_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _dayMeta = const VerificationMeta('day');
+  @override
+  late final GeneratedColumn<String> day = GeneratedColumn<String>(
+    'day',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _activeMinutesMeta = const VerificationMeta(
+    'activeMinutes',
+  );
+  @override
+  late final GeneratedColumn<int> activeMinutes = GeneratedColumn<int>(
+    'active_minutes',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [profileId, day, activeMinutes];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'play_days';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PlayDayRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('profile_id')) {
+      context.handle(
+        _profileIdMeta,
+        profileId.isAcceptableOrUnknown(data['profile_id']!, _profileIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_profileIdMeta);
+    }
+    if (data.containsKey('day')) {
+      context.handle(
+        _dayMeta,
+        day.isAcceptableOrUnknown(data['day']!, _dayMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dayMeta);
+    }
+    if (data.containsKey('active_minutes')) {
+      context.handle(
+        _activeMinutesMeta,
+        activeMinutes.isAcceptableOrUnknown(
+          data['active_minutes']!,
+          _activeMinutesMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {profileId, day};
+  @override
+  PlayDayRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PlayDayRow(
+      profileId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}profile_id'],
+      )!,
+      day: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}day'],
+      )!,
+      activeMinutes: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}active_minutes'],
+      )!,
+    );
+  }
+
+  @override
+  $PlayDaysTable createAlias(String alias) {
+    return $PlayDaysTable(attachedDatabase, alias);
+  }
+}
+
+class PlayDayRow extends DataClass implements Insertable<PlayDayRow> {
+  final int profileId;
+
+  /// The local calendar day, `YYYY-MM-DD`. Local, not UTC: a habit is formed
+  /// in evenings, and an evening belongs to the day the player calls it.
+  final String day;
+
+  /// Minutes with the game awake and ticking on that day.
+  final int activeMinutes;
+  const PlayDayRow({
+    required this.profileId,
+    required this.day,
+    required this.activeMinutes,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['profile_id'] = Variable<int>(profileId);
+    map['day'] = Variable<String>(day);
+    map['active_minutes'] = Variable<int>(activeMinutes);
+    return map;
+  }
+
+  PlayDaysCompanion toCompanion(bool nullToAbsent) {
+    return PlayDaysCompanion(
+      profileId: Value(profileId),
+      day: Value(day),
+      activeMinutes: Value(activeMinutes),
+    );
+  }
+
+  factory PlayDayRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PlayDayRow(
+      profileId: serializer.fromJson<int>(json['profileId']),
+      day: serializer.fromJson<String>(json['day']),
+      activeMinutes: serializer.fromJson<int>(json['activeMinutes']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'profileId': serializer.toJson<int>(profileId),
+      'day': serializer.toJson<String>(day),
+      'activeMinutes': serializer.toJson<int>(activeMinutes),
+    };
+  }
+
+  PlayDayRow copyWith({int? profileId, String? day, int? activeMinutes}) =>
+      PlayDayRow(
+        profileId: profileId ?? this.profileId,
+        day: day ?? this.day,
+        activeMinutes: activeMinutes ?? this.activeMinutes,
+      );
+  PlayDayRow copyWithCompanion(PlayDaysCompanion data) {
+    return PlayDayRow(
+      profileId: data.profileId.present ? data.profileId.value : this.profileId,
+      day: data.day.present ? data.day.value : this.day,
+      activeMinutes: data.activeMinutes.present
+          ? data.activeMinutes.value
+          : this.activeMinutes,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlayDayRow(')
+          ..write('profileId: $profileId, ')
+          ..write('day: $day, ')
+          ..write('activeMinutes: $activeMinutes')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(profileId, day, activeMinutes);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PlayDayRow &&
+          other.profileId == this.profileId &&
+          other.day == this.day &&
+          other.activeMinutes == this.activeMinutes);
+}
+
+class PlayDaysCompanion extends UpdateCompanion<PlayDayRow> {
+  final Value<int> profileId;
+  final Value<String> day;
+  final Value<int> activeMinutes;
+  final Value<int> rowid;
+  const PlayDaysCompanion({
+    this.profileId = const Value.absent(),
+    this.day = const Value.absent(),
+    this.activeMinutes = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PlayDaysCompanion.insert({
+    required int profileId,
+    required String day,
+    this.activeMinutes = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : profileId = Value(profileId),
+       day = Value(day);
+  static Insertable<PlayDayRow> custom({
+    Expression<int>? profileId,
+    Expression<String>? day,
+    Expression<int>? activeMinutes,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (profileId != null) 'profile_id': profileId,
+      if (day != null) 'day': day,
+      if (activeMinutes != null) 'active_minutes': activeMinutes,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PlayDaysCompanion copyWith({
+    Value<int>? profileId,
+    Value<String>? day,
+    Value<int>? activeMinutes,
+    Value<int>? rowid,
+  }) {
+    return PlayDaysCompanion(
+      profileId: profileId ?? this.profileId,
+      day: day ?? this.day,
+      activeMinutes: activeMinutes ?? this.activeMinutes,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (profileId.present) {
+      map['profile_id'] = Variable<int>(profileId.value);
+    }
+    if (day.present) {
+      map['day'] = Variable<String>(day.value);
+    }
+    if (activeMinutes.present) {
+      map['active_minutes'] = Variable<int>(activeMinutes.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PlayDaysCompanion(')
+          ..write('profileId: $profileId, ')
+          ..write('day: $day, ')
+          ..write('activeMinutes: $activeMinutes, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$SaveDatabase extends GeneratedDatabase {
   _$SaveDatabase(QueryExecutor e) : super(e);
   $SaveDatabaseManager get managers => $SaveDatabaseManager(this);
@@ -11915,6 +12187,7 @@ abstract class _$SaveDatabase extends GeneratedDatabase {
   late final $HotspotRowsTable hotspotRows = $HotspotRowsTable(this);
   late final $JournalRowsTable journalRows = $JournalRowsTable(this);
   late final $ReadTitlesTable readTitles = $ReadTitlesTable(this);
+  late final $PlayDaysTable playDays = $PlayDaysTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -11939,6 +12212,7 @@ abstract class _$SaveDatabase extends GeneratedDatabase {
     hotspotRows,
     journalRows,
     readTitles,
+    playDays,
   ];
   @override
   DriftDatabaseOptions get options =>
@@ -17544,6 +17818,167 @@ typedef $$ReadTitlesTableProcessedTableManager =
       ReadTitle,
       PrefetchHooks Function()
     >;
+typedef $$PlayDaysTableCreateCompanionBuilder =
+    PlayDaysCompanion Function({
+      required int profileId,
+      required String day,
+      Value<int> activeMinutes,
+      Value<int> rowid,
+    });
+typedef $$PlayDaysTableUpdateCompanionBuilder =
+    PlayDaysCompanion Function({
+      Value<int> profileId,
+      Value<String> day,
+      Value<int> activeMinutes,
+      Value<int> rowid,
+    });
+
+class $$PlayDaysTableFilterComposer
+    extends Composer<_$SaveDatabase, $PlayDaysTable> {
+  $$PlayDaysTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get profileId => $composableBuilder(
+    column: $table.profileId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get day => $composableBuilder(
+    column: $table.day,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get activeMinutes => $composableBuilder(
+    column: $table.activeMinutes,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$PlayDaysTableOrderingComposer
+    extends Composer<_$SaveDatabase, $PlayDaysTable> {
+  $$PlayDaysTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get profileId => $composableBuilder(
+    column: $table.profileId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get day => $composableBuilder(
+    column: $table.day,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get activeMinutes => $composableBuilder(
+    column: $table.activeMinutes,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$PlayDaysTableAnnotationComposer
+    extends Composer<_$SaveDatabase, $PlayDaysTable> {
+  $$PlayDaysTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get profileId =>
+      $composableBuilder(column: $table.profileId, builder: (column) => column);
+
+  GeneratedColumn<String> get day =>
+      $composableBuilder(column: $table.day, builder: (column) => column);
+
+  GeneratedColumn<int> get activeMinutes => $composableBuilder(
+    column: $table.activeMinutes,
+    builder: (column) => column,
+  );
+}
+
+class $$PlayDaysTableTableManager
+    extends
+        RootTableManager<
+          _$SaveDatabase,
+          $PlayDaysTable,
+          PlayDayRow,
+          $$PlayDaysTableFilterComposer,
+          $$PlayDaysTableOrderingComposer,
+          $$PlayDaysTableAnnotationComposer,
+          $$PlayDaysTableCreateCompanionBuilder,
+          $$PlayDaysTableUpdateCompanionBuilder,
+          (
+            PlayDayRow,
+            BaseReferences<_$SaveDatabase, $PlayDaysTable, PlayDayRow>,
+          ),
+          PlayDayRow,
+          PrefetchHooks Function()
+        > {
+  $$PlayDaysTableTableManager(_$SaveDatabase db, $PlayDaysTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PlayDaysTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PlayDaysTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PlayDaysTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> profileId = const Value.absent(),
+                Value<String> day = const Value.absent(),
+                Value<int> activeMinutes = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PlayDaysCompanion(
+                profileId: profileId,
+                day: day,
+                activeMinutes: activeMinutes,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required int profileId,
+                required String day,
+                Value<int> activeMinutes = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PlayDaysCompanion.insert(
+                profileId: profileId,
+                day: day,
+                activeMinutes: activeMinutes,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$PlayDaysTableProcessedTableManager =
+    ProcessedTableManager<
+      _$SaveDatabase,
+      $PlayDaysTable,
+      PlayDayRow,
+      $$PlayDaysTableFilterComposer,
+      $$PlayDaysTableOrderingComposer,
+      $$PlayDaysTableAnnotationComposer,
+      $$PlayDaysTableCreateCompanionBuilder,
+      $$PlayDaysTableUpdateCompanionBuilder,
+      (PlayDayRow, BaseReferences<_$SaveDatabase, $PlayDaysTable, PlayDayRow>),
+      PlayDayRow,
+      PrefetchHooks Function()
+    >;
 
 class $SaveDatabaseManager {
   final _$SaveDatabase _db;
@@ -17586,4 +18021,6 @@ class $SaveDatabaseManager {
       $$JournalRowsTableTableManager(_db, _db.journalRows);
   $$ReadTitlesTableTableManager get readTitles =>
       $$ReadTitlesTableTableManager(_db, _db.readTitles);
+  $$PlayDaysTableTableManager get playDays =>
+      $$PlayDaysTableTableManager(_db, _db.playDays);
 }

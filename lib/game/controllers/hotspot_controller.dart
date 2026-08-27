@@ -163,6 +163,7 @@ class HotspotController extends ChangeNotifier {
     required DateTime now,
     required List<Shelter> shelters,
     required List<MapFeature> obstacles,
+    required PlayHabit habit,
   }) {
     final home = shelters
         .where((place) => place.kind == ShelterKind.main)
@@ -172,13 +173,11 @@ class HotspotController extends ChangeNotifier {
 
     return reload(
       now: now,
-      // §16.4: the world grows at the pace this player actually plays at.
-      //
-      // ⚠️ Not measured yet — §16.4's daily figure has nowhere on disk to live
-      // (stage 6, faza B). An empty habit reads as the floor, which is the
-      // slow end: a world that grows too slowly is one somebody can still
-      // play, and one that grows too fast is not.
-      habit: const PlayHabit([]),
+      // §16.4: the world grows at the pace this player actually plays at,
+      // measured over the last week (`HabitController`). A save with no week
+      // behind it reads as the floor, which is the slow end — and the right
+      // end to start somebody at.
+      habit: habit,
       shelterAt: home?.position,
       allows: (at) => filter.refuse(at) == null,
     );

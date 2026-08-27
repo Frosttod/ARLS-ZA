@@ -29,7 +29,7 @@ import 'tables.dart';
 part 'database.g.dart';
 
 /// Bumped only alongside a migration step in [_migration]. Never reused.
-const int kSchemaVersion = 34;
+const int kSchemaVersion = 35;
 
 /// Keys used in [MetaEntries].
 abstract final class MetaKeys {
@@ -67,6 +67,7 @@ abstract final class MetaKeys {
     HotspotRows,
     JournalRows,
     ReadTitles,
+    PlayDays,
   ],
 )
 class SaveDatabase extends _$SaveDatabase {
@@ -79,7 +80,7 @@ class SaveDatabase extends _$SaveDatabase {
   /// follow a constant reference. `schema_test.dart` keeps it in step with
   /// [kSchemaVersion].
   @override
-  int get schemaVersion => 34;
+  int get schemaVersion => 35;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -370,6 +371,11 @@ class SaveDatabase extends _$SaveDatabase {
       // true: nothing in the game could read a book (§11.1.4).
       if (from < 34) await m.createTable(readTitles);
 
+      // §16.4: how much this player actually plays, which is what §6.5.3's
+      // clock now runs on. A new table, so a save from before this has no
+      // habit — and reads as the floor until a week of one is measured.
+      if (from < 35) await m.createTable(playDays);
+
       await _writeSchemaVersion(to);
     },
     beforeOpen: (details) async {
@@ -626,6 +632,35 @@ class SaveDatabase extends _$SaveDatabase {
 
     return {for (final row in rows) row.itemId: row.copies};
   }
+
+  /// §16.4: the days this player has been counted on, newest first.
+  Future<List<PlayDayRow>> playDaysFor(int profileId, {required int limit}) =>
+      (select(playDays)
+            ..where((t) => t.profileId.equals(profileId))
+            ..orderBy([(t) => OrderingTerm.desc(t.day)])
+            ..limit(limit))
+          .get();
+
+  /// §16.4: one day's total, replaced rather than added to — the caller holds
+  /// the running figure, because a flush that lands twice must not count the
+  /// same minutes twice.
+  Future<void> writePlayDay(int profileId, String day, int activeMinutes) =>
+      into(playDays).insertOnConflictUpdate(
+        PlayDaysCompanion.insert(
+          profileId: profileId,
+          day: day,
+          activeMinutes: Value(activeMinutes),
+        ),
+      );
+
+  /// Anything older than the window, which is nobody's habit any more.
+  Future<void> trimPlayDays(int profileId, {required String before}) =>
+      (delete(playDays)..where(
+            (t) =>
+                t.profileId.equals(profileId) &
+                t.day.isSmallerThanValue(before),
+          ))
+          .go();
 
   /// §4.6.3: one more copy of a title read to the last page.
   Future<void> writeReadTitle(int profileId, String itemId, int copies) =>

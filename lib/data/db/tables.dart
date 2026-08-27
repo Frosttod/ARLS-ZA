@@ -223,6 +223,41 @@ class ChronicleEntries extends Table {
   ];
 }
 
+/// Warm layer: §16.4's measure of how much this player actually plays.
+///
+/// ⚠️ **Minutes the game was running, not minutes the app was installed.**
+/// §6.5.3 grows the world on a clock, and until this existed that clock was
+/// almost entirely the calendar: somebody playing two hours a day and somebody
+/// who never opened the app arrived at three level-ten hotspots less than two
+/// days apart. §16.4 asks outright whether an hour a day can keep up, and the
+/// honest answer is to measure the hour.
+///
+/// One row per local calendar day, kept for [PlayHabit.window] days and no
+/// longer — this is a habit, not a history, and a fortnight-old Tuesday says
+/// nothing about who is holding the phone now.
+@DataClassName('PlayDayRow')
+class PlayDays extends Table {
+  @override
+  String get tableName => 'play_days';
+
+  IntColumn get profileId => integer()();
+
+  /// The local calendar day, `YYYY-MM-DD`. Local, not UTC: a habit is formed
+  /// in evenings, and an evening belongs to the day the player calls it.
+  TextColumn get day => text()();
+
+  /// Minutes with the game awake and ticking on that day.
+  IntColumn get activeMinutes => integer().withDefault(const Constant(0))();
+
+  @override
+  Set<Column> get primaryKey => {profileId, day};
+
+  @override
+  List<String> get customConstraints => [
+    'FOREIGN KEY (profile_id) REFERENCES profiles (id) ON DELETE CASCADE',
+  ];
+}
+
 /// Warm layer: §4.6.3's guard against the tenth copy of the same manual.
 ///
 /// ⚠️ **A count of copies, not of pages.** Without it a player walks into

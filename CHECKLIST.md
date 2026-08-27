@@ -1,7 +1,7 @@
 # ARLS-ZA — lista kontrolna systemów
 
-Stan na dzień **2026-08-26**. Wygenerowana po przejściu pełnego zestawu
-testów: **2421 testów, `flutter analyze` czysty, schemat bazy v34**.
+Stan na dzień **2026-08-27**. Wygenerowana po przejściu pełnego zestawu
+testów: **2443 testy, `flutter analyze` czysty, schemat bazy v35**.
 
 ⚠️ Liczby poniżej są zliczone z suite'a, nie przepisane z pamięci. Suma
 obszarów musi się zgadzać z ogółem — jeśli się nie zgadza, ten plik jest
@@ -23,10 +23,10 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 
 | Obszar | Testy | Co jest tam pilnowane |
 | :---- | ----: | :---- |
-| `ui` | 431 | HUD, ekwipunek, panele, arkusze, geometria dotknięć i pierścieni, notatki stanu, dziennik, niebo w panelu, zakres przebudów |
+| `ui` | 432 | HUD, ekwipunek, panele, arkusze, geometria dotknięć i pierścieni, notatki stanu, dziennik, niebo w panelu, zakres przebudów |
 | `combat` | 426 | tabela kalibracyjna §5.1.2 wiersz po wierszu, obrażenia §5.1.5, budżet sprintu, maszyna stanów, hałas, spawn, magazynek, dodatki, **odczyt panelu ognia**, **ciosy przy zgaszonym ekranie** |
-| `sim` | 327 | tick, metabolizm, tętno, wchłanianie, **dwa zegary snu**, **masa ciała i wychudzenie**, **osiągalność zgonu z głodu i pragnienia**, **kary za stan docierające do zegarów**, nawyk gry, świt i zmierzch |
-| `game` | 213 | pętla, kontrolery, jedna para rąk, integracja pozycji, dziennik |
+| `sim` | 334 | tick, metabolizm, tętno, wchłanianie, **dwa zegary snu**, **masa ciała i wychudzenie**, **osiągalność zgonu z głodu i pragnienia**, **kary za stan docierające do zegarów**, **nawyk gry mierzony, nie zakładany (§16.4)**, świt i zmierzch |
+| `game` | 226 | pętla, kontrolery, jedna para rąk, integracja pozycji, dziennik, **wiązanie kontrolerów do profilu** |
 | `loot` | 182 | tabele, spawner, przeszukanie, rzeczy na ziemi, rozrzut §10.2, przeszkody |
 | `inventory` | 128 | dwa limity §18.1a, sloty, porcje, dodatki, trwałość, **strony książki** |
 | `shelter` | 100 | budowa, moduły, półka, stackowanie |
@@ -35,17 +35,17 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 | `items` | 76 | katalog jako dane: bilans, nazwy, sloty, użycia |
 | `location` | 67 | bramka dokładności, filtr Kalmana, martwa strefa, anty-cheat, powrót odbiornika, kadencja w schronie |
 | `skills` | 61 | §7.2.1 praktyka, §4.6 literatura, §7.2.2 krzywa, wpięcie w grę |
-| `db` | 50 | migracje v1→v34, integralność, warstwa gorąca i ciepła |
+| `db` | 50 | migracje v1→v35, integralność, warstwa gorąca i ciepła |
 | `devtools` | 44 | konsola, rejestrator sesji |
 | `safety` | 34 | §1.2, blokady na prędkości |
 | `core` | 30 | zegar gry, jeden timer |
 | `app` | 23 | bootstrap, granica awarii, **zapadki rozmiaru** main.dart, ekwipunku i pętli |
-| `journal` | 19 | §3.6.1: dzień jako data, limit wpisów, nazwy wire |
+| `journal` | 20 | §3.6.1: dzień jako data, limit wpisów, nazwy wire |
 | `actions` | 17 | wiersz akcji przeżywający zabicie procesu |
 | `notes` | 14 | notatki i lektura |
 | `l10n` | 7 | kolizje kluczy, brak twardej polszczyzny w kodzie |
 
-**Razem 2421.**
+**Razem 2443.**
 
 ### Rzeczy, które testy trzymają jako liczby, a nie jako intencje
 
@@ -58,7 +58,7 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 - **§6.2** — parametry przeciwników, w tym progi śmierci.
 - **§5.6.1** — promienie hałasu i modyfikatory otoczenia.
 - **Migracje** — każda wydana wersja schematu daje się otworzyć i podnieść do
-  v34, z danymi.
+  v35, z danymi.
 - **§2.3, §2.5.4, §5.1.1** — trzy kary za stan trzymane **przy konsumencie**,
   nie przy wzorze. Wada nie była złą liczbą, tylko parametrem z nieszkodliwą
   wartością domyślną, którego nikt nie wypełniał — czego żaden test samej

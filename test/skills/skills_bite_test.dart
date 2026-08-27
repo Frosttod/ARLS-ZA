@@ -175,7 +175,12 @@ void main() {
     // penalties-bite budgets. The defect these guard against is not a wrong
     // number — it is a parameter with a harmless default that nobody fills
     // in, which no test of the function itself can ever catch.
-    final main = File('lib/main.dart').readAsStringSync();
+    // ⚠️ Both files: binding a controller to a profile moved into a list of
+    // its own (`bindControllers`), and a guard that only reads `main.dart`
+    // would pass the moment the wiring left it.
+    final main =
+        File('lib/main.dart').readAsStringSync() +
+        File('lib/game/controller_binding.dart').readAsStringSync();
 
     for (final wiring in [
       'skill: _learned.weapons', // §5.1.1 and §5.4
@@ -190,7 +195,7 @@ void main() {
       // entry and never removed — a second character meant two listeners, and
       // the first still wrote into a loop that had been disposed.
       '_loop?.medicine = _learned.medicine',
-      'await _learned.load(', // or none of it is there at boot
+      'await learned.load(', // or none of it is there at boot
       'aimedAt(', // §5.5.1: and the switch still goes through the model
     ]) {
       expect(

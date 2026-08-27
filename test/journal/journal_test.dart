@@ -284,10 +284,15 @@ void main() {
     // journal still be empty — which is the state §6.5's whole model was in
     // for two stages, and the defect this project keeps finding: a thing that
     // works and nothing calls.
-    final main = File('lib/main.dart').readAsStringSync();
+    // ⚠️ Both files, because the wiring is in two now: binding a controller
+    // to a profile is a list of its own (`bindControllers`) and everything
+    // that happens afterwards is still the screen's.
+    final main =
+        File('lib/main.dart').readAsStringSync() +
+        File('lib/game/controller_binding.dart').readAsStringSync();
 
     for (final hook in [
-      '_diary.bind(', // read back at boot
+      'diary.bind(', // read back at boot
       '_diary.noteZone(', // the bed and the door
       '_diary.searched(', // a place, and what came out of it
       '_diary.used(', // eating, drinking, a dressing

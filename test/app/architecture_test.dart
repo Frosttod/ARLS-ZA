@@ -170,6 +170,8 @@ void main() {
       //                  a book can finally be opened (§4.6, faza 8)
       //           6439   the tester's kit became a table in lib/dev, and
       //                  the fight stopped rebuilding one point nine times
+      //           6434   the controllers are bound by a list, not by forty
+      //                  lines of `_enter` (§16.4, faza B)
       //
       // ⚠️ Lower it when a phase lands. Never raise it — not for a phase, and
       // not for a feature either. "It is a feature" is exactly the excuse that
@@ -178,7 +180,7 @@ void main() {
       // Something new that belongs to the model goes in the model.
       expect(
         lines,
-        lessThanOrEqualTo(6439),
+        lessThanOrEqualTo(6434),
         reason: 'main.dart grew; something went in that should have come out',
       );
     });

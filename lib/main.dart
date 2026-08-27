@@ -10,6 +10,8 @@ import 'devtools/dev_overlay.dart';
 import 'devtools/dev_session.dart';
 import 'game/controllers/action_controller.dart';
 import 'game/controllers/combat_controller.dart';
+import 'game/controller_binding.dart';
+import 'game/controllers/habit_controller.dart';
 import 'game/controllers/hotspot_controller.dart';
 import 'game/controllers/skill_controller.dart';
 import 'game/controllers/craft_controller.dart';
@@ -1109,41 +1111,22 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     // what took the item with it.
     final catalogue = _catalogue;
     if (catalogue != null) {
-      // ⚠️ Said once, here, and never again. The controllers exist from the
-      // first frame so their notifiers can be handed to screens before
-      // anything is loaded; this is the moment they learn whose things they
-      // are holding.
-      _pack.bind(
+      await bindControllers(
         profileId: character.profile.id,
         catalogue: catalogue,
         body: character.body,
-      );
-      _shelf.bind(profileId: character.profile.id);
-
-      // ⚠️ The tables, not the world. §10.2's radius and §10.2.1's hidden
-      // places are read off them, and that is all the loot needs to know —
-      // the world itself plans, downloads and decodes, none of which is a
-      // question about what is on the map right now.
-      _loot.bind(profileId: character.profile.id);
-      _places.bind(profileId: character.profile.id);
-      _workbench.bind(profileId: character.profile.id);
-
-      // §7: what this character has learned, before anything can ask.
-      await _learned.load(character.profile.id);
-
-      await _books.load(character.profile.id);
-
-      // §3.6.1: read back, so a run reopens where it left off.
-      await _diary.bind(
-        profileId: character.profile.id,
-        startedAt: character.profile.createdAt,
-      );
-
-      // §6.5: seeded from the character, so a run is the same world every
-      // time it is opened (§11).
-      _fires.bind(
-        profileId: character.profile.id,
+        createdAt: character.profile.createdAt,
         seed: character.profile.rngSeed,
+        pack: _pack,
+        shelf: _shelf,
+        loot: _loot,
+        places: _places,
+        workbench: _workbench,
+        learned: _learned,
+        books: _books,
+        habit: _habit,
+        diary: _diary,
+        fires: _fires,
       );
 
       await _pack.load(catalogue);
@@ -1972,73 +1955,74 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       return;
     }
 
-    if (marker.kind == MarkerKind.loot) {
-      unawaited(
-        showPlaceFor(
-          context,
-          boxes: _boxes,
-          markerId: marker.id,
-          tables: _world?.tables,
-          standingAt: _standingAt,
-          catalogue: catalogue,
-          now: _snapshot?.state.lastUpdate ?? DateTime.now().toUtc(),
-        ),
-      );
-      return;
-    }
+    final now = _snapshot?.state.lastUpdate ?? DateTime.now().toUtc();
 
-    // §6.5.6: a ring is a warning, never an explanation.
-    if (marker.kind == MarkerKind.hotspot) {
-      unawaited(
-        showHotspotFor(
-          context,
-          hotspots: _fires.hotspots.value,
-          markerId: marker.id,
-          standingAt: at,
-          now: _snapshot?.state.lastUpdate ?? DateTime.now().toUtc(),
-        ),
-      );
-      return;
-    }
+    switch (marker.kind) {
+      case MarkerKind.loot:
+        unawaited(
+          showPlaceFor(
+            context,
+            boxes: _boxes,
+            markerId: marker.id,
+            tables: _world?.tables,
+            standingAt: _standingAt,
+            catalogue: catalogue,
+            now: now,
+          ),
+        );
 
-    if (marker.kind == MarkerKind.enemy) {
+      // §6.5.6: a ring is a warning, never an explanation.
+      case MarkerKind.hotspot:
+        unawaited(
+          showHotspotFor(
+            context,
+            hotspots: _fires.hotspots.value,
+            markerId: marker.id,
+            standingAt: at,
+            now: now,
+          ),
+        );
+
       // §5.5.1: one tap, one target, and it costs the sight picture. The rest
       // carry on running — aiming is where attention goes, not a pause button.
-      setState(() {
-        _aim = aimedAt(
-          _aim,
-          marker.id,
-          now: DateTime.now(),
-          weapons: _learned.weapons,
-          heartRate: _snapshot?.state.heartRateBpm ?? 70,
-          restingHeartRate: _character?.constants.restingHeartRate ?? 70,
-          maxHeartRate: _character?.constants.maxHeartRate ?? 190,
+      case MarkerKind.enemy:
+        setState(() {
+          _aim = aimedAt(
+            _aim,
+            marker.id,
+            now: DateTime.now(),
+            weapons: _learned.weapons,
+            heartRate: _snapshot?.state.heartRateBpm ?? 70,
+            restingHeartRate: _character?.constants.restingHeartRate ?? 70,
+            maxHeartRate: _character?.constants.maxHeartRate ?? 190,
+          );
+        });
+
+      case MarkerKind.remains:
+        unawaited(
+          showRemainsFor(
+            context,
+            bodies: _remains,
+            markerId: marker.id,
+            standingAt: at,
+            onSearch: (body) => unawaited(_searchRemains(body)),
+          ),
         );
-      });
-      return;
-    }
 
-    if (marker.kind == MarkerKind.remains) {
-      unawaited(
-        showRemainsFor(
-          context,
-          bodies: _remains,
-          markerId: marker.id,
-          standingAt: at,
-          onSearch: (body) => unawaited(_searchRemains(body)),
-        ),
-      );
-      return;
-    }
-
-    if (marker.kind == MarkerKind.dropped) {
       // ⚠️ The list, not one item. §4.8 gathers a dozen things dropped on one
       // corner into a single dot with a number on it, and tapping that dot
-      // used to open the details of whichever row happened to be first —
-      // so a pile of fourteen answered a question about one of them, and
-      // never said what the other thirteen were.
-      unawaited(_showPileAt(marker.at));
-      return;
+      // used to open the details of whichever row happened to be first — so a
+      // pile of fourteen answered a question about one of them, and never
+      // said what the other thirteen were.
+      case MarkerKind.dropped:
+        unawaited(_showPileAt(marker.at));
+
+      // §8.1: the player's own door. It has a panel of its own reached from
+      // the strip, and a sheet over the map would be a second way to say the
+      // same thing — the if-chain this replaced fell through here silently,
+      // which is the same behaviour and none of the intent.
+      case MarkerKind.shelter:
+        break;
     }
   }
 
@@ -3383,6 +3367,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       now: DateTime.now().toUtc(),
       shelters: places,
       obstacles: _world?.obstacles ?? const [],
+      habit: _habit.habit.value,
     );
     if (mounted) setState(() {});
   }
@@ -5926,9 +5911,13 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       case AppLifecycleState.detached:
       case AppLifecycleState.hidden:
         unawaited(loop.onPaused(DateTime.now().toUtc()));
+        // §16.4: the stretch that just ended is written down. Nothing ticks in
+        // a pocket, so a pocket is not play.
+        unawaited(_habit.slept());
         _sleepTickers();
       case AppLifecycleState.resumed:
         unawaited(loop.onResumed());
+        _habit.woke();
         unawaited(_readPermissions());
         unawaited(_wakeTickers());
       case AppLifecycleState.inactive:
@@ -6043,6 +6032,12 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// §4.6.3: which titles are already behind this character.
   late final ReadingController _books = _controllers.adopt(
     ReadingController(widget.session.db),
+  );
+
+  /// §16.4: how much this player actually plays, which is the pace §6.5.3
+  /// grows the world at.
+  late final HabitController _habit = _controllers.adopt(
+    HabitController(widget.session.db),
   );
 
   /// §3.6.1: what the character did, in order.

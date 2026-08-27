@@ -152,4 +152,66 @@ void main() {
       expect(styles.reduce((a, b) => a < b ? a : b), greaterThan(3));
     });
   });
+
+  group('§16.4: the minutes themselves', () {
+    test('a plain stretch is whole minutes of one day', () {
+      final from = DateTime(2026, 8, 16, 20, 0);
+
+      expect(minutesByDay(from, from.add(const Duration(minutes: 43))), {
+        '2026-08-16': 43,
+      });
+    });
+
+    test('and seconds that do not make a minute are not a minute', () {
+      final from = DateTime(2026, 8, 16, 20, 0);
+
+      expect(
+        minutesByDay(from, from.add(const Duration(seconds: 59))),
+        isEmpty,
+      );
+    });
+
+    test('a session across midnight belongs to both days', () {
+      // ⚠️ Split rather than given to whichever end. Handing ninety minutes to
+      // the 16th puts an evening in the window that nobody played.
+      final from = DateTime(2026, 8, 16, 23, 30);
+
+      expect(minutesByDay(from, DateTime(2026, 8, 17, 1, 0)), {
+        '2026-08-16': 30,
+        '2026-08-17': 60,
+      });
+    });
+
+    test('and a clock that went backwards costs nothing', () {
+      final from = DateTime(2026, 8, 16, 20, 0);
+
+      expect(
+        minutesByDay(from, from.subtract(const Duration(hours: 1))),
+        isEmpty,
+      );
+      expect(minutesByDay(from, from), isEmpty);
+    });
+
+    test('a day is written the way a player would read it', () {
+      expect(dayKey(DateTime(2026, 8, 6)), '2026-08-06');
+      expect(dayKey(DateTime(2026, 12, 31, 23, 59)), '2026-12-31');
+    });
+  });
+
+  group('§16.4: and it is what the world runs on', () {
+    test('an hour a day is faster than a week away', () {
+      // The whole point of measuring: these two used to be the same world.
+      expect(
+        daysToMaxLevel(habit(List.filled(7, 60))),
+        lessThan(daysToMaxLevel(habit(List.filled(7, 0)))),
+      );
+    });
+
+    test('and three hours a day is faster still', () {
+      expect(
+        daysToMaxLevel(habit(List.filled(7, 180))),
+        lessThan(daysToMaxLevel(habit(List.filled(7, 60)))),
+      );
+    });
+  });
 }
