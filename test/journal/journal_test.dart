@@ -257,6 +257,28 @@ void main() {
     });
   });
 
+  test('§3.6.1: every kind is written by something', () {
+    // ⚠️ The audit that found `opened` and `fought` dead was a grep. This is
+    // the grep, kept: a kind the game never writes is a line of §3.6.1 that
+    // does not exist, and it will render perfectly while doing so.
+    //
+    // ⚠️ Two are deliberately not here. `read` and `learned` are written from
+    // §4.6 and §7 respectively — both are, now — so if this list ever needs an
+    // exception again, that is the moment to ask why the kind exists.
+    final written = [
+      File('lib/main.dart').readAsStringSync(),
+      File('lib/game/controllers/journal_controller.dart').readAsStringSync(),
+    ].join();
+
+    for (final kind in JournalKind.values) {
+      expect(
+        written.contains('JournalKind.${kind.name}'),
+        isTrue,
+        reason: '${kind.name} is a kind nothing in the game ever writes',
+      );
+    }
+  });
+
   test('§3.6.1: and the game actually writes to it', () {
     // ⚠️ Source-level, because every part of this could be perfect and the
     // journal still be empty — which is the state §6.5's whole model was in
@@ -277,6 +299,12 @@ void main() {
       'JournalKind.built', // a module
       'JournalKind.blackout', // §9.2
       'journal: _diary.entries.value', // and the profile can see it
+      // ⚠️ Both of these existed as kinds, rendered correctly, and were
+      // never written by anything — found by an audit of the log rather than
+      // by a player. A kind nothing writes is a row of the design doc that
+      // does not exist.
+      '_diary.opened(', // §18.5: twenty seconds on a crowbar
+      'JournalKind.fought', // §5: the fight, once, not once a trigger pull
     ]) {
       expect(
         main.contains(hook),

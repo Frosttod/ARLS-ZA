@@ -179,4 +179,29 @@ void main() {
       reason: 'the bar was drawn before the row was written',
     );
   });
+
+  group('§9.2, §2.1a: and going down stops every clock', () {
+    // ⚠️ Found by reading, and it strands a run. Going down cleared the
+    // search, the aim and the meal — everything on screen — and left the row
+    // of §11.1 on disk, the reload in memory and the open book set. So
+    // `_alreadyBusy` went on naming an action that had stopped existing, and
+    // for the rest of the session every start was refused with the label of a
+    // sandwich nobody was eating. Only a restart cleared it, because that is
+    // where `ActionRunner.restore` settles the row.
+    //
+    // The book was the worse half: it holds the loop's long-work flag up
+    // (§2.1a), and §2.5.1 will not put somebody to sleep who is still reading.
+    for (final (clock, why) in [
+      ('_endTimedAction()', 'the row on disk outlives the session'),
+      ('_endReload()', '§5.5.4 keeps the busy check occupied'),
+      ('_books.open = null', 'reading holds the long-work flag up (§2.5.1)'),
+      ('_search.value = null', 'the strip goes on drawing a bar'),
+    ]) {
+      test('it clears $clock', () {
+        final down = bodyOf('Future<void> _settleDown(GameSnapshot snapshot)');
+
+        expect(down.contains(clock), isTrue, reason: why);
+      });
+    }
+  });
 }

@@ -13,6 +13,7 @@ import 'game/controllers/combat_controller.dart';
 import 'game/controllers/hotspot_controller.dart';
 import 'game/controllers/skill_controller.dart';
 import 'game/controllers/craft_controller.dart';
+import 'dev/tester_kit.dart';
 import 'game/controllers/inventory_controller.dart';
 import 'game/controllers/journal_controller.dart';
 import 'game/controllers/loot_controller.dart';
@@ -1608,54 +1609,11 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final catalogue = _catalogue;
     if (character == null || catalogue == null) return;
 
-    var next = _inventory.value.packId == null
-        ? _inventory.value.withPack('pack_daypack')
-        : _inventory.value;
-    for (final id in const [
-      'cloth_winter_jacket',
-      'cloth_boots',
-      'armor_vest_soft',
-    ]) {
-      next = next.wear(id, catalogue);
-    }
-    for (final line in const [
-      // Something to fire and something to fire from it: §5 cannot be tried
-      // on a phone without both.
-      ('weapon_rifle_545', 1),
-      ('ammo_545x39', 60),
-      ('att_red_dot', 1),
-
-      // §4.2: and something to put the rounds in. A magazine-fed rifle with
-      // no magazine cannot be fired at all, and §10 only drops these on
-      // military ground — which is not somewhere every tester has to hand.
-      ('mag_rifle_545', 2),
-
-      // §18.3: the tool every shelter module asks for. Same reason: a walk
-      // that has to find a hammer before any of §8.4 can be looked at is a
-      // walk, not a test.
-      ('melee_hammer', 1),
-      ('tool_multitool', 1),
-      ('food_canned_meat', 2),
-      ('drink_water_bottle_500', 2),
-      ('med_bandage', 3),
-      ('melee_knife', 1),
-      ('mat_wood', 4),
-      ('tool_flashlight', 1),
-    ]) {
-      next = next
-          .add(line.$1, catalogue, body: character.body, count: line.$2)
-          .inventory;
-    }
-    next = next
-        .add(
-          'lit_guide_survival',
-          catalogue,
-          body: character.body,
-          pagesTotal: 160,
-        )
-        .inventory;
-
-    _inventory.value = next;
+    _inventory.value = testerKit(
+      _inventory.value,
+      catalogue,
+      body: character.body,
+    );
     await _saveInventory();
   }
 
@@ -2584,6 +2542,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       if (still == null || still.isDead) _aim = _aim.released;
     });
 
+    // §3.6.1: one line for the fight, not one per trigger pull.
+    unawaited(_diary.add(JournalKind.fought, subject: target.kind.name));
+
     // ⚠️ Counted from the outcome rather than from the log line, so a shot
     // fired while the app is being closed still lands in the tally.
     _note(
@@ -3094,6 +3055,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final damage =
         ((blade?.props['blood_ml_per_hit'] as num?)?.toDouble() ?? 40) *
         where.multiplier;
+    final here = GeoPoint(fix.latitude, fix.longitude);
 
     setState(() {
       // §2.6: a blade opens what it lands in, and a throat opened is a fight
@@ -3107,7 +3069,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
             HitLocation.torso => 3,
             _ => 1,
           },
-          from: GeoPoint(fix.latitude, fix.longitude),
+          from: here,
         );
       }
 
@@ -3115,11 +3077,11 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       // the whole reason to use them.
       _combat = _combat.heard(
         NoiseEvent(
-          at: GeoPoint(fix.latitude, fix.longitude),
+          at: here,
           radiusM: NoiseKind.melee.baseM,
           startedAt: DateTime.now().toUtc(),
         ),
-        playerAt: GeoPoint(fix.latitude, fix.longitude),
+        playerAt: here,
       );
 
       final still = _combat.enemies.where((e) => e.id == target.id).firstOrNull;
@@ -3129,6 +3091,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       }
     });
 
+    unawaited(_diary.add(JournalKind.fought, subject: target.kind.name));
     _note(
       (stats) => stats.swung(
         where: landed ? where : null,
@@ -3285,7 +3248,16 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     if (loop.takeWentDown()) {
       _note((stats) => stats.wentDown());
 
-      // §5.5.1: nothing is aimed at any more, and nothing is being searched.
+      // §5.5.1, §2.1a: nothing is aimed at, and nothing is being done.
+      //
+      // ⚠️ **Every clock, not only the ones on screen.** Clearing the search
+      // left §11.1's row on disk, the reload and the open book set — so
+      // `_alreadyBusy` named an action that had stopped existing and refused
+      // every start for the rest of the session.
+      _stopSearchTimer();
+      _endReload();
+      _books.open = null;
+
       setState(() {
         _aim = _aim.released;
         _search.value = null;
@@ -3294,6 +3266,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       });
 
       _logCombat('— ${causeName(L10n.of(context), loop.deathCause)} —');
+
+      // §11.1: last — it touches the disk, and the label above needs a
+      // context this await would spend.
+      await _endTimedAction();
 
       if (loop.down == DownState.dead) {
         await _factory.recordDeath(
@@ -5517,21 +5493,21 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   }
 
   void _startBreach(BarrierBreach breach) {
-    // ⚠️ Sticky. The car outside the shelter has a door on it, so opening it
-    // goes through here rather than through the search — which is why "I
-    // cannot search the car from my shelter" survived a fix to the search.
+    // ⚠️ Sticky. The car outside the shelter has a door, so opening it goes
+    // through here rather than through the search — which is why "I cannot
+    // search the car from my shelter" survived a fix to the search.
     final at = _standingAt.value;
     final box = _boxInReach();
     if (at == null || box == null) return;
 
-    // ⚠️ §2.1a: one pair of hands, and this is the third place that had
-    // to learn it. Both searches asked [_alreadyBusy] and this did not — it
-    // asked only whether another *search* was running — so a dismantling at
-    // the bench refused a quick search and waved a locked car straight
-    // through. Reported from a walk as exactly that inconsistency, and the
-    // inconsistency was the tell: forcing a door is not a lesser act than
-    // looking in a bin, it is twenty seconds of both hands on a crowbar.
+    // ⚠️ §2.1a: one pair of hands, and the third place that had to learn it.
+    // This asked only whether another *search* was running, so a dismantling
+    // refused a quick search and waved a locked car through. Forcing a door is
+    // twenty seconds of both hands on a crowbar.
     if (_refuseIfBusy()) return;
+
+    // §3.6.1: twenty seconds on a crowbar is a thing somebody did.
+    unawaited(_diary.opened(box.tableId, name: box.name));
 
     setState(() {
       _search.value = Search.breach(

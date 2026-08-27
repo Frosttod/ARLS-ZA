@@ -168,6 +168,8 @@ void main() {
       //                  arguments assembled in a build method (§5.5.1)
       //           6463   the start screen and the game screen out, and
       //                  a book can finally be opened (§4.6, faza 8)
+      //           6439   the tester's kit became a table in lib/dev, and
+      //                  the fight stopped rebuilding one point nine times
       //
       // ⚠️ Lower it when a phase lands. Never raise it — not for a phase, and
       // not for a feature either. "It is a feature" is exactly the excuse that
@@ -176,7 +178,7 @@ void main() {
       // Something new that belongs to the model goes in the model.
       expect(
         lines,
-        lessThanOrEqualTo(6463),
+        lessThanOrEqualTo(6439),
         reason: 'main.dart grew; something went in that should have come out',
       );
     });

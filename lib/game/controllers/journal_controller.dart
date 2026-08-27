@@ -140,6 +140,13 @@ class JournalController extends ChangeNotifier {
         for (final step in steps) step.itemId: 1,
       });
 
+  /// §18.5: a lock, a car door, a shutter — forced open.
+  ///
+  /// Named the same way a searched place is: the table id and the map's own
+  /// name, both on disk, neither of them words (§1.1).
+  Future<void> opened(String tableId, {String? name}) =>
+      add(JournalKind.opened, subject: '$tableId$kPlaceSplit${name ?? ''}');
+
   /// §18: what came off a bench, as one line with counts on it.
   Future<void> made(JournalKind kind, Map<String, int> items) =>
       add(kind, subject: _list(items));

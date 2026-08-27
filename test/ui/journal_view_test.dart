@@ -81,6 +81,19 @@ void main() {
       expect(line, contains('Groszek, Sklep'));
     });
 
+    test('a forced door is named the same way a searched one is', () {
+      // ⚠️ §18.5 went in writing the *rendered* name to disk, which is the
+      // one thing §1.1 forbids: a player who changes the language would find
+      // half their diary in the other one.
+      final line = lineFor(
+        JournalKind.opened,
+        subject: 'proc_abandoned_car$kPlaceSplit',
+      );
+
+      expect(line, isNot(contains('proc_abandoned_car')));
+      expect(line, contains(l10n.placeCar));
+    });
+
     test('an enemy is named, not printed as its wire name', () {
       expect(lineFor(JournalKind.killed, subject: 'walker'), isNot('walker'));
     });

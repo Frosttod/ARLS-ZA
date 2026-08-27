@@ -88,7 +88,7 @@ String journalLine(
   return switch (entry.kind) {
     JournalKind.searched => l10n.journalSearched(place()),
     JournalKind.found => counted(l10n, haul()),
-    JournalKind.opened => l10n.journalOpened(entry.subject ?? ''),
+    JournalKind.opened => l10n.journalOpened(place()),
     JournalKind.fought => l10n.journalFought(enemy()),
     JournalKind.killed => l10n.journalKilled(enemy()),
     JournalKind.hurt => l10n.journalHurt(enemy()),
