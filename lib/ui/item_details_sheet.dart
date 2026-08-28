@@ -149,6 +149,24 @@ Future<void> showItemDetails(
                     style: TextStyle(fontSize: 11, color: colours.muted),
                   ),
                 ],
+                // §4.1, §12: one sentence saying what the thing is for.
+                //
+                // ⚠️ Above the table, not instead of it. The numbers answer
+                // "is this one better"; the sentence answers "what *is* this",
+                // which is asked the first time a thing is picked up.
+                if (names.lookup('item.${item.id}.desc', language: language)
+                    case final sentence?) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    sentence,
+                    style: TextStyle(
+                      fontSize: 12,
+                      height: 1.35,
+                      color: colours.muted,
+                    ),
+                  ),
+                ],
+
                 // §5.6.3: what is on this weapon, and what is left to put on
                 // it. On the piece rather than on the player: two rifles in one
                 // pack are two rifles.

@@ -488,6 +488,55 @@ void main() {
       expect(table.keys, isNotEmpty);
     });
 
+    test('every bundled item says in one sentence what it is for', () {
+      // ⚠️ §12: the numbers answer "is this one better"; the sentence answers
+      // "what *is* this", which is the question somebody has the first time
+      // they pick a thing up. A missing one is not a crash — it is a blank
+      // where the answer was, on exactly the item nobody recognised.
+      final said = ItemNames.parse(
+        File(kItemDescriptionsAsset).readAsStringSync(),
+      );
+
+      final missing = <String>[];
+      for (final item in catalogue.all) {
+        for (final language in const ['pl', 'en']) {
+          if (said.lookup('item.${item.id}.desc', language: language) == null) {
+            missing.add('${item.id} ($language)');
+          }
+        }
+      }
+
+      expect(missing, isEmpty, reason: missing.join(', '));
+    });
+
+    test(
+      'and every Polish sentence is written, not fallen back to English',
+      () {
+        final source =
+            jsonDecode(File(kItemDescriptionsAsset).readAsStringSync())
+                as Map<String, Object?>;
+        final raw = source['names']! as Map<String, Object?>;
+
+        final untranslated = [
+          for (final item in catalogue.all)
+            if ((raw['item.${item.id}.desc'] as Map<String, Object?>?)?['pl'] ==
+                null)
+              item.id,
+        ];
+
+        expect(untranslated, isEmpty);
+      },
+    );
+
+    test('and nothing is described that does not exist', () {
+      final said = ItemNames.parse(
+        File(kItemDescriptionsAsset).readAsStringSync(),
+      );
+      final keys = {for (final item in catalogue.all) 'item.${item.id}.desc'};
+
+      expect(said.keys.toSet().difference(keys), isEmpty);
+    });
+
     test('the table has no names for items that do not exist', () {
       final keys = {for (final item in catalogue.all) item.name.key};
 

@@ -1,0 +1,598 @@
+{
+  "_comment": "Item descriptions (§4.1, §1.1, §12): one sentence saying what a thing is for, in the same two languages the names use. Kept apart from names.json because that table is checked key-for-key against the catalogue, and a description is a second string about the same item rather than a second item. Same shape and same parser, so a content pack can ship its own.",
+  "schema": 1,
+  "languages": [
+    "pl",
+    "en"
+  ],
+  "names": {
+    "item.weapon_rifle_22lr.desc": {
+      "pl": "Cichy karabinek na drobną zwierzynę; do Kroczącego trzeba trafić w głowę.",
+      "en": "A quiet rifle meant for small game; against a Walker only a head shot ends it."
+    },
+    "item.weapon_revolver_38.desc": {
+      "pl": "Sześć strzałów, żadnego zacięcia i głośny na pół dzielnicy.",
+      "en": "Six shots, nothing to jam, and heard for half a district."
+    },
+    "item.weapon_pistol_9mm.desc": {
+      "pl": "Lekki i zawsze pod ręką, ale bez magazynka jest kawałkiem stali.",
+      "en": "Light and always to hand, but without a magazine it is a piece of steel."
+    },
+    "item.weapon_smg_9mm.desc": {
+      "pl": "Wypluwa magazynek w kilka sekund i ściąga wszystko w promieniu czterystu metrów.",
+      "en": "Empties a magazine in seconds and pulls in everything within four hundred metres."
+    },
+    "item.weapon_rifle_545.desc": {
+      "pl": "Celny na dystans, na który zdążysz zareagować; huk niesie się na siedemset metrów.",
+      "en": "Accurate at any range you can still react from; the report carries seven hundred metres."
+    },
+    "item.weapon_rifle_762x39.desc": {
+      "pl": "Cięższy pocisk i większa dziura, kosztem odrzutu i hałasu.",
+      "en": "A heavier bullet and a bigger hole, paid for in recoil and noise."
+    },
+    "item.weapon_shotgun_pump.desc": {
+      "pl": "Na dziesięć metrów kończy sprawę, dalej rozrzuca śrut w powietrze.",
+      "en": "Settles anything within ten metres and throws shot into the air past that."
+    },
+    "item.weapon_rifle_mosin.desc": {
+      "pl": "Powtarzalny, bardzo celny, i po każdym strzale trzeba przeładować ręcznie.",
+      "en": "Bolt-action and very accurate, and every shot has to be worked by hand."
+    },
+    "item.ammo_22lr.desc": {
+      "pl": "Mały nabój do cichego karabinka — mało energii, mało hałasu.",
+      "en": "A small round for a quiet rifle: little energy, little noise."
+    },
+    "item.ammo_38special.desc": {
+      "pl": "Nabój rewolwerowy; skuteczny z bliska, bezużyteczny dalej.",
+      "en": "A revolver round: effective up close and useless past that."
+    },
+    "item.ammo_9x19.desc": {
+      "pl": "Najpospolitszy nabój pistoletowy w mieście.",
+      "en": "The commonest pistol round in any city."
+    },
+    "item.ammo_545x39.desc": {
+      "pl": "Karabinowy nabój pośredni — płaski tor i mały odrzut.",
+      "en": "An intermediate rifle round: flat trajectory, little recoil."
+    },
+    "item.ammo_762x39.desc": {
+      "pl": "Cięższy nabój pośredni, robi większą ranę.",
+      "en": "A heavier intermediate round that opens a bigger wound."
+    },
+    "item.ammo_762x54r.desc": {
+      "pl": "Nabój karabinowy pełnej mocy, do broni powtarzalnej.",
+      "en": "A full-power rifle round for a bolt-action."
+    },
+    "item.ammo_12ga_buck.desc": {
+      "pl": "Śrut na bliski dystans — wiele pocisków, jeden strzał.",
+      "en": "Buckshot for close range: many pellets, one trigger pull."
+    },
+    "item.ammo_12ga_slug.desc": {
+      "pl": "Jeden ciężki pocisk zamiast śrutu; niesie dalej i przebija.",
+      "en": "One heavy slug instead of shot: it carries further and it punches through."
+    },
+    "item.tool_suppressor.desc": {
+      "pl": "Ścina huk strzału do jednej trzeciej — różnica między jednym trupem a całą ulicą.",
+      "en": "Cuts the report to a third: the difference between one body and a whole street."
+    },
+    "item.att_red_dot.desc": {
+      "pl": "Czerwony punkt zamiast szukania muszki — węższy rozrzut i szybsze złożenie się do strzału.",
+      "en": "A red dot instead of hunting for the front sight: a tighter group and a faster shot."
+    },
+    "item.att_laser.desc": {
+      "pl": "Skraca składanie się do strzału, ale plamka jest widoczna także dla nich.",
+      "en": "Shortens the time to a shot, and the dot is visible to them as well."
+    },
+    "item.att_weapon_light.desc": {
+      "pl": "Oświetla cel i mówi wszystkim dookoła, gdzie stoisz.",
+      "en": "Lights the target and tells everything around exactly where you stand."
+    },
+    "item.att_foregrip.desc": {
+      "pl": "Stabilizuje broń przy szybkim strzelaniu.",
+      "en": "Steadies the weapon when shots come quickly."
+    },
+    "item.mag_pistol_9mm.desc": {
+      "pl": "Piętnaście naboi 9 mm — bez niego pistolet nie strzeli.",
+      "en": "Fifteen rounds of 9 mm; without one the pistol does not fire."
+    },
+    "item.mag_pistol_9mm_ext.desc": {
+      "pl": "Dwadzieścia pięć naboi i wystaje z chwytu.",
+      "en": "Twenty-five rounds, and it sticks out of the grip."
+    },
+    "item.mag_smg_9mm.desc": {
+      "pl": "Trzydzieści naboi do pistoletu maszynowego.",
+      "en": "Thirty rounds for the submachine gun."
+    },
+    "item.mag_rifle_22lr.desc": {
+      "pl": "Dziesięć naboi .22 LR.",
+      "en": "Ten rounds of .22 LR."
+    },
+    "item.mag_rifle_545.desc": {
+      "pl": "Trzydzieści naboi 5,45 — standardowy magazynek karabinka.",
+      "en": "Thirty rounds of 5.45: the rifle standard."
+    },
+    "item.mag_rifle_545_drum.desc": {
+      "pl": "Sześćdziesiąt naboi, ciężki i niewygodny w noszeniu.",
+      "en": "Sixty rounds, heavy and awkward to carry."
+    },
+    "item.mag_rifle_762x39.desc": {
+      "pl": "Trzydzieści naboi 7,62.",
+      "en": "Thirty rounds of 7.62."
+    },
+    "item.melee_knife.desc": {
+      "pl": "Cichy, lekki, zawsze przy sobie — i służy też za narzędzie.",
+      "en": "Quiet, light, always on you, and it doubles as a tool."
+    },
+    "item.melee_machete.desc": {
+      "pl": "Długie ostrze, które tnie głęboko i nie wymaga siły.",
+      "en": "A long blade that cuts deep and asks for no strength."
+    },
+    "item.melee_axe.desc": {
+      "pl": "Rozłupuje wszystko, w co trafi, łącznie z drzwiami.",
+      "en": "Splits whatever it lands in, doors included."
+    },
+    "item.melee_crowbar.desc": {
+      "pl": "Otwiera zamknięte drzwi w kilkanaście sekund i bije jak łom.",
+      "en": "Opens a locked door in a dozen seconds, and hits like the bar it is."
+    },
+    "item.melee_hammer.desc": {
+      "pl": "Narzędzie do budowy schronu, które w razie czego jest bronią.",
+      "en": "The tool the shelter is built with, and a weapon if it has to be."
+    },
+    "item.melee_bat.desc": {
+      "pl": "Prosty, wyważony, nie wymaga umiejętności.",
+      "en": "Simple and balanced, and it asks nothing of you."
+    },
+    "item.melee_shovel.desc": {
+      "pl": "Ciężka, powolna, ale krawędź tnie zaskakująco dobrze.",
+      "en": "Heavy and slow, and the edge cuts better than it looks."
+    },
+    "item.melee_screwdriver.desc": {
+      "pl": "Ostatnia deska ratunku i przyzwoity śrubokręt.",
+      "en": "A last resort, and a decent screwdriver."
+    },
+    "item.melee_spike.desc": {
+      "pl": "Zaostrzony kij — zero kosztów, zero obietnic.",
+      "en": "A sharpened stick: costs nothing and promises nothing."
+    },
+    "item.melee_spear.desc": {
+      "pl": "Sięga dalej niż ich ręce, i o to w niej chodzi.",
+      "en": "It reaches further than their arms do, which is the whole point."
+    },
+    "item.melee_club_studded.desc": {
+      "pl": "Maczuga nabijana metalem; miażdży i rozrywa naraz.",
+      "en": "A club studded with metal: it crushes and tears at once."
+    },
+    "item.cloth_tshirt.desc": {
+      "pl": "Zwykła koszulka; nie grzeje i nie chroni, ale coś to lepsze niż nic.",
+      "en": "A plain shirt: no warmth and no protection, and better than bare skin."
+    },
+    "item.cloth_thermal_underwear.desc": {
+      "pl": "Warstwa pod resztą ubrania — najtańsze ciepło, jakie da się nieść.",
+      "en": "The layer under everything else: the cheapest warmth there is to carry."
+    },
+    "item.cloth_fleece.desc": {
+      "pl": "Ciepła warstwa środkowa, lekka jak na to, ile daje.",
+      "en": "A warm middle layer, light for what it gives."
+    },
+    "item.cloth_winter_jacket.desc": {
+      "pl": "Najcieplejsza rzecz, jaką znajdziesz w szafie; ciężka i zajmuje pół plecaka.",
+      "en": "The warmest thing in anybody wardrobe, heavy and half a pack in bulk."
+    },
+    "item.cloth_rain_shell.desc": {
+      "pl": "Nie grzeje, ale mokre ubranie pod spodem grzeje jeszcze mniej.",
+      "en": "It adds no warmth, and wet clothing underneath gives even less."
+    },
+    "item.cloth_trousers.desc": {
+      "pl": "Zwykłe spodnie na co dzień.",
+      "en": "Ordinary trousers for an ordinary day."
+    },
+    "item.cloth_winter_trousers.desc": {
+      "pl": "Grube spodnie na noc i na mróz.",
+      "en": "Thick trousers for the night and for the cold."
+    },
+    "item.cloth_boots.desc": {
+      "pl": "Buty, w których da się przejść dwadzieścia kilometrów.",
+      "en": "Boots you can walk twenty kilometres in."
+    },
+    "item.cloth_gloves.desc": {
+      "pl": "Chronią dłonie przed zimnem i przed tym, czego dotykasz.",
+      "en": "They keep the cold off your hands, and whatever you are touching."
+    },
+    "item.cloth_hat.desc": {
+      "pl": "Przez głowę ucieka najwięcej ciepła.",
+      "en": "More heat leaves through the head than anywhere else."
+    },
+    "item.armor_helmet_ballistic.desc": {
+      "pl": "Ciężki, niewygodny, i jedyna rzecz chroniąca głowę.",
+      "en": "Heavy, uncomfortable, and the only thing that covers a head."
+    },
+    "item.armor_vest_soft.desc": {
+      "pl": "Zatrzymuje zęby i pistolet; nie zatrzyma karabinu.",
+      "en": "Stops teeth and a pistol; it will not stop a rifle."
+    },
+    "item.armor_vest_plate.desc": {
+      "pl": "Płyty zatrzymują nawet karabin, ale osiem kilogramów niesie się cały dzień.",
+      "en": "The plates stop even a rifle, and eight kilograms are carried all day."
+    },
+    "item.armor_bite_sleeves.desc": {
+      "pl": "Ochraniacze na przedramiona — dokładnie tam, gdzie się gryzie.",
+      "en": "Guards for the forearms, which is exactly where they bite."
+    },
+    "item.cloth_briefs.desc": {
+      "pl": "Prosta bielizna; niewiele, ale nocą różnica jest odczuwalna.",
+      "en": "Plain underwear: not much, and at night the difference is felt."
+    },
+    "item.cloth_cap.desc": {
+      "pl": "Czapka z daszkiem — słońce przestaje świecić w oczy.",
+      "en": "A peaked cap, and the sun stops being in your eyes."
+    },
+    "item.cloth_leather_cap.desc": {
+      "pl": "Skórzana czapka, cieplejsza i trwalsza niż wszystko szyte z materiału.",
+      "en": "A leather cap, warmer and tougher than anything sewn from cloth."
+    },
+    "item.cloth_sun_hat.desc": {
+      "pl": "Szerokie rondo, cień na kark, mało ciepła.",
+      "en": "A wide brim, shade on the neck, and little warmth."
+    },
+    "item.armor_leather_pauldrons.desc": {
+      "pl": "Skóra na ramionach — lekka osłona tam, gdzie najczęściej sięgają.",
+      "en": "Leather over the shoulders: light cover where they reach most often."
+    },
+    "item.cloth_gloves_studded.desc": {
+      "pl": "Rękawice z metalowymi ćwiekami; chronią dłonie i dodają ciosowi wagi.",
+      "en": "Gloves with metal studs: they guard the hands and add weight to a blow."
+    },
+    "item.cloth_gloves_tactical.desc": {
+      "pl": "Dobra skóra i dobry chwyt — broń leży pewniej w dłoni.",
+      "en": "Good leather and a good grip: the weapon sits steadier in the hand."
+    },
+    "item.cloth_trousers_reinforced.desc": {
+      "pl": "Spodnie z naszytą skórą na udach i kolanach.",
+      "en": "Trousers with leather sewn over the thighs and knees."
+    },
+    "item.cloth_cargo_pads.desc": {
+      "pl": "Bojówki z twardymi ochraniaczami kolan — najlepsza osłona nóg, jaką da się uszyć.",
+      "en": "Cargo trousers with hard knee pads: the best leg cover a needle can make."
+    },
+    "item.cloth_sneakers.desc": {
+      "pl": "Miękka podeszwa, cicha na asfalcie i nie do zdarcia w tydzień.",
+      "en": "A soft sole, quiet on tarmac, and it lasts longer than a week."
+    },
+    "item.cloth_boots_military.desc": {
+      "pl": "Skóra wzmocniona metalem — cięższe niż wszystko inne i przetrwają wszystko inne.",
+      "en": "Leather reinforced with metal: heavier than anything else and they outlast it."
+    },
+    "item.pack_school.desc": {
+      "pl": "Dwadzieścia dwa litry; leży w każdym mieszkaniu i w każdej szkole.",
+      "en": "Twenty-two litres, and there is one in every flat and every school."
+    },
+    "item.pack_shopping_bag.desc": {
+      "pl": "Mieści dużo i zajmuje rękę, więc nie niesiesz w niej broni.",
+      "en": "It holds a lot and takes an arm, so you are not holding a weapon."
+    },
+    "item.pack_daypack.desc": {
+      "pl": "Czterdzieści pięć litrów — plecak, w którym mieści się dzień w terenie.",
+      "en": "Forty-five litres: a day in the field, carried."
+    },
+    "item.pack_tactical.desc": {
+      "pl": "Pięćdziesiąt pięć litrów i pasy, które przenoszą ciężar na biodra.",
+      "en": "Fifty-five litres, and straps that put the weight on your hips."
+    },
+    "item.pack_trekking.desc": {
+      "pl": "Sześćdziesiąt pięć litrów, stelaż i najlepszy rozkład ciężaru.",
+      "en": "Sixty-five litres, a frame, and the best weight distribution there is."
+    },
+    "item.pack_military.desc": {
+      "pl": "Dziewięćdziesiąt litrów; nosi się w nim wszystko i widać to z daleka.",
+      "en": "Ninety litres: it carries everything, and it is seen from a distance."
+    },
+    "item.pack_improvised.desc": {
+      "pl": "Zszyty z tego, co było; trzyma się, dopóki się trzyma.",
+      "en": "Stitched from whatever there was; it holds until it does not."
+    },
+    "item.pack_running.desc": {
+      "pl": "Mały i lekki — mieści mniej niż tornister, ale sam nic nie waży.",
+      "en": "Small and light: it holds less than a schoolbag and weighs almost nothing."
+    },
+    "item.pack_field.desc": {
+      "pl": "Szyty na miarę wyprawy; sześćdziesiąt litrów i jedenaście kilogramów udźwigu.",
+      "en": "Sewn for a long walk: sixty litres and eleven kilograms of carry."
+    },
+    "item.tool_multitool.desc": {
+      "pl": "Otwiera, kręci, tnie i odblokowuje połowę receptur warsztatu.",
+      "en": "It opens, turns and cuts, and it unlocks half the bench."
+    },
+    "item.tool_can_opener.desc": {
+      "pl": "Konserwa bez niego to konserwa, której nie zjesz.",
+      "en": "A tin without one is a tin you do not eat."
+    },
+    "item.tool_flashlight.desc": {
+      "pl": "Widzisz dwadzieścia pięć metrów dalej, a oni widzą ciebie jeszcze dalej.",
+      "en": "You see twenty-five metres further; they see you further still."
+    },
+    "item.tool_headlamp.desc": {
+      "pl": "To samo co latarka, tylko z wolnymi rękami.",
+      "en": "The same as a torch, with both hands free."
+    },
+    "item.tool_binoculars.desc": {
+      "pl": "Półtora raza większy promień przeszukania — patrzysz, zamiast chodzić.",
+      "en": "Half again the search radius: you look instead of walking."
+    },
+    "item.tool_lighter.desc": {
+      "pl": "Ogień w kieszeni, dopóki starczy gazu.",
+      "en": "Fire in a pocket, for as long as the gas lasts."
+    },
+    "item.tool_matches.desc": {
+      "pl": "Tanie, lekkie i mokre są bezużyteczne.",
+      "en": "Cheap, light, and worthless once wet."
+    },
+    "item.tool_saw.desc": {
+      "pl": "Zamienia meble w deski szybciej niż cokolwiek innego.",
+      "en": "Turns furniture into planks faster than anything else."
+    },
+    "item.tool_wrench_set.desc": {
+      "pl": "Do wszystkiego, co jest skręcone, a ma być rozkręcone.",
+      "en": "For everything that is bolted together and should not be."
+    },
+    "item.tool_water_filter.desc": {
+      "pl": "Zamienia wodę niepewnego pochodzenia w wodę.",
+      "en": "Turns water you would not drink into water."
+    },
+    "item.tool_crank_radio.desc": {
+      "pl": "Nie potrzebuje baterii; czasem coś jeszcze nadaje.",
+      "en": "It needs no battery, and sometimes something is still broadcasting."
+    },
+    "item.tool_lockpicks.desc": {
+      "pl": "Otwierają kłódkę w minutę i prawie bezgłośnie — łom robi to szybciej i słychać go z daleka.",
+      "en": "They open a lock in a minute and almost silently; a crowbar is faster and heard for streets."
+    },
+    "item.tool_sewing_kit.desc": {
+      "pl": "Igła, nici i wszystko, co da się uszyć z materiału i skóry.",
+      "en": "A needle, thread, and everything that can be sewn from cloth and leather."
+    },
+    "item.tool_gun_cleaning_kit.desc": {
+      "pl": "Broń wyczyszczona strzela; broń zaniedbana zawodzi w najgorszym momencie.",
+      "en": "A clean weapon fires; a neglected one fails at the worst moment."
+    },
+    "item.tool_bolt_cutters.desc": {
+      "pl": "Przecinają kłódkę i siatkę, i ważą swoje.",
+      "en": "They cut a padlock and a fence, and they weigh what they weigh."
+    },
+    "item.med_bandage.desc": {
+      "pl": "Zamyka umiarkowane krwawienie; na tętnicze nie wystarczy.",
+      "en": "Closes a moderate bleed; an arterial one will laugh at it."
+    },
+    "item.med_pressure_dressing.desc": {
+      "pl": "Zatrzymuje silne krwawienie uciskiem.",
+      "en": "Stops a severe bleed by pressing on it."
+    },
+    "item.med_tourniquet.desc": {
+      "pl": "Jedyna rzecz, która zatrzyma krwawienie tętnicze.",
+      "en": "The only thing that stops an arterial bleed."
+    },
+    "item.med_suture_kit.desc": {
+      "pl": "Zszywa to, czego opatrunek nie zamknie.",
+      "en": "Sews what a dressing will not close."
+    },
+    "item.med_first_aid_kit.desc": {
+      "pl": "Wszystko naraz, w jednym pudełku i na kilka użyć.",
+      "en": "Everything at once, in one box, for several uses."
+    },
+    "item.med_painkillers.desc": {
+      "pl": "Ból znika, przyczyna nie.",
+      "en": "The pain goes; the reason for it stays."
+    },
+    "item.med_antibiotics.desc": {
+      "pl": "Jedyna odpowiedź na zakażoną ranę.",
+      "en": "The only answer to a wound that has gone bad."
+    },
+    "item.med_antiseptic.desc": {
+      "pl": "Przemyta rana rzadziej się zaogni.",
+      "en": "A washed wound goes bad less often."
+    },
+    "item.med_splint.desc": {
+      "pl": "Usztywnia złamanie, żeby dało się iść.",
+      "en": "Sets a break well enough to walk on."
+    },
+    "item.med_saline.desc": {
+      "pl": "Uzupełnia płyny szybciej niż picie, i nie da się jej znieść dużo.",
+      "en": "Replaces fluid faster than drinking, and you cannot carry much of it."
+    },
+    "item.med_bandage_improvised.desc": {
+      "pl": "Pasek materiału; działa gorzej niż prawdziwy bandaż i jest zawsze.",
+      "en": "A strip of cloth: worse than a real bandage, and always to hand."
+    },
+    "item.med_pressure_improvised.desc": {
+      "pl": "Improwizowany ucisk na silne krwawienie.",
+      "en": "An improvised press for a severe bleed."
+    },
+    "item.med_tourniquet_improvised.desc": {
+      "pl": "Szmata i kij — brzydkie, i ratuje życie.",
+      "en": "A rag and a stick: ugly, and it saves a life."
+    },
+    "item.med_splint_improvised.desc": {
+      "pl": "Dwa kawałki drewna i materiał.",
+      "en": "Two pieces of wood and some cloth."
+    },
+    "item.food_canned_meat.desc": {
+      "pl": "Kalorie, które nie zepsują się przez rok; potrzebny otwieracz.",
+      "en": "Calories that keep for a year, and it needs an opener."
+    },
+    "item.food_canned_vegetables.desc": {
+      "pl": "Mniej kalorii niż mięso, za to trochę wody.",
+      "en": "Fewer calories than meat, and a little water with them."
+    },
+    "item.food_energy_bar.desc": {
+      "pl": "Dużo kalorii w małej paczce; zjadany w kilkanaście sekund.",
+      "en": "A lot of calories in a small wrapper, eaten in seconds."
+    },
+    "item.food_crackers.desc": {
+      "pl": "Suche, lekkie i wysuszą cię bardziej, niż nakarmią.",
+      "en": "Dry and light, and they take more water than they give food."
+    },
+    "item.food_sandwich.desc": {
+      "pl": "Zepsuje się do jutra, więc zjedz dziś.",
+      "en": "It will be spoiled by tomorrow, so it is eaten today."
+    },
+    "item.food_dried_meat.desc": {
+      "pl": "Białko, które przetrwa wszystko poza wilgocią.",
+      "en": "Protein that survives everything except damp."
+    },
+    "item.food_instant_soup.desc": {
+      "pl": "Potrzebuje wody, ale oddaje ją razem z kaloriami.",
+      "en": "It costs water and gives it back with the calories."
+    },
+    "item.food_chocolate.desc": {
+      "pl": "Szybki cukier, kiedy nogi odmawiają.",
+      "en": "Fast sugar for when the legs stop."
+    },
+    "item.food_apple.desc": {
+      "pl": "Mało kalorii, dużo wody, psuje się w kilka dni.",
+      "en": "Few calories, a lot of water, and gone in days."
+    },
+    "item.drink_water_bottle_500.desc": {
+      "pl": "Pół litra czystej wody.",
+      "en": "Half a litre of clean water."
+    },
+    "item.drink_water_bottle_1500.desc": {
+      "pl": "Półtora litra; ciężkie, i warte każdego grama.",
+      "en": "A litre and a half: heavy, and worth every gram."
+    },
+    "item.drink_water_dirty.desc": {
+      "pl": "Ugasi pragnienie i może cię położyć — przefiltruj albo przegotuj.",
+      "en": "It answers thirst and it may put you down: filter it or boil it."
+    },
+    "item.drink_energy.desc": {
+      "pl": "Cukier i kofeina; podnosi tętno, a tętno rozszerza każdą ranę.",
+      "en": "Sugar and caffeine: it lifts the heart rate, and the heart rate widens every wound."
+    },
+    "item.mat_wood.desc": {
+      "pl": "Deski i kawałki mebli — podstawa budowy, i zajmuje najwięcej miejsca ze wszystkiego.",
+      "en": "Planks and broken furniture: the base of every build, and the bulkiest thing you carry."
+    },
+    "item.mat_metal.desc": {
+      "pl": "Złom na wszystko, co ma trzymać kształt.",
+      "en": "Scrap for anything that has to hold its shape."
+    },
+    "item.mat_plastic.desc": {
+      "pl": "Lekki, wszędzie go pełno, i sam z siebie do niczego.",
+      "en": "Light, everywhere, and no use on its own."
+    },
+    "item.mat_fabric.desc": {
+      "pl": "Materiał na opatrunki, ubrania i plecaki.",
+      "en": "Cloth for dressings, clothing and packs."
+    },
+    "item.mat_component.desc": {
+      "pl": "Elektronika z tego, co dało się rozebrać — rzadka i potrzebna do wszystkiego trudnego.",
+      "en": "Electronics pulled out of something else: scarce, and needed by everything difficult."
+    },
+    "item.mat_rope.desc": {
+      "pl": "Lina; trzyma to, co ma się nie rozjechać.",
+      "en": "Rope: it holds together what would otherwise come apart."
+    },
+    "item.mat_duct_tape.desc": {
+      "pl": "Naprawia wszystko na tyle długo, żeby wrócić do schronu.",
+      "en": "It fixes anything for long enough to get home."
+    },
+    "item.mat_wire.desc": {
+      "pl": "Drut do wiązania, mocowania i zamykania.",
+      "en": "Wire for tying, fixing and closing."
+    },
+    "item.mat_nails.desc": {
+      "pl": "Garść gwoździ.",
+      "en": "A handful of nails."
+    },
+    "item.mat_battery.desc": {
+      "pl": "Bez niej latarka jest kawałkiem plastiku.",
+      "en": "Without one a torch is a piece of plastic."
+    },
+    "item.mat_fuel.desc": {
+      "pl": "Kanister paliwa; pali się długo i wszystko dookoła też.",
+      "en": "A can of fuel: it burns for a long time, and so does everything near it."
+    },
+    "item.mat_leather.desc": {
+      "pl": "Skóra na rękawice, buty i ochraniacze.",
+      "en": "Leather for gloves, boots and guards."
+    },
+    "item.mat_glue.desc": {
+      "pl": "Trzyma tam, gdzie nici i drut nie sięgną.",
+      "en": "It holds where thread and wire cannot reach."
+    },
+    "item.mat_alcohol.desc": {
+      "pl": "Odkaża rany i pali się czystym płomieniem.",
+      "en": "It disinfects a wound and burns with a clean flame."
+    },
+    "item.lit_note.desc": {
+      "pl": "Czyjeś słowa, zostawione dla kogoś, kto przyjdzie później.",
+      "en": "Somebody words, left for whoever came next."
+    },
+    "item.lit_leaflet_first_aid.desc": {
+      "pl": "Cztery strony i podstawy opatrywania ran.",
+      "en": "Four pages, and the basics of closing a wound."
+    },
+    "item.lit_leaflet_range_safety.desc": {
+      "pl": "Cztery strony o tym, jak nie postrzelić samego siebie.",
+      "en": "Four pages on not shooting yourself."
+    },
+    "item.lit_magazine_hunting.desc": {
+      "pl": "Tropienie i teren, między reklamami lunet.",
+      "en": "Tracking and ground, between advertisements for scopes."
+    },
+    "item.lit_magazine_guns.desc": {
+      "pl": "Testy broni i trochę wiedzy, która się przydaje.",
+      "en": "Gun reviews, and some knowledge that turns out to matter."
+    },
+    "item.lit_magazine_diy.desc": {
+      "pl": "Poradniki majsterkowicza; więcej z nich pożytku niż przed epidemią.",
+      "en": "Do-it-yourself columns, of more use now than they ever were."
+    },
+    "item.lit_guide_first_aid.desc": {
+      "pl": "Dwieście stron o tym, jak zatrzymać krwawienie i nie zabić pacjenta.",
+      "en": "Two hundred pages on stopping a bleed without killing the patient."
+    },
+    "item.lit_guide_survival.desc": {
+      "pl": "Woda, ogień, orientacja w terenie i szukanie tego, co zostało.",
+      "en": "Water, fire, ground, and finding what is left."
+    },
+    "item.lit_guide_gunsmithing.desc": {
+      "pl": "Jak broń działa i dlaczego przestaje.",
+      "en": "How a weapon works, and why it stops."
+    },
+    "item.lit_guide_repairs.desc": {
+      "pl": "Naprawy domowe — dokładnie to, z czego składa się schron.",
+      "en": "Home repairs, which is exactly what a shelter is made of."
+    },
+    "item.lit_textbook_medicine.desc": {
+      "pl": "Podręcznik akademicki; czyta się wolno i uczy najwięcej.",
+      "en": "A university textbook: slow to read and worth the most."
+    },
+    "item.lit_textbook_ballistics.desc": {
+      "pl": "Tor pocisku, rozrzut i to, co robi z ciałem.",
+      "en": "Trajectory, dispersion, and what a bullet does to a body."
+    },
+    "item.lit_textbook_engineering.desc": {
+      "pl": "Konstrukcje, materiały i obliczenia, na których stoi schron.",
+      "en": "Structures, materials and the arithmetic a shelter stands on."
+    },
+    "item.lit_textbook_fieldcraft.desc": {
+      "pl": "Poruszanie się w terenie tak, żeby nikt nie zauważył.",
+      "en": "Moving over ground without being the thing that is noticed."
+    },
+    "item.lit_encyclopedia_medicine.desc": {
+      "pl": "Dziewięćset stron i dwa kilogramy; miesiąc czytania i największy skok wiedzy.",
+      "en": "Nine hundred pages and two kilograms: a month of reading and the largest step there is."
+    },
+    "item.lit_encyclopedia_weapons.desc": {
+      "pl": "Wszystko o broni, od zamka po amunicję.",
+      "en": "Everything about weapons, from the action to the ammunition."
+    },
+    "item.lit_encyclopedia_engineering.desc": {
+      "pl": "Kompendium techniki; ciężkie jak cegła i tyle samo warte.",
+      "en": "A compendium of engineering, heavy as a brick and worth as much."
+    },
+    "item.lit_encyclopedia_nature.desc": {
+      "pl": "Rośliny, zwierzęta i teren — wszystko, co rośnie tam, dokąd idziesz.",
+      "en": "Plants, animals and ground: everything growing where you are going."
+    }
+  }
+}

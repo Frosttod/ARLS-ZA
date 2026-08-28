@@ -12,6 +12,15 @@ import 'dart:convert';
 /// items, and must never be parsed as a catalogue.
 const String kItemNamesAsset = 'assets/data/names.json';
 
+/// §4.1, §12: one sentence per item, saying what the thing is for.
+///
+/// ⚠️ Its own file, and read by the same parser. `names.json` is checked
+/// key-for-key against the catalogue — every item has exactly one name and
+/// nothing else may live there — while a description is a *second* string
+/// about the same item. Putting both in one table would mean either loosening
+/// that check or inventing a second shape for it.
+const String kItemDescriptionsAsset = 'assets/data/descriptions.json';
+
 class ItemNames {
   const ItemNames(this._byKey);
 
@@ -46,6 +55,18 @@ class ItemNames {
           },
     });
   }
+
+  /// Two tables read as one.
+  ///
+  /// ⚠️ **Two files, one lookup, and that is deliberate.** Names and
+  /// descriptions are separate assets because `names.json` is checked
+  /// key-for-key against the catalogue — one name per item and nothing else
+  /// may live there. But everything downstream asks the same question, by key,
+  /// so handing the screens two tables would mean threading a second argument
+  /// through every sheet that shows an item. The keys cannot collide: one ends
+  /// `.name` and the other `.desc`.
+  factory ItemNames.merged(Iterable<ItemNames> tables) =>
+      ItemNames({for (final table in tables) ...table._byKey});
 
   Iterable<String> get keys => _byKey.keys;
 

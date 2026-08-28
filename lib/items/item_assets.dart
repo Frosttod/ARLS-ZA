@@ -15,8 +15,12 @@ import 'item_names.dart';
 
 /// Reads the bundled name table. Packs carry their names inline, so this is
 /// only the shipped one.
-Future<ItemNames> loadItemNames() async =>
-    ItemNames.parse(await rootBundle.loadString(kItemNamesAsset));
+/// Every word the game has about items: the names of §4.1 and §12's one-line
+/// descriptions, in one lookup.
+Future<ItemNames> loadItemNames() async => ItemNames.merged([
+  ItemNames.parse(await rootBundle.loadString(kItemNamesAsset)),
+  ItemNames.parse(await rootBundle.loadString(kItemDescriptionsAsset)),
+]);
 
 /// Reads the bundled catalogue, and any content pack found in [packDirectory].
 ///

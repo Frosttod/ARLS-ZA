@@ -20,6 +20,39 @@ void main() {
   ]);
   final tables = LootTableSet.parse(File(tablesAsset).readAsStringSync());
 
+  group('§18.2: drewno tam, gdzie stoją meble', () {
+    /// Ile jednostek drewna może wypaść w danym miejscu.
+    int woodIn(String id) {
+      final table = tables.tables.firstWhere((t) => t.id == id);
+      return table.entries
+          .where((entry) => entry.itemId == 'mat_wood')
+          .fold(0, (sum, entry) => sum + entry.max);
+    }
+
+    test('opuszczone mieszkanie ma z czego wziąć deski', () {
+      // ⚠️ Zgłoszone z terenu: magazyn to dwadzieścia jednostek drewna, czyli
+      // czterdzieści kilogramów i osiemdziesiąt litrów — dwa pełne plecaki
+      // samego drewna. A drewno nie wypadało w mieszkaniach, więc gracz w
+      // mieście budował schron z wypraw do lasu. Mieszkanie to meble, półki,
+      // blaty i drzwi.
+      expect(woodIn('proc_abandoned_house'), greaterThan(0));
+    });
+
+    test('i śmietnik też, bo tam ląduje połamane', () {
+      expect(woodIn('proc_waste'), greaterThan(0));
+    });
+
+    test('ale stodoła i skład dają go najwięcej', () {
+      // Kolejność, nie tylko obecność: mieszkanie ma być wyjściem awaryjnym,
+      // a nie lepszym źródłem niż miejsce pełne desek.
+      expect(woodIn('proc_barn'), greaterThan(woodIn('proc_abandoned_house')));
+      expect(
+        woodIn('poi_hardware'),
+        greaterThanOrEqualTo(woodIn('proc_abandoned_house')),
+      );
+    });
+  });
+
   group('the shipped tables', () {
     test('parse without a fault', () {
       expect(tables.problems, isEmpty, reason: tables.problems.join('\n'));

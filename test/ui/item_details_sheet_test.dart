@@ -27,7 +27,12 @@ void main() {
     for (final asset in kBundledItemAssets)
       ItemSource(asset, File(asset).readAsStringSync()),
   ]);
-  final names = ItemNames.parse(File(kItemNamesAsset).readAsStringSync());
+  // ⚠️ Obie tabele, tak jak w grze: nazwy i zdania są jednym lookupem, więc
+  // arkusz karmiony samymi nazwami byłby arkuszem, którego gracz nie widzi.
+  final names = ItemNames.merged([
+    ItemNames.parse(File(kItemNamesAsset).readAsStringSync()),
+    ItemNames.parse(File(kItemDescriptionsAsset).readAsStringSync()),
+  ]);
   final recipes = RecipeBook.parse(File(kRecipesAsset).readAsStringSync());
 
   /// A bench with nothing learned: §18.6's floor share, which is what most
@@ -463,6 +468,28 @@ void main() {
       await open(tester, itemId: 'melee_crowbar', inventory: const Inventory());
 
       expect(find.text('PO ROZEBRANIU'), findsNothing);
+    });
+  });
+
+  group('§12: co to w ogóle jest', () {
+    testWidgets('arkusz mówi jednym zdaniem, do czego rzecz służy', (
+      tester,
+    ) async {
+      // Tabela odpowiada „czy ta jest lepsza". Zdanie odpowiada „co to jest",
+      // a to jest pytanie, które ktoś ma raz — przy pierwszym podniesieniu.
+      await open(
+        tester,
+        itemId: 'tool_lockpicks',
+        inventory: const Inventory(),
+      );
+
+      expect(find.textContaining('kłódkę'), findsOneWidget);
+    });
+
+    testWidgets('i jest po polsku, kiedy gra jest po polsku', (tester) async {
+      await open(tester, itemId: 'melee_spear', inventory: const Inventory());
+
+      expect(find.textContaining('Sięga dalej'), findsOneWidget);
     });
   });
 }
