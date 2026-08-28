@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:arls_za/craft/craft_job.dart';
+import 'package:arls_za/craft/item_recipe.dart';
 import 'package:arls_za/inventory/inventory.dart';
 import 'package:arls_za/items/item_catalogue.dart';
 import 'package:arls_za/items/item_names.dart';
@@ -26,6 +28,16 @@ void main() {
       ItemSource(asset, File(asset).readAsStringSync()),
   ]);
   final names = ItemNames.parse(File(kItemNamesAsset).readAsStringSync());
+  final recipes = RecipeBook.parse(File(kRecipesAsset).readAsStringSync());
+
+  /// A bench with nothing learned: §18.6's floor share, which is what most
+  /// players read most of the time.
+  const plain = CraftBench(
+    atShelter: true,
+    workshopLevel: 0,
+    atHand: {'tool_multitool'},
+    materials: {},
+  );
 
   Future<void> open(
     WidgetTester tester, {
@@ -36,6 +48,7 @@ void main() {
     String? wearLabel,
     void Function(CarriedItem line, CarriedItem attachment)? onAttach,
     bool fromPack = true,
+    CraftBench? bench,
   }) async {
     final entry = line ?? CarriedItem(itemId: itemId!);
     await tester.pumpWidget(
@@ -59,6 +72,8 @@ void main() {
               onWear: onWear,
               wearLabel: wearLabel,
               onAttach: onAttach,
+              bench: bench,
+              book: bench == null ? null : recipes,
               fromPack: fromPack,
             ),
             child: const Text('open'),
@@ -406,6 +421,48 @@ void main() {
         findsNothing,
         reason: 'their own rifle is wearing it',
       );
+    });
+  });
+
+  group('§18.6: co z tego zostanie', () {
+    testWidgets('rzecz warta rozebrania mówi, co odda i ile to zajmie', (
+      tester,
+    ) async {
+      // ⚠️ Zgłoszone jako „skąd mam wiedzieć, czy opłaca się to rozbierać".
+      // Ekran rozbiórki znał odpowiedź, ale dopiero po wejściu w niego z
+      // konkretnym przedmiotem — czyli po decyzji, której miała dotyczyć.
+      await open(
+        tester,
+        itemId: 'melee_crowbar',
+        inventory: const Inventory(),
+        bench: plain,
+      );
+
+      expect(find.text('PO ROZEBRANIU'), findsOneWidget);
+      expect(find.textContaining('min'), findsWidgets);
+      expect(find.textContaining('Złom metalowy'), findsWidgets);
+    });
+
+    testWidgets('a kanapka nie mówi nic, bo nikt jej nie rozbiera', (
+      tester,
+    ) async {
+      // Wiersz „nic by z tego nie zostało" pod każdą konserwą to szum, a szum
+      // jest tym, przez co gracz przestaje czytać wiersze, które coś znaczą.
+      await open(
+        tester,
+        itemId: 'food_canned_meat',
+        inventory: const Inventory(),
+        bench: plain,
+      );
+
+      expect(find.text('PO ROZEBRANIU'), findsNothing);
+    });
+
+    testWidgets('bez warsztatu w zasięgu arkusz o tym milczy', (tester) async {
+      // Stos na chodniku ogląda się, nie wycenia.
+      await open(tester, itemId: 'melee_crowbar', inventory: const Inventory());
+
+      expect(find.text('PO ROZEBRANIU'), findsNothing);
     });
   });
 }

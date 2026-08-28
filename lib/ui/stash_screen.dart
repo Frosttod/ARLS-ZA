@@ -21,6 +21,7 @@ import '../items/item_catalogue.dart';
 import '../shelter/stash.dart';
 import 'fonts.dart';
 import 'units.dart';
+import 'item_details_sheet.dart';
 import 'hud.dart' show HudColors;
 import '../l10n/app_localizations.dart';
 import 'effects.dart';
@@ -473,15 +474,7 @@ class _LineState extends State<_Line> {
               ),
           ],
           if (widget.onDetails != null)
-            IconButton(
-              onPressed: widget.onDetails,
-              icon: const Icon(Icons.info_outline, size: 18),
-              tooltip: l10n.itemDetails,
-              color: colours.muted,
-              visualDensity: VisualDensity.compact,
-              constraints: const BoxConstraints(),
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-            ),
+            ItemInfoButton(onPressed: widget.onDetails!, colour: colours.muted),
 
           TextButton(
             onPressed: enabled ? widget.onTap : null,

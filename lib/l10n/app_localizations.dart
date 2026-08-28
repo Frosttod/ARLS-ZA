@@ -3685,6 +3685,24 @@ abstract class L10n {
   /// **'Details'**
   String get itemDetails;
 
+  /// No description provided for @itemSalvageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'If taken apart'**
+  String get itemSalvageTitle;
+
+  /// No description provided for @itemSalvageNothing.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing would be left of it.'**
+  String get itemSalvageNothing;
+
+  /// No description provided for @itemSalvageTakes.
+  ///
+  /// In en, this message translates to:
+  /// **'takes {minutes} min'**
+  String itemSalvageTakes(int minutes);
+
   /// No description provided for @itemCompare.
   ///
   /// In en, this message translates to:

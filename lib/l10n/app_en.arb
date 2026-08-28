@@ -1221,6 +1221,16 @@
   "attachmentNoRail": "No rail left on this weapon.",
   "attachmentRemove": "Take off",
   "itemDetails": "Details",
+  "itemSalvageTitle": "If taken apart",
+  "itemSalvageNothing": "Nothing would be left of it.",
+  "itemSalvageTakes": "takes {minutes} min",
+  "@itemSalvageTakes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
   "itemCompare": "Compared with",
   "itemCarried": "carried",
   "itemWorn": "worn",

@@ -38,6 +38,7 @@ import 'effects.dart';
 import '../loot/search.dart';
 import '../sim/body.dart';
 import '../sim/pinned_goal.dart';
+import 'item_details_sheet.dart';
 import 'hud.dart' show HudColors;
 
 /// How the pack is ordered (§4.1, §12).
@@ -581,6 +582,13 @@ class _SlotRow extends StatelessWidget {
                 ),
               ),
             ),
+            // ⚠️ The glyph, not only the tap — on the very pieces somebody
+            // is wearing, which is where "what is this doing for me" is asked.
+            if (worn != null && onDetails != null)
+              ItemInfoButton(
+                onPressed: () => onDetails!(worn),
+                colour: colours.muted,
+              ),
             if (definition != null)
               Text(
                 kilograms(worn!.massKg(definition, catalogue: catalogue)),
@@ -910,8 +918,7 @@ class _ItemRowState extends State<_ItemRow> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Left: what it is. Tapping it opens the numbers, and so does
-                  // the glyph beside it for anybody who looks for a button.
+                  // Left: what it is. Name or glyph, both open the numbers.
                   Expanded(
                     child: GestureDetector(
                       onTap: widget.onDetails == null
@@ -969,16 +976,9 @@ class _ItemRowState extends State<_ItemRow> {
                             ),
                           ),
                           if (widget.onDetails != null)
-                            IconButton(
+                            ItemInfoButton(
                               onPressed: () => widget.onDetails!(line),
-                              icon: const Icon(Icons.info_outline, size: 18),
-                              color: colours.muted,
-                              tooltip: l10n.itemDetails,
-                              visualDensity: VisualDensity.compact,
-                              constraints: const BoxConstraints(),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                              ),
+                              colour: colours.muted,
                             ),
                         ],
                       ),

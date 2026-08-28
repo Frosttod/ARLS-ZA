@@ -2037,6 +2037,17 @@ class L10nEn extends L10n {
   String get itemDetails => 'Details';
 
   @override
+  String get itemSalvageTitle => 'If taken apart';
+
+  @override
+  String get itemSalvageNothing => 'Nothing would be left of it.';
+
+  @override
+  String itemSalvageTakes(int minutes) {
+    return 'takes $minutes min';
+  }
+
+  @override
   String get itemCompare => 'Compared with';
 
   @override

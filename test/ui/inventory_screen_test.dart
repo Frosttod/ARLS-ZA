@@ -482,9 +482,40 @@ void main() {
 
       await pump(tester, pack, onDetails: (line) => asked = line.itemId);
 
-      await tapInPack(tester, find.byIcon(Icons.info_outline));
+      // ⚠️ `.last`, because the figure above the list now carries the same
+      // glyph on every filled slot — including the pack itself, which is worn.
+      // That is the point of this change, and it is why the pack's own row is
+      // no longer the only one on screen with a way in.
+      await tapInPack(tester, find.byIcon(Icons.info_outline).last);
 
       expect(asked, 'armor_vest_soft');
+    });
+
+    testWidgets('and the glyph is on the worn row, not only the tap', (
+      tester,
+    ) async {
+      // ⚠️ Reported as "how do I see what my vest is doing". The name on a
+      // slot row has opened the numbers for a long time, and nothing said so:
+      // the pack row had the glyph and the figure did not, so the pieces
+      // somebody is actually wearing were the ones they had to guess about.
+      String? asked;
+
+      await pump(
+        tester,
+        const Inventory().wear('armor_vest_soft'),
+        onDetails: (line) => asked = line.itemId,
+      );
+
+      await tapInPack(tester, find.byIcon(Icons.info_outline).first);
+
+      expect(asked, 'armor_vest_soft');
+    });
+
+    testWidgets('an empty slot offers nothing to look at', (tester) async {
+      // An absent control, never a dead one: there is no vest to explain.
+      await pump(tester, const Inventory(), onDetails: (_) {});
+
+      expect(find.byIcon(Icons.info_outline), findsNothing);
     });
 
     testWidgets('so can something being worn, which is the one to beat', (

@@ -27,6 +27,8 @@ import '../combat/magazine_item.dart';
 import '../items/item_catalogue.dart';
 import '../items/item_names.dart';
 import '../items/item_stats.dart';
+import '../craft/craft_job.dart';
+import '../craft/item_recipe.dart';
 import '../l10n/app_localizations.dart';
 import 'effects.dart';
 import 'hud.dart' show HudColors;
@@ -52,6 +54,16 @@ Future<void> showItemDetails(
   void Function(CarriedItem line)? onDismantle,
   void Function(CarriedItem line)? onStash,
   void Function(CarriedItem line)? onDrop,
+
+  /// §18.6: what this very piece would leave behind, and how long it takes.
+  ///
+  /// ⚠️ **At this player's share, not at the table's.** Engineering and the
+  /// workshop move the figure from 40% to 65%, and a sheet quoting the raw
+  /// table would tell somebody who has read three books the wrong number about
+  /// the thing in their hands. Null where there is no bench to ask — a pile on
+  /// the pavement is looked at, not costed.
+  CraftBench? bench,
+  RecipeBook? book,
 
   /// Whether this piece is one the player is carrying.
   ///
@@ -173,6 +185,22 @@ Future<void> showItemDetails(
                     ),
                   ),
                 ),
+
+                // §18.6: and what would be left of it. Under the numbers,
+                // because "is it worth more in pieces" is the question asked
+                // after "is it any good", never before it.
+                if (bench != null && book != null)
+                  _Salvage(
+                    line: line,
+                    item: item,
+                    bench: bench,
+                    book: book,
+                    catalogue: catalogue,
+                    nameOf: nameOf,
+                    colours: colours,
+                    l10n: l10n,
+                  ),
+
                 const SizedBox(height: 8),
 
                 // ⚠️ Away from the others, on the left, with the harmless
@@ -259,6 +287,123 @@ CarriedItem? _rival(
     if (definition != null && comparable(item, definition)) return other;
   }
   return null;
+}
+
+/// The glyph that opens [showItemDetails], wherever a piece is listed.
+///
+/// ⚠️ **One button, because there are three lists.** The pack, the shelves and
+/// the slots on the body all show the same thing and all need the same way in
+/// — and the slot row was the one that never got it, so the pieces a player is
+/// actually wearing were the pieces they had to guess were tappable.
+class ItemInfoButton extends StatelessWidget {
+  const ItemInfoButton({
+    required this.onPressed,
+    required this.colour,
+    super.key,
+  });
+
+  final VoidCallback onPressed;
+  final Color colour;
+
+  @override
+  Widget build(BuildContext context) => IconButton(
+    onPressed: onPressed,
+    icon: const Icon(Icons.info_outline, size: 18),
+    color: colour,
+    tooltip: L10n.of(context).itemDetails,
+    visualDensity: VisualDensity.compact,
+    constraints: const BoxConstraints(),
+    padding: const EdgeInsets.symmetric(horizontal: 6),
+  );
+}
+
+/// §18.6: what comes back out of this piece, and what it costs to get it.
+///
+/// ⚠️ **Off the same functions the bench uses, never a second arithmetic.**
+/// The disassembly screen and this sheet answering differently would be worse
+/// than the sheet saying nothing: a player reads one, acts on the other, and
+/// the game has lied to them about the only thing they were deciding.
+class _Salvage extends StatelessWidget {
+  const _Salvage({
+    required this.line,
+    required this.item,
+    required this.bench,
+    required this.book,
+    required this.catalogue,
+    required this.nameOf,
+    required this.colours,
+    required this.l10n,
+  });
+
+  final CarriedItem line;
+  final ItemDefinition item;
+  final CraftBench bench;
+  final RecipeBook book;
+  final ItemCatalogue catalogue;
+  final String Function(ItemDefinition definition) nameOf;
+  final HudColors colours;
+  final L10n l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    final yields = salvagePreview(
+      line.itemId,
+      bench,
+      catalogue: catalogue,
+      book: book,
+      condition: line.condition ?? item.condition ?? 100,
+    );
+
+    // ⚠️ Silent about things that are not taken apart at all — food, a
+    // dressing, a book. A row saying "nothing would be left of it" under every
+    // sandwich in the pack is noise, and noise is what makes a player stop
+    // reading the rows that matter.
+    if (materialContent(item, book).isEmpty) return const SizedBox.shrink();
+
+    final minutes = salvageTime(materialContent(item, book)).inMinutes;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Text(
+              l10n.itemSalvageTitle.toUpperCase(),
+              style: TextStyle(
+                fontSize: 9,
+                letterSpacing: 1.1,
+                color: colours.muted,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              l10n.itemSalvageTakes(minutes),
+              style: TextStyle(fontSize: 11, color: colours.muted),
+            ),
+          ],
+        ),
+        const SizedBox(height: 2),
+        Text(
+          yields.isEmpty
+              ? l10n.itemSalvageNothing
+              : effects([
+                  for (final entry in yields.entries)
+                    '${_materialName(entry.key)} ×${entry.value}',
+                ]),
+          style: TextStyle(
+            fontSize: 12,
+            color: yields.isEmpty ? colours.muted : colours.data,
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _materialName(String itemId) {
+    final material = catalogue[itemId];
+    return material == null ? itemId : nameOf(material);
+  }
 }
 
 class _StatRow extends StatelessWidget {

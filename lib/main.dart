@@ -1487,6 +1487,22 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// The choice a player actually faces is not "is this vest good" but "is it
   /// better than mine", and that question is unanswerable while the two numbers
   /// live on separate screens.
+  /// §4.8, §10.3: something lying where it fell, looked at but not owned.
+  ///
+  /// ⚠️ `fromPack: false` is the whole difference from the sheet below, which
+  /// compares a piece against its counterpart on the body. A pile on the
+  /// pavement has none — asked to find one it found the player's own rifle.
+  Future<void> _showFoundItem(CarriedItem line) => showItemDetails(
+    context,
+    line: line,
+    inventory: _inventory,
+    catalogue: _catalogue!,
+    names: _names ?? ItemNames.empty,
+    bench: _bench(),
+    book: _recipes,
+    fromPack: false,
+  );
+
   Future<void> _showItemDetails(CarriedItem line) async {
     final catalogue = _catalogue;
     final item = catalogue?[line.itemId];
@@ -1505,6 +1521,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       inventory: _inventory,
       catalogue: catalogue,
       names: _names ?? ItemNames.empty,
+      // §18.6: what would be left of it, at this player's share.
+      bench: _bench(),
+      book: _recipes,
       // §18.6: nothing that has been opened up goes on. Half a coat does not
       // keep the rain off, and the row hides the glyph for the same reason —
       // this is the sheet saying the same thing.
@@ -2048,16 +2067,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         catalogue: catalogue,
         names: _names ?? ItemNames.empty,
         onTake: (pile) => unawaited(_takePileFrom(pile, where)),
-        onDetails: (pile) => unawaited(
-          showItemDetails(
-            context,
-            line: pile.asCarried,
-            inventory: _inventory,
-            catalogue: catalogue,
-            names: _names ?? ItemNames.empty,
-            fromPack: false,
-          ),
-        ),
+        onDetails: (pile) => unawaited(_showFoundItem(pile.asCarried)),
       );
     } finally {
       here.dispose();
@@ -2118,18 +2128,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         catalogue: _catalogue!,
         names: _names ?? ItemNames.empty,
         onTake: (pile) => unawaited(_takePile(pile)),
-        onDetails: (pile) => unawaited(
-          showItemDetails(
-            context,
-            line: pile.asCarried,
-            inventory: _inventory,
-            catalogue: _catalogue!,
-            names: _names ?? ItemNames.empty,
-            // A pile at the player's feet, same as a tap on the map: not
-            // theirs until they pick it up.
-            fromPack: false,
-          ),
-        ),
+        onDetails: (pile) => unawaited(_showFoundItem(pile.asCarried)),
       ),
     );
   }
@@ -4906,6 +4905,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       inventory: _inventory,
       catalogue: catalogue,
       names: _names ?? ItemNames.empty,
+      bench: _bench(),
+      book: _recipes,
       // ⚠️ Not from the pack. The sheet looks for the piece's counterpart in
       // the inventory to compare against, and a shelf line has none — the same
       // rule a pile on the pavement obeys, and for the same reason: it once
