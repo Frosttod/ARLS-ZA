@@ -15,6 +15,7 @@ library;
 
 import '../map/geometry.dart';
 import '../safety/spawn_exclusion.dart';
+import 'awareness.dart';
 import 'enemy.dart';
 import 'enemy_spawner.dart';
 import 'noise.dart';
@@ -113,6 +114,10 @@ class CombatSession {
     double scouting = 0,
     // §17.4: they notice a fifth further in the dark.
     double darkness = 0,
+    // §5.6.1: how fast the player is actually walking, which is the only
+    // thing they can do about being heard (§0 — there is no crouch button in
+    // a game that measures real movement).
+    double speedKmh = 0,
     void Function(Enemy dead)? onDeath,
   }) {
     // §3.5's features are what a person may not be sent through; most of them
@@ -139,6 +144,7 @@ class CombatSession {
         ground: ground,
         scouting: scouting,
         darkness: darkness,
+        playerNoiseM: playerNoiseM(speedKmh),
       );
 
       if (after.isDead) {

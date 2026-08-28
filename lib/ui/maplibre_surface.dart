@@ -29,6 +29,7 @@ import 'map_view.dart' show TileSurfaceBuilder;
 import 'package:maplibre_gl/maplibre_gl.dart';
 
 import '../location/position_fix.dart';
+import '../combat/awareness.dart';
 import '../map/geometry.dart';
 import '../map/map_source.dart';
 import '../map/map_style.dart';
@@ -1124,8 +1125,14 @@ class _FacingPainter extends CustomPainter {
 
   final List<({Offset at, double headingDeg, Color colour})> markers;
 
-  /// Narrow enough to read as a direction rather than as a searchlight.
-  static const double spreadDeg = 50;
+  /// §6.2: exactly the cone the game checks against.
+  ///
+  /// ⚠️ **It was fifty degrees because it meant nothing.** A wedge drawn
+  /// narrower than the field of view is a lie a player acts on: they walk
+  /// round what looks like the edge of its vision and are seen, and nothing
+  /// on screen explains why. Now that [seesPlayer] asks about this cone, the
+  /// picture and the rule have to be the same number.
+  static const double spreadDeg = kFieldOfViewDeg;
   static const double reachPx = 26;
 
   @override

@@ -20,6 +20,7 @@ library;
 
 import 'dart:math' as math;
 
+import 'awareness.dart';
 import '../map/geometry.dart';
 import '../safety/spawn_exclusion.dart';
 
@@ -379,6 +380,17 @@ class Enemy {
 
   bool get isDead => bloodLostMl >= bloodMl * kind.deathAtLoss;
 
+  /// §6.2, §5.5.1: czy w ogóle wie, że coś się dzieje.
+  ///
+  /// ⚠️ Także wtedy, gdy tylko coś usłyszał. Wzbudzony jest wzbudzony —
+  /// przeciwnik idący sprawdzić hałas rozgląda się, i podejście mu od tyłu
+  /// jest zakładem, a nie egzekucją (§5.5.1).
+  bool get isAware =>
+      state == EnemyState.chase ||
+      state == EnemyState.spent ||
+      state == EnemyState.alert ||
+      heardAt != null;
+
   /// §5.5.1: healthy, wounded or critical, against what it takes to kill it.
   ///
   /// Measured against the threshold rather than against its whole volume: a
@@ -515,6 +527,14 @@ Enemy advanceEnemy(
   SpawnFilter? ground,
   double scouting = 0,
   double darkness = 0,
+
+  /// §5.6.1: how far the player's own footfall carries right now.
+  ///
+  /// ⚠️ **Hearing is the half of §6.2 that has no direction**, and the half
+  /// that makes running a decision. Nought — somebody standing still — is
+  /// silence, and silence is what the last three metres of an approach are
+  /// bought with.
+  double playerNoiseM = 0,
 }) {
   if (enemy.isDead || elapsed <= Duration.zero) return enemy;
 
@@ -539,14 +559,20 @@ Enemy advanceEnemy(
           ? kContactLost * kWoundedContactFactor
           : kContactLost);
 
+  // §6.2: seen means *looked at*. The cone is around the way it is walking,
+  // which is drawn on the map — an enemy facing away is an enemy that can be
+  // walked around, and that is the whole of the approach.
+  final sightM = enemy.sightAgainst(scouting, darkness: darkness);
+  final sees = seesPlayer(enemy, playerAt, sightM: sightM);
+  final hears = !sees && hearsPlayer(enemy, playerAt, noiseM: playerNoiseM);
+
   var state = _nextState(
     enemy,
     distance: distance,
+    sees: sees,
     heardShot: heardShot,
     beyondLeash: beyondLeash,
     lostContact: lostContact,
-    scouting: scouting,
-    darkness: darkness,
   );
 
   // §6.1: the stopwatch. Spent only while sprinting, given back while walking.
@@ -568,9 +594,11 @@ Enemy advanceEnemy(
   // §5.6.2: a sound is a place, and the place is what it walks to. Only while
   // the player is not the nearer answer — something in front of you beats
   // something you heard.
-  final noise = enemy.heardAt;
-  final seen = distance <= enemy.sightAgainst(scouting, darkness: darkness);
-  final investigating = noise != null && !seen && state != EnemyState.returning;
+  // §5.6.2: footfall is a sound like any other — it sends this one to **where
+  // the player was**, not to where they are. Which is what leaves room for
+  // running past something and not being followed to the door.
+  final noise = hears ? playerAt : enemy.heardAt;
+  final investigating = noise != null && !sees && state != EnemyState.returning;
 
   var left = enemy.investigateLeft;
   var walked = enemy.walkedToNoise;
@@ -595,7 +623,7 @@ Enemy advanceEnemy(
         state = EnemyState.returning;
       }
     }
-  } else if (seen) {
+  } else if (sees) {
     forget = true;
   }
 
@@ -674,11 +702,10 @@ Enemy advanceEnemy(
 EnemyState _nextState(
   Enemy enemy, {
   required double distance,
+  required bool sees,
   required bool heardShot,
   required bool beyondLeash,
   required bool lostContact,
-  double scouting = 0,
-  double darkness = 0,
 }) {
   // ⚠️ §6.1a's contact rule and §5.6.2's search would otherwise contradict
   // each other: an enemy sent to a noise is *supposed* to be somewhere the
@@ -698,8 +725,7 @@ EnemyState _nextState(
         : EnemyState.returning;
   }
 
-  final noticed =
-      heardShot || distance <= enemy.sightAgainst(scouting, darkness: darkness);
+  final noticed = heardShot || sees;
   if (!noticed) {
     // §5.6.2: a sound already heard is still worth walking to, so it stays
     // alert rather than forgetting the moment the player is out of sight.

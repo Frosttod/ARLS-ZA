@@ -827,9 +827,10 @@ List<MapMarker> markersFrom({
         id: enemy.id,
         kind: MarkerKind.enemy,
         at: enemy.position,
-        // §3.6: which way it is walking. Not a field of view — §6.2 gives
-        // them a radius and nothing directional — but knowing that one of
-        // them has turned towards you is the whole of the warning.
+        // §6.2: which way it is looking, and now that is exactly what it
+        // means — the wedge on the map is the cone [seesPlayer] asks about.
+        // Standing outside it is the whole of the approach, so the picture and
+        // the rule are one number (`kFieldOfViewDeg`).
         headingDeg: enemy.headingDeg,
         // §6.2: what it can see, drawn only once it is near enough for that
         // to be a decision. The question is how close a player can get

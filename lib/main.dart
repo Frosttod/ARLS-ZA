@@ -33,6 +33,7 @@ import 'items/item_catalogue.dart';
 import 'items/item_names.dart';
 import 'combat/aim.dart';
 import 'combat/blows_away.dart';
+import 'combat/awareness.dart';
 import 'combat/ballistics.dart';
 import 'combat/combat_session.dart';
 import 'combat/engagement.dart';
@@ -2322,6 +2323,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         scouting: _learned.scouting,
         // §17.4: and everybody is noticed sooner after dark.
         darkness: snapshot.darkness,
+        // §5.6.1: and everybody hears somebody who is running.
+        speedKmh: snapshot.speedKmh,
       );
 
       for (final gone in vanishedNear(
@@ -3032,35 +3035,32 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
                     character.constants.restingHeartRate),
     );
 
-    final landed = Random().nextDouble() < chance;
-    final where = rollHitLocation(Random().nextDouble());
-    final damage =
-        ((blade?.props['blood_ml_per_hit'] as num?)?.toDouble() ?? 40) *
-        where.multiplier;
     final here = GeoPoint(fix.latitude, fix.longitude);
 
+    // §5.5.1: behind something unaware, at arm's reach, armed — one movement
+    // rather than a fight, and every condition is drawn before it is asked.
+    final blow = meleeOutcome(
+      target: target,
+      at: here,
+      bladeBloodMl: (blade?.props['blood_ml_per_hit'] as num?)?.toDouble(),
+      chance: chance,
+      random: Random(),
+    );
+
     setState(() {
-      // §2.6: a blade opens what it lands in, and a throat opened is a fight
-      // that finishes itself.
-      if (landed) {
+      if (blow.bloodMl > 0) {
         _combat = _combat.wound(
           target.id,
-          damage,
-          bleeding: switch (where) {
-            HitLocation.head => 5,
-            HitLocation.torso => 3,
-            _ => 1,
-          },
+          blow.bloodMl,
+          bleeding: blow.bleeding,
           from: here,
         );
       }
 
-      // §5.6.1: hands and a blade are twenty-five metres of noise, which is
-      // the whole reason to use them.
       _combat = _combat.heard(
         NoiseEvent(
           at: here,
-          radiusM: NoiseKind.melee.baseM,
+          radiusM: blow.noiseM,
           startedAt: DateTime.now().toUtc(),
         ),
         playerAt: here,
@@ -3076,23 +3076,23 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     unawaited(_diary.add(JournalKind.fought, subject: target.kind.name));
     _note(
       (stats) => stats.swung(
-        where: landed ? where : null,
-        bloodMl: landed ? damage : 0,
+        where: blow.bloodMl > 0 ? blow.where : null,
+        bloodMl: blow.bloodMl,
       ),
     );
 
     if (!mounted) return;
     final left = _combat.enemies.where((e) => e.id == target.id).firstOrNull;
     _say(
-      !landed
+      blow.bloodMl <= 0
           ? L10n.of(context).combatMiss
           : left == null || left.isDead
-          ? (where == HitLocation.head
+          ? (blow.where == HitLocation.head
                 ? L10n.of(context).combatExecution
                 : L10n.of(context).combatDown)
           : L10n.of(context).combatHitAt(
-              hitLocationName(L10n.of(context), where),
-              damage.round(),
+              hitLocationName(L10n.of(context), blow.where),
+              blow.bloodMl.round(),
             ),
       remember: true,
     );
