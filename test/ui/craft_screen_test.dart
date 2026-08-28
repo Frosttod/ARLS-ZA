@@ -199,4 +199,73 @@ void main() {
       expect(find.textContaining('materia'), findsWidgets);
     });
   });
+
+  group('§12: czas mówi, w czym jest liczony', () {
+    testWidgets('minuty to minuty, a godziny to godziny', (tester) async {
+      // ⚠️ Zgłoszone z terenu: „2:30 przy plecaku wojskowym — dwie i pół
+      // minuty czy godziny?". Wiersz warsztatu stojący w miejscu nie ma jak
+      // tego powiedzieć samym dwukropkiem, a sąsiedni wiersz z „45:00" znaczy
+      // czterdzieści pięć minut tym samym zapisem.
+      await pump(tester);
+
+      expect(find.textContaining(' min'), findsWidgets);
+      expect(find.textContaining(RegExp(r'^\d+:\d\d\$')), findsNothing);
+    });
+  });
+
+  group('§12: filtr tego, co da się zrobić', () {
+    testWidgets('domyślnie widać wszystko, także rzeczy poza zasięgiem', (
+      tester,
+    ) async {
+      // Receptura poza zasięgiem jest powodem, żeby zbudować warsztat albo
+      // poszukać skóry. Ukrycie jej domyślnie ukrywa razem z nią cel.
+      await pump(tester, bench: benchWith(workshopLevel: 0));
+
+      // W zakładce, bo lista „Wszystko" jest dłuższa niż ekran, a czego nie
+      // widać, tego test nie znajdzie.
+      await tester.tap(find.text('Broń biała'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Włócznia ×2'), findsOneWidget);
+    });
+
+    testWidgets('włączony chowa to, czego nie da się zacząć', (tester) async {
+      await pump(tester, bench: benchWith(workshopLevel: 0));
+
+      await tester.tap(find.text('Broń biała'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byIcon(Icons.filter_alt_outlined));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Włócznia ×2'), findsNothing);
+    });
+
+    testWidgets('a pusta zakładka mówi, że pusta', (tester) async {
+      await pump(tester, bench: benchWith(workshopLevel: 0));
+
+      await tester.tap(find.byIcon(Icons.filter_alt_outlined));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Plecak'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Nic tutaj nie da się jeszcze zrobić.'), findsOneWidget);
+    });
+
+    testWidgets('zajęty warsztat nie opróżnia listy (§18.4)', (tester) async {
+      // ⚠️ Przy trwającej robocie odmawia **wszystko**, więc filtr oparty na
+      // samej odmowie wyczyściłby każdą zakładkę — a gracz przeczytałby pusty
+      // warsztat zamiast zajętego.
+      final job = CraftJob(
+        recipeId: 'craft_spear',
+        startedAt: DateTime.now().toUtc(),
+        readyAt: DateTime.now().toUtc().add(const Duration(minutes: 20)),
+      );
+
+      await pump(tester, job: job);
+      await tester.tap(find.byIcon(Icons.filter_alt_outlined));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(FilledButton), findsWidgets);
+    });
+  });
 }

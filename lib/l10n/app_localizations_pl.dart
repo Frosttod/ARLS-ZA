@@ -1614,6 +1614,12 @@ class L10nPl extends L10n {
   String get craftAll => 'Wszystko';
 
   @override
+  String get craftOnlyPossible => 'Tylko możliwe teraz';
+
+  @override
+  String get craftNoneHere => 'Nic tutaj nie da się jeszcze zrobić.';
+
+  @override
   String actionBusy(String what) {
     return 'Zajęty: $what';
   }

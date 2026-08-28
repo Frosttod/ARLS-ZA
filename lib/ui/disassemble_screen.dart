@@ -604,7 +604,7 @@ class _Total extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    remaining(work),
+                    worked(work),
                     style: TextStyle(
                       fontSize: 13,
                       color: colours.data,

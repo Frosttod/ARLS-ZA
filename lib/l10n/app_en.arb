@@ -941,6 +941,8 @@
   "slotEmpty": "empty",
   "craftTitle": "Making",
   "craftAll": "All",
+  "craftOnlyPossible": "Only what can be made now",
+  "craftNoneHere": "Nothing here can be made yet.",
   "actionBusy": "Busy: {what}",
   "@actionBusy": {
     "placeholders": {

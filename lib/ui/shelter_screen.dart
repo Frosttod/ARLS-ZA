@@ -715,7 +715,9 @@ class _ModuleRow extends StatelessWidget {
                                   '${itemNameOf(entry.key)} ×${entry.value}',
                               ].join(', '),
                             )
-                          : _short(work),
+                          // §12: an estimate says its unit; only a countdown
+                          // may be a bare clock.
+                          : worked(work),
                       style: TextStyle(
                         fontSize: 12,
                         color: missing.isEmpty && tools && !away

@@ -2923,6 +2923,18 @@ abstract class L10n {
   /// **'All'**
   String get craftAll;
 
+  /// No description provided for @craftOnlyPossible.
+  ///
+  /// In en, this message translates to:
+  /// **'Only what can be made now'**
+  String get craftOnlyPossible;
+
+  /// No description provided for @craftNoneHere.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing here can be made yet.'**
+  String get craftNoneHere;
+
   /// No description provided for @actionBusy.
   ///
   /// In en, this message translates to:

@@ -1613,6 +1613,12 @@ class L10nEn extends L10n {
   String get craftAll => 'All';
 
   @override
+  String get craftOnlyPossible => 'Only what can be made now';
+
+  @override
+  String get craftNoneHere => 'Nothing here can be made yet.';
+
+  @override
   String actionBusy(String what) {
     return 'Busy: $what';
   }

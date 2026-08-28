@@ -37,7 +37,7 @@ import '../sim/pinned_goal.dart';
 import 'units.dart';
 import 'hud.dart' show HudColors;
 
-class CraftScreen extends StatelessWidget {
+class CraftScreen extends StatefulWidget {
   const CraftScreen({
     required this.book,
     required this.catalogue,
@@ -69,7 +69,24 @@ class CraftScreen extends StatelessWidget {
   final VoidCallback onCancel;
 
   @override
+  State<CraftScreen> createState() => _CraftScreenState();
+}
+
+class _CraftScreenState extends State<CraftScreen> {
+  /// §12: whether the list is cut down to what could be started right now.
+  ///
+  /// ⚠️ **Off by default, and it stays that way.** A recipe out of reach is
+  /// the reason to build a workshop or go looking for leather — hiding it by
+  /// default would hide the goal along with the row. This is a tool for
+  /// somebody standing at the bench with materials in hand asking "what can I
+  /// do with these", which is a different question and a real one.
+  bool _onlyPossible = false;
+
+  @override
   Widget build(BuildContext context) {
+    final book = widget.book;
+    final catalogue = widget.catalogue;
+    final job = widget.job;
     final l10n = L10n.of(context);
     final colours = HudColors.of(context);
 
@@ -96,6 +113,15 @@ class CraftScreen extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(
           title: Text(l10n.craftTitle),
+          actions: [
+            IconButton(
+              tooltip: l10n.craftOnlyPossible,
+              onPressed: () => setState(() => _onlyPossible = !_onlyPossible),
+              icon: Icon(
+                _onlyPossible ? Icons.filter_alt : Icons.filter_alt_outlined,
+              ),
+            ),
+          ],
           bottom: TabBar(
             isScrollable: true,
             tabAlignment: TabAlignment.start,
@@ -114,9 +140,9 @@ class CraftScreen extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
                 child: _Running(
-                  job: job!,
-                  label: _jobLabel(l10n, job!),
-                  onCancel: onCancel,
+                  job: job,
+                  label: _jobLabel(l10n, job),
+                  onCancel: widget.onCancel,
                   colours: colours,
                   l10n: l10n,
                 ),
@@ -143,39 +169,69 @@ class CraftScreen extends StatelessWidget {
     );
   }
 
-  Widget _list(List<ItemRecipe> rows, HudColors colours, L10n l10n) => ListView(
-    padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
-    children: [
-      for (final recipe in rows)
-        _RecipeRow(
-          recipe: recipe,
-          definition: catalogue[recipe.output],
-          name: itemNameOf(recipe.output),
-          bench: bench,
-          book: book,
-          catalogue: catalogue,
-          inventory: inventory,
-          names: names,
-          refusal: refusalFor(recipe, bench),
-          itemNameOf: itemNameOf,
-          onCraft: () => onCraft(recipe),
-          colours: colours,
-          l10n: l10n,
+  Widget _list(List<ItemRecipe> rows, HudColors colours, L10n l10n) {
+    final bench = widget.bench;
+    final catalogue = widget.catalogue;
+
+    // ⚠️ A busy bench is not a reason to hide anything. Everything is refused
+    // while something is on the vice, so filtering on the refusal alone would
+    // empty every tab the moment a job started — and the player would read an
+    // empty bench rather than a busy one.
+    final shown = _onlyPossible
+        ? [
+            for (final recipe in rows)
+              if (refusalFor(recipe, bench) case null || CraftRefusal.busy)
+                recipe,
+          ]
+        : rows;
+
+    if (shown.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Text(
+            l10n.craftNoneHere,
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 13, color: colours.muted),
+          ),
         ),
-    ],
-  );
+      );
+    }
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
+      children: [
+        for (final recipe in shown)
+          _RecipeRow(
+            recipe: recipe,
+            definition: catalogue[recipe.output],
+            name: widget.itemNameOf(recipe.output),
+            bench: bench,
+            book: widget.book,
+            catalogue: catalogue,
+            inventory: widget.inventory,
+            names: widget.names,
+            refusal: refusalFor(recipe, bench),
+            itemNameOf: widget.itemNameOf,
+            onCraft: () => widget.onCraft(recipe),
+            colours: colours,
+            l10n: l10n,
+          ),
+      ],
+    );
+  }
 
   String _jobLabel(L10n l10n, CraftJob running) {
     if (running.isSalvage) {
-      return l10n.craftTakingApart(itemNameOf(running.salvageItemId!));
+      return l10n.craftTakingApart(widget.itemNameOf(running.salvageItemId!));
     }
 
-    final recipe = book.recipes
+    final recipe = widget.book.recipes
         .where((entry) => entry.id == running.recipeId)
         .firstOrNull;
     return recipe == null
         ? l10n.craftTitle
-        : l10n.craftMaking(itemNameOf(recipe.output));
+        : l10n.craftMaking(widget.itemNameOf(recipe.output));
   }
 }
 
@@ -315,7 +371,7 @@ class _RecipeRow extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  remaining(work),
+                  worked(work),
                   style: TextStyle(
                     fontSize: 13,
                     color: colours.muted,
