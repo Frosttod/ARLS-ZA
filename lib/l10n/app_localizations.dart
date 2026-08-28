@@ -2917,6 +2917,12 @@ abstract class L10n {
   /// **'Making'**
   String get craftTitle;
 
+  /// No description provided for @craftAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get craftAll;
+
   /// No description provided for @actionBusy.
   ///
   /// In en, this message translates to:

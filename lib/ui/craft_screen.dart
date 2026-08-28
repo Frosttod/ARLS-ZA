@@ -1,9 +1,15 @@
 /// The bench (§18.4, §18.6).
 ///
-/// One list of everything §18.4 knows how to make, each row saying what it
-/// costs and — when it cannot be started — why not, in that order. A recipe
-/// that is out of reach stays on the list rather than disappearing: knowing a
-/// spear needs a workshop is the reason to build one.
+/// Everything §18.4 knows how to make, in tabs by what it makes, each row
+/// saying what it costs and — when it cannot be started — why not, in that
+/// order. A recipe that is out of reach stays on the list rather than
+/// disappearing: knowing a spear needs a workshop is the reason to build one.
+///
+/// ⚠️ **Tabs, because the list outgrew a list.** Eight rows read fine;
+/// twenty-six do not, and a player looking for a coat had to scroll past four
+/// dressings, three packs and a crowbar to find out whether one exists. The
+/// tab is the item's own kind (§4.1), so nothing here decides categories —
+/// the catalogue already did.
 ///
 /// ⚠️ The refusal is on the row, not in a message after the tap. A greyed
 /// button that says nothing is the thing this screen exists to avoid; the
@@ -13,12 +19,20 @@ library;
 
 import 'package:flutter/material.dart';
 
+import 'dart:async';
+
+import 'package:flutter/foundation.dart' show ValueListenable;
+
 import '../craft/craft_job.dart';
 import '../craft/item_recipe.dart';
+import '../inventory/inventory.dart';
 import '../items/item.dart';
+import '../items/item_names.dart';
 import '../items/item_catalogue.dart';
 import '../l10n/app_localizations.dart';
 import 'fonts.dart';
+import 'inventory_screen.dart' show kindName;
+import 'item_details_sheet.dart';
 import '../sim/pinned_goal.dart';
 import 'units.dart';
 import 'hud.dart' show HudColors;
@@ -29,6 +43,8 @@ class CraftScreen extends StatelessWidget {
     required this.catalogue,
     required this.bench,
     required this.job,
+    required this.inventory,
+    required this.names,
     required this.itemNameOf,
     required this.onCraft,
     required this.onCancel,
@@ -41,6 +57,12 @@ class CraftScreen extends StatelessWidget {
 
   /// What is already on the bench, if anything.
   final CraftJob? job;
+
+  /// §12: so a row can show what the thing would actually be, before it is
+  /// made. The sheet compares against what is worn, which is the question a
+  /// player asks about a coat they are thinking of sewing.
+  final ValueListenable<Inventory> inventory;
+  final ItemNames names;
 
   final String Function(String itemId) itemNameOf;
   final void Function(ItemRecipe) onCraft;
@@ -60,38 +82,88 @@ class CraftScreen extends StatelessWidget {
         return work != 0 ? work : a.output.compareTo(b.output);
       });
 
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.craftTitle)),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
-        children: [
-          if (job != null) ...[
-            _Running(
-              job: job!,
-              label: _jobLabel(l10n, job!),
-              onCancel: onCancel,
-              colours: colours,
-              l10n: l10n,
-            ),
-            const SizedBox(height: 12),
-          ],
+    // §4.1's own kinds, in the enum's order, and only the ones something is
+    // actually made of. A tab with nothing behind it is a promise the bench
+    // does not keep.
+    final kinds = [
+      for (final kind in ItemKind.values)
+        if (recipes.any((recipe) => catalogue[recipe.output]?.kind == kind))
+          kind,
+    ];
 
-          for (final recipe in recipes)
-            _RecipeRow(
-              recipe: recipe,
-              definition: catalogue[recipe.output],
-              name: itemNameOf(recipe.output),
-              bench: bench,
-              refusal: refusalFor(recipe, bench),
-              itemNameOf: itemNameOf,
-              onCraft: () => onCraft(recipe),
-              colours: colours,
-              l10n: l10n,
+    return DefaultTabController(
+      length: kinds.length + 1,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(l10n.craftTitle),
+          bottom: TabBar(
+            isScrollable: true,
+            tabAlignment: TabAlignment.start,
+            tabs: [
+              Tab(text: l10n.craftAll),
+              for (final kind in kinds) Tab(text: kindName(l10n, kind)),
+            ],
+          ),
+        ),
+        body: Column(
+          children: [
+            // ⚠️ Above the tabs, not inside one of them. A player who started
+            // a coat and then looked at the knives would otherwise find the
+            // bar gone and the bench apparently empty.
+            if (job != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                child: _Running(
+                  job: job!,
+                  label: _jobLabel(l10n, job!),
+                  onCancel: onCancel,
+                  colours: colours,
+                  l10n: l10n,
+                ),
+              ),
+            Expanded(
+              child: TabBarView(
+                children: [
+                  _list(recipes, colours, l10n),
+                  for (final kind in kinds)
+                    _list(
+                      [
+                        for (final recipe in recipes)
+                          if (catalogue[recipe.output]?.kind == kind) recipe,
+                      ],
+                      colours,
+                      l10n,
+                    ),
+                ],
+              ),
             ),
-        ],
+          ],
+        ),
       ),
     );
   }
+
+  Widget _list(List<ItemRecipe> rows, HudColors colours, L10n l10n) => ListView(
+    padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
+    children: [
+      for (final recipe in rows)
+        _RecipeRow(
+          recipe: recipe,
+          definition: catalogue[recipe.output],
+          name: itemNameOf(recipe.output),
+          bench: bench,
+          book: book,
+          catalogue: catalogue,
+          inventory: inventory,
+          names: names,
+          refusal: refusalFor(recipe, bench),
+          itemNameOf: itemNameOf,
+          onCraft: () => onCraft(recipe),
+          colours: colours,
+          l10n: l10n,
+        ),
+    ],
+  );
 
   String _jobLabel(L10n l10n, CraftJob running) {
     if (running.isSalvage) {
@@ -193,6 +265,10 @@ class _RecipeRow extends StatelessWidget {
     required this.definition,
     required this.name,
     required this.bench,
+    required this.book,
+    required this.catalogue,
+    required this.inventory,
+    required this.names,
     required this.refusal,
     required this.itemNameOf,
     required this.onCraft,
@@ -204,6 +280,10 @@ class _RecipeRow extends StatelessWidget {
   final ItemDefinition? definition;
   final String name;
   final CraftBench bench;
+  final RecipeBook book;
+  final ItemCatalogue catalogue;
+  final ValueListenable<Inventory> inventory;
+  final ItemNames names;
   final CraftRefusal? refusal;
   final String Function(String itemId) itemNameOf;
   final VoidCallback onCraft;
@@ -243,6 +323,27 @@ class _RecipeRow extends StatelessWidget {
                     fontFeatures: const [FontFeature.tabularFigures()],
                   ),
                 ),
+                // §12: what the thing actually is, before an hour is spent
+                // on it. The same sheet the pack shows, so a coat being
+                // considered is compared against the coat being worn.
+                if (definition != null)
+                  ItemInfoButton(
+                    onPressed: () => unawaited(
+                      showItemDetails(
+                        context,
+                        line: CarriedItem(itemId: recipe.output),
+                        inventory: inventory,
+                        catalogue: catalogue,
+                        names: names,
+                        bench: bench,
+                        book: book,
+                        // Nothing here is owned yet: no wearing, no dropping,
+                        // and nothing to take apart.
+                        fromPack: false,
+                      ),
+                    ),
+                    colour: colours.muted,
+                  ),
                 IconButton(
                   icon: const Icon(Icons.push_pin_outlined, size: 18),
                   tooltip: l10n.goalPin,
@@ -307,9 +408,16 @@ class _RecipeRow extends StatelessWidget {
             const SizedBox(height: 4),
             Row(
               children: [
+                // ⚠️ Everything except being busy. "Something is already
+                // being made" repeated down twenty-six rows says one thing
+                // twenty-six times, and the one thing is already said by the
+                // bar at the top and by every button being dead. What belongs
+                // here is what is missing *from this row*.
                 Expanded(
                   child: Text(
-                    refusal == null ? '' : _said(l10n, refusal!),
+                    refusal == null || refusal == CraftRefusal.busy
+                        ? ''
+                        : _said(l10n, refusal!),
                     style: TextStyle(fontSize: 11, color: colours.muted),
                   ),
                 ),

@@ -1489,8 +1489,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// live on separate screens.
   /// §4.8, §10.3: something lying where it fell, looked at but not owned.
   ///
-  /// ⚠️ `fromPack: false`: the sheet compares against what is on the body, and
-  /// a pile has no counterpart — asked for one it found the player's rifle.
+  /// ⚠️ `fromPack: false`: the sheet compares against what is worn, and a pile
+  /// has none — asked for one it once found the player's own rifle.
   Future<void> _showFoundItem(CarriedItem line) => showItemDetails(
     context,
     line: line,
@@ -1520,12 +1520,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       inventory: _inventory,
       catalogue: catalogue,
       names: _names ?? ItemNames.empty,
-      // §18.6: what would be left of it, at this player's share.
       bench: _bench(),
       book: _recipes,
-      // §18.6: nothing that has been opened up goes on. Half a coat does not
-      // keep the rain off, and the row hides the glyph for the same reason —
-      // this is the sheet saying the same thing.
+      // §18.6: nothing opened up goes on — half a coat keeps no rain off,
+      // and the row hides the glyph for the same reason.
       onWear: wearable && !worn && !line.isPartlyDismantled
           ? () => unawaited(_wear(line))
           : null,
@@ -3789,6 +3787,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
             catalogue: catalogue,
             bench: _bench(),
             job: job,
+            inventory: _inventory,
+            names: _names ?? ItemNames.empty,
             itemNameOf: _nameOfId,
             onCraft: (recipe) => unawaited(_craft(recipe)),
             onCancel: () => unawaited(_cancelCraft()),

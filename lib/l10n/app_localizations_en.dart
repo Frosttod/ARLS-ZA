@@ -1610,6 +1610,9 @@ class L10nEn extends L10n {
   String get craftTitle => 'Making';
 
   @override
+  String get craftAll => 'All';
+
+  @override
   String actionBusy(String what) {
     return 'Busy: $what';
   }

@@ -850,6 +850,7 @@
   "slotRail": "Szyna",
   "slotEmpty": "puste",
   "craftTitle": "Wytwarzanie",
+  "craftAll": "Wszystko",
   "actionBusy": "Zajęty: {what}",
   "@actionBusy": {
     "placeholders": {

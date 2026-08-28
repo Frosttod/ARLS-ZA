@@ -940,6 +940,7 @@
   "slotRail": "Rail",
   "slotEmpty": "empty",
   "craftTitle": "Making",
+  "craftAll": "All",
   "actionBusy": "Busy: {what}",
   "@actionBusy": {
     "placeholders": {

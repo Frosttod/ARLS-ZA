@@ -1611,6 +1611,9 @@ class L10nPl extends L10n {
   String get craftTitle => 'Wytwarzanie';
 
   @override
+  String get craftAll => 'Wszystko';
+
+  @override
   String actionBusy(String what) {
     return 'Zajęty: $what';
   }
