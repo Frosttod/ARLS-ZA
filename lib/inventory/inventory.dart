@@ -86,6 +86,11 @@ class CarriedItem {
   final int? pagesTotal;
   final int pagesRead;
 
+  /// §4.6.1: pages still unread in **this copy**. Nought for anything that is
+  /// not a book, and for a book read to the last page — which is what decides
+  /// whether the screen offers to open it at all (§12).
+  int get pagesLeft => (pagesTotal ?? 0) - pagesRead;
+
   /// Which note this copy is (§19.1). Null for everything that is not one.
   final String? noteId;
 

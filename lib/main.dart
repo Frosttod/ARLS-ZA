@@ -1489,9 +1489,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// live on separate screens.
   /// §4.8, §10.3: something lying where it fell, looked at but not owned.
   ///
-  /// ⚠️ `fromPack: false` is the whole difference from the sheet below, which
-  /// compares a piece against its counterpart on the body. A pile on the
-  /// pavement has none — asked to find one it found the player's own rifle.
+  /// ⚠️ `fromPack: false`: the sheet compares against what is on the body, and
+  /// a pile has no counterpart — asked for one it found the player's rifle.
   Future<void> _showFoundItem(CarriedItem line) => showItemDetails(
     context,
     line: line,
@@ -2159,6 +2158,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       count: item.count,
       condition: item.condition,
       pagesTotal: item.pagesTotal,
+      // ⚠️ §4.6.1: dropped here alone, so a book picked up started at page one.
+      pagesRead: item.pagesRead,
       attachments: item.attachments,
       rounds: item.rounds,
       salvageSeconds: item.salvageSeconds,

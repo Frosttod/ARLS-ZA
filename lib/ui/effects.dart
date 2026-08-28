@@ -70,3 +70,11 @@ String? groundLabel<T>(
   final nearest = nameOf(piles.first);
   return piles.length == 1 ? nearest : '$nearest  +${piles.length - 1}';
 }
+
+/// §4.6.1, §12: how far through a copy somebody is, or the word for done.
+///
+/// ⚠️ One place, because two lists show it: the pack and the ground. "160 /
+/// 160" is a sum a player has to do to learn the one thing they wanted to
+/// know, on a shelf of books that all end in a number.
+String? pagesLabel(String finished, {int? total, required int read}) =>
+    total == null ? null : (read >= total ? finished : '$read / $total');

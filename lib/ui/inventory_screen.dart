@@ -1115,8 +1115,9 @@ class _ItemRowState extends State<_ItemRow> {
                             // eighteen titles of `literature.json` — the whole
                             // path up §7's curve — could be carried, weighed
                             // and dropped and never opened.
-                            if ((line.noteId != null ||
-                                    line.pagesTotal != null) &&
+                            // And absent once finished (§12): a button that
+                            // answers nothing reads as a broken one.
+                            if ((line.noteId != null || line.pagesLeft > 0) &&
                                 widget.onRead != null)
                               _RowAction(
                                 icon: Icons.description_outlined,
@@ -1152,11 +1153,6 @@ class _ItemRowState extends State<_ItemRow> {
                 ],
               ),
 
-              // Under this piece, and only while it is this piece being used.
-              //
-              // \u26a0\ufe0f The piece, not the item id. Found on a phone: a tin opened
-              // out of a stack of four leaves a part-eaten one beside three whole
-              // ones, and matching by id drew the same bar under both rows.
               // The last thing this row would not do, and why (§12).
               //
               // ⚠️ Under the row rather than shouted at the top of the screen.
@@ -1303,8 +1299,12 @@ class _ItemRowState extends State<_ItemRow> {
     final condition = widget.line.condition;
     if (condition != null) parts.add('${condition.round()}%');
 
-    final pages = widget.line.pagesTotal;
-    if (pages != null) parts.add('${widget.line.pagesRead} / $pages');
+    final read = pagesLabel(
+      widget.l10n.readingFinished,
+      total: widget.line.pagesTotal,
+      read: widget.line.pagesRead,
+    );
+    if (read != null) parts.add(read);
 
     // §4.7: what is left of a bottle somebody put down half way through.
     final portion = widget.line.portion;

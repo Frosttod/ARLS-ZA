@@ -2039,6 +2039,9 @@ class L10nPl extends L10n {
   String get itemDetails => 'Szczegóły';
 
   @override
+  String get readingFinished => 'ukończona';
+
+  @override
   String get itemSalvageTitle => 'Po rozebraniu';
 
   @override

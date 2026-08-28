@@ -1096,6 +1096,7 @@
   "attachmentNoRail": "Brak wolnego slotu w tej broni.",
   "attachmentRemove": "Zdejmij",
   "itemDetails": "Szczegóły",
+  "readingFinished": "ukończona",
   "itemSalvageTitle": "Po rozebraniu",
   "itemSalvageNothing": "Nic by z tego nie zostało.",
   "itemSalvageTakes": "zajmie {minutes} min",

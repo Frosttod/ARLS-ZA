@@ -1221,6 +1221,7 @@
   "attachmentNoRail": "No rail left on this weapon.",
   "attachmentRemove": "Take off",
   "itemDetails": "Details",
+  "readingFinished": "read",
   "itemSalvageTitle": "If taken apart",
   "itemSalvageNothing": "Nothing would be left of it.",
   "itemSalvageTakes": "takes {minutes} min",

@@ -187,7 +187,9 @@ void main() {
     final pack = File('lib/ui/inventory_screen.dart').readAsStringSync();
 
     // The pack offers it for a book, not only for §19.1's found paper.
-    expect(pack.contains('line.pagesTotal != null'), isTrue);
+    // ⚠️ Pages **left**, not pages at all: a copy read to the last page is no
+    // longer offered (§12), and the guard moved onto the piece itself.
+    expect(pack.contains('line.pagesLeft > 0'), isTrue);
 
     expect(main.contains('_readBook('), isTrue);
     expect(main.contains('ActionKind.reading.name'), isTrue);
@@ -238,5 +240,33 @@ void main() {
 
     expect(hours, greaterThan(300), reason: 'a skill has to cost a season');
     expect(hours, lessThan(700));
+  });
+
+  test('§4.6.1, §12: a finished copy says so, and offers nothing more', () {
+    // ⚠️ Source-level. Both halves came from the field: a shelf of books all
+    // ending in a number, and no way to tell which of them was done without
+    // doing the sum — and a read button on a copy with nothing left in it.
+    final pack = File('lib/ui/inventory_screen.dart').readAsStringSync();
+    final ground = File('lib/ui/ground_sheet.dart').readAsStringSync();
+
+    expect(pack.contains('l10n.readingFinished'), isTrue);
+    expect(ground.contains('l10n.readingFinished'), isTrue);
+
+    // §12: absent, never greyed. A control that answers nothing reads broken.
+    expect(
+      pack.contains('line.pagesLeft > 0'),
+      isTrue,
+      reason: 'a book read to the last page is still offering to be read',
+    );
+  });
+
+  test('§4.6.1: and picking one up off the ground keeps the place', () {
+    // ⚠️ The ground remembered `pagesRead`, the shelves remembered it, and
+    // this one path did not pass it — so a book dropped half way through and
+    // picked up again started at page one. Three hundred pages of somebody's
+    // winter, and nothing on screen to say it had happened.
+    final main = File('lib/main.dart').readAsStringSync();
+
+    expect(main.contains('pagesRead: item.pagesRead,'), isTrue);
   });
 }

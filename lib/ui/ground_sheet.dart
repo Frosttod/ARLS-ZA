@@ -187,7 +187,7 @@ class _PileRow extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    _subtitle(),
+                    _subtitle(L10n.of(context)),
                     style: TextStyle(fontSize: 11, color: colours.muted),
                   ),
                 ],
@@ -206,14 +206,18 @@ class _PileRow extends StatelessWidget {
 
   /// How far, how worn, and how far read — the three things that decide which
   /// of two identical-looking piles is the one worth carrying.
-  String _subtitle() {
+  String _subtitle(L10n l10n) {
     final parts = <String>['${pile.distanceM.round()} m'];
 
     final condition = pile.condition;
     if (condition != null) parts.add('${condition.round()}%');
 
-    final pages = pile.pagesTotal;
-    if (pages != null) parts.add('${pile.pagesRead} / $pages');
+    final read = pagesLabel(
+      l10n.readingFinished,
+      total: pile.pagesTotal,
+      read: pile.pagesRead,
+    );
+    if (read != null) parts.add(read);
 
     return effects(parts);
   }

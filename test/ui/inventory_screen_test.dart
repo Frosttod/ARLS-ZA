@@ -36,6 +36,7 @@ void main() {
     void Function(CarriedItem)? onWear,
     void Function(CarriedItem)? onUse,
     void Function(CarriedItem)? onDetails,
+    void Function(CarriedItem)? onRead,
     ValueListenable<Search?>? action,
     ValueListenable<CarriedItem?>? usingLine,
   }) async {
@@ -69,6 +70,7 @@ void main() {
           onWear: onWear,
           onUse: onUse,
           onDetails: onDetails,
+          onRead: onRead,
           action: action,
           usingLine: usingLine,
         ),
@@ -489,6 +491,49 @@ void main() {
       await tapInPack(tester, find.byIcon(Icons.info_outline).last);
 
       expect(asked, 'armor_vest_soft');
+    });
+
+    testWidgets('a book part-read says which page, one finished says so', (
+      tester,
+    ) async {
+      // §4.6.1: "160 / 160" is a sum the player has to do to learn the one
+      // thing they wanted to know, on a shelf of books that all end in a
+      // number.
+      final half = const Inventory()
+          .withPack('pack_daypack')
+          .add(
+            'lit_guide_survival',
+            catalogue,
+            body: body,
+            pagesTotal: 160,
+            pagesRead: 40,
+          )
+          .inventory;
+
+      await pump(tester, half);
+
+      expect(find.textContaining('40 / 160'), findsOneWidget);
+      expect(find.textContaining('ukończona'), findsNothing);
+    });
+
+    testWidgets('and a finished one is not offered for reading (§12)', (
+      tester,
+    ) async {
+      final done = const Inventory()
+          .withPack('pack_daypack')
+          .add(
+            'lit_guide_survival',
+            catalogue,
+            body: body,
+            pagesTotal: 160,
+            pagesRead: 160,
+          )
+          .inventory;
+
+      await pump(tester, done, onRead: (_) {});
+
+      expect(find.textContaining('ukończona'), findsOneWidget);
+      expect(find.byIcon(Icons.description_outlined), findsNothing);
     });
 
     testWidgets('and the glyph is on the worn row, not only the tap', (

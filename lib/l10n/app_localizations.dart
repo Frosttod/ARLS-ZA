@@ -3685,6 +3685,12 @@ abstract class L10n {
   /// **'Details'**
   String get itemDetails;
 
+  /// No description provided for @readingFinished.
+  ///
+  /// In en, this message translates to:
+  /// **'read'**
+  String get readingFinished;
+
   /// No description provided for @itemSalvageTitle.
   ///
   /// In en, this message translates to:

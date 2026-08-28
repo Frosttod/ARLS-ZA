@@ -2037,6 +2037,9 @@ class L10nEn extends L10n {
   String get itemDetails => 'Details';
 
   @override
+  String get readingFinished => 'read';
+
+  @override
   String get itemSalvageTitle => 'If taken apart';
 
   @override
