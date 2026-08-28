@@ -206,12 +206,19 @@ void main() {
     test('a made thing is measured by its recipe, not by its mass', () {
       // The recipe *is* the material value where there is one. Guessing from
       // mass would let a player make something cheap and break it for more.
+      //
+      // ⚠️ **Per piece, and the run makes two.** Reading the run's materials
+      // as one spear's content was a material duplicator: a run cost three
+      // units and produced two spears that each came apart into two. Found by
+      // the crafted-gear budget, which asks every made thing whether it gives
+      // back more than it cost.
       final spear = catalogue['melee_spear']!;
 
+      expect(book.making('melee_spear')!.count, 2);
       expect(materialContent(spear, book), {
-        'mat_wood': 1.0,
-        'mat_metal': 1.0,
-        'mat_fabric': 1.0,
+        'mat_wood': 0.5,
+        'mat_metal': 0.5,
+        'mat_fabric': 0.5,
       });
     });
 

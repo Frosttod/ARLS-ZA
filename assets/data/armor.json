@@ -365,6 +365,215 @@
           "mat_fabric": 0.8
         }
       }
+    },
+    {
+      "id": "cloth_briefs",
+      "type": "armor",
+      "name_key": "item.cloth_briefs.name",
+      "weight_kg": 0.1,
+      "volume_l": 0.4,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 0.05,
+      "rarity": "common",
+      "loot_tags": [],
+      "props": {
+        "slot": "torso_base",
+        "insulation_clo": 0.25,
+        "protection_level": 0,
+        "coverage_pct": 0,
+        "craft_only": true
+      }
+    },
+    {
+      "id": "cloth_cap",
+      "type": "armor",
+      "name_key": "item.cloth_cap.name",
+      "weight_kg": 0.08,
+      "volume_l": 0.4,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 0.05,
+      "rarity": "common",
+      "loot_tags": [],
+      "props": {
+        "slot": "head",
+        "insulation_clo": 0.15,
+        "protection_level": 0,
+        "coverage_pct": 0,
+        "craft_only": true
+      }
+    },
+    {
+      "id": "cloth_leather_cap",
+      "type": "armor",
+      "name_key": "item.cloth_leather_cap.name",
+      "weight_kg": 0.2,
+      "volume_l": 0.6,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 0.03,
+      "rarity": "common",
+      "loot_tags": [],
+      "props": {
+        "slot": "head",
+        "insulation_clo": 0.55,
+        "protection_level": 0,
+        "coverage_pct": 0,
+        "craft_only": true
+      }
+    },
+    {
+      "id": "cloth_sun_hat",
+      "type": "armor",
+      "name_key": "item.cloth_sun_hat.name",
+      "weight_kg": 0.12,
+      "volume_l": 0.9,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 0.05,
+      "rarity": "common",
+      "loot_tags": [],
+      "props": {
+        "slot": "head",
+        "insulation_clo": 0.2,
+        "protection_level": 0,
+        "coverage_pct": 0,
+        "craft_only": true
+      }
+    },
+    {
+      "id": "armor_leather_pauldrons",
+      "type": "armor",
+      "name_key": "item.armor_leather_pauldrons.name",
+      "weight_kg": 0.7,
+      "volume_l": 1.6,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 0.04,
+      "rarity": "common",
+      "loot_tags": [],
+      "props": {
+        "slot": "arms",
+        "insulation_clo": 0.3,
+        "protection_level": 1,
+        "coverage_pct": 15,
+        "craft_only": true
+      }
+    },
+    {
+      "id": "cloth_gloves_studded",
+      "type": "armor",
+      "name_key": "item.cloth_gloves_studded.name",
+      "weight_kg": 0.2,
+      "volume_l": 0.5,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 0.08,
+      "rarity": "common",
+      "loot_tags": [],
+      "props": {
+        "slot": "hands",
+        "insulation_clo": 0.25,
+        "protection_level": 1,
+        "coverage_pct": 4,
+        "craft_only": true
+      }
+    },
+    {
+      "id": "cloth_gloves_tactical",
+      "type": "armor",
+      "name_key": "item.cloth_gloves_tactical.name",
+      "weight_kg": 0.18,
+      "volume_l": 0.5,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 0.06,
+      "rarity": "common",
+      "loot_tags": [],
+      "props": {
+        "slot": "hands",
+        "insulation_clo": 0.3,
+        "protection_level": 1,
+        "coverage_pct": 5,
+        "craft_only": true
+      }
+    },
+    {
+      "id": "cloth_trousers_reinforced",
+      "type": "armor",
+      "name_key": "item.cloth_trousers_reinforced.name",
+      "weight_kg": 0.9,
+      "volume_l": 2.4,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 0.04,
+      "rarity": "common",
+      "loot_tags": [],
+      "props": {
+        "slot": "legs",
+        "insulation_clo": 0.7,
+        "protection_level": 1,
+        "coverage_pct": 20,
+        "craft_only": true
+      }
+    },
+    {
+      "id": "cloth_cargo_pads",
+      "type": "armor",
+      "name_key": "item.cloth_cargo_pads.name",
+      "weight_kg": 1.2,
+      "volume_l": 3.0,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 0.04,
+      "rarity": "common",
+      "loot_tags": [],
+      "props": {
+        "slot": "legs",
+        "insulation_clo": 0.8,
+        "protection_level": 2,
+        "coverage_pct": 28,
+        "craft_only": true
+      }
+    },
+    {
+      "id": "cloth_sneakers",
+      "type": "armor",
+      "name_key": "item.cloth_sneakers.name",
+      "weight_kg": 0.7,
+      "volume_l": 2.2,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 0.09,
+      "rarity": "common",
+      "loot_tags": [],
+      "props": {
+        "slot": "feet",
+        "insulation_clo": 0.2,
+        "protection_level": 0,
+        "coverage_pct": 0,
+        "craft_only": true
+      }
+    },
+    {
+      "id": "cloth_boots_military",
+      "type": "armor",
+      "name_key": "item.cloth_boots_military.name",
+      "weight_kg": 1.6,
+      "volume_l": 3.2,
+      "stackable": false,
+      "condition": 100,
+      "condition_decay_per_use": 0.03,
+      "rarity": "common",
+      "loot_tags": [],
+      "props": {
+        "slot": "feet",
+        "insulation_clo": 0.45,
+        "protection_level": 1,
+        "coverage_pct": 8,
+        "craft_only": true
+      }
     }
   ]
 }

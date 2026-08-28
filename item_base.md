@@ -19,7 +19,7 @@ Liczby pochodzą z tego samego kodu, którego używa gra: §18.6 pyta `salvageOf
 
 ## Skorowidz
 
-134 przedmiotów, od najcięższego.
+147 przedmiotów, od najcięższego.
 
 | Przedmiot | Rodzaj | Masa | Objętość | Rozbiórka | Czas |
 | :--- | :--- | ---: | ---: | :--- | ---: |
@@ -34,109 +34,122 @@ Liczby pochodzą z tego samego kodu, którego używa gra: §18.6 pyta `salvageOf
 | Plecak wojskowy `pack_military` | Plecaki | 2.60 | 4.50 | tkanina ×3 | 12 min |
 | Karabinek .22 LR `weapon_rifle_22lr` | Broń palna | 2.50 | 3.40 | metal ×1 | 5.5 min |
 | Drewno `mat_wood` | Materiały | 2.00 | 4.00 | — | — |
-| Łopata `melee_shovel` | Broń biała | 1.90 | 3.50 | nic | 4.4 min |
 | Nożyce do kłódek `tool_bolt_cutters` | Narzędzia | 1.90 | 2.40 | metal ×1 | 5.3 min |
+| Łopata `melee_shovel` | Broń biała | 1.90 | 3.50 | nic | 4.4 min |
 | Plecak trekkingowy `pack_trekking` | Plecaki | 1.80 | 3.50 | tkanina ×2 | 9.3 min |
 | Zestaw kluczy `tool_wrench_set` | Narzędzia | 1.80 | 2.40 | metal ×1 | 5.2 min |
 | Maczuga z okuciem `melee_club_studded` | Broń biała | 1.70 | 2.80 | metal ×1 | 6.6 min |
-| Łom `melee_crowbar` | Broń biała | 1.60 | 1.80 | nic | 4.2 min |
+| Łom `melee_crowbar` | Broń biała | 1.60 | 1.80 | metal ×2 | 7.8 min |
+| Buty wojskowe `cloth_boots_military` | Pancerz i odzież | 1.60 | 3.20 | leather ×1, metal ×1 | 10 min |
+| Plecak polowy `pack_field` | Plecaki | 1.60 | 2.40 | tkanina ×3, plastik ×1, glue ×1, wire ×1 | 15 min |
 | Encyklopedia medyczna `lit_encyclopedia_medicine` | Literatura | 1.57 | 1.83 | — | — |
+| Encyklopedia broni `lit_encyclopedia_weapons` | Literatura | 1.57 | 1.83 | — | — |
 | Encyklopedia przyrody `lit_encyclopedia_nature` | Literatura | 1.57 | 1.83 | — | — |
 | Encyklopedia techniki `lit_encyclopedia_engineering` | Literatura | 1.57 | 1.83 | — | — |
-| Encyklopedia broni `lit_encyclopedia_weapons` | Literatura | 1.57 | 1.83 | — | — |
 | Woda 1,5 l `drink_water_bottle_1500` | Żywność i napoje | 1.55 | 1.60 | — | — |
-| Plecak taktyczny `pack_tactical` | Plecaki | 1.40 | 3.00 | tkanina ×2 | 7.9 min |
 | Hełm balistyczny `armor_helmet_ballistic` | Pancerz i odzież | 1.40 | 4.50 | tkanina ×1, plastik ×1 | 7.8 min |
 | Siekiera `melee_axe` | Broń biała | 1.40 | 2.20 | nic | 4.0 min |
+| Plecak taktyczny `pack_tactical` | Plecaki | 1.40 | 3.00 | tkanina ×2 | 7.9 min |
 | Włócznia `melee_spear` | Broń biała | 1.30 | 3.20 | tkanina ×1 | 6.6 min |
+| Bojówki z ochraniaczami `cloth_cargo_pads` | Pancerz i odzież | 1.20 | 3.00 | tkanina ×2, plastik ×1 | 11 min |
 | Kurtka zimowa `cloth_winter_jacket` | Pancerz i odzież | 1.20 | 6.00 | tkanina ×1 | 7.0 min |
 | Buty trekkingowe `cloth_boots` | Pancerz i odzież | 1.10 | 3.50 | leather ×1 | 5.8 min |
 | Woda niepewnego pochodzenia `drink_water_dirty` | Żywność i napoje | 1.05 | 1.10 | — | — |
 | Piła `tool_saw` | Narzędzia | 1.00 | 2.00 | nic | 4.2 min |
 | Kij bejsbolowy `melee_bat` | Broń biała | 0.90 | 2.60 | nic | 3.5 min |
+| Wzmocnione spodnie `cloth_trousers_reinforced` | Pancerz i odzież | 0.90 | 2.40 | tkanina ×1, leather ×1 | 10 min |
+| Plecak turystyczny `pack_daypack` | Plecaki | 0.90 | 2.50 | tkanina ×2, plastik ×1 | 13 min |
 | Lina `mat_rope` | Materiały | 0.90 | 2.00 | — | — |
 | Rewolwer .38 `weapon_revolver_38` | Broń palna | 0.90 | 0.90 | nic | 3.9 min |
-| Plecak turystyczny `pack_daypack` | Plecaki | 0.90 | 2.50 | tkanina ×1 | 6.2 min |
-| Komponent elektroniczny `mat_component` | Materiały | 0.80 | 0.40 | — | — |
 | Zaostrzony kij `melee_spike` | Broń biała | 0.80 | 2.40 | nic | 4.2 min |
+| Komponent elektroniczny `mat_component` | Materiały | 0.80 | 0.40 | — | — |
 | Spodnie zimowe `cloth_winter_trousers` | Pancerz i odzież | 0.80 | 3.20 | tkanina ×1 | 5.7 min |
 | Złom metalowy `mat_metal` | Materiały | 0.75 | 0.30 | — | — |
 | Młotek `melee_hammer` | Broń biała | 0.70 | 0.90 | nic | 3.5 min |
+| Skórzane naramienniki `armor_leather_pauldrons` | Pancerz i odzież | 0.70 | 1.60 | tkanina ×1, leather ×1 | 7.8 min |
+| Trampki `cloth_sneakers` | Pancerz i odzież | 0.70 | 2.20 | tkanina ×1, leather ×1 | 7.8 min |
 | Prowizoryczny plecak `pack_improvised` | Plecaki | 0.70 | 3.00 | tkanina ×2 | 9.0 min |
 | Lornetka `tool_binoculars` | Narzędzia | 0.70 | 1.20 | nic | 4.3 min |
 | Pistolet 9 mm `weapon_pistol_9mm` | Broń palna | 0.70 | 0.80 | nic | 3.7 min |
 | Magazynek bębnowy 5,45x39 (60) `mag_rifle_545_drum` | Pozostałe | 0.65 | 0.80 | nic | 3.9 min |
 | Ochraniacze na przedramiona `armor_bite_sleeves` | Pancerz i odzież | 0.60 | 2.00 | tkanina ×1 | 4.7 min |
-| Plecak szkolny `pack_school` | Plecaki | 0.60 | 2.00 | tkanina ×1 | 5.1 min |
 | Skóra `mat_leather` | Materiały | 0.60 | 1.20 | — | — |
-| Maczeta `melee_machete` | Broń biała | 0.60 | 1.20 | nic | 3.5 min |
+| Plecak szkolny `pack_school` | Plecaki | 0.60 | 2.00 | tkanina ×1 | 5.1 min |
 | Apteczka `med_first_aid_kit` | Medykamenty | 0.60 | 1.60 | — | — |
-| Spirytus `mat_alcohol` | Materiały | 0.55 | 0.60 | — | — |
+| Maczeta `melee_machete` | Broń biała | 0.60 | 1.20 | metal ×1 | 6.6 min |
 | Kroplówka z solą fizjologiczną `med_saline` | Medykamenty | 0.55 | 0.60 | — | — |
+| Spirytus `mat_alcohol` | Materiały | 0.55 | 0.60 | — | — |
 | Woda 0,5 l `drink_water_bottle_500` | Żywność i napoje | 0.52 | 0.55 | — | — |
-| Spodnie `cloth_trousers` | Pancerz i odzież | 0.50 | 2.00 | tkanina ×1 | 4.7 min |
 | Radio na korbkę `tool_crank_radio` | Narzędzia | 0.50 | 1.00 | nic | 4.1 min |
+| Spodnie `cloth_trousers` | Pancerz i odzież | 0.50 | 2.00 | tkanina ×1 | 4.7 min |
 | Gwoździe `mat_nails` | Materiały | 0.50 | 0.30 | — | — |
-| Podręcznik medycyny ratunkowej `lit_textbook_medicine` | Literatura | 0.49 | 0.52 | — | — |
-| Podręcznik terenoznawstwa `lit_textbook_fieldcraft` | Literatura | 0.49 | 0.52 | — | — |
 | Podręcznik balistyki `lit_textbook_ballistics` | Literatura | 0.49 | 0.52 | — | — |
+| Podręcznik medycyny ratunkowej `lit_textbook_medicine` | Literatura | 0.49 | 0.52 | — | — |
 | Podręcznik techniczny `lit_textbook_engineering` | Literatura | 0.49 | 0.52 | — | — |
+| Podręcznik terenoznawstwa `lit_textbook_fieldcraft` | Literatura | 0.49 | 0.52 | — | — |
 | Polar `cloth_fleece` | Pancerz i odzież | 0.45 | 2.50 | tkanina ×1 | 4.5 min |
-| Drut `mat_wire` | Materiały | 0.40 | 0.40 | — | — |
+| Konserwa mięsna `food_canned_meat` | Żywność i napoje | 0.40 | 0.40 | — | — |
+| Konserwa warzywna `food_canned_vegetables` | Żywność i napoje | 0.40 | 0.40 | — | — |
 | Plastik `mat_plastic` | Materiały | 0.40 | 0.80 | — | — |
 | Kurtka przeciwdeszczowa `cloth_rain_shell` | Pancerz i odzież | 0.40 | 1.60 | nic | 4.3 min |
+| Drut `mat_wire` | Materiały | 0.40 | 0.40 | — | — |
 | Szyna improwizowana `med_splint_improvised` | Medykamenty | 0.40 | 1.00 | tkanina ×1 | 5.4 min |
-| Konserwa mięsna `food_canned_meat` | Żywność i napoje | 0.40 | 0.40 | — | — |
 | Tłumik `tool_suppressor` | Dodatki do broni | 0.40 | 0.50 | nic | 3.6 min |
-| Konserwa warzywna `food_canned_vegetables` | Żywność i napoje | 0.40 | 0.40 | — | — |
-| Zestaw do czyszczenia broni `tool_gun_cleaning_kit` | Narzędzia | 0.35 | 0.60 | nic | 3.4 min |
-| Bielizna termoaktywna `cloth_thermal_underwear` | Pancerz i odzież | 0.35 | 1.40 | nic | 4.2 min |
 | Szyna usztywniająca `med_splint` | Medykamenty | 0.35 | 1.20 | — | — |
+| Bielizna termoaktywna `cloth_thermal_underwear` | Pancerz i odzież | 0.35 | 1.40 | nic | 4.2 min |
+| Plecak biegowy `pack_running` | Plecaki | 0.35 | 0.60 | tkanina ×1 | 6.6 min |
+| Zestaw do czyszczenia broni `tool_gun_cleaning_kit` | Narzędzia | 0.35 | 0.60 | nic | 3.4 min |
 | Magazynek karabinkowy 7,62x39 (30) `mag_rifle_762x39` | Pozostałe | 0.33 | 0.40 | nic | 3.5 min |
-| Filtr do wody `tool_water_filter` | Narzędzia | 0.30 | 0.60 | nic | 3.7 min |
 | Materiał `mat_fabric` | Materiały | 0.30 | 1.00 | — | — |
+| Filtr do wody `tool_water_filter` | Narzędzia | 0.30 | 0.60 | nic | 3.7 min |
 | Torba na zakupy `pack_shopping_bag` | Plecaki | 0.30 | 0.50 | nic | 4.0 min |
 | Napój energetyczny `drink_energy` | Żywność i napoje | 0.28 | 0.30 | — | — |
-| Taśma klejąca `mat_duct_tape` | Materiały | 0.25 | 0.50 | — | — |
 | Multitool `tool_multitool` | Narzędzia | 0.25 | 0.30 | nic | 3.3 min |
+| Taśma klejąca `mat_duct_tape` | Materiały | 0.25 | 0.50 | — | — |
 | Magazynek karabinkowy 5,45x39 (30) `mag_rifle_545` | Pozostałe | 0.23 | 0.35 | nic | 3.3 min |
 | Magazynek do PM 9x19 (30) `mag_smg_9mm` | Pozostałe | 0.22 | 0.30 | nic | 3.3 min |
 | Poradnik rusznikarski `lit_guide_gunsmithing` | Literatura | 0.21 | 0.25 | — | — |
-| Poradnik napraw domowych `lit_guide_repairs` | Literatura | 0.21 | 0.25 | — | — |
-| Poradnik pierwszej pomocy `lit_guide_first_aid` | Literatura | 0.21 | 0.25 | — | — |
 | Poradnik przetrwania `lit_guide_survival` | Literatura | 0.21 | 0.25 | — | — |
+| Poradnik pierwszej pomocy `lit_guide_first_aid` | Literatura | 0.21 | 0.25 | — | — |
+| Poradnik napraw domowych `lit_guide_repairs` | Literatura | 0.21 | 0.25 | — | — |
 | Latarka `tool_flashlight` | Narzędzia | 0.20 | 0.35 | nic | 3.5 min |
 | Krakersy `food_crackers` | Żywność i napoje | 0.20 | 0.90 | — | — |
+| Rękawice z ćwiekami `cloth_gloves_studded` | Pancerz i odzież | 0.20 | 0.50 | tkanina ×1, leather ×1 | 7.8 min |
+| Skórzana czapka `cloth_leather_cap` | Pancerz i odzież | 0.20 | 0.60 | leather ×2 | 7.8 min |
 | Latarka taktyczna `att_weapon_light` | Dodatki do broni | 0.20 | 0.25 | nic | 3.3 min |
 | Magazynek przedłużony 9x19 (25) `mag_pistol_9mm_ext` | Pozostałe | 0.18 | 0.22 | nic | 3.2 min |
 | Jabłko `food_apple` | Żywność i napoje | 0.18 | 0.25 | — | — |
+| Rękawice taktyczne `cloth_gloves_tactical` | Pancerz i odzież | 0.18 | 0.50 | leather ×1, wire ×1 | 9.0 min |
 | Chwyt przedni `att_foregrip` | Dodatki do broni | 0.18 | 0.25 | nic | 3.1 min |
 | Klej `mat_glue` | Materiały | 0.15 | 0.20 | — | — |
-| Nóż `melee_knife` | Broń biała | 0.15 | 0.30 | nic | 3.1 min |
-| Koszulka `cloth_tshirt` | Pancerz i odzież | 0.15 | 0.80 | nic | 3.5 min |
-| Kolimator `att_red_dot` | Dodatki do broni | 0.15 | 0.20 | nic | 3.1 min |
 | Zestaw do szycia ran `med_suture_kit` | Medykamenty | 0.15 | 0.30 | — | — |
+| Nóż `melee_knife` | Broń biała | 0.15 | 0.30 | nic | 3.1 min |
+| Koszulka `cloth_tshirt` | Pancerz i odzież | 0.15 | 0.80 | tkanina ×1 | 5.4 min |
 | Kanapka `food_sandwich` | Żywność i napoje | 0.15 | 0.40 | — | — |
+| Kolimator `att_red_dot` | Dodatki do broni | 0.15 | 0.20 | nic | 3.1 min |
 | Staza improwizowana `med_tourniquet_improvised` | Medykamenty | 0.14 | 0.25 | tkanina ×1 | 5.4 min |
-| Czasopismo łowieckie `lit_magazine_hunting` | Literatura | 0.12 | 0.13 | — | — |
-| Śrubokręt `melee_screwdriver` | Broń biała | 0.12 | 0.20 | nic | 3.1 min |
-| Czołówka `tool_headlamp` | Narzędzia | 0.12 | 0.25 | nic | 3.3 min |
-| Czasopismo majsterkowicza `lit_magazine_diy` | Literatura | 0.12 | 0.13 | — | — |
-| Staza taktyczna `med_tourniquet` | Medykamenty | 0.12 | 0.20 | — | — |
-| Czasopismo o broni `lit_magazine_guns` | Literatura | 0.12 | 0.13 | — | — |
 | Magazynek pistoletowy 9x19 (15) `mag_pistol_9mm` | Pozostałe | 0.12 | 0.15 | nic | 3.1 min |
-| Środek odkażający `med_antiseptic` | Medykamenty | 0.10 | 0.20 | — | — |
-| Wytrychy `tool_lockpicks` | Narzędzia | 0.10 | 0.15 | — | — |
-| Zestaw do szycia `tool_sewing_kit` | Narzędzia | 0.10 | 0.20 | — | — |
-| Czekolada `food_chocolate` | Żywność i napoje | 0.10 | 0.12 | — | — |
+| Czołówka `tool_headlamp` | Narzędzia | 0.12 | 0.25 | nic | 3.3 min |
+| Śrubokręt `melee_screwdriver` | Broń biała | 0.12 | 0.20 | nic | 3.1 min |
+| Czasopismo o broni `lit_magazine_guns` | Literatura | 0.12 | 0.13 | — | — |
+| Czasopismo majsterkowicza `lit_magazine_diy` | Literatura | 0.12 | 0.13 | — | — |
+| Kapelusz `cloth_sun_hat` | Pancerz i odzież | 0.12 | 0.90 | tkanina ×1, plastik ×1 | 9.0 min |
+| Staza taktyczna `med_tourniquet` | Medykamenty | 0.12 | 0.20 | — | — |
+| Czasopismo łowieckie `lit_magazine_hunting` | Literatura | 0.12 | 0.13 | — | — |
+| Opatrunek uciskowy improwizowany `med_pressure_improvised` | Medykamenty | 0.10 | 0.20 | tkanina ×1 | 5.4 min |
 | Suszone mięso `food_dried_meat` | Żywność i napoje | 0.10 | 0.20 | — | — |
+| Środek odkażający `med_antiseptic` | Medykamenty | 0.10 | 0.20 | — | — |
+| Wytrychy `tool_lockpicks` | Narzędzia | 0.10 | 0.15 | metal ×1 | 5.4 min |
+| Zestaw do szycia `tool_sewing_kit` | Narzędzia | 0.10 | 0.20 | — | — |
 | Celownik laserowy `att_laser` | Dodatki do broni | 0.10 | 0.15 | nic | 3.1 min |
 | Rękawice `cloth_gloves` | Pancerz i odzież | 0.10 | 0.50 | nic | 3.3 min |
-| Opatrunek uciskowy improwizowany `med_pressure_improvised` | Medykamenty | 0.10 | 0.20 | tkanina ×1 | 5.4 min |
+| Czekolada `food_chocolate` | Żywność i napoje | 0.10 | 0.12 | — | — |
 | Magazynek karabinkowy .22 LR (10) `mag_rifle_22lr` | Pozostałe | 0.10 | 0.12 | nic | 3.1 min |
-| Czapka `cloth_hat` | Pancerz i odzież | 0.08 | 0.60 | nic | 3.3 min |
-| Opatrunek uciskowy `med_pressure_dressing` | Medykamenty | 0.08 | 0.25 | — | — |
+| Slipy `cloth_briefs` | Pancerz i odzież | 0.10 | 0.40 | nic | 4.2 min |
 | Otwieracz do konserw `tool_can_opener` | Narzędzia | 0.08 | 0.10 | — | — |
+| Opatrunek uciskowy `med_pressure_dressing` | Medykamenty | 0.08 | 0.25 | — | — |
+| Czapka z daszkiem `cloth_cap` | Pancerz i odzież | 0.08 | 0.40 | tkanina ×1 | 6.6 min |
+| Czapka `cloth_hat` | Pancerz i odzież | 0.08 | 0.60 | nic | 3.3 min |
 | Zupa błyskawiczna `food_instant_soup` | Żywność i napoje | 0.07 | 0.35 | — | — |
 | Baton energetyczny `food_energy_bar` | Żywność i napoje | 0.06 | 0.08 | — | — |
 | Opatrunek improwizowany `med_bandage_improvised` | Medykamenty | 0.05 | 0.12 | nic | 4.2 min |
@@ -479,11 +492,11 @@ Znajdowany: industrial, garage, shop
 | Hałas (m) | 30 |
 | `doubles_as_tool` | true |
 
-**Wytwarzanie:** — (tylko znajdowane)
+**Wytwarzanie:** Złom metalowy ×4 · 40 min · warsztat L1 · narzędzie: Młotek
 
-**Zawartość:** Złom metalowy 0.75, Drewno 0.24
+**Zawartość:** Złom metalowy 4.00
 
-**Rozbiórka:** **nic** · z warsztatem: Złom metalowy ×1 · 4.2 min
+**Rozbiórka:** Złom metalowy ×2 · z warsztatem: Złom metalowy ×3 · 7.8 min
 
 ### Młotek
 
@@ -550,11 +563,11 @@ Znajdowany: rural, shop, garden
 | `strength_required` | 25 |
 | Hałas (m) | 28 |
 
-**Wytwarzanie:** — (tylko znajdowane)
+**Wytwarzanie:** Skóra ×1, Złom metalowy ×2 · 45 min · warsztat L2 · narzędzie: Młotek
 
-**Zawartość:** Złom metalowy 0.28, Drewno 0.09
+**Zawartość:** Skóra 1.00, Złom metalowy 2.00
 
-**Rozbiórka:** **nic** · z warsztatem: **nic** · 3.5 min
+**Rozbiórka:** Złom metalowy ×1 · z warsztatem: Złom metalowy ×1, Skóra ×1 · 6.6 min
 
 ### Śrubokręt
 
@@ -695,6 +708,26 @@ Znajdowany: military, police
 
 **Rozbiórka:** Materiał ×1, Plastik ×1 · z warsztatem: Plastik ×1, Materiał ×2 · 7.8 min
 
+### Skórzane naramienniki
+
+`armor_leather_pauldrons` · Leather pauldrons · pospolity
+
+**Masa** 0.70 kg · **Objętość** 1.60 l · **Stan** 100% · **Zużycie** 0.04%/użycie
+
+| Parametr | Wartość |
+| :--- | ---: |
+| `slot` | arms |
+| Izolacja (clo) | 0.3 |
+| `protection_level` | 1 |
+| `coverage_pct` | 15 |
+| `craft_only` | true |
+
+**Wytwarzanie:** Materiał ×2, Skóra ×2 · 40 min · warsztat L1 · narzędzie: Zestaw do szycia
+
+**Zawartość:** Materiał 2.00, Skóra 2.00
+
+**Rozbiórka:** Materiał ×1, Skóra ×1 · z warsztatem: Materiał ×2, Skóra ×1 · 7.8 min
+
 ### Kamizelka z płytami
 
 `armor_vest_plate` · Plate carrier · bardzo rzadki
@@ -763,6 +796,86 @@ Znajdowany: residential, shop, military
 
 **Rozbiórka:** Skóra ×1 · z warsztatem: Skóra ×1, Materiał ×1 · 5.8 min
 
+### Buty wojskowe
+
+`cloth_boots_military` · Combat boots · pospolity
+
+**Masa** 1.60 kg · **Objętość** 3.20 l · **Stan** 100% · **Zużycie** 0.03%/użycie
+
+| Parametr | Wartość |
+| :--- | ---: |
+| `slot` | feet |
+| Izolacja (clo) | 0.45 |
+| `protection_level` | 1 |
+| `coverage_pct` | 8 |
+| `craft_only` | true |
+
+**Wytwarzanie:** Skóra ×4, Złom metalowy ×2 · 180 min · warsztat L2 · narzędzie: Zestaw do szycia
+
+**Zawartość:** Skóra 4.00, Złom metalowy 2.00
+
+**Rozbiórka:** Skóra ×1, Złom metalowy ×1 · z warsztatem: Skóra ×3, Złom metalowy ×1 · 10 min
+
+### Slipy
+
+`cloth_briefs` · Briefs · pospolity
+
+**Masa** 0.10 kg · **Objętość** 0.40 l · **Stan** 100% · **Zużycie** 0.05%/użycie
+
+| Parametr | Wartość |
+| :--- | ---: |
+| `slot` | torso_base |
+| Izolacja (clo) | 0.25 |
+| `protection_level` | 0 |
+| `coverage_pct` | 0 |
+| `craft_only` | true |
+
+**Wytwarzanie:** Materiał ×1 · 20 min · narzędzie: Zestaw do szycia
+
+**Zawartość:** Materiał 1.00
+
+**Rozbiórka:** **nic** · z warsztatem: Materiał ×1 · 4.2 min
+
+### Czapka z daszkiem
+
+`cloth_cap` · Baseball cap · pospolity
+
+**Masa** 0.08 kg · **Objętość** 0.40 l · **Stan** 100% · **Zużycie** 0.05%/użycie
+
+| Parametr | Wartość |
+| :--- | ---: |
+| `slot` | head |
+| Izolacja (clo) | 0.15 |
+| `protection_level` | 0 |
+| `coverage_pct` | 0 |
+| `craft_only` | true |
+
+**Wytwarzanie:** Materiał ×2, Plastik ×1 · 30 min · narzędzie: Zestaw do szycia
+
+**Zawartość:** Materiał 2.00, Plastik 1.00
+
+**Rozbiórka:** Materiał ×1 · z warsztatem: Materiał ×1, Plastik ×1 · 6.6 min
+
+### Bojówki z ochraniaczami
+
+`cloth_cargo_pads` · Padded cargo trousers · pospolity
+
+**Masa** 1.20 kg · **Objętość** 3.00 l · **Stan** 100% · **Zużycie** 0.04%/użycie
+
+| Parametr | Wartość |
+| :--- | ---: |
+| `slot` | legs |
+| Izolacja (clo) | 0.8 |
+| `protection_level` | 2 |
+| `coverage_pct` | 28 |
+| `craft_only` | true |
+
+**Wytwarzanie:** Materiał ×4, Klej ×1, Plastik ×2 · 110 min · warsztat L2 · narzędzie: Zestaw do szycia
+
+**Zawartość:** Materiał 4.00, Klej 1.00, Plastik 2.00
+
+**Rozbiórka:** Materiał ×2, Plastik ×1 · z warsztatem: Materiał ×3, Plastik ×1, Klej ×1 · 11 min
+
 ### Polar
 
 `cloth_fleece` · Fleece · pospolity
@@ -805,6 +918,46 @@ Znajdowany: residential, shop, industrial
 
 **Rozbiórka:** **nic** · z warsztatem: **nic** · 3.3 min
 
+### Rękawice z ćwiekami
+
+`cloth_gloves_studded` · Studded gloves · pospolity
+
+**Masa** 0.20 kg · **Objętość** 0.50 l · **Stan** 100% · **Zużycie** 0.08%/użycie
+
+| Parametr | Wartość |
+| :--- | ---: |
+| `slot` | hands |
+| Izolacja (clo) | 0.25 |
+| `protection_level` | 1 |
+| `coverage_pct` | 4 |
+| `craft_only` | true |
+
+**Wytwarzanie:** Materiał ×2, Skóra ×1, Złom metalowy ×1 · 45 min · warsztat L1 · narzędzie: Zestaw do szycia
+
+**Zawartość:** Materiał 2.00, Skóra 1.00, Złom metalowy 1.00
+
+**Rozbiórka:** Materiał ×1, Skóra ×1 · z warsztatem: Materiał ×1, Skóra ×1, Złom metalowy ×1 · 7.8 min
+
+### Rękawice taktyczne
+
+`cloth_gloves_tactical` · Tactical gloves · pospolity
+
+**Masa** 0.18 kg · **Objętość** 0.50 l · **Stan** 100% · **Zużycie** 0.06%/użycie
+
+| Parametr | Wartość |
+| :--- | ---: |
+| `slot` | hands |
+| Izolacja (clo) | 0.3 |
+| `protection_level` | 1 |
+| `coverage_pct` | 5 |
+| `craft_only` | true |
+
+**Wytwarzanie:** Skóra ×2, Plastik ×1, Drut ×2 · 60 min · warsztat L1 · narzędzie: Zestaw do szycia
+
+**Zawartość:** Skóra 2.00, Plastik 1.00, Drut 2.00
+
+**Rozbiórka:** Skóra ×1, Drut ×1 · z warsztatem: Skóra ×1, Drut ×1, Plastik ×1 · 9.0 min
+
 ### Czapka
 
 `cloth_hat` · Hat · pospolity
@@ -825,6 +978,26 @@ Znajdowany: residential, shop
 **Zawartość:** Materiał 0.21
 
 **Rozbiórka:** **nic** · z warsztatem: **nic** · 3.3 min
+
+### Skórzana czapka
+
+`cloth_leather_cap` · Leather cap · pospolity
+
+**Masa** 0.20 kg · **Objętość** 0.60 l · **Stan** 100% · **Zużycie** 0.03%/użycie
+
+| Parametr | Wartość |
+| :--- | ---: |
+| `slot` | head |
+| Izolacja (clo) | 0.55 |
+| `protection_level` | 0 |
+| `coverage_pct` | 0 |
+| `craft_only` | true |
+
+**Wytwarzanie:** Skóra ×4 · 50 min · narzędzie: Zestaw do szycia
+
+**Zawartość:** Skóra 4.00
+
+**Rozbiórka:** Skóra ×2 · z warsztatem: Skóra ×3 · 7.8 min
 
 ### Kurtka przeciwdeszczowa
 
@@ -848,6 +1021,46 @@ Znajdowany: residential, shop, sport
 **Zawartość:** Materiał 1.07, Złom metalowy 0.05
 
 **Rozbiórka:** **nic** · z warsztatem: Materiał ×1 · 4.3 min
+
+### Trampki
+
+`cloth_sneakers` · Sneakers · pospolity
+
+**Masa** 0.70 kg · **Objętość** 2.20 l · **Stan** 100% · **Zużycie** 0.09%/użycie
+
+| Parametr | Wartość |
+| :--- | ---: |
+| `slot` | feet |
+| Izolacja (clo) | 0.2 |
+| `protection_level` | 0 |
+| `coverage_pct` | 0 |
+| `craft_only` | true |
+
+**Wytwarzanie:** Materiał ×2, Skóra ×1, Plastik ×1 · 60 min · warsztat L1 · narzędzie: Zestaw do szycia
+
+**Zawartość:** Materiał 2.00, Skóra 1.00, Plastik 1.00
+
+**Rozbiórka:** Materiał ×1, Skóra ×1 · z warsztatem: Materiał ×1, Skóra ×1, Plastik ×1 · 7.8 min
+
+### Kapelusz
+
+`cloth_sun_hat` · Sun hat · pospolity
+
+**Masa** 0.12 kg · **Objętość** 0.90 l · **Stan** 100% · **Zużycie** 0.05%/użycie
+
+| Parametr | Wartość |
+| :--- | ---: |
+| `slot` | head |
+| Izolacja (clo) | 0.2 |
+| `protection_level` | 0 |
+| `coverage_pct` | 0 |
+| `craft_only` | true |
+
+**Wytwarzanie:** Materiał ×3, Plastik ×2 · 35 min · narzędzie: Zestaw do szycia
+
+**Zawartość:** Materiał 3.00, Plastik 2.00
+
+**Rozbiórka:** Materiał ×1, Plastik ×1 · z warsztatem: Materiał ×2, Plastik ×1 · 9.0 min
 
 ### Bielizna termoaktywna
 
@@ -891,6 +1104,26 @@ Znajdowany: residential, shop
 
 **Rozbiórka:** Materiał ×1 · z warsztatem: Materiał ×1 · 4.7 min
 
+### Wzmocnione spodnie
+
+`cloth_trousers_reinforced` · Reinforced trousers · pospolity
+
+**Masa** 0.90 kg · **Objętość** 2.40 l · **Stan** 100% · **Zużycie** 0.04%/użycie
+
+| Parametr | Wartość |
+| :--- | ---: |
+| `slot` | legs |
+| Izolacja (clo) | 0.7 |
+| `protection_level` | 1 |
+| `coverage_pct` | 20 |
+| `craft_only` | true |
+
+**Wytwarzanie:** Materiał ×3, Skóra ×2, Plastik ×1 · 75 min · warsztat L1 · narzędzie: Zestaw do szycia
+
+**Zawartość:** Materiał 3.00, Skóra 2.00, Plastik 1.00
+
+**Rozbiórka:** Materiał ×1, Skóra ×1 · z warsztatem: Materiał ×2, Skóra ×1, Plastik ×1 · 10 min
+
 ### Koszulka
 
 `cloth_tshirt` · T-shirt · pospolity
@@ -906,11 +1139,11 @@ Znajdowany: residential, shop
 | `protection_level` | 0 |
 | `coverage_pct` | 0 |
 
-**Wytwarzanie:** — (tylko znajdowane)
+**Wytwarzanie:** Materiał ×2 · 35 min · narzędzie: Zestaw do szycia
 
-**Zawartość:** Materiał 0.40
+**Zawartość:** Materiał 2.00
 
-**Rozbiórka:** **nic** · z warsztatem: **nic** · 3.5 min
+**Rozbiórka:** Materiał ×1 · z warsztatem: Materiał ×1 · 5.4 min
 
 ### Kurtka zimowa
 
@@ -973,11 +1206,30 @@ Znajdowany: residential, shop, sport
 | `comfort_carry_bonus_kg` | 8 |
 | `max_carry_bonus_kg` | 8 |
 
-**Wytwarzanie:** — (tylko znajdowane)
+**Wytwarzanie:** Materiał ×6, Plastik ×2 · 90 min · warsztat L1 · narzędzie: Zestaw do szycia
 
-**Zawartość:** Materiał 2.55, Złom metalowy 0.09
+**Zawartość:** Materiał 6.00, Plastik 2.00
 
-**Rozbiórka:** Materiał ×1 · z warsztatem: Materiał ×2 · 6.2 min
+**Rozbiórka:** Materiał ×2, Plastik ×1 · z warsztatem: Materiał ×4, Plastik ×1 · 13 min
+
+### Plecak polowy
+
+`pack_field` · Field pack · pospolity
+
+**Masa** 1.60 kg · **Objętość** 2.40 l · **Stan** 100% · **Zużycie** 0.30%/użycie
+
+| Parametr | Wartość |
+| :--- | ---: |
+| Pojemność (l) | 60 |
+| `comfort_carry_bonus_kg` | 11 |
+| `max_carry_bonus_kg` | 11 |
+| `craft_only` | true |
+
+**Wytwarzanie:** Materiał ×8, Klej ×2, Plastik ×3, Drut ×2 · 150 min · warsztat L2 · narzędzie: Zestaw do szycia
+
+**Zawartość:** Materiał 8.00, Klej 2.00, Plastik 3.00, Drut 2.00
+
+**Rozbiórka:** Materiał ×3, Plastik ×1, Klej ×1, Drut ×1 · z warsztatem: Materiał ×5, Klej ×2, Plastik ×2, Drut ×1 · 15 min
 
 ### Prowizoryczny plecak
 
@@ -1019,6 +1271,25 @@ Znajdowany: military
 **Zawartość:** Materiał 7.37, Złom metalowy 0.26
 
 **Rozbiórka:** Materiał ×3 · z warsztatem: Materiał ×5 · 12 min
+
+### Plecak biegowy
+
+`pack_running` · Running pack · pospolity
+
+**Masa** 0.35 kg · **Objętość** 0.60 l · **Stan** 100% · **Zużycie** 0.30%/użycie
+
+| Parametr | Wartość |
+| :--- | ---: |
+| Pojemność (l) | 16 |
+| `comfort_carry_bonus_kg` | 3 |
+| `max_carry_bonus_kg` | 3 |
+| `craft_only` | true |
+
+**Wytwarzanie:** Taśma klejąca ×1, Materiał ×2 · 45 min · narzędzie: Zestaw do szycia
+
+**Zawartość:** Taśma klejąca 1.00, Materiał 2.00
+
+**Rozbiórka:** Materiał ×1 · z warsztatem: Materiał ×1, Taśma klejąca ×1 · 6.6 min
 
 ### Plecak szkolny
 
@@ -2227,9 +2498,11 @@ Znajdowany: garage, police, residential
 | `quiet` | true |
 | `note` | The silent alternative to a crowbar, which opens the same door and is heard doing it. |
 
-**Wytwarzanie:** — (tylko znajdowane)
+**Wytwarzanie:** Złom metalowy ×2 · 12 min · daje 4 szt. · narzędzie: Multitool / Młotek
 
-**Rozbiórka:** — (nie da się rozebrać)
+**Zawartość:** Złom metalowy 2.00
+
+**Rozbiórka:** Złom metalowy ×1 · z warsztatem: Złom metalowy ×1 · 5.4 min
 
 ### Zapałki
 

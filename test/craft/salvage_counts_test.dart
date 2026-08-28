@@ -11,7 +11,7 @@ import 'package:test/test.dart';
 ///
 /// ⚠️ **A stack is several pieces, and the screen offered one.**
 ///
-/// Reported from a walk: three improvised tourniquets are one row in the pack
+/// Reported from a walk: three of one stackable thing are one row in the pack
 /// with a count on it, the disassembly list quoted the minutes for one, and
 /// there was no way to ask for the other two. The row was not wrong about the
 /// price of a single piece — it simply had no way to say *how many*.
@@ -20,12 +20,36 @@ import 'package:test/test.dart';
 /// running total, the summary, the sitting itself — multiplies by it. The
 /// alternative the report also offered, summing the whole stack automatically,
 /// was the worse of the two: §18.6 destroys what it opens, and a screen that
-/// quietly took all three of somebody's tourniquets because they ticked a box
+/// quietly took all three of somebody's pieces because they ticked a box
 /// would be the most expensive misread in the game.
 void main() {
+  /// ⚠️ **A stackable thing worth taking apart, and the shipped catalogue has
+  /// none.** It used to: improvised tourniquets are stackable and made of
+  /// fabric, so §18.6 gave fabric back. Then [materialContent] learned to
+  /// divide a recipe by the number of pieces it makes — six tourniquets come
+  /// out of one rag, so each holds a sixth of one, and a sixth of a rag is not
+  /// recoverable. That was a fix for a material duplicator, and the loss is
+  /// the right one.
+  ///
+  /// The mechanism below is about **rows and counts**, not about tourniquets,
+  /// and it is still exactly as real. So the case it needs is built here
+  /// rather than borrowed from a balance table that has every right to move:
+  /// a stackable piece holding two whole units, which is what a thing has to
+  /// hold before an unskilled pair of hands can get anything out of it.
+  const spares = '''
+{"schema": 1, "items": [{
+  "id": "mat_spare_part", "type": "crafting",
+  "name": {"pl": "Część zamienna", "en": "Spare part"},
+  "weight_kg": 0.2, "volume_l": 0.3, "stackable": true, "rarity": "common",
+  "loot_tags": ["garage"],
+  "props": {"salvage": {"mat_metal": 1.4, "mat_plastic": 0.6}}
+}]}
+''';
+
   final catalogue = ItemCatalogue.load([
     for (final asset in kBundledItemAssets)
       ItemSource(asset, File(asset).readAsStringSync()),
+    const ItemSource('test://spares.json', spares),
   ]);
   final recipes = RecipeBook.parse(File(kRecipesAsset).readAsStringSync());
 
@@ -36,10 +60,8 @@ void main() {
     materials: const {},
   );
 
-  /// A real stackable thing that is worth taking apart: §18.4 makes it out of
-  /// fabric, so §18.6 gives fabric back.
   CarriedItem stack(int count, {int? started}) => const CarriedItem(
-    itemId: 'med_tourniquet_improvised',
+    itemId: 'mat_spare_part',
   ).copyWith(uid: 'a.1', count: count, salvageSeconds: started);
 
   SalvageOffer offerOf(CarriedItem line) => offersFrom(
@@ -54,7 +76,7 @@ void main() {
   test('the pack really does stack this, or the test proves nothing', () {
     // ⚠️ The whole report rests on it. If the item stopped stacking, every
     // assertion below would pass against a case that cannot happen.
-    expect(catalogue['med_tourniquet_improvised']?.stackable, isTrue);
+    expect(catalogue['mat_spare_part']?.stackable, isTrue);
     expect(offerOf(stack(3)).yields, isNotEmpty);
   });
 
@@ -123,7 +145,7 @@ void main() {
 
     test('asking for more than there are is capped, never invented', () {
       // ⚠️ The pack behind the picker can shrink while it is open. A number
-      // remembered from before that must not conjure a fourth tourniquet.
+      // remembered from before that must not conjure a fourth piece.
       final batch = batchOf([SalvagePick(offerOf(stack(2)), 9)]);
 
       expect(batch.length, 2);
@@ -138,7 +160,7 @@ void main() {
   });
 
   test('§18.6: the pieces still come apart one after another', () {
-    // Half way through three tourniquets, one is fabric and two are exactly
+    // Half way through three of them, one is metal and two are exactly
     // as they were. That is the promise the whole model rests on, and adding
     // counts must not have quietly turned it into a single long bar.
     final offer = offerOf(stack(3));

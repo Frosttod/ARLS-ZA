@@ -541,6 +541,58 @@
     "item.pack_improvised.name": {
       "pl": "Prowizoryczny plecak",
       "en": "Improvised pack"
+    },
+    "item.cloth_briefs.name": {
+      "pl": "Slipy",
+      "en": "Briefs"
+    },
+    "item.cloth_cap.name": {
+      "pl": "Czapka z daszkiem",
+      "en": "Baseball cap"
+    },
+    "item.cloth_leather_cap.name": {
+      "pl": "Skórzana czapka",
+      "en": "Leather cap"
+    },
+    "item.cloth_sun_hat.name": {
+      "pl": "Kapelusz",
+      "en": "Sun hat"
+    },
+    "item.armor_leather_pauldrons.name": {
+      "pl": "Skórzane naramienniki",
+      "en": "Leather pauldrons"
+    },
+    "item.cloth_gloves_studded.name": {
+      "pl": "Rękawice z ćwiekami",
+      "en": "Studded gloves"
+    },
+    "item.cloth_gloves_tactical.name": {
+      "pl": "Rękawice taktyczne",
+      "en": "Tactical gloves"
+    },
+    "item.cloth_trousers_reinforced.name": {
+      "pl": "Wzmocnione spodnie",
+      "en": "Reinforced trousers"
+    },
+    "item.cloth_cargo_pads.name": {
+      "pl": "Bojówki z ochraniaczami",
+      "en": "Padded cargo trousers"
+    },
+    "item.cloth_sneakers.name": {
+      "pl": "Trampki",
+      "en": "Sneakers"
+    },
+    "item.cloth_boots_military.name": {
+      "pl": "Buty wojskowe",
+      "en": "Combat boots"
+    },
+    "item.pack_running.name": {
+      "pl": "Plecak biegowy",
+      "en": "Running pack"
+    },
+    "item.pack_field.name": {
+      "pl": "Plecak polowy",
+      "en": "Field pack"
     }
   }
 }

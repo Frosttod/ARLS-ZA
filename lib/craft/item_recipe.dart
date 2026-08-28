@@ -193,7 +193,7 @@ Duration craftWork(
   );
 }
 
-/// §18.6: what one item is made of, in material units.
+/// §18.6: what **one** item is made of, in material units.
 ///
 /// The recipe when there is one — that is the material value, exactly — and
 /// otherwise the `salvage` map in the catalogue, which is the item's mass split
@@ -202,12 +202,22 @@ Duration craftWork(
 /// components and a third of a unit of plastic, and those fractions matter:
 /// rounding them away one at a time is what made the whole system return
 /// nothing.
+///
+/// ⚠️ **Divided by the run's yield, and that word `one` is the whole of it.**
+/// A recipe states what a *run* costs, and a run of §18.4's medical rows makes
+/// four. Reading the run's materials as one item's content made every such row
+/// a material duplicator: one length of cloth became four improvised bandages,
+/// each of which came apart into a length of cloth. Four for one, no skill
+/// required, and the same for spikes, spears and anything else made in a
+/// batch — which is every reason the shipped rows exist.
 Map<String, double> materialContent(ItemDefinition item, RecipeBook book) {
   final recipe = book.making(item.id);
   if (recipe != null) {
+    final made = recipe.count < 1 ? 1 : recipe.count;
+
     return {
       for (final entry in recipe.materials.entries)
-        entry.key: entry.value.toDouble(),
+        entry.key: entry.value / made,
     };
   }
 

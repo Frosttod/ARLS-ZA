@@ -106,6 +106,261 @@
         "tool_sewing_kit",
         "tool_multitool"
       ]
+    },
+    {
+      "id": "craft_briefs",
+      "output": "cloth_briefs",
+      "count": 1,
+      "materials": {
+        "mat_fabric": 1
+      },
+      "work_minutes": 20,
+      "workshop_level": 0,
+      "tools_any_of": [
+        "tool_sewing_kit"
+      ]
+    },
+    {
+      "id": "craft_tshirt",
+      "output": "cloth_tshirt",
+      "count": 1,
+      "materials": {
+        "mat_fabric": 2
+      },
+      "work_minutes": 35,
+      "workshop_level": 0,
+      "tools_any_of": [
+        "tool_sewing_kit"
+      ]
+    },
+    {
+      "id": "craft_cap",
+      "output": "cloth_cap",
+      "count": 1,
+      "materials": {
+        "mat_fabric": 2,
+        "mat_plastic": 1
+      },
+      "work_minutes": 30,
+      "workshop_level": 0,
+      "tools_any_of": [
+        "tool_sewing_kit"
+      ]
+    },
+    {
+      "id": "craft_sun_hat",
+      "output": "cloth_sun_hat",
+      "count": 1,
+      "materials": {
+        "mat_fabric": 3,
+        "mat_plastic": 2
+      },
+      "work_minutes": 35,
+      "workshop_level": 0,
+      "tools_any_of": [
+        "tool_sewing_kit"
+      ]
+    },
+    {
+      "id": "craft_leather_cap",
+      "output": "cloth_leather_cap",
+      "count": 1,
+      "materials": {
+        "mat_leather": 4
+      },
+      "work_minutes": 50,
+      "workshop_level": 0,
+      "tools_any_of": [
+        "tool_sewing_kit"
+      ]
+    },
+    {
+      "id": "craft_pauldrons",
+      "output": "armor_leather_pauldrons",
+      "count": 1,
+      "materials": {
+        "mat_fabric": 2,
+        "mat_leather": 2
+      },
+      "work_minutes": 40,
+      "workshop_level": 1,
+      "tools_any_of": [
+        "tool_sewing_kit"
+      ]
+    },
+    {
+      "id": "craft_gloves_studded",
+      "output": "cloth_gloves_studded",
+      "count": 1,
+      "materials": {
+        "mat_fabric": 2,
+        "mat_leather": 1,
+        "mat_metal": 1
+      },
+      "work_minutes": 45,
+      "workshop_level": 1,
+      "tools_any_of": [
+        "tool_sewing_kit"
+      ]
+    },
+    {
+      "id": "craft_gloves_tactical",
+      "output": "cloth_gloves_tactical",
+      "count": 1,
+      "materials": {
+        "mat_leather": 2,
+        "mat_plastic": 1,
+        "mat_wire": 2
+      },
+      "work_minutes": 60,
+      "workshop_level": 1,
+      "tools_any_of": [
+        "tool_sewing_kit"
+      ]
+    },
+    {
+      "id": "craft_trousers_reinforced",
+      "output": "cloth_trousers_reinforced",
+      "count": 1,
+      "materials": {
+        "mat_fabric": 3,
+        "mat_leather": 2,
+        "mat_plastic": 1
+      },
+      "work_minutes": 75,
+      "workshop_level": 1,
+      "tools_any_of": [
+        "tool_sewing_kit"
+      ]
+    },
+    {
+      "id": "craft_cargo_pads",
+      "output": "cloth_cargo_pads",
+      "count": 1,
+      "materials": {
+        "mat_fabric": 4,
+        "mat_glue": 1,
+        "mat_plastic": 2
+      },
+      "work_minutes": 110,
+      "workshop_level": 2,
+      "tools_any_of": [
+        "tool_sewing_kit"
+      ]
+    },
+    {
+      "id": "craft_sneakers",
+      "output": "cloth_sneakers",
+      "count": 1,
+      "materials": {
+        "mat_fabric": 2,
+        "mat_leather": 1,
+        "mat_plastic": 1
+      },
+      "work_minutes": 60,
+      "workshop_level": 1,
+      "tools_any_of": [
+        "tool_sewing_kit"
+      ]
+    },
+    {
+      "id": "craft_boots_military",
+      "output": "cloth_boots_military",
+      "count": 1,
+      "materials": {
+        "mat_leather": 4,
+        "mat_metal": 2
+      },
+      "work_minutes": 180,
+      "workshop_level": 2,
+      "tools_any_of": [
+        "tool_sewing_kit"
+      ]
+    },
+    {
+      "id": "craft_pack_running",
+      "output": "pack_running",
+      "count": 1,
+      "materials": {
+        "mat_duct_tape": 1,
+        "mat_fabric": 2
+      },
+      "work_minutes": 45,
+      "workshop_level": 0,
+      "tools_any_of": [
+        "tool_sewing_kit"
+      ]
+    },
+    {
+      "id": "craft_pack_daypack",
+      "output": "pack_daypack",
+      "count": 1,
+      "materials": {
+        "mat_fabric": 6,
+        "mat_plastic": 2
+      },
+      "work_minutes": 90,
+      "workshop_level": 1,
+      "tools_any_of": [
+        "tool_sewing_kit"
+      ]
+    },
+    {
+      "id": "craft_pack_field",
+      "output": "pack_field",
+      "count": 1,
+      "materials": {
+        "mat_fabric": 8,
+        "mat_glue": 2,
+        "mat_plastic": 3,
+        "mat_wire": 2
+      },
+      "work_minutes": 150,
+      "workshop_level": 2,
+      "tools_any_of": [
+        "tool_sewing_kit"
+      ]
+    },
+    {
+      "id": "craft_machete",
+      "output": "melee_machete",
+      "count": 1,
+      "materials": {
+        "mat_leather": 1,
+        "mat_metal": 2
+      },
+      "work_minutes": 45,
+      "workshop_level": 2,
+      "tools_any_of": [
+        "melee_hammer"
+      ]
+    },
+    {
+      "id": "craft_crowbar",
+      "output": "melee_crowbar",
+      "count": 1,
+      "materials": {
+        "mat_metal": 4
+      },
+      "work_minutes": 40,
+      "workshop_level": 1,
+      "tools_any_of": [
+        "melee_hammer"
+      ]
+    },
+    {
+      "id": "craft_lockpicks",
+      "output": "tool_lockpicks",
+      "count": 4,
+      "materials": {
+        "mat_metal": 2
+      },
+      "work_minutes": 12,
+      "workshop_level": 0,
+      "tools_any_of": [
+        "tool_multitool",
+        "melee_hammer"
+      ]
     }
   ],
   "_comment": "§18.4's recipes. ⚠ The count matters as much as the cost: every improvised row here makes something far lighter than the smallest unit the game has — a dressing is 50 g and the smallest thing anybody can pick up is a 0.3 kg bolt of cloth. A recipe cannot cost a fraction of a unit, so these used to cost a whole one and make one thing, and ninety-five per cent of the material vanished. One sitting now makes several, which is what a person actually does with a torn-up shirt. What is left over is offcuts, and offcuts are real: the rows land between forty and a hundred per cent of the mass that went in. The work time is per sitting, not per piece — you tear the shirt once."
