@@ -635,4 +635,94 @@ void main() {
       expect(refilled.isOpen, isTrue);
     });
   });
+
+  group('§8.1: nikt nie mieszka w sklepie', () {
+    /// Strefa schronu: pięćdziesiąt metrów bezpiecznych plus trzydzieści
+    /// czystego terenu dookoła.
+    const zoneM = 50 + 30.0;
+
+    test('nic nowego nie staje w strefie ani tuż przy niej', () {
+      // ⚠️ Skrzynia, samochód czy śmietnik pod własnymi drzwiami zamieniają
+      // dom w darmowe źródło łupu odnawiające się co dobę, bez wychodzenia.
+      final plan = spawner.plan(
+        centre: centre,
+        candidates: [poiAt(20), poiAt(60), poiAt(79)],
+        existing: const [],
+        now: now,
+        seed: 7,
+        sanctuaryAt: centre,
+        sanctuaryRadiusM: zoneM,
+      );
+
+      expect(plan.added, isEmpty);
+    });
+
+    test('a metr dalej już tak', () {
+      final plan = spawner.plan(
+        centre: centre,
+        candidates: [poiAt(95)],
+        existing: const [],
+        now: now,
+        seed: 7,
+        sanctuaryAt: centre,
+        sanctuaryRadiusM: zoneM,
+      );
+
+      expect(plan.added, hasLength(1));
+    });
+
+    test('bez schronu wszystko jest jak dotąd', () {
+      final plan = spawner.plan(
+        centre: centre,
+        candidates: [poiAt(20), poiAt(60)],
+        existing: const [],
+        now: now,
+        seed: 7,
+      );
+
+      expect(plan.added, isNotEmpty);
+    });
+
+    test('sklep, przy którym ktoś zamieszkał, przeszukuje się raz', () {
+      // ⚠️ Był tam przed schronem i zostaje — ale się nie odnawia. Inaczej
+      // wybór miejsca na schron byłby wyborem dożywotniej pensji.
+      final emptied = LootBox(
+        poiId: 'shop',
+        position: centre,
+        tableId: 'poi_grocery',
+        spawnedAt: now.subtract(const Duration(days: 3)),
+      ).lootedAtTime(now.subtract(const Duration(days: 2)), Random(1));
+
+      final plan = spawner.plan(
+        centre: centre,
+        candidates: const [],
+        existing: [emptied],
+        now: now,
+        seed: 7,
+        sanctuaryAt: centre,
+        sanctuaryRadiusM: zoneM,
+      );
+
+      expect(plan.boxes.single.lootedAt, isNotNull, reason: 'dalej pusty');
+    });
+
+    test('ale ten sam sklep poza strefą odnawia się normalnie', () {
+      final emptied = LootBox(
+        poiId: 'shop',
+        position: centre,
+        tableId: 'poi_grocery',
+        spawnedAt: now.subtract(const Duration(days: 3)),
+      ).lootedAtTime(now.subtract(const Duration(days: 2)), Random(1));
+
+      final plan = spawner.plan(
+        centre: centre,
+        candidates: const [],
+        existing: [emptied],
+        now: now,
+        seed: 7,
+      );
+
+      expect(plan.boxes.single.lootedAt, isNull, reason: 'znowu pełny');
+    });
+  });
 }

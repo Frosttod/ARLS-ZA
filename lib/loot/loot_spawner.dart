@@ -333,7 +333,20 @@ class LootSpawner {
     /// are all somewhere the game must never send anybody. Passed in because
     /// the same tiles that produced the candidates produced these.
     List<MapFeature> obstacles = const [],
+
+    /// §8.1: środek schronu gracza, jeśli już stoi.
+    ///
+    /// ⚠️ **Nikt nie mieszka w sklepie.** Skrzynia, samochód czy śmietnik
+    /// stawiane w strefie schronu — albo tuż przy niej — zamieniają dom w
+    /// darmowe źródło łupu odnawiające się co dobę, bez wychodzenia. Cała
+    /// ekonomia §10 stoi na tym, że po rzeczy trzeba iść.
+    GeoPoint? sanctuaryAt,
+    double sanctuaryRadiusM = 0,
   }) {
+    bool inSanctuary(GeoPoint place) =>
+        sanctuaryAt != null &&
+        place.distanceTo(sanctuaryAt) <= sanctuaryRadiusM;
+
     final filter = SpawnFilter(obstacles);
     final kept = <LootBox>[];
     final forgotten = <LootBox>[];
@@ -344,9 +357,17 @@ class LootSpawner {
         continue;
       }
       // A respawn is not a new box: same place, same table, full again.
-      kept.add(
-        box.lootedAt != null && box.isActiveAt(now) ? box.refilledAt(now) : box,
-      );
+      //
+      // ⚠️ **Ale nie w strefie schronu.** Sklep, przy którym ktoś zamieszkał,
+      // był tam przed schronem i zostaje — da się go przeszukać **raz**, i na
+      // tym koniec. Odnawianie go zamieniłoby wybór miejsca na schron w wybór
+      // dożywotniej pensji.
+      final refills =
+          box.lootedAt != null &&
+          box.isActiveAt(now) &&
+          !inSanctuary(box.position);
+
+      kept.add(refills ? box.refilledAt(now) : box);
     }
 
     final taken = {for (final box in kept) box.poiId};
@@ -404,6 +425,9 @@ class LootSpawner {
           ? _fallbackTableFor(poi)
           : null;
       if (table == null && fallback == null) continue;
+
+      // §8.1: i nic nowego nie ląduje pod własnymi drzwiami.
+      if (inSanctuary(poi.position)) continue;
 
       final refusal = filter.refuse(poi.position);
       if (refusal != null) continue;

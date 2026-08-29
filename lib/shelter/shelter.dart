@@ -44,6 +44,17 @@ const double kCampSpacingM = 800;
 /// §8.5.2: and one inside a hotspot would be a camp nobody can reach.
 const double kCampFromHotspotM = 400;
 
+/// §8.1, §10.1: ile czystego terenu wokół strefy schronu zostaje bez łupu.
+///
+/// ⚠️ Trzydzieści metrów **poza** promieniem bezpiecznym, nie zamiast niego.
+/// Skrzynia stojąca dokładnie na granicy jest skrzynią, do której wychodzi się
+/// na dwa kroki — a §10 stoi na tym, że po rzeczy trzeba iść.
+const double kShelterLootClearM = 30;
+
+/// §8.1, §10.1: cała strefa, w której nie stawia się łupu — promień schronu
+/// plus czysty teren dookoła.
+const double kShelterLootFreeM = 50 + kShelterLootClearM;
+
 /// §8.5.2: unvisited this long and it starts coming apart.
 const Duration kCampDecayAfter = Duration(days: 14);
 
@@ -244,6 +255,18 @@ class Shelter {
 
   /// §8.3: whether anything is actually being worked on here right now.
   bool get isWorking => !paused && (buildLeft != null || building != null);
+
+  /// §8.3: czy to miejsce już stoi.
+  ///
+  /// ⚠️ **Wiersz istnieje od chwili wbicia pierwszej deski**, a półki, warsztat
+  /// i sen zaczynają się dopiero, kiedy schron stoi. Zgłoszone z terenu:
+  /// „mam opcję przeniesienia do magazynu, choć nie mam schronu" — przedmioty
+  /// szły na półki placu budowy i gracz nie miał jak sprawdzić, gdzie są.
+  ///
+  /// ⚠️ Zero to nie null. [worked] odlicza do zera i tam zostaje, a nie zeruje
+  /// pola — więc gotowy schron ma `buildLeft: 0`, i porównanie z nullem
+  /// odpowiadałoby „plac budowy" do końca biegu. Złapane testem, nie w terenie.
+  bool get isBuilt => (buildLeft ?? Duration.zero) <= Duration.zero;
 
   DateTime get readyAt => startedAt.add(buildTime);
 

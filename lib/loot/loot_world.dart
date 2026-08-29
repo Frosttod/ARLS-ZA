@@ -117,6 +117,8 @@ class LootWorld {
     required List<LootBox> existing,
     required DateTime now,
     required int seed,
+    GeoPoint? sanctuaryAt,
+    double sanctuaryRadiusM = 0,
   }) async {
     final path = _packPath;
     if (path == null || _planning) return null;
@@ -234,6 +236,8 @@ class LootWorld {
       seed: seed,
       names: ground.names,
       obstacles: obstacles,
+      sanctuaryAt: sanctuaryAt,
+      sanctuaryRadiusM: sanctuaryRadiusM,
     );
   }
 

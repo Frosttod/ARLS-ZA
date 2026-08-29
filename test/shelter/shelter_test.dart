@@ -351,4 +351,37 @@ void main() {
       expect(old.worked(const Duration(hours: 1)).buildLeft, isNull);
     });
   });
+
+  group('§8.3, §18.2: półki zaczynają się, kiedy schron stoi', () {
+    test('gotowy schron stoi', () {
+      expect(built().isBuilt, isTrue);
+    });
+
+    test('a plac budowy jeszcze nie', () {
+      // ⚠️ Zgłoszone z terenu: „mam opcję przeniesienia do magazynu, choć nie
+      // mam schronu". Wiersz istnieje od chwili wbicia pierwszej deski, więc
+      // każde pytanie „czy jest schron" odpowiadało tak — a przedmiot szedł
+      // na półki placu budowy i znikał graczowi z plecaka bez śladu.
+      final going = built().copyWith(buildLeft: const Duration(hours: 2));
+
+      expect(going.isBuilt, isFalse);
+    });
+
+    test('i przestaje nim być, kiedy praca się skończy', () {
+      final going = built().copyWith(buildLeft: const Duration(minutes: 30));
+      final done = going.worked(const Duration(hours: 1));
+
+      expect(done.isBuilt, isTrue);
+    });
+
+    test('a wstrzymana budowa to dalej plac budowy', () {
+      // Pauza zatrzymuje zegar, nie stawia ścian (§2.1a).
+      final paused = built().copyWith(
+        buildLeft: const Duration(hours: 2),
+        paused: true,
+      );
+
+      expect(paused.isBuilt, isFalse);
+    });
+  });
 }

@@ -140,14 +140,12 @@ import 'ui/start_screen.dart';
 ///
 /// This file was seven thousand lines and one class that owned the pack, the
 /// shelves, the shelters, the loot, the fight, five clocks and the screen they
-/// were drawn on. Crediting a meal could reach the game loop, come back
-/// through a snapshot listener and credit the meal again — three hops between
-/// layers that were, in the file, one class. That is what the field reported
-/// as the game hanging on food.
+/// were drawn on — and crediting a meal could reach the game loop, come back
+/// through a snapshot listener and credit the meal again. That is what the
+/// field reported as the game hanging on food.
 ///
-/// It is being taken apart one owner at a time. The order and the guarantees
-/// are the migration plan; what this comment is for is the direction: things
-/// leave, nothing arrives.
+/// It is being taken apart one owner at a time, and the direction is the whole
+/// of this note: things leave, nothing arrives.
 void main() => runGuarded(
   ArlsZaApp(
     home: (onSettings) => IntroScreen(
@@ -463,13 +461,11 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   ///
   /// ⚠️ Called on every tick, and idempotent by construction: it works out
   /// what should have been swallowed by this fraction and applies the
-  /// difference. A tick that arrives late, or twice in one frame, cannot feed
-  /// somebody twice.
+  /// difference, so a tick arriving late or twice cannot feed somebody twice.
   ///
-  /// The tin empties as it is eaten, so there is no moment at which the pack
-  /// is lying about what is in it — which is the whole of the bug this
-  /// replaces. Killing the app halfway leaves a half-eaten tin because it
-  /// *is* half eaten, not because anything reconstructed one.
+  /// The tin empties as it is eaten, so the pack never lies about what is in
+  /// it: killing the app halfway leaves a half-eaten tin because it *is* half
+  /// eaten, not because anything reconstructed one.
   Future<void> _advanceMeal(double progress) async {
     final plan = _meal;
     final loop = _loop;
@@ -2216,6 +2212,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       existing: _boxes,
       now: snapshot.state.lastUpdate,
       seed: character.profile.rngSeed,
+      // §8.1: nic nowego pod drzwiami, i nic stamtąd się nie odnawia.
+      sanctuaryAt: _mainShelter()?.position,
+      sanctuaryRadiusM: kShelterLootFreeM,
     );
     if (plan == null || !mounted) return;
 
@@ -4776,7 +4775,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     if (catalogue == null || main == null) return;
 
     final at = _standingAt.value;
-    if (at == null || !main.atSite(at)) {
+    if (at == null || !main.isBuilt || !main.atSite(at)) {
       _say(L10n.of(context).shelterNotHere);
       return;
     }
@@ -4807,7 +4806,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     if (at == null) return false;
 
     return _shelters.value.any(
-      (place) => place.kind == ShelterKind.main && place.atSite(at),
+      (place) =>
+          place.kind == ShelterKind.main && place.isBuilt && place.atSite(at),
     );
   }
 
