@@ -126,8 +126,13 @@ bool hearsPlayer(Enemy enemy, GeoPoint at, {required double noiseM}) =>
 /// Trzy warunki naraz, i każdy z nich gracz może sprawdzić wzrokiem na mapie:
 /// przeciwnik nie jest wzbudzony, stoisz za nim, i jesteś na wyciągnięcie ręki
 /// — nie w pasmie zwarcia, które ma dwadzieścia metrów, tylko *przy nim*.
+/// ⚠️ **Brutala się nie ucisza.** §6.2 daje mu sześć do ośmiu litrów krwi i
+/// kark, którego nie da się przeciąć nożem w jednym ruchu — a mechanika, w
+/// której najgroźniejsza rzecz w grze pada od jednego dotknięcia od tyłu,
+/// zamienia elitę w cel treningowy. Na niego trzeba mieć broń albo pomysł.
 bool canTakeDown(Enemy enemy, GeoPoint at) =>
     !enemy.isDead &&
+    enemy.kind != EnemyKind.brute &&
     !enemy.isAware &&
     isBehind(enemy, at) &&
     enemy.position.distanceTo(at) <= kTakeDownM;

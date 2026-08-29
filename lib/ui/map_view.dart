@@ -38,6 +38,8 @@ typedef TileSurfaceBuilder =
       required bool economy,
       void Function(MapMarker? marker)? onMarkerTap,
       NoiseWave? noise,
+      // §17.4: zero w południe, jeden w nocy.
+      double darkness,
     });
 
 class MapScreen extends StatefulWidget {
@@ -45,6 +47,7 @@ class MapScreen extends StatefulWidget {
     required this.tileBuilder,
     required this.fix,
     this.headingDeg,
+    this.darkness = 0,
     this.markers = const [],
     this.onMarkerTap,
     this.noise,
@@ -67,6 +70,9 @@ class MapScreen extends StatefulWidget {
   /// Course over ground. Null while stationary, and then no cone is drawn:
   /// a cone left pointing the last way travelled is a lie a player acts on.
   final double? headingDeg;
+
+  /// §17.4: ile jest ciemno. Mapa gaśnie razem z niebem.
+  final double darkness;
 
   final List<MapMarker> markers;
 
@@ -177,6 +183,7 @@ class _MapScreenState extends State<MapScreen> {
               economy: widget.economy,
               onMarkerTap: widget.onMarkerTap,
               noise: widget.noise,
+              darkness: widget.darkness,
             ),
           ),
 

@@ -463,6 +463,18 @@ abstract class L10n {
   /// **'can still sprint'**
   String get hudThreatSprint;
 
+  /// No description provided for @hudNoise.
+  ///
+  /// In en, this message translates to:
+  /// **'Noise'**
+  String get hudNoise;
+
+  /// No description provided for @hudNoiseQuiet.
+  ///
+  /// In en, this message translates to:
+  /// **'silent'**
+  String get hudNoiseQuiet;
+
   /// No description provided for @hudCarry.
   ///
   /// In en, this message translates to:
@@ -2640,6 +2652,12 @@ abstract class L10n {
   /// In en, this message translates to:
   /// **'Hit — {millilitres} ml lost'**
   String combatHurt(int millilitres);
+
+  /// No description provided for @combatExecute.
+  ///
+  /// In en, this message translates to:
+  /// **'Silence'**
+  String get combatExecute;
 
   /// No description provided for @combatStrike.
   ///

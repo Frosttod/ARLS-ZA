@@ -274,11 +274,20 @@ class CombatPanel extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
               ],
+              // §5.5.1: ten sam przycisk, inne słowo — bo to jest inna rzecz.
+              // „Ucisz" mówi, że cios wyjdzie w plecy czegoś, co nie wie, i
+              // że skończy się jednym ruchem; gracz ma to wiedzieć **przed**
+              // naciśnięciem, a nie z dziennika po fakcie.
               if (reading.canStrike && onStrike != null) ...[
-                OutlinedButton(
-                  onPressed: onStrike,
-                  child: Text(l10n.combatStrike),
-                ),
+                reading.canTakeDown
+                    ? FilledButton.tonal(
+                        onPressed: onStrike,
+                        child: Text(l10n.combatExecute),
+                      )
+                    : OutlinedButton(
+                        onPressed: onStrike,
+                        child: Text(l10n.combatStrike),
+                      ),
                 const SizedBox(width: 8),
               ],
               FilledButton(

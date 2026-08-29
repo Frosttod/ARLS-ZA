@@ -31,6 +31,7 @@ class GameScreen extends StatelessWidget {
     required this.progress,
     required this.searchPanel,
     required this.economy,
+    this.darkness = 0,
     required this.hud,
     required this.notices,
     required this.onMenu,
@@ -39,6 +40,9 @@ class GameScreen extends StatelessWidget {
   });
 
   final TileSurfaceBuilder tileBuilder;
+
+  /// §17.4: ile jest ciemno, zero w południe i jeden w nocy.
+  final double darkness;
 
   /// §3.2: where the player is, or null while nothing has passed the gate.
   final PositionFix? fix;
@@ -82,6 +86,8 @@ class GameScreen extends StatelessWidget {
         progress: progress,
         searchPanel: searchPanel,
         headingDeg: fix?.headingDeg,
+        // §17.4: mapa gaśnie razem z niebem.
+        darkness: darkness,
         economy: economy,
 
         // There is always a map here — this screen is only built with a

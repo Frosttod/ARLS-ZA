@@ -17,6 +17,7 @@
 library;
 
 import 'ballistics.dart';
+import 'awareness.dart';
 import 'enemy.dart';
 import 'engagement.dart' show kMeleeM;
 import '../map/geometry.dart';
@@ -54,6 +55,7 @@ class TargetReading {
     required this.canFire,
     required this.canReload,
     required this.canStrike,
+    required this.canTakeDown,
   });
 
   /// §5.5.1: what is being aimed at, in the player's language. Resolved by the
@@ -92,6 +94,9 @@ class TargetReading {
   final bool canFire;
   final bool canReload;
   final bool canStrike;
+
+  /// §5.5.1: cios w plecy czegoś, co nie wie. Jeden ruch, nie walka.
+  final bool canTakeDown;
 }
 
 /// Everything the panel needs, from what the game already knows.
@@ -156,5 +161,10 @@ TargetReading readTarget({
     // anybody's position, so the fight stops being about distance and becomes
     // about what is in your hands — and bare hands count.
     canStrike: !inOwnZone && !inGrace && metres <= kMeleeM,
+
+    // §5.5.1: i czy to jest już nie walka, tylko jeden ruch. Osobno od
+    // [canStrike], bo przycisk ma powiedzieć **co się stanie**, a nie zostawić
+    // gracza z domysłem, czy akurat stoi wystarczająco dokładnie za nim.
+    canTakeDown: !inOwnZone && !inGrace && armed && canTakeDown(target, from),
   );
 }

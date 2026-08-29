@@ -71,6 +71,10 @@
     }
   },
   "hudThreatSprint": "ma jeszcze sprint",
+  "hudNoise": "Hałas",
+  "hudNoiseQuiet": "cicho",
+  "hudNoise": "Hałas",
+  "hudNoiseQuiet": "cicho",
   "hudCarry": "Udźwig",
   "hudBulk": "Objętość",
   "hudNoSignal": "Brak sygnału",
@@ -760,6 +764,7 @@
       }
     }
   },
+  "combatExecute": "Ucisz",
   "combatStrike": "Cios",
   "enemyWalker": "Szwędacz",
   "enemyLeaper": "Skakun",

@@ -147,6 +147,10 @@
     }
   },
   "hudThreatSprint": "can still sprint",
+  "hudNoise": "Noise",
+  "hudNoiseQuiet": "silent",
+  "hudNoise": "Noise",
+  "hudNoiseQuiet": "silent",
   "hudCarry": "Carry",
   "hudBulk": "Bulk",
   "hudNoSignal": "No signal",
@@ -850,6 +854,7 @@
       }
     }
   },
+  "combatExecute": "Silence",
   "combatStrike": "Strike",
   "enemyWalker": "Walker",
   "enemyLeaper": "Leaper",

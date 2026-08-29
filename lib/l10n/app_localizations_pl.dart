@@ -224,6 +224,12 @@ class L10nPl extends L10n {
   String get hudThreatSprint => 'ma jeszcze sprint';
 
   @override
+  String get hudNoise => 'Hałas';
+
+  @override
+  String get hudNoiseQuiet => 'cicho';
+
+  @override
   String get hudCarry => 'Udźwig';
 
   @override
@@ -1461,6 +1467,9 @@ class L10nPl extends L10n {
   String combatHurt(int millilitres) {
     return 'Trafiony — $millilitres ml';
   }
+
+  @override
+  String get combatExecute => 'Ucisz';
 
   @override
   String get combatStrike => 'Cios';

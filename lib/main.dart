@@ -2313,7 +2313,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         onDeath: _remember,
         obstacles: _world?.obstacles ?? const [],
         // §6.5: what each hotspot sends. §6.4's trickle is added underneath.
-        origins: _fires.originsAt(now),
+        origins: _fires.originsAt(now, darkness: snapshot.darkness),
         // §8.1: they wait at the edge of what the player built.
         sanctuaries: _sanctuaries,
         shelterAt: _mainShelter()?.position,
@@ -2321,9 +2321,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         denseUrban: _world?.denseUrban ?? false,
         // §7: somebody who knows how to move is noticed later.
         scouting: _learned.scouting,
-        // §17.4: and everybody is noticed sooner after dark.
+        // §17.4: noticed sooner after dark, and there are more of them.
         darkness: snapshot.darkness,
-        // §5.6.1: and everybody hears somebody who is running.
         speedKmh: snapshot.speedKmh,
       );
 
@@ -3037,8 +3036,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
     final here = GeoPoint(fix.latitude, fix.longitude);
 
-    // §5.5.1: behind something unaware, at arm's reach, armed — one movement
-    // rather than a fight, and every condition is drawn before it is asked.
+    // §5.5.1: behind something unaware, at arm's reach, armed — one movement.
     final blow = meleeOutcome(
       target: target,
       at: here,
@@ -6192,6 +6190,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     constants: character.constants,
     warnings: _warnings(l10n, snapshot),
     sky: snapshot.sky,
+    noiseM: playerNoiseM(snapshot.speedKmh),
     bleeding: inTheField ? (_loop?.bleeding ?? BleedTier.none) : BleedTier.none,
     carryComfortKg: character.body.carryComfortKg,
     carryMaxKg: character.body.carryMaxKg,
@@ -6254,6 +6253,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         fix: snapshot?.displayFix,
         markers: _markers(),
         onMarkerTap: _showMarker,
+        darkness: snapshot?.darkness ?? 0,
         noise: _combat.open == null
             ? null
             : NoiseWave(

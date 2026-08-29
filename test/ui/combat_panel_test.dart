@@ -66,6 +66,7 @@ void main() {
               settling: false,
               canFire: canFire,
               canReload: canReload && onReload != null,
+              canTakeDown: false,
               canStrike: canStrike && onStrike != null,
             ),
             onFire: onFire ?? () {},

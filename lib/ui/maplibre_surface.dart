@@ -96,6 +96,7 @@ TileSurfaceBuilder tilesFrom(MapSource source, {GeoPoint? fallbackCentre}) =>
       required economy,
       onMarkerTap,
       noise,
+      darkness = 0.0,
     }) => MapLibreSurface(
       source: source,
       centre: centre,
@@ -103,8 +104,15 @@ TileSurfaceBuilder tilesFrom(MapSource source, {GeoPoint? fallbackCentre}) =>
       economy: economy,
       onMarkerTap: onMarkerTap,
       noise: noise,
+      darkness: darkness,
       fallbackCentre: fallbackCentre,
     );
+
+/// §17.4, §12: jak ciemna robi się mapa w pełnej nocy.
+///
+/// Sześćdziesiąt procent, nie sto: mapa ma dalej być mapą. To jest różnica,
+/// którą widać kątem oka, a nie ekran, przez który trzeba się przebić.
+const double kNightTintMax = 0.6;
 
 class MapLibreSurface extends StatefulWidget {
   const MapLibreSurface({
@@ -113,6 +121,7 @@ class MapLibreSurface extends StatefulWidget {
     required this.markers,
     this.noise,
     this.onMarkerTap,
+    this.darkness = 0,
     required this.economy,
     this.fallbackCentre,
     super.key,
@@ -123,6 +132,15 @@ class MapLibreSurface extends StatefulWidget {
   final MapSource source;
 
   final PositionFix? centre;
+
+  /// §17.4: ile jest ciemno, zero w południe i jeden w nocy.
+  ///
+  /// ⚠️ **Mapa wyglądała tak samo o czternastej i o drugiej w nocy.** §17.4
+  /// liczyła ten indeks od dawna i czytał go wyłącznie model — wykrywanie
+  /// przeciwników i promień przeszukania. Gracz nie miał na ekranie niczego,
+  /// co mówiłoby, że właśnie zapadła noc, a noc jest tym, przed czym ta gra
+  /// każe wracać do schronu.
+  final double darkness;
 
   /// Where to point the camera before the first fix arrives — the installed
   /// pack's own centre, read from its header.
@@ -591,9 +609,36 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
                               tilt: overlayTilt,
                             ),
                             headingDeg: marker.headingDeg!,
+                            // §6.2: tak daleko, jak naprawdę widzi. Klin
+                            // dwudziestosześciopikselowy był rysowany pod
+                            // markerem i przez to niewidoczny — a stożek,
+                            // którego nie widać, jest niewidzialną karą.
+                            reachPx:
+                                (marker.reachM ?? 0) /
+                                metresPerPixel(_zoom, centre.latitude),
                             colour: Color(kMarkerColours[marker.kind]!),
                           ),
                       ],
+                    ),
+                  ),
+                ),
+              ),
+
+            // §17.4: i noc, którą widać.
+            //
+            // ⚠️ Na samej górze, nad wszystkim, bo to jest światło, a nie
+            // warstwa danych — ale bez markerów pod spodem gaszonych do
+            // nieczytelności. Granatowy, nie czarny: czerń wygląda jak wygaszony
+            // ekran, a o to, żeby telefon wyglądał na działający, gra dba
+            // osobno (§12).
+            if (widget.darkness > 0.02)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0B1A2B).withValues(
+                        alpha: kNightTintMax * widget.darkness.clamp(0.0, 1.0),
+                      ),
                     ),
                   ),
                 ),
@@ -1123,7 +1168,8 @@ class _ReachPainter extends CustomPainter {
 class _FacingPainter extends CustomPainter {
   const _FacingPainter({required this.markers});
 
-  final List<({Offset at, double headingDeg, Color colour})> markers;
+  final List<({Offset at, double headingDeg, double reachPx, Color colour})>
+  markers;
 
   /// §6.2: exactly the cone the game checks against.
   ///
@@ -1133,7 +1179,9 @@ class _FacingPainter extends CustomPainter {
   /// on screen explains why. Now that [seesPlayer] asks about this cone, the
   /// picture and the rule have to be the same number.
   static const double spreadDeg = kFieldOfViewDeg;
-  static const double reachPx = 26;
+
+  /// Ile najmniej, żeby klin dało się w ogóle zobaczyć przy dalekim zoomie.
+  static const double minimumPx = 22;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -1141,6 +1189,7 @@ class _FacingPainter extends CustomPainter {
 
     for (final marker in markers) {
       final centre = middle + marker.at;
+      final reachPx = marker.reachPx < minimumPx ? minimumPx : marker.reachPx;
       if (centre.dx < -reachPx ||
           centre.dy < -reachPx ||
           centre.dx > size.width + reachPx ||
@@ -1165,10 +1214,30 @@ class _FacingPainter extends CustomPainter {
         Paint()
           ..shader = RadialGradient(
             colors: [
-              marker.colour.withValues(alpha: 0.45),
-              marker.colour.withValues(alpha: 0.0),
+              marker.colour.withValues(alpha: 0.55),
+              marker.colour.withValues(alpha: 0.06),
             ],
           ).createShader(Rect.fromCircle(center: centre, radius: reachPx)),
+      );
+
+      // ⚠️ Obrys, bo o krawędź tego klina rozbija się cała decyzja. Wypełnienie
+      // gaśnie ku końcowi — tam, gdzie gracz najbardziej potrzebuje wiedzieć,
+      // czy jeszcze jest w środku — więc granica musi być narysowana linią, a
+      // nie końcem gradientu.
+      canvas.drawPath(
+        Path()
+          ..moveTo(centre.dx, centre.dy)
+          ..arcTo(
+            Rect.fromCircle(center: centre, radius: reachPx),
+            start,
+            spreadDeg * math.pi / 180,
+            false,
+          )
+          ..close(),
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.4
+          ..color = marker.colour.withValues(alpha: 0.75),
       );
     }
   }
@@ -1181,6 +1250,7 @@ class _FacingPainter extends CustomPainter {
       if ((old.markers[i].headingDeg - markers[i].headingDeg).abs() > 1) {
         return true;
       }
+      if ((old.markers[i].reachPx - markers[i].reachPx).abs() > 1) return true;
     }
     return false;
   }

@@ -66,14 +66,14 @@ class HotspotController extends ChangeNotifier {
   /// ⚠️ Never the whole population. §6.4's ambient trickle exists alongside
   /// these and is what makes an empty street not *quite* empty — the caller
   /// adds it, because only the caller knows where the player is standing.
-  List<SpawnOrigin> originsAt(DateTime now) => [
+  List<SpawnOrigin> originsAt(DateTime now, {double darkness = 0}) => [
     for (final spot in live)
       SpawnOrigin(
         id: spot.id,
         centre: spot.centre,
         radiusM: spot.radiusM,
         kinds: spot.compositionNow(now),
-        capacity: spot.enemyCapAt(now),
+        capacity: spot.enemyCapAt(now, darkness: darkness),
       ),
   ];
 

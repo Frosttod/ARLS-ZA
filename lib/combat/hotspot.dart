@@ -56,6 +56,13 @@ const (double, double) kHotspotGrowthM = (14, 26);
 /// §6.5.4: how long a hotspot stays furious after losing a level.
 const Duration kAgitationLength = Duration(minutes: 10);
 
+/// §17.4: o ile więcej ich chodzi po ciemku, przy pełnej nocy.
+///
+/// Połowa. Wystarczy, żeby ta sama ulica była innym problemem o dwudziestej
+/// drugiej niż o czternastej, i za mało, żeby noc była nie do przejścia —
+/// §6.5.3 rośnie i bez tego.
+const double kNightCrowdShare = 0.5;
+
 /// §6.5.4's safety valve: agitation does not renew this far from the centre.
 ///
 /// ⚠️ The one rule here that exists to let a player lose. Agitation is meant
@@ -343,14 +350,25 @@ class Hotspot {
   /// Whether [at] is inside the circle drawn on the map (§6.5.6).
   bool covers(GeoPoint at) => !isResting && centre.distanceTo(at) <= radiusM;
 
-  /// §6.5.2: what it may have out at once, agitation included.
-  int enemyCapAt(DateTime now) {
+  /// §6.5.2, §17.4: what it may have out at once — agitation and the dark.
+  ///
+  /// [darkness] is §17.4's index, nought at midday and one at night.
+  ///
+  /// ⚠️ **Noc musi kosztować.** §17.4 dawała nocy tylko piątą część promienia
+  /// wykrycia i nic poza tym, więc wyjście po ciemku było tańsze niż w dzień:
+  /// widać ich stożki z daleka, a jest ich tyle samo. Teraz jest ich o połowę
+  /// więcej, i to jest powód, dla którego szuka się w dzień, a wraca przed
+  /// zmierzchem.
+  int enemyCapAt(DateTime now, {double darkness = 0}) {
     if (isResting) return 0;
 
     final base = levelRow(level).enemyCap;
     // §6.5.4: half again, rounded up — the point of agitation is that the
     // ground you just cleared fills back in faster than you emptied it.
-    return isAgitatedAt(now) ? (base * 3 / 2).ceil() : base;
+    final agitated = isAgitatedAt(now) ? base * 3 / 2 : base.toDouble();
+
+    return (agitated * (1 + kNightCrowdShare * darkness.clamp(0.0, 1.0)))
+        .ceil();
   }
 
   /// §6.5.2, §6.5.4: how long a place in that count stays empty.

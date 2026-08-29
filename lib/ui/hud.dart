@@ -96,6 +96,7 @@ class Hud extends StatelessWidget {
     this.carriedVolumeL = 0,
     this.capacityL = kPocketCapacityL,
     this.sky = const (dusk: null, dawn: null),
+    this.noiseM = 0,
     super.key,
   });
 
@@ -116,6 +117,14 @@ class Hud extends StatelessWidget {
   /// a fresh one on every tick of its own clock — which is two clocks that
   /// disagree. Given the moment, it subtracts for itself and stays exact.
   final ({DateTime? dusk, DateTime? dawn}) sky;
+
+  /// §5.6.1: jak daleko słychać teraz kroki gracza.
+  ///
+  /// ⚠️ **Bez tego skradanka jest zgadywanką.** Prędkość decyduje o tym, kto
+  /// usłyszy — a gracz nie ma jak zobaczyć, po której stronie progu właśnie
+  /// idzie. Metry, nie „cicho/głośno": promienie wykrycia też są w metrach, a
+  /// dwie liczby w tych samych jednostkach da się porównać jednym spojrzeniem.
+  final double noiseM;
 
   /// §2.6: what is still open. Its own chip rather than part of the blood
   /// readout, because it is the only status on the HUD with a clock on it —
@@ -237,6 +246,8 @@ class Hud extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 6),
+              _Noise(metres: noiseM, colours: colours, l10n: l10n),
+              const SizedBox(height: 6),
               _Sky(sky: sky, colours: colours),
               const SizedBox(height: 6),
               _StatusRow(
@@ -281,6 +292,45 @@ class Hud extends StatelessWidget {
 ///
 /// The clock is local and the run is real time (§16.4), so this is the
 /// player's own watch — which is the point. It is their evening being spent.
+/// §5.6.1, §12: ile słychać kroki, w metrach.
+class _Noise extends StatelessWidget {
+  const _Noise({
+    required this.metres,
+    required this.colours,
+    required this.l10n,
+  });
+
+  final double metres;
+  final HudColors colours;
+  final L10n l10n;
+
+  @override
+  Widget build(BuildContext context) => Row(
+    children: [
+      Text(
+        l10n.hudNoise.toUpperCase(),
+        style: TextStyle(fontSize: 9, letterSpacing: 1.1, color: colours.muted),
+      ),
+      const SizedBox(width: 8),
+      Text(
+        metres <= 0 ? l10n.hudNoiseQuiet : '${metres.round()} m',
+        style: TextStyle(
+          fontSize: 12,
+          fontFamily: kDataFont,
+          fontFeatures: const [FontFeature.tabularFigures()],
+          // Cisza jest osiągnięciem, nie stanem domyślnym: kolor danych, kiedy
+          // nic nie słychać, i ostrzeżenia, kiedy słychać z czterdziestu.
+          color: metres <= 0
+              ? colours.data
+              : metres >= 40
+              ? colours.alert
+              : colours.text,
+        ),
+      ),
+    ],
+  );
+}
+
 class _Sky extends StatefulWidget {
   const _Sky({required this.sky, required this.colours});
 

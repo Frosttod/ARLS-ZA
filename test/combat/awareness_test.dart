@@ -177,6 +177,21 @@ void main() {
       expect(canTakeDown(searching, at(180, 2)), isFalse);
     });
 
+    test('i nigdy na Brutalu (§6.2)', () {
+      // ⚠️ Sześć do ośmiu litrów krwi i kark, którego nie da się przeciąć
+      // nożem w jednym ruchu. Mechanika, w której najgroźniejsza rzecz w grze
+      // pada od dotknięcia od tyłu, zamienia elitę w cel treningowy.
+      final brute = Enemy.spawn(
+        id: 'b',
+        kind: EnemyKind.brute,
+        at: here,
+        home: here,
+        random: Random(3),
+      ).copyWith(headingDeg: 0);
+
+      expect(canTakeDown(brute, at(180, 2)), isFalse);
+    });
+
     test('ani na kimś świeżo postawionym, który patrzy dookoła', () {
       expect(canTakeDown(facingNorth(heading: null), at(180, 2)), isFalse);
     });

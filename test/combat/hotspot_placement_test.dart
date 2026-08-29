@@ -254,7 +254,7 @@ void main() {
     final main = File('lib/main.dart').readAsStringSync();
     final markers = File('lib/ui/map_markers.dart').readAsStringSync();
 
-    expect(main.contains('origins: _fires.originsAt(now)'), isTrue);
+    expect(main.contains('origins: _fires.originsAt(now'), isTrue);
     expect(main.contains('hotspots: _fires.hotspots.value'), isTrue);
     expect(markers.contains('MarkerKind.hotspot'), isTrue);
 
