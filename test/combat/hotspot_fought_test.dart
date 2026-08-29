@@ -56,12 +56,14 @@ void main() {
       expect(spot.integrity - hurt.integrity, 5);
     });
 
-    test('a Brute is worth three and a half Walkers', () {
+    test('a Brute is worth exactly what a Walker is', () {
+      // ⚠️ Zmiana z §6.5.4: liczy się ciało w kole, nie to, czyje. Brutal jest
+      // groźniejszy — i to jest jego cena, a nie jego wartość.
       final spot = at(5);
 
       expect(
         spot.integrity - spot.damagedBy(EnemyKind.brute, at: centre).integrity,
-        35,
+        spot.integrity - spot.damagedBy(EnemyKind.walker, at: centre).integrity,
       );
     });
 

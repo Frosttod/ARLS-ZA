@@ -224,6 +224,9 @@ class L10nPl extends L10n {
   String get hudThreatSprint => 'ma jeszcze sprint';
 
   @override
+  String get zoneCleared => 'Strefa padła. Coś po niej zostało.';
+
+  @override
   String get hudNoise => 'Hałas';
 
   @override
@@ -1007,7 +1010,7 @@ class L10nPl extends L10n {
   String get campTooCloseToCamp => 'Bliżej niż 800 m od drugiego obozu.';
 
   @override
-  String get campTooCloseToHotspot => 'Za blisko środka ogniska.';
+  String get campTooCloseToHotspot => 'Za blisko środka Strefy Rozkładu.';
 
   @override
   String get campDecaying =>
@@ -1157,10 +1160,10 @@ class L10nPl extends L10n {
       'Nikt tu nie zaglądał. Podejdź na wyciągnięcie ręki, aby przeszukać.';
 
   @override
-  String get mapMarkerHotspot => 'Ognisko';
+  String get mapMarkerHotspot => 'Strefa Rozkładu';
 
   @override
-  String get hotspotTitle => 'Ognisko';
+  String get hotspotTitle => 'Strefa Rozkładu';
 
   @override
   String hotspotLevelOf(int level, int max) {
@@ -1169,16 +1172,16 @@ class L10nPl extends L10n {
 
   @override
   String get hotspotWhat =>
-      'Rośnie bez ciebie. Każdy poziom to szerszy okrąg i więcej sztuk.';
+      'Rośnie bez ciebie. Każdy poziom to szerszy okrąg i więcej wrogów.';
 
   @override
-  String get hotspotIntegrity => 'Mur';
+  String get hotspotIntegrity => 'Bariera';
 
   @override
-  String get hotspotEnemies => 'Sztuk naraz';
+  String get hotspotEnemies => 'Wrogów naraz';
 
   @override
-  String get hotspotRespawn => 'Wraca co';
+  String get hotspotRespawn => 'Wylęg co';
 
   @override
   String get hotspotComposition => 'Skład';
@@ -1202,12 +1205,12 @@ class L10nPl extends L10n {
 
   @override
   String hotspotAgitatedMore(int percent) {
-    return '+$percent% sztuk';
+    return '+$percent% wrogów';
   }
 
   @override
   String hotspotAgitatedRespawn(int times) {
-    return 'nawroty ×$times';
+    return 'wylęg ×$times';
   }
 
   @override
@@ -1225,7 +1228,7 @@ class L10nPl extends L10n {
   }
 
   @override
-  String get hotspotAtZero => 'Mur na zerze';
+  String get hotspotAtZero => 'Bariera na zerze';
 
   @override
   String get hotspotAtZeroValue => 'poziom w dół';
@@ -1239,7 +1242,7 @@ class L10nPl extends L10n {
   }
 
   @override
-  String get hotspotRegen => 'Odrost muru';
+  String get hotspotRegen => 'Odrost bariery';
 
   @override
   String hotspotRegenValue(int percent) {
@@ -1264,7 +1267,7 @@ class L10nPl extends L10n {
 
   @override
   String hotspotLevel(int level) {
-    return 'Ognisko, poziom $level';
+    return 'Strefa Rozkładu, poziom $level';
   }
 
   @override

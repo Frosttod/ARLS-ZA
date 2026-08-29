@@ -71,8 +71,7 @@
     }
   },
   "hudThreatSprint": "ma jeszcze sprint",
-  "hudNoise": "Hałas",
-  "hudNoiseQuiet": "cicho",
+  "zoneCleared": "Strefa padła. Coś po niej zostało.",
   "hudNoise": "Hałas",
   "hudNoiseQuiet": "cicho",
   "hudCarry": "Udźwig",
@@ -519,7 +518,7 @@
   "campTooMany": "Dwa obozy to maksimum. Najpierw zwiń któryś.",
   "campTooCloseToShelter": "Bliżej niż 800 m od schronu — to byłyby po prostu drugie drzwi.",
   "campTooCloseToCamp": "Bliżej niż 800 m od drugiego obozu.",
-  "campTooCloseToHotspot": "Za blisko środka ogniska.",
+  "campTooCloseToHotspot": "Za blisko środka Strefy Rozkładu.",
   "campDecaying": "Nikogo tu nie było od dwóch tygodni. Zaczyna się rozpadać.",
   "moduleStorage": "Magazyn",
   "moduleWorkshop": "Warsztat",
@@ -568,8 +567,8 @@
   "remainsSearched": "Kieszenie przeszukane.",
   "remainsEmptied": "Już przeszukane.",
   "remainsUnsearched": "Nikt tu nie zaglądał. Podejdź na wyciągnięcie ręki, aby przeszukać.",
-  "mapMarkerHotspot": "Ognisko",
-  "hotspotTitle": "Ognisko",
+  "mapMarkerHotspot": "Strefa Rozkładu",
+  "hotspotTitle": "Strefa Rozkładu",
   "hotspotLevelOf": "Poziom {level} z {max}",
   "@hotspotLevelOf": {
     "placeholders": {
@@ -581,10 +580,10 @@
       }
     }
   },
-  "hotspotWhat": "Rośnie bez ciebie. Każdy poziom to szerszy okrąg i więcej sztuk.",
-  "hotspotIntegrity": "Mur",
-  "hotspotEnemies": "Sztuk naraz",
-  "hotspotRespawn": "Wraca co",
+  "hotspotWhat": "Rośnie bez ciebie. Każdy poziom to szerszy okrąg i więcej wrogów.",
+  "hotspotIntegrity": "Bariera",
+  "hotspotEnemies": "Wrogów naraz",
+  "hotspotRespawn": "Wylęg co",
   "hotspotComposition": "Skład",
   "hotspotRadius": "Promień",
   "hotspotDistance": "Odległość",
@@ -598,7 +597,7 @@
     }
   },
   "hotspotAgitatedSorts": "gorszy skład",
-  "hotspotAgitatedMore": "+{percent}% sztuk",
+  "hotspotAgitatedMore": "+{percent}% wrogów",
   "@hotspotAgitatedMore": {
     "placeholders": {
       "percent": {
@@ -606,7 +605,7 @@
       }
     }
   },
-  "hotspotAgitatedRespawn": "nawroty ×{times}",
+  "hotspotAgitatedRespawn": "wylęg ×{times}",
   "@hotspotAgitatedRespawn": {
     "placeholders": {
       "times": {
@@ -625,7 +624,7 @@
       }
     }
   },
-  "hotspotAtZero": "Mur na zerze",
+  "hotspotAtZero": "Bariera na zerze",
   "hotspotAtZeroValue": "poziom w dół",
   "hotspotThen": "Potem",
   "hotspotThenValue": "{minutes} min furii",
@@ -636,7 +635,7 @@
       }
     }
   },
-  "hotspotRegen": "Odrost muru",
+  "hotspotRegen": "Odrost bariery",
   "hotspotRegenValue": "{percent}%/h",
   "@hotspotRegenValue": {
     "placeholders": {
@@ -666,7 +665,7 @@
       }
     }
   },
-  "hotspotLevel": "Ognisko, poziom {level}",
+  "hotspotLevel": "Strefa Rozkładu, poziom {level}",
   "@hotspotLevel": {
     "placeholders": {
       "level": {

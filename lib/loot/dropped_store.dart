@@ -57,6 +57,35 @@ class DroppedStore {
   /// however many things are in it — which is the shape [kSearchScatterM]
   /// exists to break. Three bandages out of a chemist are three places to
   /// walk to.
+  /// §6.5.4, §10.3: a whole table of things left in one place at once.
+  ///
+  /// ⚠️ Here rather than on the screen that triggers it. What a cache is made
+  /// of is content; *how* a pile reaches the ground — scattered, dated, rolled
+  /// per copy — is this file's job, and a caller repeating it is a caller that
+  /// will get one of those three wrong.
+  Future<void> dropTable(
+    int profileId, {
+    required Map<String, (int, int)> table,
+    required GeoPoint at,
+    required Random random,
+    required DateTime now,
+    ItemCatalogue? catalogue,
+  }) async {
+    for (final entry in table.entries) {
+      final (low, high) = entry.value;
+
+      await dropScattered(
+        profileId,
+        itemId: entry.key,
+        count: low + random.nextInt(high - low + 1),
+        from: at,
+        random: random,
+        now: now,
+        catalogue: catalogue,
+      );
+    }
+  }
+
   Future<void> dropScattered(
     int profileId, {
     required String itemId,

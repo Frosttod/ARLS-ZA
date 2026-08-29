@@ -138,11 +138,16 @@ void main() {
       expect(integrityMaxAt(10), 260);
     });
 
-    test('a kill inside the circle is worth full, outside is worth half', () {
-      expect(killPoints(EnemyKind.walker, insideRadius: true), 10);
-      expect(killPoints(EnemyKind.walker, insideRadius: false), 5);
-      expect(killPoints(EnemyKind.brute, insideRadius: true), 35);
-      expect(killPoints(EnemyKind.brute, insideRadius: false), 17);
+    test('a kill inside the circle is worth ten, outside five', () {
+      // ⚠️ **Ten samo, niezależnie od gatunku.** Punktacja po gatunku —
+      // Kroczący dziesięć, Skoczek piętnaście, Brutal trzydzieści pięć —
+      // nagradzała wybieranie najgroźniejszego celu, czyli dokładnie to, czego
+      // §6.5.4 nie chce: strefę zbija się wytrzymałością, nie jednym
+      // bohaterskim zamachem. Kto to jest, decyduje o **koszcie** zabicia.
+      for (final kind in EnemyKind.values) {
+        expect(killPoints(kind, insideRadius: true), 10, reason: kind.name);
+        expect(killPoints(kind, insideRadius: false), 5, reason: kind.name);
+      }
     });
 
     test('luring them out is about twice as slow, and never faster', () {
@@ -151,8 +156,8 @@ void main() {
       // as one inside it, there would be no reason to fight inside — and the
       // circle is the thing being neutralised.
       //
-      // ⚠️ Not literally two: half of fifteen is rounded down to seven, so a
-      // Leaper dragged out is worth 2.14 times as many kills, not 2. The
+      // Dokładnie dwa, odkąd punktacja jest jednakowa: dziesięć w kole i
+      // pięć poza nim, dla każdego gatunku. The
       // rounding always favours the hotspot, which is the right way round.
       for (final kind in EnemyKind.values) {
         final inside = killPoints(kind, insideRadius: true);
@@ -169,7 +174,7 @@ void main() {
 
       final hit = hotspot.damagedBy(EnemyKind.leaper, at: far);
 
-      expect(hotspot.integrity - hit.integrity, 7);
+      expect(hotspot.integrity - hit.integrity, 5);
     });
 
     test('and inside it pays whole', () {
@@ -177,7 +182,7 @@ void main() {
 
       final hit = hotspot.damagedBy(EnemyKind.leaper, at: centre);
 
-      expect(hotspot.integrity - hit.integrity, 15);
+      expect(hotspot.integrity - hit.integrity, 10);
     });
 
     test('integrity comes back at five per cent an hour, and stops full', () {
@@ -361,6 +366,129 @@ void main() {
 
       expect(capped.level, 10);
       expect(capped.nextLevelAt, now.add(const Duration(hours: 2)));
+    });
+  });
+
+  group('§6.5.3, §6.5.4: STREFY ROZKŁADU — nowe reguły', () {
+    final t0 = DateTime.utc(2026, 8, 30, 12);
+
+    test('wzrost to doba do dwóch dób, nie osiem godzin świata', () {
+      // ⚠️ Poprzednia formuła liczyła w godzinach świata i po przeliczeniu
+      // przez tempo gry dawała strefę rosnącą szybciej, niż da się ją zbić.
+      // Miasto ma się psuć przez tygodnie, nie przez popołudnie.
+      final hour = PlayHabit([
+        for (var day = 0; day < 7; day++)
+          PlayDay(day: t0.subtract(Duration(days: day)), activeMinutes: 60),
+      ]);
+
+      for (var seed = 0; seed < 40; seed++) {
+        final wait = promotionDelay(
+          survivalDay: 1,
+          habit: hour,
+          random: Random(seed),
+        ).inHours;
+
+        expect(wait, greaterThanOrEqualTo(20));
+        expect(wait, lessThanOrEqualTo(52));
+      }
+    });
+
+    test('kto gra więcej, temu rośnie szybciej — i nikomu bez końca', () {
+      PlayHabit habitOf(int minutes) => PlayHabit([
+        for (var day = 0; day < 7; day++)
+          PlayDay(
+            day: t0.subtract(Duration(days: day)),
+            activeMinutes: minutes,
+          ),
+      ]);
+
+      final busy = promotionDelay(
+        survivalDay: 1,
+        habit: habitOf(240),
+        random: Random(1),
+      );
+      final absent = promotionDelay(
+        survivalDay: 1,
+        habit: habitOf(0),
+        random: Random(1),
+      );
+
+      expect(busy, lessThan(absent));
+      expect(busy.inHours, greaterThanOrEqualTo(kZoneGrowthFloorHours.round()));
+      expect(
+        absent.inHours,
+        lessThanOrEqualTo(kZoneGrowthCeilingHours.round()),
+      );
+    });
+
+    test('bariera nie odrasta, kiedy gracz stoi w środku', () {
+      // ⚠️ Pasek leczący się w trakcie walki czyta się jak błąd, nawet gdy
+      // wobec tempa zabijania jest arytmetycznie bez znaczenia.
+      final hurt = at(10, integrity: 100);
+
+      final alone = hurt.regenerated(const Duration(hours: 1));
+      final watched = hurt.regenerated(
+        const Duration(hours: 1),
+        playerAt: centre,
+      );
+
+      expect(alone.integrity, greaterThan(hurt.integrity));
+      expect(watched.integrity, hurt.integrity);
+    });
+
+    test('a poza kołem odrasta normalnie', () {
+      final hurt = at(5, integrity: 50);
+      final far = GeoPoint(centre.latitude + 0.02, centre.longitude);
+
+      expect(
+        hurt.regenerated(const Duration(hours: 1), playerAt: far).integrity,
+        greaterThan(hurt.integrity),
+      );
+    });
+
+    group('§6.5.4: wysyp', () {
+      test('wolno raz, potem godzina blokady', () {
+        final spot = at(7);
+
+        expect(spot.maySurgeAt(t0), isTrue);
+
+        final after = spot.surged(at: t0);
+        expect(after.maySurgeAt(t0.add(const Duration(minutes: 59))), isFalse);
+        expect(after.maySurgeAt(t0.add(const Duration(minutes: 61))), isTrue);
+      });
+
+      test('i wypuszcza połowę limitu ponad limit', () {
+        final spot = at(10).surged(at: t0);
+
+        // Dziesiątka wypuszcza dwunastu; wysyp dokłada sześciu.
+        expect(spot.surgeExtraAt(t0), 6);
+      });
+
+      test('ale tylko dopóki trwa furia', () {
+        final spot = at(10).surged(at: t0);
+
+        expect(spot.surgeExtraAt(t0.add(kAgitationLength * 2)), 0);
+      });
+
+      test('odpoczywający slot nie wysypuje niczego', () {
+        final resting = at(
+          1,
+        ).demoted(at: t0, restFor: const Duration(hours: 24));
+
+        expect(resting.isResting, isTrue);
+        expect(resting.maySurgeAt(t0), isFalse);
+      });
+    });
+
+    test('§10.3: i po zbitej strefie coś zostaje', () {
+      // ⚠️ Dotąd nie zostawało nic: dwie godziny ciągłej walki przeciw
+      // rosnącemu oporowi, a jedyną nagrodą był spokój, czyli brak czegoś.
+      expect(kZoneCache, isNotEmpty);
+      for (final entry in kZoneCache.entries) {
+        final (low, high) = entry.value;
+        expect(low, greaterThan(0), reason: entry.key);
+        expect(high, greaterThanOrEqualTo(low), reason: entry.key);
+      }
     });
   });
 }

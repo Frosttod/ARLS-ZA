@@ -147,8 +147,7 @@
     }
   },
   "hudThreatSprint": "can still sprint",
-  "hudNoise": "Noise",
-  "hudNoiseQuiet": "silent",
+  "zoneCleared": "The zone is down. Something was left where it stood.",
   "hudNoise": "Noise",
   "hudNoiseQuiet": "silent",
   "hudCarry": "Carry",
@@ -595,7 +594,7 @@
   "campTooMany": "Two camps is the limit. Take one down first.",
   "campTooCloseToShelter": "Under 800 m from the shelter — that would just be a second front door.",
   "campTooCloseToCamp": "Under 800 m from the other camp.",
-  "campTooCloseToHotspot": "Too close to the middle of a hotspot.",
+  "campTooCloseToHotspot": "Too close to the middle of a Decay Zone.",
   "campDecaying": "Nobody has been here in a fortnight. It is coming apart.",
   "moduleStorage": "Storage",
   "moduleWorkshop": "Workshop",
@@ -644,8 +643,8 @@
   "remainsSearched": "Pockets turned out.",
   "remainsEmptied": "Already turned out.",
   "remainsUnsearched": "Nobody has been through it. Come within arm’s reach to search it.",
-  "mapMarkerHotspot": "Hotspot",
-  "hotspotTitle": "Hotspot",
+  "mapMarkerHotspot": "Decay Zone",
+  "hotspotTitle": "Decay Zone",
   "hotspotLevelOf": "Level {level} of {max}",
   "@hotspotLevelOf": {
     "placeholders": {
@@ -657,10 +656,10 @@
       }
     }
   },
-  "hotspotWhat": "It grows without you. Every level widens the circle and adds bodies.",
-  "hotspotIntegrity": "Wall",
-  "hotspotEnemies": "Out at once",
-  "hotspotRespawn": "Replaced every",
+  "hotspotWhat": "It grows without you. Every level widens the circle and adds enemies.",
+  "hotspotIntegrity": "Barrier",
+  "hotspotEnemies": "Enemies at once",
+  "hotspotRespawn": "Hatches every",
   "hotspotComposition": "Sorts",
   "hotspotRadius": "Radius",
   "hotspotDistance": "Distance",
@@ -674,7 +673,7 @@
     }
   },
   "hotspotAgitatedSorts": "worse sorts",
-  "hotspotAgitatedMore": "+{percent}% out",
+  "hotspotAgitatedMore": "+{percent}% enemies",
   "@hotspotAgitatedMore": {
     "placeholders": {
       "percent": {
@@ -682,7 +681,7 @@
       }
     }
   },
-  "hotspotAgitatedRespawn": "returns ×{times}",
+  "hotspotAgitatedRespawn": "hatching ×{times}",
   "@hotspotAgitatedRespawn": {
     "placeholders": {
       "times": {
@@ -701,7 +700,7 @@
       }
     }
   },
-  "hotspotAtZero": "Wall at nought",
+  "hotspotAtZero": "Barrier at nought",
   "hotspotAtZeroValue": "a level off",
   "hotspotThen": "Then",
   "hotspotThenValue": "{minutes} min of fury",
@@ -712,7 +711,7 @@
       }
     }
   },
-  "hotspotRegen": "Wall regrows",
+  "hotspotRegen": "Barrier regrows",
   "hotspotRegenValue": "{percent}%/h",
   "@hotspotRegenValue": {
     "placeholders": {
@@ -742,7 +741,7 @@
       }
     }
   },
-  "hotspotLevel": "Hotspot, level {level}",
+  "hotspotLevel": "Decay Zone, level {level}",
   "@hotspotLevel": {
     "placeholders": {
       "level": {

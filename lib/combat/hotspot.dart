@@ -83,6 +83,23 @@ const (Duration, Duration) kRestAfterClearing = (
 /// §6.5.3: the spread on a promotion interval, so the clock is not a metronome.
 const (double, double) kPromotionJitter = (0.6, 1.4);
 
+/// §6.5.3: ile realnego czasu strefa rośnie o jeden poziom.
+///
+/// ⚠️ **Doba do dwóch dób, a nie osiem godzin świata.** Poprzednia formuła
+/// liczyła w godzinach świata — osiem pierwszego dnia, ćwierć godziny mniej
+/// każdego następnego, podłoga na dwóch — i po przeliczeniu przez tempo gry
+/// dawała strefę rosnącą szybciej, niż da się ją zbić. Miasto ma się psuć
+/// przez tygodnie, nie przez popołudnie.
+const (double, double) kZoneGrowthHours = (24, 48);
+
+/// Nawyk odniesienia z §16.4: godzina dziennie, czyli 5.8 h kredytu.
+const double kReferenceCreditedHours = 5.8;
+
+/// I granice, żeby żaden nawyk nie zamienił tego w inną grę: pół doby dla
+/// kogoś, kto gra całymi dniami, cztery doby dla kogoś, kogo nie ma.
+const double kZoneGrowthFloorHours = 12;
+const double kZoneGrowthCeilingHours = 96;
+
 /// §6.5.2, one row (level 1–10).
 class HotspotLevel {
   const HotspotLevel({
@@ -215,14 +232,22 @@ double hotspotRadiusM(int seed, int level) {
 /// Half outside the radius, which is the whole trade §6.5.4 offers: luring
 /// them out is safer and exactly twice as slow. Rounded down, so a Walker
 /// dragged into the open is worth five and not five and a half.
-int killPoints(EnemyKind kind, {required bool insideRadius}) {
-  final full = switch (kind) {
-    EnemyKind.walker => 10,
-    EnemyKind.leaper => 15,
-    EnemyKind.brute => 35,
-  };
-  return insideRadius ? full : full ~/ 2;
-}
+int killPoints(EnemyKind kind, {required bool insideRadius}) =>
+    insideRadius ? kKillInZone : kKillOutside;
+
+/// §6.5.4: ile jest warte ciało padłe w strefie.
+///
+/// ⚠️ **Jednakowo, niezależnie od gatunku.** Punktacja po gatunku — Kroczący
+/// dziesięć, Skoczek piętnaście, Brutal trzydzieści pięć — nagradzała
+/// wybieranie najgroźniejszego celu, czyli dokładnie to, czego §6.5.4 nie
+/// chce: strefę zbija się przez wytrzymałość, a nie przez jeden bohaterski
+/// zamach. Kto to jest, decyduje o tym, ile kosztuje zabicie, a nie ile jest
+/// warte.
+const int kKillInZone = 10;
+
+/// I połowa za ciało poza kołem. Cały handel §6.5.4: wywabianie jest
+/// bezpieczniejsze i dokładnie dwa razy wolniejsze.
+const int kKillOutside = 5;
 
 /// §6.5.4: how much a hotspot at [level] can take before losing one.
 int integrityMaxAt(int level) => 60 + 20 * level;
@@ -267,15 +292,21 @@ Duration promotionDelay({
   required PlayHabit habit,
   required Random random,
 }) {
-  final (low, high) = kPromotionJitter;
-  final worldHours =
-      promotionIntervalHours(survivalDay) *
-      (low + random.nextDouble() * (high - low));
+  final (low, high) = kZoneGrowthHours;
+  final base = low + random.nextDouble() * (high - low);
 
-  final pace = habit.creditedHoursPerDay / 24;
-  final realHours = pace <= 0 ? worldHours : worldHours / pace;
+  // §16.4: doba do dwóch dób **dla nawyku odniesienia** — godziny dziennie.
+  // Kto gra więcej, temu miasto rośnie szybciej; kto zniknął na tydzień,
+  // wraca do świata, który poszedł dalej, ale nie oszalał.
+  final credited = habit.creditedHoursPerDay;
+  final factor = credited <= 0 ? 1.0 : kReferenceCreditedHours / credited;
 
-  return Duration(milliseconds: (realHours * 3600 * 1000).round());
+  final hours = (base * factor).clamp(
+    kZoneGrowthFloorHours,
+    kZoneGrowthCeilingHours,
+  );
+
+  return Duration(milliseconds: (hours * 3600 * 1000).round());
 }
 
 /// One of §6.5.1's three places, live or resting.
@@ -290,6 +321,7 @@ class Hotspot {
     required this.nextLevelAt,
     this.agitatedUntil,
     this.restingUntil,
+    this.surgedAt,
   });
 
   /// A fresh one at level one (§6.5.2).
@@ -329,6 +361,9 @@ class Hotspot {
 
   /// §6.5.4: furious until this moment, or null.
   final DateTime? agitatedUntil;
+
+  /// §6.5.4: kiedy ostatnio wyrzuciła wysyp. Null, jeśli nigdy.
+  final DateTime? surgedAt;
 
   /// §6.5.4: the slot is empty until this moment, or null.
   final DateTime? restingUntil;
@@ -395,12 +430,36 @@ class Hotspot {
     return copyWith(integrity: left < 0 ? 0 : left);
   }
 
+  /// §6.5.4: czy ta strefa odpowiada na cios wysypem.
+  ///
+  /// Rzut robi wołający — model niczego nie losuje sam, żeby ten sam bieg dał
+  /// się odtworzyć (§11). Tutaj rozstrzyga się tylko, czy wolno.
+  bool maySurgeAt(DateTime now) {
+    if (isResting) return false;
+
+    final last = surgedAt;
+    return last == null || now.difference(last) >= kSurgeCooldown;
+  }
+
+  /// Ilu ich wychodzi ponad limit, i kiedy to było.
+  Hotspot surged({required DateTime at}) =>
+      copyWith(surgedAt: at, agitatedUntil: at.add(kAgitationLength));
+
+  /// §6.5.4: limit powiększony o wysyp, jeśli któryś jeszcze trwa.
+  int surgeExtraAt(DateTime now) =>
+      isAgitatedAt(now) ? (levelRow(level).enemyCap * kSurgeShare).ceil() : 0;
+
   /// §6.5.4: five per cent of the maximum an hour, and never past it.
   ///
   /// A player who walks away half way through comes back to a hotspot that has
   /// healed — possible, and expensive, which is the point.
-  Hotspot regenerated(Duration elapsed) {
+  /// ⚠️ **Nie leczy się, kiedy gracz stoi w środku.** Pasek odbudowujący się
+  /// w trakcie walki czyta się jak błąd, nawet gdy wobec tempa zabijania jest
+  /// arytmetycznie bez znaczenia — a §12 mówi, że to, co widać, ma znaczyć to,
+  /// co się dzieje.
+  Hotspot regenerated(Duration elapsed, {GeoPoint? playerAt}) {
     if (isResting || elapsed <= Duration.zero) return this;
+    if (playerAt != null && covers(playerAt)) return this;
 
     final hours = elapsed.inMilliseconds / 3600000;
     final back = integrityMax * kIntegrityRegenPerHour * hours;
@@ -480,6 +539,7 @@ class Hotspot {
     DateTime? nextLevelAt,
     DateTime? agitatedUntil,
     DateTime? restingUntil,
+    DateTime? surgedAt,
     bool clearAgitation = false,
     bool clearResting = false,
   }) => Hotspot(
@@ -494,6 +554,7 @@ class Hotspot {
         ? null
         : (agitatedUntil ?? this.agitatedUntil),
     restingUntil: clearResting ? null : (restingUntil ?? this.restingUntil),
+    surgedAt: surgedAt ?? this.surgedAt,
   );
 }
 
@@ -603,3 +664,40 @@ Hotspot settleHotspot(
 
   return current;
 }
+
+/// §6.5.4: co się dzieje, kiedy ktoś zacznie zbijać strefę.
+///
+/// ⚠️ **Dziesięć procent, i nie częściej niż raz na godzinę.** Strefa, która
+/// odpowiada na każdy cios, jest ścianą; strefa, która nie odpowiada nigdy,
+/// jest workiem treningowym. Rzut przy każdym trafieniu z blokadą godziny daje
+/// trzecią rzecz: wejście do środka jest zakładem, a nie rachunkiem, i przegrać
+/// go można raz na wyprawę, nie co minutę.
+///
+/// Blokada jest na dysku (`surgedAt`), bo inaczej zdejmowałoby się ją
+/// restartem — a to jest kara za wejście do strefy, nie za granie bez przerwy.
+const double kSurgeChance = 0.10;
+const Duration kSurgeCooldown = Duration(minutes: 60);
+
+/// Ile ich wychodzi z wysypu, ponad limit.
+///
+/// Połowa limitu poziomu, w górę: na piątce trzech, na dziesiątce sześciu. Nie
+/// tyle, żeby to była śmierć, i dość, żeby przestać liczyć na to, że wiadomo,
+/// ilu ich jest.
+const double kSurgeShare = 0.5;
+
+/// §6.5.4, §10.3: co zostaje po zbitej strefie.
+///
+/// ⚠️ **Bo dotąd nie zostawało nic.** Zbicie strefy do zera to dwie godziny
+/// ciągłej walki przeciw rosnącemu oporowi — i jedyną nagrodą był spokój,
+/// czyli brak czegoś. Skrytka jest tym, po co się tam w ogóle idzie: rzeczy z
+/// górnej półki, których nie ma w żadnym mieszkaniu.
+///
+/// Lista, nie tabela lootu, bo to nie jest miejsce na mapie — to jest wynik.
+/// I celowo krótka: cztery rzeczy, które zmieniają wyprawę, zamiast dwudziestu,
+/// które zmieniają liczbę w plecaku.
+const Map<String, (int, int)> kZoneCache = {
+  'mat_component': (4, 8),
+  'mat_metal': (10, 18),
+  'med_first_aid_kit': (1, 2),
+  'ammo_545x39': (30, 60),
+};

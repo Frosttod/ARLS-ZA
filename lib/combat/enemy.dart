@@ -144,7 +144,17 @@ enum EnemyKind {
   double get damageMl => baseDamageMl * attackMultiplier;
 }
 
-/// §6.1a: how far an enemy will follow before giving up.
+/// §6.1a, §6.5: how far an enemy will follow before giving up.
+///
+/// ⚠️ **Four hundred, and it stays four hundred.** Cutting it was tried, to
+/// keep a Decay Zone's own enemies near the zone — and it broke the rule this
+/// number exists for: a Walker sprints ninety seconds at sixteen km/h, which
+/// is four hundred metres, so the *stamina* is what ends a chase and the leash
+/// is the backstop. A shorter leash would end chases before they cost anything
+/// and make luring free rather than slow.
+///
+/// What keeps them near the zone is [kWanderRadiusM] — forty metres about the
+/// centre they came from — and the walk home that follows every lost contact.
 const double kLeashM = 400;
 
 /// §6.1a: how long without the player coming near before it goes home.

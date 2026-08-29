@@ -24,6 +24,10 @@
 /// draws. They disagreed once, in three different ways, over one school.
 library;
 
+import 'dart:math';
+
+import '../../items/item_catalogue.dart';
+
 import 'package:flutter/foundation.dart';
 
 import '../../combat/remains.dart';
@@ -92,6 +96,14 @@ class LootController extends ChangeNotifier {
   /// ⚠️ Not "was it invented". A car standing in the street is invented by
   /// §10.1 and is perfectly visible from the pavement; hiding everything
   /// invented meant a walk through a city showed no cars at all.
+
+  /// §10.2.1: whether this place can be seen without going and looking.
+  ///
+  /// ⚠️ Not "was it invented". A car standing in the street is invented by
+  /// §10.1 and is still perfectly visible from the pavement; a house that
+  /// might or might not be abandoned is exactly what reconnaissance is for.
+  /// Hiding everything invented meant a walk through a city showed no cars and
+  /// no bins at all — they were there, and nothing said so.
   bool isVisible(LootBox box) {
     final table = _tables?[box.tableId];
     if (table == null || !table.hidden) return true;
@@ -162,6 +174,33 @@ class LootController extends ChangeNotifier {
 
     boxes.value = await LootStore(_db).load(profileId);
     notifyListeners();
+  }
+
+  /// §6.5.4, §10.3: skrytka po zbitej Strefie Rozkładu.
+  ///
+  /// ⚠️ Tutaj, bo to jest łup — a kontroler stref nie zna warstwy lootu i nie
+  /// ma jej znać. Strefa mówi tylko „padła i stała tam"; co po niej zostaje,
+  /// jest sprawą tego pliku.
+  Future<void> leaveCache(
+    Map<String, (int, int)> table, {
+    required GeoPoint at,
+    required int seed,
+    required DateTime now,
+    ItemCatalogue? catalogue,
+  }) async {
+    final profileId = _profileId;
+    if (profileId == null) return;
+
+    await DroppedStore(_db).dropTable(
+      profileId,
+      table: table,
+      at: at,
+      random: Random(seed ^ at.hashCode),
+      now: now,
+      catalogue: catalogue,
+    );
+
+    await reloadDropped(now);
   }
 
   Future<void> reloadDropped(DateTime now) async {

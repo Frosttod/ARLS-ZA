@@ -37,6 +37,7 @@ class HotspotStore {
           bornAt: row.bornAt,
           nextLevelAt: row.nextLevelAt,
           agitatedUntil: row.agitatedUntil,
+          surgedAt: row.surgedAt,
           restingUntil: row.restingUntil,
         ),
     };
@@ -60,6 +61,7 @@ class HotspotStore {
       bornAt: spot.bornAt,
       nextLevelAt: spot.nextLevelAt,
       agitatedUntil: Value(spot.agitatedUntil),
+      surgedAt: Value(spot.surgedAt),
       restingUntil: Value(spot.restingUntil),
     ),
   );

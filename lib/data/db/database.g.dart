@@ -10693,6 +10693,17 @@ class $HotspotRowsTable extends HotspotRows
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _surgedAtMeta = const VerificationMeta(
+    'surgedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> surgedAt = GeneratedColumn<DateTime>(
+    'surged_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _agitatedUntilMeta = const VerificationMeta(
     'agitatedUntil',
   );
@@ -10727,6 +10738,7 @@ class $HotspotRowsTable extends HotspotRows
     integrity,
     bornAt,
     nextLevelAt,
+    surgedAt,
     agitatedUntil,
     restingUntil,
   ];
@@ -10817,6 +10829,12 @@ class $HotspotRowsTable extends HotspotRows
     } else if (isInserting) {
       context.missing(_nextLevelAtMeta);
     }
+    if (data.containsKey('surged_at')) {
+      context.handle(
+        _surgedAtMeta,
+        surgedAt.isAcceptableOrUnknown(data['surged_at']!, _surgedAtMeta),
+      );
+    }
     if (data.containsKey('agitated_until')) {
       context.handle(
         _agitatedUntilMeta,
@@ -10880,6 +10898,10 @@ class $HotspotRowsTable extends HotspotRows
         DriftSqlType.dateTime,
         data['${effectivePrefix}next_level_at'],
       )!,
+      surgedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}surged_at'],
+      ),
       agitatedUntil: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}agitated_until'],
@@ -10917,6 +10939,13 @@ class HotspotRow extends DataClass implements Insertable<HotspotRow> {
   /// the app shut, which is the whole point of it being pressure.
   final DateTime nextLevelAt;
 
+  /// §6.5.4: kiedy strefa ostatnio wyrzuciła wysyp, albo null.
+  ///
+  /// ⚠️ Na dysku, bo blokada godziny ma przeżyć zamknięcie aplikacji. Trzymana
+  /// w pamięci byłaby blokadą, którą zdejmuje się restartem — a wysyp jest
+  /// karą za wejście do strefy, nie za granie bez przerwy.
+  final DateTime? surgedAt;
+
   /// §6.5.4: furious until this moment, or null.
   final DateTime? agitatedUntil;
 
@@ -10932,6 +10961,7 @@ class HotspotRow extends DataClass implements Insertable<HotspotRow> {
     required this.integrity,
     required this.bornAt,
     required this.nextLevelAt,
+    this.surgedAt,
     this.agitatedUntil,
     this.restingUntil,
   });
@@ -10947,6 +10977,9 @@ class HotspotRow extends DataClass implements Insertable<HotspotRow> {
     map['integrity'] = Variable<double>(integrity);
     map['born_at'] = Variable<DateTime>(bornAt);
     map['next_level_at'] = Variable<DateTime>(nextLevelAt);
+    if (!nullToAbsent || surgedAt != null) {
+      map['surged_at'] = Variable<DateTime>(surgedAt);
+    }
     if (!nullToAbsent || agitatedUntil != null) {
       map['agitated_until'] = Variable<DateTime>(agitatedUntil);
     }
@@ -10967,6 +11000,9 @@ class HotspotRow extends DataClass implements Insertable<HotspotRow> {
       integrity: Value(integrity),
       bornAt: Value(bornAt),
       nextLevelAt: Value(nextLevelAt),
+      surgedAt: surgedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(surgedAt),
       agitatedUntil: agitatedUntil == null && nullToAbsent
           ? const Value.absent()
           : Value(agitatedUntil),
@@ -10991,6 +11027,7 @@ class HotspotRow extends DataClass implements Insertable<HotspotRow> {
       integrity: serializer.fromJson<double>(json['integrity']),
       bornAt: serializer.fromJson<DateTime>(json['bornAt']),
       nextLevelAt: serializer.fromJson<DateTime>(json['nextLevelAt']),
+      surgedAt: serializer.fromJson<DateTime?>(json['surgedAt']),
       agitatedUntil: serializer.fromJson<DateTime?>(json['agitatedUntil']),
       restingUntil: serializer.fromJson<DateTime?>(json['restingUntil']),
     );
@@ -11008,6 +11045,7 @@ class HotspotRow extends DataClass implements Insertable<HotspotRow> {
       'integrity': serializer.toJson<double>(integrity),
       'bornAt': serializer.toJson<DateTime>(bornAt),
       'nextLevelAt': serializer.toJson<DateTime>(nextLevelAt),
+      'surgedAt': serializer.toJson<DateTime?>(surgedAt),
       'agitatedUntil': serializer.toJson<DateTime?>(agitatedUntil),
       'restingUntil': serializer.toJson<DateTime?>(restingUntil),
     };
@@ -11023,6 +11061,7 @@ class HotspotRow extends DataClass implements Insertable<HotspotRow> {
     double? integrity,
     DateTime? bornAt,
     DateTime? nextLevelAt,
+    Value<DateTime?> surgedAt = const Value.absent(),
     Value<DateTime?> agitatedUntil = const Value.absent(),
     Value<DateTime?> restingUntil = const Value.absent(),
   }) => HotspotRow(
@@ -11035,6 +11074,7 @@ class HotspotRow extends DataClass implements Insertable<HotspotRow> {
     integrity: integrity ?? this.integrity,
     bornAt: bornAt ?? this.bornAt,
     nextLevelAt: nextLevelAt ?? this.nextLevelAt,
+    surgedAt: surgedAt.present ? surgedAt.value : this.surgedAt,
     agitatedUntil: agitatedUntil.present
         ? agitatedUntil.value
         : this.agitatedUntil,
@@ -11053,6 +11093,7 @@ class HotspotRow extends DataClass implements Insertable<HotspotRow> {
       nextLevelAt: data.nextLevelAt.present
           ? data.nextLevelAt.value
           : this.nextLevelAt,
+      surgedAt: data.surgedAt.present ? data.surgedAt.value : this.surgedAt,
       agitatedUntil: data.agitatedUntil.present
           ? data.agitatedUntil.value
           : this.agitatedUntil,
@@ -11074,6 +11115,7 @@ class HotspotRow extends DataClass implements Insertable<HotspotRow> {
           ..write('integrity: $integrity, ')
           ..write('bornAt: $bornAt, ')
           ..write('nextLevelAt: $nextLevelAt, ')
+          ..write('surgedAt: $surgedAt, ')
           ..write('agitatedUntil: $agitatedUntil, ')
           ..write('restingUntil: $restingUntil')
           ..write(')'))
@@ -11091,6 +11133,7 @@ class HotspotRow extends DataClass implements Insertable<HotspotRow> {
     integrity,
     bornAt,
     nextLevelAt,
+    surgedAt,
     agitatedUntil,
     restingUntil,
   );
@@ -11107,6 +11150,7 @@ class HotspotRow extends DataClass implements Insertable<HotspotRow> {
           other.integrity == this.integrity &&
           other.bornAt == this.bornAt &&
           other.nextLevelAt == this.nextLevelAt &&
+          other.surgedAt == this.surgedAt &&
           other.agitatedUntil == this.agitatedUntil &&
           other.restingUntil == this.restingUntil);
 }
@@ -11121,6 +11165,7 @@ class HotspotRowsCompanion extends UpdateCompanion<HotspotRow> {
   final Value<double> integrity;
   final Value<DateTime> bornAt;
   final Value<DateTime> nextLevelAt;
+  final Value<DateTime?> surgedAt;
   final Value<DateTime?> agitatedUntil;
   final Value<DateTime?> restingUntil;
   final Value<int> rowid;
@@ -11134,6 +11179,7 @@ class HotspotRowsCompanion extends UpdateCompanion<HotspotRow> {
     this.integrity = const Value.absent(),
     this.bornAt = const Value.absent(),
     this.nextLevelAt = const Value.absent(),
+    this.surgedAt = const Value.absent(),
     this.agitatedUntil = const Value.absent(),
     this.restingUntil = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -11148,6 +11194,7 @@ class HotspotRowsCompanion extends UpdateCompanion<HotspotRow> {
     required double integrity,
     required DateTime bornAt,
     required DateTime nextLevelAt,
+    this.surgedAt = const Value.absent(),
     this.agitatedUntil = const Value.absent(),
     this.restingUntil = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -11170,6 +11217,7 @@ class HotspotRowsCompanion extends UpdateCompanion<HotspotRow> {
     Expression<double>? integrity,
     Expression<DateTime>? bornAt,
     Expression<DateTime>? nextLevelAt,
+    Expression<DateTime>? surgedAt,
     Expression<DateTime>? agitatedUntil,
     Expression<DateTime>? restingUntil,
     Expression<int>? rowid,
@@ -11184,6 +11232,7 @@ class HotspotRowsCompanion extends UpdateCompanion<HotspotRow> {
       if (integrity != null) 'integrity': integrity,
       if (bornAt != null) 'born_at': bornAt,
       if (nextLevelAt != null) 'next_level_at': nextLevelAt,
+      if (surgedAt != null) 'surged_at': surgedAt,
       if (agitatedUntil != null) 'agitated_until': agitatedUntil,
       if (restingUntil != null) 'resting_until': restingUntil,
       if (rowid != null) 'rowid': rowid,
@@ -11200,6 +11249,7 @@ class HotspotRowsCompanion extends UpdateCompanion<HotspotRow> {
     Value<double>? integrity,
     Value<DateTime>? bornAt,
     Value<DateTime>? nextLevelAt,
+    Value<DateTime?>? surgedAt,
     Value<DateTime?>? agitatedUntil,
     Value<DateTime?>? restingUntil,
     Value<int>? rowid,
@@ -11214,6 +11264,7 @@ class HotspotRowsCompanion extends UpdateCompanion<HotspotRow> {
       integrity: integrity ?? this.integrity,
       bornAt: bornAt ?? this.bornAt,
       nextLevelAt: nextLevelAt ?? this.nextLevelAt,
+      surgedAt: surgedAt ?? this.surgedAt,
       agitatedUntil: agitatedUntil ?? this.agitatedUntil,
       restingUntil: restingUntil ?? this.restingUntil,
       rowid: rowid ?? this.rowid,
@@ -11250,6 +11301,9 @@ class HotspotRowsCompanion extends UpdateCompanion<HotspotRow> {
     if (nextLevelAt.present) {
       map['next_level_at'] = Variable<DateTime>(nextLevelAt.value);
     }
+    if (surgedAt.present) {
+      map['surged_at'] = Variable<DateTime>(surgedAt.value);
+    }
     if (agitatedUntil.present) {
       map['agitated_until'] = Variable<DateTime>(agitatedUntil.value);
     }
@@ -11274,6 +11328,7 @@ class HotspotRowsCompanion extends UpdateCompanion<HotspotRow> {
           ..write('integrity: $integrity, ')
           ..write('bornAt: $bornAt, ')
           ..write('nextLevelAt: $nextLevelAt, ')
+          ..write('surgedAt: $surgedAt, ')
           ..write('agitatedUntil: $agitatedUntil, ')
           ..write('restingUntil: $restingUntil, ')
           ..write('rowid: $rowid')
@@ -17156,6 +17211,7 @@ typedef $$HotspotRowsTableCreateCompanionBuilder =
       required double integrity,
       required DateTime bornAt,
       required DateTime nextLevelAt,
+      Value<DateTime?> surgedAt,
       Value<DateTime?> agitatedUntil,
       Value<DateTime?> restingUntil,
       Value<int> rowid,
@@ -17171,6 +17227,7 @@ typedef $$HotspotRowsTableUpdateCompanionBuilder =
       Value<double> integrity,
       Value<DateTime> bornAt,
       Value<DateTime> nextLevelAt,
+      Value<DateTime?> surgedAt,
       Value<DateTime?> agitatedUntil,
       Value<DateTime?> restingUntil,
       Value<int> rowid,
@@ -17227,6 +17284,11 @@ class $$HotspotRowsTableFilterComposer
 
   ColumnFilters<DateTime> get nextLevelAt => $composableBuilder(
     column: $table.nextLevelAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get surgedAt => $composableBuilder(
+    column: $table.surgedAt,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -17295,6 +17357,11 @@ class $$HotspotRowsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<DateTime> get surgedAt => $composableBuilder(
+    column: $table.surgedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get agitatedUntil => $composableBuilder(
     column: $table.agitatedUntil,
     builder: (column) => ColumnOrderings(column),
@@ -17343,6 +17410,9 @@ class $$HotspotRowsTableAnnotationComposer
     column: $table.nextLevelAt,
     builder: (column) => column,
   );
+
+  GeneratedColumn<DateTime> get surgedAt =>
+      $composableBuilder(column: $table.surgedAt, builder: (column) => column);
 
   GeneratedColumn<DateTime> get agitatedUntil => $composableBuilder(
     column: $table.agitatedUntil,
@@ -17395,6 +17465,7 @@ class $$HotspotRowsTableTableManager
                 Value<double> integrity = const Value.absent(),
                 Value<DateTime> bornAt = const Value.absent(),
                 Value<DateTime> nextLevelAt = const Value.absent(),
+                Value<DateTime?> surgedAt = const Value.absent(),
                 Value<DateTime?> agitatedUntil = const Value.absent(),
                 Value<DateTime?> restingUntil = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -17408,6 +17479,7 @@ class $$HotspotRowsTableTableManager
                 integrity: integrity,
                 bornAt: bornAt,
                 nextLevelAt: nextLevelAt,
+                surgedAt: surgedAt,
                 agitatedUntil: agitatedUntil,
                 restingUntil: restingUntil,
                 rowid: rowid,
@@ -17423,6 +17495,7 @@ class $$HotspotRowsTableTableManager
                 required double integrity,
                 required DateTime bornAt,
                 required DateTime nextLevelAt,
+                Value<DateTime?> surgedAt = const Value.absent(),
                 Value<DateTime?> agitatedUntil = const Value.absent(),
                 Value<DateTime?> restingUntil = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -17436,6 +17509,7 @@ class $$HotspotRowsTableTableManager
                 integrity: integrity,
                 bornAt: bornAt,
                 nextLevelAt: nextLevelAt,
+                surgedAt: surgedAt,
                 agitatedUntil: agitatedUntil,
                 restingUntil: restingUntil,
                 rowid: rowid,

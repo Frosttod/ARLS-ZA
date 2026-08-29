@@ -52,6 +52,7 @@ import 'ui/disassemble_screen.dart';
 import 'combat/magazine_item.dart';
 import 'combat/weapon_load.dart';
 import 'combat/enemy.dart';
+import 'combat/hotspot.dart';
 import 'combat/noise.dart';
 import 'combat/enemy_spawner.dart';
 import 'combat/pursuit.dart';
@@ -2293,6 +2294,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
       // §6.5.4: integrity back, fury dropped for somebody who left.
       unawaited(_fires.settle(now: now, playerAt: here));
+      if (_fires.clearedAt.value case final fell?) {
+        _fires.clearedAt.value = null;
+        unawaited(_zoneFell(fell, now));
+      }
 
       // §5.6.2: how warm the street is after this second — the fact, the
       // place and the number, never the fighters.
@@ -3353,6 +3358,18 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   ];
 
   /// §8: what has been built, from the save.
+  /// §6.5.4, §10.3: skrytka po zbitej Strefie.
+  Future<void> _zoneFell(GeoPoint at, DateTime now) async {
+    await _loot.leaveCache(
+      kZoneCache,
+      at: at,
+      seed: _character?.profile.rngSeed ?? 0,
+      now: now,
+      catalogue: _catalogue,
+    );
+    if (mounted) _say(L10n.of(context).zoneCleared);
+  }
+
   Future<void> _reloadShelters() async {
     final places = await _places.reload(DateTime.now().toUtc());
     if (!mounted) return;
@@ -5177,13 +5194,6 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     return _fight.threatAt(GeoPoint(fix.latitude, fix.longitude));
   }
 
-  /// §3.6: loot is yellow. An emptied box is not drawn at all — a marker that
-  /// stays after there is nothing behind it is a walk taken for nothing.
-  ///
-  /// §10.2.3 decides what is on the map before anybody looks: a pharmacy is a
-  /// building and is visible from the street, so its marker is always there. A
-  /// wrecked car in a side road is not, and appears only once the player has
-  /// stopped and searched the area.
   /// The markers as the map wants them, worked out once per change.
   ///
   /// ⚠️ **This is on the hot path and used to be rebuilt on every `setState`.**
@@ -5237,13 +5247,6 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     pileReachM: _reachForPilesAt,
   );
 
-  /// §10.2.1: whether this place can be seen without going and looking.
-  ///
-  /// ⚠️ Not "was it invented". A car standing in the street is invented by
-  /// §10.1 and is still perfectly visible from the pavement; a house that
-  /// might or might not be abandoned is exactly what reconnaissance is for.
-  /// Hiding everything invented meant a walk through a city showed no cars and
-  /// no bins at all — they were there, and nothing said so.
   /// §5.5.6: what is close enough to be drawn, with a little hysteresis.
   ///
   /// ⚠️ Two different numbers were doing this job: the spawner makes things up
@@ -5257,8 +5260,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// rule §7's Reconnaissance is going to take over.
   List<Enemy> _visibleEnemies() => _fight.visible(_standingAt.value);
 
-  /// §10.3.5: how long each depth takes at this place.
-  /// §10.3.5, §7: what each depth costs *here*, at this character's hands.
+  /// §10.3.5, §7: what each depth costs here, at this character's hands.
   Map<SearchDepth, Duration> _searchTimesAt(LootBox? box) => searchTimesFor(
     sizeOf: box == null ? null : _world?.tables[box.tableId]?.size,
     scouting: _learned.scouting,
@@ -6119,11 +6121,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _reloadDropped() => _loot.reloadDropped(DateTime.now().toUtc());
-
   Future<void> _reloadRemains() => _loot.reloadRemains(DateTime.now().toUtc());
-
   double _reachForPilesAt(GeoPoint at) => _loot.reachForPilesAt(at);
-
   bool _isVisible(LootBox box) => _loot.isVisible(box);
 
   /// §19.3: the place the player is standing at, if any.

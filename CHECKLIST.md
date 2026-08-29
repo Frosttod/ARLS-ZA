@@ -1,7 +1,7 @@
 # ARLS-ZA — lista kontrolna systemów
 
 Stan na dzień **2026-08-28**. Wygenerowana po przejściu pełnego zestawu
-testów: **2519 testów, `flutter analyze` czysty, schemat bazy v35**.
+testów: **2528 testów, `flutter analyze` czysty, schemat bazy v36**.
 
 ⚠️ Liczby poniżej są zliczone z suite'a, nie przepisane z pamięci. Suma
 obszarów musi się zgadzać z ogółem — jeśli się nie zgadza, ten plik jest
@@ -24,7 +24,7 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 | Obszar | Testy | Co jest tam pilnowane |
 | :---- | ----: | :---- |
 | `ui` | 454 | HUD, ekwipunek, panele, arkusze, geometria dotknięć i pierścieni, notatki stanu, dziennik, niebo w panelu, zakres przebudów |
-| `combat` | 458 | tabela kalibracyjna §5.1.2 wiersz po wierszu, obrażenia §5.1.5, budżet sprintu, maszyna stanów, hałas, spawn, magazynek, dodatki, **odczyt panelu ognia**, **ciosy przy zgaszonym ekranie**, **pole widzenia, słuch i cios w plecy (§6.2, §5.5.1)** |
+| `combat` | 468 | tabela kalibracyjna §5.1.2 wiersz po wierszu, obrażenia §5.1.5, budżet sprintu, maszyna stanów, hałas, spawn, magazynek, dodatki, **odczyt panelu ognia**, **ciosy przy zgaszonym ekranie**, **pole widzenia, słuch i cios w plecy (§6.2, §5.5.1)**, **Strefy Rozkładu: punktacja, wzrost, wysyp (§6.5.4)** |
 | `sim` | 334 | tick, metabolizm, tętno, wchłanianie, **dwa zegary snu**, **masa ciała i wychudzenie**, **osiągalność zgonu z głodu i pragnienia**, **kary za stan docierające do zegarów**, **nawyk gry mierzony, nie zakładany (§16.4)**, świt i zmierzch |
 | `game` | 226 | pętla, kontrolery, jedna para rąk, integracja pozycji, dziennik, **wiązanie kontrolerów do profilu** |
 | `loot` | 185 | tabele, spawner, przeszukanie, rzeczy na ziemi, rozrzut §10.2, przeszkody |
@@ -35,7 +35,7 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 | `items` | 79 | katalog jako dane: bilans, nazwy, sloty, użycia |
 | `location` | 67 | bramka dokładności, filtr Kalmana, martwa strefa, anty-cheat, powrót odbiornika, kadencja w schronie |
 | `skills` | 63 | §7.2.1 praktyka, §4.6 literatura, §7.2.2 krzywa, wpięcie w grę |
-| `db` | 50 | migracje v1→v35, integralność, warstwa gorąca i ciepła |
+| `db` | 50 | migracje v1→v36, integralność, warstwa gorąca i ciepła |
 | `devtools` | 44 | konsola, rejestrator sesji |
 | `safety` | 34 | §1.2, blokady na prędkości |
 | `core` | 30 | zegar gry, jeden timer |
@@ -45,7 +45,7 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 | `notes` | 14 | notatki i lektura |
 | `l10n` | 7 | kolizje kluczy, brak twardej polszczyzny w kodzie |
 
-**Razem 2519.**
+**Razem 2528.**
 
 ### Rzeczy, które testy trzymają jako liczby, a nie jako intencje
 
@@ -58,7 +58,7 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 - **§6.2** — parametry przeciwników, w tym progi śmierci.
 - **§5.6.1** — promienie hałasu i modyfikatory otoczenia.
 - **Migracje** — każda wydana wersja schematu daje się otworzyć i podnieść do
-  v35, z danymi.
+  v36, z danymi.
 - **§2.3, §2.5.4, §5.1.1** — trzy kary za stan trzymane **przy konsumencie**,
   nie przy wzorze. Wada nie była złą liczbą, tylko parametrem z nieszkodliwą
   wartością domyślną, którego nikt nie wypełniał — czego żaden test samej

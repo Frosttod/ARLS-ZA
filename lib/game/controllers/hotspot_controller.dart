@@ -73,7 +73,8 @@ class HotspotController extends ChangeNotifier {
         centre: spot.centre,
         radiusM: spot.radiusM,
         kinds: spot.compositionNow(now),
-        capacity: spot.enemyCapAt(now, darkness: darkness),
+        capacity:
+            spot.enemyCapAt(now, darkness: darkness) + spot.surgeExtraAt(now),
       ),
   ];
 
@@ -200,16 +201,41 @@ class HotspotController extends ChangeNotifier {
         .firstOrNull;
     if (owner == null) return;
 
-    final hurt = owner.value.damagedBy(enemy.kind, at: enemy.position);
+    var hurt = owner.value.damagedBy(enemy.kind, at: enemy.position);
+
+    // §6.5.4: dziesięć procent, i nie częściej niż raz na godzinę. Rzut jest
+    // tutaj, a nie w modelu, bo model niczego nie losuje sam (§11) — ale
+    // ziarno jest z postaci i ze slotu, więc ten sam bieg daje to samo.
+    if (hurt.maySurgeAt(now) &&
+        Random(_seed ^ now.millisecondsSinceEpoch ~/ 60000).nextDouble() <
+            kSurgeChance) {
+      hurt = hurt.surged(at: now);
+      surges.value = now;
+    }
 
     // §6.5.4: through the wall. One level off, the fury that comes with it,
     // and a rest for the slot if that was the last one.
+    final cleared = hurt.integrity <= 0 && hurt.level <= 1;
     final after = hurt.integrity <= 0
         ? hurt.demoted(at: now, restFor: _restFor(owner.key))
         : hurt;
 
     await _write(owner.key, after);
+
+    // §6.5.4, §10.3: i to jest jedyna rzecz warta dwóch godzin ciągłej walki.
+    // Zbicie strefy do zera zostawiało dotąd sam spokój.
+    if (cleared) clearedAt.value = owner.value.centre;
   }
+
+  /// §6.5.4: kiedy ostatnio strefa odpowiedziała wysypem. Dla ekranu.
+  final ValueNotifier<DateTime?> surges = ValueNotifier(null);
+
+  /// §6.5.4: środek strefy, która właśnie padła — miejsce na skrytkę.
+  ///
+  /// ⚠️ Powiadomienie, nie stan: kto to odbierze, ten zrzuca łup i zeruje.
+  /// Kontroler nie zna warstwy lootu i nie ma jej znać — ta reguła jest tym,
+  /// co pozwala go testować z samą bazą w pamięci.
+  final ValueNotifier<GeoPoint?> clearedAt = ValueNotifier(null);
 
   /// §6.5.4: what the clock does to them, called once a tick.
   ///
@@ -227,7 +253,7 @@ class HotspotController extends ChangeNotifier {
     for (final entry in _slots.entries.toList()) {
       final before = entry.value;
 
-      var spot = before.regenerated(elapsed);
+      var spot = before.regenerated(elapsed, playerAt: playerAt);
       if (playerAt != null) spot = spot.settledIfAbandoned(playerAt);
 
       // ⚠️ **Only when it is worth a write.** Regeneration is five per cent an
@@ -312,6 +338,8 @@ class HotspotController extends ChangeNotifier {
   @override
   void dispose() {
     hotspots.dispose();
+    surges.dispose();
+    clearedAt.dispose();
     super.dispose();
   }
 }

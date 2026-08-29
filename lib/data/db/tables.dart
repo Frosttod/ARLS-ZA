@@ -352,6 +352,13 @@ class HotspotRows extends Table {
   /// the app shut, which is the whole point of it being pressure.
   DateTimeColumn get nextLevelAt => dateTime()();
 
+  /// §6.5.4: kiedy strefa ostatnio wyrzuciła wysyp, albo null.
+  ///
+  /// ⚠️ Na dysku, bo blokada godziny ma przeżyć zamknięcie aplikacji. Trzymana
+  /// w pamięci byłaby blokadą, którą zdejmuje się restartem — a wysyp jest
+  /// karą za wejście do strefy, nie za granie bez przerwy.
+  DateTimeColumn get surgedAt => dateTime().nullable()();
+
   /// §6.5.4: furious until this moment, or null.
   DateTimeColumn get agitatedUntil => dateTime().nullable()();
 

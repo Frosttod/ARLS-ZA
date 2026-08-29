@@ -463,6 +463,12 @@ abstract class L10n {
   /// **'can still sprint'**
   String get hudThreatSprint;
 
+  /// No description provided for @zoneCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'The zone is down. Something was left where it stood.'**
+  String get zoneCleared;
+
   /// No description provided for @hudNoise.
   ///
   /// In en, this message translates to:
@@ -1810,7 +1816,7 @@ abstract class L10n {
   /// No description provided for @campTooCloseToHotspot.
   ///
   /// In en, this message translates to:
-  /// **'Too close to the middle of a hotspot.'**
+  /// **'Too close to the middle of a Decay Zone.'**
   String get campTooCloseToHotspot;
 
   /// No description provided for @campDecaying.
@@ -2104,13 +2110,13 @@ abstract class L10n {
   /// No description provided for @mapMarkerHotspot.
   ///
   /// In en, this message translates to:
-  /// **'Hotspot'**
+  /// **'Decay Zone'**
   String get mapMarkerHotspot;
 
   /// No description provided for @hotspotTitle.
   ///
   /// In en, this message translates to:
-  /// **'Hotspot'**
+  /// **'Decay Zone'**
   String get hotspotTitle;
 
   /// No description provided for @hotspotLevelOf.
@@ -2122,25 +2128,25 @@ abstract class L10n {
   /// No description provided for @hotspotWhat.
   ///
   /// In en, this message translates to:
-  /// **'It grows without you. Every level widens the circle and adds bodies.'**
+  /// **'It grows without you. Every level widens the circle and adds enemies.'**
   String get hotspotWhat;
 
   /// No description provided for @hotspotIntegrity.
   ///
   /// In en, this message translates to:
-  /// **'Wall'**
+  /// **'Barrier'**
   String get hotspotIntegrity;
 
   /// No description provided for @hotspotEnemies.
   ///
   /// In en, this message translates to:
-  /// **'Out at once'**
+  /// **'Enemies at once'**
   String get hotspotEnemies;
 
   /// No description provided for @hotspotRespawn.
   ///
   /// In en, this message translates to:
-  /// **'Replaced every'**
+  /// **'Hatches every'**
   String get hotspotRespawn;
 
   /// No description provided for @hotspotComposition.
@@ -2182,13 +2188,13 @@ abstract class L10n {
   /// No description provided for @hotspotAgitatedMore.
   ///
   /// In en, this message translates to:
-  /// **'+{percent}% out'**
+  /// **'+{percent}% enemies'**
   String hotspotAgitatedMore(int percent);
 
   /// No description provided for @hotspotAgitatedRespawn.
   ///
   /// In en, this message translates to:
-  /// **'returns ×{times}'**
+  /// **'hatching ×{times}'**
   String hotspotAgitatedRespawn(int times);
 
   /// No description provided for @hotspotHowTo.
@@ -2218,7 +2224,7 @@ abstract class L10n {
   /// No description provided for @hotspotAtZero.
   ///
   /// In en, this message translates to:
-  /// **'Wall at nought'**
+  /// **'Barrier at nought'**
   String get hotspotAtZero;
 
   /// No description provided for @hotspotAtZeroValue.
@@ -2242,7 +2248,7 @@ abstract class L10n {
   /// No description provided for @hotspotRegen.
   ///
   /// In en, this message translates to:
-  /// **'Wall regrows'**
+  /// **'Barrier regrows'**
   String get hotspotRegen;
 
   /// No description provided for @hotspotRegenValue.
@@ -2278,7 +2284,7 @@ abstract class L10n {
   /// No description provided for @hotspotLevel.
   ///
   /// In en, this message translates to:
-  /// **'Hotspot, level {level}'**
+  /// **'Decay Zone, level {level}'**
   String hotspotLevel(int level);
 
   /// No description provided for @mapMarkerShelter.

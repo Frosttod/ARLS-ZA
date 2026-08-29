@@ -29,7 +29,7 @@ import 'tables.dart';
 part 'database.g.dart';
 
 /// Bumped only alongside a migration step in [_migration]. Never reused.
-const int kSchemaVersion = 35;
+const int kSchemaVersion = 36;
 
 /// Keys used in [MetaEntries].
 abstract final class MetaKeys {
@@ -80,7 +80,7 @@ class SaveDatabase extends _$SaveDatabase {
   /// follow a constant reference. `schema_test.dart` keeps it in step with
   /// [kSchemaVersion].
   @override
-  int get schemaVersion => 35;
+  int get schemaVersion => 36;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -375,6 +375,19 @@ class SaveDatabase extends _$SaveDatabase {
       // clock now runs on. A new table, so a save from before this has no
       // habit — and reads as the floor until a week of one is measured.
       if (from < 35) await m.createTable(playDays);
+
+      // §6.5.4: kiedy strefa ostatnio wyrzuciła wysyp. Nullable, więc zapis
+      // sprzed tej wersji czyta się jako „jeszcze nigdy" — co jest prawdą.
+      //
+      // ⚠️ **Tylko dla zapisu, który już miał tę tabelę.** `createTable` wyżej
+      // stawia ją w **dzisiejszym** kształcie, więc zapis z v31 dostaje
+      // `surged_at` razem z tabelą — i dodanie kolumny po raz drugi wywraca
+      // migrację na „duplicate column". Pułapka jest wbudowana w migracje
+      // wyłącznie addytywne i łapie każdą kolumnę dokładaną do tabeli, która
+      // sama jest młodsza od schematu.
+      if (from >= 32 && from < 36) {
+        await m.addColumn(hotspotRows, hotspotRows.surgedAt);
+      }
 
       await _writeSchemaVersion(to);
     },
