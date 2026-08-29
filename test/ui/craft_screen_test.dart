@@ -191,12 +191,17 @@ void main() {
       }
     });
 
-    testWidgets('a brak materiału wciąż mówi, czego brakuje', (tester) async {
-      // Druga strona tej samej reguły: to, czego brakuje **temu wierszowi**,
-      // zostaje. Ucichła tylko rzecz wspólna dla wszystkich.
+    testWidgets('a brak materiału widać tam, gdzie jest wypisany', (
+      tester,
+    ) async {
+      // ⚠️ Druga strona tej samej reguły. Braki są **kolorem przy wymaganiu**,
+      // nie zdaniem pod przyciskiem: „Warsztat L1" wypisany raz w wymaganiach
+      // i drugi raz jako odmowa to jeden wiersz zajęty na nic, i zgłoszono go
+      // ze zrzutu ekranu.
       await pump(tester, bench: benchWith());
 
-      expect(find.textContaining('materia'), findsWidgets);
+      expect(find.textContaining('Drewno'), findsWidgets);
+      expect(find.textContaining('Warsztat'), findsWidgets);
     });
   });
 
@@ -226,7 +231,7 @@ void main() {
       await tester.tap(find.text('Broń biała'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Włócznia ×2'), findsOneWidget);
+      expect(find.text('Włócznia'), findsOneWidget);
     });
 
     testWidgets('włączony chowa to, czego nie da się zacząć', (tester) async {
@@ -237,7 +242,7 @@ void main() {
       await tester.tap(find.byIcon(Icons.filter_alt_outlined));
       await tester.pumpAndSettle();
 
-      expect(find.text('Włócznia ×2'), findsNothing);
+      expect(find.text('Włócznia'), findsNothing);
     });
 
     testWidgets('a pusta zakładka mówi, że pusta', (tester) async {

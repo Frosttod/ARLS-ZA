@@ -2319,12 +2319,12 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         shelterAt: _mainShelter()?.position,
         // §5.6.1: walls that swallow a shot swallow a silhouette too.
         denseUrban: _world?.denseUrban ?? false,
-        // §7: somebody who knows how to move is noticed later.
         scouting: _learned.scouting,
-        // §17.4: noticed sooner after dark, and there are more of them.
         darkness: snapshot.darkness,
         speedKmh: snapshot.speedKmh,
       );
+
+      _loop?.enemiesNear = _combat.any(here, withinM: kFightPaceM);
 
       for (final gone in vanishedNear(
         before,

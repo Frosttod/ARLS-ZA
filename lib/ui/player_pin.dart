@@ -99,48 +99,11 @@ class _PlayerPainter extends CustomPainter {
         Paint()
           ..shader = RadialGradient(
             colors: [
-              player.withValues(alpha: 0.55),
-              player.withValues(alpha: 0.05),
+              player.withValues(alpha: 0.6),
+              player.withValues(alpha: 0.04),
             ],
           ).createShader(Rect.fromCircle(center: centre, radius: reach)),
       );
-
-      // ⚠️ Grot na końcu klina. Sam gradient gaśnie dokładnie tam, gdzie ma
-      // powiedzieć „w tę stronę" — zgłoszone z terenu jako „widać, ale słabo".
-      // Trójkąt czyta się jednym spojrzeniem, także w słońcu.
-      final tip = Offset(
-        centre.dx + reach * 0.82 * math.cos(_radians(heading - 90)),
-        centre.dy + reach * 0.82 * math.sin(_radians(heading - 90)),
-      );
-      final left = Offset(
-        centre.dx + reach * 0.42 * math.cos(_radians(heading - 90 - 28)),
-        centre.dy + reach * 0.42 * math.sin(_radians(heading - 90 - 28)),
-      );
-      final right = Offset(
-        centre.dx + reach * 0.42 * math.cos(_radians(heading - 90 + 28)),
-        centre.dy + reach * 0.42 * math.sin(_radians(heading - 90 + 28)),
-      );
-
-      canvas
-        ..drawPath(
-          Path()
-            ..moveTo(tip.dx, tip.dy)
-            ..lineTo(left.dx, left.dy)
-            ..lineTo(right.dx, right.dy)
-            ..close(),
-          Paint()..color = player.withValues(alpha: 0.95),
-        )
-        ..drawPath(
-          Path()
-            ..moveTo(tip.dx, tip.dy)
-            ..lineTo(left.dx, left.dy)
-            ..lineTo(right.dx, right.dy)
-            ..close(),
-          Paint()
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 1.2
-            ..color = const Color(0xFF0B0F12).withValues(alpha: 0.6),
-        );
     }
 
     // The dot last, so it sits over the cone rather than under it.

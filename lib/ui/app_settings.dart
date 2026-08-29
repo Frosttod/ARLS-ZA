@@ -13,6 +13,8 @@
 /// update of everything: it lives in the same database as the save.
 library;
 
+import 'dart:ui' show PlatformDispatcher;
+
 import 'package:flutter/material.dart';
 
 import 'fonts.dart';
@@ -120,6 +122,17 @@ class AppSettings extends ChangeNotifier {
   Locale? get locale => _locale;
 
   ThemeChoice get theme => _theme;
+
+  /// §17.2, §12: czy *w tej chwili* wychodzi ciemny motyw.
+  ///
+  /// ⚠️ Do pokazania w ustawieniach. „Dzień i noc" rozstrzyga się z pozycji i
+  /// zegara, więc ekran, który mówi tylko którą opcję wybrano, nie odpowiada
+  /// na jedyne pytanie, jakie ktoś ma przy tej opcji: *czy ona w ogóle działa*.
+  /// Zgłoszone z terenu jako „mamy dzień, a styl ciemny".
+  bool get resolvesDark =>
+      themeMode == ThemeMode.dark ||
+      (themeMode == ThemeMode.system &&
+          PlatformDispatcher.instance.platformBrightness == Brightness.dark);
 
   ThemeMode get themeMode => switch (_theme) {
     ThemeChoice.daylight => _darkOutside ? ThemeMode.dark : ThemeMode.light,

@@ -2359,6 +2359,18 @@ abstract class L10n {
   /// **'Day and night'**
   String get themeDaylight;
 
+  /// No description provided for @themeNowLight.
+  ///
+  /// In en, this message translates to:
+  /// **'now: light'**
+  String get themeNowLight;
+
+  /// No description provided for @themeNowDark.
+  ///
+  /// In en, this message translates to:
+  /// **'now: dark'**
+  String get themeNowDark;
+
   /// No description provided for @themeDaylightHint.
   ///
   /// In en, this message translates to:
@@ -3742,8 +3754,8 @@ abstract class L10n {
   /// No description provided for @itemSalvageTakes.
   ///
   /// In en, this message translates to:
-  /// **'takes {minutes} min'**
-  String itemSalvageTakes(int minutes);
+  /// **'takes {time}'**
+  String itemSalvageTakes(String time);
 
   /// No description provided for @itemCompare.
   ///

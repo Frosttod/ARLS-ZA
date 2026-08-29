@@ -763,6 +763,8 @@
   "languageEnglish": "English",
   "themeTitle": "Appearance",
   "themeDaylight": "Day and night",
+  "themeNowLight": "now: light",
+  "themeNowDark": "now: dark",
   "themeDaylightHint": "Light between dawn and dusk, dark between dusk and dawn, from where you are standing.",
   "themeDark": "Dark",
   "themeLight": "Light",
@@ -1232,11 +1234,11 @@
   "readingFinished": "read",
   "itemSalvageTitle": "If taken apart",
   "itemSalvageNothing": "Nothing would be left of it.",
-  "itemSalvageTakes": "takes {minutes} min",
+  "itemSalvageTakes": "takes {time}",
   "@itemSalvageTakes": {
     "placeholders": {
-      "minutes": {
-        "type": "int"
+      "time": {
+        "type": "String"
       }
     }
   },

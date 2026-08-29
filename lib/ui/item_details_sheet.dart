@@ -31,6 +31,7 @@ import '../craft/craft_job.dart';
 import '../craft/item_recipe.dart';
 import '../l10n/app_localizations.dart';
 import 'effects.dart';
+import 'units.dart';
 import 'hud.dart' show HudColors;
 
 Future<void> showItemDetails(
@@ -378,7 +379,11 @@ class _Salvage extends StatelessWidget {
     // reading the rows that matter.
     if (materialContent(item, book).isEmpty) return const SizedBox.shrink();
 
-    final minutes = salvageTime(materialContent(item, book)).inMinutes;
+    // ⚠️ Tą samą funkcją co ekran rozbiórki. „6 min" na karcie i „6:21" na
+    // warsztacie to nie były dwa formaty tej samej liczby — to były dwie
+    // odpowiedzi na jedno pytanie, i gracz nie miał jak wiedzieć, która jest
+    // prawdziwa.
+    final takes = worked(salvageTime(materialContent(item, book)));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -396,7 +401,7 @@ class _Salvage extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Text(
-              l10n.itemSalvageTakes(minutes),
+              l10n.itemSalvageTakes(takes),
               style: TextStyle(fontSize: 11, color: colours.muted),
             ),
           ],

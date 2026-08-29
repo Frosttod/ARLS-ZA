@@ -1309,6 +1309,12 @@ class L10nPl extends L10n {
   String get themeDaylight => 'Dzień i noc';
 
   @override
+  String get themeNowLight => 'teraz: jasny';
+
+  @override
+  String get themeNowDark => 'teraz: ciemny';
+
+  @override
   String get themeDaylightHint =>
       'Jasny od świtu do zmierzchu, ciemny od zmierzchu do świtu — według Twojej pozycji.';
 
@@ -2066,8 +2072,8 @@ class L10nPl extends L10n {
   String get itemSalvageNothing => 'Nic by z tego nie zostało.';
 
   @override
-  String itemSalvageTakes(int minutes) {
-    return 'zajmie $minutes min';
+  String itemSalvageTakes(String time) {
+    return 'zajmie $time';
   }
 
   @override

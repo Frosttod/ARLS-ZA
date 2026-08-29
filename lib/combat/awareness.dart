@@ -197,3 +197,12 @@ meleeOutcome({
 
 /// §5.5.3: co robi pięść. Mało, i o to chodzi — broń biała jest decyzją.
 const double kBareHandsBloodMl = 40;
+
+/// §3.3, §12: jak blisko musi być przeciwnik, żeby gra przestała oszczędzać.
+///
+/// ⚠️ **Ekonomia baterii wygrywała z walką.** Decyzja o tempie brała
+/// `inCombat: false` wpisane na sztywno — z komentarzem „walka przyjdzie w
+/// etapie 5" — więc przy trzech Kroczących pod nosem GPS chodził w tempie
+/// spaceru, ekran w oszczędnym, a markery skakały zamiast płynąć. Dokładnie
+/// wtedy, kiedy z kierunku ich patrzenia odczytuje się, czy się da przejść.
+const double kFightPaceM = 150;

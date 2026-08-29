@@ -99,6 +99,18 @@ class CombatSession {
       if (enemy.position.distanceTo(playerAt) <= kActiveRadiusM) enemy,
   ];
 
+  /// §3.3, §5: czy cokolwiek żywego stoi bliżej niż [withinM].
+  ///
+  /// Osobno od [near], bo to jest pytanie o **tempo gry**, nie o listę celów —
+  /// i zadawane co sekundę, więc nie buduje listy, żeby ją policzyć.
+  bool any(GeoPoint playerAt, {required double withinM}) {
+    for (final enemy in enemies) {
+      if (enemy.isDead) continue;
+      if (enemy.position.distanceTo(playerAt) <= withinM) return true;
+    }
+    return false;
+  }
+
   /// One step of the world: what exists, and what each of them is doing.
   CombatSession advance({
     required GeoPoint playerAt,

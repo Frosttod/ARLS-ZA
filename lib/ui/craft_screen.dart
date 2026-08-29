@@ -434,30 +434,39 @@ class _RecipeRow extends StatelessWidget {
               ],
             ),
 
-            if (recipe.toolsAnyOf.isNotEmpty) ...[
+            // §18.4, §12: narzędzia i warsztat w jednym wierszu.
+            //
+            // ⚠️ Poziom warsztatu był wypisany dwa razy — raz tutaj, raz przy
+            // przycisku jako odmowa — i zajmował wiersz w każdej karcie, w
+            // której cokolwiek go wymaga. Ta sama rzecz powiedziana dwa razy
+            // czyta się jak dwie różne rzeczy.
+            if (recipe.toolsAnyOf.isNotEmpty || recipe.workshopLevel > 0) ...[
               const SizedBox(height: 2),
-              Text(
-                '${l10n.craftNeedsTool}: '
-                '${recipe.toolsAnyOf.map(itemNameOf).join(' / ')}',
-                style: TextStyle(
-                  fontSize: 11,
-                  color: craftToolsAllow(recipe, bench.atHand)
-                      ? colours.data
-                      : colours.alert,
-                ),
-              ),
-            ],
-
-            if (recipe.workshopLevel > 0) ...[
-              const SizedBox(height: 2),
-              Text(
-                l10n.craftNeedsWorkshop(recipe.workshopLevel),
-                style: TextStyle(
-                  fontSize: 11,
-                  color: bench.workshopLevel >= recipe.workshopLevel
-                      ? colours.data
-                      : colours.alert,
-                ),
+              Wrap(
+                spacing: 10,
+                children: [
+                  if (recipe.toolsAnyOf.isNotEmpty)
+                    Text(
+                      '${l10n.craftNeedsTool}: '
+                      '${recipe.toolsAnyOf.map(itemNameOf).join(' / ')}',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: craftToolsAllow(recipe, bench.atHand)
+                            ? colours.data
+                            : colours.alert,
+                      ),
+                    ),
+                  if (recipe.workshopLevel > 0)
+                    Text(
+                      l10n.craftNeedsWorkshop(recipe.workshopLevel),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: bench.workshopLevel >= recipe.workshopLevel
+                            ? colours.data
+                            : colours.alert,
+                      ),
+                    ),
+                ],
               ),
             ],
 
@@ -469,9 +478,17 @@ class _RecipeRow extends StatelessWidget {
                 // twenty-six times, and the one thing is already said by the
                 // bar at the top and by every button being dead. What belongs
                 // here is what is missing *from this row*.
+                // ⚠️ I nie powtarza tego, co stoi wyżej w wymaganiach.
+                // „Warsztat L1" pod przyciskiem i „Warsztat L1" w wymaganiach
+                // to jeden wiersz zajęty na nic — a to, czego brakuje, jest
+                // już zaznaczone kolorem tam, gdzie jest wypisane.
                 Expanded(
                   child: Text(
-                    refusal == null || refusal == CraftRefusal.busy
+                    refusal == null ||
+                            refusal == CraftRefusal.busy ||
+                            refusal == CraftRefusal.noWorkshop ||
+                            refusal == CraftRefusal.noTool ||
+                            refusal == CraftRefusal.noMaterials
                         ? ''
                         : _said(l10n, refusal!),
                     style: TextStyle(fontSize: 11, color: colours.muted),

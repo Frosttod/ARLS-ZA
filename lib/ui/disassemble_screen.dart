@@ -405,7 +405,11 @@ class _OfferRow extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          remaining(pick.takes),
+                          // §12: to jest oszacowanie, nie odliczanie — więc
+                          // mówi, w czym liczy. Karta przedmiotu podaje tę samą
+                          // liczbę tą samą funkcją; „6 min" tu i „6:21" tam
+                          // zgłoszono jako niespójność, i było nią.
+                          worked(pick.takes),
                           style: TextStyle(
                             fontSize: 13,
                             color: colours.muted,
@@ -711,7 +715,7 @@ class _SummaryDialog extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      remaining(line.byThen),
+                      worked(line.byThen),
                       style: TextStyle(
                         fontSize: 12,
                         color: colours.muted,
@@ -737,7 +741,7 @@ class _SummaryDialog extends StatelessWidget {
 
             const SizedBox(height: 10),
             Text(
-              l10n.salvageTakes(remaining(running)),
+              l10n.salvageTakes(worked(running)),
               style: TextStyle(
                 fontSize: 12,
                 color: colours.text,

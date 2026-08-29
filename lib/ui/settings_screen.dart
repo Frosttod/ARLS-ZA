@@ -133,7 +133,23 @@ class _SettingsScreenState extends State<SettingsScreen>
                 // this one is the sky.
                 RadioListTile<ThemeChoice>(
                   value: ThemeChoice.daylight,
-                  title: Text(l10n.themeDaylight),
+                  title: Row(
+                    children: [
+                      Expanded(child: Text(l10n.themeDaylight)),
+                      // §12: co z tego wychodzi *teraz*. Bez tego jedyne
+                      // pytanie, jakie ktoś ma przy tej opcji — czy ona w
+                      // ogóle działa — nie ma odpowiedzi na ekranie.
+                      Text(
+                        settings.resolvesDark
+                            ? l10n.themeNowDark
+                            : l10n.themeNowLight,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
                   subtitle: Text(
                     l10n.themeDaylightHint,
                     style: const TextStyle(fontSize: 11),

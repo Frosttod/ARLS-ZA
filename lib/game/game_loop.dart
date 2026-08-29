@@ -683,6 +683,10 @@ class GameLoop {
   /// controller in this project keeps about its neighbours.
   double medicine = 0;
 
+  /// §5, §3.3: czy coś stoi na tyle blisko, żeby to była walka. Ustawiane z
+  /// zewnątrz, tak jak [medicine] i z tego samego powodu.
+  bool enemiesNear = false;
+
   /// §1.3, §2.3: re-derives the body when the character's weight has moved.
   ///
   /// ⚠️ **The blood goes with it, in proportion.**
@@ -832,8 +836,8 @@ class GameLoop {
 
     final decision = _sampling.decide(
       activity: activityFrom(
-        // Combat arrives in stage 5; until then nothing asks for 1 Hz.
-        inCombat: false,
+        // §5, §3.3: sekunda na fix i pełna klatka, kiedy coś jest blisko.
+        inCombat: enemiesNear,
         sheltered: _state.zone.isSheltered,
         asleep: _state.zone == MetabolicZone.sleep,
         speedKmh: _speedKmh,
@@ -1000,11 +1004,8 @@ class GameLoop {
   /// eating tops the reserve up towards the day's requirement and never past
   /// it (§2.2 — a full stomach is full), and first aid takes the bleeding down
   /// a grade rather than clearing it by fiat.
-  /// ⚠️ No bleeding argument, on purpose. Nothing in the loop carries a wound
-  /// yet — line 305 pins the tier at none until combat lands in stage 5 — so a
-  /// dressing has nothing to treat, and accepting a parameter that silently
-  /// did nothing would be worse than not offering it. The caller refuses to
-  /// spend a bandage on an uninjured character instead.
+  /// ⚠️ No bleeding argument, on purpose: [treatBleeding] is its own door, so
+  /// a use that feeds and a use that closes a wound cannot be confused.
   /// ⚠️ **Stages, and deliberately does not publish.**
   ///
   /// This is the bug the field reported as the game hanging on food, and it
@@ -1112,15 +1113,11 @@ class GameLoop {
   /// Down to the grade rather than to nothing: a pressure dressing on an
   /// arterial bleed is not a tourniquet, and §2.6's table is explicit that
   /// only a tourniquet answers that one.
-  /// ⚠️ Stages, like [applyUse], and for the same reason — see the note there.
-  ///
-  /// This one is reached by the same path: a dressing finishes inside
-  /// `_finishUse`, which is inside the tick that the snapshot listener runs.
-  /// Publishing from here puts a second listener run inside the first. It has
-  /// never been observed going round for ever, because finishing a use clears
-  /// the action on the way in — but that is an accident of ordering, not a
-  /// rule, and the meal proved what this shape costs when the ordering does
-  /// not save it.
+  /// ⚠️ Does not publish, like [applyUse] and for the same reason: this is
+  /// reached from inside the tick that the snapshot listener runs, so
+  /// broadcasting here puts a second listener run inside the first. It has
+  /// never been seen looping — finishing a use clears the action on the way
+  /// in — but that is an accident of ordering rather than a rule.
   void treatBleeding(BleedTier down) {
     if (_bleeding.index <= down.index) return;
 

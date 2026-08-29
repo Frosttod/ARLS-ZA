@@ -51,11 +51,11 @@
     {
       "id": "craft_spike",
       "output": "melee_spike",
-      "count": 2,
+      "count": 1,
       "materials": {
         "mat_wood": 1
       },
-      "work_minutes": 8,
+      "work_minutes": 4,
       "workshop_level": 0,
       "tools_any_of": [
         "melee_knife",
@@ -65,13 +65,13 @@
     {
       "id": "craft_spear",
       "output": "melee_spear",
-      "count": 2,
+      "count": 1,
       "materials": {
         "mat_wood": 1,
         "mat_metal": 1,
         "mat_fabric": 1
       },
-      "work_minutes": 25,
+      "work_minutes": 13,
       "workshop_level": 1,
       "tools_any_of": [
         "melee_hammer",
@@ -81,12 +81,12 @@
     {
       "id": "craft_club_studded",
       "output": "melee_club_studded",
-      "count": 2,
+      "count": 1,
       "materials": {
         "mat_wood": 1,
         "mat_metal": 2
       },
-      "work_minutes": 35,
+      "work_minutes": 18,
       "workshop_level": 1,
       "tools_any_of": [
         "melee_hammer"

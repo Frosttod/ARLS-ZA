@@ -27,14 +27,16 @@ void main() {
       expect(book.recipes, isNotEmpty);
     });
 
-    test('a spear is one wood, one metal, one fabric — and makes two', () {
-      // ⚠️ One log gives two shafts. It used to take two logs and make one
-      // spear, so three quarters of the wood vanished at the bench.
+    test('a spear is one wood, one metal, one fabric — and makes one', () {
+      // ⚠️ **Jedna sztuka, i to jest zmiana z terenu.** Przebieg robiący dwie
+      // włócznie brzmi jak oszczędność, dopóki gracz nie potrzebuje jednej:
+      // wtedy druga jest kilogramem i trzema litrami plecaka, których nikt nie
+      // chciał. Broń jest rzeczą trwałą — partiami robi się opatrunki.
       final spear = book.making('melee_spear')!;
 
       expect(spear.materials, {'mat_wood': 1, 'mat_metal': 1, 'mat_fabric': 1});
-      expect(spear.count, 2);
-      expect(spear.work, const Duration(minutes: 25));
+      expect(spear.count, 1);
+      expect(spear.work, const Duration(minutes: 13));
       expect(spear.workshopLevel, 1);
     });
 
@@ -76,15 +78,15 @@ void main() {
     test('nothing without one, thirty per cent at level three', () {
       final club = book.making('melee_club_studded')!;
 
-      expect(craftWork(club), const Duration(minutes: 35));
-      expect(craftWork(club, workshopLevel: 3).inMinutes, 24);
+      expect(craftWork(club), const Duration(minutes: 18));
+      expect(craftWork(club, workshopLevel: 3).inMinutes, 12);
     });
 
     test('and Engineering takes another thirty off', () {
       final club = book.making('melee_club_studded')!;
 
       final best = craftWork(club, workshopLevel: 3, engineering: 1);
-      expect(best.inMinutes, 17, reason: '35 × 0.7 × 0.7');
+      expect(best.inMinutes, 8, reason: '18 × 0.7 × 0.7');
     });
   });
 
@@ -207,19 +209,28 @@ void main() {
       // The recipe *is* the material value where there is one. Guessing from
       // mass would let a player make something cheap and break it for more.
       //
-      // ⚠️ **Per piece, and the run makes two.** Reading the run's materials
+      // ⚠️ **Per piece.** Reading the run's materials
       // as one spear's content was a material duplicator: a run cost three
       // units and produced two spears that each came apart into two. Found by
       // the crafted-gear budget, which asks every made thing whether it gives
       // back more than it cost.
       final spear = catalogue['melee_spear']!;
 
-      expect(book.making('melee_spear')!.count, 2);
+      // Broń robi się po jednej sztuce; partiami robi się opatrunki, i to na
+      // nich ta reguła zarabia — sześć staz z jednej szmaty i kija.
+      expect(book.making('melee_spear')!.count, 1);
       expect(materialContent(spear, book), {
-        'mat_wood': 0.5,
-        'mat_metal': 0.5,
-        'mat_fabric': 0.5,
+        'mat_wood': 1.0,
+        'mat_metal': 1.0,
+        'mat_fabric': 1.0,
       });
+      expect(
+        materialContent(
+          catalogue['med_tourniquet_improvised']!,
+          book,
+        )['mat_fabric'],
+        closeTo(1 / 6, 0.001),
+      );
     });
 
     test('and never gives back everything it cost', () {
