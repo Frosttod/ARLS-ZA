@@ -14,6 +14,9 @@ library;
 import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 
+import '../combat/blows_away.dart';
+import '../l10n/app_localizations.dart';
+
 import 'hud.dart' show HudColors;
 
 /// One thing said, and when.
@@ -81,4 +84,28 @@ class NoticeStack extends StatelessWidget {
       },
     );
   }
+}
+
+/// §5.5.3, §12: co się stało przy zgaszonym ekranie.
+///
+/// ⚠️ **Okno, nie pasek na dole.** Zgłoszone z terenu: gracz wrócił do gry ze
+/// wstrząsem i krwawieniem i **nie wiedział dlaczego**. Komunikat gasnący po
+/// trzech sekundach w trakcie wstawania aplikacji to komunikat, którego nikt
+/// nie przeczytał — a to jest jedyna rzecz, która wydarzyła się bez niego.
+Future<void> showAwayFight(BuildContext context, BlowsAway hurt) {
+  final l10n = L10n.of(context);
+
+  return showDialog<void>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text(l10n.awayTitle),
+      content: Text(l10n.awayAttackedBody(hurt.blows, hurt.bloodMl.round())),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(l10n.commonOk),
+        ),
+      ],
+    ),
+  );
 }

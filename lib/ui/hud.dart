@@ -12,6 +12,7 @@ library;
 import 'package:flutter/material.dart';
 
 import 'fonts.dart';
+import '../combat/awareness.dart';
 import 'units.dart';
 import '../inventory/inventory.dart' show kPocketCapacityL;
 import '../l10n/app_localizations.dart';
@@ -1136,9 +1137,13 @@ class _LimitBar extends StatelessWidget {
 class ThreatReading {
   const ThreatReading({
     required this.count,
+    required this.nearby,
     required this.nearestM,
     required this.anySprinting,
   });
+
+  /// Ilu ich w ogóle jest w zasięgu ostrzeżenia, świadomych czy nie.
+  final int nearby;
 
   /// How many are actually engaged — not how many exist in the district.
   final int count;
@@ -1164,11 +1169,15 @@ class _Threat extends StatelessWidget {
 
     // §5.5.2's colour code — and never colour alone (§12): the number of
     // metres is right there beside it.
-    final colour = metres > 100
-        ? colours.data
-        : metres > 30
-        ? const Color(0xFFE8B33A)
-        : colours.alert;
+    //
+    // ⚠️ Trzy progi zamiast dwóch, i liczone od stu siedemdziesięciu pięciu, a
+    // nie od stu. Zgłoszone z terenu: pasek zapalał się dopiero wtedy, gdy coś
+    // już szło — czyli w chwili, w której zostawał sam bieg.
+    final colour = switch (ThreatBand.of(reading.nearestM)) {
+      ThreatBand.none || ThreatBand.watch => colours.data,
+      ThreatBand.close => const Color(0xFFE8B33A),
+      ThreatBand.onYou => colours.alert,
+    };
 
     return Row(
       children: [
@@ -1177,7 +1186,12 @@ class _Threat extends StatelessWidget {
         Expanded(
           child: Text(
             effects([
-              l10n.hudThreat(reading.count, metres),
+              // Zero ściganych to inna wiadomość niż trzech biegnących: „są,
+              // ale jeszcze nie wiedzą" jest zaproszeniem do obejścia.
+              if (reading.count == 0)
+                l10n.hudThreatQuiet(reading.nearby)
+              else
+                l10n.hudThreat(reading.count, metres),
               if (reading.anySprinting) l10n.hudThreatSprint,
             ]),
             style: TextStyle(

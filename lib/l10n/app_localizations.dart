@@ -193,6 +193,12 @@ abstract class L10n {
   /// **'{days, plural, =0{Less than a day passed.} =1{One day passed.} other{{days} days passed.}}'**
   String awayElapsed(int days);
 
+  /// No description provided for @awayAttackedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{blows} blows landed while the screen was off, and {ml} ml of blood with them. Dress what is open before you walk anywhere.'**
+  String awayAttackedBody(int blows, int ml);
+
   /// Explains the §2.1.1 offline floor so the player is not confused by resources stopping at 10%.
   ///
   /// In en, this message translates to:
@@ -456,6 +462,12 @@ abstract class L10n {
   /// In en, this message translates to:
   /// **'{count} in the fight · nearest {metres} m'**
   String hudThreat(int count, int metres);
+
+  /// No description provided for @hudThreatQuiet.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} nearby, none coming yet'**
+  String hudThreatQuiet(int count);
 
   /// No description provided for @hudThreatSprint.
   ///

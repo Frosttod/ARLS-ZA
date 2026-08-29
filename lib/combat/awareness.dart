@@ -206,3 +206,36 @@ const double kBareHandsBloodMl = 40;
 /// spaceru, ekran w oszczędnym, a markery skakały zamiast płynąć. Dokładnie
 /// wtedy, kiedy z kierunku ich patrzenia odczytuje się, czy się da przejść.
 const double kFightPaceM = 150;
+
+/// §5.5.2, §12: jak blisko coś stoi, w progach, które gracz widzi na pasku.
+///
+/// ⚠️ **Ostrzeżenie przychodziło za późno, i to jest zgłoszenie z terenu.**
+/// Pasek liczył wyłącznie tych, którzy **już** ruszyli — czujnych i biegnących
+/// — więc Kroczący stojący osiemdziesiąt metrów dalej, jeszcze nieświadomy, nie
+/// istniał na ekranie. Gracz dowiadywał się o nim w chwili, w której było już
+/// za późno na cokolwiek poza biegiem.
+///
+/// Cztery progi, bo to są cztery różne decyzje: **daleko** (idź dalej),
+/// **sto siedemdziesiąt pięć** (zwolnij, popatrz na stożki), **sto
+/// pięćdziesiąt** (zdecyduj: obejść czy wracać), **sto** (już nie ma obejścia —
+/// albo cicho w bok, albo do broni).
+enum ThreatBand {
+  none(double.infinity),
+  watch(175),
+  close(150),
+  onYou(100);
+
+  const ThreatBand(this.metres);
+
+  /// Górna granica pasma.
+  final double metres;
+
+  /// Pasmo dla najbliższego, cokolwiek robi.
+  static ThreatBand of(double? nearestM) {
+    if (nearestM == null) return ThreatBand.none;
+    if (nearestM <= ThreatBand.onYou.metres) return ThreatBand.onYou;
+    if (nearestM <= ThreatBand.close.metres) return ThreatBand.close;
+    if (nearestM <= ThreatBand.watch.metres) return ThreatBand.watch;
+    return ThreatBand.none;
+  }
+}

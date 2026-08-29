@@ -23,6 +23,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../combat/combat_session.dart';
 import '../../combat/blows_away.dart';
+import '../../combat/awareness.dart';
 import '../../combat/enemy.dart';
 import '../../combat/enemy_spawner.dart' show kActiveRadiusM;
 
@@ -152,25 +153,37 @@ class CombatController extends ChangeNotifier {
   ThreatReading? threatAt(GeoPoint? at) {
     if (at == null) return null;
 
+    // ⚠️ **Najbliższy, cokolwiek robi.** Pasek liczył wyłącznie tych, którzy
+    // już ruszyli, więc Kroczący stojący osiemdziesiąt metrów dalej i jeszcze
+    // nieświadomy nie istniał na ekranie — a to jest dokładnie ten, o którym
+    // gracz chciałby wiedzieć, póki jeszcze ma wybór.
+    var nearest = double.infinity;
+    for (final enemy in _session.near(at)) {
+      if (enemy.isDead) continue;
+
+      final distance = enemy.position.distanceTo(at);
+      if (distance < nearest) nearest = distance;
+    }
+    if (nearest > ThreatBand.watch.metres) return null;
+
+    // Ilu z nich naprawdę idzie po gracza. Zero znaczy „są, ale jeszcze nie
+    // wiedzą" — i to jest inna wiadomość niż „trzech biegnie".
     final engaged = [
       for (final enemy in _session.near(at))
-        if (enemy.state != EnemyState.idle &&
+        if (!enemy.isDead &&
+            enemy.state != EnemyState.idle &&
             enemy.state != EnemyState.returning)
           enemy,
     ];
-    if (engaged.isEmpty) return null;
 
-    var nearest = double.infinity;
     var sprinting = false;
-
     for (final enemy in engaged) {
-      final distance = enemy.position.distanceTo(at);
-      if (distance < nearest) nearest = distance;
       if (enemy.budget > Duration.zero) sprinting = true;
     }
 
     return ThreatReading(
       count: engaged.length,
+      nearby: _session.near(at).where((enemy) => !enemy.isDead).length,
       nearestM: nearest,
       anySprinting: sprinting,
     );

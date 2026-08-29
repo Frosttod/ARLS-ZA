@@ -1,7 +1,7 @@
 # ARLS-ZA — lista kontrolna systemów
 
 Stan na dzień **2026-08-28**. Wygenerowana po przejściu pełnego zestawu
-testów: **2528 testów, `flutter analyze` czysty, schemat bazy v36**.
+testów: **2536 testów, `flutter analyze` czysty, schemat bazy v36**.
 
 ⚠️ Liczby poniżej są zliczone z suite'a, nie przepisane z pamięci. Suma
 obszarów musi się zgadzać z ogółem — jeśli się nie zgadza, ten plik jest
@@ -45,7 +45,7 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 | `notes` | 14 | notatki i lektura |
 | `l10n` | 7 | kolizje kluczy, brak twardej polszczyzny w kodzie |
 
-**Razem 2528.**
+**Razem 2536.**
 
 ### Rzeczy, które testy trzymają jako liczby, a nie jako intencje
 

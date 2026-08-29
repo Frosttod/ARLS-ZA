@@ -457,6 +457,7 @@ void main() {
         healthy(),
         threat: const ThreatReading(
           count: 3,
+          nearby: 3,
           nearestM: 84,
           anySprinting: false,
         ),
@@ -472,7 +473,12 @@ void main() {
       await pumpHud(
         tester,
         healthy(),
-        threat: const ThreatReading(count: 1, nearestM: 40, anySprinting: true),
+        threat: const ThreatReading(
+          count: 1,
+          nearby: 1,
+          nearestM: 40,
+          anySprinting: true,
+        ),
       );
 
       expect(find.textContaining('ma jeszcze sprint'), findsOneWidget);
@@ -486,6 +492,7 @@ void main() {
         healthy(),
         threat: const ThreatReading(
           count: 2,
+          nearby: 2,
           nearestM: 12,
           anySprinting: false,
         ),
@@ -779,6 +786,44 @@ void main() {
 
       expect(find.text(L10nPl().hudSunrise), findsOneWidget);
       expect(find.text(L10nPl().hudSunset), findsNothing);
+    });
+  });
+
+  group('§5.5.2, §12: ostrzeżenie przychodzi wcześniej', () {
+    testWidgets('coś stojącego sto siedemdziesiąt metrów dalej już widać', (
+      tester,
+    ) async {
+      // ⚠️ Zgłoszone z terenu: pasek liczył wyłącznie tych, którzy już ruszyli,
+      // więc Kroczący jeszcze nieświadomy nie istniał na ekranie — a to jest
+      // dokładnie ten, o którym gracz chciałby wiedzieć, póki ma wybór.
+      await pumpHud(
+        tester,
+        healthy(),
+        threat: const ThreatReading(
+          count: 0,
+          nearby: 2,
+          nearestM: 170,
+          anySprinting: false,
+        ),
+      );
+
+      expect(find.textContaining('jeszcze nie idą'), findsOneWidget);
+    });
+
+    testWidgets('a kiedy ruszą, mówi ilu i jak daleko', (tester) async {
+      await pumpHud(
+        tester,
+        healthy(),
+        threat: const ThreatReading(
+          count: 2,
+          nearby: 2,
+          nearestM: 90,
+          anySprinting: false,
+        ),
+      );
+
+      expect(find.textContaining('90'), findsOneWidget);
+      expect(find.textContaining('jeszcze nie idą'), findsNothing);
     });
   });
 }

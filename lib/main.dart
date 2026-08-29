@@ -2802,7 +2802,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
     _wounded(loop, hurt);
     unawaited(_diary.add(JournalKind.hurt, subject: '${hurt.blows}'));
-    if (mounted) _say(L10n.of(context).combatHurtAway(hurt.blows));
+
+    if (mounted) unawaited(showAwayFight(context, hurt));
   }
 
   /// §5.2, §5.5.3: everything in reach swings, and being surrounded hurts.

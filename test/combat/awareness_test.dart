@@ -298,4 +298,35 @@ void main() {
 
     expect(surface.contains('spreadDeg = kFieldOfViewDeg'), isTrue);
   });
+
+  group('§5.5.2, §12: progi ostrzeżenia', () {
+    test('daleko to nic', () {
+      expect(ThreatBand.of(null), ThreatBand.none);
+      expect(ThreatBand.of(300), ThreatBand.none);
+      expect(ThreatBand.of(176), ThreatBand.none);
+    });
+
+    test('sto siedemdziesiąt pięć: popatrz na stożki', () {
+      expect(ThreatBand.of(175), ThreatBand.watch);
+      expect(ThreatBand.of(151), ThreatBand.watch);
+    });
+
+    test('sto pięćdziesiąt: obejść czy wracać', () {
+      expect(ThreatBand.of(150), ThreatBand.close);
+      expect(ThreatBand.of(101), ThreatBand.close);
+    });
+
+    test('sto: nie ma już obejścia', () {
+      expect(ThreatBand.of(100), ThreatBand.onYou);
+      expect(ThreatBand.of(3), ThreatBand.onYou);
+    });
+
+    test('progi idą w jedną stronę i nie zachodzą na siebie', () {
+      // ⚠️ Zgłoszone z terenu: ostrzeżenie zapalało się dopiero wtedy, gdy coś
+      // już szło — czyli w chwili, w której zostawał sam bieg. Progi liczą się
+      // od odległości, nie od tego, czy przeciwnik już wie.
+      expect(ThreatBand.onYou.metres, lessThan(ThreatBand.close.metres));
+      expect(ThreatBand.close.metres, lessThan(ThreatBand.watch.metres));
+    });
+  });
 }

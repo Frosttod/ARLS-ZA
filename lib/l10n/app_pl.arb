@@ -16,6 +16,7 @@
   "importFailed": "Wczytywanie nie powiodło się: {reason}",
   "awayTitle": "Kiedy Cię nie było",
   "awayElapsed": "{days, plural, =0{Minęło mniej niż doba.} =1{Minęła doba.} few{Minęły {days} dni.} many{Minęło {days} dni.} other{Minęło {days} dni.}}",
+  "awayAttackedBody": "Przy zgaszonym ekranie doszło {blows} ciosów i {ml} ml krwi. Opatrz to, zanim gdziekolwiek pójdziesz.",
   "awayFloored": "Organizm działał na rezerwach. Żaden zasób nie spadł poniżej progu bezpieczeństwa.",
   "clockRolledBack": "Zegar urządzenia cofnął się. Czas nie został naliczony.",
   "bloodVolume": "Objętość krwi",
@@ -70,6 +71,7 @@
       }
     }
   },
+  "hudThreatQuiet": "{count} w pobliżu, jeszcze nie idą",
   "hudThreatSprint": "ma jeszcze sprint",
   "zoneCleared": "Strefa padła. Coś po niej zostało.",
   "hudNoise": "Hałas",

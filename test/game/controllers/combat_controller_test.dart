@@ -95,21 +95,35 @@ void main() {
   });
 
   group('§5.5: how bad it is', () {
-    test('a quiet street reads as nothing at all', () {
-      // ⚠️ Something idle is scenery, not a threat. A reading that counted it
-      // would be crying wolf on every street with anything on it.
+    test('coś stojącego pięćdziesiąt metrów dalej już jest ostrzeżeniem', () {
+      // ⚠️ **Zmiana z terenu.** Wcześniej liczyli się wyłącznie ci, którzy już
+      // ruszyli — więc Kroczący nieświadomy gracza nie istniał na ekranie, a
+      // gracz dowiadywał się o nim wtedy, gdy zostawał sam bieg. Teraz jest w
+      // czytniku, z zerem ściganych: „są, ale jeszcze nie idą".
       fight.session = CombatSession(seed: 1, enemies: [walker('a', 50)]);
+
+      final reading = fight.threatAt(here)!;
+
+      expect(reading.count, 0, reason: 'nikt jeszcze nie idzie');
+      expect(reading.nearby, 1);
+      expect(reading.nearestM, closeTo(50, 1));
+    });
+
+    test('ale dopiero od stu siedemdziesięciu pięciu metrów', () {
+      // Dalej to jest ulica, nie zagrożenie — czytnik, który zapala się na
+      // wszystko w promieniu spaceru, jest czytnikiem, którego nikt nie czyta.
+      fight.session = CombatSession(seed: 1, enemies: [walker('a', 200)]);
 
       expect(fight.threatAt(here), isNull);
     });
 
-    test('and one walking home is still not a threat', () {
+    test('a wracający do siebie nie jest ścigającym', () {
       fight.session = CombatSession(
         seed: 1,
         enemies: [walker('a', 50, state: EnemyState.returning)],
       );
 
-      expect(fight.threatAt(here), isNull);
+      expect(fight.threatAt(here)!.count, 0);
     });
 
     test('something hunting is', () {
@@ -136,8 +150,9 @@ void main() {
 
       final reading = fight.threatAt(here)!;
 
-      expect(reading.count, 2, reason: 'the idle one is not part of it');
-      expect(reading.nearestM, closeTo(30, 1));
+      expect(reading.count, 2, reason: 'the idle one is not chasing');
+      expect(reading.nearby, 3, reason: 'ale stoi tam i jest widoczny');
+      expect(reading.nearestM, closeTo(20, 1), reason: 'najbliższy, czyli ten');
     });
 
     test('nowhere at all reads as nothing', () {

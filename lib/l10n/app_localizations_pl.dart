@@ -73,6 +73,11 @@ class L10nPl extends L10n {
   }
 
   @override
+  String awayAttackedBody(int blows, int ml) {
+    return 'Przy zgaszonym ekranie doszło $blows ciosów i $ml ml krwi. Opatrz to, zanim gdziekolwiek pójdziesz.';
+  }
+
+  @override
   String get awayFloored =>
       'Organizm działał na rezerwach. Żaden zasób nie spadł poniżej progu bezpieczeństwa.';
 
@@ -218,6 +223,11 @@ class L10nPl extends L10n {
   @override
   String hudThreat(int count, int metres) {
     return '$count w walce · najbliżej $metres m';
+  }
+
+  @override
+  String hudThreatQuiet(int count) {
+    return '$count w pobliżu, jeszcze nie idą';
   }
 
   @override

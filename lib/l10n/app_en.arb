@@ -59,6 +59,17 @@
       }
     }
   },
+  "awayAttackedBody": "{blows} blows landed while the screen was off, and {ml} ml of blood with them. Dress what is open before you walk anywhere.",
+  "@awayAttackedBody": {
+    "placeholders": {
+      "blows": {
+        "type": "int"
+      },
+      "ml": {
+        "type": "int"
+      }
+    }
+  },
   "awayFloored": "Your body was running on reserves. Nothing dropped below the safety floor.",
   "@awayFloored": {
     "description": "Explains the §2.1.1 offline floor so the player is not confused by resources stopping at 10%."
@@ -142,6 +153,14 @@
         "type": "int"
       },
       "metres": {
+        "type": "int"
+      }
+    }
+  },
+  "hudThreatQuiet": "{count} nearby, none coming yet",
+  "@hudThreatQuiet": {
+    "placeholders": {
+      "count": {
         "type": "int"
       }
     }
