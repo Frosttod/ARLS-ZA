@@ -15,7 +15,7 @@ Różnica jest istotna, bo w kilkunastu miejscach **świadomie odeszliśmy od do
 
 ⚠️ **Reguła utrzymania tego pliku:** liczba zmieniona w kodzie i nieprzeniesiona tutaj czyni ten dokument gorszym niż jego brak. Przy każdej zmianie stałej — aktualizuj sekcję.
 
-**Stan:** 2121 testów · schemat bazy **v29** · etapy 0–2 zamknięte, 3–5 i 8 przed testem w terenie.
+**Stan:** 2592 testy · schemat bazy **v37** · etapy 0–2 zamknięte, 3–6 i 8 przed testem w terenie.
 
 ---
 
@@ -552,7 +552,49 @@ Liczba slotów zależy od broni (rewolwer 1, karabin 3). **Masa dodatków wlicza
 | Łom | 1,2 kg | drzwi, kłódka | 12 / 25 s | 150 / 60 m |
 | Siekiera | 1,6 kg | drzwi | 12 s | 150 m |
 
+Bez narzędzia zostaje ramię: **drzwi 90 s / 200 m**, okno 10 s / 160 m, kłódka
+nigdy.
+
 Łom i siekiera są jednocześnie bronią białą — `doubles_as_tool`.
+
+**Narzędzie się zużywa** — `condition_decay_per_use`, po jednym otwarciu:
+
+| Narzędzie | Zużycie na użycie | Starcza na |
+| :---- | ----: | ----: |
+| **Wytrychy** | **2%** | **50 zamków** |
+| Łom, siekiera, nożyce | 0,1–0,3% | setki |
+
+⚠️ **Schodzi egzemplarz najbardziej zużyty, nie pierwszy z brzegu.** Kto nosi
+dwa komplety, dorabia się jednego całego i jednego na wykończeniu — tak robi
+każdy, kto ma w kieszeni dwa scyzoryki.
+
+⚠️ **Broń w ręce stoi w obu listach naraz.** Prawdziwy egzemplarz z uid zostaje
+w plecaku, a lista noszonych trzyma sam znacznik slotu — bez uid i bez
+kondycji. Zużycie znacznika byłoby zużyciem niczego.
+
+Panel przeszukania nazywa **to narzędzie, którym gra naprawdę otworzy**:
+pierwsze z `tool_ids`, które gracz ma. Drzwi ustępują łomowi *albo* siekierze, a
+panel pokazujący jedno, kiedy zużywa się drugie, byłby gorszy od milczącego —
+gracz zapamiętałby cenę, której nie zapłacił.
+
+### 8.5. Zestaw startowy (§4, §12)
+
+Drugi etap tworzenia postaci: cztery wybory po dwie możliwości, obie na ekranie
+naraz i z opisem pod spodem.
+
+| Krok | Jedno z | O czym rozstrzyga |
+| :---- | :---- | :---- |
+| 1 | łom · **1 wytrych** | drzwi szybko czy cicho |
+| 2 | 5 opatrunków · apteczka | wiele drobnych ran albo jedna poważna |
+| 3 | maczeta · siekiera | co jest w ręce, kiedy zabraknie dystansu |
+| 4 | 2 puszki mięsa · 3 warzyw | kalorie teraz albo dzień dłużej bez szukania |
+
+⚠️ **Jeden wytrych, nie komplet.** Odkąd otwieranie zużywa narzędzie (§8.4),
+cztery to pięćdziesiąt zamków wydanych, zanim gra się zaczęła.
+
+⚠️ Wybór wychodzi z kreatora **dopiero po potwierdzeniu**: §11.1 chce, żeby
+zapis był cały albo żeby go nie było, a ekran oddający wybory po drodze
+zostawiłby po przerwanym kreatorze wiersze ekwipunku bez postaci.
 
 ---
 
@@ -568,6 +610,12 @@ Liczba slotów zależy od broni (rewolwer 1, karabin 3). **Masa dodatków wlicza
 | Gwarantowany bliski ring | **5 miejsc w 600 m** |
 | Zapominanie | 4 000 m |
 | Odnowa skrzyni | **4–8 h** |
+
+**Pod własnymi drzwiami nic nie rośnie: 80 m** — 50 m strefy bezpiecznej plus
+30 m czystego terenu dookoła. Skrzynia stojąca dokładnie na granicy jest
+skrzynią, do której wychodzi się na dwa kroki, a §10 stoi na tym, że po rzeczy
+trzeba iść. Prawdziwe POI, które stało tam przed budową schronu, nie znika —
+przeszukuje się je raz, jak wszystko inne.
 
 **Samochody i śmietniki mają rezerwację: 3 najbliższe, niezależnie od gęstości.** §10.1 trzyma *otagowane* parkingi z dala od miasta (4165 parkingów na 427 sklepów spożywczych w promieniu 2 km od centrum Poznania) i słusznie — ale wymyślony samochód i wymyślony śmietnik to nie to samo: jest ich garść, są najzwyklejszą rzeczą na ulicy i niosą dokładnie to, czego brakuje §18.2. Zmierzone na spacerze: bliski pierścień zapełniał się prawdziwymi sklepami w pierwszym przebiegu, pula zapasowa nigdy nie była ruszana, a miasto nie dawało **ani jednego** samochodu i śmietnika. Rezerwacja idzie z puli 15 miejsc §10, nie ponad nią.
 
@@ -638,13 +686,19 @@ przyciskiem z mignięciem.
 
 | Bariera | Otwarte od startu | Siłą | Cicho | Narzędziem |
 | :---- | ----: | :---- | :---- | :---- |
-| **Drzwi** | 35% | 20 s / 150 m | wytrychy 60 s / 20 m | łom, siekiera 12 s / 150 m |
+| **Drzwi** | 35% | **90 s / 200 m** | wytrychy 60 s / 20 m | łom, siekiera 12 s / 150 m |
 | **Kłódka** | 10% | — | wytrychy 45 s / 20 m | **nożyce 10 s / 60 m**, łom/piła/multitool 25 s / 60 m |
-| **Okno** | 45% | 5 s / 150 m | — | — |
+| **Okno** | 45% | **10 s / 160 m** | — | — |
 
 ⚠️ **Kłódki nie da się otworzyć bez narzędzia.** §19.3 nazywa ją barierą
 wymagającą narzędzia, a złagodzenie tego uczyniłoby każde narzędzie w grze
 opcjonalnym.
+
+⚠️ **Kolejność jest treścią, i nie zawsze była.** Dwadzieścia sekund ramieniem
+przy dwunastu łomem znaczyło, że narzędzia są ozdobą — osiem sekund różnicy
+nikogo nie skłoni do noszenia kilograma sześciuset — a gołe ręce były
+**szybsze** od wytrychów, więc cicha droga nie miała żadnej przewagi poza
+hałasem. Teraz: łom 12 s, wytrychy 60 s, ramię 90 s i dwieście metrów.
 
 **Nożyce do kłódek** (`tool_bolt_cutters`, 1,9 kg) to głośna i szybka
 odpowiedź; **wytrychy** (`tool_lockpicks`, 0,1 kg) to cicha i wolna. Dwa
@@ -839,6 +893,66 @@ W MVP występuje wyłącznie **Szwędacz**. Grupa 2–4 czyni walkę z grupą st
 
 **W gęstej zabudowie zasięg wykrycia ×0,7** — ściany, które połykają strzał, połykają też sylwetkę.
 
+### 11.2a. Co widzą i co słyszą (§6.2, §5.6.1)
+
+⚠️ **Wykrycie było promieniem, a promień nie ma tyłu.** Szwędacz zauważał
+gracza zza pleców tak samo jak na wprost, więc jedyną odpowiedzią na
+przeciwnika była broń albo dystans — podchodzenie nie istniało jako możliwość.
+
+| Reguła | Wartość |
+| :---- | :---- |
+| Pole widzenia | **120°** wokół kierunku marszu |
+| Martwy łuk pleców | 120° |
+| Słuch | promień hałasu gracza (niżej) |
+| Ścigający | widzi dookoła |
+
+**Hałas gracza** — jedyna skradanka, jaką ma gra mierząca prawdziwy ruch: nie ma
+przycisku „kucnij" i nigdy nie będzie.
+
+| Tempo | Prędkość | Słychać z |
+| :---- | :---- | ----: |
+| Postój | < 0,5 km/h | **0 m** |
+| Ostrożny krok | < 3,2 km/h | 8 m |
+| Marsz | < 6,4 km/h | 15 m |
+| Bieg | ≥ 6,4 km/h | **40 m** |
+
+Liczba stoi na HUD-zie na stałe, słowem i odległością. **Usłyszane to nie
+zobaczone**: dźwięk robi z przeciwnika czujnego, a czujny idzie *w stronę
+hałasu*, nie do gracza.
+
+⚠️ **Stożek musi być narysowany.** Stożek, którego nie widać, jest niewidzialną
+karą, a nie mechaniką — rysowany jest w prawdziwym promieniu wykrycia, nie w
+stałych 26 pikselach, jak przez pierwszy commit.
+
+### 11.2b. Cicha eliminacja (§5.5.1)
+
+Trzy warunki naraz, każdy sprawdzalny wzrokiem: przeciwnik **niewzbudzony**,
+gracz **za jego plecami** (łuk 120°), odległość **≤ 3 m**, ostrze w ręce.
+Skutek: cała objętość krwi naraz, **12 m hałasu** — tyle, ile słychać padające
+ciało.
+
+⚠️ **Brutala się nie ucisza.** Sześć do ośmiu litrów krwi i kark, którego nie
+przecina się nożem w jednym ruchu. Mechanika, w której najgroźniejsza rzecz w
+grze pada od jednego dotknięcia od tyłu, zamienia elitę w cel treningowy.
+
+### 11.2c. Pasma zagrożenia (§5.5.2, §12)
+
+| Pasmo | Dystans | Decyzja |
+| :---- | ----: | :---- |
+| Obserwuj | **175 m** | zwolnij, popatrz na stożki |
+| Blisko | **150 m** | obejść czy wracać |
+| Na tobie | **100 m** | obejścia już nie ma |
+
+Liczą **każdego** przeciwnika, także jeszcze nieświadomego. Wcześniej pasek
+liczył wyłącznie tych, którzy już ruszyli, więc Szwędacz stojący osiemdziesiąt
+metrów dalej nie istniał na ekranie.
+
+Na **150 m** (`kFightPaceM`) gra przestaje oszczędzać: GPS i ekran wchodzą w
+tempo walki. Wcześniej decyzja o tempie brała `inCombat: false` wpisane na
+sztywno — z komentarzem „walka przyjdzie w etapie 5".
+
+**Po zmierzchu jest ich o połowę więcej** (`kNightCrowdShare` = 0,5, §17.4).
+
 ### 11.3. Spawn (§6.4)
 
 | | Wartość |
@@ -854,7 +968,7 @@ W MVP występuje wyłącznie **Szwędacz**. Grupa 2–4 czyni walkę z grupą st
 
 ⚠️ **Histereza:** znacznik już narysowany zostaje widoczny do 375 m. Bez niej ten sam Szwędacz migotał, przechodząc granicę 300 m tam i z powrotem.
 
-⚠️ Przy 600 m i gęstości 2/km² maksymalna liczba przeciwników tłowych to **2**. Prawdziwa populacja ma pochodzić z ognisk (§6.5), których jeszcze nie ma.
+⚠️ Przy 600 m i gęstości 2/km² maksymalna liczba przeciwników tłowych to **2**. Prawdziwa populacja pochodzi ze Stref Rozkładu (§11.5).
 
 ### 11.4. Trwałość
 
@@ -872,6 +986,74 @@ W MVP występuje wyłącznie **Szwędacz**. Grupa 2–4 czyni walkę z grupą st
 Bez tego zamknięcie aplikacji było doskonałą ucieczką. Ucieczka nadal istnieje — jest spacerem, nie menedżerem zadań.
 
 **Ciała są zapisywane** — **12 h**, ze znacznikiem „przeszukane". Łup pojawia się dopiero po przeszukaniu z bliska.
+
+### 11.5. Strefy Rozkładu (§6.5)
+
+Wszystko inne w tej grze robi gracz. Strefa jest tym, co gra robi z powrotem.
+
+| | Wartość |
+| :---- | ----: |
+| Maks. naraz | **3** |
+| Od schronu | 500–2 000 m |
+| Między centrami | 450 m |
+| Promień | 20 m (poz. 1) → **200 m** (poz. 10) |
+| Wrogów na poz. 10 | 12 |
+| Odpoczynek slotu po likwidacji | **24–48 h** |
+
+**Wzrost — doba do dwóch dób realnego czasu na poziom:**
+
+```
+interwał = random(24 h, 48 h) × (5,8 h ÷ kredyt_godzin_na_dobę) × random(0,6; 1,4)
+           przycięte do 12 h … 96 h
+```
+
+⚠️ **Poprzednia formuła liczyła w godzinach świata** — osiem pierwszego dnia,
+ćwierć godziny mniej każdego następnego, podłoga na dwóch — i po przeliczeniu
+przez tempo gry dawała strefę rosnącą szybciej, niż da się ją zbić. Miasto ma
+się psuć przez tygodnie, nie przez popołudnie.
+
+Skalowanie idzie z nawyku gry (§16.1, nawyk odniesienia: godzina dziennie).
+Przycięcie 12–96 h trzyma to w ryzach w obie strony: kto gra całymi dniami, nie
+dostaje łatwiejszego świata, a kto znika na dwa tygodnie, nie wraca do innej
+gry.
+
+**Zbijanie:**
+
+| | Wartość |
+| :---- | ----: |
+| Bariera | `60 + 20 × poziom` (80 pkt na poz. 1, 260 na 10) |
+| Ciało w kole | **10 pkt** |
+| Ciało poza kołem | **5 pkt** |
+| Regeneracja | **5% maksimum / h** |
+
+⚠️ **Punktacja płaska, niezależnie od gatunku.** Po gatunku — Szwędacz 10,
+Skakun 15, Brutal 35 — nagradzała wybieranie najgroźniejszego celu, czyli
+odwrotność tego, po co strefa jest: decyzją ma być *gdzie* się walczy, a nie
+*z czym*. Wywabianie poza koło jest bezpieczniejsze i dokładnie dwa razy
+wolniejsze.
+
+⚠️ **Bariera nie odbudowuje się, kiedy gracz stoi w środku.** Pasek
+odbudowujący się pod nogami tego, kto go opróżnia, mówi, że próba jest bez
+sensu.
+
+**Wysyp:** 10% szans przy każdym trafieniu w strefie, najwyżej **raz na 60
+minut**, wypuszcza **połowę limitu poziomu ponad limit** na 10 minut. Blokada
+leży na dysku (`surged_at`), bo kara, którą zdejmuje się restartem aplikacji,
+jest karą za granie uczciwie. Wzburzenie nie odnawia się dalej niż **400 m** od
+centrum — ma być trudno, a nie ma być spirali bez wyjścia.
+
+**Skrytka po likwidacji** — powód, żeby tam iść, a nie pocieszenie za amunicję:
+
+| Zawartość | Ile |
+| :---- | ----: |
+| Komponenty | 4–8 |
+| Złom | 10–18 |
+| Apteczki | 1–2 |
+| Naboje 5,45×39 | 30–60 |
+
+Cztery rzeczy, które zmieniają wyprawę, zamiast dwudziestu, które zmieniają
+liczbę w plecaku. **Pusty slot jest osobnym stanem** — „tu jeszcze nie było
+strefy" i „tę właśnie zbito" to przeciwieństwa.
 
 ---
 
@@ -902,6 +1084,23 @@ Przeciwnicy zatrzymują się na granicy. Gracz musi wyjść, żeby walczyć — 
 | Minimum osiągalne | **~1 h 22 min** |
 
 ⚠️ **Praca liczy się wyłącznie na placu.** Odejście zatrzymuje pasek. Postęp zapisywany co 15 s, znacznik czasu w bazie — noc z zamkniętą aplikacją liczy się w całości.
+
+**Ta sama reguła obowiązuje warsztat** (§2.1a.3, schemat v37). Wyjście ze strefy
+odkłada wytwarzanie i demontaż tam, gdzie były; powrót przesuwa **oba** stemple
+o czas nieobecności.
+
+⚠️ Obecność była sprawdzana **raz**, przy odpalaniu roboty, i nigdy więcej:
+`ready_at` ustawione przy starcie było czystym zegarem ściennym, więc plecak
+wojskowy dało się zostawić na imadle, przejść pół miasta i odebrać go w terenie.
+
+⚠️ Przesunięcie samego terminu wydłużyłoby robotę zamiast ją przesunąć —
+postęp liczy się od `started_at`, więc godzinna praca po dobie nieobecności
+miałaby dobę i godzinę „całości", a trzydzieści zrobionych minut czytałoby się
+jako dwa procent.
+
+**Lektura tej reguły nie ma** i to jest decyzja, nie przeoczenie: strona jest
+akcją (`ActionKind.reading`, 76 s), nie wymaga schronu, żeby ruszyć, a §4.6
+wprost mówi, że wielkie tomy opłaca się czytać na miejscu.
 
 **Przerwanie** jest możliwe i nieodwracalne: materiały zostają w ścianach, praca zaczyna się od zera. Okno mówi to wprost.
 
@@ -1088,7 +1287,7 @@ Miejsca, w których kod **świadomie** robi coś innego niż `ARLS-ZA_design_doc
 | **Krew po przebudzeniu** | „25% maksymalnej (klasa III)" | **65%** | Te dwie połowy są sprzeczne: 25% pozostałej to 75% utraty = klasa **IV** = śmierć. Dosłownie wdrożone → budzisz się i natychmiast padasz z powrotem, w pętli. Wygrała klasa, nie liczba. |
 | **Reakcja na hałas** | marsz do punktu hałasu | **bieg**, gdy hałas ≥ 200 m | Chybiony strzał ściągający ich spacerkiem z 400 m czytał się jak świat, który go nie usłyszał. Bez tego cena broni palnej jest notatką w logu, a nie kosztem. |
 | **Przekierowanie na drugi strzał** | reagują tylko SPOCZYNEK/POWRÓT | także **CZUJNOŚĆ** | Idący do pierwszego strzału ignorowali każdy następny — można było strzelać i odchodzić bez konsekwencji. |
-| **Promień spawnu lootu** | 2 km | **1,2 km** (beta) | 25 minut marszu po jeden sklep to szum na mapie. Wraca przy ogniskach. |
+| **Promień spawnu lootu** | 2 km | **1,2 km** (beta) | 25 minut marszu po jeden sklep to szum na mapie. Do przeliczenia teraz, kiedy Strefy Rozkładu dają dalekim punktom powód istnienia. |
 | **Sen w dzień** | tylko noc (§2.5.3) | **także 10 min spokoju** | Prośba z testów. Nie da się farmić — dług zatrzymuje się na zerze. |
 | **Warsztat** | 3% na poziom | dostęp do napraw | Dokument sam oznacza swoją wersję jako niezbalansowaną. |
 | **Regeneracja krwi** | brak | **60 ml/h** | Bez tego przeżycie ciężkiej walki to dożywocie w klasie IV. |
@@ -1104,6 +1303,10 @@ Miejsca, w których kod **świadomie** robi coś innego niż `ARLS-ZA_design_doc
 | **Progi 5% i 10% odwodnienia** | „osłabienie" / „stan krytyczny", bez liczb | ×1,30 / ×1,60 czasu czynności | §2.3 nakazuje, żeby pragnienie było ostrzejsze od głodu; bez tego było odwrotnie. |
 | **Deprywacja przewlekła** | brak | **drugi zegar** (§5.3) | §2.5.4 mierzy ostatnią noc, ma sufit doby i na 6-godzinnych nocach nie drga. Trzy tygodnie niedosypiania czytały się jak jeden zarwany wieczór. |
 | **Nadwyżka kalorii** | „nadmiar nie kumuluje zapasu" | idzie w **masę ciała** | Wyrzucana, nie dawała nic — nie było powodu najeść się przed wyprawą. Zapas dobowy dalej się nie kumuluje. |
+| **Punktacja strefy** | po gatunku: 10 / 15 / 35 pkt | **10 pkt płasko, 5 poza kołem** | Punktacja po gatunku nagradzała wybieranie najgroźniejszego celu, czyli odwrotność tego, po co strefa jest: decyzją ma być *gdzie* się walczy, a nie *z czym*. |
+| **Wzrost strefy** | godziny świata (8 h → 2 h) | **24–48 h realnego czasu**, skalowane nawykiem | Po przeliczeniu przez tempo gry stara formuła dawała strefę rosnącą szybciej, niż da się ją zbić. |
+| **Lektura poza strefą** | §2.1a.3: zajęcie schronowe | **tyka wszędzie** | §4.6 wprost mówi, że wielkie tomy opłaca się czytać na miejscu. Wymuszenie strefy nie wstrzymałoby czytania, tylko zabroniło czytać w terenie. |
+| **Otwieranie drzwi ramieniem** | — | **90 s / 200 m** (było 20 s / 150 m) | Osiem sekund różnicy wobec łomu znaczyło, że narzędzia są ozdobą, a gołe ręce były szybsze od wytrychów. |
 
 ---
 
@@ -1126,8 +1329,24 @@ dyktować tempo wzrostu.
 ⚠️ Pierwsza wersja była odwrotna — świat gracza grającego rzadko rósł **dwa
 razy szybciej**. Zostawiony test pilnuje kierunku.
 
-⚠️ Pomiar **nie jest zapisywany** — to zmiana schematu, która przyjdzie razem
-ze składem ognisk.
+Wpięty w §11.5: dyktuje tempo wzrostu Stref Rozkładu.
+
+### 16.2. Zajęcia jako model (§2.1a.3, §2.1a.4)
+
+`Occupation`, `advanceOccupation`, `zoneSuspended`, wznowienie po powrocie —
+model kompletny, przetestowany, i **`beginOccupation` nie ma w grze ani jednego
+wołającego** poza testami.
+
+Nie wpięty świadomie: „zajętość" (postać przy imadle nie zasypia) loop ma już
+przez `setWorking`, a zegar roboty dostał własną regułę obecności (§12.2).
+Wpięcie zajęcia dołożyłoby **drugi zapis tego samego faktu**. Decyzja do
+podjęcia: albo crafting, budowa i lektura przechodzą na `Occupation` jako jedno
+źródło prawdy, albo model znika.
+
+### 16.3. `TickEngine`
+
+Osobny silnik tickowy obok `GameLoop`. Nic go nie woła. Ta sama decyzja co
+wyżej: wpiąć albo usunąć.
 
 ---
 
@@ -1135,15 +1354,17 @@ ze składem ognisk.
 
 | Mechanika | Stan | Blokuje |
 | :---- | :---- | :---- |
-| **Ogniska (§6.5)** | ⬜ etap 6 | prawdziwą populację przeciwników; dziś świat ma maks. 2 tłowych |
-| **Umiejętności (§7)** | ⬜ | wszyscy strzelają jak nowicjusz (25 MOA); `learningRateMultiplier` z §2.5.4 i §2.5.5 nie ma jeszcze konsumenta |
-| **Magazynki jako przedmioty** | ⬜ | stan magazynka nie jest zapisywany |
-| **Zawartość magazynu schronu** | ⬜ | pojemność policzona, nie ma gdzie odłożyć |
+| **Kronika strefy (§6.10)** | ⬜ | awans i likwidacja nie mają wpisu ani powiadomienia |
+| **Umiejętności (§7)** | 🟡 | czytane przez walkę, budowę i demontaż; `learningRateMultiplier` z §2.5.4 i §2.5.5 nadal bez konsumenta |
+| **Magazynki jako przedmioty** | ✅ | w katalogu i w generatorze strony (typ `magazine`) |
+| **Zawartość magazynu schronu** | ✅ | półka §18.2, z blokadą przed budową |
 | **Dźwięki i haptyka** | ⬜ etap 7 | ~55 plików, licencje |
 | **Pancerz per lokalizacja** | ⬜ | trafienia mają lokalizacje, pancerz liczy jeden próg torsa |
 | **Budynki jako przeszkody** | ⬜ | warstwa w paczkach nie niesie typu |
 | **Światło broni** | ⬜ | §6.2 daje wykrywanie bez kierunku |
-| **Crafting, moduły, recykling** | ⬜ P3 | — |
+| **Drugi kanał obrażeń (§5.5.1)** | ⬜ | `strength_required` i `reach_m` leżą w danych i nikt ich nie czyta |
+| **Temperatura otoczenia** | ⬜ | `ambientTempC` i `clothingClo` nie mają źródła |
+| **Światło (`tool_flashlight`)** | ⬜ | latarka nie robi nic |
 | **Pogoda i sezonowość** | ⬜ P4 | wymaga craftingu |
 | **Onboarding, dostępność** | ⬜ etap 9 | publikację |
 

@@ -14,7 +14,7 @@ Każdy zamknięty etap dostaje sekcję **Dziennik wykonania** z decyzjami podję
 | 3 | Mapa, GPS, bezpieczeństwo gracza | 🟡 13/13 zadań, po kilku spacerach | — | `f035626` … `43510ef` (15 commitów) |
 | 4 | Przedmioty, loot, przeszukanie | 🟡 11/11 zadań, po testach w terenie | — | `2b1cb31` … `6033aff` |
 | 5 | Walka, przeciwnicy, hałas | 🟡 14/14 zadań, po testach w terenie | — | … `6033aff` |
-| 6 | Ognisko z pełnym cyklem | 🟡 **w toku** | — | — |
+| 6 | Strefy Rozkładu z pełnym cyklem | 🟡 13/13 zadań, po testach w terenie | — | `24ef01b`, schemat v36 |
 | 7 | Audio pozycyjne i haptyka | ⬜ | — | — |
 | 8 | Schron, obóz, pętla dobowa | 🟡 8/9 zadań, po testach w terenie | — | schemat v21 |
 | — | Profil i statystyki postaci (§13.1) | ✅ poza etapami | 2026-08-18 | `8937688` |
@@ -24,16 +24,24 @@ Każdy zamknięty etap dostaje sekcję **Dziennik wykonania** z decyzjami podję
 | — | Warsztat: magazyn + wytwarzanie w jednym, rozbiórka wsadowa z kolejką | ✅ poza etapami | 2026-08-22 | schemat v26 |
 | — | Migracja `main.dart`: sześć kontrolerów, granica awarii, zapadka rozmiaru | ✅ fazy 0–6 | 2026-08-22 | 7088 → 6638 linii |
 | — | **Fizjologia długoterminowa** (§2.3.1, §2.5.5) | ✅ poza etapami | 2026-08-23 | schemat v27–v29 |
+| — | **Skradanka**: stożki 120°, słuch wg tempa, cicha eliminacja, pasma 175/150/100 m | ✅ poza etapami | 2026-08-28 | `ec0be3f` … `344a31f` |
+| — | **Bariery**: zużycie narzędzia, przebalansowane czasy, panel nazywa narzędzie | ✅ poza etapami | 2026-08-30 | `fdefddb` … `a64a9a5` |
+| — | **Zestaw startowy** jako drugi etap tworzenia postaci (§4, §12) | ✅ poza etapami | 2026-08-29 | `5c3e85b`, `b96b927` |
+| — | **Reguła obecności przy warsztacie** (§2.1a.3) | ✅ poza etapami | 2026-08-30 | `c6768b3`, schemat v37 |
 
-**Metryki:** 2121 testów · `flutter analyze` czysty · schemat bazy **v29**
+**Metryki:** 2592 testy · `flutter analyze` czysty · schemat bazy **v37** · `main.dart` 6420 linii
 
 ✅ **`main` jest wypchnięty na `origin/main`.** Wcześniej cała gra istniała na jednym dysku i było to największe ryzyko projektu — jedyne, którego nie dawało się naprawić kodem.
 
 ⚠️ Repozytorium `Frosttod/ARLS-ZA` jest **publiczne**. `android/key.properties` jest w `.gitignore` i nie wolno go tam wpuścić.
 
-### Co zamyka etapy 3–5 i 8
+### Co zamyka etapy 3–6 i 8
 
-Wszystkie cztery mają komplet zadań i przeszły testy w terenie. Do formalnego zamknięcia brakuje **ognisk (etap 6)**: §6.4 daje dziś wyłącznie ambientową strużkę — maksymalnie dwóch przeciwników na kilometr kwadratowy — więc walka, loot i schron są sprawdzone pojedynczo, ale nigdy pod presją, dla której powstały. Promień spawnu lootu stoi z tego samego powodu na 1200 m zamiast 2000 m.
+Wszystkie pięć ma komplet zadań i przeszło testy w terenie. Blokada, którą był brak ognisk, **zniknęła**: Strefy Rozkładu stoją z pełnym cyklem — bariera, wysyp, skrytka, odpoczynek slotu — więc walka, loot i schron mają wreszcie presję, dla której powstały.
+
+Do formalnego zamknięcia brakuje **jednej długiej passy w terenie**: trzydziestu dni z rzędu, ze zbiciem strefy z poziomu wyższego niż pierwszy, bez utraty zapisu. To jest test, którego nie da się przyspieszyć symulatorem — wzrost strefy liczy się teraz w dobach realnego czasu (§11.5 w MECHANICS).
+
+Promień spawnu lootu stoi nadal na 1200 m zamiast 2000 m i **jest do przeliczenia**: powód tej figury — „daleki znacznik, do którego nikt nie pójdzie" — właśnie przestał obowiązywać.
 
 ### Zablokowane na użytkowniku
 
@@ -427,22 +435,29 @@ Dwa wnioski na przyszłość:
 
 ---
 
-## Etap 6 — Ognisko
+## Etap 6 — Strefy Rozkładu
 
 **Cel:** presja, która rośnie sama. Bez tego nie ma czego przetrwać.
+
+**Nazwa zmieniona w trakcie** — „ognisko" czytało się w terenie jak ognisko na
+biwaku. „Bariera" zamiast integralności, „wylęg" zamiast respawnu, „wrogowie"
+zamiast sztuk.
 
 | # | Zadanie | Odniesienie |
 | :---- | :---- | :---- |
 | 6.1 | Rozmieszczenie: 500–2000 m od schronu, min. 450 m między centrami, promień do 200 m | §6.5.1 |
 | 6.2 | Poziomy 1–10: promień, limit wrogów, respawn, skład | §6.5.2 |
-| 6.3 | Wzrost: `max(2h, 8h − 0.25h × dzień) × random(0.6, 1.4)`; ⚠️ zamiast stałych 25% czasu uśpionego — tempo mierzone stylem gry (`lib/sim/play_habit.dart`), godzina gry ×3,5 plus podłoga 0,10/h. Pomiar dobowy do zapisania (schemat v12) | §6.5.3, §16.4 |
+| 6.3 | ⚠️ **Wzrost przeliczony**: `random(24 h, 48 h) × (5,8 h ÷ kredyt) × random(0,6; 1,4)`, przycięty do 12–96 h. Stara formuła liczyła w godzinach świata i dawała strefę rosnącą szybciej, niż da się ją zbić | §6.5.3, §16.4 |
 | 6.4 | Powiadomienie push przy awansie z nazwą ulicy z OSM | §6.5.3 |
-| 6.5 | Integralność, punkty za eliminacje, 50% poza promieniem, regeneracja +5%/h | §6.5.4 |
-| 6.6 | Wzburzenie po zbiciu poziomu: 10 min, ×3 respawn, +50% limitu, skład o szczebel wyżej | §6.5.4 |
+| 6.5 | ⚠️ **Punktacja płaska**: 10 pkt w kole, 5 poza nim, niezależnie od gatunku; regeneracja +5%/h, **ale nie kiedy gracz stoi w środku** | §6.5.4 |
+| 6.6 | Wzburzenie po zbiciu poziomu; **wysyp**: 10% szans przy trafieniu, raz na 60 min, połowa limitu ponad limit | §6.5.4 |
 | 6.7 | Zawór bezpieczeństwa: wzburzenie nie odnawia się przy oddaleniu >400 m | §6.5.4, decyzja otwarta §13/3 |
-| 6.8 | Likwidacja: skład z lootem ×3, slot pusty 24–48 h, nowe ognisko na poziomie 1 | §6.5.4 |
+| 6.8 | Likwidacja: **skrytka z listy** (komponenty, złom, apteczki, amunicja), slot pusty 24–48 h | §6.5.4 |
 | 6.9 | Wizualizacja: okrąg, kolor wg poziomu, panel po tapnięciu | §6.5.6 |
 | 6.10 | Licznik passy przetrwania + ekran Kronika | §13.1, §9.3 |
+
+**6.4 i 6.10 zostają otwarte** — awans i likwidacja nie mają ani wpisu w
+kronice, ani powiadomienia. Reszta stoi, ze schematem v36.
 
 **Kryterium wyjścia:** przy ×3600 ognisko przechodzi pełną ścieżkę 1 → 10 → zbicie → likwidacja bez rozjazdu stanu po restarcie aplikacji; symulacja odpowiada na pytanie z §16.4 (czy gracz z 1 h dziennie nadąża).
 

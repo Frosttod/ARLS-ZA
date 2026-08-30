@@ -10,7 +10,7 @@ Hiper-realistyczny survival GPS na Androida. Ciało gracza jest kontrolerem: obj
 | Pakiet | `com.raidodevelopment.arlsza` |
 | Nazwa w sklepie | ARLS-ZA Game |
 | Model sieciowy | offline-first, brak własnych serwerów gry |
-| Status | 2121 testów · schemat bazy v29 · etapy 0–2 zamknięte, 3–5 i 8 po testach w terenie |
+| Status | 2592 testy · schemat bazy v37 · etapy 0–2 zamknięte, 3–6 i 8 po testach w terenie |
 
 ## Dokumentacja
 
