@@ -592,6 +592,32 @@ final List<_Kind> _kinds = [
     ],
   ),
   _Kind(
+    type: 'magazine',
+    titleEn: 'Magazines',
+    titlePl: 'Magazynki',
+    headingEn: 'Rounds you already paid for',
+    headingPl: 'Naboje, za które już zapłacono',
+    ledeEn:
+        'A magazine is the difference between a reload measured in seconds and '
+        'one measured in rounds. Feed a revolver and you pay per round; change '
+        'a magazine and you pay once - which is why an empty one is still '
+        'worth carrying.',
+    ledePl:
+        'Magazynek to różnica między przeładowaniem liczonym w sekundach a '
+        'liczonym w nabojach. Rewolwer ładuje się sztuka po sztuce, magazynek '
+        'wymienia się raz - i dlatego pusty też warto nieść.',
+    columns: [
+      _Column(
+        'Fits',
+        'Pasuje do',
+        (i, p, pl) =>
+            (p['attaches_to'] as List<dynamic>? ?? const []).join(', '),
+      ),
+      _Column('Capacity', 'Pojemność', (i, p, pl) => _num(p['capacity'])),
+      _Column('Calibre', 'Kaliber', (i, p, pl) => '${p['caliber'] ?? '—'}'),
+    ],
+  ),
+  _Kind(
     type: 'crafting',
     titleEn: 'Materials',
     titlePl: 'Surowce',
