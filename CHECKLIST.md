@@ -1,7 +1,7 @@
 # ARLS-ZA — lista kontrolna systemów
 
 Stan na dzień **2026-08-28**. Wygenerowana po przejściu pełnego zestawu
-testów: **2602 testy, `flutter analyze` czysty, schemat bazy v37**.
+testów: **2608 testów, `flutter analyze` czysty, schemat bazy v37**.
 
 ⚠️ Liczby poniżej są zliczone z suite'a, nie przepisane z pamięci. Suma
 obszarów musi się zgadzać z ogółem — jeśli się nie zgadza, ten plik jest
@@ -27,7 +27,7 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 | `combat` | 472 | tabela kalibracyjna §5.1.2 wiersz po wierszu, obrażenia §5.1.5, budżet sprintu, maszyna stanów, hałas, spawn, magazynek, dodatki, **odczyt panelu ognia**, **ciosy przy zgaszonym ekranie**, **pole widzenia, słuch i cios w plecy (§6.2, §5.5.1)**, **Strefy Rozkładu: punktacja, wzrost, wysyp, kronika awansu i zbicia (§6.5.4, §6.10)** |
 | `sim` | 334 | tick, metabolizm, tętno, wchłanianie, **dwa zegary snu**, **masa ciała i wychudzenie**, **osiągalność zgonu z głodu i pragnienia**, **kary za stan docierające do zegarów**, **nawyk gry mierzony, nie zakładany (§16.4)**, świt i zmierzch |
 | `game` | 241 | pętla, kontrolery, jedna para rąk, integracja pozycji, dziennik, **wiązanie kontrolerów do profilu** |
-| `loot` | 194 | tabele, spawner, przeszukanie, rzeczy na ziemi, rozrzut §10.2, **przeszkody i czym się je otwiera** |
+| `loot` | 200 | tabele, spawner, przeszukanie, rzeczy na ziemi, rozrzut §10.2, **przeszkody i czym się je otwiera** |
 | `inventory` | 136 | dwa limity §18.1a, sloty, porcje, dodatki, **zużycie narzędzia**, strony książki |
 | `shelter` | 104 | budowa, moduły, półka, stackowanie |
 | `map` | 88 | PMTiles, MVT, geometria, namiary, pakiety regionów |
@@ -45,7 +45,7 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 | `notes` | 14 | notatki i lektura |
 | `l10n` | 7 | kolizje kluczy, brak twardej polszczyzny w kodzie |
 
-**Razem 2602.**
+**Razem 2608.**
 
 ### Rzeczy, które testy trzymają jako liczby, a nie jako intencje
 

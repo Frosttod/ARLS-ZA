@@ -184,6 +184,7 @@ void main() {
       //                  hand knows its own attachments (§2.1a.3, §5.6.3)
       //           6418   a zone says when it grew and when it fell, and the
       //                  fittings list is a list (§6.5.3, §6.10)
+      //           6415   a page is not read at a run (§4.6.1)
       //
       // ⚠️ Lower it when a phase lands. Never raise it — not for a phase, and
       // not for a feature either. "It is a feature" is exactly the excuse that
@@ -192,7 +193,7 @@ void main() {
       // Something new that belongs to the model goes in the model.
       expect(
         lines,
-        lessThanOrEqualTo(6418),
+        lessThanOrEqualTo(6415),
         reason: 'main.dart grew; something went in that should have come out',
       );
     });

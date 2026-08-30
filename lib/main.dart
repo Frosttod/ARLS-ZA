@@ -2586,6 +2586,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         now: DateTime.now().toUtc(),
         itemId: line.itemId,
         duration: takes,
+        ruinedAboveKmh: kRunningKmh,
         label: L10n.of(context).actionReadingPage(
           _nameOfId(line.itemId),
           line.pagesRead + 1,
@@ -3319,11 +3320,6 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   }
 
   /// §6.5.3, §6.10: strefa urosła, i gracz ma prawo się o tym dowiedzieć.
-  ///
-  /// ⚠️ Okno, nie pasek na sekundę. Awans jest jedyną rzeczą, którą świat robi
-  /// za plecami gracza — także przez noc z telefonem w szufladzie — więc
-  /// komunikat, który sam znika, byłby informacją wysłaną w pustkę. Ta sama
-  /// decyzja, którą wcześniej wymusił raport z walki poza aplikacją.
   Future<void> _zoneGrew(Hotspot zone) async {
     await _diary.add(JournalKind.zoneGrew, subject: '${zone.level}');
     if (!mounted) return;
@@ -5334,6 +5330,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
           (sheltered || snapshot?.signal != PositionSignal.unavailable),
       // §2.3, §2.5.4: how much of this second the body is actually worth.
       rate: snapshot?.status.workRate ?? 1,
+      speedKmh: snapshot?.speedKmh ?? 0,
     );
 
     if (next.isRunning) {

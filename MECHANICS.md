@@ -15,7 +15,7 @@ Różnica jest istotna, bo w kilkunastu miejscach **świadomie odeszliśmy od do
 
 ⚠️ **Reguła utrzymania tego pliku:** liczba zmieniona w kodzie i nieprzeniesiona tutaj czyni ten dokument gorszym niż jego brak. Przy każdej zmianie stałej — aktualizuj sekcję.
 
-**Stan:** 2602 testy · schemat bazy **v37** · etapy 0–2 zamknięte, 3–6 i 8 przed testem w terenie.
+**Stan:** 2608 testów · schemat bazy **v37** · etapy 0–2 zamknięte, 3–6 i 8 przed testem w terenie.
 
 ---
 
@@ -605,8 +605,8 @@ zostawiłby po przerwanym kreatorze wiersze ekwipunku bez postaci.
 | | Wartość |
 | :---- | ----: |
 | Maks. aktywnych miejsc | **15** |
-| Promień spawnu | **1 200 m** ⚠️ beta |
-| Promień przy cienkiej mapie | 1 800 m |
+| Promień spawnu | **2 000 m** (§10) |
+| Promień przy cienkiej mapie | 3 000 m |
 | Gwarantowany bliski ring | **5 miejsc w 600 m** |
 | Zapominanie | 4 000 m |
 | Odnowa skrzyni | **4–8 h** |
@@ -621,7 +621,7 @@ przeszukuje się je raz, jak wszystko inne.
 
 ⚠️ Wybierane po **selektorze** (tylko wymyślone punkty), liczone po **tabeli** (prawdziwy parking obok też się liczy — to już jest samochód do przeszukania, a wymyślanie drugiego obok byłoby powtarzaniem mapy).
 
-⚠️ **1 200 m to figura beta**, poniżej dwóch kilometrów z §10. Powód: 25 minut marszu w jedną stronę po jeden sklep to nie jest zadanie, to szum na mapie — a znacznik, do którego nikt nie pójdzie, uczy gracza, żeby przestał czytać znaczniki. Wraca do 2 km, gdy ogniska (§6.5) dadzą dalekim punktom powód istnienia.
+⚠️ **Wróciło do 2 km z §10.** Przez cały etap 5 stało na 1 200 m, bo 25 minut marszu w jedną stronę po jeden sklep to nie jest zadanie, to szum na mapie — a znacznik, do którego nikt nie pójdzie, uczy gracza, żeby przestał czytać znaczniki. Komentarz mówił wtedy wprost: figura §10 wraca, kiedy ogniska dadzą dalekim punktom powód istnienia. Strefy Rozkładu (§11.5) stoją 500–2 000 m od schronu, więc ten powód istnieje. **Bliski pierścień** (5 miejsc w 600 m) pilnuje, żeby te same 15 miejsc na dwa i pół raza większym kole nie zrobiło z okolicy pustyni.
 
 ### 9.2. Skąd biorą się miejsca
 
@@ -1292,7 +1292,6 @@ Miejsca, w których kod **świadomie** robi coś innego niż `ARLS-ZA_design_doc
 | **Krew po przebudzeniu** | „25% maksymalnej (klasa III)" | **65%** | Te dwie połowy są sprzeczne: 25% pozostałej to 75% utraty = klasa **IV** = śmierć. Dosłownie wdrożone → budzisz się i natychmiast padasz z powrotem, w pętli. Wygrała klasa, nie liczba. |
 | **Reakcja na hałas** | marsz do punktu hałasu | **bieg**, gdy hałas ≥ 200 m | Chybiony strzał ściągający ich spacerkiem z 400 m czytał się jak świat, który go nie usłyszał. Bez tego cena broni palnej jest notatką w logu, a nie kosztem. |
 | **Przekierowanie na drugi strzał** | reagują tylko SPOCZYNEK/POWRÓT | także **CZUJNOŚĆ** | Idący do pierwszego strzału ignorowali każdy następny — można było strzelać i odchodzić bez konsekwencji. |
-| **Promień spawnu lootu** | 2 km | **1,2 km** (beta) | 25 minut marszu po jeden sklep to szum na mapie. Do przeliczenia teraz, kiedy Strefy Rozkładu dają dalekim punktom powód istnienia. |
 | **Sen w dzień** | tylko noc (§2.5.3) | **także 10 min spokoju** | Prośba z testów. Nie da się farmić — dług zatrzymuje się na zerze. |
 | **Warsztat** | 3% na poziom | dostęp do napraw | Dokument sam oznacza swoją wersję jako niezbalansowaną. |
 | **Regeneracja krwi** | brak | **60 ml/h** | Bez tego przeżycie ciężkiej walki to dożywocie w klasie IV. |
@@ -1310,7 +1309,7 @@ Miejsca, w których kod **świadomie** robi coś innego niż `ARLS-ZA_design_doc
 | **Nadwyżka kalorii** | „nadmiar nie kumuluje zapasu" | idzie w **masę ciała** | Wyrzucana, nie dawała nic — nie było powodu najeść się przed wyprawą. Zapas dobowy dalej się nie kumuluje. |
 | **Punktacja strefy** | po gatunku: 10 / 15 / 35 pkt | **10 pkt płasko, 5 poza kołem** | Punktacja po gatunku nagradzała wybieranie najgroźniejszego celu, czyli odwrotność tego, po co strefa jest: decyzją ma być *gdzie* się walczy, a nie *z czym*. |
 | **Wzrost strefy** | godziny świata (8 h → 2 h) | **24–48 h realnego czasu**, skalowane nawykiem | Po przeliczeniu przez tempo gry stara formuła dawała strefę rosnącą szybciej, niż da się ją zbić. |
-| **Lektura poza strefą** | §2.1a.3: zajęcie schronowe | **tyka wszędzie** | §4.6 wprost mówi, że wielkie tomy opłaca się czytać na miejscu. Wymuszenie strefy nie wstrzymałoby czytania, tylko zabroniło czytać w terenie. |
+| **Lektura poza strefą** | §2.1a.3: zajęcie schronowe | **tyka wszędzie poza biegiem** | §4.6 wprost mówi, że wielkie tomy opłaca się czytać na miejscu. Wymuszenie strefy nie wstrzymałoby czytania, tylko zabroniło czytać w terenie — więc próg jest na prędkości: od 6,4 km/h strona się urywa. |
 | **Otwieranie drzwi ramieniem** | — | **90 s / 200 m** (było 20 s / 150 m) | Osiem sekund różnicy wobec łomu znaczyło, że narzędzia są ozdobą, a gołe ręce były szybsze od wytrychów. |
 
 ---

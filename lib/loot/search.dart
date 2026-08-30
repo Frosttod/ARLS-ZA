@@ -204,6 +204,7 @@ class Search {
     this.breach,
     this.usingItemId,
     this.usingLabel,
+    this.ruinedAboveKmh,
     this.strikes = 0,
   });
 
@@ -250,12 +251,17 @@ class Search {
     required String itemId,
     required Duration duration,
     required String label,
+
+    /// §2.1a.3, §4.6.1: powyżej tej prędkości czynność się urywa. Null dla
+    /// wszystkiego, co da się robić w marszu — a to jest większość §4.7.
+    double? ruinedAboveKmh,
   }) => Search(
     anchor: at,
     startedAt: now,
     requiredTime: duration,
     usingItemId: itemId,
     usingLabel: label,
+    ruinedAboveKmh: ruinedAboveKmh,
   );
 
   /// §19.3: a place, and how thoroughly.
@@ -297,6 +303,14 @@ class Search {
 
   /// The way in being made, for a breach. Null for anything else.
   final BarrierBreach? breach;
+
+  /// §4.7: prędkość, powyżej której ta czynność się urywa. Null — nie urywa.
+  ///
+  /// ⚠️ **Nie to samo co bezruch.** Bezruch (`boundaryRadiusM`) pyta, czy gracz
+  /// stoi *tam*; to pyta, jak szybko idzie. Kanapkę da się zjeść w marszu i
+  /// §4.7 wprost tego broni, ale strony w biegu nie czyta nikt — a czynność,
+  /// której nie da się przerwać, jest czynnością bez ceny.
+  final double? ruinedAboveKmh;
 
   bool get isBreach => breach != null;
 
@@ -368,8 +382,16 @@ class Search {
     bool present = true,
     double? boundaryRadiusM,
     double rate = 1,
+    double speedKmh = 0,
   }) {
     if (!isRunning) return this;
+
+    // §4.6.1: strony w biegu nie czyta nikt. Reszta §4.7 — jedzenie, picie,
+    // opatrunek — jest marszem **spowalniana**, nie przerywana, i tak ma zostać.
+    final ruinsIt = ruinedAboveKmh;
+    if (ruinsIt != null && speedKmh >= ruinsIt) {
+      return _endedAs(SearchState.cancelledByMovement);
+    }
 
     if (!isUse && (!present || at == null)) {
       return _endedAs(SearchState.lostPresence);
@@ -421,6 +443,7 @@ class Search {
     breach: breach,
     usingItemId: usingItemId,
     usingLabel: usingLabel,
+    ruinedAboveKmh: ruinedAboveKmh,
     strikes: strikes ?? this.strikes,
   );
 }
