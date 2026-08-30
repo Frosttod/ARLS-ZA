@@ -2463,6 +2463,30 @@ class L10nPl extends L10n {
   }
 
   @override
+  String journalZoneGrew(int level) {
+    return 'Strefa Rozkładu urosła do poziomu $level';
+  }
+
+  @override
+  String get journalZoneCleared => 'Strefa Rozkładu zbita';
+
+  @override
+  String get zoneGrewTitle => 'Strefa urosła';
+
+  @override
+  String zoneGrewBody(String where, int level, int radius, int enemies) {
+    return 'Strefa Rozkładu $where weszła na poziom $level. Promień $radius m, do $enemies wrogów naraz.';
+  }
+
+  @override
+  String zoneGrewAway(String distance) {
+    return '$distance stąd';
+  }
+
+  @override
+  String get zoneGrewNear => 'niedaleko';
+
+  @override
   String get journalBlackout => 'Utrata przytomności';
 
   @override

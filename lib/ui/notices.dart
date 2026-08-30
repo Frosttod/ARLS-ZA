@@ -16,6 +16,7 @@ import 'package:flutter/material.dart';
 
 import '../combat/blows_away.dart';
 import '../l10n/app_localizations.dart';
+import 'units.dart';
 
 import 'hud.dart' show HudColors;
 
@@ -100,6 +101,42 @@ Future<void> showAwayFight(BuildContext context, BlowsAway hurt) {
     builder: (context) => AlertDialog(
       title: Text(l10n.awayTitle),
       content: Text(l10n.awayAttackedBody(hurt.blows, hurt.bloodMl.round())),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(l10n.commonOk),
+        ),
+      ],
+    ),
+  );
+}
+
+/// §6.5.3, §6.10: strefa urosła, kiedy nikt nie patrzył.
+///
+/// ⚠️ **Okno, nie pasek na trzy sekundy.** Awans jest jedyną rzeczą, którą świat
+/// robi za plecami gracza — także przez noc z telefonem w szufladzie — więc
+/// komunikat, który sam znika, byłby informacją wysłaną w pustkę. Ta sama
+/// decyzja, którą wymusił raport z walki poza aplikacją ([showAwayFight]).
+Future<void> showZoneGrew(
+  BuildContext context, {
+  required int level,
+  required double radiusM,
+  required int enemies,
+  required double? distanceM,
+}) {
+  final l10n = L10n.of(context);
+
+  // §12: kierunku nie mamy czym nazwać — paczki PMTiles nie niosą warstwy z
+  // nazwami ulic — więc mówimy to, co wiemy na pewno: jak daleko.
+  final where = distanceM == null
+      ? l10n.zoneGrewNear
+      : l10n.zoneGrewAway(metres(distanceM));
+
+  return showDialog<void>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text(l10n.zoneGrewTitle),
+      content: Text(l10n.zoneGrewBody(where, level, radiusM.round(), enemies)),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),

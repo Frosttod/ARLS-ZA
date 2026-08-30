@@ -1042,6 +1042,11 @@ leży na dysku (`surged_at`), bo kara, którą zdejmuje się restartem aplikacji
 jest karą za granie uczciwie. Wzburzenie nie odnawia się dalej niż **400 m** od
 centrum — ma być trudno, a nie ma być spirali bez wyjścia.
 
+**Kronika:** awans zapisuje `wzrost strefy` (nie budzi — strefa rośnie także
+przez noc), zbicie zapisuje `strefa zbita` (budzi — nikt tego nie przespał).
+Awans pokazuje **okno**, nie pasek na trzy sekundy: to jedyna rzecz, którą świat
+robi za plecami gracza.
+
 **Skrytka po likwidacji** — powód, żeby tam iść, a nie pocieszenie za amunicję:
 
 | Zawartość | Ile |
@@ -1354,7 +1359,8 @@ wyżej: wpiąć albo usunąć.
 
 | Mechanika | Stan | Blokuje |
 | :---- | :---- | :---- |
-| **Kronika strefy (§6.10)** | ⬜ | awans i likwidacja nie mają wpisu ani powiadomienia |
+| **Licznik passy przetrwania (§13.1)** | ⬜ | kronika ma wpisy, nie ma liczby dni |
+| **Powiadomienie push (§6.5.3)** | ⬜ | awans mówi tylko oknem po wejściu do gry; push wymaga paczki i pozwolenia |
 | **Umiejętności (§7)** | 🟡 | czytane przez walkę, budowę i demontaż; `learningRateMultiplier` z §2.5.4 i §2.5.5 nadal bez konsumenta |
 | **Magazynki jako przedmioty** | ✅ | w katalogu i w generatorze strony (typ `magazine`) |
 | **Zawartość magazynu schronu** | ✅ | półka §18.2, z blokadą przed budową |

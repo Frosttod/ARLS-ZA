@@ -182,6 +182,8 @@ void main() {
       //                  a shut place knows its own barrier (§19.3, §12)
       //           6420   the bench keeps the presence rule, and the weapon in
       //                  hand knows its own attachments (§2.1a.3, §5.6.3)
+      //           6418   a zone says when it grew and when it fell, and the
+      //                  fittings list is a list (§6.5.3, §6.10)
       //
       // ⚠️ Lower it when a phase lands. Never raise it — not for a phase, and
       // not for a feature either. "It is a feature" is exactly the excuse that
@@ -190,7 +192,7 @@ void main() {
       // Something new that belongs to the model goes in the model.
       expect(
         lines,
-        lessThanOrEqualTo(6420),
+        lessThanOrEqualTo(6418),
         reason: 'main.dart grew; something went in that should have come out',
       );
     });

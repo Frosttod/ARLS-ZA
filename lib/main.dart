@@ -339,40 +339,12 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// Sorted by place rather than by the order things were fitted, so the list
   /// does not reshuffle when a player swaps a magazine — the rifle's lines sit
   /// where they sat.
-  List<WeaponFitting> _weaponFittings() {
-    final line = _weaponLine;
-    final catalogue = _catalogue;
-    if (line == null || catalogue == null) return const [];
-
-    final l10n = L10n.of(context);
-    final fitted = <(AttachmentSlot, WeaponFitting)>[];
-
-    for (final id in line.attachments) {
-      final part = catalogue[id];
-      if (part == null) continue;
-
-      final place = slotOf(part) ?? AttachmentSlot.rail;
-      final magazine = Magazine.of(part);
-
-      fitted.add((
-        place,
-        WeaponFitting(
-          place: attachmentPlaceName(l10n, place),
-          name: _nameOfItem(part),
-          // §5.3: the magazine says what is in it, because that is the one
-          // number worth a glance before walking round a corner.
-          effect: attachmentEffect(
-            part,
-            rounds: magazine == null ? null : (line.rounds ?? 0),
-            capacity: magazine?.capacity,
-          ),
-        ),
-      ));
-    }
-
-    fitted.sort((a, b) => a.$1.index.compareTo(b.$1.index));
-    return [for (final entry in fitted) entry.$2];
-  }
+  List<WeaponFitting> _weaponFittings() => weaponFittings(
+    line: _weaponLine,
+    catalogue: _catalogue,
+    l10n: L10n.of(context),
+    nameOf: _nameOfItem,
+  );
 
   /// §5.5.4's seconds, as something to watch.
   ReloadProgress? _reloadProgress() {
@@ -2285,6 +2257,11 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         _fires.clearedAt.value = null;
         unawaited(_zoneFell(fell, now));
       }
+      // §6.5.3, §6.10: świat urósł, kiedy nikt nie patrzył.
+      if (_fires.grewTo.value case final grew?) {
+        _fires.grewTo.value = null;
+        unawaited(_zoneGrew(grew));
+      }
 
       // §5.6.2: how warm the street is after this second — the fact, the
       // place and the number, never the fighters.
@@ -3336,7 +3313,28 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       catalogue: _catalogue,
     );
 
+    // §6.10: dwie godziny walki zostawiały dotąd sam spokój i nic w kronice.
+    unawaited(_diary.add(JournalKind.zoneCleared));
     if (mounted) _say(L10n.of(context).zoneCleared);
+  }
+
+  /// §6.5.3, §6.10: strefa urosła, i gracz ma prawo się o tym dowiedzieć.
+  ///
+  /// ⚠️ Okno, nie pasek na sekundę. Awans jest jedyną rzeczą, którą świat robi
+  /// za plecami gracza — także przez noc z telefonem w szufladzie — więc
+  /// komunikat, który sam znika, byłby informacją wysłaną w pustkę. Ta sama
+  /// decyzja, którą wcześniej wymusił raport z walki poza aplikacją.
+  Future<void> _zoneGrew(Hotspot zone) async {
+    await _diary.add(JournalKind.zoneGrew, subject: '${zone.level}');
+    if (!mounted) return;
+
+    await showZoneGrew(
+      context,
+      level: zone.level,
+      radiusM: zone.radiusM,
+      enemies: levelRow(zone.level).enemyCap,
+      distanceM: _standingAt.value?.distanceTo(zone.centre),
+    );
   }
 
   Future<void> _reloadShelters() async {

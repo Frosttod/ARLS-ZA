@@ -659,9 +659,27 @@ void main() {
 
       expect(find.byType(Icon), findsWidgets);
       expect(find.textContaining(':').evaluate().length, greaterThan(0));
+
+      // ⚠️ **Liczone, nie wyszukiwane po treści.** Wcześniejsza wersja szukała
+      // napisu `02:5` i zakładała, że go nie będzie — a odliczanie i godzina
+      // zegarowa mają ten sam kształt `mm:ss` / `HH:mm`. Test padał wtedy i
+      // tylko wtedy, gdy zmierzch wypadał na przykład o 02:50, czyli zależnie
+      // od tego, o której ktoś odpalił zestaw. Etykieta plus godzina to dwa
+      // napisy; odliczanie byłoby trzecim.
       expect(
-        find.textContaining('02:5'),
-        findsNothing,
+        find
+            .descendant(
+              of: find
+                  .ancestor(
+                    of: find.text(L10nPl().hudSunset),
+                    matching: find.byType(Row),
+                  )
+                  .first,
+              matching: find.byType(Text),
+            )
+            .evaluate()
+            .length,
+        2,
         reason: 'three hours out is a clock time, not a countdown',
       );
     });

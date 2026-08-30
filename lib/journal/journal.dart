@@ -53,6 +53,15 @@ enum JournalKind {
   cameHome('powrót', wakes: false),
   wentOut('wyjście'),
 
+  /// §6.5.3, §6.5.4: co robi strefa, i co gracz zrobił jej.
+  ///
+  /// ⚠️ **Awans jest `wakes: false`, zbicie nie.** Strefa rośnie na własnym
+  /// zegarze, także przez noc z telefonem w szufladzie — wpis o awansie nie
+  /// jest dowodem, że ktoś wstał. Zbicie strefy jest dwiema godzinami walki i
+  /// nikt go nie przespał.
+  zoneGrew('wzrost strefy', wakes: false),
+  zoneCleared('strefa zbita'),
+
   /// §7, §9.2: the two things worth remembering that nobody chose.
   learned('umiejętność', wakes: false),
   blackout('utrata przytomności', wakes: false);

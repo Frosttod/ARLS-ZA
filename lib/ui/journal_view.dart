@@ -106,6 +106,10 @@ String journalLine(
     JournalKind.salvaged => l10n.journalSalvaged(haul()),
     JournalKind.cameHome => l10n.journalCameHome,
     JournalKind.wentOut => l10n.journalWentOut,
+    JournalKind.zoneGrew => l10n.journalZoneGrew(
+      int.tryParse(entry.subject ?? '') ?? 1,
+    ),
+    JournalKind.zoneCleared => l10n.journalZoneCleared,
     JournalKind.learned => l10n.journalLearned(skill()),
     JournalKind.blackout => l10n.journalBlackout,
   };

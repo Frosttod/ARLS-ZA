@@ -16,6 +16,12 @@ import 'package:flutter/material.dart';
 import 'fonts.dart';
 import '../l10n/app_localizations.dart';
 import 'effects.dart';
+import '../combat/attachment.dart';
+import '../combat/magazine_item.dart';
+import '../inventory/inventory.dart';
+import '../items/item.dart';
+import '../items/item_catalogue.dart';
+import 'status_notes.dart';
 import '../loot/loot_table.dart';
 import '../loot/obstacle.dart';
 import '../loot/search.dart';
@@ -630,6 +636,47 @@ String _depthName(L10n l10n, SearchDepth depth) => switch (depth) {
 /// there is one barrel and one rail, and knowing what is on each is the whole
 /// question. The effect is in the part's own units — minutes of angle,
 /// decibels, metres — so a line reads without a legend.
+/// §5.6.3, §5.3: co siedzi na broni w ręce, gotowe do wypisania.
+///
+/// Posortowane po miejscu, nie po kolejności zakładania: gniazda czyta się
+/// zawsze w tej samej kolejności, więc lista, która skacze, jest listą, którą
+/// trzeba czytać od nowa.
+List<WeaponFitting> weaponFittings({
+  required CarriedItem? line,
+  required ItemCatalogue? catalogue,
+  required L10n l10n,
+  required String Function(ItemDefinition item) nameOf,
+}) {
+  if (line == null || catalogue == null) return const [];
+
+  final fitted = <(AttachmentSlot, WeaponFitting)>[];
+  for (final id in line.attachments) {
+    final part = catalogue[id];
+    if (part == null) continue;
+
+    final place = slotOf(part) ?? AttachmentSlot.rail;
+    final magazine = Magazine.of(part);
+
+    fitted.add((
+      place,
+      WeaponFitting(
+        place: attachmentPlaceName(l10n, place),
+        name: nameOf(part),
+        // §5.3: magazynek mówi, co w nim jest — to jedyna liczba warta
+        // spojrzenia przed wyjściem zza rogu.
+        effect: attachmentEffect(
+          part,
+          rounds: magazine == null ? null : (line.rounds ?? 0),
+          capacity: magazine?.capacity,
+        ),
+      ),
+    ));
+  }
+
+  fitted.sort((a, b) => a.$1.index.compareTo(b.$1.index));
+  return [for (final entry in fitted) entry.$2];
+}
+
 class WeaponFitting {
   const WeaponFitting({required this.place, required this.name, this.effect});
 

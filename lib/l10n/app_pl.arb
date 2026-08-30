@@ -1394,6 +1394,42 @@
       }
     }
   },
+  "journalZoneGrew": "Strefa Rozkładu urosła do poziomu {level}",
+  "@journalZoneGrew": {
+    "placeholders": {
+      "level": {
+        "type": "int"
+      }
+    }
+  },
+  "journalZoneCleared": "Strefa Rozkładu zbita",
+  "zoneGrewTitle": "Strefa urosła",
+  "zoneGrewBody": "Strefa Rozkładu {where} weszła na poziom {level}. Promień {radius} m, do {enemies} wrogów naraz.",
+  "@zoneGrewBody": {
+    "placeholders": {
+      "where": {
+        "type": "String"
+      },
+      "level": {
+        "type": "int"
+      },
+      "radius": {
+        "type": "int"
+      },
+      "enemies": {
+        "type": "int"
+      }
+    }
+  },
+  "zoneGrewAway": "{distance} stąd",
+  "@zoneGrewAway": {
+    "placeholders": {
+      "distance": {
+        "type": "String"
+      }
+    }
+  },
+  "zoneGrewNear": "niedaleko",
   "journalBlackout": "Utrata przytomności",
   "journalCount": "{name} ×{count}",
   "@journalCount": {

@@ -4387,6 +4387,42 @@ abstract class L10n {
   /// **'Skill: {what}'**
   String journalLearned(String what);
 
+  /// No description provided for @journalZoneGrew.
+  ///
+  /// In en, this message translates to:
+  /// **'A Decay Zone grew to level {level}'**
+  String journalZoneGrew(int level);
+
+  /// No description provided for @journalZoneCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'Decay Zone broken'**
+  String get journalZoneCleared;
+
+  /// No description provided for @zoneGrewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'A zone grew'**
+  String get zoneGrewTitle;
+
+  /// No description provided for @zoneGrewBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The Decay Zone {where} reached level {level}. Radius {radius} m, up to {enemies} of them at once.'**
+  String zoneGrewBody(String where, int level, int radius, int enemies);
+
+  /// No description provided for @zoneGrewAway.
+  ///
+  /// In en, this message translates to:
+  /// **'{distance} away'**
+  String zoneGrewAway(String distance);
+
+  /// No description provided for @zoneGrewNear.
+  ///
+  /// In en, this message translates to:
+  /// **'nearby'**
+  String get zoneGrewNear;
+
   /// No description provided for @journalBlackout.
   ///
   /// In en, this message translates to:

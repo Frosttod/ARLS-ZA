@@ -116,6 +116,13 @@ class HotspotController extends ChangeNotifier {
         );
 
         settled[slot] = after;
+        // §6.5.3, §6.10: awans jest jedyną rzeczą, którą świat robi graczowi
+        // za jego plecami — i dotąd nie mówił o tym nikomu. Najwyższy z tych,
+        // które urosły, bo dwa okna naraz to dwa razy „ok" i zero uwagi.
+        if (after.level > existing.level &&
+            after.level > (grewTo.value?.level ?? 0)) {
+          grewTo.value = after;
+        }
         if (after != existing) await store.save(profileId, slot, after);
         continue;
       }
@@ -230,6 +237,13 @@ class HotspotController extends ChangeNotifier {
   /// §6.5.4: kiedy ostatnio strefa odpowiedziała wysypem. Dla ekranu.
   final ValueNotifier<DateTime?> surges = ValueNotifier(null);
 
+  /// §6.5.3, §6.10: strefa, która właśnie urosła — albo null.
+  ///
+  /// ⚠️ Powiadomienie, nie stan: kto to pokaże, ten zeruje. Ta sama umowa co
+  /// [clearedAt], i z tego samego powodu — kontroler nie zna ekranu i nie ma
+  /// go znać.
+  final ValueNotifier<Hotspot?> grewTo = ValueNotifier(null);
+
   /// §6.5.4: środek strefy, która właśnie padła — miejsce na skrytkę.
   ///
   /// ⚠️ Powiadomienie, nie stan: kto to odbierze, ten zrzuca łup i zeruje.
@@ -339,6 +353,7 @@ class HotspotController extends ChangeNotifier {
   void dispose() {
     hotspots.dispose();
     surges.dispose();
+    grewTo.dispose();
     clearedAt.dispose();
     super.dispose();
   }

@@ -456,8 +456,10 @@ zamiast sztuk.
 | 6.9 | Wizualizacja: okrąg, kolor wg poziomu, panel po tapnięciu | §6.5.6 |
 | 6.10 | Licznik passy przetrwania + ekran Kronika | §13.1, §9.3 |
 
-**6.4 i 6.10 zostają otwarte** — awans i likwidacja nie mają ani wpisu w
-kronice, ani powiadomienia. Reszta stoi, ze schematem v36.
+**6.10 zamknięte w połowie, 6.4 zostaje.** Awans i zbicie mają wpis w kronice,
+a awans dodatkowo okno z poziomem, promieniem i dystansem. Brakuje **licznika
+passy przetrwania** (6.10) i **powiadomienia push** (6.4) — to drugie wymaga
+zewnętrznej paczki i pozwolenia Androida, czyli decyzji, a nie kodu.
 
 **Kryterium wyjścia:** przy ×3600 ognisko przechodzi pełną ścieżkę 1 → 10 → zbicie → likwidacja bez rozjazdu stanu po restarcie aplikacji; symulacja odpowiada na pytanie z §16.4 (czy gracz z 1 h dziennie nadąża).
 

@@ -2465,6 +2465,30 @@ class L10nEn extends L10n {
   }
 
   @override
+  String journalZoneGrew(int level) {
+    return 'A Decay Zone grew to level $level';
+  }
+
+  @override
+  String get journalZoneCleared => 'Decay Zone broken';
+
+  @override
+  String get zoneGrewTitle => 'A zone grew';
+
+  @override
+  String zoneGrewBody(String where, int level, int radius, int enemies) {
+    return 'The Decay Zone $where reached level $level. Radius $radius m, up to $enemies of them at once.';
+  }
+
+  @override
+  String zoneGrewAway(String distance) {
+    return '$distance away';
+  }
+
+  @override
+  String get zoneGrewNear => 'nearby';
+
+  @override
   String get journalBlackout => 'Blacked out';
 
   @override

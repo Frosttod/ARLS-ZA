@@ -1567,6 +1567,42 @@
       }
     }
   },
+  "journalZoneGrew": "A Decay Zone grew to level {level}",
+  "@journalZoneGrew": {
+    "placeholders": {
+      "level": {
+        "type": "int"
+      }
+    }
+  },
+  "journalZoneCleared": "Decay Zone broken",
+  "zoneGrewTitle": "A zone grew",
+  "zoneGrewBody": "The Decay Zone {where} reached level {level}. Radius {radius} m, up to {enemies} of them at once.",
+  "@zoneGrewBody": {
+    "placeholders": {
+      "where": {
+        "type": "String"
+      },
+      "level": {
+        "type": "int"
+      },
+      "radius": {
+        "type": "int"
+      },
+      "enemies": {
+        "type": "int"
+      }
+    }
+  },
+  "zoneGrewAway": "{distance} away",
+  "@zoneGrewAway": {
+    "placeholders": {
+      "distance": {
+        "type": "String"
+      }
+    }
+  },
+  "zoneGrewNear": "nearby",
   "journalBlackout": "Blacked out",
   "journalCount": "{name} ×{count}",
   "@journalCount": {
