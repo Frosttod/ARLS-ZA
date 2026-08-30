@@ -15,6 +15,8 @@ import '../../data/db/database.dart';
 import '../../craft/salvage_batch.dart';
 import '../../sim/occupation.dart';
 import '../../sim/tick.dart';
+import '../../journal/chronicle.dart';
+import '../../journal/chronicle_store.dart';
 import '../../journal/journal.dart';
 import '../../journal/journal_store.dart';
 
@@ -57,6 +59,19 @@ class JournalController extends ChangeNotifier {
     }
 
     notifyListeners();
+  }
+
+  /// §13.1: passy, które się skończyły — najświeższa pierwsza.
+  ///
+  /// ⚠️ **Z dysku, przy każdym pytaniu, i nietrzymane w pamięci.** Passa, która
+  /// padła, jest rzeczą rzadką i zimną: jedno zapytanie raz na wejście do
+  /// profilu kosztuje mniej niż lista wożona przez cały bieg — a lista wożona
+  /// jest listą, która może się rozjechać z tym, co na dysku.
+  Future<List<PastRun>> pastRuns() async {
+    final profileId = _profileId;
+    if (profileId == null) return const [];
+
+    return ChronicleStore(_db).load(profileId);
   }
 
   /// Writes one down.

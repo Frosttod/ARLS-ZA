@@ -2489,6 +2489,28 @@ class L10nEn extends L10n {
   String get zoneGrewNear => 'nearby';
 
   @override
+  String get chronicleTitle => 'Chronicle';
+
+  @override
+  String get chronicleEmpty => 'No streak has ended yet. That is a good sign.';
+
+  @override
+  String chronicleBest(int days) {
+    return 'Longest streak: $days days';
+  }
+
+  @override
+  String chronicleRunDays(int days) {
+    return '$days days';
+  }
+
+  @override
+  String get chronicleHardcore => 'hardcore';
+
+  @override
+  String get chronicleSoftcore => 'softcore';
+
+  @override
   String get journalBlackout => 'Blacked out';
 
   @override

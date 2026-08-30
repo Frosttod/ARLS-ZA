@@ -1430,6 +1430,26 @@
     }
   },
   "zoneGrewNear": "niedaleko",
+  "chronicleTitle": "Kronika",
+  "chronicleEmpty": "Jeszcze żadna passa się nie skończyła. To dobrze.",
+  "chronicleBest": "Najdłuższa passa: {days} dni",
+  "@chronicleBest": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "chronicleRunDays": "{days} dni",
+  "@chronicleRunDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "chronicleHardcore": "hardcore",
+  "chronicleSoftcore": "softcore",
   "journalBlackout": "Utrata przytomności",
   "journalCount": "{name} ×{count}",
   "@journalCount": {

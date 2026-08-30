@@ -1603,6 +1603,26 @@
     }
   },
   "zoneGrewNear": "nearby",
+  "chronicleTitle": "Chronicle",
+  "chronicleEmpty": "No streak has ended yet. That is a good sign.",
+  "chronicleBest": "Longest streak: {days} days",
+  "@chronicleBest": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "chronicleRunDays": "{days} days",
+  "@chronicleRunDays": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "chronicleHardcore": "hardcore",
+  "chronicleSoftcore": "softcore",
   "journalBlackout": "Blacked out",
   "journalCount": "{name} ×{count}",
   "@journalCount": {

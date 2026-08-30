@@ -15,7 +15,7 @@ Różnica jest istotna, bo w kilkunastu miejscach **świadomie odeszliśmy od do
 
 ⚠️ **Reguła utrzymania tego pliku:** liczba zmieniona w kodzie i nieprzeniesiona tutaj czyni ten dokument gorszym niż jego brak. Przy każdej zmianie stałej — aktualizuj sekcję.
 
-**Stan:** 2592 testy · schemat bazy **v37** · etapy 0–2 zamknięte, 3–6 i 8 przed testem w terenie.
+**Stan:** 2602 testy · schemat bazy **v37** · etapy 0–2 zamknięte, 3–6 i 8 przed testem w terenie.
 
 ---
 
@@ -1359,7 +1359,6 @@ wyżej: wpiąć albo usunąć.
 
 | Mechanika | Stan | Blokuje |
 | :---- | :---- | :---- |
-| **Licznik passy przetrwania (§13.1)** | ⬜ | kronika ma wpisy, nie ma liczby dni |
 | **Powiadomienie push (§6.5.3)** | ⬜ | awans mówi tylko oknem po wejściu do gry; push wymaga paczki i pozwolenia |
 | **Umiejętności (§7)** | 🟡 | czytane przez walkę, budowę i demontaż; `learningRateMultiplier` z §2.5.4 i §2.5.5 nadal bez konsumenta |
 | **Magazynki jako przedmioty** | ✅ | w katalogu i w generatorze strony (typ `magazine`) |

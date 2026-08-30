@@ -3917,7 +3917,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         // all, so it never reaches here. Anything else is worth saying.
         return refusal == null || refusal == CraftRefusal.nothingBack
             ? null
-            : _craftRefusal(refusal);
+            : craftRefusalText(l10n, refusal);
     }
   }
 
@@ -4192,7 +4192,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final bench = _bench();
     final refusal = refusalFor(recipe, bench);
     if (refusal != null) {
-      _say(_craftRefusal(refusal));
+      _say(craftRefusalText(L10n.of(context), refusal));
       return;
     }
 
@@ -4330,7 +4330,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       condition: condition,
     );
     if (refusal != null) {
-      _say(_craftRefusal(refusal));
+      _say(craftRefusalText(L10n.of(context), refusal));
       return;
     }
 
@@ -4404,9 +4404,6 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final definition = _catalogue?[itemId];
     return definition == null ? itemId : _nameOfItem(definition);
   }
-
-  String _craftRefusal(CraftRefusal refusal) =>
-      craftRefusalText(L10n.of(context), refusal);
 
   /// §2.1a.3: reads the bench, and pays out anything that finished while the
   /// app was closed.
@@ -5066,6 +5063,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     if (character == null || snapshot == null) return;
 
     final weapon = _weapon;
+    final runs = await _diary.pastRuns();
+    if (!mounted) return;
 
     await showProfile(
       context,
@@ -5082,6 +5081,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         character.profile.createdAt,
       ),
       journal: _diary.entries.value,
+      chronicle: runs,
       startedAt: character.profile.createdAt,
       catalogue: _catalogue,
       names: _names ?? ItemNames.empty,

@@ -1,4 +1,5 @@
 import 'package:arls_za/items/item_names.dart';
+import 'package:arls_za/journal/chronicle.dart';
 import 'package:arls_za/journal/journal.dart';
 import 'package:arls_za/l10n/app_localizations.dart';
 import 'package:arls_za/l10n/app_localizations_pl.dart';
@@ -42,7 +43,10 @@ void main() {
     massKg: body.spec.weightKg,
   );
 
-  Widget profile({List<JournalEntry> journal = const []}) => wrap(
+  Widget profile({
+    List<JournalEntry> journal = const [],
+    List<PastRun> chronicle = const [],
+  }) => wrap(
     ProfileScreen(
       name: 'Marek',
       body: body,
@@ -53,6 +57,7 @@ void main() {
       aliveFor: now.difference(t0),
       weaponMoa: null,
       journal: journal,
+      chronicle: chronicle,
       startedAt: t0,
       catalogue: null,
       names: ItemNames.empty,

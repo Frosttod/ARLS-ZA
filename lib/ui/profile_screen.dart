@@ -35,12 +35,14 @@ import '../skills/skill.dart';
 import 'effects.dart';
 import '../items/item_catalogue.dart';
 import '../items/item_names.dart';
+import '../journal/chronicle.dart';
 import '../journal/journal.dart';
 import '../sim/body.dart';
 import '../sim/player_stats.dart';
 import '../sim/tick.dart';
 import 'combat_panel.dart' show errorName, hitLocationName;
 import 'hud.dart' show HudColors;
+import 'chronicle_screen.dart';
 import 'journal_screen.dart';
 import 'names.dart';
 
@@ -60,6 +62,7 @@ Future<void> showProfile(
   required Duration aliveFor,
   required double? weaponMoa,
   required List<JournalEntry> journal,
+  required List<PastRun> chronicle,
   required DateTime startedAt,
   required ItemCatalogue? catalogue,
   required ItemNames names,
@@ -75,6 +78,7 @@ Future<void> showProfile(
       aliveFor: aliveFor,
       weaponMoa: weaponMoa,
       journal: journal,
+      chronicle: chronicle,
       startedAt: startedAt,
       catalogue: catalogue,
       names: names,
@@ -93,6 +97,7 @@ class ProfileScreen extends StatelessWidget {
     required this.aliveFor,
     required this.weaponMoa,
     required this.journal,
+    required this.chronicle,
     required this.startedAt,
     required this.catalogue,
     required this.names,
@@ -121,6 +126,11 @@ class ProfileScreen extends StatelessWidget {
 
   /// §3.6.1: what the character did, newest first.
   final List<JournalEntry> journal;
+
+  /// §13.1: passy, które się skończyły — najświeższa pierwsza.
+  ///
+  /// ⚠️ Wiersze były zapisywane od pierwszego dnia i nikt ich nie czytał.
+  final List<PastRun> chronicle;
 
   /// When the run began, so an entry knows which day it fell on.
   final DateTime startedAt;
@@ -160,6 +170,10 @@ class ProfileScreen extends StatelessWidget {
                 names: names,
               ),
             ),
+            // §13.1: obok licznika dni, bo to jest ten sam licznik — tyle że
+            // po tym, jak się zatrzymał.
+            onChronicle: () =>
+                unawaited(showChronicle(context, runs: chronicle)),
           ),
           const SizedBox(height: 20),
 
@@ -340,6 +354,7 @@ class _Streak extends StatelessWidget {
     required this.day,
     required this.colours,
     required this.onJournal,
+    required this.onChronicle,
   });
 
   final String name;
@@ -347,6 +362,7 @@ class _Streak extends StatelessWidget {
   final int day;
   final HudColors colours;
   final VoidCallback onJournal;
+  final VoidCallback onChronicle;
 
   @override
   Widget build(BuildContext context) {
@@ -387,6 +403,12 @@ class _Streak extends StatelessWidget {
           icon: const Icon(Icons.history_edu_outlined),
           color: colours.data,
           tooltip: l10n.journalTitle,
+        ),
+        IconButton(
+          onPressed: onChronicle,
+          icon: const Icon(Icons.military_tech_outlined),
+          color: colours.data,
+          tooltip: l10n.chronicleTitle,
         ),
       ],
     );

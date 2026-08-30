@@ -4423,6 +4423,42 @@ abstract class L10n {
   /// **'nearby'**
   String get zoneGrewNear;
 
+  /// No description provided for @chronicleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Chronicle'**
+  String get chronicleTitle;
+
+  /// No description provided for @chronicleEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No streak has ended yet. That is a good sign.'**
+  String get chronicleEmpty;
+
+  /// No description provided for @chronicleBest.
+  ///
+  /// In en, this message translates to:
+  /// **'Longest streak: {days} days'**
+  String chronicleBest(int days);
+
+  /// No description provided for @chronicleRunDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{days} days'**
+  String chronicleRunDays(int days);
+
+  /// No description provided for @chronicleHardcore.
+  ///
+  /// In en, this message translates to:
+  /// **'hardcore'**
+  String get chronicleHardcore;
+
+  /// No description provided for @chronicleSoftcore.
+  ///
+  /// In en, this message translates to:
+  /// **'softcore'**
+  String get chronicleSoftcore;
+
   /// No description provided for @journalBlackout.
   ///
   /// In en, this message translates to:

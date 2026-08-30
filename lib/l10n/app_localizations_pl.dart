@@ -2487,6 +2487,29 @@ class L10nPl extends L10n {
   String get zoneGrewNear => 'niedaleko';
 
   @override
+  String get chronicleTitle => 'Kronika';
+
+  @override
+  String get chronicleEmpty =>
+      'Jeszcze żadna passa się nie skończyła. To dobrze.';
+
+  @override
+  String chronicleBest(int days) {
+    return 'Najdłuższa passa: $days dni';
+  }
+
+  @override
+  String chronicleRunDays(int days) {
+    return '$days dni';
+  }
+
+  @override
+  String get chronicleHardcore => 'hardcore';
+
+  @override
+  String get chronicleSoftcore => 'softcore';
+
+  @override
   String get journalBlackout => 'Utrata przytomności';
 
   @override
