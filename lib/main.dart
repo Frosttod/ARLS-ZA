@@ -2357,32 +2357,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// ⚠️ Fitted because it fits. Which attachment is actually on which weapon
   /// is per-weapon state, and that is the schema change the magazine is
   /// already waiting for in stage 8.
-  List<ItemDefinition> _attachmentsFor(ItemDefinition weapon) {
-    final catalogue = _catalogue;
-    if (catalogue == null) return const [];
-
-    // What is on this weapon, not what is in the pack. Two rifles in one bag
-    // are two rifles: the one with the suppressor is the one worth carrying
-    // into a town (§5.6.3).
-    final line = _wieldedLine;
-    if (line == null) return const [];
-
-    return [
-      for (final id in line.attachments)
-        if (catalogue[id] != null) catalogue[id]!,
-    ];
-  }
-
-  /// The very piece in the hand, rather than its definition.
-  CarriedItem? get _wieldedLine {
-    final catalogue = _catalogue;
-    if (catalogue == null) return null;
-
-    for (final line in _inventory.value.worn) {
-      if (catalogue[line.itemId]?.kind == ItemKind.firearm) return line;
-    }
-    return null;
-  }
+  List<ItemDefinition> _attachmentsFor(ItemDefinition weapon) =>
+      _catalogue == null
+      ? const []
+      : attachmentsInHand(_inventory.value, _catalogue!);
 
   /// A round that fits it, out of the pack (§10.3.3: the calibre string is the
   /// whole reason ammunition is a resource rather than a number).
@@ -3462,6 +3440,15 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       if (wrote) await _reloadShelters();
     }
 
+    // §2.1a.3: warsztat też jest zajęciem schronowym, i to jest ta sama reguła
+    // obecności co przy budowie — tyle że budowa ją miała, a imadło nie.
+    final moved = await _workbench.presence(
+      shelters: _shelters.value,
+      at: at,
+      now: now,
+    );
+    if (moved && mounted) setState(() {});
+
     final finished = _shelters.value.any(
       (place) =>
           place.building != null &&
@@ -3966,8 +3953,13 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
           label: _jobLabel(job),
           startedAt: job.startedAt,
           readyAt: job.readyAt,
+          pausedAt: job.pausedAt,
           onStop: () => unawaited(_cancelCraft()),
-          note: job.isSalvage
+          // §2.1a.3: praca stoi poza strefą, i to jest jedyna rzecz, którą
+          // gracz musi wtedy wiedzieć — reszta poczeka do powrotu.
+          note: job.isPaused
+              ? l10n.craftPausedAway
+              : job.isSalvage
               ? l10n.craftStopKeepsWork
               : l10n.craftCancelWarning,
         ),

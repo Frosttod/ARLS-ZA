@@ -28,6 +28,7 @@ class RunningAction {
     required this.label,
     required this.startedAt,
     required this.readyAt,
+    this.pausedAt,
     this.onStop,
     this.note,
   });
@@ -39,6 +40,16 @@ class RunningAction {
 
   final DateTime startedAt;
   final DateTime readyAt;
+
+  /// §2.1a.3: kiedy praca stanęła, albo null — idzie.
+  ///
+  /// ⚠️ **Pasek musi stać razem z robotą.** Zegar ścienny nie wie, że nikogo
+  /// nie ma przy imadle: pasek liczący do `readyAt` sunąłby dalej po wyjściu
+  /// ze strefy i doszedłby do końca, po którym nic by się nie stało.
+  final DateTime? pausedAt;
+
+  /// Która to godzina dla tej pracy. Stoi, kiedy stoi robota.
+  DateTime _clock(DateTime now) => pausedAt ?? now;
 
   /// How to get out of it. Null only for something that genuinely cannot be
   /// stopped — which, so far, is nothing.
@@ -52,11 +63,14 @@ class RunningAction {
     final total = readyAt.difference(startedAt).inMilliseconds;
     if (total <= 0) return 1;
 
-    return (now.difference(startedAt).inMilliseconds / total).clamp(0.0, 1.0);
+    return (_clock(now).difference(startedAt).inMilliseconds / total).clamp(
+      0.0,
+      1.0,
+    );
   }
 
   Duration remainingAt(DateTime now) {
-    final left = readyAt.difference(now);
+    final left = readyAt.difference(_clock(now));
     return left.isNegative ? Duration.zero : left;
   }
 }

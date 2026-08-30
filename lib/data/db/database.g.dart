@@ -9251,6 +9251,17 @@ class $CraftJobsTable extends CraftJobs
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _pausedAtMeta = const VerificationMeta(
+    'pausedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> pausedAt = GeneratedColumn<DateTime>(
+    'paused_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -9261,6 +9272,7 @@ class $CraftJobsTable extends CraftJobs
     salvageBatch,
     startedAt,
     readyAt,
+    pausedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -9334,6 +9346,12 @@ class $CraftJobsTable extends CraftJobs
     } else if (isInserting) {
       context.missing(_readyAtMeta);
     }
+    if (data.containsKey('paused_at')) {
+      context.handle(
+        _pausedAtMeta,
+        pausedAt.isAcceptableOrUnknown(data['paused_at']!, _pausedAtMeta),
+      );
+    }
     return context;
   }
 
@@ -9375,6 +9393,10 @@ class $CraftJobsTable extends CraftJobs
         DriftSqlType.dateTime,
         data['${effectivePrefix}ready_at'],
       )!,
+      pausedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}paused_at'],
+      ),
     );
   }
 
@@ -9417,6 +9439,18 @@ class CraftJobRow extends DataClass implements Insertable<CraftJobRow> {
   final String? salvageBatch;
   final DateTime startedAt;
   final DateTime readyAt;
+
+  /// §2.1a.3: kiedy gracz wyszedł ze strefy, albo null — praca idzie.
+  ///
+  /// ⚠️ **Zegar ścienny nie wie, że nikogo nie ma przy imadle.** `readyAt`
+  /// ustawiane przy starcie tykało niezależnie od tego, gdzie stoi postać, więc
+  /// plecak wojskowy dało się zostawić na warsztacie, przejść pół miasta i
+  /// odebrać go w terenie. §2.1a.3 wymienia crafting wśród zajęć schronowych, a
+  /// te tykają **w strefie schronu lub obozu**.
+  ///
+  /// Zamrożenie, nie utrata: powrót przesuwa `readyAt` o czas nieobecności, a
+  /// postęp zostaje dokładnie tam, gdzie był.
+  final DateTime? pausedAt;
   const CraftJobRow({
     required this.id,
     required this.profileId,
@@ -9426,6 +9460,7 @@ class CraftJobRow extends DataClass implements Insertable<CraftJobRow> {
     this.salvageBatch,
     required this.startedAt,
     required this.readyAt,
+    this.pausedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -9446,6 +9481,9 @@ class CraftJobRow extends DataClass implements Insertable<CraftJobRow> {
     }
     map['started_at'] = Variable<DateTime>(startedAt);
     map['ready_at'] = Variable<DateTime>(readyAt);
+    if (!nullToAbsent || pausedAt != null) {
+      map['paused_at'] = Variable<DateTime>(pausedAt);
+    }
     return map;
   }
 
@@ -9467,6 +9505,9 @@ class CraftJobRow extends DataClass implements Insertable<CraftJobRow> {
           : Value(salvageBatch),
       startedAt: Value(startedAt),
       readyAt: Value(readyAt),
+      pausedAt: pausedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(pausedAt),
     );
   }
 
@@ -9484,6 +9525,7 @@ class CraftJobRow extends DataClass implements Insertable<CraftJobRow> {
       salvageBatch: serializer.fromJson<String?>(json['salvageBatch']),
       startedAt: serializer.fromJson<DateTime>(json['startedAt']),
       readyAt: serializer.fromJson<DateTime>(json['readyAt']),
+      pausedAt: serializer.fromJson<DateTime?>(json['pausedAt']),
     );
   }
   @override
@@ -9498,6 +9540,7 @@ class CraftJobRow extends DataClass implements Insertable<CraftJobRow> {
       'salvageBatch': serializer.toJson<String?>(salvageBatch),
       'startedAt': serializer.toJson<DateTime>(startedAt),
       'readyAt': serializer.toJson<DateTime>(readyAt),
+      'pausedAt': serializer.toJson<DateTime?>(pausedAt),
     };
   }
 
@@ -9510,6 +9553,7 @@ class CraftJobRow extends DataClass implements Insertable<CraftJobRow> {
     Value<String?> salvageBatch = const Value.absent(),
     DateTime? startedAt,
     DateTime? readyAt,
+    Value<DateTime?> pausedAt = const Value.absent(),
   }) => CraftJobRow(
     id: id ?? this.id,
     profileId: profileId ?? this.profileId,
@@ -9523,6 +9567,7 @@ class CraftJobRow extends DataClass implements Insertable<CraftJobRow> {
     salvageBatch: salvageBatch.present ? salvageBatch.value : this.salvageBatch,
     startedAt: startedAt ?? this.startedAt,
     readyAt: readyAt ?? this.readyAt,
+    pausedAt: pausedAt.present ? pausedAt.value : this.pausedAt,
   );
   CraftJobRow copyWithCompanion(CraftJobsCompanion data) {
     return CraftJobRow(
@@ -9540,6 +9585,7 @@ class CraftJobRow extends DataClass implements Insertable<CraftJobRow> {
           : this.salvageBatch,
       startedAt: data.startedAt.present ? data.startedAt.value : this.startedAt,
       readyAt: data.readyAt.present ? data.readyAt.value : this.readyAt,
+      pausedAt: data.pausedAt.present ? data.pausedAt.value : this.pausedAt,
     );
   }
 
@@ -9553,7 +9599,8 @@ class CraftJobRow extends DataClass implements Insertable<CraftJobRow> {
           ..write('salvageCondition: $salvageCondition, ')
           ..write('salvageBatch: $salvageBatch, ')
           ..write('startedAt: $startedAt, ')
-          ..write('readyAt: $readyAt')
+          ..write('readyAt: $readyAt, ')
+          ..write('pausedAt: $pausedAt')
           ..write(')'))
         .toString();
   }
@@ -9568,6 +9615,7 @@ class CraftJobRow extends DataClass implements Insertable<CraftJobRow> {
     salvageBatch,
     startedAt,
     readyAt,
+    pausedAt,
   );
   @override
   bool operator ==(Object other) =>
@@ -9580,7 +9628,8 @@ class CraftJobRow extends DataClass implements Insertable<CraftJobRow> {
           other.salvageCondition == this.salvageCondition &&
           other.salvageBatch == this.salvageBatch &&
           other.startedAt == this.startedAt &&
-          other.readyAt == this.readyAt);
+          other.readyAt == this.readyAt &&
+          other.pausedAt == this.pausedAt);
 }
 
 class CraftJobsCompanion extends UpdateCompanion<CraftJobRow> {
@@ -9592,6 +9641,7 @@ class CraftJobsCompanion extends UpdateCompanion<CraftJobRow> {
   final Value<String?> salvageBatch;
   final Value<DateTime> startedAt;
   final Value<DateTime> readyAt;
+  final Value<DateTime?> pausedAt;
   const CraftJobsCompanion({
     this.id = const Value.absent(),
     this.profileId = const Value.absent(),
@@ -9601,6 +9651,7 @@ class CraftJobsCompanion extends UpdateCompanion<CraftJobRow> {
     this.salvageBatch = const Value.absent(),
     this.startedAt = const Value.absent(),
     this.readyAt = const Value.absent(),
+    this.pausedAt = const Value.absent(),
   });
   CraftJobsCompanion.insert({
     this.id = const Value.absent(),
@@ -9611,6 +9662,7 @@ class CraftJobsCompanion extends UpdateCompanion<CraftJobRow> {
     this.salvageBatch = const Value.absent(),
     required DateTime startedAt,
     required DateTime readyAt,
+    this.pausedAt = const Value.absent(),
   }) : profileId = Value(profileId),
        startedAt = Value(startedAt),
        readyAt = Value(readyAt);
@@ -9623,6 +9675,7 @@ class CraftJobsCompanion extends UpdateCompanion<CraftJobRow> {
     Expression<String>? salvageBatch,
     Expression<DateTime>? startedAt,
     Expression<DateTime>? readyAt,
+    Expression<DateTime>? pausedAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -9633,6 +9686,7 @@ class CraftJobsCompanion extends UpdateCompanion<CraftJobRow> {
       if (salvageBatch != null) 'salvage_batch': salvageBatch,
       if (startedAt != null) 'started_at': startedAt,
       if (readyAt != null) 'ready_at': readyAt,
+      if (pausedAt != null) 'paused_at': pausedAt,
     });
   }
 
@@ -9645,6 +9699,7 @@ class CraftJobsCompanion extends UpdateCompanion<CraftJobRow> {
     Value<String?>? salvageBatch,
     Value<DateTime>? startedAt,
     Value<DateTime>? readyAt,
+    Value<DateTime?>? pausedAt,
   }) {
     return CraftJobsCompanion(
       id: id ?? this.id,
@@ -9655,6 +9710,7 @@ class CraftJobsCompanion extends UpdateCompanion<CraftJobRow> {
       salvageBatch: salvageBatch ?? this.salvageBatch,
       startedAt: startedAt ?? this.startedAt,
       readyAt: readyAt ?? this.readyAt,
+      pausedAt: pausedAt ?? this.pausedAt,
     );
   }
 
@@ -9685,6 +9741,9 @@ class CraftJobsCompanion extends UpdateCompanion<CraftJobRow> {
     if (readyAt.present) {
       map['ready_at'] = Variable<DateTime>(readyAt.value);
     }
+    if (pausedAt.present) {
+      map['paused_at'] = Variable<DateTime>(pausedAt.value);
+    }
     return map;
   }
 
@@ -9698,7 +9757,8 @@ class CraftJobsCompanion extends UpdateCompanion<CraftJobRow> {
           ..write('salvageCondition: $salvageCondition, ')
           ..write('salvageBatch: $salvageBatch, ')
           ..write('startedAt: $startedAt, ')
-          ..write('readyAt: $readyAt')
+          ..write('readyAt: $readyAt, ')
+          ..write('pausedAt: $pausedAt')
           ..write(')'))
         .toString();
   }
@@ -16498,6 +16558,7 @@ typedef $$CraftJobsTableCreateCompanionBuilder =
       Value<String?> salvageBatch,
       required DateTime startedAt,
       required DateTime readyAt,
+      Value<DateTime?> pausedAt,
     });
 typedef $$CraftJobsTableUpdateCompanionBuilder =
     CraftJobsCompanion Function({
@@ -16509,6 +16570,7 @@ typedef $$CraftJobsTableUpdateCompanionBuilder =
       Value<String?> salvageBatch,
       Value<DateTime> startedAt,
       Value<DateTime> readyAt,
+      Value<DateTime?> pausedAt,
     });
 
 class $$CraftJobsTableFilterComposer
@@ -16557,6 +16619,11 @@ class $$CraftJobsTableFilterComposer
 
   ColumnFilters<DateTime> get readyAt => $composableBuilder(
     column: $table.readyAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get pausedAt => $composableBuilder(
+    column: $table.pausedAt,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -16609,6 +16676,11 @@ class $$CraftJobsTableOrderingComposer
     column: $table.readyAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get pausedAt => $composableBuilder(
+    column: $table.pausedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$CraftJobsTableAnnotationComposer
@@ -16649,6 +16721,9 @@ class $$CraftJobsTableAnnotationComposer
 
   GeneratedColumn<DateTime> get readyAt =>
       $composableBuilder(column: $table.readyAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get pausedAt =>
+      $composableBuilder(column: $table.pausedAt, builder: (column) => column);
 }
 
 class $$CraftJobsTableTableManager
@@ -16690,6 +16765,7 @@ class $$CraftJobsTableTableManager
                 Value<String?> salvageBatch = const Value.absent(),
                 Value<DateTime> startedAt = const Value.absent(),
                 Value<DateTime> readyAt = const Value.absent(),
+                Value<DateTime?> pausedAt = const Value.absent(),
               }) => CraftJobsCompanion(
                 id: id,
                 profileId: profileId,
@@ -16699,6 +16775,7 @@ class $$CraftJobsTableTableManager
                 salvageBatch: salvageBatch,
                 startedAt: startedAt,
                 readyAt: readyAt,
+                pausedAt: pausedAt,
               ),
           createCompanionCallback:
               ({
@@ -16710,6 +16787,7 @@ class $$CraftJobsTableTableManager
                 Value<String?> salvageBatch = const Value.absent(),
                 required DateTime startedAt,
                 required DateTime readyAt,
+                Value<DateTime?> pausedAt = const Value.absent(),
               }) => CraftJobsCompanion.insert(
                 id: id,
                 profileId: profileId,
@@ -16719,6 +16797,7 @@ class $$CraftJobsTableTableManager
                 salvageBatch: salvageBatch,
                 startedAt: startedAt,
                 readyAt: readyAt,
+                pausedAt: pausedAt,
               ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))

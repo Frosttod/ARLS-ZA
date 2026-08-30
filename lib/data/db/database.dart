@@ -29,7 +29,7 @@ import 'tables.dart';
 part 'database.g.dart';
 
 /// Bumped only alongside a migration step in [_migration]. Never reused.
-const int kSchemaVersion = 36;
+const int kSchemaVersion = 37;
 
 /// Keys used in [MetaEntries].
 abstract final class MetaKeys {
@@ -80,7 +80,7 @@ class SaveDatabase extends _$SaveDatabase {
   /// follow a constant reference. `schema_test.dart` keeps it in step with
   /// [kSchemaVersion].
   @override
-  int get schemaVersion => 36;
+  int get schemaVersion => 37;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -320,6 +320,14 @@ class SaveDatabase extends _$SaveDatabase {
       // anything older gets the column from createTable above.
       if (from >= 22 && from < 26) {
         await m.addColumn(craftJobs, craftJobs.salvageBatch);
+      }
+
+      // §2.1a.3: praca na warsztacie stoi, kiedy nikogo przy nim nie ma.
+      // Ta sama osłona co przy `salvage_batch` i z tego samego powodu:
+      // `createTable` buduje z dzisiejszej definicji, więc tabela założona
+      // w tej samej migracji ma kolumnę od razu.
+      if (from >= 22 && from < 37) {
+        await m.addColumn(craftJobs, craftJobs.pausedAt);
       }
 
       // §2.3: the two clocks the lethal rules need. Additive with defaults of
@@ -819,6 +827,21 @@ class SaveDatabase extends _$SaveDatabase {
 
   Future<void> clearCraftJob(int profileId) =>
       (delete(craftJobs)..where((t) => t.profileId.equals(profileId))).go();
+
+  /// §2.1a.3: praca stanęła albo ruszyła — jedyne dwie kolumny, które się
+  /// wtedy zmieniają. Nie `beginCraftJob`, bo to jest ta sama robota, nie nowa.
+  Future<void> setCraftClock(
+    int profileId, {
+    required DateTime startedAt,
+    required DateTime readyAt,
+    required DateTime? pausedAt,
+  }) => (update(craftJobs)..where((t) => t.profileId.equals(profileId))).write(
+    CraftJobsCompanion(
+      startedAt: Value(startedAt),
+      readyAt: Value(readyAt),
+      pausedAt: Value(pausedAt),
+    ),
+  );
 
   // ------------------------------------------------------------- shelter ---
 

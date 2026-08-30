@@ -23,7 +23,9 @@ library;
 
 import 'dart:math' as math;
 
+import '../inventory/inventory.dart';
 import '../items/item.dart';
+import '../items/item_catalogue.dart';
 import 'magazine_item.dart';
 
 /// Whether [attachment] goes on [weapon] (§10.3.3's calibre string, again).
@@ -244,4 +246,30 @@ String? attachmentEffect(ItemDefinition part, {int? rounds, int? capacity}) {
   if (light != null && light > 0) parts.add('${light.round()} m');
 
   return parts.isEmpty ? null : parts.join(' · ');
+}
+
+/// Ta broń, którą postać trzyma, a nie jej definicja (§5.3, §5.6.3).
+///
+/// ⚠️ **Sztuka, nie wpis w katalogu.** Dwa karabiny w jednym plecaku to dwa
+/// karabiny: ten z tłumikiem jest tym, który warto nieść do miasta, i tylko
+/// egzemplarz wie, co ma na sobie.
+CarriedItem? wieldedFirearm(Inventory inventory, ItemCatalogue catalogue) {
+  for (final line in inventory.worn) {
+    if (catalogue[line.itemId]?.kind == ItemKind.firearm) return line;
+  }
+  return null;
+}
+
+/// §5.6.3: co siedzi na broni w ręce.
+List<ItemDefinition> attachmentsInHand(
+  Inventory inventory,
+  ItemCatalogue catalogue,
+) {
+  final line = wieldedFirearm(inventory, catalogue);
+  if (line == null) return const [];
+
+  return [
+    for (final id in line.attachments)
+      if (catalogue[id] != null) catalogue[id]!,
+  ];
 }

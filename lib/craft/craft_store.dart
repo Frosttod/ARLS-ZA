@@ -26,6 +26,7 @@ class CraftStore {
       batch: SalvageBatch.decode(row.salvageBatch),
       startedAt: row.startedAt.toUtc(),
       readyAt: row.readyAt.toUtc(),
+      pausedAt: row.pausedAt?.toUtc(),
     );
   }
 
@@ -90,6 +91,14 @@ class CraftStore {
       ),
     );
   }
+
+  /// §2.1a.3: zapisuje sam zegar — pracę odłożoną albo podjętą z powrotem.
+  Future<void> saveClock(int profileId, CraftJob job) => db.setCraftClock(
+    profileId,
+    startedAt: job.startedAt,
+    readyAt: job.readyAt,
+    pausedAt: job.pausedAt,
+  );
 
   Future<void> clear(int profileId) => db.clearCraftJob(profileId);
 }

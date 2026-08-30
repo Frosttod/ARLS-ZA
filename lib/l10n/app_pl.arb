@@ -924,6 +924,7 @@
   "craftTakeApart": "Rozbierz",
   "craftPartlyApart": "częściowo rozebrany",
   "craftStop": "Przerwij",
+  "craftPausedAway": "Praca stoi — wróć do schronu albo obozu.",
   "craftStopKeepsWork": "Przerwanie zachowuje pracę. Przedmiot zostaje rozebrany.",
   "craftStopped": "Przerwane. To, co zrobione, zostaje.",
   "craftTakeApartRunning": "Rozbiórka w toku",

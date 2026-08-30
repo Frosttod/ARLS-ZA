@@ -26,6 +26,7 @@ class CraftJob {
     this.salvageItemId,
     this.salvageCondition,
     this.batch = SalvageBatch.empty,
+    this.pausedAt,
   });
 
   /// §18.4: the recipe being made, or null when this is a dismantling.
@@ -48,6 +49,57 @@ class CraftJob {
   final DateTime startedAt;
   final DateTime readyAt;
 
+  /// §2.1a.3: kiedy postać wyszła ze strefy, albo null — praca idzie.
+  ///
+  /// ⚠️ **Zegar ścienny nie wiedział, że nikogo nie ma przy imadle.** `readyAt`
+  /// ustawione przy starcie tykało niezależnie od tego, gdzie stoi postać, więc
+  /// plecak wojskowy dało się zostawić na warsztacie, przejść pół miasta i
+  /// odebrać go w terenie. Obecność sprawdzana była **raz**, przy odpalaniu.
+  final DateTime? pausedAt;
+
+  bool get isPaused => pausedAt != null;
+
+  /// Która to godzina dla tej pracy. Stoi, kiedy stoi robota.
+  DateTime _clock(DateTime now) => pausedAt ?? now;
+
+  /// §2.1a.3: praca odłożona, bo postać wyszła. Postęp zostaje.
+  CraftJob suspended({required DateTime at}) =>
+      isPaused ? this : _copy(pausedAt: at);
+
+  /// I podjęta z powrotem — termin przesuwa się o czas nieobecności.
+  ///
+  /// ⚠️ Przesunięcie, nie skasowanie: praca ma zostać dokładnie tam, gdzie ją
+  /// zostawiono, a nie cofnąć się do początku ani przeskoczyć do końca.
+  CraftJob resumed({required DateTime at}) {
+    final left = pausedAt;
+    if (left == null) return this;
+
+    // ⚠️ **Oba stemple, nie sam termin.** Postęp i pasek liczą się od
+    // `startedAt`, więc przesunięcie samego `readyAt` wydłużyłoby robotę
+    // zamiast ją przesunąć: godzinna praca po dobie nieobecności miałaby
+    // dobę i godzinę „całości", a trzydzieści minut zrobione czytałoby się
+    // jako dwa procent. Cała robota przesuwa się o czas, w którym jej nie było.
+    final away = at.isAfter(left) ? at.difference(left) : Duration.zero;
+    return CraftJob(
+      recipeId: recipeId,
+      salvageItemId: salvageItemId,
+      salvageCondition: salvageCondition,
+      batch: batch,
+      startedAt: startedAt.add(away),
+      readyAt: readyAt.add(away),
+    );
+  }
+
+  CraftJob _copy({DateTime? pausedAt}) => CraftJob(
+    recipeId: recipeId,
+    salvageItemId: salvageItemId,
+    salvageCondition: salvageCondition,
+    batch: batch,
+    startedAt: startedAt,
+    readyAt: readyAt,
+    pausedAt: pausedAt ?? this.pausedAt,
+  );
+
   bool get isSalvage => salvageItemId != null;
 
   /// Whether this sitting has more than one piece in it.
@@ -59,16 +111,16 @@ class CraftJob {
   /// cannot earn more than it was worth.
   Duration creditedAt(DateTime now) {
     final total = readyAt.difference(startedAt);
-    final done = now.difference(startedAt);
+    final done = _clock(now).difference(startedAt);
 
     if (done.isNegative) return Duration.zero;
     return done > total ? total : done;
   }
 
-  bool isDoneAt(DateTime now) => !now.isBefore(readyAt);
+  bool isDoneAt(DateTime now) => !_clock(now).isBefore(readyAt);
 
   Duration remainingAt(DateTime now) {
-    final left = readyAt.difference(now);
+    final left = readyAt.difference(_clock(now));
     return left.isNegative ? Duration.zero : left;
   }
 
@@ -77,7 +129,7 @@ class CraftJob {
     final total = readyAt.difference(startedAt).inMilliseconds;
     if (total <= 0) return 1;
 
-    final done = now.difference(startedAt).inMilliseconds;
+    final done = _clock(now).difference(startedAt).inMilliseconds;
     return (done / total).clamp(0.0, 1.0);
   }
 }

@@ -27,6 +27,8 @@ import '../../craft/salvage_batch.dart';
 import '../../data/db/database.dart';
 import '../../inventory/inventory.dart';
 import '../../items/item_catalogue.dart';
+import '../../map/geometry.dart';
+import '../../shelter/shelter.dart';
 
 class CraftController extends ChangeNotifier {
   CraftController(this._db);
@@ -171,6 +173,45 @@ class CraftController extends ChangeNotifier {
     if (profileId == null) return;
 
     await CraftStore(_db).beginBatchSalvage(profileId, batch, now: now);
+  }
+
+  /// §2.1a.3: praca stoi, kiedy nikogo nie ma przy imadle.
+  ///
+  /// ⚠️ **Zamrożenie, nie utrata.** Wyjście ze strefy odkłada robotę tam, gdzie
+  /// była, a powrót przesuwa termin o czas nieobecności — plecak wojskowy
+  /// zostawiony na warsztacie nie robi się sam przez pół miasta, ale też nie
+  /// przepada za to, że gracz wyszedł po wodę.
+  ///
+  /// Zwraca `true`, jeśli coś się zmieniło — wołający ma wtedy co zapisać.
+  Future<bool> presence({
+    required List<Shelter> shelters,
+    required GeoPoint? at,
+    required DateTime now,
+  }) async {
+    final profileId = _profileId;
+    final current = job.value;
+    if (profileId == null || current == null) return false;
+
+    // Ta sama odpowiedź, którą liczy warsztat, oferując robotę: obóz jest
+    // miejscem, w którym się trzyma rzeczy, więc i on liczy się za warsztat
+    // (§8.5). Dwie różne odpowiedzi znaczyłyby, że gra przyjmuje zlecenia
+    // tam, gdzie ich nie wykonuje.
+    final atShelter = at != null && shelterAt(at, shelters, now: now) != null;
+
+    // Skończonej pracy się nie odkłada: to już jest wynik, a nie robota, i
+    // czeka na odbiór tam, gdzie leży.
+    if (current.isDoneAt(now)) return false;
+
+    final next = atShelter
+        ? current.resumed(at: now)
+        : current.suspended(at: now);
+    if (identical(next, current)) return false;
+
+    job.value = next;
+    notifyListeners();
+
+    await CraftStore(_db).saveClock(profileId, next);
+    return true;
   }
 
   Future<void> clear() async {

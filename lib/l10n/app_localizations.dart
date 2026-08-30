@@ -3109,6 +3109,12 @@ abstract class L10n {
   /// **'Stop'**
   String get craftStop;
 
+  /// No description provided for @craftPausedAway.
+  ///
+  /// In en, this message translates to:
+  /// **'The work is stopped — go back to the shelter or camp.'**
+  String get craftPausedAway;
+
   /// No description provided for @craftStopKeepsWork.
   ///
   /// In en, this message translates to:

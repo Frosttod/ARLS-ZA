@@ -180,6 +180,8 @@ void main() {
       //                  attachment slots name themselves (§19.3)
       //           6428   the ways through a barrier say what opens them, and
       //                  a shut place knows its own barrier (§19.3, §12)
+      //           6420   the bench keeps the presence rule, and the weapon in
+      //                  hand knows its own attachments (§2.1a.3, §5.6.3)
       //
       // ⚠️ Lower it when a phase lands. Never raise it — not for a phase, and
       // not for a feature either. "It is a feature" is exactly the excuse that
@@ -188,7 +190,7 @@ void main() {
       // Something new that belongs to the model goes in the model.
       expect(
         lines,
-        lessThanOrEqualTo(6428),
+        lessThanOrEqualTo(6420),
         reason: 'main.dart grew; something went in that should have come out',
       );
     });

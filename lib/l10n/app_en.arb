@@ -1048,6 +1048,7 @@
   "craftTakeApart": "Take apart",
   "craftPartlyApart": "partly apart",
   "craftStop": "Stop",
+  "craftPausedAway": "The work is stopped — go back to the shelter or camp.",
   "craftStopKeepsWork": "Stopping keeps the work. The piece stays open.",
   "craftStopped": "Stopped. What was done is done.",
   "craftTakeApartRunning": "Taking it apart",

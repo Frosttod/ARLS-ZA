@@ -901,6 +901,18 @@ class CraftJobs extends Table {
   DateTimeColumn get startedAt => dateTime()();
   DateTimeColumn get readyAt => dateTime()();
 
+  /// §2.1a.3: kiedy gracz wyszedł ze strefy, albo null — praca idzie.
+  ///
+  /// ⚠️ **Zegar ścienny nie wie, że nikogo nie ma przy imadle.** `readyAt`
+  /// ustawiane przy starcie tykało niezależnie od tego, gdzie stoi postać, więc
+  /// plecak wojskowy dało się zostawić na warsztacie, przejść pół miasta i
+  /// odebrać go w terenie. §2.1a.3 wymienia crafting wśród zajęć schronowych, a
+  /// te tykają **w strefie schronu lub obozu**.
+  ///
+  /// Zamrożenie, nie utrata: powrót przesuwa `readyAt` o czas nieobecności, a
+  /// postęp zostaje dokładnie tam, gdzie był.
+  DateTimeColumn get pausedAt => dateTime().nullable()();
+
   @override
   List<String> get customConstraints => [
     'FOREIGN KEY (profile_id) REFERENCES profiles (id) ON DELETE CASCADE',

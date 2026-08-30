@@ -1,7 +1,7 @@
 # ARLS-ZA — lista kontrolna systemów
 
 Stan na dzień **2026-08-28**. Wygenerowana po przejściu pełnego zestawu
-testów: **2584 testów, `flutter analyze` czysty, schemat bazy v36**.
+testów: **2592 testy, `flutter analyze` czysty, schemat bazy v37**.
 
 ⚠️ Liczby poniżej są zliczone z suite'a, nie przepisane z pamięci. Suma
 obszarów musi się zgadzać z ogółem — jeśli się nie zgadza, ten plik jest
@@ -31,11 +31,11 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 | `inventory` | 136 | dwa limity §18.1a, sloty, porcje, dodatki, **zużycie narzędzia**, strony książki |
 | `shelter` | 104 | budowa, moduły, półka, stackowanie |
 | `map` | 88 | PMTiles, MVT, geometria, namiary, pakiety regionów |
-| `craft` | 97 | recepty, **odzież i plecaki szyte (§18.4)**, rozbiórka wsadowa, ilości ze stosu, bilans §18.2 |
+| `craft` | 105 | recepty, odzież i plecaki szyte, rozbiórka wsadowa, **warsztat stoi bez obecności (§2.1a.3)**, bilans §18.2 |
 | `items` | 79 | katalog jako dane: bilans, nazwy, sloty, użycia |
 | `location` | 67 | bramka dokładności, filtr Kalmana, martwa strefa, anty-cheat, powrót odbiornika, kadencja w schronie |
 | `skills` | 63 | §7.2.1 praktyka, §4.6 literatura, §7.2.2 krzywa, wpięcie w grę |
-| `db` | 50 | migracje v1→v36, integralność, warstwa gorąca i ciepła |
+| `db` | 50 | migracje v1→v37, integralność, warstwa gorąca i ciepła |
 | `devtools` | 44 | konsola, rejestrator sesji |
 | `safety` | 34 | §1.2, blokady na prędkości |
 | `core` | 30 | zegar gry, jeden timer |
@@ -45,7 +45,7 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 | `notes` | 14 | notatki i lektura |
 | `l10n` | 7 | kolizje kluczy, brak twardej polszczyzny w kodzie |
 
-**Razem 2584.**
+**Razem 2592.**
 
 ### Rzeczy, które testy trzymają jako liczby, a nie jako intencje
 
@@ -58,7 +58,7 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 - **§6.2** — parametry przeciwników, w tym progi śmierci.
 - **§5.6.1** — promienie hałasu i modyfikatory otoczenia.
 - **Migracje** — każda wydana wersja schematu daje się otworzyć i podnieść do
-  v36, z danymi.
+  v37, z danymi.
 - **§2.3, §2.5.4, §5.1.1** — trzy kary za stan trzymane **przy konsumencie**,
   nie przy wzorze. Wada nie była złą liczbą, tylko parametrem z nieszkodliwą
   wartością domyślną, którego nikt nie wypełniał — czego żaden test samej
