@@ -32,22 +32,38 @@ void main() {
       expect(Barrier.padlock.blocks(const {'tool_lockpicks'}), isFalse);
     });
 
-    test('a window always gives way, and always costs the same', () {
+    test('a window always gives way, and stays the cheap way in', () {
       // The way in that exists for a player who owns nothing.
       expect(Barrier.window.blocks(const {}), isFalse);
-      expect(Barrier.window.force!.noiseM, 150);
+      expect(Barrier.window.force!.noiseM, greaterThanOrEqualTo(150));
+      expect(Barrier.window.force!.seconds, lessThan(30));
     });
 
-    test('forcing a door is §5.6.1\'s 150 metres', () {
-      expect(Barrier.door.force!.noiseM, 150);
+    test('forcing a door carries at least §5.6.1 150 metres', () {
+      expect(Barrier.door.force!.noiseM, greaterThanOrEqualTo(150));
     });
 
-    test('quiet is slower, and that is the whole decision', () {
+    test('§19.3: a tool is worth carrying, and that is the whole decision', () {
+      // ⚠️ **Zgłoszone z terenu: „bez narzędzia mam ten sam czas".** Ramię
+      // kosztowało dwadzieścia sekund przy dwunastu łomem — osiem sekund
+      // różnicy nie skłoni nikogo do noszenia kilograma sześciuset. Gorzej:
+      // gołe ręce były **szybsze** od wytrychów, więc cicha droga nie miała
+      // żadnej przewagi poza hałasem.
       final quiet = Barrier.door.quiet!;
+      final pry = Barrier.door.pry!;
       final force = Barrier.door.force!;
 
-      expect(quiet.noiseM, lessThan(force.noiseM));
-      expect(quiet.seconds, greaterThan(force.seconds));
+      // Najszybciej łomem, potem wytrychami, na końcu ramieniem.
+      expect(pry.seconds, lessThan(quiet.seconds));
+      expect(quiet.seconds, lessThan(force.seconds));
+
+      // I najciszej wytrychami, najgłośniej ramieniem.
+      expect(quiet.noiseM, lessThan(pry.noiseM));
+      expect(pry.noiseM, lessThanOrEqualTo(force.noiseM));
+
+      // ⚠️ Różnica, którą widać: wejście bez narzędzi trwa co najmniej
+      // pięciokrotnie dłużej niż łomem. Osiem sekund czyta się jako to samo.
+      expect(force.seconds, greaterThanOrEqualTo(pry.seconds * 5));
     });
 
     test('the quiet way is offered first', () {

@@ -151,8 +151,13 @@ void main() {
 
       expect(find.byIcon(Icons.vpn_key_outlined), findsOneWidget);
       expect(find.byIcon(Icons.front_hand_outlined), findsOneWidget);
+
+      // ⚠️ Sekundy i metry na podpisie — bo to jest cała decyzja §19.3, i
+      // żadna ikona nie uniesie jej sama. Wytrychy: minuta i dwadzieścia
+      // metrów. Ramię: półtorej minuty i dwieście.
       expect(find.textContaining('60 s'), findsOneWidget);
-      expect(find.textContaining('150 m'), findsOneWidget);
+      expect(find.textContaining('90 s'), findsOneWidget);
+      expect(find.textContaining('200 m'), findsOneWidget);
     });
 
     testWidgets('a crowbar is a third way, faster and loud', (tester) async {

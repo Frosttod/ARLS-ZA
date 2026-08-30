@@ -49,7 +49,16 @@ enum Barrier {
   /// a crowbar makes the same noise faster than shoulders do.
   door(
     alreadyOpenShare: 0.35,
-    force: BarrierBreach(seconds: 20, noiseM: 150),
+    // ⚠️ **Półtorej minuty, i to jest zgłoszenie z terenu.** Dwadzieścia sekund
+    // ramieniem przy dwunastu łomem znaczyło, że narzędzia są ozdobą: osiem
+    // sekund różnicy nikogo nie skłoni do noszenia kilograma sześciuset. Gorzej
+    // — gołe ręce były **szybsze** od wytrychów, więc cicha droga nie miała
+    // żadnej przewagi poza hałasem.
+    //
+    // Teraz kolejność jest taka, jaka ma być: łom dwanaście sekund, wytrychy
+    // minutę, ramię półtorej minuty i dwieście metrów. Każde narzędzie jest
+    // warte noszenia, a wejście bez niczego zostaje możliwe i kosztuje.
+    force: BarrierBreach(seconds: 90, noiseM: 200),
     quiet: BarrierBreach(
       seconds: 60,
       noiseM: 20,
@@ -98,7 +107,10 @@ enum Barrier {
   /// The way in that always exists, and always costs the same 150 m.
   window(
     alreadyOpenShare: 0.45,
-    force: BarrierBreach(seconds: 5, noiseM: 150),
+    // Szyba nie broni się długo — ale pięć sekund to był odruch, nie decyzja.
+    // Dziesięć wystarczy, żeby dało się rozmyślić, i dalej jest najszybszą
+    // drogą do środka, jaką ma ktoś bez narzędzi.
+    force: BarrierBreach(seconds: 10, noiseM: 160),
     quiet: null,
     pry: null,
   );
