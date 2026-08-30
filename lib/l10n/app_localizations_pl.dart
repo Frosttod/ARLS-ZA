@@ -171,6 +171,43 @@ class L10nPl extends L10n {
       'Zamiast śmierci tracisz przytomność. Umiejętności i schron zostają; passa jest zerowana.';
 
   @override
+  String get kitTitle => 'Z czym wychodzisz';
+
+  @override
+  String get kitStepTools => 'Jedno narzędzie';
+
+  @override
+  String get kitStepMedical => 'Jeden opatrunek';
+
+  @override
+  String get kitStepCombat => 'Jedno ostrze';
+
+  @override
+  String get kitStepFood => 'Jeden posiłek';
+
+  @override
+  String kitStepOf(int step, int total) {
+    return 'Krok $step z $total';
+  }
+
+  @override
+  String get kitSummary => 'To jest wszystko, co masz';
+
+  @override
+  String get kitSummaryHint => 'Nic poza tym. Czego tu nie ma, trzeba znaleźć.';
+
+  @override
+  String get kitBack => 'Wstecz';
+
+  @override
+  String get kitConfirm => 'Bierz i idź';
+
+  @override
+  String kitCount(int count) {
+    return '×$count';
+  }
+
+  @override
   String get beginSurvival => 'Zaczynam';
 
   @override

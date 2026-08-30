@@ -193,7 +193,7 @@ Future<void> showItemDetails(
                       children: [
                         for (final stat in mine)
                           _StatRow(
-                            label: _statLabel(l10n, stat.key),
+                            label: statLabel(l10n, stat.key),
                             mine: stat,
                             theirs: theirs
                                 .where((other) => other.key == stat.key)
@@ -509,7 +509,12 @@ class _StatRow extends StatelessWidget {
   }
 }
 
-String _statLabel(L10n l10n, String key) => switch (key) {
+/// §1.1: co ten odczyt znaczy, w języku gracza.
+///
+/// ⚠️ Publiczne, bo kreator zestawu startowego pokazuje **te same** odczyty na
+/// karcie wyboru. Druga tablica etykiet znaczyłaby, że „ochrona" na jednym
+/// ekranie i „pancerz" na drugim to ta sama liczba pod dwiema nazwami.
+String statLabel(L10n l10n, String key) => switch (key) {
   'condition' => l10n.statCondition,
   'energy' => l10n.statEnergy,
   'moa' => l10n.statMoa,

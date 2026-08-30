@@ -101,7 +101,7 @@ void main() {
           };
 
           expect(
-            kitFits(picks, catalogue, body: body),
+            kitFits(picks, body, catalogue),
             isTrue,
             reason: 'zestaw $a/$b nie mieści się w kieszeniach',
           );
@@ -110,7 +110,7 @@ void main() {
     });
 
     test('i naprawdę trafia do plecaka, przez limity §18.1a', () {
-      final pack = kitFor(pickAll(0), catalogue, body: body);
+      final pack = kitFor(pickAll(0), body, catalogue);
 
       expect(pack.carried, hasLength(KitStep.values.length));
       expect(pack.massKg(catalogue), greaterThan(0));
@@ -119,8 +119,8 @@ void main() {
     test('a niepełny wybór daje tyle, ile wybrano', () {
       final pack = kitFor(
         {KitStep.food: kStartingKit[KitStep.food]!.first},
+        body,
         catalogue,
-        body: body,
       );
 
       expect(pack.carried, hasLength(1));

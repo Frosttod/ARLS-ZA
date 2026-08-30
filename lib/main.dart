@@ -90,6 +90,7 @@ import 'ui/notices.dart';
 import 'ui/refresh_rate.dart';
 import 'ui/search_panel.dart';
 import 'game/game_session.dart';
+import 'game/starting_kit.dart';
 import 'actions/action_runner.dart';
 import 'game/position_controller.dart';
 import 'sim/timed_action.dart';
@@ -135,6 +136,7 @@ import 'ui/maplibre_surface.dart';
 import 'ui/region_picker.dart';
 import 'ui/settings_screen.dart';
 import 'ui/start_screen.dart';
+import 'ui/starting_kit_screen.dart';
 
 /// ⚠️ **What is left here is the door, not the house.**
 ///
@@ -1601,18 +1603,12 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
   /// Developer builds only. Puts a plausible kit in the pack so the screen can
   /// be looked at on a phone before §10 gives the game a way to find anything.
-  Future<void> _devFillPack() async {
-    final character = _character;
-    final catalogue = _catalogue;
-    if (character == null || catalogue == null) return;
-
-    _inventory.value = testerKit(
-      _inventory.value,
-      catalogue,
-      body: character.body,
-    );
-    await _saveInventory();
-  }
+  Future<void> _devFillPack() => fillPackForTesting(
+    _inventory,
+    catalogue: _catalogue,
+    body: _character?.body,
+    save: _saveInventory,
+  );
 
   /// §4.8: what leaves the pack lands on the ground and stays for a day.
   ///
@@ -3367,6 +3363,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       now: now,
       catalogue: _catalogue,
     );
+
     if (mounted) _say(L10n.of(context).zoneCleared);
   }
 
@@ -4431,7 +4428,6 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// app was closed.
   /// Watches the bench while something is on it.
   void _startBenchTimer() => _clock.restart(_kBench);
-
   void _stopBenchTimer() => _clock.retime();
 
   Future<void> _reloadCraftJob() async {
@@ -4796,9 +4792,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   }
 
   /// §8.1: the one shelter a run has, or null before it is built.
-  Shelter? _mainShelter() => _shelters.value
-      .where((place) => place.kind == ShelterKind.main)
-      .firstOrNull;
+  Shelter? _mainShelter() =>
+      _shelters.value.where((p) => p.kind == ShelterKind.main).firstOrNull;
 
   /// Whether the shelves are within arm's reach right now (§18.2).
   bool _shelvesInReach() {
@@ -5878,12 +5873,28 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     if (mounted) await _resolveMap();
   }
 
+  /// §4: drugi etap tworzenia postaci — z czym się wychodzi.
+  ///
+  /// ⚠️ **Przed [GameSession.create], nie po**: cofnięcie się z tego ekranu ma
+  /// zostawiać bazę taką, jaka była (§11.1).
   Future<void> _createCharacter(CharacterDraft draft) async {
+    final catalogue = _catalogue;
+    if (catalogue == null) return;
+
+    final picks = await pickStartingKit(
+      context,
+      catalogue: catalogue,
+      names: _names ?? ItemNames.empty,
+    );
+    if (picks == null || !mounted) return;
+
     final created = await _factory.create(
       name: draft.name,
       spec: draft.spec,
       deathMode: draft.deathMode,
       now: DateTime.now().toUtc(),
+      // §18.1a: przez [Inventory.add], więc limity §4.5 obowiązują od razu.
+      kit: kitFor(picks, draft.profile, catalogue),
     );
     if (!mounted) return;
 
@@ -6125,6 +6136,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   Future<void> _reloadRemains() => _loot.reloadRemains(DateTime.now().toUtc());
   double _reachForPilesAt(GeoPoint at) => _loot.reachForPilesAt(at);
   bool _isVisible(LootBox box) => _loot.isVisible(box);
+  Future<void> _shelveSpill(Map<String, int> spill) =>
+      _shelf.spill(spill, _mainShelter(), _catalogue);
 
   /// §19.3: the place the player is standing at, if any.
   ///
@@ -6138,26 +6151,13 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     _snapshot?.state.lastUpdate ?? DateTime.now().toUtc(),
   );
 
+  // Przekazania do kontrolerów, które są ich właścicielami.
   Future<void> _saveInventory() => _pack.save();
-
   Future<void> _saveShelf() => _shelf.save();
-
   Map<String, int> _carriedCounts() => _pack.counts();
-
   Set<String> _carriedIds() => _pack.ids();
-
   Map<String, int> _shelvedCounts() => _shelf.counts();
-
   PackRoom _packRoom() => _pack.room();
-
-  /// §18.1a: puts what would not fit onto the shelves of the main shelter.
-  Future<void> _shelveSpill(Map<String, int> spill) async {
-    final catalogue = _catalogue;
-    final main = _mainShelter();
-    if (catalogue == null || main == null) return;
-
-    await _shelf.spill(spill, main, catalogue);
-  }
 
   @override
   Widget build(BuildContext context) => GameScope(

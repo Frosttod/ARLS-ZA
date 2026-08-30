@@ -130,6 +130,34 @@
   "hardcoreBody": "Death ends the character. Skills, shelter and stored gear are gone; the streak goes to the Chronicle.",
   "softcoreTitle": "Softcore",
   "softcoreBody": "You lose consciousness instead of dying. Skills and shelter survive; the streak resets.",
+    "kitTitle": "What you leave with",
+  "kitStepTools": "One tool",
+  "kitStepMedical": "One dressing",
+  "kitStepCombat": "One blade",
+  "kitStepFood": "One meal",
+  "kitStepOf": "Step {step} of {total}",
+  "@kitStepOf": {
+    "placeholders": {
+      "step": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "kitSummary": "This is what you have",
+  "kitSummaryHint": "Nothing else. What is not here has to be found.",
+  "kitBack": "Back",
+  "kitConfirm": "Take it and go",
+  "kitCount": "×{count}",
+  "@kitCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "beginSurvival": "Begin",
   "errNameTooShort": "At least 4 characters.",
   "errNameTooLong": "At most 16 characters.",

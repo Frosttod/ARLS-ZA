@@ -6,6 +6,8 @@
 /// `main.dart` because it is a table, not behaviour.
 library;
 
+import 'package:flutter/foundation.dart';
+
 import '../inventory/inventory.dart';
 import '../items/item_catalogue.dart';
 import '../sim/body.dart';
@@ -63,4 +65,21 @@ Inventory testerKit(
   return next
       .add('lit_guide_survival', catalogue, body: body, pagesTotal: 160)
       .inventory;
+}
+
+/// Wsypuje [testerKit] do plecaka i zapisuje. Tylko build deweloperski.
+///
+/// ⚠️ Tutaj, bo to jest cały ten przycisk: dwa null-checki i jedno wywołanie.
+/// W `main.dart` był metodą, a metoda w tym pliku jest jedną rzeczą mniej w
+/// klasie, która ma ich sześć tysięcy linii.
+Future<void> fillPackForTesting(
+  ValueNotifier<Inventory> pack, {
+  required ItemCatalogue? catalogue,
+  required BodyProfile? body,
+  required Future<void> Function() save,
+}) async {
+  if (catalogue == null || body == null) return;
+
+  pack.value = testerKit(pack.value, catalogue, body: body);
+  await save();
 }

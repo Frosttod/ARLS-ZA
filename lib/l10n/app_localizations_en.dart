@@ -169,6 +169,44 @@ class L10nEn extends L10n {
       'You lose consciousness instead of dying. Skills and shelter survive; the streak resets.';
 
   @override
+  String get kitTitle => 'What you leave with';
+
+  @override
+  String get kitStepTools => 'One tool';
+
+  @override
+  String get kitStepMedical => 'One dressing';
+
+  @override
+  String get kitStepCombat => 'One blade';
+
+  @override
+  String get kitStepFood => 'One meal';
+
+  @override
+  String kitStepOf(int step, int total) {
+    return 'Step $step of $total';
+  }
+
+  @override
+  String get kitSummary => 'This is what you have';
+
+  @override
+  String get kitSummaryHint =>
+      'Nothing else. What is not here has to be found.';
+
+  @override
+  String get kitBack => 'Back';
+
+  @override
+  String get kitConfirm => 'Take it and go';
+
+  @override
+  String kitCount(int count) {
+    return '×$count';
+  }
+
+  @override
   String get beginSurvival => 'Begin';
 
   @override

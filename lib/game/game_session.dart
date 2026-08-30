@@ -14,6 +14,8 @@ import '../data/db/database.dart';
 import '../data/persistence/save_bootstrap.dart';
 import '../devtools/dev_mode.dart';
 import '../devtools/dev_session.dart';
+import '../inventory/inventory.dart';
+import '../inventory/inventory_store.dart';
 import '../map/geometry.dart';
 import '../shelter/shelter.dart';
 import '../location/device_position_source.dart';
@@ -140,11 +142,19 @@ class GameSessionFactory {
   /// The seed is drawn once here and never again: it is what makes a run
   /// replayable, so it belongs to the character rather than to the session
   /// (§11).
+  /// [kit] to §4's zestaw startowy — zapisywany **tą samą operacją** co
+  /// profil.
+  ///
+  /// ⚠️ Tutaj, a nie na ekranie, bo §11.1 mówi, że zapis albo jest cały, albo
+  /// go nie ma. Postać zapisana bez rzeczy i wiersze ekwipunku dopisane
+  /// sekundę później to okno, w którym proces może zginąć — i budzi się ktoś,
+  /// kto wybrał maczetę i nie ma jej.
   Future<ActiveCharacter> create({
     required String name,
     required BodySpec spec,
     required DeathMode deathMode,
     required DateTime now,
+    Inventory kit = const Inventory(),
   }) async {
     final body = BodyProfile.from(spec);
     final constants = body.toSimConstants();
@@ -178,6 +188,8 @@ class GameSessionFactory {
         zone: Value(state.zone.wire),
       ),
     );
+
+    if (kit.carried.isNotEmpty) await InventoryStore(db).save(id, kit);
 
     final profile = await db.profileById(id);
     return ActiveCharacter(profile: profile!, body: body, state: state);

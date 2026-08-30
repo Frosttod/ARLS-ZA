@@ -361,6 +361,72 @@ abstract class L10n {
   /// **'You lose consciousness instead of dying. Skills and shelter survive; the streak resets.'**
   String get softcoreBody;
 
+  /// No description provided for @kitTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What you leave with'**
+  String get kitTitle;
+
+  /// No description provided for @kitStepTools.
+  ///
+  /// In en, this message translates to:
+  /// **'One tool'**
+  String get kitStepTools;
+
+  /// No description provided for @kitStepMedical.
+  ///
+  /// In en, this message translates to:
+  /// **'One dressing'**
+  String get kitStepMedical;
+
+  /// No description provided for @kitStepCombat.
+  ///
+  /// In en, this message translates to:
+  /// **'One blade'**
+  String get kitStepCombat;
+
+  /// No description provided for @kitStepFood.
+  ///
+  /// In en, this message translates to:
+  /// **'One meal'**
+  String get kitStepFood;
+
+  /// No description provided for @kitStepOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Step {step} of {total}'**
+  String kitStepOf(int step, int total);
+
+  /// No description provided for @kitSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'This is what you have'**
+  String get kitSummary;
+
+  /// No description provided for @kitSummaryHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing else. What is not here has to be found.'**
+  String get kitSummaryHint;
+
+  /// No description provided for @kitBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get kitBack;
+
+  /// No description provided for @kitConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Take it and go'**
+  String get kitConfirm;
+
+  /// No description provided for @kitCount.
+  ///
+  /// In en, this message translates to:
+  /// **'×{count}'**
+  String kitCount(int count);
+
   /// No description provided for @beginSurvival.
   ///
   /// In en, this message translates to:

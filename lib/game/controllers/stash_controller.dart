@@ -165,13 +165,18 @@ class StashController extends ChangeNotifier {
   ///
   /// Never observed in the field. Found by moving the code, which is most of
   /// what moving code is for.
+  /// ⚠️ Null zamiast wymagania schronu: „nie ma gdzie tego położyć" jest
+  /// zwykłym stanem gry przed §8.3, a nie błędem wołającego — i sprawdzanie
+  /// tego u każdego z dwóch wołających znaczyło trzecie miejsce, w którym
+  /// można o tym zapomnieć.
   Future<void> spill(
     Map<String, int> overflow,
-    Shelter place,
-    ItemCatalogue catalogue,
+    Shelter? place,
+    ItemCatalogue? catalogue,
   ) async {
     final profileId = _profileId;
-    if (profileId == null || overflow.isEmpty) return;
+    if (profileId == null || place == null || catalogue == null) return;
+    if (overflow.isEmpty) return;
 
     if (_openAt?.id != place.id) await open(place, catalogue);
 

@@ -92,9 +92,9 @@ const Map<KitStep, List<KitOption>> kStartingKit = {
 /// do gry rzeczy, których nie da się unieść.
 Inventory kitFor(
   Map<KitStep, KitOption> picks,
-  ItemCatalogue catalogue, {
-  required BodyProfile body,
-}) {
+  BodyProfile body,
+  ItemCatalogue catalogue,
+) {
   var pack = const Inventory();
 
   // Kolejność kroków, nie kolejność mapy: gdyby coś się nie zmieściło, ma
@@ -119,10 +119,10 @@ Inventory kitFor(
 /// w tabeli nie zepsuła tego po cichu.
 bool kitFits(
   Map<KitStep, KitOption> picks,
-  ItemCatalogue catalogue, {
-  required BodyProfile body,
-}) {
-  final pack = kitFor(picks, catalogue, body: body);
+  BodyProfile body,
+  ItemCatalogue catalogue,
+) {
+  final pack = kitFor(picks, body, catalogue);
   final limits = pack.limits(body, catalogue);
 
   return pack.massKg(catalogue) <= limits.maxKg &&
