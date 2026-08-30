@@ -176,6 +176,8 @@ void main() {
       //                  every piece says what it comes apart into (§18.6)
       //           6436   a copy of a book keeps its place when it is picked
       //                  back up, and says when it is finished (§4.6.1)
+      //           6431   the breach wears the tool that made it, and the
+      //                  attachment slots name themselves (§19.3)
       //
       // ⚠️ Lower it when a phase lands. Never raise it — not for a phase, and
       // not for a feature either. "It is a feature" is exactly the excuse that
@@ -184,7 +186,7 @@ void main() {
       // Something new that belongs to the model goes in the model.
       expect(
         lines,
-        lessThanOrEqualTo(6436),
+        lessThanOrEqualTo(6431),
         reason: 'main.dart grew; something went in that should have come out',
       );
     });

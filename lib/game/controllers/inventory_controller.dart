@@ -143,6 +143,21 @@ class InventoryController extends ChangeNotifier {
 
   // ------------------------------------------------------------- writing ---
 
+  /// §19.3: pierwsze z [candidates], które gracz ma, schodzi o swoje zużycie.
+  ///
+  /// Ta sama kolejność, którą sprawdza `BarrierBreach.isAvailableWith` — czym
+  /// panel pozwolił otworzyć, to się zużyło.
+  Future<void> useTool(Iterable<String> candidates) async {
+    final catalogue = _catalogue;
+    final used = candidates.where(carries).firstOrNull;
+    if (catalogue == null || used == null) return;
+
+    inventory.value = inventory.value.usedTool(used, catalogue);
+    notifyListeners();
+
+    await save();
+  }
+
   Future<void> save() async {
     final profileId = _profileId;
     if (profileId == null) return;

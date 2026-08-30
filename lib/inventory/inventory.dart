@@ -623,6 +623,60 @@ class Inventory {
     return Inventory(carried: lines, worn: worn, packId: packId);
   }
 
+  /// §19.3, §4.1: narzędzie po jednym użyciu.
+  ///
+  /// ⚠️ **`condition_decay_per_use` leżało w danych i nic go nie czytało.**
+  /// Dwa procent na użycie przy wytrychach — najwyższa wartość w katalogu,
+  /// wpisana po to, żeby komplet starczał na pięćdziesiąt zamków — było polem
+  /// parsowanym i nigdy stosowanym. Cicha droga do każdych drzwi w grze
+  /// kosztowała jednorazowo dwa kawałki złomu.
+  ///
+  /// Zużywa się **najbardziej zużyty egzemplarz**, nie pierwszy z brzegu: kto
+  /// nosi dwa komplety, dorabia się jednego całego i jednego na wykończeniu, a
+  /// nie dwóch po połowie. Ta sama zasada, którą kieruje się każdy, kto ma w
+  /// kieszeni dwa scyzoryki.
+  ///
+  /// Przy zerze wiersz znika — i to jest cała różnica między narzędziem a
+  /// materiałem: narzędzie służy wiele razy, ale nie w nieskończoność.
+  Inventory usedTool(String itemId, ItemCatalogue catalogue) {
+    final decay = (catalogue[itemId]?.conditionDecayPerUse ?? 0).toDouble();
+    if (decay <= 0) return this;
+
+    // ⚠️ **Plecak najpierw, i to nie jest kolejność z gustu.** Broń w ręce
+    // stoi w obu listach naraz: prawdziwy egzemplarz z uid zostaje w
+    // `carried`, a `worn` trzyma sam znacznik slotu — bez uid i bez kondycji.
+    // Zużycie znacznika byłoby zużyciem niczego, a [withLine] i tak nie ma go
+    // po czym poznać (`isSame` idzie po uid).
+    CarriedItem? worst;
+    for (final line in [...carried, ...worn]) {
+      if (line.itemId != itemId) continue;
+      if (worst != null &&
+          (line.condition ?? 100) >= (worst.condition ?? 100)) {
+        continue;
+      }
+      // Znacznik bierzemy tylko wtedy, gdy nic prawdziwego nie ma — ubranie
+      // zdjęte z listy noszonych jest jedynym takim przypadkiem.
+      if (worst != null && line.uid == null && worst.uid != null) continue;
+      worst = line;
+    }
+    if (worst == null) return this;
+
+    final left = (worst.condition ?? 100) - decay;
+    if (left > 0) return withLine(worst, worst.copyWith(condition: left));
+
+    return Inventory(
+      carried: [
+        for (final line in carried)
+          if (!line.isSame(worst)) line,
+      ],
+      worn: [
+        for (final line in worn)
+          if (!line.isSame(worst)) line,
+      ],
+      packId: packId,
+    );
+  }
+
   /// §5.6.3: bolts [attachment] onto [line], out of the pack.
   ///
   /// Refused where it does not fit the weapon, where there is no rail left, or

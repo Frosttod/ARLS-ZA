@@ -10,6 +10,7 @@
 /// citation.
 library;
 
+import '../combat/attachment.dart';
 import '../l10n/app_localizations.dart';
 import '../items/item.dart';
 import '../sim/occupation.dart';
@@ -177,3 +178,12 @@ String useLabelFor(
   }
   return l10n.searchAreaRunning;
 }
+
+/// Gdzie na broni siedzi dodatek, w słowach ekranu (§5.5.4).
+String attachmentPlaceName(L10n l10n, AttachmentSlot place) => switch (place) {
+  AttachmentSlot.magazine => l10n.slotMagazine,
+  AttachmentSlot.optic => l10n.slotOptic,
+  AttachmentSlot.barrel => l10n.slotBarrel,
+  AttachmentSlot.grip => l10n.slotGrip,
+  AttachmentSlot.rail => l10n.slotRail,
+};

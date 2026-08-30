@@ -1,7 +1,7 @@
 # ARLS-ZA — lista kontrolna systemów
 
 Stan na dzień **2026-08-28**. Wygenerowana po przejściu pełnego zestawu
-testów: **2569 testów, `flutter analyze` czysty, schemat bazy v36**.
+testów: **2577 testów, `flutter analyze` czysty, schemat bazy v36**.
 
 ⚠️ Liczby poniżej są zliczone z suite'a, nie przepisane z pamięci. Suma
 obszarów musi się zgadzać z ogółem — jeśli się nie zgadza, ten plik jest
@@ -28,7 +28,7 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 | `sim` | 334 | tick, metabolizm, tętno, wchłanianie, **dwa zegary snu**, **masa ciała i wychudzenie**, **osiągalność zgonu z głodu i pragnienia**, **kary za stan docierające do zegarów**, **nawyk gry mierzony, nie zakładany (§16.4)**, świt i zmierzch |
 | `game` | 241 | pętla, kontrolery, jedna para rąk, integracja pozycji, dziennik, **wiązanie kontrolerów do profilu** |
 | `loot` | 190 | tabele, spawner, przeszukanie, rzeczy na ziemi, rozrzut §10.2, przeszkody |
-| `inventory` | 128 | dwa limity §18.1a, sloty, porcje, dodatki, trwałość, **strony książki** |
+| `inventory` | 136 | dwa limity §18.1a, sloty, porcje, dodatki, **zużycie narzędzia**, strony książki |
 | `shelter` | 104 | budowa, moduły, półka, stackowanie |
 | `map` | 88 | PMTiles, MVT, geometria, namiary, pakiety regionów |
 | `craft` | 97 | recepty, **odzież i plecaki szyte (§18.4)**, rozbiórka wsadowa, ilości ze stosu, bilans §18.2 |
@@ -45,7 +45,7 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 | `notes` | 14 | notatki i lektura |
 | `l10n` | 7 | kolizje kluczy, brak twardej polszczyzny w kodzie |
 
-**Razem 2569.**
+**Razem 2577.**
 
 ### Rzeczy, które testy trzymają jako liczby, a nie jako intencje
 

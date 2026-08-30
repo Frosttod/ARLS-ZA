@@ -357,7 +357,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       fitted.add((
         place,
         WeaponFitting(
-          place: _placeName(l10n, place),
+          place: attachmentPlaceName(l10n, place),
           name: _nameOfItem(part),
           // §5.3: the magazine says what is in it, because that is the one
           // number worth a glance before walking round a corner.
@@ -373,14 +373,6 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     fitted.sort((a, b) => a.$1.index.compareTo(b.$1.index));
     return [for (final entry in fitted) entry.$2];
   }
-
-  String _placeName(L10n l10n, AttachmentSlot place) => switch (place) {
-    AttachmentSlot.magazine => l10n.slotMagazine,
-    AttachmentSlot.optic => l10n.slotOptic,
-    AttachmentSlot.barrel => l10n.slotBarrel,
-    AttachmentSlot.grip => l10n.slotGrip,
-    AttachmentSlot.rail => l10n.slotRail,
-  };
 
   /// §5.5.4's seconds, as something to watch.
   ReloadProgress? _reloadProgress() {
@@ -5514,6 +5506,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
     final opened = box.openedAtTime(now);
     _loot.replace(opened);
+
+    // §19.3: czym to otwarto, to się zużyło.
+    await _pack.useTool(search.breach?.toolIds ?? const []);
 
     await LootStore(widget.session.db).saveOne(character.profile.id, opened);
     if (mounted) _say(L10n.of(context).breachDone);

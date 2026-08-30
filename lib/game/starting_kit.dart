@@ -58,7 +58,11 @@ const Map<KitStep, List<KitOption>> kStartingKit = {
   // dwudziestu. Ta sama para drzwi, dwie różne gry.
   KitStep.tools: [
     KitOption(itemId: 'melee_crowbar'),
-    KitOption(itemId: 'tool_lockpicks', count: 4),
+    // ⚠️ Jeden, nie komplet. Odkąd §19.3 zużywa narzędzie przy każdym
+    // otwarciu, cztery wytrychy to pięćdziesiąt zamków wydanych na starcie —
+    // czyli cicha droga przez pierwszy tydzień za darmo. Jeden to około
+    // pięćdziesięciu otwarć i decyzja, kiedy go użyć.
+    KitOption(itemId: 'tool_lockpicks'),
   ],
 
   // §2.6: pięć opatrunków na pięć ran przeciw jednej apteczce, która radzi
