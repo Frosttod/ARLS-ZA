@@ -24,7 +24,13 @@ library;
 import 'dart:math';
 
 import 'ballistics.dart' show HitLocation, rollHitLocation;
+import '../items/item.dart';
 import 'enemy.dart';
+import 'melee.dart';
+
+/// §5.5.3: kanały obrażeń są częścią tej samej odpowiedzi co [meleeOutcome] —
+/// kto pyta o jeden zamach, pyta o oba naraz.
+export 'melee.dart';
 import 'noise.dart';
 import '../map/geometry.dart';
 
@@ -156,14 +162,28 @@ const double kTakeDownNoiseM = 12;
 /// ⚠️ Losowanie jest w środku, bo uciszenie **nie chybia**: rzut na trafienie
 /// zrobiony na zewnątrz i tak trzeba by tu zignorować, a dwa miejsca, z
 /// których jedno czasem ignoruje drugie, to jedno miejsce za dużo.
-({double bloodMl, double bleeding, double noiseM, HitLocation where})
+///
+/// [blade] to przedmiot w ręce, albo null dla gołych rąk — gołymi rękami nikogo
+/// się nie ucisza i nikogo się nie przewraca.
+///
+/// [crowd] to ilu ich stoi w zwarciu: §5.5.3's tłok, ten sam, który liczy
+/// [flankingMultiplier]. Decyduje o tym, czy zasięg pomaga, czy zawadza.
+({
+  double bloodMl,
+  double bleeding,
+  double noiseM,
+  HitLocation where,
+  double staggerSeconds,
+})
 meleeOutcome({
   required Enemy target,
   required GeoPoint at,
-  required double? bladeBloodMl,
+  required ItemDefinition? blade,
   required double chance,
   required Random random,
+  int crowd = 1,
 }) {
+  final bladeBloodMl = (blade?.props['blood_ml_per_hit'] as num?)?.toDouble();
   final armed = bladeBloodMl != null;
 
   if (armed && canTakeDown(target, at)) {
@@ -176,15 +196,30 @@ meleeOutcome({
       bleeding: 5,
       noiseM: kTakeDownNoiseM,
       where: HitLocation.head,
+      // Nie ma czego oszałamiać: to jest koniec, a nie przerwa.
+      staggerSeconds: 0.0,
     );
   }
 
   final where = rollHitLocation(random.nextDouble());
 
+  // §5.5.3: zasięg pomaga w pojedynkę i zawadza w tłoku (`reachEdge`), a obuch
+  // działa **tylko wtedy, gdy cios wyszedł** — kij minięty obok niczego nie
+  // przewraca.
+  final landed =
+      random.nextDouble() <
+      (chance +
+              reachEdge(
+                reachM: (blade?.props['reach_m'] as num?)?.toDouble(),
+                crowd: crowd,
+              ))
+          .clamp(0.0, 1.0);
+
   return (
-    bloodMl: random.nextDouble() < chance
+    bloodMl: landed
         ? (bladeBloodMl ?? kBareHandsBloodMl) * where.multiplier
         : 0,
+    staggerSeconds: landed ? staggerSecondsOf(blade) : 0.0,
     bleeding: switch (where) {
       HitLocation.head => 5,
       HitLocation.torso => 3,

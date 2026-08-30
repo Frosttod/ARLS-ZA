@@ -5,6 +5,7 @@ import 'package:arls_za/combat/awareness.dart';
 import 'package:arls_za/combat/ballistics.dart';
 import 'package:arls_za/combat/noise.dart';
 import 'package:arls_za/combat/enemy.dart';
+import 'package:arls_za/items/item_catalogue.dart';
 import 'package:arls_za/map/geometry.dart';
 import 'package:test/test.dart';
 
@@ -232,12 +233,20 @@ void main() {
   group('§5.5.1: co robi jeden zamach', () {
     final always = Random(1);
 
+    // ⚠️ Prawdziwy nóż z katalogu, nie atrapa: 180 ml, kolna, 0,4 m. Atrapa
+    // przeżyłaby każdą zmianę danych i przestałaby cokolwiek sprawdzać.
+    final catalogue = ItemCatalogue.load([
+      for (final asset in kBundledItemAssets)
+        ItemSource(asset, File(asset).readAsStringSync()),
+    ]);
+    final knife = catalogue['melee_knife'];
+
     test('uciszenie zabiera całą krew i nie chybia', () {
       final walker = facingNorth();
       final blow = meleeOutcome(
         target: walker,
         at: at(180, 2),
-        bladeBloodMl: 180,
+        blade: knife,
         // Zero szans na trafienie: uciszenie nie jest rzutem.
         chance: 0,
         random: always,
@@ -253,7 +262,7 @@ void main() {
         target: facingNorth(),
         // Z przodu: to jest walka, nie podejście.
         at: at(0, 2),
-        bladeBloodMl: 180,
+        blade: knife,
         chance: 1,
         random: always,
       );
@@ -267,7 +276,7 @@ void main() {
       final blow = meleeOutcome(
         target: facingNorth(),
         at: at(180, 2),
-        bladeBloodMl: null,
+        blade: null,
         chance: 1,
         random: always,
       );
@@ -280,7 +289,7 @@ void main() {
       final blow = meleeOutcome(
         target: facingNorth(),
         at: at(0, 2),
-        bladeBloodMl: 180,
+        blade: knife,
         chance: 0,
         random: always,
       );

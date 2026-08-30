@@ -2954,11 +2954,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     }
 
     final blade = _meleeInHand;
-    final swing = Duration(
-      milliseconds:
-          (((blade?.props['swing_seconds'] as num?)?.toDouble() ?? 1.4) * 1000)
-              .round(),
-    );
+    final swing = swingTimeOf(blade);
 
     final now = DateTime.now();
     final last = _lastSwing;
@@ -2989,12 +2985,16 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final blow = meleeOutcome(
       target: target,
       at: here,
-      bladeBloodMl: (blade?.props['blood_ml_per_hit'] as num?)?.toDouble(),
+      blade: blade,
       chance: chance,
       random: Random(),
+      crowd: _combat.near(here).length,
     );
 
     setState(() {
+      // §5.5.3: obuch nie krwawi, tylko zatrzymuje.
+      _combat = _combat.staggered(target.id, blow.staggerSeconds);
+
       if (blow.bloodMl > 0) {
         _combat = _combat.wound(
           target.id,

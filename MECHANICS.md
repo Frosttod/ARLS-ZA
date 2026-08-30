@@ -15,7 +15,7 @@ Różnica jest istotna, bo w kilkunastu miejscach **świadomie odeszliśmy od do
 
 ⚠️ **Reguła utrzymania tego pliku:** liczba zmieniona w kodzie i nieprzeniesiona tutaj czyni ten dokument gorszym niż jego brak. Przy każdej zmianie stałej — aktualizuj sekcję.
 
-**Stan:** 2608 testów · schemat bazy **v37** · etapy 0–2 zamknięte, 3–6 i 8 przed testem w terenie.
+**Stan:** 2625 testów · schemat bazy **v37** · etapy 0–2 zamknięte, 3–6 i 8 przed testem w terenie.
 
 ---
 
@@ -788,6 +788,47 @@ Panel walki pokazuje **największe pojedyncze źródło** obok procentu — żeb
 
 Losowane **w obie strony** — ugryzienie też ma lokalizację. Trafiony przeciwnik może **wykrwawić się, zanim dobiegnie**, co czyni wycofanie się taktyką.
 
+### 10.3a. Dwa kanały obrażeń (§5.5.1, §5.5.3)
+
+⚠️ **Wszystko w zwarciu robiło jedną rzecz — upuszczało krew.** Młotek nie tnie,
+a mimo to jedyną różnicą między nim a maczetą było dwieście mililitrów.
+`damage_type` leżało w danych wszystkich jedenastu broni białych i nie czytał go
+nikt.
+
+| Kanał | Czym | Co robi |
+| :---- | :---- | :---- |
+| **Sieczna, kolna** | nóż, maczeta, siekiera, włócznia, szpikulec, śrubokręt | krwawienie — zabija z czasem |
+| **Obuchowa** | pałka, młotek, łom, łopata, maczuga | **oszołomienie** — stoi, nie bije, nie goni |
+
+**Oszołomienie = masa broni w sekundach**, wyprowadzone, nie dopisane do danych:
+młotek 0,7 s · pałka 0,9 s · łom 1,6 s · maczuga 1,7 s · łopata 1,9 s.
+
+| | |
+| :---- | ----: |
+| Koszt budżetu sprintu | **2 s biegu za sekundę stania** |
+| Brutal | **połowa** oszołomienia |
+| Chybiony cios | zero (obuch jest skutkiem trafienia, nie zamachu) |
+| Trup | zero |
+
+⚠️ **Cena obucha jest w czasie zamachu.** Łopata oszałamia na 1,9 s i bierze
+zamach 2,1 s — kto bije ciężkim, ten bije rzadziej, i to jest jedyny powód, dla
+którego maczeta dalej ma sens.
+
+**Zasięg** (`reach_m`, 0,3–1,8 m) przesuwa szansę trafienia względem pałki
+(0,9 m = zero):
+
+| Sytuacja | Długa broń | Krótka broń |
+| :---- | :---- | :---- |
+| Jeden przeciwnik | **+**, do +15 pkt | − |
+| Dwóch i więcej | **−**, do −15 pkt | **+** |
+
+⚠️ **Włócznia nie może być po prostu lepsza.** Metr dziewięćdziesiąt drzewca
+trzyma Kroczącego na dystans, kiedy jest jeden, i jest kijem, kiedy trzech stoi
+dookoła. Nóż nie ma czym trzymać na dystans ani czym zawadzać — jego przewagą
+**jest** tłok.
+
+Trzecim wyjściem zostaje cios w plecy (§11.2b). Zabić, odejść albo uciszyć.
+
 ### 10.4. Dystanse (§5.2)
 
 | | |
@@ -1366,7 +1407,7 @@ wyżej: wpiąć albo usunąć.
 | **Pancerz per lokalizacja** | ⬜ | trafienia mają lokalizacje, pancerz liczy jeden próg torsa |
 | **Budynki jako przeszkody** | ⬜ | warstwa w paczkach nie niesie typu |
 | **Światło broni** | ⬜ | §6.2 daje wykrywanie bez kierunku |
-| **Drugi kanał obrażeń (§5.5.1)** | ⬜ | `strength_required` i `reach_m` leżą w danych i nikt ich nie czyta |
+| **Siła jako oś (§5.5.1)** | ⬜ | `strength_required` leży w danych; wymaga statystyki siły, której nie ma |
 | **Temperatura otoczenia** | ⬜ | `ambientTempC` i `clothingClo` nie mają źródła |
 | **Światło (`tool_flashlight`)** | ⬜ | latarka nie robi nic |
 | **Pogoda i sezonowość** | ⬜ P4 | wymaga craftingu |

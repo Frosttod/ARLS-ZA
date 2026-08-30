@@ -253,6 +253,7 @@ class Enemy {
     this.headingDeg,
     this.sightFactor = 1,
     this.bleedMlPerSecond = 0,
+    this.staggerLeft = Duration.zero,
   });
 
   /// Rolls the ranges of §6.2 once, at spawn. Two Walkers are not the same
@@ -347,6 +348,15 @@ class Enemy {
   /// lie a player would act on — the same reason §3.6 refuses to leave the
   /// player's own cone pointing the last way they walked.
   final double? headingDeg;
+
+  /// §5.5.3: ile jeszcze stoi po obuchu. Zero — idzie dalej.
+  ///
+  /// ⚠️ **To jest drugi kanał obrażeń, i jedyny, który nie zabija.** Ciało z
+  /// rozbitym kolanem dalej ma całą krew — tyle że przez tę chwilę nie bije i
+  /// nie goni. Za to się płaci, niosąc łopatę zamiast maczety.
+  final Duration staggerLeft;
+
+  bool get isStaggered => staggerLeft > Duration.zero;
 
   Duration get budget => sprintLeft ?? kind.sprintBudget;
 
@@ -450,6 +460,7 @@ class Enemy {
     double? headingDeg,
     double? sightFactor,
     double? bleedMlPerSecond,
+    Duration? staggerLeft,
   }) => Enemy(
     id: id,
     kind: kind,
@@ -473,6 +484,7 @@ class Enemy {
     headingDeg: headingDeg ?? this.headingDeg,
     sightFactor: sightFactor ?? this.sightFactor,
     bleedMlPerSecond: bleedMlPerSecond ?? this.bleedMlPerSecond,
+    staggerLeft: staggerLeft ?? this.staggerLeft,
   );
 
   /// The wound of §5.1.5, taken.
@@ -556,6 +568,21 @@ Enemy advanceEnemy(
     if (bled.isDead) return bled;
     enemy = bled;
   }
+  // §5.5.3: obuch. Ciało, które właśnie dostało łopatą, przez tę chwilę stoi —
+  // nie idzie, nie goni i nie odzyskuje tchu. Wcześnie, bo wszystko poniżej
+  // jest o tym, dokąd rusza, a ono nigdzie nie rusza.
+  if (enemy.isStaggered) {
+    final left = enemy.staggerLeft - elapsed;
+    return enemy.copyWith(
+      staggerLeft: left.isNegative ? Duration.zero : left,
+      // Zegar kontaktu (§6.1a) tyka dalej: gracz, który w tym czasie odszedł,
+      // naprawdę odszedł, i to jest cała nagroda za ten cios.
+      sinceContact: enemy.position.distanceTo(playerAt) <= kContactM
+          ? Duration.zero
+          : enemy.sinceContact + elapsed,
+    );
+  }
+
   final distance = enemy.position.distanceTo(playerAt);
 
   // §6.1a: contact is the player being near, not the enemy trying.

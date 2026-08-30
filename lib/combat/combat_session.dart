@@ -253,6 +253,45 @@ class CombatSession {
   /// this a wounded Walker went on searching the place the *noise* came from,
   /// which made the second round cheaper than the first and read, from the
   /// player's side, as a thing that did not care it had been hit.
+  /// §5.5.3: obuch. Stoi przez [seconds] i traci tyle biegu, ile §5.5.3 każe.
+  ///
+  /// ⚠️ **Brutal połowę.** Sto dwadzieścia kilogramów obrzęku nie przewraca się
+  /// od kija — ta sama zasada, dla której nie da się go uciszyć od tyłu
+  /// (§5.5.1). Elita ma zostać elitą przy każdym kanale obrażeń, nie tylko przy
+  /// jednym.
+  CombatSession staggered(String enemyId, double seconds) {
+    if (seconds <= 0) return this;
+
+    return CombatSession(
+      seed: seed,
+      enemies: [
+        for (final enemy in enemies)
+          if (enemy.id != enemyId || enemy.isDead)
+            enemy
+          else
+            enemy.copyWith(
+              staggerLeft: Duration(
+                milliseconds:
+                    (seconds * 1000 * (enemy.kind == EnemyKind.brute ? 0.5 : 1))
+                        .round(),
+              ),
+              // §6.1: sekunda oszołomienia to dwie sekundy biegu, których nie
+              // ma. Bez tego obuch byłby przerwą, a nie ceną.
+              sprintLeft: () {
+                final left =
+                    enemy.budget -
+                    Duration(
+                      milliseconds: (seconds * kStaggerSprintCost * 1000)
+                          .round(),
+                    );
+                return left.isNegative ? Duration.zero : left;
+              }(),
+            ),
+      ],
+      open: open,
+    );
+  }
+
   CombatSession wound(
     String enemyId,
     double bloodLossMl, {
