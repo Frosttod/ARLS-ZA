@@ -30,6 +30,7 @@ import '../notes/note.dart';
 import '../safety/spawn_exclusion.dart';
 import 'procedural_points.dart' show kCarSelector, kWasteSelector;
 import 'loot_table.dart';
+import 'obstacle.dart';
 
 /// §10: at most this many live at once within [kSpawnRadiusM].
 const int kMaxActiveBoxes = 15;
@@ -627,3 +628,10 @@ class LootSpawner {
   static int _hourStamp(DateTime now) =>
       now.toUtc().millisecondsSinceEpoch ~/ Duration.millisecondsPerHour;
 }
+
+/// Co zamyka to miejsce, albo null — otwarte, albo nie ma tam nic (§19.3).
+///
+/// Bariera jest własnością tabeli, nie skrzynki: apteka jest zamknięta,
+/// parking nie, i to jest treść, a nie kod.
+Barrier? barrierOn(LootBox? box, LootTableSet? tables) =>
+    box == null || box.isOpen ? null : tables?[box.tableId]?.barrier;

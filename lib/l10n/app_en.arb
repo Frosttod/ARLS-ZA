@@ -1149,6 +1149,7 @@
   "breachForce": "Force it",
   "breachPry": "Lever it",
   "breachPick": "Pick it",
+  "breachBareHands": "Bare hands",
   "breachNoTool": "No tool for this — a padlock needs one.",
   "breachDone": "You are in.",
   "breachNoise": "{metres} m of noise",

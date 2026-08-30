@@ -1861,6 +1861,9 @@ class L10nPl extends L10n {
   String get breachPick => 'Otwórz wytrychem';
 
   @override
+  String get breachBareHands => 'Gołe ręce';
+
+  @override
   String get breachNoTool =>
       'Brak narzędzia — kłódki nie otworzysz gołymi rękami.';
 

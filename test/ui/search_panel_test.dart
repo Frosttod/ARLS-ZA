@@ -51,6 +51,12 @@ void main() {
             searchUnitsLeft: left,
             barrier: barrier,
             carried: carried,
+            toolName: (id) => switch (id) {
+              'tool_lockpicks' => 'Wytrychy',
+              'melee_crowbar' => 'Łom',
+              'melee_axe' => 'Siekiera',
+              _ => id,
+            },
             onBreach: (_) {},
             onSearchArea: () {},
             onSearchHere: (_) {},
@@ -165,6 +171,45 @@ void main() {
 
       expect(find.byIcon(Icons.construction_outlined), findsOneWidget);
       expect(find.byIcon(Icons.vpn_key_outlined), findsNothing);
+    });
+
+    testWidgets('i każda droga mówi, czym się ją przechodzi', (tester) async {
+      // ⚠️ **Zgłoszone z terenu: „to niewiele mówi".** Trzy glify z sekundami
+      // pod spodem mówiły, że coś kosztuje dwanaście sekund, ale nie mówiły
+      // czym się to robi ani czego brakuje.
+      await pump(
+        tester,
+        barrier: Barrier.door,
+        carried: {'tool_lockpicks', 'melee_crowbar'},
+      );
+
+      expect(find.text('Wytrychy'), findsOneWidget);
+      expect(find.text('Łom'), findsOneWidget);
+      expect(find.text('Gołe ręce'), findsOneWidget);
+    });
+
+    testWidgets('a siekiera nazywa się siekierą, nie łomem', (tester) async {
+      // ⚠️ Drzwi podważa łom **albo** siekiera, i panel pokazujący jedno,
+      // a zużywający drugie, byłby gorszy od milczącego: gracz zapamiętałby
+      // cenę, której nie zapłacił. Ta sama kolejność co w `useTool`.
+      await pump(tester, barrier: Barrier.door, carried: {'melee_axe'});
+
+      expect(find.text('Siekiera'), findsOneWidget);
+      expect(find.text('Łom'), findsNothing);
+    });
+
+    testWidgets('a nazwa stoi obok swojej ceny', (tester) async {
+      await pump(tester, barrier: Barrier.door, carried: {'melee_crowbar'});
+
+      final row = find.ancestor(
+        of: find.text('Łom'),
+        matching: find.byType(Row),
+      );
+
+      expect(
+        find.descendant(of: row.first, matching: find.textContaining('12 s')),
+        findsOneWidget,
+      );
     });
 
     testWidgets('empty-handed, a door still gives way to shoulders', (

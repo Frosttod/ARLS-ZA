@@ -1863,6 +1863,9 @@ class L10nEn extends L10n {
   String get breachPick => 'Pick it';
 
   @override
+  String get breachBareHands => 'Bare hands';
+
+  @override
   String get breachNoTool => 'No tool for this — a padlock needs one.';
 
   @override

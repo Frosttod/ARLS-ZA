@@ -3121,8 +3121,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         // §10.3.5: what each depth costs in seconds, here. A bin is not a
         // supermarket, and the caption is where the player finds that out.
         searchTimes: _searchTimesAt(box),
-        barrier: _barrierOn(box),
+        barrier: barrierOn(box, _world?.tables),
         carried: _carriedIds(),
+        // §12: „podważ" znaczy łom albo siekierę — zależy, co gracz niesie.
+        toolName: _nameOfId,
         onSearchArea: _startAreaSearch,
         onSearchHere: _startObjectSearch,
         onBreach: _startBreach,
@@ -5462,11 +5464,6 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   ///
   /// A box that has been opened once stays open — a forced door does not
   /// repair itself while the player walks home.
-  Barrier? _barrierOn(LootBox? box) {
-    if (box == null || box.isOpen) return null;
-    return _world?.tables[box.tableId]?.barrier;
-  }
-
   void _startBreach(BarrierBreach breach) {
     // ⚠️ Sticky. The car outside the shelter has a door, so opening it goes
     // through here rather than through the search — which is why "I cannot

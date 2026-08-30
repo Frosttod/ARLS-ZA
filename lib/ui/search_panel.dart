@@ -33,6 +33,7 @@ class SearchPanel extends StatelessWidget {
     required this.onCancel,
     this.barrier,
     this.carried = const {},
+    this.toolName,
     this.onBreach,
     this.droppedLabel,
     this.onTakeDropped,
@@ -93,6 +94,10 @@ class SearchPanel extends StatelessWidget {
 
   /// Item ids the player has, which is what decides the ways in.
   final Set<String> carried;
+
+  /// §12: jak się nazywa przedmiot o tym id. Bez tego panel mówi „podważ",
+  /// a gracz i tak musi zgadnąć, czym.
+  final String Function(String itemId)? toolName;
 
   final void Function(BarrierBreach breach)? onBreach;
 
@@ -156,6 +161,7 @@ class SearchPanel extends StatelessWidget {
                 barrier: canSearchHere ? barrier : null,
                 searchTimes: searchTimes,
                 carried: carried,
+                toolName: toolName,
                 onBreach: busy ? null : onBreach,
                 onSearchArea: busy ? null : onSearchArea,
                 onSearchHere: busy ? null : onSearchHere,
@@ -269,6 +275,7 @@ class _Actions extends StatelessWidget {
     required this.searchTimes,
     required this.barrier,
     required this.carried,
+    required this.toolName,
     required this.onBreach,
     required this.onSearchArea,
     required this.onSearchHere,
@@ -290,6 +297,7 @@ class _Actions extends StatelessWidget {
 
   final Barrier? barrier;
   final Set<String> carried;
+  final String Function(String itemId)? toolName;
   final void Function(BarrierBreach)? onBreach;
   final VoidCallback? onSearchArea;
   final void Function(SearchDepth)? onSearchHere;
@@ -340,6 +348,21 @@ class _Actions extends StatelessWidget {
             style: const TextStyle(fontSize: 11, color: Color(0xFFE8B33A)),
           ),
 
+        // §19.3: a way in comes before anything to do inside — i wierszem, nie
+        // ikoną. Zgłoszone z terenu: trzy glify z sekundami pod spodem mówiły,
+        // że **coś** kosztuje dwanaście sekund, ale nie mówiły czym się to
+        // robi. Gracz z siekierą i bez łomu widział ten sam klucz francuski.
+        for (final way in ways)
+          _BreachWay(
+            barrier: shut!,
+            way: way,
+            toolId: way.toolWith(carried),
+            toolName: toolName,
+            colours: colours,
+            l10n: l10n,
+            onPressed: onBreach == null ? null : () => onBreach!(way),
+          ),
+
         // Wrapped, not a row: four glyphs with their times under them do not
         // fit across a phone, and a clipped control is one nobody can press.
         Wrap(
@@ -352,21 +375,6 @@ class _Actions extends StatelessWidget {
               tooltip: l10n.searchArea,
               color: colours.text,
             ),
-
-            // §19.3: a way in comes before anything to do inside.
-            for (final way in ways)
-              _ActionIcon(
-                icon: _wayIcon(shut!, way),
-                // Seconds and metres of noise: §19.3's whole choice, and not
-                // one an icon can carry on its own.
-                caption: effects([
-                  '${way.seconds} s',
-                  l10n.breachNoise(way.noiseM.round()),
-                ]),
-                tooltip: _verb(l10n, shut, way),
-                colours: colours,
-                onPressed: onBreach == null ? null : () => onBreach!(way),
-              ),
 
             // The three depths of §10.3.5, all three at once. Hiding the slow
             // ones behind a menu would hide the decision - and one with no
@@ -413,6 +421,93 @@ class _Actions extends StatelessWidget {
           ],
         ),
       ],
+    );
+  }
+}
+
+/// Jedna droga przez barierę: czym, jak długo i jak głośno (§19.3, §12).
+///
+/// ⚠️ **Nazwa narzędzia jest tu treścią, nie ozdobą.** Drzwi podważa łom *albo*
+/// siekiera, a kłódkę tnie przecinak — do tej pory panel pokazywał jedną ikonę
+/// „podważ" dla wszystkich trzech, więc gracz nie wiedział, co mu zejdzie i
+/// czego mu brakuje. Pokazywane jest to narzędzie, którym gra naprawdę otworzy:
+/// pierwsze z `toolIds`, które gracz ma — ta sama kolejność, którą zużywa
+/// `InventoryController.useTool`.
+///
+/// Rozwijane nie jest, choć takie było zgłoszenie: dróg jest najwyżej trzy, a
+/// zwinięta lista chowa dokładnie tę decyzję, dla której §19.3 stawia bariery —
+/// szybko i głośno przeciw wolno i cicho. Jeden dotyk zamiast dwóch.
+class _BreachWay extends StatelessWidget {
+  const _BreachWay({
+    required this.barrier,
+    required this.way,
+    required this.toolId,
+    required this.toolName,
+    required this.colours,
+    required this.l10n,
+    required this.onPressed,
+  });
+
+  final Barrier barrier;
+  final BarrierBreach way;
+
+  /// Czym gracz tędy wejdzie, albo null — gołymi rękami.
+  final String? toolId;
+
+  final String Function(String itemId)? toolName;
+  final HudColors colours;
+  final L10n l10n;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final named = toolId == null ? null : toolName?.call(toolId!);
+
+    return Semantics(
+      button: true,
+      // §12: czytnik ekranu dostaje czasownik, którego wiersz już nie pisze —
+      // „podważ łomem", a nie samo „łom".
+      label: effects([
+        _verb(l10n, barrier, way),
+        named ?? l10n.breachBareHands,
+      ]),
+      child: InkWell(
+        onTap: onPressed,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 5),
+          child: Row(
+            children: [
+              Icon(
+                _wayIcon(barrier, way),
+                size: 18,
+                color: onPressed == null ? colours.muted : colours.text,
+              ),
+              const SizedBox(width: 8),
+
+              // Czym. Gołe ręce też są odpowiedzią — i tą, która boli.
+              Expanded(
+                child: Text(
+                  named ?? l10n.breachBareHands,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: onPressed == null ? colours.muted : colours.text,
+                  ),
+                ),
+              ),
+
+              // Ile to kosztuje, w jednostkach gracza: sekundy i metry hałasu.
+              // §19.3 nie ma innej treści niż te dwie liczby.
+              Text(
+                effects([
+                  '${way.seconds} s',
+                  l10n.breachNoise(way.noiseM.round()),
+                ]),
+                style: TextStyle(fontSize: 11, color: colours.muted),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

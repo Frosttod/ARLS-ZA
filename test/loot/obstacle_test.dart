@@ -205,4 +205,42 @@ void main() {
       }
     });
   });
+
+  group('§12: czym się tędy wchodzi', () {
+    test('nazwane jest to narzędzie, które gracz naprawdę ma', () {
+      // ⚠️ Drzwi podważa łom **albo** siekiera. Panel pokazujący jedno,
+      // a `useTool` zużywające drugie, byłoby gorsze od panelu milczącego.
+      final pry = Barrier.door.pry!;
+
+      expect(pry.toolWith(const {'melee_axe'}), 'melee_axe');
+      expect(pry.toolWith(const {'melee_crowbar'}), 'melee_crowbar');
+    });
+
+    test('a przy dwóch — pierwsze z listy, tak jak przy zużyciu', () {
+      // ⚠️ **Ta sama kolejność, którą zużywa `InventoryController.useTool`.**
+      // Dwie różne odpowiedzi na to samo pytanie znaczą, że gracz płaci czym
+      // innym, niż mu pokazano.
+      final pry = Barrier.door.pry!;
+
+      expect(
+        pry.toolWith(const {'melee_axe', 'melee_crowbar'}),
+        'melee_crowbar',
+      );
+      expect(pry.toolIds.first, 'melee_crowbar');
+    });
+
+    test('a gołe ręce nie są przedmiotem', () {
+      expect(Barrier.door.force!.toolWith(const {}), isNull);
+      expect(Barrier.door.pry!.toolWith(const {'mat_metal'}), isNull);
+    });
+  });
+
+  test('§12: i panel naprawdę dostaje po czym to nazwać', () {
+    // ⚠️ Test źródłowy: pole może być poprawne i niewołane — ta gra złapała
+    // już jedenaście takich. Bez `toolName` lista mówi „Gołe ręce" o każdej
+    // drodze, bo nie ma czym nazwać narzędzia.
+    final main = File('lib/main.dart').readAsStringSync();
+
+    expect(main.contains('toolName: _nameOfId'), isTrue);
+  });
 }

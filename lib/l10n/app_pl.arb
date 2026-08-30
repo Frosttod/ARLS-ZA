@@ -1025,6 +1025,7 @@
   "breachForce": "Wyważ",
   "breachPry": "Podważ",
   "breachPick": "Otwórz wytrychem",
+  "breachBareHands": "Gołe ręce",
   "breachNoTool": "Brak narzędzia — kłódki nie otworzysz gołymi rękami.",
   "breachDone": "Jesteś w środku.",
   "breachNoise": "hałas {metres} m",

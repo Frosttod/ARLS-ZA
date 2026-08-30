@@ -178,6 +178,8 @@ void main() {
       //                  back up, and says when it is finished (§4.6.1)
       //           6431   the breach wears the tool that made it, and the
       //                  attachment slots name themselves (§19.3)
+      //           6428   the ways through a barrier say what opens them, and
+      //                  a shut place knows its own barrier (§19.3, §12)
       //
       // ⚠️ Lower it when a phase lands. Never raise it — not for a phase, and
       // not for a feature either. "It is a feature" is exactly the excuse that
@@ -186,7 +188,7 @@ void main() {
       // Something new that belongs to the model goes in the model.
       expect(
         lines,
-        lessThanOrEqualTo(6431),
+        lessThanOrEqualTo(6428),
         reason: 'main.dart grew; something went in that should have come out',
       );
     });

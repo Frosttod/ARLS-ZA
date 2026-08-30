@@ -41,6 +41,14 @@ class BarrierBreach {
 
   bool isAvailableWith(Set<String> carried) =>
       !needsTool || toolIds.any(carried.contains);
+
+  /// Czym gracz naprawdę tędy wejdzie, albo null, jeśli gołymi rękami.
+  ///
+  /// ⚠️ **Ta sama kolejność, którą zużywa `InventoryController.useTool`.** Panel
+  /// pokazujący łom, a zużywający siekierę, byłby gorszy od panelu milczącego:
+  /// gracz zapamiętałby cenę, której nie zapłacił.
+  String? toolWith(Set<String> carried) =>
+      toolIds.where(carried.contains).firstOrNull;
 }
 
 /// A barrier on a place, and the ways through it.

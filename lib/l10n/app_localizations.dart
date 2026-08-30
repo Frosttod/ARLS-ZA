@@ -3343,6 +3343,12 @@ abstract class L10n {
   /// **'Pick it'**
   String get breachPick;
 
+  /// No description provided for @breachBareHands.
+  ///
+  /// In en, this message translates to:
+  /// **'Bare hands'**
+  String get breachBareHands;
+
   /// No description provided for @breachNoTool.
   ///
   /// In en, this message translates to:
