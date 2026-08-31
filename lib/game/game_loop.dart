@@ -15,9 +15,6 @@
 library;
 
 import 'dart:async';
-import 'dart:convert';
-
-import 'package:drift/drift.dart';
 
 import '../core/game_clock.dart';
 import '../data/db/database.dart';
@@ -38,6 +35,7 @@ import '../sim/body.dart';
 import '../combat/pursuit.dart';
 import '../sim/death.dart';
 import '../sim/occupation.dart';
+import 'blind_gap.dart';
 import '../sim/physiology.dart';
 import '../sim/tick.dart';
 
@@ -485,14 +483,53 @@ class GameLoop {
     _lastFix = accepted.fix;
     _integrity.observeSpeed(accepted.speedMps, accepted.fix.timestamp);
 
+    // §2.5.1: to jest ten odczyt, na który czekała przerwa.
+    //
+    // ⚠️ **I to on, a nie lepka pozycja, mówi, gdzie postać jest.** Lepką
+    // ustawia interfejs (§3.2) i po nocy z zamkniętą aplikacją jest ona
+    // sprzed nocy — czyli z ulicy, na której gra zgasła. Odczyt jest z teraz.
+    // Sama przerwa doliczy się na najbliższym ticku — sekundę później, i bez
+    // zapisu do bazy z wnętrza strumienia odczytów.
+    _standingAt = GeoPoint(accepted.fix.latitude, accepted.fix.longitude);
+
     // The sampling rate reacts to movement, and movement arrives here rather
     // than on the tick. Waiting for the next tick would leave someone who has
     // just started walking being sampled at 0.05 Hz (§3.3).
     unawaited(_applySampling(accepted.fix.timestamp));
   }
 
+  /// §2.5.1: odkąd czekamy na świeży odczyt, żeby policzyć długą przerwę.
+  DateTime? _waitingForFix;
+
+  /// Reguła jest w [holdsBlindGap]; tutaj zostaje tylko stempel.
+  bool _holdsGap() {
+    final now = clock.wallClock.nowUtc();
+    final at = _standingAt;
+
+    final holds = holdsBlindGap(
+      now: now,
+      lastUpdate: _state.lastUpdate,
+      hasShelters: _shelters.isNotEmpty,
+      inShelter:
+          at != null &&
+          shelterAt(at, _shelters, now: _state.lastUpdate) != null,
+      fixAt: _lastFix?.timestamp,
+      waitingSince: _waitingForFix,
+    );
+
+    _waitingForFix = holds ? (_waitingForFix ?? now) : null;
+    return holds;
+  }
+
   /// Advances the simulation to now and stages the result for writing.
   Future<void> _tick({bool offline = false}) async {
+    // §2.5.1: nocy przespanej w schronie nie liczy się z ulicy, na której
+    // aplikacja zgasła. Zegar zostaje nietknięty, więc przerwa czeka w całości.
+    if (_holdsGap()) {
+      _publish();
+      return;
+    }
+
     final advanceResult = clock.advance(_state.lastUpdate);
     _rolledBack = advanceResult.rolledBack;
 
@@ -512,29 +549,7 @@ class GameLoop {
     final unmeasured = elapsed > kUnmeasuredGap;
     final input = _buildInput(offline: offline || unmeasured);
 
-    // ⚠️ §2.5.1's ten minutes can fall *inside* the span being replayed, and
-    // the input is decided once for the whole of it.
-    //
-    // Found on a walk: sitting in a shelter in the daytime never paid the
-    // sleep debt down at all. The zone flipped to `sleep` on the tick after
-    // the tenth minute, so the HUD said asleep — but by then the whole span
-    // had already been applied with `sleeping: false`, and a four-hour sit
-    // *added* an hour and twenty to the debt. The night case worked, and hid
-    // it: darkness is true from the first instant, so its input is right from
-    // the first instant.
-    //
-    // So the span is split where the character settles, and the two halves are
-    // applied with the input each of them actually had.
-    final awakeFor = _awakeBefore(elapsed, input);
-
-    final outcome = awakeFor == null
-        ? _applySpan(elapsed, input)
-        : _applySpan(
-            elapsed - awakeFor,
-            input.asleep,
-            after: awakeFor,
-            of: input,
-          );
+    final outcome = _applyGap(elapsed, input);
 
     _state = outcome.state;
     _reweigh();
@@ -556,6 +571,22 @@ class GameLoop {
     await _maybeSnapshot(advanceResult.now);
 
     _publish();
+  }
+
+  /// §2.5.1: cała przerwa, z podziałem na dziesięciu minutach, jeśli wypada w
+  /// środku. Jedno miejsce, bo [_tick] i poprawka §2.5.1 muszą liczyć tę samą
+  /// przerwę tak samo.
+  TickOutcome _applyGap(Duration elapsed, TickInput input) {
+    final awakeFor = _awakeBefore(elapsed, input);
+
+    return awakeFor == null
+        ? _applySpan(elapsed, input)
+        : _applySpan(
+            elapsed - awakeFor,
+            input.asleep,
+            after: awakeFor,
+            of: input,
+          );
   }
 
   /// Applies [span], optionally after [after] of [of] first.
@@ -883,43 +914,32 @@ class GameLoop {
     await session.snapshots.capture(session.db, now: now);
   }
 
-  VitalsCompanion _toCompanion() => VitalsCompanion(
-    profileId: Value(profileId),
-    lastUpdate: Value(_state.lastUpdate),
-    bloodMl: Value(_state.bloodMl),
-    waterMl: Value(_state.waterMl),
-    caloriesKcal: Value(_state.caloriesKcal),
-    pendingKcal: Value(_state.pendingKcal),
-    pendingWaterMl: Value(_state.pendingWaterMl),
-    heartRateBpm: Value(_state.heartRateBpm),
-    sleepDebtSeconds: Value(_state.sleepDebtSeconds),
-    sleepStrain: Value(_state.sleepStrain),
-    // §2.3: the two clocks the lethal rules hang on. They have to survive a
-    // kill, or closing the app would be a glass of water.
-    bodyMassKg: Value(_state.bodyMassKg),
-    dryStreakSeconds: Value(_state.dryStreakSeconds),
-    starvedStreakSeconds: Value(_state.starvedStreakSeconds),
-    zone: Value(_state.zone.wire),
-    latitude: Value(_lastFix?.latitude),
-    longitude: Value(_lastFix?.longitude),
-    accuracyM: Value(_lastFix?.accuracyM),
-    speedKmh: Value(_speedKmh),
-    occupationJson: Value(
-      _occupation == null ? null : jsonEncode(_occupation!.toJson()),
-    ),
-    bleedTier: Value(_bleeding.name),
-    downUntil: Value(_downUntil),
-    graceUntil: Value(_graceUntil),
-    huntUntil: Value(_pursuit?.until),
-    huntLatitude: Value(_pursuit?.at.latitude),
-    huntLongitude: Value(_pursuit?.at.longitude),
-    huntCount: Value(_pursuit?.count ?? 0),
+  VitalsCompanion _toCompanion() => vitalsRow(
+    profileId: profileId,
+    state: _state,
+    fix: _lastFix,
+    speedKmh: _speedKmh,
+    occupation: _occupation,
+    bleeding: _bleeding,
+    downUntil: _downUntil,
+    graceUntil: _graceUntil,
+    pursuit: _pursuit,
   );
+
+  static GeoPoint? _geoOf(PositionFix? fix) =>
+      fix == null ? null : GeoPoint(fix.latitude, fix.longitude);
 
   void _publish() {
     if (_snapshots.isClosed) return;
 
     final fix = _lastFix;
+
+    // ⚠️ **Brak odczytu to nie jest południe.** Niebo liczyło się wyłącznie z
+    // bramkowanego `_lastFix`, a §2.1a.4 pod dachem ścisza odbiornik — więc
+    // dokładnie tam, gdzie gracz śpi, gra raportowała pełny dzień i pustą parę
+    // Świt/Zmierzch. Ta sama lepka pozycja, z której `_applyShelter` odczytuje
+    // strefę, i z której mierzy wszystko inne w grze.
+    final under = _standingAt ?? _geoOf(fix) ?? _geoOf(_displayFix);
     final settledAt = _settledAt;
     Duration? countdown;
     if (settledAt != null &&
@@ -938,21 +958,21 @@ class GameLoop {
         status: _status(),
         signal: source.currentSignal,
         speedKmh: _speedKmh,
-        isNight: fix == null
+        isNight: under == null
             ? false
             : isNightAt(
                 momentUtc: _state.lastUpdate,
-                latitude: fix.latitude,
-                longitude: fix.longitude,
+                latitude: under.latitude,
+                longitude: under.longitude,
               ),
-        darkness: fix == null
+        darkness: under == null
             ? 0
             : darknessAt(
                 momentUtc: _state.lastUpdate,
-                latitude: fix.latitude,
-                longitude: fix.longitude,
+                latitude: under.latitude,
+                longitude: under.longitude,
               ),
-        sky: _skyTimes(fix),
+        sky: _skyTimes(under),
         occupation: _occupation,
         sleepCountdown: countdown,
         fix: fix,
@@ -1164,8 +1184,7 @@ class GameLoop {
   /// that kept running would credit the player with standing still — so the
   /// loop stops and the time away is replayed under the offline valve of
   /// §2.1.1 instead.
-  ({DateTime? dusk, DateTime? dawn}) _sky = const (dusk: null, dawn: null);
-  DateTime? _skyFor;
+  final SkyCache _sky = SkyCache();
 
   /// §17.2: when the light next goes and next comes back, cached.
   ///
@@ -1174,31 +1193,13 @@ class GameLoop {
   /// calculations a second for two times that move four minutes a day.
   /// Recomputed when one passes, or hourly; the countdown stays exact in
   /// between because it is a moment rather than a duration.
-  ({DateTime? dusk, DateTime? dawn}) _skyTimes(PositionFix? fix) {
-    if (fix == null) return const (dusk: null, dawn: null);
-
-    final now = _state.lastUpdate;
-    final since = _skyFor;
-    // ⚠️ Recomputed a minute *before* a moment lapses rather than after: a
-    // pair whose next entry is behind us is one the panel has to guess around.
-    final soon = now.add(const Duration(minutes: 1));
-    final passed =
-        (_sky.dusk?.isBefore(soon) ?? false) ||
-        (_sky.dawn?.isBefore(soon) ?? false);
-
-    if (since != null &&
-        !passed &&
-        now.difference(since).abs() < const Duration(hours: 1)) {
-      return _sky;
-    }
-
-    _skyFor = now;
-    return _sky = skyTimes(
-      fromUtc: now,
-      latitude: fix.latitude,
-      longitude: fix.longitude,
-    );
-  }
+  ({DateTime? dusk, DateTime? dawn}) _skyTimes(GeoPoint? at) => at == null
+      ? const (dusk: null, dawn: null)
+      : _sky.at(
+          _state.lastUpdate,
+          latitude: at.latitude,
+          longitude: at.longitude,
+        );
 
   Future<void> onPaused(DateTime now) async {
     _appForeground = false;

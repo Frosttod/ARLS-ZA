@@ -627,6 +627,105 @@ void main() {
       );
     });
 
+    test('a night spent at home after the app died in the street', () async {
+      // ⚠️ **Zgłoszone z terenu: „noc 100% w schronie, a dług senny został".**
+      // Gracz wyszedł ze schronu wieczorem, aplikacja zgasła na ulicy, wrócił
+      // do domu i przespał noc z telefonem na szafce. Odtworzenie przerwy brało
+      // **ostatnią zapisaną pozycję** — czyli tę ulicę — więc osiem godzin snu
+      // wracało jako osiem godzin czuwania na dworze i dług rósł zamiast maleć.
+      //
+      // Pozycja sprzed ośmiu godzin nie mówi nic o tym, gdzie postać jest
+      // teraz. Pierwszy świeży odczyt mówi, i to on rozstrzyga.
+      final tired = SimState.fresh(
+        at: midnight,
+        constants: constants,
+        massKg: 80,
+      ).copyWith(sleepDebtSeconds: const Duration(hours: 9).inSeconds);
+
+      final rig = await buildLoop(initial: tired, startAt: midnight);
+      addTearDown(() async {
+        await rig.loop.dispose();
+        await rig.source.dispose();
+        await rig.session.close();
+      });
+
+      rig.loop.setShelters([
+        Shelter(
+          id: 1,
+          kind: ShelterKind.main,
+          position: const GeoPoint(52.4064, 16.9252),
+          startedAt: midnight.subtract(const Duration(days: 1)),
+          buildTime: kShelterBuildTime,
+        ),
+      ]);
+
+      // Ostatnie, co gra widziała: gracz dwieście metrów od domu, na ulicy.
+      rig.loop.setStandingAt(const GeoPoint(52.4082, 16.9252));
+
+      rig.wall.advance(const Duration(hours: 8));
+      await rig.loop.start();
+
+      // I dopiero teraz odbiornik łapie pierwszy odczyt — z sypialni.
+      rig.source.jumpTo(52.4064, 16.9252);
+      rig.source.step();
+      await pump();
+
+      // Przerwa dolicza się na najbliższym ticku.
+      await rig.loop.onPaused(rig.wall.nowUtc());
+
+      expect(
+        rig.loop.state.sleepDebt,
+        lessThan(const Duration(hours: 2)),
+        reason: 'osiem godzin w schronie spłaca dziewięciogodzinny dług',
+      );
+    });
+
+    test('but a fix that is still in the street corrects nothing', () async {
+      // ⚠️ Poprawka jest odpowiedzią na „wróciłem do domu", nie amnestią dla
+      // każdego, kto wyłączył aplikację. Kto rano stoi tam, gdzie stał
+      // wieczorem, ten spędził tę noc na dworze i tak ma to policzone.
+      final tired = SimState.fresh(
+        at: midnight,
+        constants: constants,
+        massKg: 80,
+      ).copyWith(sleepDebtSeconds: const Duration(hours: 9).inSeconds);
+
+      final rig = await buildLoop(initial: tired, startAt: midnight);
+      addTearDown(() async {
+        await rig.loop.dispose();
+        await rig.source.dispose();
+        await rig.session.close();
+      });
+
+      rig.loop.setShelters([
+        Shelter(
+          id: 1,
+          kind: ShelterKind.main,
+          position: const GeoPoint(52.4064, 16.9252),
+          startedAt: midnight.subtract(const Duration(days: 1)),
+          buildTime: kShelterBuildTime,
+        ),
+      ]);
+      rig.loop.setStandingAt(const GeoPoint(52.4082, 16.9252));
+
+      rig.wall.advance(const Duration(hours: 8));
+      await rig.loop.start();
+
+      // Dwieście metrów od domu, czyli tam, gdzie był wieczorem.
+      rig.source.jumpTo(52.4082, 16.9252);
+      rig.source.step();
+      await pump();
+
+      // Przerwa dolicza się na najbliższym ticku.
+      await rig.loop.onPaused(rig.wall.nowUtc());
+
+      expect(
+        rig.loop.state.sleepDebt,
+        greaterThan(const Duration(hours: 9)),
+        reason: 'noc na dworze nie spłaca długu, tylko go powiększa',
+      );
+    });
+
     test(
       'a night replayed on waking is a night asleep, not a night out',
       () async {

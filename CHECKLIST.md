@@ -1,7 +1,7 @@
 # ARLS-ZA — lista kontrolna systemów
 
 Stan na dzień **2026-08-28**. Wygenerowana po przejściu pełnego zestawu
-testów: **2625 testów, `flutter analyze` czysty, schemat bazy v37**.
+testów: **2637 testów, `flutter analyze` czysty, schemat bazy v37**.
 
 ⚠️ Liczby poniżej są zliczone z suite'a, nie przepisane z pamięci. Suma
 obszarów musi się zgadzać z ogółem — jeśli się nie zgadza, ten plik jest
@@ -38,14 +38,14 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 | `db` | 50 | migracje v1→v37, integralność, warstwa gorąca i ciepła |
 | `devtools` | 44 | konsola, rejestrator sesji |
 | `safety` | 34 | §1.2, blokady na prędkości |
-| `core` | 30 | zegar gry, jeden timer |
+| `core` | 37 | zegar gry, jeden timer |
 | `app` | 23 | bootstrap, granica awarii, **zapadki rozmiaru** main.dart, ekwipunku i pętli |
 | `journal` | 26 | §3.6.1: dzień jako data, limit wpisów, nazwy wire |
 | `actions` | 17 | wiersz akcji przeżywający zabicie procesu |
 | `notes` | 14 | notatki i lektura |
 | `l10n` | 7 | kolizje kluczy, brak twardej polszczyzny w kodzie |
 
-**Razem 2625.**
+**Razem 2637.**
 
 ### Rzeczy, które testy trzymają jako liczby, a nie jako intencje
 

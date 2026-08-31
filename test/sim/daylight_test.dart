@@ -1,4 +1,5 @@
 import 'package:arls_za/sim/daylight.dart';
+import 'package:arls_za/ui/app_settings.dart';
 import 'package:test/test.dart';
 
 /// Verification table from §17.2. The whole point of computing daylight from
@@ -317,6 +318,60 @@ void main() {
 
       expect(sky.dusk, isNull);
       expect(sky.dawn, isNull);
+    });
+  });
+
+  const lat = 52.4064, lon = 16.9252;
+
+  group('§17.2: paleta przełącza się tam, gdzie panel drukuje godzinę', () {
+    test('po świcie jest jasno', () {
+      // 31 sierpnia, Poznań: cywilny świt 05:28, wschód 06:11.
+      final after = DateTime.utc(2026, 8, 31, 4, 3); // 06:03 czasu lokalnego
+      final darkness = darknessAt(
+        momentUtc: after,
+        latitude: lat,
+        longitude: lon,
+      );
+
+      expect(darkness, lessThan(kDarkPaletteAt));
+    });
+
+    test('a przed nim ciemno', () {
+      final before = DateTime.utc(2026, 8, 31, 3, 0); // 05:00 lokalnie
+      final darkness = darknessAt(
+        momentUtc: before,
+        latitude: lat,
+        longitude: lon,
+      );
+
+      expect(darkness, greaterThanOrEqualTo(kDarkPaletteAt));
+    });
+
+    test('i jest to dokładnie ta granica, którą liczy panel', () {
+      // ⚠️ To jest cały sens tej poprawki: gracz może sprawdzić styl na własnym
+      // pasku, bo obie liczby biorą się z tego samego progu.
+      final change = skyChangeAfter(
+        fromUtc: DateTime.utc(2026, 8, 31, 2, 0),
+        latitude: lat,
+        longitude: lon,
+      );
+
+      expect(change, isNotNull);
+      expect(change!.untilDark, isFalse, reason: 'najbliższa zmiana to świt');
+
+      final justBefore = darknessAt(
+        momentUtc: change.at.subtract(const Duration(minutes: 2)),
+        latitude: lat,
+        longitude: lon,
+      );
+      final justAfter = darknessAt(
+        momentUtc: change.at.add(const Duration(minutes: 2)),
+        latitude: lat,
+        longitude: lon,
+      );
+
+      expect(justBefore, greaterThanOrEqualTo(kDarkPaletteAt));
+      expect(justAfter, lessThan(kDarkPaletteAt));
     });
   });
 }

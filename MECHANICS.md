@@ -15,7 +15,7 @@ Różnica jest istotna, bo w kilkunastu miejscach **świadomie odeszliśmy od do
 
 ⚠️ **Reguła utrzymania tego pliku:** liczba zmieniona w kodzie i nieprzeniesiona tutaj czyni ten dokument gorszym niż jego brak. Przy każdej zmianie stałej — aktualizuj sekcję.
 
-**Stan:** 2625 testów · schemat bazy **v37** · etapy 0–2 zamknięte, 3–6 i 8 przed testem w terenie.
+**Stan:** 2637 testów · schemat bazy **v37** · etapy 0–2 zamknięte, 3–6 i 8 przed testem w terenie.
 
 ---
 
@@ -304,6 +304,28 @@ Noc wyliczana offline ze wschodu i zachodu słońca dla szerokości geograficzne
 
 **Wybudza:** rozpoczęcie czegokolwiek (budowa, crafting, lektura, jedzenie, opatrunek, przeszukanie) albo wyjście ze strefy.
 
+### 5.1a. Noc, której nikt nie widział (§2.5.1, §11.1.2)
+
+⚠️ **Zgłoszone z terenu: „noc 100% w schronie, a dług senny został".** Gracz
+wyszedł ze schronu wieczorem, aplikacja zgasła na ulicy, wrócił do domu i
+przespał noc. Odtworzenie przerwy brało **ostatnią zapisaną pozycję** — tę
+ulicę — więc osiem godzin snu wracało jako osiem godzin czuwania na dworze.
+
+| | Wartość |
+| :---- | ----: |
+| Przerwa, od której się czeka | **15 min** |
+| Ile się czeka na świeży odczyt | **20 s** |
+
+Pozycja sprzed ośmiu godzin nie mówi nic o tym, gdzie postać jest teraz, więc
+długa przerwa **czeka** na pierwszy świeży odczyt. Czeka tylko wtedy, gdy
+odpowiedź może się zmienić: bez schronu na mapie albo z postacią, która i tak
+stoi w swoim, liczy się natychmiast. Po dwudziestu sekundach liczy się z tego,
+co jest — pod dachem odbiornik bywa głuchy (§2.1a.4), a fizjologia, która stoi,
+bo GPS milczy, byłaby gorsza od źle policzonej.
+
+⚠️ Świeży odczyt bije lepką pozycję z interfejsu: tę ustawia §3.2 i po nocy z
+zamkniętą aplikacją jest ona sprzed nocy.
+
 ### 5.2. Skutki długu — **ostatnia noc**
 
 | Dług | Skutek |
@@ -424,6 +446,21 @@ dla punktu `x` na wschód i `y` na północ od środka, odległości kamery `D` 
 `D` to **1,5 wysokości ekranu** — z własnej reguły MapLibre `0.5 / tan(fov/2) × height` przy domyślnym polu widzenia 0,6435 rad.
 
 ⚠️ **Tolerancja dotknięcia rośnie z perspektywą.** Palec przy górnej krawędzi pochylonej mapy przykrywa znacznie więcej terenu niż ten sam palec na dole. Bez skalowania dalsza połowa mapy byłaby nieklikalna, a bliższa kradłaby dotknięcia sąsiadom.
+
+### 7.1a bis. Jasny i ciemny styl (§17.2, §12)
+
+**Jedna granica na jedno niebo.** Styl „dzień i noc" przełącza się dokładnie na
+tych dwóch godzinach, które panel drukuje: Świt i Zmierzch, czyli cywilny
+zmierzch, sześć stopni pod horyzontem (`darkness >= 1`).
+
+⚠️ Paleta miała własny próg 0,5 — mniej więcej trzy stopnie — czyli drugą
+odpowiedź na to samo pytanie, rozjeżdżającą się dwa razy na dobę. Zgłoszone z
+terenu: zegar 06:03, Świt 05:28, styl dalej nocny.
+
+⚠️ **Brak odczytu to nie jest południe.** Niebo liczyło się wyłącznie z
+bramkowanego odczytu, a §2.1a.4 pod dachem ścisza odbiornik — więc dokładnie
+tam, gdzie gracz śpi, gra raportowała pełny dzień i pustą parę Świt/Zmierzch.
+Teraz bierze tę samą lepką pozycję, z której mierzy wszystko inne.
 
 ### 7.1b. Krój pisma i płynność
 

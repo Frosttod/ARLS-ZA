@@ -66,22 +66,18 @@ class MemorySettingsStore implements SettingsStore {
   Future<void> write(String key, String value) async => _values[key] = value;
 }
 
-/// §12, §17.2: which palette the game shows, and what decides it.
+/// §17.2, §12: od kiedy „dzień i noc" daje ciemny styl.
 ///
-/// ⚠️ [daylight] is the one that is not a preference. The other three answer
-/// "what do I like"; this one answers "what is it like outside", from the
-/// player's own position — light between dawn and dusk, dark between dusk and
-/// dawn. It is the default because this game is played by walking around, and
-/// a black map under a June noon is not legible at arm's length (§12) while a
-/// white one at midnight ruins the night vision the player is using to watch
-/// where their feet go.
-/// §12, §17.2: how dark it has to be before the map turns dark.
+/// ⚠️ **Jedna granica na jedno niebo, i to jest ta, którą gracz widzi.** Panel
+/// drukuje Świt i Zmierzch z `darkness >= 1` — z cywilnego zmierzchu, sześciu
+/// stopni pod horyzontem. Paleta miała własny próg 0,5, czyli mniej więcej trzy
+/// stopnie: dwie różne odpowiedzi na to samo pytanie, rozjeżdżające się o
+/// dwadzieścia minut dwa razy na dobę.
 ///
-/// ⚠️ Half way through civil twilight — the sun three degrees under — rather
-/// than at the first hint of it. Dusk takes a good half hour at this latitude,
-/// and a palette that flipped at the first degree would turn the map black
-/// while the street outside was still perfectly bright.
-const double kDarkPaletteAt = 0.5;
+/// Zgłoszone z terenu: „mamy już po świcie", zegar 06:03, Świt 05:28, styl
+/// ciemny. Teraz styl przełącza się dokładnie na tych dwóch godzinach, które
+/// stoją na pasku — i gracz może to sprawdzić bez wchodzenia w ustawienia.
+const double kDarkPaletteAt = 1;
 
 enum ThemeChoice {
   daylight,

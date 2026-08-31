@@ -402,3 +402,43 @@ DateTime _atHour(DateTime date, double hour) {
 double _radians(double degrees) => degrees * math.pi / 180;
 
 double _degrees(double radians) => radians * 180 / math.pi;
+
+/// Para Świt/Zmierzch, przeliczana rzadko (§17.2, §3.3).
+///
+/// ⚠️ **Skanowanie doby co tick jest kosztem, którego nikt nie widzi.**
+/// [skyTimes] przechodzi dobę co pięć minut i dopoławia połowieniem — raz na
+/// godzinę to nic, sześćdziesiąt razy na minutę to bateria. Pamięć podręczna
+/// jest tu, a nie w pętli, bo to jest własność samego nieba: kto pyta o te dwie
+/// godziny, ten dostaje tę samą odpowiedź przez najbliższą godzinę.
+class SkyCache {
+  ({DateTime? dusk, DateTime? dawn}) _sky = (dusk: null, dawn: null);
+  DateTime? _for;
+
+  ({DateTime? dusk, DateTime? dawn}) at(
+    DateTime now, {
+    required double latitude,
+    required double longitude,
+  }) {
+    final since = _for;
+    // ⚠️ Przeliczane minutę **przed** upływem momentu, nie po: para, której
+    // najbliższy wpis jest już za nami, to para, wokół której panel musi
+    // zgadywać.
+    final soon = now.add(const Duration(minutes: 1));
+    final passed =
+        (_sky.dusk?.isBefore(soon) ?? false) ||
+        (_sky.dawn?.isBefore(soon) ?? false);
+
+    if (since != null &&
+        !passed &&
+        now.difference(since).abs() < const Duration(hours: 1)) {
+      return _sky;
+    }
+
+    _for = now;
+    return _sky = skyTimes(
+      fromUtc: now,
+      latitude: latitude,
+      longitude: longitude,
+    );
+  }
+}

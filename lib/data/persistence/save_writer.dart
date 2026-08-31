@@ -12,6 +12,15 @@
 /// back rather than leaving a half-updated row (§11.1.2).
 library;
 
+import 'dart:convert';
+
+import 'package:drift/drift.dart';
+
+import '../../combat/pursuit.dart';
+import '../../location/position_fix.dart';
+import '../../sim/occupation.dart';
+import '../../sim/physiology.dart';
+import '../../sim/tick.dart';
 import '../db/database.dart';
 
 /// Reason a hot-layer flush happened. Recorded so the developer overlay can
@@ -138,3 +147,52 @@ class SaveWriter {
   /// restore replaces the database underneath us.
   void discardPending() => _pendingHot = null;
 }
+
+/// Warstwa gorąca jako wiersz (§11.1.1).
+///
+/// ⚠️ **Mapowanie, nie logika — i dlatego mieszka tu, a nie w pętli.** Pętla
+/// symuluje; to, którą kolumnę nazywa się jak, jest sprawą zapisu. Dopóki
+/// siedziało w `GameLoop`, każda nowa kolumna rosła w pliku, który ma się
+/// kurczyć (zapadka §16.1).
+VitalsCompanion vitalsRow({
+  required int profileId,
+  required SimState state,
+  required PositionFix? fix,
+  required double speedKmh,
+  required Occupation? occupation,
+  required BleedTier bleeding,
+  required DateTime? downUntil,
+  required DateTime? graceUntil,
+  required Pursuit? pursuit,
+}) => VitalsCompanion(
+  profileId: Value(profileId),
+  lastUpdate: Value(state.lastUpdate),
+  bloodMl: Value(state.bloodMl),
+  waterMl: Value(state.waterMl),
+  caloriesKcal: Value(state.caloriesKcal),
+  pendingKcal: Value(state.pendingKcal),
+  pendingWaterMl: Value(state.pendingWaterMl),
+  heartRateBpm: Value(state.heartRateBpm),
+  sleepDebtSeconds: Value(state.sleepDebtSeconds),
+  sleepStrain: Value(state.sleepStrain),
+  // §2.3: dwa zegary, na których wiszą reguły śmiertelne. Muszą przeżyć
+  // ubicie procesu, inaczej zamknięcie aplikacji byłoby szklanką wody.
+  bodyMassKg: Value(state.bodyMassKg),
+  dryStreakSeconds: Value(state.dryStreakSeconds),
+  starvedStreakSeconds: Value(state.starvedStreakSeconds),
+  zone: Value(state.zone.wire),
+  latitude: Value(fix?.latitude),
+  longitude: Value(fix?.longitude),
+  accuracyM: Value(fix?.accuracyM),
+  speedKmh: Value(speedKmh),
+  occupationJson: Value(
+    occupation == null ? null : jsonEncode(occupation.toJson()),
+  ),
+  bleedTier: Value(bleeding.name),
+  downUntil: Value(downUntil),
+  graceUntil: Value(graceUntil),
+  huntUntil: Value(pursuit?.until),
+  huntLatitude: Value(pursuit?.at.latitude),
+  huntLongitude: Value(pursuit?.at.longitude),
+  huntCount: Value(pursuit?.count ?? 0),
+);
