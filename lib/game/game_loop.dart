@@ -483,14 +483,12 @@ class GameLoop {
     _lastFix = accepted.fix;
     _integrity.observeSpeed(accepted.speedMps, accepted.fix.timestamp);
 
-    // §2.5.1: to jest ten odczyt, na który czekała przerwa.
-    //
-    // ⚠️ **I to on, a nie lepka pozycja, mówi, gdzie postać jest.** Lepką
-    // ustawia interfejs (§3.2) i po nocy z zamkniętą aplikacją jest ona
-    // sprzed nocy — czyli z ulicy, na której gra zgasła. Odczyt jest z teraz.
-    // Sama przerwa doliczy się na najbliższym ticku — sekundę później, i bez
-    // zapisu do bazy z wnętrza strumienia odczytów.
-    _standingAt = GeoPoint(accepted.fix.latitude, accepted.fix.longitude);
+    // §2.5.1: **tylko** ten odczyt ustawia pozycję — ten, na który czekała
+    // przerwa. Poza nim rządzi lepka z §3.2: surowy odczyt wrzucałby strefę
+    // schronu w migotanie, bo pod dachem mają po trzydzieści metrów.
+    if (_waitingForFix != null) {
+      _standingAt = GeoPoint(accepted.fix.latitude, accepted.fix.longitude);
+    }
 
     // The sampling rate reacts to movement, and movement arrives here rather
     // than on the tick. Waiting for the next tick would leave someone who has
@@ -504,7 +502,9 @@ class GameLoop {
   /// Reguła jest w [holdsBlindGap]; tutaj zostaje tylko stempel.
   bool _holdsGap() {
     final now = clock.wallClock.nowUtc();
-    final at = _standingAt;
+
+    // Ta sama pozycja, z której [_applyShelter] odczytuje strefę.
+    final at = _standingAt ?? _geoOf(_lastFix);
 
     final holds = holdsBlindGap(
       now: now,
