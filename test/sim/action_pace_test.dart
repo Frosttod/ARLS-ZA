@@ -261,4 +261,48 @@ void main() {
       expect(countedSpeedKmh(reported: 0.3, sheltered: true, trusted: true), 0);
     });
   });
+
+  group('§2.2: jedna granica chodu i biegu', () {
+    test('siedem i dwie dziesiąte, czyli prędkość przejścia', () {
+      // ⚠️ Nie okrągła liczba z sufitu. Chód przechodzi w bieg przy około
+      // 2,0 m/s — zmierzone i powtarzalne — i ta sama liczba wypada z liczby
+      // Froude'a: przejście przy Fr ≈ 0,5 daje `v = √(0,5 · g · L)`, czyli
+      // 2,1 m/s dla nogi długości 0,9 m.
+      expect(kRunningKmh, 7.2);
+      expect(kRunningKmh / 3.6, closeTo(2.0, 0.01));
+    });
+
+    test('a marsz to tempo, które człowiek wybiera sam', () {
+      expect(kWalkingKmh / 3.6, closeTo(1.39, 0.01));
+    });
+
+    test('i progi idą po kolei', () {
+      expect(kStillKmh, lessThan(kWalkingKmh));
+      expect(kWalkingKmh, lessThan(kRunningKmh));
+    });
+  });
+
+  test('§2.2: i jest ich dokładnie po jednej', () {
+    // ⚠️ **Były dwie `kRunningKmh`: 6,4 i 8.** Ta sama nazwa, dwie biblioteki,
+    // dwie wartości — powyżej 6,4 gracz hałasował jak biegnący, powyżej 8
+    // przestawał opatrywać ranę, a między nimi był jednocześnie biegnącym i
+    // niebiegnącym. Nie kolidowały wyłącznie dlatego, że żaden plik nie
+    // importował obu naraz, więc kompilator milczał.
+    final defined = <String, List<String>>{};
+    for (final file in Directory('lib').listSync(recursive: true)) {
+      if (file is! File || !file.path.endsWith('.dart')) continue;
+
+      final source = file.readAsStringSync();
+      for (final name in ['kRunningKmh', 'kStillKmh', 'kWalkingKmh']) {
+        if (source.contains('const double ' + name + ' =')) {
+          (defined[name] ??= []).add(file.path);
+        }
+      }
+    }
+
+    expect(defined.keys, hasLength(3), reason: 'wszystkie trzy progi istnieją');
+    for (final entry in defined.entries) {
+      expect(entry.value, hasLength(1), reason: entry.value.join(', '));
+    }
+  });
 }

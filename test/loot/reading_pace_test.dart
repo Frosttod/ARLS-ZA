@@ -40,7 +40,7 @@ void main() {
   group('§4.6.1: bieg urywa stronę', () {
     test('a marsz jej nie rusza', () {
       // §4.7: książkę czyta się w marszu — to jest ta sama zgoda, którą ma
-      // kanapka, i nie o nią tu chodzi.
+      // kanapka, i nie o nią tu chodzi. 4,5 km/h to swobodny marsz.
       final after = page().advance(
         const Duration(seconds: 10),
         at: here,
@@ -62,16 +62,18 @@ void main() {
     });
 
     test('i próg jest progiem, nie „ponad"', () {
-      // Dokładnie 6,4 km/h to już bieg (§2.2). Ostrożny krok przy 6,39 nie.
+      // ⚠️ 7,2 km/h to prędkość przejścia chód→bieg (§2.2) i **jedyna** taka
+      // liczba w grze. Przez jakiś czas były dwie — 6,4 przy hałasie i 8 przy
+      // rękach — więc między nimi gracz był jednocześnie biegnącym i nie.
       expect(
         page()
-            .advance(const Duration(seconds: 5), at: here, speedKmh: 6.39)
+            .advance(const Duration(seconds: 5), at: here, speedKmh: 7.19)
             .isRunning,
         isTrue,
       );
       expect(
         page()
-            .advance(const Duration(seconds: 5), at: here, speedKmh: 6.4)
+            .advance(const Duration(seconds: 5), at: here, speedKmh: 7.2)
             .isRunning,
         isFalse,
       );

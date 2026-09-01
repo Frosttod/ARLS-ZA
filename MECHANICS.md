@@ -15,7 +15,7 @@ Różnica jest istotna, bo w kilkunastu miejscach **świadomie odeszliśmy od do
 
 ⚠️ **Reguła utrzymania tego pliku:** liczba zmieniona w kodzie i nieprzeniesiona tutaj czyni ten dokument gorszym niż jego brak. Przy każdej zmianie stałej — aktualizuj sekcję.
 
-**Stan:** 2656 testów · schemat bazy **v37** · etapy 0–2 zamknięte, 3–6 i 8 przed testem w terenie.
+**Stan:** 2660 testów · schemat bazy **v37** · etapy 0–2 zamknięte, 3–6 i 8 przed testem w terenie.
 
 ---
 
@@ -1017,8 +1017,21 @@ przycisku „kucnij" i nigdy nie będzie.
 | :---- | :---- | ----: |
 | Postój | < 0,5 km/h | **0 m** |
 | Ostrożny krok | < 3,2 km/h | 8 m |
-| Marsz | < 6,4 km/h | 15 m |
-| Bieg | ≥ 6,4 km/h | **40 m** |
+| Marsz | < 7,2 km/h | 15 m |
+| Bieg | ≥ 7,2 km/h | **40 m** |
+
+⚠️ **7,2 km/h to prędkość przejścia chód→bieg**, nie okrągła liczba z sufitu:
+około 2,0 m/s, zmierzone i powtarzalne, i ta sama wartość wypada z liczby
+Froude'a (przejście przy Fr ≈ 0,5, `v = √(0,5 · g · L)` daje 2,1 m/s dla nogi
+0,9 m). Swobodny marsz to 5 km/h, czyli 1,4 m/s.
+
+⚠️ **Były dwie takie stałe i obie nazywały się `kRunningKmh`:** 6,4 w
+`combat/awareness.dart` i 8 w `sim/action_pace.dart`. Powyżej 6,4 gracz
+hałasował jak biegnący i urywała mu się strona lektury, powyżej 8 przestawał
+opatrywać ranę — między jedną a drugą był jednocześnie biegnącym i niebiegnącym,
+zależnie od tego, kto pytał. Nie kolidowały wyłącznie dlatego, że żaden plik nie
+importował obu naraz. Teraz jest jedna, w `action_pace.dart`, a test źródłowy
+liczy definicje.
 
 Liczba stoi na HUD-zie na stałe, słowem i odległością. **Usłyszane to nie
 zobaczone**: dźwięk robi z przeciwnika czujnego, a czujny idzie *w stronę

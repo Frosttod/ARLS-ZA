@@ -25,12 +25,17 @@ import 'dart:math';
 
 import 'ballistics.dart' show HitLocation, rollHitLocation;
 import '../items/item.dart';
+import '../sim/action_pace.dart';
 import 'enemy.dart';
 import 'melee.dart';
 
 /// §5.5.3: kanały obrażeń są częścią tej samej odpowiedzi co [meleeOutcome] —
 /// kto pyta o jeden zamach, pyta o oba naraz.
 export 'melee.dart';
+
+/// §5.6.1: drabinka tempa jest częścią tej samej odpowiedzi co [playerNoiseM] —
+/// kto pyta, jak głośno idzie gracz, pyta o te progi.
+export '../sim/action_pace.dart' show kStillKmh, kRunningKmh;
 import 'noise.dart';
 import '../map/geometry.dart';
 
@@ -54,14 +59,12 @@ double playerNoiseM(double speedKmh) {
   return NoiseKind.running.baseM;
 }
 
-/// Poniżej tego gracz stoi. Ta sama granica, której używa §10.2's stillness.
-const double kStillKmh = 0.5;
-
 /// Wolny, uważny krok. Powyżej tego idzie się normalnie.
+///
+/// ⚠️ Progi chodu i biegu mieszkają w `sim/action_pace.dart` — jedna drabinka
+/// na całą grę. Ta biblioteka miała własne kopie [kStillKmh] i [kRunningKmh],
+/// i jedna z nich mówiła co innego niż oryginał.
 const double kCarefulKmh = 3.2;
-
-/// Od tego zaczyna się bieg (§2.2's trucht).
-const double kRunningKmh = 6.4;
 
 /// Ile słychać wolny krok. Mniej niż marsz, więcej niż nic — ostatnie metry
 /// podejścia są ryzykiem, i o to chodzi.

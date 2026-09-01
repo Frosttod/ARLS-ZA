@@ -56,11 +56,30 @@ double countedSpeedKmh({
   required bool trusted,
 }) => sheltered || !trusted ? 0 : reported;
 
-/// §2.3's ordinary walking pace.
+/// §2.3: swobodny marsz. 1,4 m/s — prędkość, którą człowiek wybiera sam,
+/// kiedy nikt go nie goni i nie ma dokąd się spieszyć.
 const double kWalkingKmh = 5;
 
-/// Past this nobody is dressing a wound (§4.7).
-const double kRunningKmh = 8;
+/// Granica chodu i biegu — **jedna dla całej gry** (§2.2, §4.7, §5.6.1).
+///
+/// ⚠️ **Były dwie, i to jest usterka, którą ten komentarz zamyka.** Ta stała
+/// istniała w dwóch bibliotekach naraz, pod tą samą nazwą i z dwiema różnymi
+/// wartościami: 6,4 w `combat/awareness.dart` i 8 tutaj. Powyżej 6,4 gracz
+/// hałasował jak biegnący i urywała mu się strona lektury; powyżej 8 przestawał
+/// opatrywać ranę. Między jedną a drugą był jednocześnie biegnącym i
+/// niebiegnącym, zależnie od tego, kto pytał. Nie kolidowały tylko dlatego, że
+/// żaden plik nie importował obu naraz.
+///
+/// **7,2 km/h to prędkość przejścia chód→bieg** (*preferred transition speed*),
+/// zmierzona i powtarzalna: około 2,0 m/s. Wypada też z liczby Froude'a —
+/// przejście następuje przy Fr ≈ 0,5, czyli `v = √(0,5 · g · L)`, co dla nogi
+/// długości 0,9 m daje 2,1 m/s. Poniżej człowiek chodzi, bo chodzenie jest
+/// tańsze; powyżej biegnie, bo chodzenie przestaje być tańsze.
+///
+/// Powyżej tej granicy nie ma już pasm: 8 km/h i 25 km/h to dla hałasu (§5.6.1)
+/// i dla rąk (§4.7) dokładnie to samo. Kolejne progi są gdzie indziej i mierzą
+/// co innego — 15 km/h blokuje walkę (§3.5).
+const double kRunningKmh = 7.2;
 
 /// What kind of thing this is, for the purpose of the clock.
 enum ActionPace {
