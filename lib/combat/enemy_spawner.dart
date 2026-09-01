@@ -20,6 +20,7 @@ import 'dart:math';
 import '../map/geometry.dart';
 import '../safety/spawn_exclusion.dart';
 import 'enemy.dart';
+import 'hotspot.dart' show kNightCrowdShare;
 
 /// §6.4: never nearer than this to the player.
 const double kSpawnMinM = 150;
@@ -52,17 +53,27 @@ class SpawnOrigin {
   });
 
   /// The ambient trickle of §6.4: single Walkers, anywhere, rarely.
+  /// §17.4: [darkness] zagęszcza ulicę po zmroku — patrz [kNightCrowdShare].
+  ///
+  /// ⚠️ **Strefy Rozkładu miały to od początku, a strużka §6.4 nie.** Noc
+  /// dokładała przeciwników wyłącznie tam, gdzie i tak było ich najwięcej, a
+  /// pusta ulica między strefami była po ciemku dokładnie tak samo pusta jak w
+  /// południe. To jest ta sama noc i ta sama stała.
   factory SpawnOrigin.ambient({
     required GeoPoint centre,
     required double radiusM,
+    double darkness = 0,
   }) {
     final areaKm2 = pi * radiusM * radiusM / 1e6;
+    final byDay = areaKm2 * kAmbientPerKm2Max;
+
     return SpawnOrigin(
       id: 'ambient',
       centre: centre,
       radiusM: radiusM,
       kinds: const [EnemyKind.walker],
-      capacity: (areaKm2 * kAmbientPerKm2Max).floor(),
+      capacity: (byDay * (1 + kNightCrowdShare * darkness.clamp(0.0, 1.0)))
+          .floor(),
     );
   }
 

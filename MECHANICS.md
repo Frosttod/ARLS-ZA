@@ -15,7 +15,7 @@ Różnica jest istotna, bo w kilkunastu miejscach **świadomie odeszliśmy od do
 
 ⚠️ **Reguła utrzymania tego pliku:** liczba zmieniona w kodzie i nieprzeniesiona tutaj czyni ten dokument gorszym niż jego brak. Przy każdej zmianie stałej — aktualizuj sekcję.
 
-**Stan:** 2662 testy · schemat bazy **v37** · etapy 0–2 zamknięte, 3–6 i 8 przed testem w terenie.
+**Stan:** 2667 testów · schemat bazy **v37** · etapy 0–2 zamknięte, 3–6 i 8 przed testem w terenie.
 
 ---
 
@@ -1064,6 +1064,12 @@ Liczba stoi na HUD-zie na stałe, słowem i odległością. **Usłyszane to nie
 zobaczone**: dźwięk robi z przeciwnika czujnego, a czujny idzie *w stronę
 hałasu*, nie do gracza.
 
+⚠️ **I jest narysowana.** Pasek mówi „hałas 15 m", a piętnaście metrów wygląda
+inaczej przy każdym zbliżeniu mapy — pytanie brzmi „czy ten Szwędacz stoi w
+środku, czy poza". Wokół gracza rysowany jest **kreskowany okrąg** własnego
+kroku: kreskowany, bo pozostałe okręgi na tej mapie mówią o gruncie, a ten jest
+dźwiękiem, który ucichnie, gdy tylko zwolnisz.
+
 ⚠️ **Stożek musi być narysowany.** Stożek, którego nie widać, jest niewidzialną
 karą, a nie mechaniką — rysowany jest w prawdziwym promieniu wykrycia, nie w
 stałych 26 pikselach, jak przez pierwszy commit.
@@ -1095,7 +1101,10 @@ Na **150 m** (`kFightPaceM`) gra przestaje oszczędzać: GPS i ekran wchodzą w
 tempo walki. Wcześniej decyzja o tempie brała `inCombat: false` wpisane na
 sztywno — z komentarzem „walka przyjdzie w etapie 5".
 
-**Po zmierzchu jest ich o połowę więcej** (`kNightCrowdShare` = 0,5, §17.4).
+**Po zmierzchu jest ich o połowę więcej** (`kNightCrowdShare` = 0,5, §17.4) —
+i to dotyczy **zarówno stref, jak i strużki §6.4**. ⚠️ Przez jakiś czas noc
+dokładała przeciwników wyłącznie w strefach, więc pusta ulica między nimi była po
+ciemku dokładnie tak samo pusta jak w południe.
 
 ### 11.3. Spawn (§6.4)
 

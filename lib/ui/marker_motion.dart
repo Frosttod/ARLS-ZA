@@ -40,6 +40,18 @@ const Duration kMarkerGlide = Duration(seconds: 1);
 /// is what the player is actually reading.
 const int kMarkerFps = 30;
 
+/// §3.3, §6.1a: jak blisko coś musi być, żeby płynność przestała być luksusem.
+///
+/// ⚠️ **Poślizg chodził tylko poza trybem oszczędnym, a tryb oszczędny włącza
+/// się przy słabej baterii — czyli pod koniec każdej dłuższej wyprawy.** Wtedy
+/// markery zaczynały skakać raz na sekundę i dokładnie wtedy, kiedy z ruchu
+/// przeciwnika odczytuje się, czy zdąży się przejść.
+///
+/// Siedemdziesiąt pięć metrów, bo tyle wynosi najdłuższy zasięg wzroku w grze
+/// (Skakun, §6.2): wewnątrz tego kręgu wszystko, co widać, może już iść po
+/// gracza. Zgłoszone z terenu jako „animacja ruchu musi być płynniejsza".
+const double kSmoothWithinM = 75;
+
 class _Leg {
   const _Leg({required this.from, required this.to, required this.startedAt});
 

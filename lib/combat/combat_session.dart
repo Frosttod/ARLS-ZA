@@ -193,7 +193,12 @@ class CombatSession {
       // more than that.
       origins: [
         ...origins,
-        SpawnOrigin.ambient(centre: playerAt, radiusM: kAmbientRadiusM),
+        SpawnOrigin.ambient(
+          centre: playerAt,
+          radiusM: kAmbientRadiusM,
+          // §17.4: po ciemku ulica jest gęstsza, nie tylko strefy.
+          darkness: darkness,
+        ),
       ],
       // The hour is in the seed so the street repopulates as the day goes on
       // without reshuffling every time the app is opened (§10, §11).

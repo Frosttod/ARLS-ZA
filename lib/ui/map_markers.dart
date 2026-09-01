@@ -647,6 +647,18 @@ const Map<MarkerAlert, int> kAlertColours = {
 /// — so the answer to "what did I just wake up" is on the screen rather than
 /// in a number nobody was shown. §5.6.2's amber rings on the ones that heard
 /// it are the other half of the same sentence.
+/// §5.6.5: zdarzenie hałasowe jako fala do narysowania, albo null.
+///
+/// Tutaj, bo zamiana [NoiseEvent] na [NoiseWave] jest faktem o fali, a nie o
+/// ekranie: to samo zdarzenie rysuje się tak samo, ktokolwiek o nie pyta.
+NoiseWave? waveOf(NoiseEvent? open) => open == null
+    ? null
+    : NoiseWave(
+        at: open.at,
+        radiusM: open.radiusM,
+        startedAt: open.startedAt.toLocal(),
+      );
+
 class NoiseWave {
   const NoiseWave({
     required this.at,

@@ -6233,13 +6233,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         markers: _markers(),
         onMarkerTap: _showMarker,
         darkness: snapshot?.darkness ?? 0,
-        noise: _combat.open == null
-            ? null
-            : NoiseWave(
-                at: _combat.open!.at,
-                radiusM: _combat.open!.radiusM,
-                startedAt: _combat.open!.startedAt.toLocal(),
-              ),
+        noise: waveOf(_combat.open),
+        // §5.6.1: pasek mówi „hałas 15 m", mapa mówi kto w nich stoi.
+        footfallM: playerNoiseM(snapshot?.speedKmh ?? 0),
         progress: _running(),
         searchPanel: snapshot == null
             ? null

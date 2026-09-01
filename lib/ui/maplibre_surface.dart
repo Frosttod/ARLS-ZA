@@ -96,6 +96,7 @@ TileSurfaceBuilder tilesFrom(MapSource source, {GeoPoint? fallbackCentre}) =>
       required economy,
       onMarkerTap,
       noise,
+      footfallM,
       darkness = 0.0,
     }) => MapLibreSurface(
       source: source,
@@ -103,6 +104,7 @@ TileSurfaceBuilder tilesFrom(MapSource source, {GeoPoint? fallbackCentre}) =>
       markers: markers,
       economy: economy,
       onMarkerTap: onMarkerTap,
+      footfallM: footfallM,
       noise: noise,
       darkness: darkness,
       fallbackCentre: fallbackCentre,
@@ -120,6 +122,7 @@ class MapLibreSurface extends StatefulWidget {
     required this.centre,
     required this.markers,
     this.noise,
+    this.footfallM,
     this.onMarkerTap,
     this.darkness = 0,
     required this.economy,
@@ -155,6 +158,15 @@ class MapLibreSurface extends StatefulWidget {
 
   /// §5.6.5: a sound spreading, or null when the street is quiet.
   final NoiseWave? noise;
+
+  /// §5.6.1: jak daleko niesie się **własny krok** gracza, albo null w bezruchu.
+  ///
+  /// ⚠️ **Liczba na pasku nie jest odległością.** HUD pisze „hałas 15 m" i to
+  /// jest prawda, której nie da się użyć: piętnaście metrów to na mapie coś
+  /// zupełnie innego przy zbliżeniu ulicy niż przy zbliżeniu dzielnicy, a
+  /// pytanie brzmi „czy ten Szwędacz stoi w środku, czy poza". Okrąg odpowiada
+  /// na nie bez liczenia.
+  final double? footfallM;
 
   /// What to do when the player taps one, or taps nothing — the empty tap
   /// arrives as null, because letting go of a target is a thing a player does
@@ -211,6 +223,18 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
   /// §3.6: where each marker is *on its way to*, so a 1 Hz simulation does not
   /// have to look like one.
   final _motion = MarkerMotion();
+
+  /// §6.1a: czy cokolwiek żywego stoi bliżej niż [kSmoothWithinM].
+  bool _closeBy(PositionFix? centre) {
+    if (centre == null) return false;
+
+    final here = GeoPoint(centre.latitude, centre.longitude);
+    for (final marker in widget.markers) {
+      if (marker.kind != MarkerKind.enemy) continue;
+      if (marker.at.distanceTo(here) <= kSmoothWithinM) return true;
+    }
+    return false;
+  }
 
   /// §3.6: the drawing clock, rounded down to [kMarkerFps].
   ///
@@ -335,12 +359,17 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
     // zoom and the centre both change without the marker list changing, and a
     // glide that only started on a new list would freeze mid-step whenever the
     // player pinched.
-    if (!widget.economy) _motion.update(widget.markers, DateTime.now());
+    // §3.3: płynność jest luksusem — do siedemdziesięciu pięciu metrów (§6.2).
+    // Bliżej niż to jest różnica między „idzie w moją stronę" a „stoi", i tego
+    // nie odczytuje się z markera skaczącego raz na sekundę.
+    final smooth = !widget.economy || _closeBy(centre);
+
+    if (smooth) _motion.update(widget.markers, DateTime.now());
 
     _keepPulse(
       wanted:
           spreading != null ||
-          (!widget.economy && _motion.movingAt(DateTime.now())) ||
+          (smooth && _motion.movingAt(DateTime.now())) ||
           alerted.any((marker) => marker.alert == MarkerAlert.hunting),
     );
 
@@ -492,6 +521,21 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
                             tilt: overlayTilt,
                           ),
                       ],
+                    ),
+                  ),
+                ),
+              ),
+
+            // §5.6.1: własny krok gracza, wokół gracza — czyli wokół środka,
+            // bo mapa zawsze go tam trzyma.
+            if ((widget.footfallM ?? 0) > 0)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: CustomPaint(
+                    painter: _FootfallPainter(
+                      radiusPx:
+                          widget.footfallM! /
+                          metresPerPixel(_zoom, centre.latitude),
                     ),
                   ),
                 ),
@@ -1121,6 +1165,50 @@ class _ZonePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_ZonePainter old) => old.zones != zones;
+}
+
+/// §5.6.1: dokąd niesie się własny krok gracza.
+///
+/// ⚠️ **Kreskowany, i to nie jest ozdoba.** Pozostałe okręgi na tej mapie mówią
+/// o gruncie: strefa schronu jest tam, gdzie jest, a zasięg wzroku Szwędacza
+/// należy do Szwędacza. Ten nie jest miejscem — jest dźwiękiem, który za chwilę
+/// ucichnie, bo wystarczy zwolnić. Ciągła linia obiecywałaby trwałość, której
+/// tu nie ma.
+class _FootfallPainter extends CustomPainter {
+  const _FootfallPainter({required this.radiusPx});
+
+  final double radiusPx;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (radiusPx < 6 || radiusPx > size.longestSide) return;
+
+    final middle = Offset(size.width / 2, size.height / 2);
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5
+      ..color = const Color(0x99E8B33A);
+
+    // Kreski liczone z obwodu, żeby przy każdym promieniu były tej samej
+    // długości na ekranie — okrąg z czterema kreskami i okrąg z czterdziestoma
+    // czyta się jako dwie różne rzeczy.
+    const dash = 10.0;
+    final steps = (2 * math.pi * radiusPx / (dash * 2)).round().clamp(8, 96);
+    final step = 2 * math.pi / steps;
+
+    for (var i = 0; i < steps; i++) {
+      canvas.drawArc(
+        Rect.fromCircle(center: middle, radius: radiusPx),
+        i * step,
+        step / 2,
+        false,
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_FootfallPainter old) => old.radiusPx != radiusPx;
 }
 
 /// The rings that say what is within reach, drawn around the middle.

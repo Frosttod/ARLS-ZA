@@ -38,6 +38,8 @@ typedef TileSurfaceBuilder =
       required bool economy,
       void Function(MapMarker? marker)? onMarkerTap,
       NoiseWave? noise,
+      // §5.6.1: promień własnego kroku, albo null w bezruchu.
+      double? footfallM,
       // §17.4: zero w południe, jeden w nocy.
       double darkness,
     });
@@ -51,6 +53,7 @@ class MapScreen extends StatefulWidget {
     this.markers = const [],
     this.onMarkerTap,
     this.noise,
+    this.footfallM,
     this.notices,
     this.economy = false,
     this.hasPack = true,
@@ -82,6 +85,9 @@ class MapScreen extends StatefulWidget {
 
   /// §5.6.5: the last thing the player did that was heard.
   final NoiseWave? noise;
+
+  /// §5.6.1: jak daleko niesie się własny krok gracza, albo null w bezruchu.
+  final double? footfallM;
 
   /// §3.3 economy mode: no animations. The camera jumps instead of gliding.
   final bool economy;
@@ -183,6 +189,7 @@ class _MapScreenState extends State<MapScreen> {
               economy: widget.economy,
               onMarkerTap: widget.onMarkerTap,
               noise: widget.noise,
+              footfallM: widget.footfallM,
               darkness: widget.darkness,
             ),
           ),

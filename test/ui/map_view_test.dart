@@ -35,6 +35,7 @@ void main() {
     required bool economy,
     void Function(MapMarker? marker)? onMarkerTap,
     NoiseWave? noise,
+    double? footfallM,
     double darkness = 0,
   }) {
     asked.add((markers: markers, economy: economy));

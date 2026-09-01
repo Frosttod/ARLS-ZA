@@ -28,6 +28,7 @@ class GameScreen extends StatelessWidget {
     required this.markers,
     required this.onMarkerTap,
     required this.noise,
+    this.footfallM,
     required this.progress,
     required this.searchPanel,
     required this.economy,
@@ -52,6 +53,9 @@ class GameScreen extends StatelessWidget {
 
   /// §5.6.5: what the last shot woke up, drawn at the radius it carried.
   final NoiseWave? noise;
+
+  /// §5.6.1: jak daleko niesie się własny krok gracza, albo null w bezruchu.
+  final double? footfallM;
 
   /// §2.1a, §12: everything with a clock on it, and every line with a way out.
   ///
@@ -83,6 +87,7 @@ class GameScreen extends StatelessWidget {
         markers: markers,
         onMarkerTap: onMarkerTap,
         noise: noise,
+        footfallM: footfallM,
         progress: progress,
         searchPanel: searchPanel,
         headingDeg: fix?.headingDeg,
