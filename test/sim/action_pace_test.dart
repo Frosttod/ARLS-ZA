@@ -294,7 +294,7 @@ void main() {
 
       final source = file.readAsStringSync();
       for (final name in ['kRunningKmh', 'kStillKmh', 'kWalkingKmh']) {
-        if (source.contains('const double ' + name + ' =')) {
+        if (source.contains('const double $name =')) {
           (defined[name] ??= []).add(file.path);
         }
       }

@@ -21,6 +21,7 @@ library;
 import 'dart:math' as math;
 
 import 'awareness.dart';
+import 'noise.dart';
 import '../map/geometry.dart';
 import '../safety/spawn_exclusion.dart';
 
@@ -63,7 +64,9 @@ enum EnemyKind {
     attackMultiplier: 0.9,
     baseDamageMl: 120,
     attackInterval: Duration(milliseconds: 1200),
-    detectionM: 120,
+    detectionM: 75,
+    hearingM: 20,
+    reaction: Duration(milliseconds: 500),
     deathAtLoss: 0.45,
     packSize: (1, 1),
   ),
@@ -79,7 +82,9 @@ enum EnemyKind {
     attackMultiplier: 1.05,
     baseDamageMl: 180,
     attackInterval: Duration(seconds: 2),
-    detectionM: 80,
+    detectionM: 45,
+    hearingM: 40,
+    reaction: Duration(seconds: 2),
     deathAtLoss: 0.45,
     packSize: (2, 4),
   ),
@@ -94,7 +99,9 @@ enum EnemyKind {
     attackMultiplier: 1.2,
     baseDamageMl: 400,
     attackInterval: Duration(seconds: 3),
-    detectionM: 60,
+    detectionM: 25,
+    hearingM: 50,
+    reaction: Duration(seconds: 4),
     deathAtLoss: 0.50,
     packSize: (1, 1),
   );
@@ -109,6 +116,8 @@ enum EnemyKind {
     required this.baseDamageMl,
     required this.attackInterval,
     required this.detectionM,
+    required this.hearingM,
+    required this.reaction,
     required this.deathAtLoss,
     required this.packSize,
   });
@@ -131,15 +140,51 @@ enum EnemyKind {
   final Duration attackInterval;
 
   /// §6.2: how far off it notices a player.
+  ///
+  /// ⚠️ **Trzy razy krótszy niż był, i to jest zgłoszenie z terenu.** Sto
+  /// dwadzieścia metrów Skakuna to sylwetka rozpoznawana z odległości, z której
+  /// człowiek o dobrych oczach ledwie ją widzi — a zwłoki z zaćmionymi
+  /// rogówkami widzą gorzej, nie lepiej. Zasięgi zeszły, a w zamian (patrz
+  /// [reaction]) przestały być tylko progiem czujności: zauważony gracz jest
+  /// goniony od razu.
   final double detectionM;
+
+  /// §5.6.1: z jakiej odległości słyszy **biegnącego** gracza.
+  ///
+  /// ⚠️ **To jest ucho, nie promień.** Głośność niesie się tyle, ile niesie
+  /// (§5.6.1: bieg czterdzieści metrów, marsz piętnaście, ostrożny krok osiem),
+  /// a ta liczba mówi, jak dobrze **ta** rzecz to słyszy. Brutal ma pięćdziesiąt
+  /// przy czterdziestu metrach biegu, czyli ucho lepsze niż nośność dźwięku:
+  /// usłyszy też marsz z osiemnastu, kiedy Skakun nie usłyszy go z ośmiu.
+  ///
+  /// Trzy różne sposoby na znalezienie gracza zamiast jednego: Skakun poluje
+  /// oczami, Brutal uszami, Szwędacz po trochu jednym i drugim.
+  final double hearingM;
+
+  /// §6.1a: ile trwa, zanim ruszy za zobaczonym graczem.
+  ///
+  /// ⚠️ **To zastępuje próg „sześćdziesiąt procent zasięgu wzroku".** Wcześniej
+  /// przeciwnik, który widział gracza, **maszerował** w jego stronę, dopóki ten
+  /// nie zbliżył się na 0,6 zasięgu — Szwędacz widział z siedemdziesięciu
+  /// dziewięciu metrów i szedł spacerem przez trzydzieści. Czytało się to jak
+  /// bezmyślność, bo nią było: liczba 0,6 nie ma oparcia w §6.1a ani nigdzie
+  /// indziej.
+  ///
+  /// Teraz zobaczony znaczy goniony — po zwłoce, która jest tym, czym jest
+  /// naprawdę: obrót głowy, jęk, dopiero szarża. I jest zarazem oknem gracza na
+  /// zejście z linii wzroku.
+  final Duration reaction;
 
   /// §6.2: the share of its blood it dies at, rather than all of it.
   final double deathAtLoss;
 
   final (int, int) packSize;
 
-  /// §6.1a: a chase starts inside 60% of what it can see.
-  double get chaseM => detectionM * 0.6;
+  /// §5.6.1: ile z nośności dźwięku wyłapuje to ucho.
+  ///
+  /// Wyprowadzone z [hearingM] i z hałasu biegu, a nie wpisane osobno: gdyby
+  /// bieg kiedyś zaczął nieść inaczej, uszy pójdą za nim same.
+  double get hearingFactor => hearingM / NoiseKind.running.baseM;
 
   double get damageMl => baseDamageMl * attackMultiplier;
 }
@@ -254,6 +299,7 @@ class Enemy {
     this.sightFactor = 1,
     this.bleedMlPerSecond = 0,
     this.staggerLeft = Duration.zero,
+    this.reactionLeft,
   });
 
   /// Rolls the ranges of §6.2 once, at spawn. Two Walkers are not the same
@@ -363,8 +409,15 @@ class Enemy {
   /// How far this one actually notices anything, here (§6.2, §5.6.1).
   double get sightM => kind.detectionM * sightFactor;
 
-  /// §6.1a: it charges inside sixty per cent of what it can see.
-  double get chaseM => sightM * 0.6;
+  /// §6.1a: ile jeszcze trwa obrót głowy, zanim ruszy. Null — nie widzi.
+  ///
+  /// ⚠️ Zeruje się, kiedy gracz zejdzie z linii wzroku: następne zauważenie
+  /// zaczyna nakręcanie od nowa. To jest ta nagroda za schowanie się za rogiem,
+  /// której zasięg wzroku sam z siebie nie daje.
+  final Duration? reactionLeft;
+
+  /// §5.6.1: z jakiej odległości **to** ucho łapie hałas o tej nośności.
+  double hearingOf(double noiseM) => noiseM * kind.hearingFactor;
 
   /// §5.6.2, §6.1a: whether this one is actually onto the player.
   ///
@@ -461,6 +514,8 @@ class Enemy {
     double? sightFactor,
     double? bleedMlPerSecond,
     Duration? staggerLeft,
+    Duration? reactionLeft,
+    bool clearReaction = false,
   }) => Enemy(
     id: id,
     kind: kind,
@@ -485,6 +540,7 @@ class Enemy {
     sightFactor: sightFactor ?? this.sightFactor,
     bleedMlPerSecond: bleedMlPerSecond ?? this.bleedMlPerSecond,
     staggerLeft: staggerLeft ?? this.staggerLeft,
+    reactionLeft: clearReaction ? null : (reactionLeft ?? this.reactionLeft),
   );
 
   /// The wound of §5.1.5, taken.
@@ -603,8 +659,16 @@ Enemy advanceEnemy(
   final sees = seesPlayer(enemy, playerAt, sightM: sightM);
   final hears = !sees && hearsPlayer(enemy, playerAt, noiseM: playerNoiseM);
 
+  // §6.1a: obrót głowy, jęk, dopiero szarża. Zauważony gracz jest goniony —
+  // ale nie w tej samej sekundzie, i to jest okno na zejście z linii wzroku.
+  // Zejście z niej kasuje nakręcanie: następne zauważenie zaczyna od nowa.
+  final winding = !sees
+      ? null
+      : _down(enemy.reactionLeft ?? enemy.kind.reaction, elapsed);
+
   var state = _nextState(
     enemy,
+    charges: sees && (winding ?? Duration.zero) <= Duration.zero,
     distance: distance,
     sees: sees,
     heardShot: heardShot,
@@ -732,7 +796,15 @@ Enemy advanceEnemy(
     forgetNoise: forget,
     investigateLeft: left,
     walkedToNoise: walked,
+    reactionLeft: winding,
+    clearReaction: winding == null,
   );
+}
+
+/// Odlicza [elapsed] i nie schodzi poniżej zera.
+Duration _down(Duration left, Duration elapsed) {
+  final rest = left - elapsed;
+  return rest.isNegative ? Duration.zero : rest;
 }
 
 /// §6.1a's table, in the order its rows are written.
@@ -740,6 +812,9 @@ EnemyState _nextState(
   Enemy enemy, {
   required double distance,
   required bool sees,
+
+  /// §6.1a: widzi **i** zdążył się już zebrać. Patrz [EnemyKind.reaction].
+  required bool charges,
   required bool heardShot,
   required bool beyondLeash,
   required bool lostContact,
@@ -784,7 +859,12 @@ EnemyState _nextState(
     return EnemyState.spent;
   }
 
-  if (heardShot || distance <= enemy.chaseM) {
+  // ⚠️ **Zobaczony znaczy goniony.** Wcześniej stało tu `distance <= chaseM`,
+  // czyli sześćdziesiąt procent zasięgu wzroku — przeciwnik, który widział
+  // gracza, maszerował w jego stronę przez pozostałe czterdzieści. Liczba 0,6
+  // nie miała oparcia w §6.1a ani nigdzie indziej, a czytała się jak
+  // bezmyślność. Zwłokę robi teraz [EnemyKind.reaction].
+  if (heardShot || charges) {
     return enemy.budget > Duration.zero ? EnemyState.chase : EnemyState.spent;
   }
 

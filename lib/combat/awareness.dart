@@ -127,8 +127,16 @@ bool seesPlayer(Enemy enemy, GeoPoint at, {required double sightM}) {
 ///
 /// Słuch nie ma kierunku — to jest różnica między nim a wzrokiem i powód, dla
 /// którego bieg jest karą, której nie da się obejść ustawieniem się z tyłu.
+///
+/// ⚠️ **Ucho jest różne dla każdego rodzaju** (`EnemyKind.hearingM`). Nośność
+/// dźwięku jest jedna — bieg czterdzieści metrów, marsz piętnaście, ostrożny
+/// krok osiem — a to, ile z niej ktoś wyłapie, zależy od tego, kto słucha.
+/// Brutal słyszy biegnącego z pięćdziesięciu, Skakun z dwudziestu: ślepy tank i
+/// wzrokowiec to dwa różne problemy, choć hałas jest ten sam.
 bool hearsPlayer(Enemy enemy, GeoPoint at, {required double noiseM}) =>
-    !enemy.isDead && noiseM > 0 && enemy.position.distanceTo(at) <= noiseM;
+    !enemy.isDead &&
+    noiseM > 0 &&
+    enemy.position.distanceTo(at) <= enemy.hearingOf(noiseM);
 
 /// §5.5.1: czy ten cios jest ciosem w plecy kogoś, kto o niczym nie wie.
 ///

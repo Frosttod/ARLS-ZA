@@ -15,7 +15,7 @@ Różnica jest istotna, bo w kilkunastu miejscach **świadomie odeszliśmy od do
 
 ⚠️ **Reguła utrzymania tego pliku:** liczba zmieniona w kodzie i nieprzeniesiona tutaj czyni ten dokument gorszym niż jego brak. Przy każdej zmianie stałej — aktualizuj sekcję.
 
-**Stan:** 2660 testów · schemat bazy **v37** · etapy 0–2 zamknięte, 3–6 i 8 przed testem w terenie.
+**Stan:** 2662 testy · schemat bazy **v37** · etapy 0–2 zamknięte, 3–6 i 8 przed testem w terenie.
 
 ---
 
@@ -962,7 +962,9 @@ Efekt: **każdy nabój ściąga ulicę tam, gdzie stoisz teraz.** Broń palna je
 | Krew | 2 400–2 800 | 3 200–3 600 | **6 000–8 000** |
 | Obrażenia | 120 ml | 180 ml | **400 ml** |
 | Co ile bije | 1,2 s | 2 s | 3 s |
-| Wykrycie | 120 m | 80 m | 60 m |
+| **Wzrok** | **75 m** | **45 m** | **25 m** |
+| **Słuch** (biegnący gracz) | **20 m** | **40 m** | **50 m** |
+| **Reakcja** | **0,5 s** | **2 s** | **4 s** |
 | Śmierć przy utracie | 45% | 45% | 50% |
 | Grupa | 1 | **2–4** | 1 |
 
@@ -996,6 +998,31 @@ W MVP występuje wyłącznie **Szwędacz**. Grupa 2–4 czyni walkę z grupą st
 **Omijają przeszkody** — woda i strefy §3.5 blokują ruch. Budynki jeszcze nie (warstwa w paczkach nie niesie typu).
 
 **W gęstej zabudowie zasięg wykrycia ×0,7** — ściany, które połykają strzał, połykają też sylwetkę.
+
+### 11.1a. Trzy zmysły, trzy problemy (§6.2, §5.6.1, §6.1a)
+
+⚠️ **Zgłoszone z terenu: „zombie nie są zbyt mądre i wolno reagują".** Nie był to
+problem percepcji — widziały gracza na pełnym dystansie od zawsze. Nie **biegły**:
+pościg zaczynał się dopiero na `0,6 × zasięg wzroku`, więc Szwędacz widział z
+siedemdziesięciu dziewięciu metrów i maszerował przez trzydzieści. Liczba 0,6
+nie miała oparcia w §6.1a ani nigdzie indziej.
+
+**Zasięgi wzroku spadły trzykrotnie**, bo sto dwadzieścia metrów to sylwetka na
+granicy tego, co widzi zdrowe oko, a zaćmiona rogówka widzi gorzej, nie lepiej.
+W zamian **zobaczony znaczy goniony** — po zwłoce, która jest tym, czym jest:
+obrót głowy, jęk, dopiero szarża. Zwłoka jest zarazem oknem gracza na zejście z
+linii wzroku, a **zejście z niej kasuje nakręcanie**: następne zauważenie
+zaczyna od nowa.
+
+**Słuch jest osobną osią.** Nośność dźwięku jest jedna (§5.6.1: bieg 40 m, marsz
+15, ostrożny krok 8), a `hearingM` mówi, ile z niej wyłapuje to konkretne ucho.
+Brutal ma pięćdziesiąt przy czterdziestu metrach biegu — ucho lepsze niż nośność
+dźwięku, czyli usłyszy też marsz z osiemnastu metrów, kiedy Skakun nie usłyszy go
+z ośmiu.
+
+Netto: **nie jest trudniej, jest inaczej.** Widzą bliżej niż dotąd, ale
+angażują się od razu, a każdy typ znajduje gracza inaczej — Skakun oczami,
+Brutal uszami, Szwędacz po trochu jednym i drugim.
 
 ### 11.2a. Co widzą i co słyszą (§6.2, §5.6.1)
 

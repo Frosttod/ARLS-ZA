@@ -60,13 +60,28 @@ void main() {
     });
 
     test('each notices at its own distance', () {
-      expect(EnemyKind.leaper.detectionM, 120);
-      expect(EnemyKind.walker.detectionM, 80);
-      expect(EnemyKind.brute.detectionM, 60);
+      // ⚠️ Trzy razy krócej, niż było. Sto dwadzieścia metrów to sylwetka na
+      // granicy tego, co widzi zdrowe oko — a zaćmiona rogówka widzi gorzej.
+      expect(EnemyKind.leaper.detectionM, 75);
+      expect(EnemyKind.walker.detectionM, 45);
+      expect(EnemyKind.brute.detectionM, 25);
     });
 
-    test('and charges inside sixty per cent of it', () {
-      expect(EnemyKind.walker.chaseM, closeTo(48, 0.01));
+    test('and each hears at its own', () {
+      // §5.6.1: nośność dźwięku jest jedna, ucho jest różne. Brutal słyszy
+      // biegnącego dalej, niż go widzi — i to jest cały jego charakter.
+      expect(EnemyKind.leaper.hearingM, 20);
+      expect(EnemyKind.walker.hearingM, 40);
+      expect(EnemyKind.brute.hearingM, 50);
+      expect(EnemyKind.brute.hearingM, greaterThan(EnemyKind.brute.detectionM));
+    });
+
+    test('and each takes its own time to charge', () {
+      // §6.1a: obrót głowy, jęk, dopiero szarża — i okno gracza na zejście z
+      // linii wzroku.
+      expect(EnemyKind.leaper.reaction, const Duration(milliseconds: 500));
+      expect(EnemyKind.walker.reaction, const Duration(seconds: 2));
+      expect(EnemyKind.brute.reaction, const Duration(seconds: 4));
     });
 
     test('two of a kind are not the same one', () {
@@ -217,28 +232,52 @@ void main() {
       expect(worst, lessThan(90));
     });
 
-    test('inside its detection it walks, and pays nothing for it', () {
-      // §6.1a: the alert state spends no budget, which is what makes a slow
-      // approach survivable — and §5.1.3 what makes it the only good one.
-      final alert = run(
-        spawn(EnemyKind.walker, at: 10),
-        playerAt: north(70),
-        total: const Duration(seconds: 3),
+    test('it sees, and for a moment only walks', () {
+      // §6.1a: obrót głowy, jęk, dopiero szarża. Przez te dwie sekundy stan
+      // czujności nie wydaje budżetu — i to jest okno gracza na zejście z linii
+      // wzroku.
+      final alert = advanceEnemy(
+        spawn(EnemyKind.walker),
+        playerAt: north(40),
+        elapsed: const Duration(seconds: 1),
       );
 
       expect(alert.state, EnemyState.alert);
       expect(alert.budget, EnemyKind.walker.sprintBudget);
     });
 
-    test('inside sixty per cent of it, it runs', () {
-      final chase = advanceEnemy(
+    test('and once it has gathered itself, it runs', () {
+      // ⚠️ **Zobaczony znaczy goniony.** Wcześniej stał tu próg „sześćdziesiąt
+      // procent zasięgu wzroku": przeciwnik widział gracza i **maszerował** w
+      // jego stronę przez pozostałe czterdzieści procent.
+      final chase = run(
         spawn(EnemyKind.walker),
         playerAt: north(40),
-        elapsed: const Duration(seconds: 1),
+        total: const Duration(seconds: 3),
       );
 
       expect(chase.state, EnemyState.chase);
       expect(chase.budget, lessThan(EnemyKind.walker.sprintBudget));
+    });
+
+    test('a step out of sight puts the wind-up back to the start', () {
+      // Za rogiem nakręcanie przepada: następne zauważenie zaczyna od nowa, i
+      // dlatego chowanie się działa nawet wtedy, gdy już Cię widziano.
+      final winding = advanceEnemy(
+        spawn(EnemyKind.walker),
+        playerAt: north(40),
+        elapsed: const Duration(milliseconds: 1500),
+      );
+      expect(winding.reactionLeft, isNotNull);
+
+      final gone = advanceEnemy(
+        winding,
+        playerAt: north(200),
+        elapsed: const Duration(seconds: 1),
+      );
+
+      expect(gone.reactionLeft, isNull);
+      expect(gone.state, isNot(EnemyState.chase));
     });
 
     test('a shot starts a chase at any distance (§5.6)', () {
@@ -463,8 +502,8 @@ void main() {
         sightFactor: 0.7,
       );
 
-      expect(field.sightM, 80);
-      expect(town.sightM, closeTo(56, 0.01));
+      expect(field.sightM, 45);
+      expect(town.sightM, closeTo(31.5, 0.01));
     });
 
     test('and it charges from inside sixty per cent of that', () {
@@ -477,14 +516,15 @@ void main() {
         sightFactor: 0.7,
       );
 
-      expect(town.chaseM, closeTo(33.6, 0.01));
+      // §6.2: gęsta zabudowa połyka sylwetkę tak samo jak strzał.
+      expect(town.sightM, closeTo(31.5, 0.01));
     });
 
-    test('a player at seventy metres is seen in a field and not in a town', () {
+    test('a player at forty metres is seen in a field and not in a town', () {
       // The same distance, the same Walker, two different streets.
       final field = advanceEnemy(
         spawn(EnemyKind.walker),
-        playerAt: north(70),
+        playerAt: north(40),
         elapsed: const Duration(seconds: 1),
       );
       final town = advanceEnemy(
@@ -496,7 +536,7 @@ void main() {
           random: Random(1),
           sightFactor: 0.7,
         ),
-        playerAt: north(70),
+        playerAt: north(40),
         elapsed: const Duration(seconds: 1),
       );
 
@@ -559,9 +599,11 @@ void main() {
     });
 
     test('with nothing in the way it still walks straight at them', () {
+      // Czterdzieści metrów, bo Szwędacz widzi na czterdzieści pięć — z
+      // siedemdziesięciu nie widzi nikogo i błąka się po swojemu.
       final after = run(
         spawn(EnemyKind.walker),
-        playerAt: north(70),
+        playerAt: north(40),
         total: const Duration(seconds: 5),
       );
 
