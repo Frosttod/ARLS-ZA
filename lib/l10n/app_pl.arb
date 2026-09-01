@@ -1450,6 +1450,68 @@
   },
   "chronicleHardcore": "hardcore",
   "chronicleSoftcore": "softcore",
+  "vitalWater": "Woda",
+  "vitalFood": "Jedzenie",
+  "vitalSleep": "Sen",
+  "vitalLadder": "CO BĘDZIE DALEJ",
+  "vitalNoPenaltyYet": "Na razie nic to nie kosztuje.",
+  "vitalOfBodyMass": "−{percent}% masy",
+  "@vitalOfBodyMass": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "vitalBelowDaily": "poniżej {percent}%",
+  "@vitalBelowDaily": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "vitalFromHours": "od {hours} h długu",
+  "@vitalFromHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "vitalAccuracy": "celność −{percent}%",
+  "@vitalAccuracy": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "vitalSlower": "wszystko o {percent}% dłużej",
+  "@vitalSlower": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "vitalMoa": "rozrzut +{moa} MOA",
+  "@vitalMoa": {
+    "placeholders": {
+      "moa": {
+        "type": "String"
+      }
+    }
+  },
+  "vitalLearning": "nauka −{percent}%",
+  "@vitalLearning": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "vitalTapForDetail": "Dotknij, żeby zobaczyć, co to zmienia",
   "journalBlackout": "Utrata przytomności",
   "journalCount": "{name} ×{count}",
   "@journalCount": {

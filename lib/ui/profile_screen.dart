@@ -23,12 +23,14 @@ import 'package:flutter/material.dart';
 
 import 'fonts.dart';
 import 'units.dart';
+import 'vital_sheet.dart';
 import '../combat/ballistics.dart';
 import '../combat/enemy.dart' show kScoutingStealth;
 import '../combat/magazine.dart' show kWeaponsSpeed;
 import '../craft/item_recipe.dart' show kSalvageReturn, kSalvageReturnSkilled;
 import '../inventory/item_use.dart' show kMedicineSpeed;
 import '../loot/search.dart' show kScoutingSpeed;
+import '../sim/penalty_ladder.dart';
 import '../sim/physiology.dart';
 import '../l10n/app_localizations.dart';
 import '../skills/skill.dart';
@@ -479,6 +481,8 @@ class _StateLines extends StatelessWidget {
 
     return Column(
       children: [
+        // §12: te trzy wiersze mają pod spodem drabinkę kar (§2.3, §2.5.4).
+        // Cena ma być widoczna **przed** decyzją, bo to ona jest decyzją.
         _Line(
           label: l10n.profileStateWater,
           value: l10n.profileOfDaily(
@@ -486,6 +490,21 @@ class _StateLines extends StatelessWidget {
             '${constants.waterDailyMl.round()} ml',
           ),
           colours: colours,
+          onTap: () => unawaited(
+            showVitalSheet(
+              context,
+              kind: VitalKind.water,
+              ladder: waterLadder(
+                waterMl: state.waterMl,
+                dailyMl: constants.waterDailyMl,
+                bodyMassKg: state.bodyMassKg,
+              ),
+              now: l10n.profileOfDaily(
+                '${state.waterMl.round()} ml',
+                '${constants.waterDailyMl.round()} ml',
+              ),
+            ),
+          ),
         ),
         _Line(
           label: l10n.profileStateCalories,
@@ -494,11 +513,33 @@ class _StateLines extends StatelessWidget {
             '${constants.caloriesDailyKcal.round()} kcal',
           ),
           colours: colours,
+          onTap: () => unawaited(
+            showVitalSheet(
+              context,
+              kind: VitalKind.food,
+              ladder: foodLadder(
+                caloriesKcal: state.caloriesKcal,
+                dailyKcal: constants.caloriesDailyKcal,
+              ),
+              now: l10n.profileOfDaily(
+                '${state.caloriesKcal.round()} kcal',
+                '${constants.caloriesDailyKcal.round()} kcal',
+              ),
+            ),
+          ),
         ),
         _Line(
           label: l10n.profileStateSleep,
           value: l10n.profileDebtHours(state.sleepDebt.inHours),
           colours: colours,
+          onTap: () => unawaited(
+            showVitalSheet(
+              context,
+              kind: VitalKind.sleep,
+              ladder: sleepLadder(state.sleepDebt),
+              now: l10n.profileDebtHours(state.sleepDebt.inHours),
+            ),
+          ),
         ),
         // §2.5.5: the figure the sleep bar cannot show, which is exactly why
         // it belongs on a screen that has room for words.
@@ -892,6 +933,7 @@ class _Line extends StatelessWidget {
     required this.value,
     required this.colours,
     this.strong = false,
+    this.onTap,
   });
 
   final String label;
@@ -899,8 +941,16 @@ class _Line extends StatelessWidget {
   final HudColors colours;
   final bool strong;
 
+  /// §12: wiersz, który ma coś więcej do powiedzenia. Null — nie ma.
+  final VoidCallback? onTap;
+
   @override
-  Widget build(BuildContext context) => Padding(
+  Widget build(BuildContext context) {
+    final row = _row(context);
+    return onTap == null ? row : InkWell(onTap: onTap, child: row);
+  }
+
+  Widget _row(BuildContext context) => Padding(
     padding: const EdgeInsets.only(bottom: 3),
     child: Row(
       children: [

@@ -15,7 +15,7 @@ Różnica jest istotna, bo w kilkunastu miejscach **świadomie odeszliśmy od do
 
 ⚠️ **Reguła utrzymania tego pliku:** liczba zmieniona w kodzie i nieprzeniesiona tutaj czyni ten dokument gorszym niż jego brak. Przy każdej zmianie stałej — aktualizuj sekcję.
 
-**Stan:** 2637 testów · schemat bazy **v37** · etapy 0–2 zamknięte, 3–6 i 8 przed testem w terenie.
+**Stan:** 2656 testów · schemat bazy **v37** · etapy 0–2 zamknięte, 3–6 i 8 przed testem w terenie.
 
 ---
 
@@ -174,6 +174,32 @@ Liczone jako **deficyt względem masy ciała**, nie względem paska:
 ⚠️ **Drugi próg śmiertelny (12 h w stanie krytycznym) to rozszerzenie**, nie zapis z dokumentu. §2.3 daje pragnieniu jedną regułę i kwalifikuje ją słowami „w warunkach wysiłku" — samo to czyni nieśmiertelnym kogoś, kto siedzi w schronie, bo zapas ma podłogę na 10% masy ciała i tam zostaje.
 
 ⚠️ **Pragnienie nie ma osi długoterminowej i to jest właściwa odpowiedź.** Odwodnienie nie ma pamięci: napijesz się i jesteś zdrowy. Kontrast z jedzeniem (§3.4a) jest całym sensem tej pary.
+
+### 3.3a. Drabinka kar — co widzi gracz (§12)
+
+⚠️ **Gra karała za wodę, jedzenie i sen i nigdzie nie mówiła jak.** Kara była
+widoczna dopiero wtedy, gdy już bolała, więc „zostało mi pół butelki" było
+liczbą bez ceny. Trzy wiersze w profilu (Woda, Kalorie, Dług senny) otwierają
+teraz arkusz z całą drabinką i zaznaczonym szczeblem, na którym gracz stoi.
+
+| Witalność | Próg | Co robi |
+| :---- | :---- | :---- |
+| **Woda** | −2% masy ciała | celność −15% |
+| | −5% | + wszystko o 30% dłużej |
+| | −10% | + wszystko o 60% dłużej |
+| **Jedzenie** | poniżej 50% zapasu | celność −10% |
+| | poniżej 20% | + wszystko o 20% dłużej |
+| **Sen** | od 4 h długu | rozrzut +1 MOA |
+| | od 12 h | rozrzut +3 MOA, wszystko o 50% dłużej, nauka −20% |
+
+⚠️ **Szczeble są generowane z tych samych funkcji, które karzą** — przejściem
+po dziedzinie i zapisaniem każdego miejsca, w którym kara się zmienia. Wpisane
+ręcznie rozjechałyby się z modelem przy pierwszej zmianie progu, a ekran, który
+kłamie o karach, jest gorszy od ekranu, który milczy.
+
+⚠️ Każdy szczebel mówi **cały** stan, nie samą różnicę: przy pięciu procentach
+ubytku wody celność dalej jest niższa o piętnaście, i gracz widzi to na tym
+wierszu, zamiast składać z dwóch.
 
 ### 3.4. Głód — dobowy zapas
 

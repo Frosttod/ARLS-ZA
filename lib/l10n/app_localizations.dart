@@ -4459,6 +4459,84 @@ abstract class L10n {
   /// **'softcore'**
   String get chronicleSoftcore;
 
+  /// No description provided for @vitalWater.
+  ///
+  /// In en, this message translates to:
+  /// **'Water'**
+  String get vitalWater;
+
+  /// No description provided for @vitalFood.
+  ///
+  /// In en, this message translates to:
+  /// **'Food'**
+  String get vitalFood;
+
+  /// No description provided for @vitalSleep.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep'**
+  String get vitalSleep;
+
+  /// No description provided for @vitalLadder.
+  ///
+  /// In en, this message translates to:
+  /// **'WHAT COMES NEXT'**
+  String get vitalLadder;
+
+  /// No description provided for @vitalNoPenaltyYet.
+  ///
+  /// In en, this message translates to:
+  /// **'Costs you nothing yet.'**
+  String get vitalNoPenaltyYet;
+
+  /// No description provided for @vitalOfBodyMass.
+  ///
+  /// In en, this message translates to:
+  /// **'−{percent}% of mass'**
+  String vitalOfBodyMass(int percent);
+
+  /// No description provided for @vitalBelowDaily.
+  ///
+  /// In en, this message translates to:
+  /// **'below {percent}%'**
+  String vitalBelowDaily(int percent);
+
+  /// No description provided for @vitalFromHours.
+  ///
+  /// In en, this message translates to:
+  /// **'from {hours} h of debt'**
+  String vitalFromHours(int hours);
+
+  /// No description provided for @vitalAccuracy.
+  ///
+  /// In en, this message translates to:
+  /// **'accuracy −{percent}%'**
+  String vitalAccuracy(int percent);
+
+  /// No description provided for @vitalSlower.
+  ///
+  /// In en, this message translates to:
+  /// **'everything {percent}% longer'**
+  String vitalSlower(int percent);
+
+  /// No description provided for @vitalMoa.
+  ///
+  /// In en, this message translates to:
+  /// **'dispersion +{moa} MOA'**
+  String vitalMoa(String moa);
+
+  /// No description provided for @vitalLearning.
+  ///
+  /// In en, this message translates to:
+  /// **'learning −{percent}%'**
+  String vitalLearning(int percent);
+
+  /// No description provided for @vitalTapForDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to see what it changes'**
+  String get vitalTapForDetail;
+
   /// No description provided for @journalBlackout.
   ///
   /// In en, this message translates to:

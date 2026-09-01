@@ -1623,6 +1623,68 @@
   },
   "chronicleHardcore": "hardcore",
   "chronicleSoftcore": "softcore",
+  "vitalWater": "Water",
+  "vitalFood": "Food",
+  "vitalSleep": "Sleep",
+  "vitalLadder": "WHAT COMES NEXT",
+  "vitalNoPenaltyYet": "Costs you nothing yet.",
+  "vitalOfBodyMass": "−{percent}% of mass",
+  "@vitalOfBodyMass": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "vitalBelowDaily": "below {percent}%",
+  "@vitalBelowDaily": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "vitalFromHours": "from {hours} h of debt",
+  "@vitalFromHours": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      }
+    }
+  },
+  "vitalAccuracy": "accuracy −{percent}%",
+  "@vitalAccuracy": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "vitalSlower": "everything {percent}% longer",
+  "@vitalSlower": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "vitalMoa": "dispersion +{moa} MOA",
+  "@vitalMoa": {
+    "placeholders": {
+      "moa": {
+        "type": "String"
+      }
+    }
+  },
+  "vitalLearning": "learning −{percent}%",
+  "@vitalLearning": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "vitalTapForDetail": "Tap to see what it changes",
   "journalBlackout": "Blacked out",
   "journalCount": "{name} ×{count}",
   "@journalCount": {

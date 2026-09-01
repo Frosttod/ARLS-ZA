@@ -2511,6 +2511,59 @@ class L10nEn extends L10n {
   String get chronicleSoftcore => 'softcore';
 
   @override
+  String get vitalWater => 'Water';
+
+  @override
+  String get vitalFood => 'Food';
+
+  @override
+  String get vitalSleep => 'Sleep';
+
+  @override
+  String get vitalLadder => 'WHAT COMES NEXT';
+
+  @override
+  String get vitalNoPenaltyYet => 'Costs you nothing yet.';
+
+  @override
+  String vitalOfBodyMass(int percent) {
+    return '−$percent% of mass';
+  }
+
+  @override
+  String vitalBelowDaily(int percent) {
+    return 'below $percent%';
+  }
+
+  @override
+  String vitalFromHours(int hours) {
+    return 'from $hours h of debt';
+  }
+
+  @override
+  String vitalAccuracy(int percent) {
+    return 'accuracy −$percent%';
+  }
+
+  @override
+  String vitalSlower(int percent) {
+    return 'everything $percent% longer';
+  }
+
+  @override
+  String vitalMoa(String moa) {
+    return 'dispersion +$moa MOA';
+  }
+
+  @override
+  String vitalLearning(int percent) {
+    return 'learning −$percent%';
+  }
+
+  @override
+  String get vitalTapForDetail => 'Tap to see what it changes';
+
+  @override
   String get journalBlackout => 'Blacked out';
 
   @override

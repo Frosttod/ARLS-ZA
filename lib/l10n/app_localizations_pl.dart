@@ -2510,6 +2510,59 @@ class L10nPl extends L10n {
   String get chronicleSoftcore => 'softcore';
 
   @override
+  String get vitalWater => 'Woda';
+
+  @override
+  String get vitalFood => 'Jedzenie';
+
+  @override
+  String get vitalSleep => 'Sen';
+
+  @override
+  String get vitalLadder => 'CO BĘDZIE DALEJ';
+
+  @override
+  String get vitalNoPenaltyYet => 'Na razie nic to nie kosztuje.';
+
+  @override
+  String vitalOfBodyMass(int percent) {
+    return '−$percent% masy';
+  }
+
+  @override
+  String vitalBelowDaily(int percent) {
+    return 'poniżej $percent%';
+  }
+
+  @override
+  String vitalFromHours(int hours) {
+    return 'od $hours h długu';
+  }
+
+  @override
+  String vitalAccuracy(int percent) {
+    return 'celność −$percent%';
+  }
+
+  @override
+  String vitalSlower(int percent) {
+    return 'wszystko o $percent% dłużej';
+  }
+
+  @override
+  String vitalMoa(String moa) {
+    return 'rozrzut +$moa MOA';
+  }
+
+  @override
+  String vitalLearning(int percent) {
+    return 'nauka −$percent%';
+  }
+
+  @override
+  String get vitalTapForDetail => 'Dotknij, żeby zobaczyć, co to zmienia';
+
+  @override
   String get journalBlackout => 'Utrata przytomności';
 
   @override
