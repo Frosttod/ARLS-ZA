@@ -492,6 +492,50 @@ void main() {
       );
     });
   });
+
+  group('§10.1: cztery przedmioty, jedna droga do nich', () {
+    /// Które tabele realne (OSM) w ogóle dają szansę na [itemId].
+    List<String> realSourcesOf(String itemId) => [
+      for (final table in tables.tables)
+        if (table.source == LootSource.osm &&
+            table.entries.any((entry) => entry.itemId == itemId))
+          table.id,
+    ];
+
+    test('zestaw do szycia miał tylko dom, i to na terenie, który miasto '
+        'wysokiej gęstości nigdy nie generuje', () {
+      // ⚠️ **Zgłoszone z terenu: „mieszkam w mieście ponad 700 000
+      // mieszkańców, nie ma szans na opuszczony dom, więc nie ma szans na
+      // zestaw do szycia".** `tool_sewing_kit` ma w danych `loot_tags:
+      // ["residential", "shop"]` — obietnicę sklepu, której nic nie
+      // spełniało. Jedyną drogą był `proc_abandoned_house`, który wymaga
+      // trafienia punktem proceduralnym akurat na ziemię otagowaną
+      // `landuse=residential` — w gęstej zabudowie i tak rzadkiego, bo
+      // §10.1 dokłada tam tylko garść punktów, dzieloną między dom, samochód
+      // i śmietnik. Sklep sportowy/outdoor jest realnym miejscem na mapie
+      // każdego miasta i już sprzedaje pokrewny sprzęt turystyczny — stąd
+      // druga, prawdziwa droga.
+      expect(realSourcesOf('tool_sewing_kit'), contains('poi_sports'));
+    });
+
+    test('a trzy ubrania z opuszczonego domu wciąż nie mają realnej drogi', () {
+      // Ten sam problem, nietknięty: koszulka, spodnie i zimowa kurtka są
+      // dziś osiągalne wyłącznie przez `proc_abandoned_house`. Test mówi to
+      // wprost, a nie milczy — żeby decyzja, czy to też naprawić, była
+      // decyzją, a nie czymś, co ktoś odkryje na spacerze.
+      for (final id in [
+        'cloth_tshirt',
+        'cloth_trousers',
+        'cloth_winter_jacket',
+      ]) {
+        expect(
+          realSourcesOf(id),
+          isEmpty,
+          reason: '$id ma już realną drogę — zaktualizuj ten test',
+        );
+      }
+    });
+  });
 }
 
 /// Share of draws that came out rare, over enough rolls to be worth comparing.
