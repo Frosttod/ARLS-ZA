@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:arls_za/location/fix_filter.dart';
+import 'package:arls_za/combat/awareness.dart' show kRunningKmh;
 import 'package:arls_za/location/position_fix.dart';
 import 'package:test/test.dart';
 
@@ -294,6 +295,192 @@ void main() {
       offBy,
       lessThan(20),
       reason: 'the estimate should not jump the whole way to a poor fix',
+    );
+  });
+
+  group('§5.6.1: prędkość jest uśredniona, nie jednym odczytem', () {
+    /// Rześki marsz — 6 km/h, próbkowany co pięć sekund, tak jak kadencja
+    /// „moving" naprawdę odpytuje.
+    List<PositionFix> briskWalk({int count = 13, double accuracyM = 8}) {
+      const speedMps = 6 / 3.6;
+      return List.generate(
+        count,
+        (i) => fixAt(
+          seconds: i * 5,
+          north: speedMps * (i * 5),
+          accuracyM: accuracyM,
+        ),
+      );
+    }
+
+    test(
+      'zgłoszenie z terenu: stałe tempo, jeden odczyt kłamie o dokładności — '
+      'bez skoku w bieg',
+      () {
+        // ⚠️ To jest dokładnie to zgłoszenie: „idę stałym tempem, licznik
+        // hałasu pokazuje 40 m". Winny nie jest zwykły szum w granicach
+        // zgłaszanej dokładności — sprawdzone osobno, że taki nie przepycha
+        // marszu przez próg. Winny jest odczyt, który **kłamie o własnej
+        // dokładności**: zgłasza osiem metrów, mając naprawdę dwadzieścia
+        // pięć — dokładnie to, co robi odbiornik, kiedy traci wielotorowość
+        // pod drzewami na chwilę i dogania własną ocenę błędu odczyt później.
+        final filter = FixFilter();
+        final fixes = briskWalk();
+        fixes[9] = fixAt(
+          seconds: 9 * 5,
+          north: (6 / 3.6) * 9 * 5 + 25,
+          accuracyM: 8, // zgłoszona dokładność, nie prawdziwy błąd
+        );
+
+        FixAccepted? bad;
+        for (var i = 0; i < fixes.length; i++) {
+          final outcome = filter.accept(fixes[i]);
+          // Ten jeden odczyt, na którym wyszła kłamliwa dokładność — dalsze są
+          // już powrotem do prawdy i nie mają nic do udowodnienia.
+          if (i == 9 && outcome is FixAccepted) bad = outcome;
+        }
+
+        final unsmoothedKmh = bad!.movedM / bad.interval.inSeconds * 3.6;
+        final smoothedKmh = bad.speedMps * 3.6;
+
+        // Nieuśredniona różnica dwóch punktów naprawdę przekraczałaby próg
+        // biegu — dowód, że test odtwarza usterkę, a nie coś innego.
+        expect(unsmoothedKmh, greaterThan(kRunningKmh));
+
+        // A uśredniona zostaje pod progiem: rześki marsz nie pokazuje biegu.
+        expect(smoothedKmh, lessThan(kRunningKmh));
+      },
+    );
+
+    test('a zwykły szum w granicach zgłaszanej dokładności nic nie robi', () {
+      // ⚠️ Rozróżnienie, które uzasadnia całą diagnozę: odczyt uczciwie
+      // zgłaszający swój błąd — nawet spory, nawet przesunięty wzdłuż trasy —
+      // nie przepycha marszu przez próg biegu. Filtr pozycji sam sobie z tym
+      // radzi; problemem jest wyłącznie odczyt, który kłamie.
+      final filter = FixFilter();
+      final fixes = briskWalk(accuracyM: 20);
+      fixes[9] = fixAt(
+        seconds: 9 * 5,
+        north: (6 / 3.6) * 9 * 5 + 15,
+        accuracyM: 20,
+      );
+
+      for (final fix in fixes) {
+        final outcome = filter.accept(fix);
+        if (outcome is FixAccepted && !outcome.stationary) {
+          expect(outcome.speedMps * 3.6, lessThan(kRunningKmh));
+        }
+      }
+    });
+
+    test(
+      'a prawdziwa zmiana tempa dochodzi w kilkanaście sekund, nie ginie',
+      () {
+        // ⚠️ Uśrednianie nie ma prawa schować prawdziwego biegu na stałe —
+        // sprawdzone osobno, żeby poprawka jednego zgłoszenia nie stworzyła
+        // drugiego („uciekam, a gra tego nie widzi").
+        final filter = FixFilter();
+        const walkMps = 5 / 3.6;
+        const runMps = 12 / 3.6;
+
+        FixAccepted? last;
+        var seconds = 0;
+        for (var i = 0; i < 7; i++) {
+          seconds += 5;
+          last =
+              filter.accept(fixAt(seconds: seconds, north: walkMps * seconds))
+                  as FixAccepted;
+        }
+        final before = last!.speedMps * 3.6;
+
+        var distance = walkMps * seconds;
+        for (var i = 0; i < 4; i++) {
+          seconds += 5;
+          distance += runMps * 5;
+          last =
+              filter.accept(fixAt(seconds: seconds, north: distance))
+                  as FixAccepted;
+        }
+
+        expect(before, lessThan(kRunningKmh));
+        expect(
+          last!.speedMps * 3.6,
+          greaterThan(kRunningKmh),
+          reason: 'cztery odczyty biegu (dwadzieścia sekund) muszą wystarczyć',
+        );
+      },
+    );
+
+    test(
+      'zwolnienie po biegu przechodzi od razu, tłumione są tylko wzrosty',
+      () {
+        // ⚠️ Test źródłowy dla poprawki poprawki: symetryczne tłumienie
+        // dokładało spowolnienie do spowolnienia filtra pozycji i cofnięcie
+        // kadencji próbkowania (§3.3) po zatrzymaniu przestawało mieścić się
+        // w oknie, w którym dotąd się mieściło. Zejście w dół ma przechodzić
+        // przez uśredniacz od razu, tak jak przechodziłoby bez niego.
+        final filter = FixFilter();
+        const runMps = 12 / 3.6;
+
+        var seconds = 0;
+        for (var i = 0; i < 7; i++) {
+          seconds += 5;
+          filter.accept(fixAt(seconds: seconds, north: runMps * seconds));
+        }
+        final frozenAt = runMps * seconds;
+
+        // Sama pierwsza klatka po zatrzymaniu — jeszcze zanim `stationary`
+        // zdąży się przełączyć — ma już wolniej, nie tyle samo co przed chwilą.
+        seconds += 5;
+        final firstAfterStop =
+            filter.accept(fixAt(seconds: seconds, north: frozenAt))
+                as FixAccepted;
+
+        expect(
+          firstAfterStop.speedMps,
+          lessThan(runMps * 0.9),
+          reason: 'zwolnienie nie czeka na uśrednianie, tylko przechodzi',
+        );
+      },
+    );
+
+    test(
+      'po przerwie (§11.2) pierwszy odczyt nie dziedziczy starej prędkości',
+      () {
+        // ⚠️ Uśredniacz jest zerowany przy [FixFilter.reset] razem z resztą
+        // stanu — inaczej pierwszy krok po wznowieniu sesji byłby liczony
+        // razem z prędkością sprzed przerwy i przez chwilę kłamałby w tę albo
+        // w drugą stronę, zależnie od tego, kto biegł, zanim gra zgasła.
+        final filter = FixFilter();
+        const runMps = 12 / 3.6;
+
+        var seconds = 0;
+        for (var i = 0; i < 7; i++) {
+          seconds += 5;
+          filter.accept(fixAt(seconds: seconds, north: runMps * seconds));
+        }
+
+        filter.reset();
+
+        // Nowa sesja, nowe tempo — marsz, od zera, w zupełnie innym miejscu.
+        const walkMps = 5 / 3.6;
+        var seconds2 = 100;
+        FixAccepted? last;
+        for (var i = 0; i < 7; i++) {
+          seconds2 += 5;
+          last =
+              filter.accept(
+                    fixAt(seconds: seconds2, north: walkMps * (seconds2 - 100)),
+                  )
+                  as FixAccepted;
+        }
+
+        expect(
+          last!.speedMps * 3.6,
+          lessThan(kRunningKmh),
+          reason: 'nie zostaje podbite biegiem sprzed przerwy',
+        );
+      },
     );
   });
 

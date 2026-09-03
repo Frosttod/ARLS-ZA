@@ -1,7 +1,7 @@
 # ARLS-ZA — lista kontrolna systemów
 
 Stan na dzień **2026-08-28**. Wygenerowana po przejściu pełnego zestawu
-testów: **2667 testów, `flutter analyze` czysty, schemat bazy v37**.
+testów: **2672 testy, `flutter analyze` czysty, schemat bazy v37**.
 
 ⚠️ Liczby poniżej są zliczone z suite'a, nie przepisane z pamięci. Suma
 obszarów musi się zgadzać z ogółem — jeśli się nie zgadza, ten plik jest
@@ -33,7 +33,7 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 | `map` | 88 | PMTiles, MVT, geometria, namiary, pakiety regionów |
 | `craft` | 105 | recepty, odzież i plecaki szyte, rozbiórka wsadowa, **warsztat stoi bez obecności (§2.1a.3)**, bilans §18.2 |
 | `items` | 79 | katalog jako dane: bilans, nazwy, sloty, użycia |
-| `location` | 67 | bramka dokładności, filtr Kalmana, martwa strefa, anty-cheat, powrót odbiornika, kadencja w schronie |
+| `location` | 72 | bramka dokładności, filtr Kalmana, martwa strefa, **prędkość uśredniona przeciw kłamliwej dokładności**, anty-cheat, powrót odbiornika, kadencja w schronie |
 | `skills` | 63 | §7.2.1 praktyka, §4.6 literatura, §7.2.2 krzywa, wpięcie w grę |
 | `db` | 50 | migracje v1→v37, integralność, warstwa gorąca i ciepła |
 | `devtools` | 44 | konsola, rejestrator sesji |
@@ -45,7 +45,7 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 | `notes` | 14 | notatki i lektura |
 | `l10n` | 7 | kolizje kluczy, brak twardej polszczyzny w kodzie |
 
-**Razem 2667.**
+**Razem 2672.**
 
 ### Rzeczy, które testy trzymają jako liczby, a nie jako intencje
 

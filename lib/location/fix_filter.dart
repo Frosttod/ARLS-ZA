@@ -80,6 +80,39 @@ class FixAccepted extends FixOutcome {
   final Duration interval;
 }
 
+/// §5.6.1: ile waży jeden świeży odczyt przy uśrednianiu prędkości.
+///
+/// ⚠️ **Zgłoszone z terenu: „idę stałym tempem, a licznik hałasu pokazuje
+/// 40 m" — czyli bieg, którego nie było.** Prędkość liczyła się jako jedna
+/// różnica dwóch punktów (`przesunięcie / interwał`) — pochodna z sygnału,
+/// którego samo położenie jest wygładzone Kalmanem, ale prędkość z niego
+/// liczona nie była wygładzona wcale.
+///
+/// ⚠️ **Zwykły szum w granicach zgłaszanej dokładności to nie jest ten
+/// przypadek** — sprawdzone: pojedynczy odczyt uczciwie zgłaszający dwadzieścia
+/// metrów błędu, nawet przesunięty o piętnaście metrów wzdłuż trasy, nie
+/// przepycha marszu przez próg. Winny jest odczyt, który **kłamie o własnej
+/// dokładności** — zgłasza osiem–dziesięć metrów, mając naprawdę
+/// dwadzieścia pięć–trzydzieści pięć. To nie jest wymysł: odbiornik pod
+/// drzewami albo między budynkami traci wielotorowość na chwilę i dogania
+/// własną ocenę błędu o odczyt później, a dokładnie tam kadencja „w marszu"
+/// (5 s) zdarza się w terenie. Filtr pozycji ufa zgłoszonej dokładności
+/// dosłownie — nie ma jak sprawdzić, że kłamie — więc bierze taki odczyt z
+/// wysokim wzmocnieniem i przesuwa się za nim naprawdę daleko.
+///
+/// Zmierzone na tym właśnie przypadku: rześki marsz (6 km/h), jeden odczyt na
+/// dziewiątym kroku zgłasza osiem metrów dokładności, mając dwadzieścia pięć
+/// błędu. Nieuśredniona różnica dwóch punktów skacze do **13,6 km/h** —
+/// niemal dwa razy więcej niż prawda. Waga jeden do pięciu ścina to do
+/// **6,85 km/h**, z zapasem pod progiem biegu (7,2 km/h) nawet przy błędzie
+/// sięgającym trzydziestu pięciu metrów.
+///
+/// Cena: prawdziwa zmiana tempa (naprawdę zaczęte bieganie) dochodzi do
+/// właściwej wartości po czterech odczytach — dwudziestu sekundach przy
+/// marszu, czterech przy walce, gdzie kadencja i tak przyspiesza do jednej
+/// sekundy.
+const double kSpeedSmoothing = 0.2;
+
 /// Smooths a stream of fixes and decides what counts as movement.
 ///
 /// One instance per session: it carries the estimate and the recent path.
@@ -91,6 +124,7 @@ class FixFilter {
     this.minSamples = 7,
     this.straightnessGate = 0.7,
     this.processNoiseMps = 2.0,
+    this.speedSmoothing = kSpeedSmoothing,
   });
 
   /// §3.2. A fix with a worse claimed accuracy is dropped outright.
@@ -126,8 +160,17 @@ class FixFilter {
   /// standing.
   final double processNoiseMps;
 
+  /// §5.6.1: waga jednego świeżego odczytu przy uśrednianiu prędkości —
+  /// patrz [kSpeedSmoothing].
+  final double speedSmoothing;
+
   double? _estLat;
   double? _estLon;
+
+  /// §5.6.1: prędkość, uśredniona osobno od pozycji. Null dopóki nic się
+  /// jeszcze nie ruszało — pierwszy odczyt ruchu ustawia ją wprost, bez
+  /// uśredniania z niczym.
+  double? _speedEstimateMps;
 
   /// Positional variance of the estimate, in square metres.
   double _variance = 0;
@@ -151,6 +194,7 @@ class FixFilter {
     _lastAccepted = null;
     _previous = null;
     _path.clear();
+    _speedEstimateMps = null;
   }
 
   FixOutcome accept(PositionFix raw) {
@@ -178,6 +222,9 @@ class FixFilter {
     _remember(smoothed);
 
     if (previous == null) {
+      // §5.6.1: bez tego stary uśredniacz zostałby z prędkością z poprzedniej
+      // sesji ruchu i przez chwilę kłamałby w drugą stronę.
+      _speedEstimateMps = null;
       return FixAccepted(
         fix: smoothed,
         movedM: 0,
@@ -188,6 +235,7 @@ class FixFilter {
     }
 
     if (_looksStationary()) {
+      _speedEstimateMps = null;
       return FixAccepted(
         fix: smoothed,
         movedM: 0,
@@ -199,10 +247,31 @@ class FixFilter {
 
     final moved = previous.distanceTo(smoothed);
     final seconds = interval.inMicroseconds / Duration.microsecondsPerSecond;
+    final instant = seconds > 0 ? moved / seconds : 0.0;
+
+    // §5.6.1: pierwszy odczyt ruchu po bezruchu ustawia uśredniacz wprost —
+    // uśrednianie z zerem opóźniłoby wykrycie prawdziwego startu, a to jest
+    // dokładnie odwrotny błąd od tego, który ten uśredniacz naprawia.
+    //
+    // ⚠️ **Tłumione są tylko wzrosty.** Zejście w dół przepuszczane jest od
+    // razu — bo fałszywy odczyt potrafi tylko *dokleić* metry, których nie
+    // było, nigdy ich odjąć: zwolnienie czy prawdziwe zatrzymanie nigdy nie
+    // jest tym samym rodzajem kłamstwa co skok. Symetryczne tłumienie
+    // znalazło się w tym pliku i zaraz je wyleciało: kadencja próbkowania
+    // czeka na prędkość poniżej 0,5 km/h, żeby przejść na rzadsze pytanie
+    // odbiornika (§3.3), a filtr pozycji i tak już gaśnie powoli po biegu —
+    // drugie tłumienie na to samo dokładało spowolnienie do spowolnienia i
+    // zdarzało się, że kadencja nie schodziła w sto sekund testu, w którym
+    // dotąd schodziła.
+    final speed = _speedEstimateMps == null || instant < _speedEstimateMps!
+        ? instant
+        : _speedEstimateMps! + speedSmoothing * (instant - _speedEstimateMps!);
+    _speedEstimateMps = speed;
+
     return FixAccepted(
       fix: smoothed,
       movedM: moved,
-      speedMps: seconds > 0 ? moved / seconds : 0,
+      speedMps: speed,
       stationary: false,
       interval: interval,
     );

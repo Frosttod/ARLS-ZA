@@ -15,7 +15,7 @@ Różnica jest istotna, bo w kilkunastu miejscach **świadomie odeszliśmy od do
 
 ⚠️ **Reguła utrzymania tego pliku:** liczba zmieniona w kodzie i nieprzeniesiona tutaj czyni ten dokument gorszym niż jego brak. Przy każdej zmianie stałej — aktualizuj sekcję.
 
-**Stan:** 2667 testów · schemat bazy **v37** · etapy 0–2 zamknięte, 3–6 i 8 przed testem w terenie.
+**Stan:** 2672 testy · schemat bazy **v37** · etapy 0–2 zamknięte, 3–6 i 8 przed testem w terenie.
 
 ---
 
@@ -329,6 +329,39 @@ Postać śpi, gdy **jednocześnie**:
 Noc wyliczana offline ze wschodu i zachodu słońca dla szerokości geograficznej i daty. **Naturalna sezonowość bez żadnego modyfikatora**: 21 czerwca w Poznaniu noc trwa 7,4 h (dług narasta mimo schronu), 21 grudnia 16,6 h.
 
 **Wybudza:** rozpoczęcie czegokolwiek (budowa, crafting, lektura, jedzenie, opatrunek, przeszukanie) albo wyjście ze strefy.
+
+### 3.2a. Prędkość jest uśredniona, nie jednym odczytem (§5.6.1, §3.2)
+
+⚠️ **Zgłoszone z terenu: „idę stałym tempem, a licznik hałasu pokazuje 40 m" —
+czyli bieg, którego nie było.** Prędkość liczyła się jako jedna różnica dwóch
+punktów (`przesunięcie ÷ interwał`) — pochodna z sygnału, którego samo
+położenie jest wygładzone Kalmanem, ale prędkość z niego liczona nie była
+wygładzona wcale.
+
+⚠️ **Zwykły szum w granicach zgłoszonej dokładności to nie jest ten
+przypadek** — sprawdzone: odczyt uczciwie zgłaszający swój błąd, nawet spory,
+nie przepycha marszu przez próg. Winny jest odczyt, który **kłamie o własnej
+dokładności** — zgłasza osiem–dziesięć metrów, mając naprawdę dwadzieścia
+pięć–trzydzieści pięć. Odbiornik pod drzewami albo między budynkami traci
+wielotorowość na chwilę i dogania własną ocenę błędu odczyt później, a
+dokładnie tam kadencja „w marszu" (5 s) zdarza się w terenie.
+
+Zmierzone na tym przypadku: rześki marsz (6 km/h), jeden odczyt zgłasza osiem
+metrów dokładności, mając dwadzieścia pięć błędu. Nieuśredniona różnica dwóch
+punktów skacze do **13,6 km/h**. Waga jeden do pięciu (`kSpeedSmoothing`)
+ścina to do **6,85 km/h**, z zapasem pod progiem biegu (7,2 km/h) nawet przy
+błędzie sięgającym trzydziestu pięciu metrów.
+
+⚠️ **Tłumione są tylko wzrosty.** Zejście w dół przepuszczane jest od razu —
+fałszywy odczyt potrafi tylko dokleić metry, których nie było, nigdy ich
+odjąć. Symetryczne tłumienie próbowano najpierw i zaraz wyleciało: dokładało
+spowolnienie do spowolnienia, które i tak już powoli gaśnie po biegu, i
+kadencja próbkowania (§3.3) przestawała schodzić do rzadszego pytania
+odbiornika w oknie, w którym dotąd schodziła.
+
+Cena: prawdziwa zmiana tempa (naprawdę zaczęte bieganie) dochodzi do
+właściwej wartości po czterech odczytach — dwudziestu sekundach przy marszu,
+czterech przy walce, gdzie kadencja i tak przyspiesza do jednej sekundy.
 
 ### 5.1a. Noc, której nikt nie widział (§2.5.1, §11.1.2)
 
