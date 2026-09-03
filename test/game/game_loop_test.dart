@@ -988,6 +988,87 @@ void main() {
       expect(mark!.isAfter(t0), isTrue);
     });
 
+    test(
+      'a drink absorbs while the app is closed, not only while open (§2.2)',
+      () async {
+        // ⚠️ Zgłoszenie: „po dwudziestu minutach woda powinna już być
+        // wchłonięta". Dwadzieścia pięć mililitrów na minutę (§2.2) razy
+        // dwadzieścia minut to dokładnie pięćset — cała butelka. Test świadomie
+        // sprawdza to zamkniętą aplikacją, bo to jest cała treść zgłoszenia:
+        // nie „czy wchłanianie działa", tylko „czy działa, gdy nikt nie patrzy".
+        final thirsty = SimState.fresh(
+          at: t0,
+          constants: constants,
+          massKg: 80,
+        ).copyWith(waterMl: constants.waterDailyMl - 1000);
+
+        final rig = await buildLoop(initial: thirsty);
+        addTearDown(() async {
+          await rig.loop.dispose();
+          await rig.source.dispose();
+          await rig.session.close();
+        });
+
+        await rig.loop.start();
+        final before = rig.loop.state.waterMl;
+
+        // Wypija butelkę — trafia do żołądka, nie od razu do bilansu.
+        rig.loop.applyUse(waterMl: 500);
+        expect(rig.loop.state.pendingWaterMl, 500);
+        expect(
+          rig.loop.state.waterMl,
+          before,
+          reason: 'jeszcze nic nie wchłonięte w chwili wypicia',
+        );
+
+        // Zamyka aplikację na dwadzieścia minut.
+        await rig.loop.onPaused(rig.wall.nowUtc());
+        rig.wall.advance(const Duration(minutes: 20));
+        await rig.loop.onResumed();
+
+        expect(
+          rig.loop.state.pendingWaterMl,
+          0,
+          reason: 'dwadzieścia minut przy 25 ml/min to cała butelka',
+        );
+        // Nie dokładnie +500: te same dwadzieścia minut to też dwadzieścia
+        // minut normalnego bilansu podstawowego (§2.1), który i tak by
+        // upłynął, z aplikacją otwartą czy nie. Wchłonięcie liczy się na to
+        // samo konto, nie osobno — stąd „prawie +500", a nie „dokładnie".
+        expect(
+          rig.loop.state.waterMl,
+          greaterThan(before + 460),
+          reason:
+              'wchłanianie liczy się przy zamkniętej aplikacji, nie tylko '
+              'przy otwartej',
+        );
+      },
+    );
+
+    test('a big meal is still absorbing after twenty minutes, and that is '
+        'correct (§2.2)', () async {
+      // ⚠️ **Nie każde „jeszcze nie w pełni" jest usterką.** Osiemset
+      // kilokalorii przy ośmiu na minutę to sto minut do wchłonięcia —
+      // dwadzieścia minut daje sto sześćdziesiąt, nie osiemset. To jest
+      // model, nie błąd: §4.7 mówi wprost, że wielki posiłek to coś, co
+      // się je przed potrzebą, a nie w jej trakcie.
+      final rig = await buildLoop();
+      addTearDown(() async {
+        await rig.loop.dispose();
+        await rig.source.dispose();
+        await rig.session.close();
+      });
+
+      await rig.loop.start();
+      rig.loop.applyUse(kcal: 800);
+
+      await rig.loop.onPaused(rig.wall.nowUtc());
+      rig.wall.advance(const Duration(minutes: 20));
+      await rig.loop.onResumed();
+
+      expect(rig.loop.state.pendingKcal, closeTo(640, 1));
+    });
+
     test('resuming catches up the time spent away', () async {
       final rig = await buildLoop();
       addTearDown(() async {
