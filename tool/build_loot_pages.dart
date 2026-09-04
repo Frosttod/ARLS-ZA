@@ -27,6 +27,8 @@ import 'package:arls_za/items/item_names.dart';
 import 'package:arls_za/loot/loot_table.dart';
 import 'package:arls_za/loot/obstacle.dart';
 
+import 'site_page.dart';
+
 const String kSiteDir = '../ARLS-ZA-Game';
 const String kLootTablesAsset = 'assets/data/loot_tables.json';
 
@@ -105,93 +107,68 @@ String _page(
 
   final buffer = StringBuffer();
 
-  buffer.writeln('<!doctype html>');
-  buffer.writeln('<html lang="$language">');
-  buffer.writeln('<head>');
-  buffer.writeln('<meta charset="utf-8">');
-  buffer.writeln(
-    '<meta name="viewport" content="width=device-width, initial-scale=1">',
+  buffer.write(
+    sitePageOpen(
+      pl: pl,
+      pageFile: 'loot.html',
+      title: pl ? 'Gdzie czego szukać' : 'Where to find it',
+      subtitle: pl
+          ? 'Tabele łupów · każde miejsce, każdy przedmiot'
+          : 'Loot tables · every place, every item',
+      description: pl
+          ? 'Każde miejsce do przeszukania w ARLS-ZA i co się w nim znajduje — prosto z tabel łupów gry.'
+          : 'Every searchable place in ARLS-ZA and what it holds — straight from '
+                'the loot tables the game rolls against.',
+      eyebrow: '${tables.tables.length} ${pl ? 'miejsc' : 'places'}',
+      thesis: [
+        pl
+            ? '<strong>Każdy wpis tutaj to ten, który wczytuje przeszukanie w grze.</strong> Strona powstaje z <code>assets/data/loot_tables.json</code> przez te same klasy, których używa silnik gry — tabela, która nie przejdzie walidacji, nie trafi na stronę.'
+            : '<strong>Every entry here is the one a search in the game actually rolls against.</strong> The page is generated from <code>assets/data/loot_tables.json</code> through the same classes the engine uses — a table that fails validation never reaches the page.',
+        pl
+            ? '<a href="${root}items.html">Pełny katalog przedmiotów →</a>'
+            : '<a href="${root}items.html">The full item catalogue →</a>',
+      ],
+      railTitle: pl ? 'Miejsca' : 'Places',
+      rail: [
+        RailEntry(anchor: 'real', label: pl ? 'Realne miejsca' : 'Real places'),
+        for (final table in real)
+          RailEntry(anchor: table.id, label: _title(table.id, pl)),
+        RailEntry(
+          anchor: 'procedural',
+          label: pl ? 'Warstwa proceduralna' : 'Procedural layer',
+        ),
+        for (final table in procedural)
+          RailEntry(anchor: table.id, label: _title(table.id, pl)),
+      ],
+    ),
   );
-  buffer.writeln(
-    '<title>${pl ? 'Gdzie czego szukać' : 'Where to find it'} — ARLS-ZA</title>',
-  );
-  buffer.writeln(
-    '<meta name="description" content="${pl ? 'Każde miejsce do przeszukania w ARLS-ZA i co się w nim znajduje — prosto z tabel łupów gry.' : 'Every searchable place in ARLS-ZA and what it holds — straight from the game'
-              "'"
-              's own loot tables.'}">',
-  );
-  buffer.writeln('<meta name="color-scheme" content="light">');
-  buffer.writeln('<link rel="stylesheet" href="${root}assets/site.css">');
-  buffer.writeln('</head>');
-  buffer.writeln('<body>');
 
-  buffer.writeln('<header class="hero">');
-  buffer.writeln('  <div class="hero__inner">');
-  buffer.writeln('    <div class="hero__meta eyebrow">');
+  buffer.writeln('      <section class="sec">');
+  buffer.writeln('        <div class="stats">');
   buffer.writeln(
-    '      <span><a href="${root}index.html">← ARLS-ZA</a></span>',
+    '          <div class="stat"><b>${real.length}</b><span>${escapeHtml(pl ? 'realne miejsca (OSM)' : 'real places (OSM)')}</span></div>',
   );
   buffer.writeln(
-    '      <span>${tables.tables.length} ${pl ? 'miejsc' : 'places'}</span>',
-  );
-  buffer.writeln('      <nav class="langs" aria-label="Language">');
-  buffer.writeln(
-    '        <a href="${pl ? '../loot.html' : 'loot.html'}"${pl ? '' : ' aria-current="true"'} hreflang="en">EN</a>',
+    '          <div class="stat"><b>${procedural.length}</b><span>${escapeHtml(pl ? 'punkty proceduralne' : 'procedural points')}</span></div>',
   );
   buffer.writeln(
-    '        <a href="${pl ? 'loot.html' : 'pl/loot.html'}"${pl ? ' aria-current="true"' : ''} hreflang="pl">PL</a>',
+    '          <div class="stat"><b>${uniqueItems.length}</b><span>${escapeHtml(pl ? 'różnych przedmiotów w obiegu' : 'distinct items in circulation')}</span></div>',
   );
-  buffer.writeln('      </nav>');
-  buffer.writeln('    </div>');
-  buffer.writeln('    <h1><span class="hero__title">');
-  buffer.writeln(pl ? 'Gdzie czego szukać' : 'Where to find it');
-  buffer.writeln('    </span></h1>');
-  buffer.writeln('    <p class="thesis">');
-  buffer.writeln(
-    pl
-        ? '<strong>Każdy wpis tutaj to ten, który wczytuje przeszukanie w grze.</strong> Strona powstaje z <code>assets/data/loot_tables.json</code> przez te same klasy, których używa silnik gry — tabela, która nie przejdzie walidacji, nie trafi na stronę.'
-        : '<strong>Every entry here is the one a search in the game actually rolls against.</strong> The page is generated from <code>assets/data/loot_tables.json</code> through the same classes the engine uses — a table that fails validation never reaches the page.',
-  );
-  buffer.writeln('    </p>');
-  buffer.writeln('    <p class="thesis">');
-  buffer.writeln(
-    pl
-        ? '<a href="${root}items.html">Pełny katalog przedmiotów →</a>'
-        : '<a href="${root}items.html">The full item catalogue →</a>',
-  );
-  buffer.writeln('    </p>');
-  buffer.writeln('  </div>');
-  buffer.writeln('</header>');
+  buffer.writeln('        </div>');
+  buffer.writeln('      </section>');
+  buffer.writeln();
 
-  buffer.writeln('<div class="shell"><div class="layout"><main id="content">');
-
-  buffer.writeln('<section class="sec">');
-  buffer.writeln('  <div class="stats">');
-  buffer.writeln(
-    '    <div class="stat"><b>${real.length}</b><span>${_escape(pl ? 'realne miejsca (OSM)' : 'real places (OSM)')}</span></div>',
+  _writeGroup(
+    buffer,
+    id: 'real',
+    eyebrow: pl ? 'Realne miejsca' : 'Real places',
+    heading: pl
+        ? 'Odczytane z mapy, nie wymyślone'
+        : 'Read off the map, not invented',
+    lede: pl
+        ? 'Tabele powiązane z tagami OpenStreetMap. Apteka na mapie jest apteką w grze, a to, gdzie mieszkasz, decyduje o tym, co znajdziesz.'
+        : 'Tables tied to OpenStreetMap tags. A pharmacy on the map is a pharmacy in the game, and where you live decides what you find.',
   );
-  buffer.writeln(
-    '    <div class="stat"><b>${procedural.length}</b><span>${_escape(pl ? 'punkty proceduralne' : 'procedural points')}</span></div>',
-  );
-  buffer.writeln(
-    '    <div class="stat"><b>${uniqueItems.length}</b><span>${_escape(pl ? 'różnych przedmiotów w obiegu' : 'distinct items in circulation')}</span></div>',
-  );
-  buffer.writeln('  </div>');
-  buffer.writeln('</section>');
-
-  buffer.writeln('<section class="sec" id="real">');
-  buffer.writeln('  <div class="sec__hd">');
-  buffer.writeln(
-    '    <span class="sec__no">${pl ? 'Realne miejsca' : 'Real places'}</span>',
-  );
-  buffer.writeln(
-    '    <h2>${pl ? 'Znalezione na mapie, nie wymyślone' : 'Read off the map, not invented'}</h2>',
-  );
-  buffer.writeln(
-    '    <p class="sec__lede">${_escape(pl ? 'Tabele powiązane z tagami OpenStreetMap. Apteka na mapie to apteka w grze.' : 'Tables tied to OpenStreetMap tags. A pharmacy on the map is a pharmacy in the game.')}</p>',
-  );
-  buffer.writeln('  </div>');
-  buffer.writeln('  <div class="prose">');
   for (final table in real) {
     _writeTable(
       buffer,
@@ -200,24 +177,21 @@ String _page(
       nameOf: nameOf,
       pl: pl,
       root: root,
+      eyebrow: pl ? 'Realne miejsce' : 'Real place',
     );
   }
-  buffer.writeln('  </div>');
-  buffer.writeln('</section>');
 
-  buffer.writeln('<section class="sec" id="procedural">');
-  buffer.writeln('  <div class="sec__hd">');
-  buffer.writeln(
-    '    <span class="sec__no">${pl ? 'Warstwa proceduralna' : 'Procedural layer'}</span>',
+  _writeGroup(
+    buffer,
+    id: 'procedural',
+    eyebrow: pl ? 'Warstwa proceduralna' : 'Procedural layer',
+    heading: pl
+        ? 'Dla miejsc, których OSM nie zna'
+        : 'For places OSM does not know',
+    lede: pl
+        ? 'Poniżej ośmiu punktów zainteresowania w promieniu 2 km uruchamia się warstwa oparta o obiekty obecne wszędzie: samochody, stodoły, śmietniki. Płaci 55% wagi rzadkich przedmiotów i nigdy nie wylosuje broni palnej ani zaawansowanej literatury — za to punktów jest więcej i wracają szybciej.'
+        : 'Below eight points of interest within 2 km, a layer built on objects that exist everywhere takes over: cars, barns, skips. It pays 55% weight on rare items and can never roll a firearm or advanced literature — in exchange there are more points and they come back sooner.',
   );
-  buffer.writeln(
-    '    <h2>${pl ? 'Dla miast, których OSM nie zna' : 'For towns OSM does not know'}</h2>',
-  );
-  buffer.writeln(
-    '    <p class="sec__lede">${_escape(pl ? 'Poniżej ośmiu punktów zainteresowania w promieniu 2 km ta warstwa zastępuje sklepy obiektami, które są wszędzie: samochodami, stodołami, śmietnikami. Płaci 55% wagi rzadkich przedmiotów i nie może wylosować broni palnej ani zaawansowanej literatury.' : 'Below eight points of interest within 2 km, this layer replaces shops with objects that exist everywhere: cars, barns, skips. It pays 55% weight on rare items and can never roll a firearm or advanced literature.')}</p>',
-  );
-  buffer.writeln('  </div>');
-  buffer.writeln('  <div class="prose">');
   for (final table in procedural) {
     _writeTable(
       buffer,
@@ -226,26 +200,41 @@ String _page(
       nameOf: nameOf,
       pl: pl,
       root: root,
+      eyebrow: pl ? 'Punkt proceduralny' : 'Procedural point',
     );
   }
-  buffer.writeln('  </div>');
-  buffer.writeln('</section>');
 
-  buffer.writeln('<footer class="foot">');
-  buffer.writeln('  <p class="foot__note">');
-  buffer.writeln(
-    pl
-        ? 'Strona generowana z danych gry przez <code>tool/build_loot_pages.dart</code>, tymi samymi klasami, które waliduje test <code>test/loot/loot_table_test.dart</code>. Udział procentowy to surowa waga wpisu w tabeli, przed modyfikatorami głębokości przeszukania i wprawy (§10.3.5) — realny rozkład jest bliższy pospolitym pozycjom, niż sugeruje goły procent. Zasady opisuje <a href="https://github.com/Frosttod/ARLS-ZA/blob/main/ARLS-ZA_design_doc_v2.md">dokument projektowy</a> (§10).'
-        : 'Generated from the game data by <code>tool/build_loot_pages.dart</code>, through the same classes <code>test/loot/loot_table_test.dart</code> validates against. The share is the entry\'s raw table weight, before the search-depth and scouting modifiers of §10.3.5 — the real distribution leans more common than the bare percentage suggests. The rules are in the <a href="https://github.com/Frosttod/ARLS-ZA/blob/main/ARLS-ZA_design_doc_v2.md">design document</a> (§10).',
+  buffer.write(
+    sitePageClose(
+      pl: pl,
+      pageFile: 'loot.html',
+      note: pl
+          ? 'Strona generowana z danych gry przez <code>tool/build_loot_pages.dart</code>, tymi samymi klasami, które sprawdza <code>test/loot/loot_table_test.dart</code>. Udział procentowy to surowa waga wpisu w tabeli, przed modyfikatorami głębokości przeszukania i wprawy (§10.3.5) — realny rozkład jest bliższy pospolitym pozycjom, niż sugeruje goły procent. Zasady opisuje <a href="https://github.com/Frosttod/ARLS-ZA/blob/main/ARLS-ZA_design_doc_v2.md">dokument projektowy</a> (§10).'
+          : 'Generated from the game data by <code>tool/build_loot_pages.dart</code>, through the same classes <code>test/loot/loot_table_test.dart</code> checks. The share is the entry\'s raw table weight, before the search-depth and scouting modifiers of §10.3.5 — the real distribution leans more common than the bare percentage suggests. The rules are in the <a href="https://github.com/Frosttod/ARLS-ZA/blob/main/ARLS-ZA_design_doc_v2.md">design document</a> (§10).',
+    ),
   );
-  buffer.writeln('  </p>');
-  buffer.writeln('</footer>');
-
-  buffer.writeln('</main></div></div>');
-  buffer.writeln('</body>');
-  buffer.writeln('</html>');
 
   return buffer.toString();
+}
+
+/// The heading that opens a group of places, in the shape `index.html` uses.
+void _writeGroup(
+  StringBuffer buffer, {
+  required String id,
+  required String eyebrow,
+  required String heading,
+  required String lede,
+}) {
+  buffer.writeln('      <section class="sec" id="$id">');
+  buffer.writeln('        <div class="sec__hd">');
+  buffer.writeln(
+    '          <span class="sec__no">${escapeHtml(eyebrow)}</span>',
+  );
+  buffer.writeln('          <h2>${escapeHtml(heading)}</h2>');
+  buffer.writeln('          <p class="sec__lede">${escapeHtml(lede)}</p>');
+  buffer.writeln('        </div>');
+  buffer.writeln('      </section>');
+  buffer.writeln();
 }
 
 void _writeTable(
@@ -255,14 +244,11 @@ void _writeTable(
   required String Function(String id) nameOf,
   required bool pl,
   required String root,
+  required String eyebrow,
 }) {
   final entries = table.entries.toList()
     ..sort((a, b) => b.weight.compareTo(a.weight));
   final total = entries.fold<double>(0, (sum, e) => sum + e.weight);
-
-  buffer.writeln(
-    '    <h3 id="${table.id}">${_escape(_title(table.id, pl))}</h3>',
-  );
 
   final meta = <String>[
     if (table.barrier != null)
@@ -280,26 +266,35 @@ void _writeTable(
           ? 'widoczne dopiero po rozpoznaniu'
           : 'visible only after reconnaissance',
   ];
-  buffer.writeln('    <p class="sec__lede">${_escape(meta.join(' · '))}</p>');
+  buffer.writeln('      <section class="sec" id="${table.id}">');
+  buffer.writeln('        <div class="sec__hd">');
+  buffer.writeln(
+    '          <span class="sec__no">${escapeHtml(eyebrow)}</span>',
+  );
+  buffer.writeln('          <h2>${escapeHtml(_title(table.id, pl))}</h2>');
+  buffer.writeln(
+    '          <p class="sec__lede">${escapeHtml(meta.join(' · '))}</p>',
+  );
+  buffer.writeln('        </div>');
 
-  buffer.writeln('    <div class="scroller">');
-  buffer.writeln('      <table class="tbl">');
-  buffer.write('        <thead><tr>');
+  buffer.writeln('        <div class="scroller">');
+  buffer.writeln('          <table class="tbl">');
+  buffer.write('            <thead><tr>');
   buffer.write('<th scope="col">${pl ? 'Przedmiot' : 'Item'}</th>');
   buffer.write('<th scope="col">${pl ? 'Rzadkość' : 'Rarity'}</th>');
   buffer.write('<th scope="col" class="n">${pl ? 'Ilość' : 'Qty'}</th>');
   buffer.write('<th scope="col" class="n">${pl ? 'Udział' : 'Share'}</th>');
   buffer.writeln('</tr></thead>');
-  buffer.writeln('        <tbody>');
+  buffer.writeln('            <tbody>');
   for (final entry in entries) {
     final item = catalogue[entry.itemId];
     final share = total <= 0 ? 0.0 : entry.weight / total * 100;
     final qty = entry.min == entry.max
         ? '${entry.min}'
         : '${entry.min}–${entry.max}';
-    buffer.write('          <tr>');
+    buffer.write('              <tr>');
     buffer.write(
-      '<th scope="row"><a href="${root}items.html#item-${entry.itemId}">${_escape(nameOf(entry.itemId))}</a></th>',
+      '<th scope="row"><a href="${root}items.html#item-${entry.itemId}">${escapeHtml(nameOf(entry.itemId))}</a></th>',
     );
     buffer.write(
       '<td>${item == null ? '—' : _rarityLabel(item.rarity, pl)}</td>',
@@ -308,9 +303,11 @@ void _writeTable(
     buffer.write('<td class="n">${share.toStringAsFixed(1)}%</td>');
     buffer.writeln('</tr>');
   }
-  buffer.writeln('        </tbody>');
-  buffer.writeln('      </table>');
-  buffer.writeln('    </div>');
+  buffer.writeln('            </tbody>');
+  buffer.writeln('          </table>');
+  buffer.writeln('        </div>');
+  buffer.writeln('      </section>');
+  buffer.writeln();
 }
 
 // -------------------------------------------------------------- the pieces ---
@@ -379,8 +376,3 @@ String _rarityLabel(Rarity rarity, bool pl) => switch (rarity) {
   Rarity.rare => pl ? 'rzadki' : 'rare',
   Rarity.veryRare => pl ? 'bardzo rzadki' : 'very rare',
 };
-
-String _escape(String value) => value
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;');

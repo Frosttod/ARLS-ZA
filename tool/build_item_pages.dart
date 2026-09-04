@@ -19,6 +19,8 @@ library;
 import 'dart:convert';
 import 'dart:io';
 
+import 'site_page.dart';
+
 const String kSiteDir = '../ARLS-ZA-Game';
 
 const List<String> kFiles = [
@@ -105,102 +107,78 @@ String _page(
   final root = pl ? '../' : '';
   final buffer = StringBuffer();
 
-  buffer.writeln('<!doctype html>');
-  buffer.writeln('<html lang="$language">');
-  buffer.writeln('<head>');
-  buffer.writeln('<meta charset="utf-8">');
-  buffer.writeln(
-    '<meta name="viewport" content="width=device-width, initial-scale=1">',
-  );
-  buffer.writeln(
-    '<title>${pl ? 'Katalog przedmiotów' : 'Item catalogue'} — ARLS-ZA</title>',
-  );
-  buffer.writeln(
-    '<meta name="description" content="${pl ? 'Wszystkie przedmioty w ARLS-ZA z ich masą, objętością i parametrami — prosto z plików danych gry.' : 'Every item in ARLS-ZA with its mass, volume and figures — straight from the game data files.'}">',
-  );
-  buffer.writeln('<meta name="color-scheme" content="light">');
-  buffer.writeln('<link rel="stylesheet" href="${root}assets/site.css">');
-  buffer.writeln('</head>');
-  buffer.writeln('<body>');
+  final present = [
+    for (final kind in _kinds)
+      if (items.any((item) => item['type'] == kind.type)) kind,
+  ];
 
-  buffer.writeln('<header class="hero">');
-  buffer.writeln('  <div class="hero__inner">');
-  buffer.writeln('    <div class="hero__meta eyebrow">');
-  buffer.writeln(
-    '      <span><a href="${root}index.html">${pl ? '← ARLS-ZA' : '← ARLS-ZA'}</a></span>',
+  buffer.write(
+    sitePageOpen(
+      pl: pl,
+      pageFile: 'items.html',
+      title: pl ? 'Katalog przedmiotów' : 'Item catalogue',
+      subtitle: pl
+          ? 'Masa, objętość i parametry · prosto z danych gry'
+          : 'Mass, volume and figures · straight from the game data',
+      description: pl
+          ? 'Wszystkie przedmioty w ARLS-ZA z ich masą, objętością i parametrami — prosto z plików danych gry.'
+          : 'Every item in ARLS-ZA with its mass, volume and figures — straight from the game data files.',
+      eyebrow: '${items.length} ${pl ? 'przedmiotów' : 'items'}',
+      thesis: [
+        pl
+            ? '<strong>Każda liczba tutaj jest tą, którą wczytuje gra.</strong> Ta strona powstaje z <code>assets/data/*.json</code> — plików, które trafiają do aplikacji — więc nie ma jak rozjechać się z rozgrywką.'
+            : '<strong>Every figure here is the one the game loads.</strong> This page is generated from <code>assets/data/*.json</code>, the files that ship inside the app, so it cannot quietly drift out of step with play.',
+        pl
+            ? '<a href="${root}loot.html">Gdzie który przedmiot się znajduje →</a>'
+            : '<a href="${root}loot.html">Where each item is actually found →</a>',
+      ],
+      railTitle: pl ? 'Kategorie' : 'Categories',
+      rail: [
+        for (final kind in present)
+          RailEntry(anchor: kind.type, label: kind.title(pl)),
+      ],
+    ),
   );
-  buffer.writeln(
-    '      <span>${items.length} ${pl ? 'przedmiotów' : 'items'}</span>',
-  );
-  buffer.writeln('      <nav class="langs" aria-label="Language">');
-  buffer.writeln(
-    '        <a href="${pl ? '../items.html' : 'items.html'}"${pl ? '' : ' aria-current="true"'} hreflang="en">EN</a>',
-  );
-  buffer.writeln(
-    '        <a href="${pl ? 'items.html' : 'pl/items.html'}"${pl ? ' aria-current="true"' : ''} hreflang="pl">PL</a>',
-  );
-  buffer.writeln('      </nav>');
-  buffer.writeln('    </div>');
-  buffer.writeln('    <h1><span class="hero__title">');
-  buffer.writeln(pl ? 'Katalog przedmiotów' : 'Item catalogue');
-  buffer.writeln('    </span></h1>');
-  buffer.writeln('    <p class="thesis">');
-  buffer.writeln(
-    pl
-        ? '<strong>Każda liczba tutaj jest tą, którą wczytuje gra.</strong> Ta strona powstaje z <code>assets/data/*.json</code> — plików, które trafiają do aplikacji — więc nie ma jak rozjechać się z rozgrywką.'
-        : '<strong>Every figure here is the one the game loads.</strong> This page is generated from <code>assets/data/*.json</code>, the files that ship inside the app, so it cannot quietly drift out of step with play.',
-  );
-  buffer.writeln('    </p>');
-  buffer.writeln('    <p class="thesis">');
-  buffer.writeln(
-    pl
-        ? '<a href="${root}loot.html">Gdzie który przedmiot się znajduje →</a>'
-        : '<a href="${root}loot.html">Where each item is actually found →</a>',
-  );
-  buffer.writeln('    </p>');
-  buffer.writeln('  </div>');
-  buffer.writeln('</header>');
-
-  buffer.writeln('<div class="shell"><div class="layout"><main id="content">');
 
   // A count per kind, so the shape of the catalogue is visible before the
   // tables are read.
-  buffer.writeln('<section class="sec">');
-  buffer.writeln('  <div class="stats">');
-  for (final kind in _kinds) {
+  buffer.writeln('      <section class="sec">');
+  buffer.writeln('        <div class="stats">');
+  for (final kind in present) {
     final count = items.where((item) => item['type'] == kind.type).length;
-    if (count == 0) continue;
     buffer.writeln(
-      '    <div class="stat"><b>$count</b><span>${_escape(kind.title(pl))}</span></div>',
+      '          <div class="stat"><b>$count</b><span>${escapeHtml(kind.title(pl))}</span></div>',
     );
   }
-  buffer.writeln('  </div>');
-  buffer.writeln('</section>');
+  buffer.writeln('        </div>');
+  buffer.writeln('      </section>');
+  buffer.writeln();
 
-  for (final kind in _kinds) {
+  for (final kind in present) {
     final rows = items.where((item) => item['type'] == kind.type).toList()
       ..sort(
         (a, b) =>
             _name(a, names, language).compareTo(_name(b, names, language)),
       );
-    if (rows.isEmpty) continue;
 
-    buffer.writeln('<section class="sec" id="${kind.type}">');
-    buffer.writeln('  <div class="sec__hd">');
+    buffer.writeln('      <section class="sec" id="${kind.type}">');
+    buffer.writeln('        <div class="sec__hd">');
     buffer.writeln(
-      '    <span class="sec__no">${_escape(kind.title(pl))}</span>',
+      '          <span class="sec__no">${escapeHtml(kind.title(pl))}</span>',
     );
-    buffer.writeln('    <h2>${_escape(kind.heading(pl))}</h2>');
-    buffer.writeln('    <p class="sec__lede">${_escape(kind.lede(pl))}</p>');
-    buffer.writeln('  </div>');
-    buffer.writeln('  <div class="scroller">');
-    buffer.writeln('    <table class="tbl">');
+    buffer.writeln('          <h2>${escapeHtml(kind.heading(pl))}</h2>');
+    buffer.writeln(
+      '          <p class="sec__lede">${escapeHtml(kind.lede(pl))}</p>',
+    );
+    buffer.writeln('        </div>');
+    buffer.writeln('        <div class="scroller">');
+    buffer.writeln('          <table class="tbl">');
 
-    buffer.write('      <thead><tr>');
+    buffer.write('            <thead><tr>');
     buffer.write('<th scope="col">${pl ? 'Przedmiot' : 'Item'}</th>');
     for (final column in kind.columns) {
       buffer.write(
-        '<th scope="col" class="n">${_escape(column.title(pl))}</th>',
+        '<th scope="col" class="n">${escapeHtml(column.title(pl))}</th>',
       );
     }
     buffer.write(
@@ -210,44 +188,41 @@ String _page(
     );
     buffer.writeln('</tr></thead>');
 
-    buffer.writeln('      <tbody>');
+    buffer.writeln('            <tbody>');
     for (final item in rows) {
       final props = (item['props'] as Map<String, dynamic>?) ?? const {};
-      buffer.write('        <tr id="item-${item['id']}">');
+      buffer.write('              <tr id="item-${item['id']}">');
       buffer.write(
-        '<th scope="row">${_escape(_name(item, names, language))}</th>',
+        '<th scope="row">${escapeHtml(_name(item, names, language))}</th>',
       );
       for (final column in kind.columns) {
         buffer.write(
-          '<td class="n">${_escape(column.read(item, props, pl))}</td>',
+          '<td class="n">${escapeHtml(column.read(item, props, pl))}</td>',
         );
       }
       buffer.write(
         '<td class="n">${_mass(item)}</td>'
         '<td class="n">${_volume(item)}</td>'
-        '<td>${_escape(_tags(item, pl))}</td>',
+        '<td>${escapeHtml(_tags(item, pl))}</td>',
       );
       buffer.writeln('</tr>');
     }
-    buffer.writeln('      </tbody>');
-    buffer.writeln('    </table>');
-    buffer.writeln('  </div>');
-    buffer.writeln('</section>');
+    buffer.writeln('            </tbody>');
+    buffer.writeln('          </table>');
+    buffer.writeln('        </div>');
+    buffer.writeln('      </section>');
+    buffer.writeln();
   }
 
-  buffer.writeln('<footer class="foot">');
-  buffer.writeln('  <p class="foot__note">');
-  buffer.writeln(
-    pl
-        ? 'Strona generowana z danych gry przez <code>tool/build_item_pages.dart</code>. Nazwy pochodzą z <code>names.json</code>, reszta z plików kategorii. Zasady, które te liczby obsługują, opisuje <a href="https://github.com/Frosttod/ARLS-ZA/blob/main/ARLS-ZA_design_doc_v2.md">dokument projektowy</a>.'
-        : 'Generated from the game data by <code>tool/build_item_pages.dart</code>. Names come from <code>names.json</code>, everything else from the category files. The rules these figures feed are in the <a href="https://github.com/Frosttod/ARLS-ZA/blob/main/ARLS-ZA_design_doc_v2.md">design document</a>.',
+  buffer.write(
+    sitePageClose(
+      pl: pl,
+      pageFile: 'items.html',
+      note: pl
+          ? 'Strona generowana z danych gry przez <code>tool/build_item_pages.dart</code>. Nazwy pochodzą z <code>names.json</code>, reszta z plików kategorii. Zasady, które te liczby obsługują, opisuje <a href="https://github.com/Frosttod/ARLS-ZA/blob/main/ARLS-ZA_design_doc_v2.md">dokument projektowy</a>.'
+          : 'Generated from the game data by <code>tool/build_item_pages.dart</code>. Names come from <code>names.json</code>, everything else from the category files. The rules these figures feed are in the <a href="https://github.com/Frosttod/ARLS-ZA/blob/main/ARLS-ZA_design_doc_v2.md">design document</a>.',
+    ),
   );
-  buffer.writeln('  </p>');
-  buffer.writeln('</footer>');
-
-  buffer.writeln('</main></div></div>');
-  buffer.writeln('</body>');
-  buffer.writeln('</html>');
 
   return buffer.toString();
 }
@@ -700,8 +675,3 @@ String _tagName(String tag, bool pl) => pl
           }[tag] ??
           tag
     : tag;
-
-String _escape(String value) => value
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;');
