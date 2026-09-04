@@ -151,6 +151,13 @@ String _page(
         : '<strong>Every figure here is the one the game loads.</strong> This page is generated from <code>assets/data/*.json</code>, the files that ship inside the app, so it cannot quietly drift out of step with play.',
   );
   buffer.writeln('    </p>');
+  buffer.writeln('    <p class="thesis">');
+  buffer.writeln(
+    pl
+        ? '<a href="${root}loot.html">Gdzie który przedmiot się znajduje →</a>'
+        : '<a href="${root}loot.html">Where each item is actually found →</a>',
+  );
+  buffer.writeln('    </p>');
   buffer.writeln('  </div>');
   buffer.writeln('</header>');
 
@@ -206,7 +213,7 @@ String _page(
     buffer.writeln('      <tbody>');
     for (final item in rows) {
       final props = (item['props'] as Map<String, dynamic>?) ?? const {};
-      buffer.write('        <tr>');
+      buffer.write('        <tr id="item-${item['id']}">');
       buffer.write(
         '<th scope="row">${_escape(_name(item, names, language))}</th>',
       );
