@@ -130,7 +130,7 @@
   "hardcoreBody": "Death ends the character. Skills, shelter and stored gear are gone; the streak goes to the Chronicle.",
   "softcoreTitle": "Softcore",
   "softcoreBody": "You lose consciousness instead of dying. Skills and shelter survive; the streak resets.",
-    "kitTitle": "What you leave with",
+  "kitTitle": "What you leave with",
   "kitStepTools": "One tool",
   "kitStepMedical": "One dressing",
   "kitStepCombat": "One blade",
@@ -1772,5 +1772,23 @@
         "type": "int"
       }
     }
-  }
+  },
+  "safetyBriefingGo": "Head out",
+  "rulesTitle": "Rules of survival",
+  "rulesIntro": "Three things the first hour teaches. They stay true on the thirtieth day.",
+  "rulesStandTitle": "1. Stand still to shoot.",
+  "rulesStandBody": "Movement, a high heart rate and fatigue scatter your shots. The percentage above the button is real, and it is not the same number standing as it is walking.",
+  "rulesRunTitle": "2. You cannot outrun everything.",
+  "rulesRunBody": "Some of them sprint faster than you do — but not for longer than twenty-five seconds. Distance is a resource; so is their stamina.",
+  "rulesBodyTitle": "3. Your body is the controller.",
+  "rulesBodyBody": "The character has exactly as much left in it as you actually walked. Water, calories and sleep are counted while the app is closed.",
+  "settingsPrivacy": "Privacy",
+  "settingsTelemetry": "No telemetry",
+  "settingsTelemetryBody": "The game sends nothing anywhere. No accounts, no analytics, no crash reports. Your position, your body's figures and your shelter never leave this phone.",
+  "hintMapTitle": "This is your real neighbourhood. The green dot is you.",
+  "hintWalk": "The game sees you move. Walking burns calories and water.",
+  "hintLoot": "A yellow marker is supplies. Get closer to search it.",
+  "hintPack": "You have a weight limit. Going over will not slow you down — it will tire you sooner.",
+  "hintZone": "The red circle is a Decay Zone. It grows on its own. You do not have to go there — yet.",
+  "hintDusk": "Dusk. Be visible: light clothing, a reflective band, ears free."
 }

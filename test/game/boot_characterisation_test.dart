@@ -125,7 +125,17 @@ void main() {
     await open(tester, session: first.session, settings: first.settings);
     await tester.tap(find.text('Polski'));
     await beat(tester);
+    // §15.3: the tick, then the button. The briefing cannot be walked past —
+    // and the button sits below the rules, so the test has to travel past them
+    // exactly as a reader does.
     await tester.tap(find.text('Rozumiem i biorę to na siebie'));
+    await beat(tester);
+    await tester.dragUntilVisible(
+      find.text('Wychodzę'),
+      find.byType(ListView),
+      const Offset(0, -120),
+    );
+    await tester.tap(find.text('Wychodzę'));
     await beat(tester);
 
     // Same database, new session and new settings: a restart.
@@ -150,7 +160,17 @@ void main() {
     await open(tester, session: it.session, settings: it.settings);
     await tester.tap(find.text('Polski'));
     await beat(tester);
+    // §15.3: the tick, then the button. The briefing cannot be walked past —
+    // and the button sits below the rules, so the test has to travel past them
+    // exactly as a reader does.
     await tester.tap(find.text('Rozumiem i biorę to na siebie'));
+    await beat(tester);
+    await tester.dragUntilVisible(
+      find.text('Wychodzę'),
+      find.byType(ListView),
+      const Offset(0, -120),
+    );
+    await tester.tap(find.text('Wychodzę'));
     await beat(tester);
 
     // ⚠️ **A blank page.** Not a message, not a region picker, not an

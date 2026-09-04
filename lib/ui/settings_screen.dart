@@ -16,6 +16,7 @@ import '../l10n/app_localizations.dart';
 import '../location/location_access.dart';
 import '../location/system_permissions.dart';
 import 'app_settings.dart';
+import 'survival_rules.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({
@@ -204,6 +205,29 @@ class _SettingsScreenState extends State<SettingsScreen>
             title: Text(l10n.settingsMaps),
             trailing: const Icon(Icons.chevron_right),
             onTap: widget.onOpenMaps,
+          ),
+
+          // §15.7: the three rules, findable again on day thirty.
+          ListTile(
+            title: Text(l10n.rulesTitle),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const SurvivalRulesScreen(),
+              ),
+            ),
+          ),
+
+          // §16.5: stated rather than configurable, because there is no switch
+          // to offer — nothing is collected, so nothing can be opted out of.
+          const Divider(),
+          _Heading(l10n.settingsPrivacy),
+          ListTile(
+            title: Text(l10n.settingsTelemetry),
+            subtitle: Text(
+              l10n.settingsTelemetryBody,
+              style: theme.textTheme.bodySmall,
+            ),
           ),
 
           // §11.2: the simulator is opted into, and only where one exists.

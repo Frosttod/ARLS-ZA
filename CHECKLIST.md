@@ -1,7 +1,7 @@
 # ARLS-ZA — lista kontrolna systemów
 
 Stan na dzień **2026-08-28**. Wygenerowana po przejściu pełnego zestawu
-testów: **2676 testów, `flutter analyze` czysty, schemat bazy v37**.
+testów: **2689 testów, `flutter analyze` czysty, schemat bazy v37**.
 
 ⚠️ Liczby poniżej są zliczone z suite'a, nie przepisane z pamięci. Suma
 obszarów musi się zgadzać z ogółem — jeśli się nie zgadza, ten plik jest
@@ -23,10 +23,10 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 
 | Obszar | Testy | Co jest tam pilnowane |
 | :---- | ----: | :---- |
-| `ui` | 481 | HUD, ekwipunek, panele, arkusze, geometria dotknięć i pierścieni, notatki stanu, dziennik, niebo w panelu, zakres przebudów |
+| `ui` | 484 | HUD, ekwipunek, panele, arkusze, geometria dotknięć i pierścieni, notatki stanu, dziennik, niebo w panelu, zakres przebudów, **odprawa z checkboxem i zasady przetrwania z menu (§15.3, §15.7)** |
 | `combat` | 491 | tabela kalibracyjna §5.1.2 wiersz po wierszu, obrażenia §5.1.5, budżet sprintu, maszyna stanów, hałas, spawn, magazynek, dodatki, **odczyt panelu ognia**, **ciosy przy zgaszonym ekranie**, **pole widzenia, słuch i cios w plecy (§6.2, §5.5.1)**, Strefy Rozkładu: punktacja, wzrost, wysyp, kronika, **dwa kanały obrażeń i zasięg broni (§5.5.3)** |
 | `sim` | 350 | tick, metabolizm, tętno, wchłanianie, **dwa zegary snu**, **masa ciała i wychudzenie**, **osiągalność zgonu z głodu i pragnienia**, **kary za stan docierające do zegarów**, **nawyk gry mierzony, nie zakładany (§16.4)**, świt i zmierzch, **drabinka kar generowana z modelu (§2.3, §2.5.4)** |
-| `game` | 241 | pętla, kontrolery, jedna para rąk, integracja pozycji, dziennik, **wiązanie kontrolerów do profilu** |
+| `game` | 251 | pętla, kontrolery, jedna para rąk, integracja pozycji, dziennik, **wiązanie kontrolerów do profilu**, **podpowiedzi pierwszego kontaktu i przypomnienie o zmroku (§15.5, §3.5)** |
 | `loot` | 202 | tabele, spawner, przeszukanie, rzeczy na ziemi, rozrzut §10.2, przeszkody i czym się je otwiera, **żaden przedmiot bez realnej drogi w gęstym mieście** |
 | `inventory` | 136 | dwa limity §18.1a, sloty, porcje, dodatki, **zużycie narzędzia**, strony książki |
 | `shelter` | 104 | budowa, moduły, półka, stackowanie |
@@ -45,7 +45,7 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 | `notes` | 14 | notatki i lektura |
 | `l10n` | 7 | kolizje kluczy, brak twardej polszczyzny w kodzie |
 
-**Razem 2676.**
+**Razem 2689.**
 
 ### Rzeczy, które testy trzymają jako liczby, a nie jako intencje
 

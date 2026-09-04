@@ -71,7 +71,28 @@ void main() {
     expect(find.textContaining('Patrz na drogę'), findsOneWidget);
 
     await tester.tap(find.text('Rozumiem i biorę to na siebie'));
+    await tester.pump();
+    await tester.tap(find.text('Wychodzę'));
     expect(accepted, isTrue);
+  });
+
+  testWidgets('§15.3: the button is dead until the box is ticked', (
+    tester,
+  ) async {
+    var accepted = false;
+    await pumpBriefing(tester, onAccept: () => accepted = true);
+
+    // ⚠️ The whole point of §15.3's checkbox. A button at the foot of a list
+    // is pressed by a thumb travelling downwards; a box has to be aimed at.
+    await tester.tap(find.text('Wychodzę'));
+    await tester.pump();
+    expect(accepted, isFalse);
+
+    expect(
+      tester.widget<FilledButton>(find.byType(FilledButton)).onPressed,
+      isNull,
+      reason: 'a disabled control says "not yet" without spending a tap on it',
+    );
   });
 
   testWidgets('reads in English too', (tester) async {
@@ -79,5 +100,6 @@ void main() {
 
     expect(find.text('Before you go out'), findsOneWidget);
     expect(find.text('I understand and accept this'), findsOneWidget);
+    expect(find.text('Head out'), findsOneWidget);
   });
 }

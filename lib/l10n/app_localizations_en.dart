@@ -2619,4 +2619,69 @@ class L10nEn extends L10n {
   String combatHurtAway(int blows) {
     return 'They were on you while the screen was off: $blows blows';
   }
+
+  @override
+  String get safetyBriefingGo => 'Head out';
+
+  @override
+  String get rulesTitle => 'Rules of survival';
+
+  @override
+  String get rulesIntro =>
+      'Three things the first hour teaches. They stay true on the thirtieth day.';
+
+  @override
+  String get rulesStandTitle => '1. Stand still to shoot.';
+
+  @override
+  String get rulesStandBody =>
+      'Movement, a high heart rate and fatigue scatter your shots. The percentage above the button is real, and it is not the same number standing as it is walking.';
+
+  @override
+  String get rulesRunTitle => '2. You cannot outrun everything.';
+
+  @override
+  String get rulesRunBody =>
+      'Some of them sprint faster than you do — but not for longer than twenty-five seconds. Distance is a resource; so is their stamina.';
+
+  @override
+  String get rulesBodyTitle => '3. Your body is the controller.';
+
+  @override
+  String get rulesBodyBody =>
+      'The character has exactly as much left in it as you actually walked. Water, calories and sleep are counted while the app is closed.';
+
+  @override
+  String get settingsPrivacy => 'Privacy';
+
+  @override
+  String get settingsTelemetry => 'No telemetry';
+
+  @override
+  String get settingsTelemetryBody =>
+      'The game sends nothing anywhere. No accounts, no analytics, no crash reports. Your position, your body\'s figures and your shelter never leave this phone.';
+
+  @override
+  String get hintMapTitle =>
+      'This is your real neighbourhood. The green dot is you.';
+
+  @override
+  String get hintWalk =>
+      'The game sees you move. Walking burns calories and water.';
+
+  @override
+  String get hintLoot =>
+      'A yellow marker is supplies. Get closer to search it.';
+
+  @override
+  String get hintPack =>
+      'You have a weight limit. Going over will not slow you down — it will tire you sooner.';
+
+  @override
+  String get hintZone =>
+      'The red circle is a Decay Zone. It grows on its own. You do not have to go there — yet.';
+
+  @override
+  String get hintDusk =>
+      'Dusk. Be visible: light clothing, a reflective band, ears free.';
 }

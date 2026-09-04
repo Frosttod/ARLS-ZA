@@ -123,6 +123,8 @@ import 'ui/safety_briefing.dart';
 import 'ui/effects.dart';
 import 'ui/hotspot_sheet.dart';
 import 'ui/game_screen.dart';
+import 'game/bench_inputs.dart';
+import 'ui/hint_nudger.dart';
 import 'ui/hud.dart';
 import 'ui/status_notes.dart';
 import 'ui/inventory_screen.dart';
@@ -310,7 +312,16 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   ValueNotifier<List<Shelter>> get _shelters => _places.shelters;
 
   /// §12: what the game has just said. Under the HUD, never over the menu.
-  final ValueNotifier<List<Notice>> _notices = ValueNotifier(const []);
+  final NoticeBoard _notices = NoticeBoard();
+
+  /// §15.5, §3.5: the first-contact hints, and the dusk reminder.
+  late final HintNudger _hints = HintNudger(
+    widget.session.db,
+    say: _say,
+    standingAt: _standingAt,
+    boxes: _loot.boxes,
+    zones: _fires.hotspots,
+  );
 
   /// §5.5, §6.1a: everything hostile that is out there, and what it is doing.
   ///
@@ -919,6 +930,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     _useSimulator = simulatorEnabled(
       await widget.session.db.readSetting(kSimulatorSettingKey),
     );
+    await _hints.load();
     if (!mounted) return;
 
     // Read once. A problem here is a shipped data file being wrong, which the
@@ -1187,6 +1199,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       unawaited(_advanceSearch());
       _tellLoopWhatWeAreDoing();
       _tellLoopWhereWeAre();
+      unawaited(_hints.nudge(L10n.of(context), snapshot));
       unawaited(_settleDown(snapshot));
       unawaited(_spawnLoot(snapshot));
       _advanceCombat(snapshot);
@@ -1402,6 +1415,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     // answer this screen can give before the tap rather than after it.
     if (_shelvesInReach()) await _loadShelvesOfMain();
     if (!mounted) return;
+    unawaited(_hints.openedPack(L10n.of(context)));
 
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -4126,11 +4140,11 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   ///
   /// The inputs are all immutable and replaced wholesale, so comparing the
   /// references answers "has anything changed" exactly and in constant time.
-  /// The one thing that is not a reference is the clock, and [_BenchInputs]
+  /// The one thing that is not a reference is the clock, and [BenchInputs]
   /// says why that is safe.
   CraftBench _bench() {
     final now = DateTime.now().toUtc();
-    final inputs = _BenchInputs(
+    final inputs = BenchInputs(
       shelters: _shelters.value,
       standingAt: _standingAt.value,
       inventory: _inventory.value,
@@ -4150,7 +4164,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     return bench;
   }
 
-  ({_BenchInputs inputs, CraftBench bench, DateTime madeAt})? _benchCache;
+  ({BenchInputs inputs, CraftBench bench, DateTime madeAt})? _benchCache;
 
   CraftBench _computeBench(DateTime now) {
     final main = _mainShelter();
@@ -5784,17 +5798,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// last minute back, which is why [remember] exists at all.
   void _say(String message, {bool remember = false}) {
     if (remember) _logCombat(message);
-    if (!mounted) return;
-
-    final notice = Notice(message, DateTime.now());
-    _notices.value = [notice, ..._notices.value];
-
-    Timer(kNoticeLifetime, () {
-      if (!mounted) return;
-      _notices.value = _notices.value
-          .where((other) => !identical(other, notice))
-          .toList();
-    });
+    if (mounted) _notices.say(message);
   }
 
   /// Sends the player wherever the current refusal can actually be changed.
@@ -6252,7 +6256,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         hud: snapshot == null
             ? null
             : _hud(snapshot, character, l10n, inTheField: true),
-        notices: _notices,
+        notices: _notices.lines,
         onMenu: _onMenu,
         overlay: dev == null ? null : _devOverlay(dev, snapshot),
       );
@@ -6348,63 +6352,4 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// §12: what the strip under the bars is saying, if anything.
   List<String> _warnings(L10n l10n, GameSnapshot snapshot) =>
       hudWarnings(l10n, snapshot, location: _permissions?.location);
-}
-
-/// What the crafting bench is made of, for deciding whether to make it again.
-///
-/// Every field is an immutable value replaced wholesale when it changes, so
-/// reference equality is exact: two of these are equal precisely when nothing
-/// the bench reads has moved.
-///
-/// ⚠️ The clock is deliberately not in here. Only one thing the bench reads
-/// depends on it — whether a shelter is finished (§8.3) — and that changes at
-/// most once in three hours. A cache entry is held for a second so that a
-/// build finishing is noticed promptly without making the clock an input, and
-/// a second is far below anything a player can act on.
-class _BenchInputs {
-  const _BenchInputs({
-    required this.shelters,
-    required this.standingAt,
-    required this.inventory,
-    required this.stash,
-    required this.search,
-    required this.reload,
-    required this.job,
-  });
-
-  final List<Shelter> shelters;
-  final GeoPoint? standingAt;
-  final Inventory inventory;
-  final Stash stash;
-  final Search? search;
-  final Reload? reload;
-  final CraftJob? job;
-
-  @override
-  bool operator ==(Object other) =>
-      other is _BenchInputs &&
-      identical(other.shelters, shelters) &&
-      identical(other.standingAt, standingAt) &&
-      identical(other.inventory, inventory) &&
-      identical(other.stash, stash) &&
-      identical(other.search, search) &&
-      identical(other.reload, reload) &&
-      identical(other.job, job);
-
-  @override
-  int get hashCode => Object.hash(
-    identityHashCode(shelters),
-    identityHashCode(standingAt),
-    identityHashCode(inventory),
-    identityHashCode(stash),
-    identityHashCode(search),
-    identityHashCode(reload),
-    identityHashCode(job),
-  );
-}
-
-extension on ({_BenchInputs inputs, CraftBench bench, DateTime madeAt}) {
-  /// Whether this entry is young enough to trust. See [_BenchInputs].
-  bool freshAt(DateTime now) =>
-      now.difference(madeAt) < const Duration(seconds: 1);
 }

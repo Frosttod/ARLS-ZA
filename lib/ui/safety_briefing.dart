@@ -9,16 +9,27 @@
 /// * **It is accepted, not dismissed.** There is no close button, no back
 ///   gesture out of it and no "later". The alternative is a player walking into
 ///   traffic having agreed to nothing.
+/// * **A tick, not a tap.** §15.3 asks for a checkbox rather than a bare
+///   "Next", and the difference is not decoration: a button at the end of a
+///   list is pressed by a thumb travelling downwards, while a box has to be
+///   aimed at. The button stays dead until it is ticked.
 library;
 
 import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
 
-class SafetyBriefingScreen extends StatelessWidget {
+class SafetyBriefingScreen extends StatefulWidget {
   const SafetyBriefingScreen({required this.onAccept, super.key});
 
   final VoidCallback onAccept;
+
+  @override
+  State<SafetyBriefingScreen> createState() => _SafetyBriefingScreenState();
+}
+
+class _SafetyBriefingScreenState extends State<SafetyBriefingScreen> {
+  var _taken = false;
 
   @override
   Widget build(BuildContext context) {
@@ -70,10 +81,23 @@ class SafetyBriefingScreen extends StatelessWidget {
                     ],
                   ),
                 ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 8),
+              CheckboxListTile(
+                value: _taken,
+                onChanged: (value) => setState(() => _taken = value ?? false),
+                contentPadding: EdgeInsets.zero,
+                controlAffinity: ListTileControlAffinity.leading,
+                title: Text(
+                  l10n.safetyBriefingAccept,
+                  style: theme.textTheme.bodyMedium,
+                ),
+              ),
+              const SizedBox(height: 8),
               FilledButton(
-                onPressed: onAccept,
-                child: Text(l10n.safetyBriefingAccept),
+                // ⚠️ Null, not a button that scolds. A disabled control says
+                // "not yet" without taking a tap to say it.
+                onPressed: _taken ? widget.onAccept : null,
+                child: Text(l10n.safetyBriefingGo),
               ),
             ],
           ),

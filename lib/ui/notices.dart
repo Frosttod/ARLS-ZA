@@ -11,6 +11,8 @@
 /// newest first, three at most, because a fourth line of history is not news.
 library;
 
+import 'dart:async';
+
 import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 
@@ -34,6 +36,41 @@ const Duration kNoticeLifetime = Duration(seconds: 4);
 /// At most this many at once. Older ones are dropped rather than queued: a
 /// player who searched three places wants the last answer, not the first.
 const int kNoticesShown = 3;
+
+/// What the game has said lately, and when each line stops being news.
+///
+/// ⚠️ **Lived in `main.dart` as a notifier plus a timer.** The pair is one
+/// idea — a line lasts [kNoticeLifetime] and then it is gone — and half of it
+/// sitting in the entry point meant every caller had to be trusted to start
+/// the timer. Here it cannot be forgotten: [say] is the only way in.
+class NoticeBoard {
+  final ValueNotifier<List<Notice>> lines = ValueNotifier(const []);
+
+  var _open = true;
+
+  /// One line, gone in a few seconds. The player is walking.
+  void say(String message, {DateTime? at}) {
+    if (!_open) return;
+
+    final notice = Notice(message, at ?? DateTime.now());
+    lines.value = [notice, ...lines.value];
+
+    Timer(kNoticeLifetime, () {
+      if (!_open) return;
+      lines.value = lines.value
+          .where((other) => !identical(other, notice))
+          .toList();
+    });
+  }
+
+  /// ⚠️ The flag is not tidiness. A timer outlives the screen that started it,
+  /// and writing to a disposed notifier throws — which is exactly what a
+  /// message arriving as the player leaves the game would do.
+  void dispose() {
+    _open = false;
+    lines.dispose();
+  }
+}
 
 class NoticeStack extends StatelessWidget {
   const NoticeStack({required this.notices, super.key});

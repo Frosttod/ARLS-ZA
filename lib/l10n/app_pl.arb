@@ -44,7 +44,7 @@
   "hardcoreBody": "Śmierć kończy postać. Umiejętności, schron i magazyn przepadają; passa trafia do Kroniki.",
   "softcoreTitle": "Softcore",
   "softcoreBody": "Zamiast śmierci tracisz przytomność. Umiejętności i schron zostają; passa jest zerowana.",
-    "kitTitle": "Z czym wychodzisz",
+  "kitTitle": "Z czym wychodzisz",
   "kitStepTools": "Jedno narzędzie",
   "kitStepMedical": "Jeden opatrunek",
   "kitStepCombat": "Jedno ostrze",
@@ -1599,5 +1599,23 @@
         "type": "int"
       }
     }
-  }
+  },
+  "safetyBriefingGo": "Wychodzę",
+  "rulesTitle": "Zasady przetrwania",
+  "rulesIntro": "Trzy rzeczy, których uczy pierwsza godzina. Trzydziestego dnia są tak samo prawdziwe.",
+  "rulesStandTitle": "1. Stój, żeby strzelać.",
+  "rulesStandBody": "Ruch, wysokie tętno i zmęczenie rozrzucają strzały. Procent nad przyciskiem jest prawdziwy i w marszu nie jest tą samą liczbą co w bezruchu.",
+  "rulesRunTitle": "2. Nie przed wszystkim uciekniesz.",
+  "rulesRunBody": "Niektóre sprintują szybciej niż ty — ale nie dłużej niż dwadzieścia pięć sekund. Dystans jest zasobem, ich wytrzymałość też.",
+  "rulesBodyTitle": "3. Twoje ciało jest kontrolerem.",
+  "rulesBodyBody": "Postać ma dokładnie tyle sił, ile naprawdę przeszedłeś. Woda, kalorie i sen liczą się także przy zamkniętej aplikacji.",
+  "settingsPrivacy": "Prywatność",
+  "settingsTelemetry": "Brak telemetrii",
+  "settingsTelemetryBody": "Gra nie wysyła niczego nigdzie. Bez kont, bez analityki, bez raportów awarii. Twoja pozycja, liczby twojego ciała i twój schron nie opuszczają tego telefonu.",
+  "hintMapTitle": "To twoja prawdziwa okolica. Zielona kropka to ty.",
+  "hintWalk": "Gra widzi twój ruch. Idziesz — spalasz kalorie i wodę.",
+  "hintLoot": "Żółty znacznik to zapasy. Podejdź, żeby przeszukać.",
+  "hintPack": "Masz limit wagi. Nadwyżka cię nie spowolni, ale zmęczy szybciej.",
+  "hintZone": "Czerwony okrąg to Strefa Rozkładu. Rośnie sama. Nie musisz tam iść — jeszcze.",
+  "hintDusk": "Zmrok. Bądź widoczny: jasne ubranie, opaska odblaskowa, uszy wolne."
 }

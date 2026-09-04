@@ -4614,6 +4614,114 @@ abstract class L10n {
   /// In en, this message translates to:
   /// **'They were on you while the screen was off: {blows} blows'**
   String combatHurtAway(int blows);
+
+  /// No description provided for @safetyBriefingGo.
+  ///
+  /// In en, this message translates to:
+  /// **'Head out'**
+  String get safetyBriefingGo;
+
+  /// No description provided for @rulesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Rules of survival'**
+  String get rulesTitle;
+
+  /// No description provided for @rulesIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'Three things the first hour teaches. They stay true on the thirtieth day.'**
+  String get rulesIntro;
+
+  /// No description provided for @rulesStandTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'1. Stand still to shoot.'**
+  String get rulesStandTitle;
+
+  /// No description provided for @rulesStandBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Movement, a high heart rate and fatigue scatter your shots. The percentage above the button is real, and it is not the same number standing as it is walking.'**
+  String get rulesStandBody;
+
+  /// No description provided for @rulesRunTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'2. You cannot outrun everything.'**
+  String get rulesRunTitle;
+
+  /// No description provided for @rulesRunBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Some of them sprint faster than you do — but not for longer than twenty-five seconds. Distance is a resource; so is their stamina.'**
+  String get rulesRunBody;
+
+  /// No description provided for @rulesBodyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'3. Your body is the controller.'**
+  String get rulesBodyTitle;
+
+  /// No description provided for @rulesBodyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The character has exactly as much left in it as you actually walked. Water, calories and sleep are counted while the app is closed.'**
+  String get rulesBodyBody;
+
+  /// No description provided for @settingsPrivacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy'**
+  String get settingsPrivacy;
+
+  /// No description provided for @settingsTelemetry.
+  ///
+  /// In en, this message translates to:
+  /// **'No telemetry'**
+  String get settingsTelemetry;
+
+  /// No description provided for @settingsTelemetryBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The game sends nothing anywhere. No accounts, no analytics, no crash reports. Your position, your body\'s figures and your shelter never leave this phone.'**
+  String get settingsTelemetryBody;
+
+  /// No description provided for @hintMapTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This is your real neighbourhood. The green dot is you.'**
+  String get hintMapTitle;
+
+  /// No description provided for @hintWalk.
+  ///
+  /// In en, this message translates to:
+  /// **'The game sees you move. Walking burns calories and water.'**
+  String get hintWalk;
+
+  /// No description provided for @hintLoot.
+  ///
+  /// In en, this message translates to:
+  /// **'A yellow marker is supplies. Get closer to search it.'**
+  String get hintLoot;
+
+  /// No description provided for @hintPack.
+  ///
+  /// In en, this message translates to:
+  /// **'You have a weight limit. Going over will not slow you down — it will tire you sooner.'**
+  String get hintPack;
+
+  /// No description provided for @hintZone.
+  ///
+  /// In en, this message translates to:
+  /// **'The red circle is a Decay Zone. It grows on its own. You do not have to go there — yet.'**
+  String get hintZone;
+
+  /// No description provided for @hintDusk.
+  ///
+  /// In en, this message translates to:
+  /// **'Dusk. Be visible: light clothing, a reflective band, ears free.'**
+  String get hintDusk;
 }
 
 class _L10nDelegate extends LocalizationsDelegate<L10n> {

@@ -128,4 +128,34 @@ void main() {
       reason: 'a release build has no simulator to switch on (§11.2)',
     );
   });
+
+  testWidgets('§15.7: the three rules are findable again from the menu', (
+    tester,
+  ) async {
+    await pumpSettings(tester);
+
+    // ⚠️ The test exists because of what this project keeps finding: a screen
+    // that is written, correct, and reachable from nowhere.
+    await tester.tap(find.text('Zasady przetrwania'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('1. Stój, żeby strzelać.'), findsOneWidget);
+    expect(find.text('2. Nie przed wszystkim uciekniesz.'), findsOneWidget);
+    expect(find.text('3. Twoje ciało jest kontrolerem.'), findsOneWidget);
+  });
+
+  testWidgets('§16.5: the privacy answer is stated, not offered as a switch', (
+    tester,
+  ) async {
+    await pumpSettings(tester);
+
+    expect(find.text('Brak telemetrii'), findsOneWidget);
+    expect(
+      find.byWidgetPredicate(
+        (widget) => widget is SwitchListTile && widget.value == true,
+      ),
+      findsNothing,
+      reason: 'nothing is collected, so there is nothing to opt out of',
+    );
+  });
 }

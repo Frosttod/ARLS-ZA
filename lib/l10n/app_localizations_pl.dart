@@ -2618,4 +2618,68 @@ class L10nPl extends L10n {
   String combatHurtAway(int blows) {
     return 'Dopadli Cię, gdy ekran był zgaszony: $blows ciosów';
   }
+
+  @override
+  String get safetyBriefingGo => 'Wychodzę';
+
+  @override
+  String get rulesTitle => 'Zasady przetrwania';
+
+  @override
+  String get rulesIntro =>
+      'Trzy rzeczy, których uczy pierwsza godzina. Trzydziestego dnia są tak samo prawdziwe.';
+
+  @override
+  String get rulesStandTitle => '1. Stój, żeby strzelać.';
+
+  @override
+  String get rulesStandBody =>
+      'Ruch, wysokie tętno i zmęczenie rozrzucają strzały. Procent nad przyciskiem jest prawdziwy i w marszu nie jest tą samą liczbą co w bezruchu.';
+
+  @override
+  String get rulesRunTitle => '2. Nie przed wszystkim uciekniesz.';
+
+  @override
+  String get rulesRunBody =>
+      'Niektóre sprintują szybciej niż ty — ale nie dłużej niż dwadzieścia pięć sekund. Dystans jest zasobem, ich wytrzymałość też.';
+
+  @override
+  String get rulesBodyTitle => '3. Twoje ciało jest kontrolerem.';
+
+  @override
+  String get rulesBodyBody =>
+      'Postać ma dokładnie tyle sił, ile naprawdę przeszedłeś. Woda, kalorie i sen liczą się także przy zamkniętej aplikacji.';
+
+  @override
+  String get settingsPrivacy => 'Prywatność';
+
+  @override
+  String get settingsTelemetry => 'Brak telemetrii';
+
+  @override
+  String get settingsTelemetryBody =>
+      'Gra nie wysyła niczego nigdzie. Bez kont, bez analityki, bez raportów awarii. Twoja pozycja, liczby twojego ciała i twój schron nie opuszczają tego telefonu.';
+
+  @override
+  String get hintMapTitle =>
+      'To twoja prawdziwa okolica. Zielona kropka to ty.';
+
+  @override
+  String get hintWalk =>
+      'Gra widzi twój ruch. Idziesz — spalasz kalorie i wodę.';
+
+  @override
+  String get hintLoot => 'Żółty znacznik to zapasy. Podejdź, żeby przeszukać.';
+
+  @override
+  String get hintPack =>
+      'Masz limit wagi. Nadwyżka cię nie spowolni, ale zmęczy szybciej.';
+
+  @override
+  String get hintZone =>
+      'Czerwony okrąg to Strefa Rozkładu. Rośnie sama. Nie musisz tam iść — jeszcze.';
+
+  @override
+  String get hintDusk =>
+      'Zmrok. Bądź widoczny: jasne ubranie, opaska odblaskowa, uszy wolne.';
 }
