@@ -53,6 +53,7 @@ void main() {
     Locale locale = const Locale('pl'),
     Widget? hud,
     Widget? progress,
+    double textScale = 1.0,
   }) async {
     await tester.pumpWidget(
       MaterialApp(
@@ -64,6 +65,12 @@ void main() {
           GlobalCupertinoLocalizations.delegate,
         ],
         supportedLocales: L10n.supportedLocales,
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: TextScaler.linear(textScale)),
+          child: child ?? const SizedBox.shrink(),
+        ),
         home: MapScreen(
           tileBuilder: surface,
           fix: at,
@@ -306,5 +313,20 @@ void main() {
 
       expect(find.text('EATING'), findsOneWidget);
     });
+  });
+
+  testWidgets('§12: the menu survives a doubled font', (tester) async {
+    // ⚠️ The one bar a player touches on every walk, and the one most likely
+    // to break under a scaled font: four icons with words under them, in a row
+    // that has to fit a phone. Accessible means it still fits at 200%.
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    await pumpMap(tester, at: fix, onMenu: (_) {}, textScale: 2.0);
+
+    expect(tester.takeException(), isNull);
+    expect(find.text('PROFIL'), findsOneWidget);
+    expect(find.text('USTAWIENIA'), findsOneWidget);
   });
 }

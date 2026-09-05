@@ -15,7 +15,7 @@ Różnica jest istotna, bo w kilkunastu miejscach **świadomie odeszliśmy od do
 
 ⚠️ **Reguła utrzymania tego pliku:** liczba zmieniona w kodzie i nieprzeniesiona tutaj czyni ten dokument gorszym niż jego brak. Przy każdej zmianie stałej — aktualizuj sekcję.
 
-**Stan:** 2689 testów · schemat bazy **v37** · etapy 0–2 zamknięte, 3–6 i 8 przed testem w terenie.
+**Stan:** 2701 testów · schemat bazy **v37** · etapy 0–2 zamknięte, 3–6 i 8 przed testem w terenie.
 
 ---
 
@@ -1326,6 +1326,32 @@ Schron główny **nigdy się nie rozpada** — to miejsce, gdzie gracz mieszka.
 ### 12.5. Prywatność (§8.2)
 
 ⚠️ Współrzędne schronu to w praktyce **adres domowy gracza**. Zapisane lokalnie, nigdy nie wysyłane, `allowBackup="false"` dla całej bazy.
+
+Telemetrii **nie ma żadnej** (§16.5). Ekran ustawień mówi to zwykłym wierszem, a nie przełącznikiem: przełącznik sugerowałby, że jest jakieś zbieranie do wyłączenia. Jedyne żądanie sieciowe w całej aplikacji to pobranie pakietu mapy (§16.6).
+
+---
+
+## 12b. Dostępność (§12)
+
+Cztery rzeczy, których żąda §12, i to, co za każdą z nich stoi w liczbach.
+
+| Rzecz | Jak działa | Sprawdzane przez |
+| :---- | :---- | :---- |
+| **Wysoki kontrast** | własny przełącznik **plus** flaga systemowa Androida; obie wchodzą tym samym kanałem — `MediaQuery.highContrastOf` | test mierzy kontrast palet wobec WCAG |
+| **Skalowanie czcionek** | bez ograniczeń, systemowe; ekrany przewijalne rosną, pasek nad mapą rośnie razem z nimi | odprawa, zasady, ustawienia, menu mapy i HUD pompowane przy **200%** |
+| **Wibracje** | trzy sygnały: trafienie, upadek, początek pościgu | test na kanale platformy: właściwy sygnał, i cisza po wyłączeniu |
+| **Czytniki ekranu** | każdy przycisk ikonowy ma nazwę; paski HUD mają etykiety semantyczne z wartością i procentem | testy ekranów |
+
+**Kontrast zmierzony, nie oceniony na oko:**
+
+| Para | Noc | Dzień | Wymóg |
+| :---- | ----: | ----: | :---- |
+| Tekst na panelu | ≥ 7:1 | ≥ 7:1 | WCAG AAA |
+| Paski, ostrzeżenia, tło paska | ≥ 4,5:1 | ≥ 4,5:1 | WCAG AA |
+
+⚠️ **HUD ma własną paletę wysokokontrastową i to nie jest duplikat.** Kolory paska nad mapą są literałami dobranymi do prawie-czarnego tła, więc bez osobnej pary gracz z włączonym kontrastem dostałby czytelniejsze *menu* i dokładnie tak samo nieczytelny pasek — czyli tę jedną powierzchnię, którą naprawdę czyta w marszu.
+
+⚠️ **Trzy wibracje i ani jednej więcej.** Telefon, który wibruje przy każdym zdarzeniu, zostaje wyciszony na stałe — i wtedy znika też ten jeden sygnał, który miał znaczenie. Dopóki nie ma §14 (audio), silniczek jest **jedynym** kanałem gry, który nie jest ekranem.
 
 ---
 

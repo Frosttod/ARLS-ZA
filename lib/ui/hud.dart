@@ -64,6 +64,35 @@ class HudColors {
     muted: Color(0xFF6B726E),
   );
 
+  /// §12, high contrast, night.
+  ///
+  /// ⚠️ **The HUD does not inherit the theme's contrast level, and this is why
+  /// it needs its own pair.** Every colour above is a literal, chosen against
+  /// a near-black panel — so a player who turns on high contrast would get a
+  /// crisper *menu* and exactly the same unreadable bar over the map, which is
+  /// the surface they actually read while walking.
+  ///
+  /// True black behind pure white, and the muted tone lifted until it is a
+  /// colour rather than a suggestion: an empty bar has to be visible as an
+  /// empty bar.
+  static const HudColors contrastDark = HudColors(
+    panel: Color(0xFF000000),
+    text: Color(0xFFFFFFFF),
+    data: Color(0xFF3FD0DC),
+    alert: Color(0xFFFF6A4D),
+    muted: Color(0xFFA8B0AC),
+  );
+
+  /// §12, high contrast, daylight. Pure white ground, near-black ink, and both
+  /// accents darkened until they carry on white rather than glow on it.
+  static const HudColors contrastLight = HudColors(
+    panel: Color(0xFFFFFFFF),
+    text: Color(0xFF000000),
+    data: Color(0xFF06343A),
+    alert: Color(0xFF7A1B0C),
+    muted: Color(0xFF3D4442),
+  );
+
   /// The panel behind the bars, and the surface everything else sits on.
   final Color panel;
 
@@ -79,8 +108,17 @@ class HudColors {
   /// Secondary labels and the unfilled part of a bar.
   final Color muted;
 
-  static HudColors of(BuildContext context) =>
-      Theme.of(context).brightness == Brightness.dark ? dark : light;
+  /// The pair this screen should be drawn in.
+  ///
+  /// Reads `MediaQuery.highContrastOf`, which carries both the system's
+  /// accessibility flag and the game's own switch — `main.dart` folds the
+  /// setting into the same channel so that nothing downstream has to ask two
+  /// questions to get one answer (§12).
+  static HudColors of(BuildContext context) {
+    final night = Theme.of(context).brightness == Brightness.dark;
+    if (!MediaQuery.highContrastOf(context)) return night ? dark : light;
+    return night ? contrastDark : contrastLight;
+  }
 }
 
 class Hud extends StatelessWidget {

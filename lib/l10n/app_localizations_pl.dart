@@ -2682,4 +2682,27 @@ class L10nPl extends L10n {
   @override
   String get hintDusk =>
       'Zmrok. Bądź widoczny: jasne ubranie, opaska odblaskowa, uszy wolne.';
+
+  @override
+  String get settingsAccess => 'Dostępność';
+
+  @override
+  String get settingsContrast => 'Wysoki kontrast';
+
+  @override
+  String get settingsContrastBody =>
+      'Mocniejsze oddzielenie tekstu od tła, na każdym ekranie i na pasku nad mapą. Włącza się sam, gdy w systemie włączony jest wysoki kontrast.';
+
+  @override
+  String get settingsHaptics => 'Wibracja przy sygnałach krytycznych';
+
+  @override
+  String get settingsHapticsBody =>
+      'Trafienie, upadek i to, że coś zaczęło cię ścigać. Trzy sygnały i ani jeden więcej — telefon, który wibruje na wszystko, wyłącza się na stałe.';
+
+  @override
+  String get stepMore => 'O jeden więcej';
+
+  @override
+  String get stepLess => 'O jeden mniej';
 }

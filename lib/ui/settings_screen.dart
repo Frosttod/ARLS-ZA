@@ -218,6 +218,30 @@ class _SettingsScreenState extends State<SettingsScreen>
             ),
           ),
 
+          // §12: the two switches that decide whether the game is legible and
+          // whether it can be felt. Above privacy because one of them changes
+          // how this very screen reads.
+          const Divider(),
+          _Heading(l10n.settingsAccess),
+          SwitchListTile(
+            value: widget.settings.contrast,
+            onChanged: (value) => unawaited(widget.settings.setContrast(value)),
+            title: Text(l10n.settingsContrast),
+            subtitle: Text(
+              l10n.settingsContrastBody,
+              style: theme.textTheme.bodySmall,
+            ),
+          ),
+          SwitchListTile(
+            value: widget.settings.haptics,
+            onChanged: (value) => unawaited(widget.settings.setHaptics(value)),
+            title: Text(l10n.settingsHaptics),
+            subtitle: Text(
+              l10n.settingsHapticsBody,
+              style: theme.textTheme.bodySmall,
+            ),
+          ),
+
           // §16.5: stated rather than configurable, because there is no switch
           // to offer — nothing is collected, so nothing can be opted out of.
           const Divider(),

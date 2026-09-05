@@ -17,7 +17,7 @@ Każdy zamknięty etap dostaje sekcję **Dziennik wykonania** z decyzjami podję
 | 6 | Strefy Rozkładu z pełnym cyklem | 🟡 13/13 zadań, po testach w terenie | — | `24ef01b`, schemat v36 |
 | 7 | Audio pozycyjne i haptyka | ⬜ | — | — |
 | 8 | Schron, obóz, pętla dobowa | 🟡 8/9 zadań, po testach w terenie | — | schemat v21 |
-| 9 | Onboarding i zgodność | 🟡 7/11 zadań, reszta to formularze i skryptowana walka | — | — |
+| 9 | Onboarding i zgodność | 🟡 8/11 zadań, reszta to formularze i skryptowana walka | — | — |
 | — | Profil i statystyki postaci (§13.1) | ✅ poza etapami | 2026-08-18 | `8937688` |
 | — | Oprawa: krój pisma, odświeżanie, mapa Voyager, płynność 30 fps | ✅ scalone do `main` | 2026-08-20 | `d0d0e51` … `89bce39` |
 | — | Półki w schronie, pamięć przeszukanych miejsc, zasięgi per miejsce | ✅ poza etapami | 2026-08-20 | schemat v20 |
@@ -30,7 +30,7 @@ Każdy zamknięty etap dostaje sekcję **Dziennik wykonania** z decyzjami podję
 | — | **Zestaw startowy** jako drugi etap tworzenia postaci (§4, §12) | ✅ poza etapami | 2026-08-29 | `5c3e85b`, `b96b927` |
 | — | **Reguła obecności przy warsztacie** (§2.1a.3) | ✅ poza etapami | 2026-08-30 | `c6768b3`, schemat v37 |
 
-**Metryki:** 2689 testów · `flutter analyze` czysty · schemat bazy **v37** · `main.dart` 6355 linii
+**Metryki:** 2701 testów · `flutter analyze` czysty · schemat bazy **v37** · `main.dart` 6367 linii
 
 ✅ **`main` jest wypchnięty na `origin/main`.** Wcześniej cała gra istniała na jednym dysku i było to największe ryzyko projektu — jedyne, którego nie dawało się naprawić kodem.
 
@@ -520,18 +520,17 @@ wymaga zewnętrznej paczki i pozwolenia Androida, czyli decyzji, a nie kodu.
 | 9.4 | Pierwsza walka — jedyny scenariusz skryptowany, przeciwnik nie może zabić | §15.6 |
 | 9.5 | ✅ Ekran „Zasady przetrwania" dostępny z menu | §15.7 |
 | 9.6 | ✅ Przypomnienie o widoczności po zachodzie słońca — godzinne okno po zmierzchu, raz na dobę | §3.5 |
-| 9.7 | Dostępność: czytniki ekranu w menu, wysoki kontrast, skalowanie czcionek, wibracje zamiast dźwięku | §12 |
+| 9.7 | ✅ Dostępność: wysoki kontrast (własny przełącznik **i** flaga systemowa), skalowanie czcionek sprawdzone przy 200%, wibracje przy trzech sygnałach krytycznych, każdy przycisk ikonowy nazwany | §12 |
 | 9.8 | 🟡 Polityka prywatności **wygenerowana i wystawiona** (`privacy.html`, PL i EN); formularz Data Safety, RODO, regulamin i IARC do wypełnienia w Play Console — odpowiedzi gotowe w [PLAY_CONSOLE.md](PLAY_CONSOLE.md) | §16.7 |
 | 9.9 | 🟡 Uzasadnienie `ACCESS_BACKGROUND_LOCATION` napisane (PLAY_CONSOLE.md); wideo demonstracyjne do nagrania | §16.1 |
 | 9.10 | ✅ Telemetria: **żadnej**. Ekran ustawień mówi to wprost, zamiast oferować przełącznik, którego nie ma czego wyłączać | §16.5 |
 | 9.11 | Ikona, nazwa w sklepie, zrzuty ekranu, opis ASO, obsługa proporcji ekranu | §16.8 |
 
-**Zrobione na szybko, 4 września 2026: 9.1, 9.2, 9.3, 9.5, 9.6, 9.10 oraz
-połowa 9.8 i 9.9.** Zostają cztery rzeczy i wszystkie z powodu, nie z
-zapomnienia: **9.4** to jedyny skryptowany fragment gry i wymaga przeciwnika,
-który nie może zabić — to projekt, nie wpięcie; **9.7** to audyt każdego ekranu
-pod czytnik i kontrast; **9.11** to materiały do sklepu; a druga połowa 9.8 i
-9.9 to formularze w Play Console i nagranie ekranu, czyli rzeczy spoza
+**Zrobione 4 września 2026: 9.1, 9.2, 9.3, 9.5, 9.6, 9.7, 9.10 oraz połowa 9.8
+i 9.9.** Zostają trzy rzeczy i każda z powodu, nie z zapomnienia: **9.4** to
+jedyny skryptowany fragment gry i wymaga przeciwnika, który nie może zabić — to
+projekt, nie wpięcie; **9.11** to materiały do sklepu; a druga połowa 9.8 i 9.9
+to formularze w Play Console i nagranie ekranu, czyli rzeczy spoza
 repozytorium. Odpowiedzi do tych formularzy — wyprowadzone z manifestu i z
 `pubspec.yaml`, nie z pamięci — leżą w [PLAY_CONSOLE.md](PLAY_CONSOLE.md).
 

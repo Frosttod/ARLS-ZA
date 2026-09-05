@@ -1617,5 +1617,12 @@
   "hintLoot": "Żółty znacznik to zapasy. Podejdź, żeby przeszukać.",
   "hintPack": "Masz limit wagi. Nadwyżka cię nie spowolni, ale zmęczy szybciej.",
   "hintZone": "Czerwony okrąg to Strefa Rozkładu. Rośnie sama. Nie musisz tam iść — jeszcze.",
-  "hintDusk": "Zmrok. Bądź widoczny: jasne ubranie, opaska odblaskowa, uszy wolne."
+  "hintDusk": "Zmrok. Bądź widoczny: jasne ubranie, opaska odblaskowa, uszy wolne.",
+  "settingsAccess": "Dostępność",
+  "settingsContrast": "Wysoki kontrast",
+  "settingsContrastBody": "Mocniejsze oddzielenie tekstu od tła, na każdym ekranie i na pasku nad mapą. Włącza się sam, gdy w systemie włączony jest wysoki kontrast.",
+  "settingsHaptics": "Wibracja przy sygnałach krytycznych",
+  "settingsHapticsBody": "Trafienie, upadek i to, że coś zaczęło cię ścigać. Trzy sygnały i ani jeden więcej — telefon, który wibruje na wszystko, wyłącza się na stałe.",
+  "stepMore": "O jeden więcej",
+  "stepLess": "O jeden mniej"
 }

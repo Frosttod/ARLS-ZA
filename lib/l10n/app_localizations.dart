@@ -4722,6 +4722,48 @@ abstract class L10n {
   /// In en, this message translates to:
   /// **'Dusk. Be visible: light clothing, a reflective band, ears free.'**
   String get hintDusk;
+
+  /// No description provided for @settingsAccess.
+  ///
+  /// In en, this message translates to:
+  /// **'Accessibility'**
+  String get settingsAccess;
+
+  /// No description provided for @settingsContrast.
+  ///
+  /// In en, this message translates to:
+  /// **'High contrast'**
+  String get settingsContrast;
+
+  /// No description provided for @settingsContrastBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Stronger separation between text and background, on every screen and on the bar over the map. Turns on by itself when the system\'s own high-contrast setting is on.'**
+  String get settingsContrastBody;
+
+  /// No description provided for @settingsHaptics.
+  ///
+  /// In en, this message translates to:
+  /// **'Vibration for critical signals'**
+  String get settingsHaptics;
+
+  /// No description provided for @settingsHapticsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'A hit landing, going down, and something starting to hunt you. Three signals and no more, because a phone that buzzes at everything is one you switch off.'**
+  String get settingsHapticsBody;
+
+  /// No description provided for @stepMore.
+  ///
+  /// In en, this message translates to:
+  /// **'One more'**
+  String get stepMore;
+
+  /// No description provided for @stepLess.
+  ///
+  /// In en, this message translates to:
+  /// **'One fewer'**
+  String get stepLess;
 }
 
 class _L10nDelegate extends LocalizationsDelegate<L10n> {

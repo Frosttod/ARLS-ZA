@@ -514,6 +514,7 @@ class _HowMany extends StatelessWidget {
       children: [
         _Step(
           icon: Icons.remove,
+          label: l10n.stepLess,
           onPressed: value <= 0 ? null : () => onChanged(value - 1),
           colours: colours,
         ),
@@ -531,6 +532,7 @@ class _HowMany extends StatelessWidget {
         ),
         _Step(
           icon: Icons.add,
+          label: l10n.stepMore,
           onPressed: shown >= max ? null : () => onChanged(shown + 1),
           colours: colours,
         ),
@@ -542,11 +544,17 @@ class _HowMany extends StatelessWidget {
 class _Step extends StatelessWidget {
   const _Step({
     required this.icon,
+    required this.label,
     required this.onPressed,
     required this.colours,
   });
 
   final IconData icon;
+
+  /// §12: a plus sign is not a label. Everything else in this app names its
+  /// icon buttons; this pair was the one screen reader dead end left.
+  final String label;
+
   final VoidCallback? onPressed;
   final HudColors colours;
 
@@ -557,6 +565,7 @@ class _Step extends StatelessWidget {
     child: IconButton(
       padding: EdgeInsets.zero,
       iconSize: 18,
+      tooltip: label,
       onPressed: onPressed,
       icon: Icon(icon),
       color: colours.text,

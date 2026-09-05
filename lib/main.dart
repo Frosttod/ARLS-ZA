@@ -125,6 +125,7 @@ import 'ui/hotspot_sheet.dart';
 import 'ui/game_screen.dart';
 import 'game/bench_inputs.dart';
 import 'ui/hint_nudger.dart';
+import 'ui/haptics.dart';
 import 'ui/hud.dart';
 import 'ui/status_notes.dart';
 import 'ui/inventory_screen.dart';
@@ -313,6 +314,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
   /// §12: what the game has just said. Under the HUD, never over the menu.
   final NoticeBoard _notices = NoticeBoard();
+
+  /// §12: the channel that is not the screen, for the three things §5.5.3 and
+  /// §9.2 make expensive.
+  late final Haptics _buzz = Haptics(() => widget.settings.haptics);
 
   /// §15.5, §3.5: the first-contact hints, and the dusk reminder.
   late final HintNudger _hints = HintNudger(
@@ -2286,7 +2291,12 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         now: now,
         darkness: snapshot.darkness,
       );
-      if (hunt != _loop?.pursuit) _loop?.setPursuit(hunt);
+      if (hunt != _loop?.pursuit) {
+        // §5.6.2, §12: only the moment it starts. A buzz per tick of a chase
+        // is a phone somebody switches off mid-chase.
+        if (hunt != null && _loop?.pursuit == null) _buzz(Buzz.hunted);
+        _loop?.setPursuit(hunt);
+      }
       _combat = _combat.advance(
         playerAt: here,
         elapsed: elapsed,
@@ -2796,6 +2806,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     if (!hurt.any || hurt.worst == null) return;
 
     _wounded(loop, hurt);
+    _buzz(Buzz.hit);
     _say(
       L10n.of(context).combatHurtAt(
         hitLocationName(L10n.of(context), hurt.worst!),
@@ -3192,6 +3203,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
     if (loop.takeWentDown()) {
       _note((stats) => stats.wentDown());
+      _buzz(Buzz.down);
 
       // §5.5.1, §2.1a: nothing is aimed at, and nothing is being done.
       //

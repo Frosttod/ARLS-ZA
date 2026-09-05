@@ -34,6 +34,8 @@ void main() {
     Size surface = const Size(800, 600),
     ThreatReading? threat,
     ({DateTime? dusk, DateTime? dawn}) sky = const (dusk: null, dawn: null),
+    double textScale = 1.0,
+    bool contrast = false,
   }) async {
     tester.view.physicalSize = surface;
     tester.view.devicePixelRatio = 1;
@@ -50,6 +52,13 @@ void main() {
           GlobalCupertinoLocalizations.delegate,
         ],
         supportedLocales: L10n.supportedLocales,
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+            textScaler: TextScaler.linear(textScale),
+            highContrast: contrast,
+          ),
+          child: child ?? const SizedBox.shrink(),
+        ),
         home: Scaffold(
           body: Hud(
             state: state,
@@ -842,6 +851,45 @@ void main() {
 
       expect(find.textContaining('90'), findsOneWidget);
       expect(find.textContaining('jeszcze nie idą'), findsNothing);
+    });
+  });
+
+  group('§12: the bar a player reads while walking', () {
+    testWidgets('holds together at a doubled font', (tester) async {
+      // ⚠️ This is the surface that matters most for §12 and the one hardest
+      // to keep: fixed-height rows of numbers over a map. Everything else in
+      // the app can scroll; this cannot.
+      await pumpHud(
+        tester,
+        healthy(),
+        textScale: 2.0,
+        // A phone, not the 800×600 the rest of this file uses: at twice the
+        // font the bar is genuinely taller, and that is the point of scaling
+        // rather than a fault. What is being checked is that it grows instead
+        // of tearing.
+        surface: const Size(1080, 2400),
+      );
+
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('and switches palettes when high contrast is on', (
+      tester,
+    ) async {
+      await pumpHud(tester, healthy(), contrast: true);
+
+      expect(tester.takeException(), isNull);
+      expect(
+        tester
+            .widgetList<Material>(find.byType(Material))
+            .map((material) => material.color)
+            .whereType<Color>()
+            .map((colour) => colour.withValues(alpha: 1))
+            .toList(),
+        contains(HudColors.contrastDark.panel),
+        reason:
+            'the panel is drawn in the strong palette, not the ordinary one',
+      );
     });
   });
 }

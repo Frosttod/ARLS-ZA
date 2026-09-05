@@ -1790,5 +1790,12 @@
   "hintLoot": "A yellow marker is supplies. Get closer to search it.",
   "hintPack": "You have a weight limit. Going over will not slow you down — it will tire you sooner.",
   "hintZone": "The red circle is a Decay Zone. It grows on its own. You do not have to go there — yet.",
-  "hintDusk": "Dusk. Be visible: light clothing, a reflective band, ears free."
+  "hintDusk": "Dusk. Be visible: light clothing, a reflective band, ears free.",
+  "settingsAccess": "Accessibility",
+  "settingsContrast": "High contrast",
+  "settingsContrastBody": "Stronger separation between text and background, on every screen and on the bar over the map. Turns on by itself when the system's own high-contrast setting is on.",
+  "settingsHaptics": "Vibration for critical signals",
+  "settingsHapticsBody": "A hit landing, going down, and something starting to hunt you. Three signals and no more, because a phone that buzzes at everything is one you switch off.",
+  "stepMore": "One more",
+  "stepLess": "One fewer"
 }

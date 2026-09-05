@@ -24,6 +24,20 @@ import '../data/db/database.dart';
 const String kLocaleSettingKey = 'app.locale';
 const String kThemeSettingKey = 'app.theme';
 
+/// §12: the high-contrast switch.
+///
+/// ⚠️ **Ours as well as the system's, and that is deliberate.** Android has a
+/// high-contrast flag and it reaches the app through `MediaQuery`, but it is
+/// buried three screens deep in accessibility settings and it changes every
+/// app at once. A player who wants this game legible in bright sun is not
+/// asking for their whole phone to change, so the game has its own — and
+/// honours the system one as well. Either turns it on; neither turns the other
+/// off.
+const String kContrastSettingKey = 'app.contrast';
+
+/// §12: whether the game may speak through the motor as well as the screen.
+const String kHapticsSettingKey = 'app.haptics';
+
 /// Languages the game is written in (§1.1). Not a list of locales Flutter
 /// supports — a list of languages somebody has actually translated.
 const List<Locale> kGameLocales = [Locale('pl'), Locale('en')];
@@ -103,6 +117,12 @@ class AppSettings extends ChangeNotifier {
 
   Locale? _locale;
   ThemeChoice _theme = ThemeChoice.daylight;
+  bool _contrast = false;
+
+  /// On by default. Until §14 exists, the motor is the *only* channel the game
+  /// has that is not the screen — turning it off is a choice a player makes,
+  /// not a thing they have to find.
+  bool _haptics = true;
 
   /// §17.2: whether it is dark where the player is standing.
   ///
@@ -118,6 +138,14 @@ class AppSettings extends ChangeNotifier {
   Locale? get locale => _locale;
 
   ThemeChoice get theme => _theme;
+
+  /// §12: the player's own high-contrast choice. The system's is read from
+  /// `MediaQuery` where the colours are picked, so this is only half the
+  /// answer — see [kContrastSettingKey].
+  bool get contrast => _contrast;
+
+  /// §12: whether critical signals are duplicated through the motor.
+  bool get haptics => _haptics;
 
   /// §17.2, §12: czy *w tej chwili* wychodzi ciemny motyw.
   ///
@@ -143,9 +171,16 @@ class AppSettings extends ChangeNotifier {
   Future<void> load() async {
     final language = await _store.read(kLocaleSettingKey);
     final theme = await _store.read(kThemeSettingKey);
+    final contrast = await _store.read(kContrastSettingKey);
+    final haptics = await _store.read(kHapticsSettingKey);
 
     _locale = _localeFrom(language);
     _theme = ThemeChoice.fromWire(theme);
+    _contrast = contrast == 'true';
+    // ⚠️ Absent means on. A row that was never written is a player who has
+    // never been asked, and the answer for them is the default the game ships
+    // with — not the falsiest reading of an empty string.
+    _haptics = haptics != 'false';
     notifyListeners();
   }
 
@@ -170,6 +205,18 @@ class AppSettings extends ChangeNotifier {
     notifyListeners();
     await _store.write(kThemeSettingKey, value.name);
   }
+
+  Future<void> setContrast(bool value) async {
+    _contrast = value;
+    notifyListeners();
+    await _store.write(kContrastSettingKey, '$value');
+  }
+
+  Future<void> setHaptics(bool value) async {
+    _haptics = value;
+    notifyListeners();
+    await _store.write(kHapticsSettingKey, '$value');
+  }
 }
 
 /// Turns a stored language code into a locale the game actually has.
@@ -185,26 +232,35 @@ Locale? _localeFrom(String? code) {
   return null;
 }
 
-/// The two palettes.
+/// The two palettes, each in two strengths.
 ///
 /// Dark is the one the game is designed around. Light exists because the same
 /// screen is read at noon in June, when a black map under a bright sky is not
 /// legible at arm's length (§12).
-ThemeData buildTheme(Brightness brightness) => ThemeData(
-  colorScheme: ColorScheme.fromSeed(
-    seedColor: const Color(0xFFA82D17),
-    brightness: brightness,
-  ),
-  scaffoldBackgroundColor: brightness == Brightness.dark
-      ? Colors.black
-      : const Color(0xFFF6F4F2),
+///
+/// [contrast] is §12's high-contrast mode. It is not a different design — the
+/// same seed, pushed to Material's maximum contrast level, so every screen
+/// keeps its shape and only the separation between ink and ground changes.
+/// The scaffold goes to true black or true white, which is the one place where
+/// the ordinary palette softens things deliberately and the accessible one
+/// must not.
+ThemeData buildTheme(Brightness brightness, {bool contrast = false}) =>
+    ThemeData(
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: const Color(0xFFA82D17),
+        brightness: brightness,
+        contrastLevel: contrast ? 1.0 : 0.0,
+      ),
+      scaffoldBackgroundColor: brightness == Brightness.dark
+          ? Colors.black
+          : (contrast ? Colors.white : const Color(0xFFF6F4F2)),
 
-  // §12: one face for everything that is words.
-  //
-  // Set on the theme rather than on each style, because nearly every
-  // [TextStyle] in this app gives a size and a colour and nothing else — so
-  // they inherit, and the face can be changed in one place instead of four
-  // hundred.
-  fontFamily: kUiFont,
-  useMaterial3: true,
-);
+      // §12: one face for everything that is words.
+      //
+      // Set on the theme rather than on each style, because nearly every
+      // [TextStyle] in this app gives a size and a colour and nothing else — so
+      // they inherit, and the face can be changed in one place instead of four
+      // hundred.
+      fontFamily: kUiFont,
+      useMaterial3: true,
+    );

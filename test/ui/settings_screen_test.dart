@@ -150,9 +150,13 @@ void main() {
     await pumpSettings(tester);
 
     expect(find.text('Brak telemetrii'), findsOneWidget);
+
+    // ⚠️ A tile, not a switch. Offering one would imply there is a collection
+    // to turn off, and a switch that changes nothing is worse than no switch.
     expect(
-      find.byWidgetPredicate(
-        (widget) => widget is SwitchListTile && widget.value == true,
+      find.ancestor(
+        of: find.text('Brak telemetrii'),
+        matching: find.byType(SwitchListTile),
       ),
       findsNothing,
       reason: 'nothing is collected, so there is nothing to opt out of',

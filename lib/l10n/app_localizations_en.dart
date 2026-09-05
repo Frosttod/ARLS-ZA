@@ -2684,4 +2684,27 @@ class L10nEn extends L10n {
   @override
   String get hintDusk =>
       'Dusk. Be visible: light clothing, a reflective band, ears free.';
+
+  @override
+  String get settingsAccess => 'Accessibility';
+
+  @override
+  String get settingsContrast => 'High contrast';
+
+  @override
+  String get settingsContrastBody =>
+      'Stronger separation between text and background, on every screen and on the bar over the map. Turns on by itself when the system\'s own high-contrast setting is on.';
+
+  @override
+  String get settingsHaptics => 'Vibration for critical signals';
+
+  @override
+  String get settingsHapticsBody =>
+      'A hit landing, going down, and something starting to hunt you. Three signals and no more, because a phone that buzzes at everything is one you switch off.';
+
+  @override
+  String get stepMore => 'One more';
+
+  @override
+  String get stepLess => 'One fewer';
 }

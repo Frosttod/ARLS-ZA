@@ -90,5 +90,4 @@ Kwestionariusz wypełnia się w Play Console. Fakty do zaznaczenia:
 | Zadanie | Stan |
 | :---- | :---- |
 | 9.4 — skryptowana pierwsza walka (§15.6) | niezrobione, siedem kroków podpowiedzi plus przeciwnik, który nie może zabić |
-| 9.7 — dostępność (§12) | niezrobione: czytniki ekranu w menu, wysoki kontrast, skalowanie czcionek |
 | 9.11 — ikona, zrzuty, opis ASO | ikona jest (`assets/icon.png`), reszta to materiały do sklepu |

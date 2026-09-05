@@ -74,6 +74,7 @@ class _ArlsZaAppState extends State<ArlsZaApp> {
   @override
   Widget build(BuildContext context) {
     final settings = _settings;
+    final contrast = settings?.contrast ?? false;
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
@@ -86,13 +87,26 @@ class _ArlsZaAppState extends State<ArlsZaApp> {
       ],
       supportedLocales: L10n.supportedLocales,
       locale: settings?.locale,
-      theme: buildTheme(Brightness.light),
-      darkTheme: buildTheme(Brightness.dark),
+      theme: buildTheme(Brightness.light, contrast: contrast),
+      darkTheme: buildTheme(Brightness.dark, contrast: contrast),
       themeMode: settings?.themeMode ?? ThemeMode.dark,
       // §16.1: over the whole app rather than on one screen — half the time
       // the screen the player was on is the thing that broke.
-      builder: (context, child) =>
-          CrashBanner(child: child ?? const SizedBox.shrink()),
+      //
+      // §12: and the game's own high-contrast switch is folded into the same
+      // `MediaQuery` flag the system sets, so every widget downstream asks one
+      // question — `MediaQuery.highContrastOf` — and gets a true answer
+      // whichever of the two switches is on. Never written back as false: the
+      // system's choice is not the game's to overrule.
+      builder: (context, child) {
+        final banner = CrashBanner(child: child ?? const SizedBox.shrink());
+        if (!contrast) return banner;
+
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(highContrast: true),
+          child: banner,
+        );
+      },
       home: widget.home(_adoptSettings),
     );
   }
