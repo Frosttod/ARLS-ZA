@@ -2791,4 +2791,10 @@ class L10nPl extends L10n {
 
   @override
   String get journalInterrupted => 'Robota przerwana';
+
+  @override
+  String get useNeedsOpener => 'Puszka zamknięta — nie ma czym jej otworzyć.';
+
+  @override
+  String get combatOutOfReach => 'Za daleko na cios.';
 }

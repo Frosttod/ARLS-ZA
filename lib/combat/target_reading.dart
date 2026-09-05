@@ -33,6 +33,11 @@ enum CombatRefusal {
 
   noWeapon,
   noAmmo,
+
+  /// §5.5.3: a blade is a blade at arm's length and a paperweight at thirty
+  /// metres. Its own refusal, because "no ammunition" is nonsense about an axe
+  /// and "nothing in hand" is a lie about one.
+  outOfReach,
 }
 
 class TargetReading {
@@ -116,6 +121,14 @@ TargetReading readTarget({
   required bool settling,
   required bool inOwnZone,
   required bool inGrace,
+
+  /// Whether what is in hand is fired. False for a blade, and for bare hands.
+  ///
+  /// ⚠️ Not the same question as `reach_m`. That figure (0,3–1,8 m) is how a
+  /// swing goes in a crowd (§5.5.3); what decides whether a blade is any use
+  /// at all against *this* target is [kMeleeM], the same twenty metres
+  /// [canStrike] has always used.
+  bool ranged = true,
 }) {
   final metres = target.position.distanceTo(from);
   final armed = weaponName != null;
@@ -123,14 +136,22 @@ TargetReading readTarget({
   // ⚠️ In this order, and the order is the rule. Standing in your own zone is
   // why you cannot fire even with a full magazine; being out of ammunition is
   // only the answer once none of the others is.
+  //
+  // ⚠️ **And the last two are about ranged weapons only.** Reported from the
+  // field: an axe in hand read as "nothing in hand", because the only thing
+  // this function counted as a weapon was a firearm — so a player holding two
+  // kilograms of steel was told they were empty-handed, and the silent
+  // takedown of §5.5.1 was refused for the same reason.
   final refusal = inOwnZone
       ? CombatRefusal.insideOwnZone
       : inGrace
       ? CombatRefusal.grace
       : !armed
       ? CombatRefusal.noWeapon
-      : loaded <= 0 && !hasRound
+      : ranged && loaded <= 0 && !hasRound
       ? CombatRefusal.noAmmo
+      : !ranged && metres > kMeleeM
+      ? CombatRefusal.outOfReach
       : null;
 
   return TargetReading(
@@ -151,11 +172,12 @@ TargetReading readTarget({
     magazine: magazine,
     reloading: reloading,
     refusal: refusal,
-    canFire: armed && loaded > 0 && !reloading && !inGrace && !inOwnZone,
+    canFire:
+        armed && ranged && loaded > 0 && !reloading && !inGrace && !inOwnZone,
 
     // ⚠️ Nothing to do is not the same as nothing to load: §5.3's seconds are
     // for filling a magazine, and a full one has no room to fill.
-    canReload: armed && hasRound && !reloading && loaded < magazine,
+    canReload: armed && ranged && hasRound && !reloading && loaded < magazine,
 
     // §5.2: below twenty metres the receiver has nothing useful to say about
     // anybody's position, so the fight stops being about distance and becomes

@@ -1864,5 +1864,7 @@
   "zoneBackToBuild": "Back at the shelter — the build goes on.",
   "zoneLeftBench": "Workbench left — the work is on hold.",
   "zoneBackToBench": "Back at the bench — the work goes on.",
-  "journalInterrupted": "Work stopped"
+  "journalInterrupted": "Work stopped",
+  "useNeedsOpener": "A sealed tin, and nothing to open it with.",
+  "combatOutOfReach": "Too far to swing."
 }

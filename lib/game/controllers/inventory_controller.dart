@@ -24,6 +24,7 @@ library;
 import 'package:flutter/foundation.dart';
 
 import '../../data/db/database.dart';
+import '../../inventory/item_use.dart';
 import '../../sim/body.dart';
 import '../../inventory/inventory.dart';
 import '../../inventory/inventory_store.dart';
@@ -140,6 +141,16 @@ class InventoryController extends ChangeNotifier {
   };
 
   bool carries(String itemId) => ids().contains(itemId);
+
+  /// §4.1: whether anything carried goes through the lid of a tin.
+  ///
+  /// ⚠️ Read off the catalogue rather than from a pair of ids: two things say
+  /// `opens_cans` today and a content pack may ship a third.
+  bool get opensTins => opensCans([for (final id in ids()) ?_catalogue?[id]]);
+
+  /// §10.2.2: binoculars in the pack or round the neck — one question rather
+  /// than the same two-line check in each of the places that asks it.
+  bool get hasBinoculars => carries('tool_binoculars');
 
   // ------------------------------------------------------------- writing ---
 

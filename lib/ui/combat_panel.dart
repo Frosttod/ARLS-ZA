@@ -341,6 +341,7 @@ String refusalName(L10n l10n, CombatRefusal refusal) => switch (refusal) {
   CombatRefusal.insideOwnZone => l10n.shelterInside,
   CombatRefusal.grace => l10n.downGrace,
   CombatRefusal.noWeapon => l10n.combatNoWeapon,
+  CombatRefusal.outOfReach => l10n.combatOutOfReach,
   CombatRefusal.noAmmo => l10n.combatNoAmmo,
 };
 

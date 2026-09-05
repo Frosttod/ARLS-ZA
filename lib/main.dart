@@ -1721,7 +1721,21 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final use = definition == null
         ? null
         // §7: Medicine shortens a dressing, and nothing else.
-        : useOf(definition, medicine: _learned.medicine);
+        : useOf(
+            definition,
+            medicine: _learned.medicine,
+            opener: _pack.opensTins,
+          );
+
+    // §4.1: a sealed tin, and nothing in the pack that goes through a lid.
+    // Said out loud rather than silently refused: a button that does nothing
+    // is a button the player reads as broken (§12).
+    if (definition != null &&
+        use == null &&
+        definition.props['needs_opener'] == true) {
+      _say(L10n.of(context).useNeedsOpener, note: JournalKind.interrupted);
+      return;
+    }
     if (definition == null || use == null) return;
 
     // §2.6: a dressing with nothing open to close is a dressing spent for
@@ -1876,7 +1890,11 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final use = definition == null
         ? null
         // §7: Medicine shortens a dressing, and nothing else.
-        : useOf(definition, medicine: _learned.medicine);
+        : useOf(
+            definition,
+            medicine: _learned.medicine,
+            opener: _pack.opensTins,
+          );
     if (definition == null || use == null) return;
 
     // ⚠️ A meal has been emptying itself all along (§4.7), so finishing is
@@ -2359,13 +2377,14 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   }
 
   /// What is in the hand, if it is something that fires (§5.5.1).
-  ItemDefinition? get _weapon {
-    final catalogue = _catalogue;
-    if (catalogue == null) return null;
+  ItemDefinition? get _weapon => _inHand(ItemKind.firearm);
 
+  /// What is worn of one kind, or null. §5.4 and §5.5.3 ask the same question
+  /// about two different things, and asked it twice in two identical loops.
+  ItemDefinition? _inHand(ItemKind kind) {
     for (final line in _inventory.value.worn) {
-      final item = catalogue[line.itemId];
-      if (item != null && item.kind == ItemKind.firearm) return item;
+      final item = _catalogue?[line.itemId];
+      if (item != null && item.kind == kind) return item;
     }
     return null;
   }
@@ -2566,6 +2585,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
     final weapon = _weapon;
 
+    // §5.5.3: co jest w rękach, a nie tylko co strzela. Zgłoszone z terenu:
+    // siekiera czytała się jako „nic w ręku".
+    final inHand = weapon ?? _meleeInHand;
+
     return readTarget(
       target: target,
       from: GeoPoint(
@@ -2574,7 +2597,8 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       ),
       targetName: enemyKindName(L10n.of(context), target.kind),
       error: _aimError(target),
-      weaponName: weapon == null ? null : _nameOfItem(weapon),
+      ranged: weapon != null,
+      weaponName: inHand == null ? null : _nameOfItem(inHand),
       magazine: weapon == null
           ? 0
           : magazineSize(weapon, attachments: _attachmentsFor(weapon)),
@@ -3088,16 +3112,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   }
 
   /// What is in the hand, if it is something to swing (§5.4).
-  ItemDefinition? get _meleeInHand {
-    final catalogue = _catalogue;
-    if (catalogue == null) return null;
-
-    for (final line in _inventory.value.worn) {
-      final item = catalogue[line.itemId];
-      if (item != null && item.kind == ItemKind.melee) return item;
-    }
-    return null;
-  }
+  ItemDefinition? get _meleeInHand => _inHand(ItemKind.melee);
 
   /// §10.3: marks where something went down.
   /// Everything the player can do standing exactly here (§10.2, §19.3, §4.8).
@@ -5050,13 +5065,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     onSetSkill: (skill, level) => unawaited(_learned.setLevel(skill, level)),
     onSetHotspot: (slot, level) =>
         unawaited(_fires.setLevel(slot, level, DateTime.now().toUtc())),
-    snapshot: DevSnapshot(
-      state: snapshot?.state,
-      fix: snapshot?.fix,
-      signal: snapshot?.signal ?? PositionSignal.unavailable,
+    snapshot: DevSnapshot.of(
+      snapshot,
       ticksApplied: _simulatedSeconds(snapshot),
-      lastFlushAt: snapshot?.lastFlushAt,
-      clockRolledBack: snapshot?.clockRolledBack ?? false,
     ),
   );
 
@@ -5567,7 +5578,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       scouting: _learned.scouting,
       // §10.2.2: half the radius in the dark, and nobody was passing it.
       darkness: _snapshot?.darkness ?? 0,
-      binoculars: _hasBinoculars,
+      binoculars: _pack.hasBinoculars,
     );
 
     final found = <String>{
@@ -5805,21 +5816,6 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
     await showAwaySummary(context, missed);
   }
-
-  /// §5.6.1, §10.2.2: co słychać i co widać, dopóki czynność trwa.
-  List<ActionRing> _actionRings(GameSnapshot? snapshot) => ringsFor(
-    search: _search.value,
-    sightM: searchRadiusM(
-      scouting: _learned.scouting,
-      darkness: snapshot?.darkness ?? 0,
-      binoculars: _hasBinoculars,
-    ),
-  );
-
-  /// §10.2.2: lornetka w plecaku albo na szyi — jedno pytanie, dwa miejsca.
-  bool get _hasBinoculars =>
-      _inventory.value.countOf('tool_binoculars') > 0 ||
-      _inventory.value.worn.any((line) => line.itemId == 'tool_binoculars');
 
   /// §2.1a.3, §12: says what just stopped, and writes it down.
   ///
@@ -6220,7 +6216,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     state: snapshot.state,
     status: snapshot.status,
     constants: character.constants,
-    warnings: _warnings(l10n, snapshot),
+    warnings: hudWarnings(l10n, snapshot, location: _permissions?.location),
     sky: snapshot.sky,
     noiseM: playerNoiseM(snapshot.speedKmh),
     bleeding: inTheField ? (_loop?.bleeding ?? BleedTier.none) : BleedTier.none,
@@ -6289,7 +6285,15 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         noise: waveOf(_combat.open),
         // §5.6.1: pasek mówi „hałas 15 m", mapa mówi kto w nich stoi.
         footfallM: playerNoiseM(snapshot?.speedKmh ?? 0),
-        rings: _actionRings(snapshot),
+        // §5.6.1, §10.2.2: co słychać i co widać, dopóki czynność trwa.
+        rings: ringsFor(
+          search: _search.value,
+          sightM: searchRadiusM(
+            scouting: _learned.scouting,
+            darkness: snapshot?.darkness ?? 0,
+            binoculars: _pack.hasBinoculars,
+          ),
+        ),
         progress: _running(),
         searchPanel: snapshot == null
             ? null
@@ -6400,6 +6404,4 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// A suspended run comes first: while it holds, nothing else the HUD says is
   /// being applied anyway (§3.4).
   /// §12: what the strip under the bars is saying, if anything.
-  List<String> _warnings(L10n l10n, GameSnapshot snapshot) =>
-      hudWarnings(l10n, snapshot, location: _permissions?.location);
 }

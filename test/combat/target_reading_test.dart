@@ -38,6 +38,7 @@ void main() {
     bool reloading = false,
     bool inOwnZone = false,
     bool inGrace = false,
+    bool ranged = true,
   }) => readTarget(
     target: walkerAt(metres),
     from: here,
@@ -51,6 +52,7 @@ void main() {
     settling: false,
     inOwnZone: inOwnZone,
     inGrace: inGrace,
+    ranged: ranged,
   );
 
   group('§5.5.1: the distance, worked out once', () {
@@ -186,5 +188,55 @@ void main() {
       isTrue,
       reason: 'a dead button inferred from a null callback is a second rule',
     );
+  });
+
+  group('§5.5.3: a blade is not a rifle with no bullets', () {
+    // ⚠️ Reported from the field: an axe in hand read as "Nic w ręku". The
+    // only thing this function counted as a weapon was a firearm, so a player
+    // holding two kilograms of steel was told they were empty-handed — and the
+    // silent takedown of §5.5.1 was refused for the same reason.
+    TargetReading axe({double metres = 3}) => read(
+      metres: metres,
+      weaponName: 'Siekiera',
+      ranged: false,
+      loaded: 0,
+      hasRound: false,
+      magazine: 0,
+    );
+
+    test('an axe in hand is something in hand', () {
+      expect(axe().weaponName, 'Siekiera');
+      expect(axe().refusal, isNot(CombatRefusal.noWeapon));
+    });
+
+    test('and it is never out of ammunition', () {
+      // "No ammunition" is nonsense about an axe, and it was the message.
+      expect(axe().refusal, isNull);
+      expect(axe().canFire, isFalse, reason: 'nothing to fire, either');
+      expect(axe().canReload, isFalse);
+    });
+
+    test('but it is out of reach at eighty metres', () {
+      final far = axe(metres: 80);
+
+      expect(far.refusal, CombatRefusal.outOfReach);
+      expect(far.canStrike, isFalse);
+    });
+
+    test('and bare hands are still bare hands', () {
+      final empty = read(
+        weaponName: null,
+        ranged: false,
+        loaded: 0,
+        hasRound: false,
+        magazine: 0,
+      );
+
+      expect(empty.refusal, CombatRefusal.noWeapon);
+    });
+
+    test('a rifle still runs out of bullets', () {
+      expect(read(loaded: 0, hasRound: false).refusal, CombatRefusal.noAmmo);
+    });
   });
 }

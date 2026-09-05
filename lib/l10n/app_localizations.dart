@@ -4896,6 +4896,18 @@ abstract class L10n {
   /// In en, this message translates to:
   /// **'Work stopped'**
   String get journalInterrupted;
+
+  /// No description provided for @useNeedsOpener.
+  ///
+  /// In en, this message translates to:
+  /// **'A sealed tin, and nothing to open it with.'**
+  String get useNeedsOpener;
+
+  /// No description provided for @combatOutOfReach.
+  ///
+  /// In en, this message translates to:
+  /// **'Too far to swing.'**
+  String get combatOutOfReach;
 }
 
 class _L10nDelegate extends LocalizationsDelegate<L10n> {

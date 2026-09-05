@@ -1691,5 +1691,7 @@
   "zoneBackToBuild": "Powrót do schronu — budowa wznowiona.",
   "zoneLeftBench": "Opuszczono warsztat — robota wstrzymana.",
   "zoneBackToBench": "Powrót do warsztatu — robota wznowiona.",
-  "journalInterrupted": "Robota przerwana"
+  "journalInterrupted": "Robota przerwana",
+  "useNeedsOpener": "Puszka zamknięta — nie ma czym jej otworzyć.",
+  "combatOutOfReach": "Za daleko na cios."
 }

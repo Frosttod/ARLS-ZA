@@ -15,7 +15,7 @@ Różnica jest istotna, bo w kilkunastu miejscach **świadomie odeszliśmy od do
 
 ⚠️ **Reguła utrzymania tego pliku:** liczba zmieniona w kodzie i nieprzeniesiona tutaj czyni ten dokument gorszym niż jego brak. Przy każdej zmianie stałej — aktualizuj sekcję.
 
-**Stan:** 2761 testów · schemat bazy **v38** · etapy 0–2 zamknięte, 3–6 i 8 przed testem w terenie.
+**Stan:** 2771 testów · schemat bazy **v38** · etapy 0–2 zamknięte, 3–6 i 8 przed testem w terenie.
 
 ---
 
@@ -1710,6 +1710,57 @@ Trzymanie ich znaczyło **dwa zapisy jednego faktu** — to jest kształt wady,
 którą ten projekt znajduje u siebie od miesięcy. Usunięte 5 września 2026;
 `ActionKind` (§4.7 — jedzenie, picie, opatrunek), który mieszkał w tym samym
 pliku i jest używany wszędzie, wyprowadzony do `lib/sim/action_kind.dart`.
+
+---
+
+## 16a. Przedmioty, które nic nie robią (audyt 5 września 2026)
+
+Przejrzane wszystkie 147 pozycji katalogu: czy cokolwiek w kodzie czyta to, po
+co dana rzecz istnieje. Punktem wyjścia było zgłoszenie z terenu — **konserwę
+dało się otworzyć gołymi rękami**, więc otwieracz był kilogramem ozdoby.
+
+### Naprawione
+
+| Przedmiot | Było | Jest |
+| :---- | :---- | :---- |
+| `tool_can_opener`, `tool_multitool` | `opens_cans` nikt nie czytał, `needs_opener` w `food.json` też nie | puszki wymagają czegoś, co przechodzi przez wieczko; odmowa mówi, czego brakuje |
+
+### Narzędzia, których nadal nic nie woła
+
+| Przedmiot | Martwa własność | Czego brakuje w grze |
+| :---- | :---- | :---- |
+| `tool_lighter`, `tool_matches` | `starts_fire` | ognia — a `food_instant_soup` ma `requires_fire` i `requires_water_ml`, których też nikt nie czyta |
+| `tool_water_filter` | `purifies_ml_per_use` | uzdatniania wody; `drink_water_dirty` pije się wprost, z ryzykiem choroby |
+| `tool_crank_radio` | `receives_broadcasts`, `needs_no_battery` | warstwy fabularnej (§20) |
+| `tool_gun_cleaning_kit`, `tool_wrench_set` | `required_for` | wymagań narzędziowych przy recepturach (§18.4, fala P3) |
+| `tool_headlamp`, `tool_flashlight` | `visible_to_enemies`, światło ręczne | oświetlenia jako mechaniki (§6.2) |
+
+### Medykamenty, których użycie nic nie zmienia
+
+Użycie działa wyłącznie przez `stops_bleeding_class` albo `restores_blood_ml`.
+Poniższe mają tylko własności, których nikt nie czyta — kosztują czas i znikają:
+
+`med_painkillers` (`pain_reduction`), `med_antibiotics` (`treats_infection`),
+`med_antiseptic` (`infection_risk_reduction`), `med_splint` i
+`med_splint_improvised` (`treats_fracture`).
+
+⚠️ **Wszystkie pięć czekają na ten sam brakujący układ: infekcje i złamania.**
+To nie jest pięć osobnych błędów, tylko jedna dziura w §2.6 — i dlatego nie
+naprawia się ich po kolei.
+
+### Własności bez konsumenta, których brak nie psuje przedmiotu
+
+`perishable_hours` (13 pozycji — jedzenie się nie psuje), `strength_required`
+(11 — czeka na statystykę siły), `recoil_moa`, `fire_modes`, `reload_note`,
+`waterproof`, `windproof`, `hip_belt`, `flammable`, `potable`,
+`spot_enemy_bonus`, `bite_protection`, `injury_risk_modifier`, `reusable`,
+`limbs_only`, `repairs`, `doubles_as_tool`, `occupies_hands`.
+
+⚠️ **Lista jest krótsza niż wygląda.** Broń palna działa mimo martwego
+`recoil_moa`, bo strzela; lornetka działa mimo martwego `spot_enemy_bonus`, bo
+podwaja promień rozpoznania. Martwa własność to problem tylko wtedy, gdy jest
+**jedynym powodem istnienia** przedmiotu — i takich jest jedenaście, wszystkie
+wypisane wyżej.
 
 ---
 

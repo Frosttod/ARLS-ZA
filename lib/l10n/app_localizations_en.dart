@@ -2791,4 +2791,10 @@ class L10nEn extends L10n {
 
   @override
   String get journalInterrupted => 'Work stopped';
+
+  @override
+  String get useNeedsOpener => 'A sealed tin, and nothing to open it with.';
+
+  @override
+  String get combatOutOfReach => 'Too far to swing.';
 }

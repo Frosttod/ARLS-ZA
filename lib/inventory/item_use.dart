@@ -67,13 +67,33 @@ const double kMedicineSpeed = 0.30;
 /// about the shape of this mistake in the other direction — reading a weapons
 /// encyclopaedia must not depend on medical knowledge — and the same rule
 /// holds here: knowing how to pack a wound does not help anybody open a tin.
-ItemUse? useOf(ItemDefinition item, {double medicine = 0}) {
+/// Whether anything carried opens a tin (§4.1).
+///
+/// ⚠️ **From the data, not from a list of ids.** Two things say `opens_cans`
+/// today and a content pack may ship a third; a hard-coded pair here would be
+/// a second answer to a question the catalogue already answers.
+bool opensCans(Iterable<ItemDefinition> carried) =>
+    carried.any((item) => item.props['opens_cans'] == true);
+
+/// What using this item does, or null when it cannot be used.
+///
+/// [opener] is §4.1's `needs_opener`: a sealed tin is food a player is holding
+/// and cannot eat. ⚠️ **It defaults to true, and that is deliberate** — every
+/// screen that only asks *whether* a thing is usable (the pack's own row, the
+/// shelf) gets the same answer it always did, and the two places that actually
+/// start the eating pass the real one.
+ItemUse? useOf(ItemDefinition item, {double medicine = 0, bool opener = true}) {
   final seconds = (item.props['use_seconds'] as num?)?.toDouble();
   final consumeSeconds = (item.props['consume_seconds'] as num?)?.toDouble();
 
   switch (item.kind) {
     case ItemKind.food:
       if (consumeSeconds == null) return null;
+
+      // §4.1: a tin is not food until something has been through the lid.
+      // Reported from the field: the can opener was a kilogram of decoration,
+      // because `needs_opener` sat in `food.json` and nothing had ever read it.
+      if (item.props['needs_opener'] == true && !opener) return null;
       final water = (item.props['water_ml'] as num?)?.toDouble() ?? 0;
       final kcal = (item.props['kcal'] as num?)?.toDouble() ?? 0;
 

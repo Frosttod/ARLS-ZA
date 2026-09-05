@@ -14,6 +14,7 @@ import 'package:flutter/material.dart';
 
 import '../core/game_clock.dart';
 import '../core/scaled_wall_clock.dart';
+import '../game/game_loop.dart';
 import '../location/position_fix.dart';
 import '../sim/tick.dart';
 import '../skills/skill.dart';
@@ -42,6 +43,21 @@ class DevSnapshot {
 
   final DateTime? lastFlushAt;
   final bool clockRolledBack;
+
+  /// The same reading, off a game snapshot.
+  ///
+  /// Here rather than in `main.dart`: which fields the overlay wants is a fact
+  /// about the overlay, and the entry point has a size ratchet and a habit of
+  /// absorbing anything shaped like a constructor call.
+  factory DevSnapshot.of(GameSnapshot? snapshot, {required int ticksApplied}) =>
+      DevSnapshot(
+        state: snapshot?.state,
+        fix: snapshot?.fix,
+        signal: snapshot?.signal ?? PositionSignal.unavailable,
+        ticksApplied: ticksApplied,
+        lastFlushAt: snapshot?.lastFlushAt,
+        clockRolledBack: snapshot?.clockRolledBack ?? false,
+      );
 }
 
 /// A small always-on readout, plus a button that opens the full panel.
