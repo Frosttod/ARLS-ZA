@@ -273,12 +273,12 @@ class MapMarker {
 /// because a dimmer red is still red and §3.6's hues each mean something. A
 /// place with nothing in it belongs to no category; it is a note the player
 /// left themselves.
-const int kSpentColour = 0xFF6B726E;
+const int kSpentColour = 0xFF9AA3A0;
 
 const Map<MarkerKind, int> kMarkerColours = {
   MarkerKind.enemy: 0xFFD93A2B,
   MarkerKind.loot: 0xFFE8B33A,
-  MarkerKind.dropped: 0xFF8C8F92,
+  MarkerKind.dropped: 0xFFB9BEC1,
   MarkerKind.remains: 0xFFE6E1D6,
   MarkerKind.shelter: 0xFF3A7BD9,
 
@@ -297,9 +297,13 @@ const int kPlayerColour = 0xFF4CD964;
 /// The shelter is the largest: it is the one point on the map a player
 /// navigates *to* from a distance (§8).
 const Map<MarkerKind, double> kMarkerRadius = {
-  MarkerKind.enemy: 7,
-  MarkerKind.loot: 6,
-  MarkerKind.dropped: 5,
+  MarkerKind.enemy: 8,
+
+  // ⚠️ Seven, because this is the one that carries a glyph. Six left a ten
+  // pixel icon in a twelve pixel circle, and the colour that says which kind
+  // of place it is survived only as a rim.
+  MarkerKind.loot: 7,
+  MarkerKind.dropped: 6,
   MarkerKind.remains: 6,
   MarkerKind.shelter: 9,
 

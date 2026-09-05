@@ -459,6 +459,35 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
           children: [
             Positioned.fill(child: gestures),
 
+            // §17.4: i noc, którą widać.
+            //
+            // ⚠️ **Nad kafelkami, pod danymi — i to jest poprawka zgłoszona z
+            // terenu.** Komentarz w tym miejscu od początku mówił „bez markerów
+            // pod spodem gaszonych do nieczytelności", a warstwa stała na samym
+            // końcu listy, czyli **nad** wszystkim: każdy znacznik, stożek i
+            // okrąg był w nocy przygaszony o sześćdziesiąt procent. Noc ma
+            // ściemniać miasto, nie odpowiedzi gry.
+            //
+            // Granatowy, nie czarny: czerń wygląda jak wygaszony ekran, a o to,
+            // żeby telefon wyglądał na działający, gra dba osobno (§12).
+            //
+            // ⚠️ Tylko przy ciemnej palecie. Gracz, który **wybrał** tryb
+            // jasny, dostawał o 21:40 szarą mapę pod białym panelem — dwie
+            // różne pory doby na jednym ekranie. Przy „dzień i noc" paleta i
+            // tak jest ciemna, więc atmosfera zostaje tam, gdzie była.
+            if (widget.darkness > 0.02 && palette == MapPalette.dark)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0B1A2B).withValues(
+                        alpha: kNightTintMax * widget.darkness.clamp(0.0, 1.0),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
             // §10.2, §4.8: how close is close enough, drawn around the player
             // rather than around every marker. Reach is symmetric, so it is
             // the same statement — and one painter costs nothing next to
@@ -670,26 +699,6 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
                             colour: Color(kMarkerColours[marker.kind]!),
                           ),
                       ],
-                    ),
-                  ),
-                ),
-              ),
-
-            // §17.4: i noc, którą widać.
-            //
-            // ⚠️ Na samej górze, nad wszystkim, bo to jest światło, a nie
-            // warstwa danych — ale bez markerów pod spodem gaszonych do
-            // nieczytelności. Granatowy, nie czarny: czerń wygląda jak wygaszony
-            // ekran, a o to, żeby telefon wyglądał na działający, gra dba
-            // osobno (§12).
-            if (widget.darkness > 0.02)
-              Positioned.fill(
-                child: IgnorePointer(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF0B1A2B).withValues(
-                        alpha: kNightTintMax * widget.darkness.clamp(0.0, 1.0),
-                      ),
                     ),
                   ),
                 ),
@@ -1008,19 +1017,17 @@ class _MarkerPainter extends CustomPainter {
         marker.spent ? kSpentColour : kMarkerColours[marker.kind]!,
       );
 
-      // A dark rim, because §12 will not let a dot be legible only by its
-      // colour and a pale one on a pale street is no dot at all.
+      // ⚠️ **Three rings, and each one answers a different map.** A dark rim
+      // alone was enough on the old washed-out palettes; against a street that
+      // now carries real contrast it was not, and a marker on a pale road at
+      // noon read as a smudge. So: a light halo outside the rim for dark
+      // ground, the dark rim itself for light ground, and the colour at full
+      // strength rather than nine tenths — a dot that means something is not
+      // the place to be tasteful.
       canvas
-        ..drawCircle(
-          at,
-          radius + 0.75,
-          Paint()..color = const Color(0xE6000000),
-        )
-        ..drawCircle(
-          at,
-          radius,
-          Paint()..color = colour.withValues(alpha: 0.9),
-        );
+        ..drawCircle(at, radius + 2, Paint()..color = const Color(0x59F2EFEA))
+        ..drawCircle(at, radius + 1, Paint()..color = const Color(0xF20B0D0E))
+        ..drawCircle(at, radius, Paint()..color = colour);
 
       final glyph = marker.icon;
       if (glyph != null) _drawGlyph(canvas, at, glyph);
@@ -1040,7 +1047,10 @@ class _MarkerPainter extends CustomPainter {
       text: TextSpan(
         text: String.fromCharCode(icon.codePoint),
         style: TextStyle(
-          fontSize: 11,
+          // ⚠️ Ten, not eleven, inside a twelve-pixel dot. At eleven the glyph
+          // reached the rim on both sides and the colour behind it — which is
+          // what says *what kind of place this is* — was down to a hairline.
+          fontSize: 10,
           fontFamily: icon.fontFamily,
           package: icon.fontPackage,
           color: const Color(0xFF0B0D0E),

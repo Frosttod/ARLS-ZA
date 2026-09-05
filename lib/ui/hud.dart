@@ -69,6 +69,8 @@ class HudColors {
 
   /// Daylight. The data and muted tones are darkened rather than mirrored: a
   /// teal that reads well on near-black is invisible on near-white.
+  /// Daylight. The panel, the map ground and the menus are one colour on
+  /// purpose — see `kPaper`.
   static const HudColors light = HudColors(
     panel: Color(0xFFF2EFEA),
     text: Color(0xFF14181A),

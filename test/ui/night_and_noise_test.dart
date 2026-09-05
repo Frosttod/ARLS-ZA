@@ -77,4 +77,38 @@ void main() {
           'poślizg markerów działa też przy słabej baterii, jeśli są blisko',
     );
   });
+
+  group('§17.4, §12: noc ściemnia miasto, nie odpowiedzi gry', () {
+    final surface = File('lib/ui/maplibre_surface.dart').readAsStringSync();
+
+    test('przyciemnienie leży pod markerami, nie nad nimi', () {
+      // ⚠️ Zgłoszone z terenu jako „znaczniki słabo widoczne w obu trybach".
+      // Warstwa nocy stała na końcu listy dzieci `Stack`, czyli **nad**
+      // wszystkim: każdy znacznik, stożek i okrąg był po zmroku przygaszony o
+      // sześćdziesiąt procent. Komentarz przy tej warstwie od początku mówił,
+      // że ma być odwrotnie — kod mówił co innego.
+      final tint = surface.indexOf('kNightTintMax * widget.darkness');
+      final markers = surface.indexOf('painter: _MarkerPainter(');
+
+      expect(tint, greaterThan(0));
+      expect(markers, greaterThan(0));
+      expect(
+        tint,
+        lessThan(markers),
+        reason:
+            'wcześniejsze dziecko Stacka jest niżej — noc ma być pod danymi',
+      );
+    });
+
+    test('i nie zapada się na mapie, którą gracz wybrał jasną', () {
+      // Ekran o 21:40 w trybie jasnym: szara mapa pod białym panelem, czyli
+      // dwie różne pory doby naraz. Przy „dzień i noc" paleta i tak jest
+      // ciemna, więc atmosfera nie ginie.
+      expect(
+        surface.contains('palette == MapPalette.dark'),
+        isTrue,
+        reason: 'przyciemnienie należy do ciemnej palety, nie do zegara',
+      );
+    });
+  });
 }

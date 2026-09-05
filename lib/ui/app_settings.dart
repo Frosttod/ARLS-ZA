@@ -244,6 +244,13 @@ Locale? _localeFrom(String? code) {
 /// The scaffold goes to true black or true white, which is the one place where
 /// the ordinary palette softens things deliberately and the accessible one
 /// must not.
+/// §12: the one off-white the light theme is built on.
+///
+/// Shared with `HudColors.light.panel` and `MapPalette.light.background`, which
+/// is the whole point: a map, a bar over it and a menu under it that are three
+/// different whites read as three unrelated screens.
+const Color kPaper = Color(0xFFF2EFEA);
+
 ThemeData buildTheme(Brightness brightness, {bool contrast = false}) =>
     _themes[(brightness, contrast)] ??= _buildTheme(brightness, contrast);
 
@@ -260,9 +267,16 @@ ThemeData _buildTheme(Brightness brightness, bool contrast) => ThemeData(
     brightness: brightness,
     contrastLevel: contrast ? 1.0 : 0.0,
   ),
+  // ⚠️ **One paper, not three.** The light theme had a pinkish Material
+  // surface under the menus, a warm cream map and an off-white HUD panel — all
+  // within a few points of each other and none of them matching, which is what
+  // a field report called the map being out of step with the menus. This is
+  // `HudColors.light.panel` and `MapPalette.light.background`, spelled the same
+  // in all three places.
   scaffoldBackgroundColor: brightness == Brightness.dark
       ? Colors.black
-      : (contrast ? Colors.white : const Color(0xFFF6F4F2)),
+      : (contrast ? Colors.white : kPaper),
+  canvasColor: brightness == Brightness.dark ? Colors.black : kPaper,
 
   // §12: one face for everything that is words.
   //

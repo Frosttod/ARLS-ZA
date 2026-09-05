@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:arls_za/l10n/app_localizations.dart';
+import 'package:arls_za/map/map_style.dart';
 import 'package:arls_za/ui/app_settings.dart';
 import 'package:arls_za/ui/haptics.dart';
 import 'package:arls_za/ui/hud.dart';
@@ -154,6 +155,15 @@ void main() {
           reason: 'a label nobody can read is a label nobody reads',
         );
       }
+    });
+
+    test('§12: the light theme is one paper, not three', () {
+      // ⚠️ Reported from a screenshot: a warm cream map under a pinkish menu
+      // bar under an off-white panel. Each was defensible on its own and
+      // together they read as three screens glued into one.
+      expect(HudColors.light.panel, kPaper);
+      expect(MapPalette.light.background.toUpperCase(), '#F2EFEA');
+      expect(buildTheme(Brightness.light).scaffoldBackgroundColor, kPaper);
     });
 
     test('and the strong palettes actually clear AAA', () {

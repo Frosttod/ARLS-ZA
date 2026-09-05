@@ -250,7 +250,10 @@ void main() {
       // player is what everything else is measured from.
       expect(kMarkerColours[MarkerKind.enemy], 0xFFD93A2B);
       expect(kMarkerColours[MarkerKind.loot], 0xFFE8B33A);
-      expect(kMarkerColours[MarkerKind.dropped], 0xFF8C8F92);
+      // ⚠️ Lifted from 0xFF8C8F92, which was chosen against a near-black map
+      // and disappeared into the new one. Still grey, and still the quietest
+      // thing on the map — a dropped bag is a note the player left themselves.
+      expect(kMarkerColours[MarkerKind.dropped], 0xFFB9BEC1);
       expect(kMarkerColours[MarkerKind.shelter], 0xFF3A7BD9);
 
       // §6.5.6: a shade past the enemy's, because the dots inside it are the

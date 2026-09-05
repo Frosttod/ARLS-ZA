@@ -15,7 +15,7 @@ Różnica jest istotna, bo w kilkunastu miejscach **świadomie odeszliśmy od do
 
 ⚠️ **Reguła utrzymania tego pliku:** liczba zmieniona w kodzie i nieprzeniesiona tutaj czyni ten dokument gorszym niż jego brak. Przy każdej zmianie stałej — aktualizuj sekcję.
 
-**Stan:** 2753 testów · schemat bazy **v38** · etapy 0–2 zamknięte, 3–6 i 8 przed testem w terenie.
+**Stan:** 2756 testów · schemat bazy **v38** · etapy 0–2 zamknięte, 3–6 i 8 przed testem w terenie.
 
 ---
 
@@ -1395,6 +1395,8 @@ nieczytelny", i co za każdą stało.
 | Zawieszenie przy zmianie trybu wizualnego | mapa miała `key` na jasności, więc zmiana palety **niszczyła widok natywny** i budowała nowy — czyli czytała pakiet 235 MB od nowa | klucz zdjęty; wtyczka i tak porównuje `styleString` w `didUpdateWidget` i przeładowuje styl w miejscu |
 | Zawieszenie przy przełączaniu modułów schronu | każda akcja modułu przeładowuje schrony, a to układało Strefy od nowa: do 60 sond §3.5 na pusty slot, po dwóch kilometrach miasta, na wątku interfejsu | układanie tylko wtedy, gdy **dom się przesunął**; wzrost i tak liczy tick |
 | Ciemny tryb nieczytelny | paski, ostrzeżenia i etykiety miały wobec panelu **2,15 / 2,60 / 2,22 : 1** — poniżej nawet 3:1 dla grafiki | ton i nasycenie zostały, jasność podniesiona do ≥ 5:1; test mierzy obie palety |
+| Znaczniki słabo widoczne w obu trybach | warstwa nocy stała **na końcu listy dzieci `Stack`**, czyli nad wszystkim: po zmroku każdy znacznik był przygaszony o 60% — a komentarz przy niej mówił, że ma być odwrotnie | noc pod danymi, nad kafelkami; do tego jasna aureola wokół ciemnego rantu, pełne krycie wypełnienia i większa kropka pod ikonę |
+| Jasna mapa niespójna z menu | trzy różne biele: różowawa powierzchnia Materiala pod menu, kremowa mapa, biało-szary panel — plus przyciemnienie nocy nakładane **także** na wybraną paletę jasną | jeden `kPaper` (#F2EFEA) na mapę, panel i tła menu; przyciemnienie tylko przy ciemnej palecie |
 
 ⚠️ **Zmiana trybu przy zmierzchu dzieje się sama.** `ThemeChoice.daylight` jest
 domyślny, więc zawieszenie przychodziło bez pytania, na ulicy, o najgorszej porze

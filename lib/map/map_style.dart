@@ -95,7 +95,7 @@ class MapPalette {
   /// A trunk road is 9.4 to one against the ground, a side street 3.9, and
   /// they are 2.4 apart from each other.
   static const MapPalette light = MapPalette(
-    background: '#F0EBE1',
+    background: '#F2EFEA',
     water: '#3E8FC0',
     green: '#B4D189',
     building: '#DED5C6',
