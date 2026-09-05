@@ -245,22 +245,31 @@ Locale? _localeFrom(String? code) {
 /// the ordinary palette softens things deliberately and the accessible one
 /// must not.
 ThemeData buildTheme(Brightness brightness, {bool contrast = false}) =>
-    ThemeData(
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: const Color(0xFFA82D17),
-        brightness: brightness,
-        contrastLevel: contrast ? 1.0 : 0.0,
-      ),
-      scaffoldBackgroundColor: brightness == Brightness.dark
-          ? Colors.black
-          : (contrast ? Colors.white : const Color(0xFFF6F4F2)),
+    _themes[(brightness, contrast)] ??= _buildTheme(brightness, contrast);
 
-      // §12: one face for everything that is words.
-      //
-      // Set on the theme rather than on each style, because nearly every
-      // [TextStyle] in this app gives a size and a colour and nothing else — so
-      // they inherit, and the face can be changed in one place instead of four
-      // hundred.
-      fontFamily: kUiFont,
-      useMaterial3: true,
-    );
+/// ⚠️ **Cached because `ColorScheme.fromSeed` is not cheap.** It quantises a
+/// seed into a full tonal palette, and `MaterialApp` asks for both brightnesses
+/// on every rebuild of the root — which is every settings change and every
+/// crossing of dusk. Measured at about 1.1 ms a call on a desktop, so several
+/// times that on a phone, for an answer that depends on two booleans.
+final Map<(Brightness, bool), ThemeData> _themes = {};
+
+ThemeData _buildTheme(Brightness brightness, bool contrast) => ThemeData(
+  colorScheme: ColorScheme.fromSeed(
+    seedColor: const Color(0xFFA82D17),
+    brightness: brightness,
+    contrastLevel: contrast ? 1.0 : 0.0,
+  ),
+  scaffoldBackgroundColor: brightness == Brightness.dark
+      ? Colors.black
+      : (contrast ? Colors.white : const Color(0xFFF6F4F2)),
+
+  // §12: one face for everything that is words.
+  //
+  // Set on the theme rather than on each style, because nearly every
+  // [TextStyle] in this app gives a size and a colour and nothing else — so
+  // they inherit, and the face can be changed in one place instead of four
+  // hundred.
+  fontFamily: kUiFont,
+  useMaterial3: true,
+);

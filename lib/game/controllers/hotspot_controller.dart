@@ -177,6 +177,17 @@ class HotspotController extends ChangeNotifier {
         .where((place) => place.kind == ShelterKind.main)
         .firstOrNull;
 
+    // ⚠️ **Only when the house has moved, and this was a reported hang.**
+    // Every shelter module built, paused or demolished reloads the shelters,
+    // and that used to land here — re-running the layout each time: up to
+    // sixty §3.5 probes per empty slot across a two-kilometre extract of a
+    // real city, on the interface isolate. None of it could change the answer,
+    // because a Storage module does not move a house. Growth is settled by the
+    // tick (`settle`), which is a different question and stays where it was.
+    if (home?.position == _laidOutFor && _laidOut) return Future.value();
+    _laidOutFor = home?.position;
+    _laidOut = true;
+
     final filter = SpawnFilter(obstacles);
 
     return reload(
@@ -242,6 +253,10 @@ class HotspotController extends ChangeNotifier {
   /// ⚠️ Powiadomienie, nie stan: kto to pokaże, ten zeruje. Ta sama umowa co
   /// [clearedAt], i z tego samego powodu — kontroler nie zna ekranu i nie ma
   /// go znać.
+  /// Where the layout was last worked out from — see [reloadFor].
+  GeoPoint? _laidOutFor;
+  bool _laidOut = false;
+
   final ValueNotifier<Hotspot?> grewTo = ValueNotifier(null);
 
   /// §6.5.4: środek strefy, która właśnie padła — miejsce na skrytkę.

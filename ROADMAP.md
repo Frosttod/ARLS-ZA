@@ -31,7 +31,7 @@ Każdy zamknięty etap dostaje sekcję **Dziennik wykonania** z decyzjami podję
 | — | **Reguła obecności przy warsztacie** (§2.1a.3) | ✅ poza etapami | 2026-08-30 | `c6768b3`, schemat v37 |
 | — | **Widżet 4×1 na ekran główny** (§13.1): woda, kalorie, sen, tętno, co dolega | ✅ poza etapami | 2026-09-05 | — |
 
-**Metryki:** 2736 testów · `flutter analyze` czysty · schemat bazy **v38** · `main.dart` 6410 linii
+**Metryki:** 2741 testów · `flutter analyze` czysty · schemat bazy **v38** · `main.dart` 6410 linii
 
 ✅ **`main` jest wypchnięty na `origin/main`.** Wcześniej cała gra istniała na jednym dysku i było to największe ryzyko projektu — jedyne, którego nie dawało się naprawić kodem.
 

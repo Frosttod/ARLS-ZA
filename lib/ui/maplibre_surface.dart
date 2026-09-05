@@ -269,11 +269,18 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
         : MapPalette.light;
 
     final map = MapLibreMap(
-      // The style is baked into the platform view when it is created, so a
-      // change of palette has to build a new one. Keying on the brightness is
-      // what makes switching the theme actually repaint the map rather than
-      // leaving a black city under a white interface.
-      key: ValueKey(palette == MapPalette.dark),
+      // ⚠️ **No key on the palette, and that is the fix for a reported hang.**
+      // This used to be keyed on the brightness, on the belief that the style
+      // is baked into the platform view at creation. It is not: the plugin
+      // diffs its options in `didUpdateWidget` and `styleString` is one of
+      // them, so a new string reloads the style in place, natively.
+      //
+      // With the key, changing the palette threw the platform view away and
+      // built another one — which on a phone means tearing down the renderer
+      // and reading a 235 MB pack's tiles again. Reported from the field as
+      // the game hanging when the visual mode is switched, and it happens by
+      // itself at dusk: `ThemeChoice.daylight` is the default, so the freeze
+      // arrived unprompted, in the street, at the worst hour of the day.
       styleString: mapStyleJson(source: widget.source, palette: palette),
       initialCameraPosition: CameraPosition(
         target: centre != null

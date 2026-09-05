@@ -46,12 +46,25 @@ class HudColors {
   });
 
   /// Night, and the design the project site was drawn in.
+  ///
+  /// ⚠️ **Three of these were unreadable and it took a field report to say so.**
+  /// The teal, the red and the muted grey were lifted straight off the project
+  /// site, where they sit on a page at reading distance in a room. Measured
+  /// against the panel they were 2.15, 2.60 and 2.22 to one — every one of them
+  /// below even the 3:1 that graphics get, on the surface a player reads at
+  /// arm's length in the street. The light palette, drawn later and by eye,
+  /// happened to land at 9.67, 7.59 and 4.30.
+  ///
+  /// Hue and saturation kept, lightness raised until each clears 5:1 — which
+  /// leaves ~4.6 once the panel's own 0.88 alpha lets the map through. What
+  /// changed is that the bars can be seen; what did not is which colour means
+  /// what.
   static const HudColors dark = HudColors(
     panel: Color(0xFF14181A),
     text: Color(0xFFE4E5DF),
-    data: Color(0xFF17565C),
-    alert: Color(0xFFA82D17),
-    muted: Color(0xFF4A524F),
+    data: Color(0xFF2895A0),
+    alert: Color(0xFFE55B42),
+    muted: Color(0xFF7E8A86),
   );
 
   /// Daylight. The data and muted tones are darkened rather than mirrored: a
@@ -61,7 +74,9 @@ class HudColors {
     text: Color(0xFF14181A),
     data: Color(0xFF0E4249),
     alert: Color(0xFF8E2412),
-    muted: Color(0xFF6B726E),
+    // 4.30 to one against the panel, which is under AA by a hair. Darkened
+    // until it clears — a secondary label is still a label.
+    muted: Color(0xFF636A66),
   );
 
   /// §12, high contrast, night.

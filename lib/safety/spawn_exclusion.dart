@@ -189,13 +189,68 @@ class Exclusion {
   final Map<String, String> tags;
 }
 
+/// How wide one cell of the lookup grid is, in degrees of latitude.
+///
+/// About 111 m north-south and 68 m east-west at Poland's latitude. A query
+/// reads the cell the point is in plus its eight neighbours, so anything
+/// within roughly 68 m is certain to be looked at — comfortably more than the
+/// widest buffer any rule uses (30 m for a railway).
+const double _kCellDeg = 0.001;
+
+/// How finely a line or an edge is sampled into cells.
+///
+/// A segment is entered into every cell it passes through, sampled at this
+/// spacing. Smaller than a cell, so no cell a segment crosses is missed, which
+/// is the whole correctness argument for the index.
+const double _kSampleM = 40;
+
 /// Decides whether the game may put something at a point.
+///
+/// ⚠️ **Indexed, because the honest version was a hang.** The first version
+/// walked every feature for every point, and every vertex of every feature —
+/// which is the right answer written the obvious way. Then §6.5 started asking
+/// it sixty times per empty hotspot slot, on a two-kilometre extract of a real
+/// city, on the interface isolate: measured at 75 ms per sixty probes over
+/// three thousand features on a desktop, so the better part of a second on a
+/// phone, per slot. Reported from the field as the game hanging when a shelter
+/// module is toggled — because building one reloads the shelters, and that
+/// reloads the zones.
+///
+/// So the features are bucketed into a coarse grid once and each probe reads
+/// nine cells. The answer is the same one: `spawn_exclusion_test.dart` checks
+/// it against the brute-force version on random cities, because this decides
+/// where the game sends a person and an index that quietly disagrees would be
+/// worse than a slow one.
 class SpawnFilter {
-  const SpawnFilter(this.features);
+  SpawnFilter(this.features);
 
   /// The features near the area being populated. The caller is expected to have
-  /// narrowed these down — this class walks the whole list.
+  /// narrowed these down.
   final List<MapFeature> features;
+
+  /// Built on first use: a caller that asks one question pays about what one
+  /// brute-force question used to cost, and a caller that asks sixty pays it
+  /// once.
+  Map<(int, int), List<(MapFeature, ExclusionRule)>>? _grid;
+
+  Map<(int, int), List<(MapFeature, ExclusionRule)>> get _cells {
+    final built = _grid;
+    if (built != null) return built;
+
+    final grid = <(int, int), List<(MapFeature, ExclusionRule)>>{};
+    for (final feature in features) {
+      // Features with no rule are dropped here rather than skipped per probe:
+      // most of a city is neither a railway nor a river.
+      final rule = exclusionFor(feature.tags);
+      if (rule == null) continue;
+
+      for (final cell in _cellsOf(feature)) {
+        (grid[cell] ??= []).add((feature, rule));
+      }
+    }
+
+    return _grid = grid;
+  }
 
   /// The rule that refuses [point], or null if it is allowed.
   ///
@@ -204,30 +259,98 @@ class SpawnFilter {
   Exclusion? refuse(GeoPoint point) {
     Exclusion? worst;
 
-    for (final feature in features) {
-      final rule = exclusionFor(feature.tags);
-      if (rule == null) continue;
+    final home = _cellOf(point);
+    for (var dy = -1; dy <= 1; dy++) {
+      for (var dx = -1; dx <= 1; dx++) {
+        final bucket = _cells[(home.$1 + dx, home.$2 + dy)];
+        if (bucket == null) continue;
 
-      final distance = feature.distanceFrom(point);
-      final excluded = rule.bufferM > 0
-          ? distance <= rule.bufferM
-          // A zero buffer means the geometry itself: inside an area, or on a
-          // line. Lines are given a metre of width, because a point exactly on
-          // an infinitely thin river is not a case that survives floating
-          // point.
-          : distance <= (feature.shape == FeatureShape.area ? 0 : 1);
-      if (!excluded) continue;
+        for (final (feature, rule) in bucket) {
+          final distance = feature.distanceFrom(point);
+          final excluded = rule.bufferM > 0
+              ? distance <= rule.bufferM
+              // A zero buffer means the geometry itself: inside an area, or on
+              // a line. Lines are given a metre of width, because a point
+              // exactly on an infinitely thin river is not a case that
+              // survives floating point.
+              : distance <= (feature.shape == FeatureShape.area ? 0 : 1);
+          if (!excluded) continue;
 
-      if (worst == null || distance < worst.distanceM) {
-        worst = Exclusion(
-          kind: rule.kind,
-          distanceM: distance,
-          tags: feature.tags,
-        );
+          if (worst == null || distance < worst.distanceM) {
+            worst = Exclusion(
+              kind: rule.kind,
+              distanceM: distance,
+              tags: feature.tags,
+            );
+          }
+        }
       }
     }
     return worst;
   }
 
   bool allows(GeoPoint point) => refuse(point) == null;
+
+  static (int, int) _cellOf(GeoPoint point) => (
+    (point.longitude / _kCellDeg).floor(),
+    (point.latitude / _kCellDeg).floor(),
+  );
+
+  /// Every cell this feature touches.
+  ///
+  /// ⚠️ Sampled along each segment, not only at the vertices. A road drawn
+  /// with two points a kilometre apart has vertices in two cells and passes
+  /// through fifteen — and the fifteen are exactly the places a player would
+  /// have been sent to stand on it.
+  static Set<(int, int)> _cellsOf(MapFeature feature) {
+    final cells = <(int, int)>{};
+    final points = feature.geometry;
+    if (points.isEmpty) return cells;
+
+    cells.add(_cellOf(points.first));
+    for (var i = 1; i < points.length; i++) {
+      final from = points[i - 1];
+      final to = points[i];
+      cells.add(_cellOf(to));
+
+      final metres = from.distanceTo(to);
+      final steps = (metres / _kSampleM).ceil();
+      for (var step = 1; step < steps; step++) {
+        final fraction = step / steps;
+        cells.add(
+          _cellOf(
+            GeoPoint(
+              from.latitude + (to.latitude - from.latitude) * fraction,
+              from.longitude + (to.longitude - from.longitude) * fraction,
+            ),
+          ),
+        );
+      }
+    }
+
+    // ⚠️ **An area is its inside, not its edge.** A point in the middle of a
+    // lake is nought metres from it and refused — but the middle of a lake
+    // holds no boundary sample, so an index built from the outline alone
+    // answers "allowed" there. Caught by the test that checks this class
+    // against the brute-force version: a railway crossing a big residential
+    // polygon disappeared. So every cell of the bounding box is filled.
+    if (feature.shape == FeatureShape.area) {
+      var minX = 1 << 30, maxX = -(1 << 30);
+      var minY = 1 << 30, maxY = -(1 << 30);
+      for (final point in points) {
+        final (x, y) = _cellOf(point);
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      }
+      for (var x = minX; x <= maxX; x++) {
+        for (var y = minY; y <= maxY; y++) {
+          cells.add((x, y));
+        }
+      }
+    }
+
+    return cells;
+  }
 }

@@ -1,7 +1,7 @@
 # ARLS-ZA — lista kontrolna systemów
 
 Stan na dzień **2026-08-28**. Wygenerowana po przejściu pełnego zestawu
-testów: **2736 testów, `flutter analyze` czysty, schemat bazy v38**.
+testów: **2741 testów, `flutter analyze` czysty, schemat bazy v38**.
 
 ⚠️ Liczby poniżej są zliczone z suite'a, nie przepisane z pamięci. Suma
 obszarów musi się zgadzać z ogółem — jeśli się nie zgadza, ten plik jest
@@ -23,7 +23,7 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 
 | Obszar | Testy | Co jest tam pilnowane |
 | :---- | ----: | :---- |
-| `ui` | 505 | HUD, ekwipunek, panele, arkusze, geometria dotknięć i pierścieni, notatki stanu, dziennik, niebo w panelu, zakres przebudów, **odprawa z checkboxem i zasady przetrwania z menu (§15.3, §15.7)**, **dostępność: kontrast mierzony wobec WCAG, czcionka przy 200%, wibracje (§12)** |
+| `ui` | 507 | HUD, ekwipunek, panele, arkusze, geometria dotknięć i pierścieni, notatki stanu, dziennik, niebo w panelu, zakres przebudów, **odprawa z checkboxem i zasady przetrwania z menu (§15.3, §15.7)**, **dostępność: kontrast mierzony wobec WCAG, czcionka przy 200%, wibracje (§12)** |
 | `combat` | 491 | tabela kalibracyjna §5.1.2 wiersz po wierszu, obrażenia §5.1.5, budżet sprintu, maszyna stanów, hałas, spawn, magazynek, dodatki, **odczyt panelu ognia**, **ciosy przy zgaszonym ekranie**, **pole widzenia, słuch i cios w plecy (§6.2, §5.5.1)**, Strefy Rozkładu: punktacja, wzrost, wysyp, kronika, **dwa kanały obrażeń i zasięg broni (§5.5.3)** |
 | `sim` | 355 | tick, metabolizm, tętno, wchłanianie, **dwa zegary snu**, **masa ciała i wychudzenie**, **osiągalność zgonu z głodu i pragnienia**, **kary za stan docierające do zegarów**, **nawyk gry mierzony, nie zakładany (§16.4)**, świt i zmierzch, **drabinka kar generowana z modelu (§2.3, §2.5.4)** |
 | `game` | 273 | pętla, kontrolery, jedna para rąk, integracja pozycji, dziennik, **wiązanie kontrolerów do profilu**, **podpowiedzi pierwszego kontaktu i przypomnienie o zmroku (§15.5, §3.5)**, **widżet: ranking dolegliwości i wygasanie faktów o ulicy (§13.1)** |
@@ -37,7 +37,7 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 | `skills` | 63 | §7.2.1 praktyka, §4.6 literatura, §7.2.2 krzywa, wpięcie w grę |
 | `db` | 50 | migracje v1→v38, integralność, warstwa gorąca i ciepła |
 | `devtools` | 44 | konsola, rejestrator sesji |
-| `safety` | 34 | §1.2, blokady na prędkości |
+| `safety` | 37 | §1.2, blokady na prędkości, **indeks wykluczeń zgodny z pętlą, którą zastąpił** |
 | `core` | 37 | zegar gry, jeden timer |
 | `app` | 23 | bootstrap, granica awarii, **zapadki rozmiaru** main.dart, ekwipunku i pętli |
 | `journal` | 26 | §3.6.1: dzień jako data, limit wpisów, nazwy wire |
@@ -45,7 +45,7 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 | `notes` | 14 | notatki i lektura |
 | `l10n` | 7 | kolizje kluczy, brak twardej polszczyzny w kodzie |
 
-**Razem 2736.**
+**Razem 2741.**
 
 ### Rzeczy, które testy trzymają jako liczby, a nie jako intencje
 

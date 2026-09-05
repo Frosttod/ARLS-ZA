@@ -15,7 +15,7 @@ Różnica jest istotna, bo w kilkunastu miejscach **świadomie odeszliśmy od do
 
 ⚠️ **Reguła utrzymania tego pliku:** liczba zmieniona w kodzie i nieprzeniesiona tutaj czyni ten dokument gorszym niż jego brak. Przy każdej zmianie stałej — aktualizuj sekcję.
 
-**Stan:** 2736 testów · schemat bazy **v38** · etapy 0–2 zamknięte, 3–6 i 8 przed testem w terenie.
+**Stan:** 2741 testów · schemat bazy **v38** · etapy 0–2 zamknięte, 3–6 i 8 przed testem w terenie.
 
 ---
 
@@ -1381,6 +1381,35 @@ Cztery liczby i jedna linijka, w komórce szerokiej mniej więcej na osiem słó
 **Wysyłka jest dławiona.** Pętla publikuje mniej więcej raz na sekundę; do launchera idzie tylko to, co zmienia widoczną liczbę, plus jedno odświeżenie co 5 minut — bez niego gra działająca wyglądałaby identycznie jak zamknięta.
 
 **Próg „coś jest blisko": 150 m** — to samo pasmo, w którym ostrzega §5.5.2. Dalej to już nie jest wybór gracza.
+
+---
+
+## 12ab. Co kosztowało płynność (§3.3, §12)
+
+Trzy rzeczy zgłoszone z terenu jako „gra się wiesza" albo „ciemny tryb jest
+nieczytelny", i co za każdą stało.
+
+| Objaw | Przyczyna | Co zrobiono |
+| :---- | :---- | :---- |
+| Zawieszenie przy zmianie trybu wizualnego | mapa miała `key` na jasności, więc zmiana palety **niszczyła widok natywny** i budowała nowy — czyli czytała pakiet 235 MB od nowa | klucz zdjęty; wtyczka i tak porównuje `styleString` w `didUpdateWidget` i przeładowuje styl w miejscu |
+| Zawieszenie przy przełączaniu modułów schronu | każda akcja modułu przeładowuje schrony, a to układało Strefy od nowa: do 60 sond §3.5 na pusty slot, po dwóch kilometrach miasta, na wątku interfejsu | układanie tylko wtedy, gdy **dom się przesunął**; wzrost i tak liczy tick |
+| Ciemny tryb nieczytelny | paski, ostrzeżenia i etykiety miały wobec panelu **2,15 / 2,60 / 2,22 : 1** — poniżej nawet 3:1 dla grafiki | ton i nasycenie zostały, jasność podniesiona do ≥ 5:1; test mierzy obie palety |
+
+⚠️ **Zmiana trybu przy zmierzchu dzieje się sama.** `ThemeChoice.daylight` jest
+domyślny, więc zawieszenie przychodziło bez pytania, na ulicy, o najgorszej porze
+doby.
+
+⚠️ **Filtr §3.5 jest teraz indeksowany.** Był pętlą po wszystkich obiektach i
+wszystkich ich wierzchołkach — poprawną i wolną. Siatka ~111 m, zapytanie czyta
+dziewięć komórek. Odpowiedzi są sprawdzane wobec starej pętli na losowych
+miastach (`test/safety/spawn_index_test.dart`), bo to decyduje, **gdzie gra
+wysyła człowieka** — a indeks, który jest szybszy i po cichu się nie zgadza,
+byłby gorszy od wolnego.
+
+Przy okazji: `ColorScheme.fromSeed` liczy paletę tonalną z ziarna i kosztuje
+~1,1 ms na wywołanie (desktop). `MaterialApp` prosi o obie jasności przy każdej
+przebudowie korzenia, więc wynik jest teraz zapamiętany — zależy od dwóch
+booleanów.
 
 ---
 

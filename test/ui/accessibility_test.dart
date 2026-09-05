@@ -131,6 +131,31 @@ void main() {
       expect(strong, HudColors.contrastDark);
     });
 
+    test('the ordinary palettes clear AA, which they did not', () {
+      // ⚠️ **Reported from the field as "dark mode is hard to read", and it
+      // was measurable.** The night palette's teal, red and grey came off the
+      // project site, where they sit on a page in a room; against the panel
+      // they were 2.15, 2.60 and 2.22 to one — every one below even the 3:1
+      // that graphics get, on the surface a player reads in the street. The
+      // daylight palette, drawn later, had happened to land at 9.67 and 7.59.
+      //
+      // Nobody had ever measured them, which is why this test exists at all.
+      for (final pair in [HudColors.dark, HudColors.light]) {
+        expect(_ratio(pair.text, pair.panel), greaterThanOrEqualTo(7.0));
+        expect(
+          _ratio(pair.data, pair.panel),
+          greaterThanOrEqualTo(4.5),
+          reason: 'the bars are the reading, not decoration',
+        );
+        expect(_ratio(pair.alert, pair.panel), greaterThanOrEqualTo(4.5));
+        expect(
+          _ratio(pair.muted, pair.panel),
+          greaterThanOrEqualTo(4.5),
+          reason: 'a label nobody can read is a label nobody reads',
+        );
+      }
+    });
+
     test('and the strong palettes actually clear AAA', () {
       // ⚠️ Measured, not asserted by eye. A "high contrast" mode that fails
       // WCAG is a setting that lies to the person who most needed it to be
