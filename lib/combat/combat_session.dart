@@ -218,6 +218,18 @@ class CombatSession {
     );
   }
 
+  /// §15.6: one more of them, put there on purpose.
+  ///
+  /// ⚠️ The only way anything enters this session other than through §6.4's
+  /// spawner, and it exists for exactly one scenario — the scripted first
+  /// fight. Ignored if something with that id is already standing there, so a
+  /// tick that runs twice does not produce two Walkers.
+  CombatSession withEnemy(Enemy extra) {
+    if (enemies.any((enemy) => enemy.id == extra.id)) return this;
+
+    return CombatSession(seed: seed, enemies: [...enemies, extra], open: open);
+  }
+
   /// §5.6: something was heard, and some of them turn towards it.
   CombatSession heard(NoiseEvent event, {required GeoPoint playerAt}) {
     final folded = accumulate(open, event);

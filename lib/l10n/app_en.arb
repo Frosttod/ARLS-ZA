@@ -1866,5 +1866,25 @@
   "zoneBackToBench": "Back at the bench — the work goes on.",
   "journalInterrupted": "Work stopped",
   "useNeedsOpener": "A sealed tin, and nothing to open it with.",
-  "combatOutOfReach": "Too far to swing."
+  "combatOutOfReach": "Too far to swing.",
+  "firstSpotted": "Something has noticed you. You can hear the direction.",
+  "firstAim": "Tap it to take aim.",
+  "firstStandStill": "Stand still. The figure above the button is your real chance of hitting — it drops several times over on the move.",
+  "firstNoise": "See that circle? The shot carries {metres} m. Something may have heard it.",
+  "@firstNoise": {
+    "placeholders": {
+      "metres": {
+        "type": "String"
+      }
+    }
+  },
+  "firstReload": "Empty. Reload — it takes three seconds, and it is still coming.",
+  "firstBill": "{shots} rounds for one of them. Ammunition is scarce and every shot gives you away. Sometimes the answer is not to fight.",
+  "@firstBill": {
+    "placeholders": {
+      "shots": {
+        "type": "int"
+      }
+    }
+  }
 }

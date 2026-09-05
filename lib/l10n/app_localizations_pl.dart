@@ -2797,4 +2797,28 @@ class L10nPl extends L10n {
 
   @override
   String get combatOutOfReach => 'Za daleko na cios.';
+
+  @override
+  String get firstSpotted => 'Coś cię zauważyło. Słychać kierunek.';
+
+  @override
+  String get firstAim => 'Dotknij przeciwnika, żeby go namierzyć.';
+
+  @override
+  String get firstStandStill =>
+      'Zatrzymaj się. Liczba nad przyciskiem to realna szansa trafienia — w ruchu spada kilkukrotnie.';
+
+  @override
+  String firstNoise(String metres) {
+    return 'Widzisz ten okrąg? Strzał słychać na $metres m. Coś mogło go usłyszeć.';
+  }
+
+  @override
+  String get firstReload =>
+      'Pusty magazynek. Przeładuj — to trwa trzy sekundy, a on się zbliża.';
+
+  @override
+  String firstBill(int shots) {
+    return '$shots naboi na jednego. Amunicji jest mało, a każdy strzał zdradza pozycję. Czasem lepiej nie walczyć.';
+  }
 }

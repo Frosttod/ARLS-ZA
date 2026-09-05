@@ -125,10 +125,12 @@ import 'ui/hotspot_sheet.dart';
 import 'ui/game_screen.dart';
 import 'game/bench_inputs.dart';
 import 'game/away_summary.dart';
+import 'game/first_fight.dart';
 import 'game/home_status.dart';
 import 'game/zone_watch.dart';
 import 'ui/hint_nudger.dart';
 import 'ui/away_sheet.dart';
+import 'ui/first_fight_teacher.dart';
 import 'ui/haptics.dart';
 import 'ui/home_widget.dart';
 import 'ui/hud.dart';
@@ -319,6 +321,16 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
   /// §12: what the game has just said. Under the HUD, never over the menu.
   final NoticeBoard _notices = NoticeBoard();
+
+  /// §15.6: the one scripted fight, and the seven lines it teaches.
+  late final FirstFightTeacher _first = FirstFightTeacher(
+    widget.session.db,
+    say: _say,
+    enemies: () => _combat.enemies,
+    targetId: () => _target?.id,
+    loaded: () => _loaded,
+    noiseM: () => _fitted?.noiseRangeM ?? 0,
+  );
 
   /// §2.1a.3, §12: whether the player is still standing where the work is.
   final ZoneWatch _zones = ZoneWatch();
@@ -951,6 +963,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       await widget.session.db.readSetting(kSimulatorSettingKey),
     );
     await _hints.load();
+    await _first.load();
     if (!mounted) return;
 
     // Read once. A problem here is a shipped data file being wrong, which the
@@ -1220,6 +1233,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       _tellLoopWhatWeAreDoing();
       _tellLoopWhereWeAre();
       unawaited(_hints.nudge(L10n.of(context), snapshot));
+      unawaited(
+        _first.teach(L10n.of(context), standing: snapshot.speedKmh < kStillKmh),
+      );
       unawaited(_tellTheLauncher(snapshot));
       unawaited(_tellThePlayerWhatTheyMissed(snapshot));
       unawaited(_settleDown(snapshot));
@@ -1412,18 +1428,23 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     Navigator.of(context).popUntil((route) => route.isFirst);
   }
 
+  /// One way to open a screen. Eight places spelled the same three lines of
+  /// route boilerplate out; the interesting part of each of them was the
+  /// widget.
+  Future<void> _push(Widget screen) => Navigator.of(
+    context,
+  ).push(MaterialPageRoute<void>(builder: (_) => screen));
+
   Future<void> _openSettings() async {
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => SettingsScreen(
-          settings: widget.settings,
-          onOpenMaps: () => unawaited(_openRegionPicker()),
-          readPermissions: _currentPermissions,
-          onFixLocation: _fixLocation,
-          onFixBattery: const SystemSettings().openBatterySettings,
-          simulatorEnabled: _useSimulator,
-          onSimulatorChanged: (value) => unawaited(_setSimulator(value)),
-        ),
+    await _push(
+      SettingsScreen(
+        settings: widget.settings,
+        onOpenMaps: () => unawaited(_openRegionPicker()),
+        readPermissions: _currentPermissions,
+        onFixLocation: _fixLocation,
+        onFixBattery: const SystemSettings().openBatterySettings,
+        simulatorEnabled: _useSimulator,
+        onSimulatorChanged: (value) => unawaited(_setSimulator(value)),
       ),
     );
   }
@@ -1439,45 +1460,43 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     if (!mounted) return;
     unawaited(_hints.openedPack(L10n.of(context)));
 
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => InventoryScreen(
-          inventory: _inventory,
-          order: _packOrder,
-          catalogue: catalogue,
-          names: _names ?? ItemNames.empty,
-          body: character.body,
-          onDrop: (line, count) => unawaited(_drop(line, count)),
-          onWear: (line) => unawaited(_wear(line)),
-          onTakeOff: (line) => unawaited(_takeOff(line)),
-          onUse: (line) => unawaited(_use(line)),
-          onFill: (line) => unawaited(_fillMagazine(line)),
-          onEmpty: (line) => unawaited(_emptyMagazine(line)),
-          onDismantle: (line) => unawaited(_dismantle(line)),
-          onStopDismantle: () => unawaited(_pauseDismantle()),
-          refusalOf: _packRefusal,
-          onStash: _shelvesInReach()
-              ? (line) => unawaited(_quickShelve(line))
-              : null,
-          craftJob: _craftJob,
-          craftLines: _dismantling,
-          // ⚠️ What actually comes out, not what the thing is made of.
-          //
-          // Two different questions, and the difference is most of the
-          // catalogue: an axe holds 0.86 units of metal and wood, which at
-          // §18.6's forty per cent rounds to nothing. Lighting the glyph on
-          // everything with a material content lit it on axes, knives and
-          // magazines and then refused every one of them on the tap.
-          canDismantle: _worthTakingApart,
-          onRead: (line) => unawaited(_readBook(line)),
-          onDetails: (line) => unawaited(_showItemDetails(line)),
-          action: _search,
-          // Which piece, not which item: a half-eaten tin beside three whole
-          // ones is one row being used and three that are not.
-          usingLine: _usingLine,
-          onCancelAction: _cancelSearch,
-          onDevFill: kDevTools ? () => unawaited(_devFillPack()) : null,
-        ),
+    await _push(
+      InventoryScreen(
+        inventory: _inventory,
+        order: _packOrder,
+        catalogue: catalogue,
+        names: _names ?? ItemNames.empty,
+        body: character.body,
+        onDrop: (line, count) => unawaited(_drop(line, count)),
+        onWear: (line) => unawaited(_wear(line)),
+        onTakeOff: (line) => unawaited(_takeOff(line)),
+        onUse: (line) => unawaited(_use(line)),
+        onFill: (line) => unawaited(_fillMagazine(line)),
+        onEmpty: (line) => unawaited(_emptyMagazine(line)),
+        onDismantle: (line) => unawaited(_dismantle(line)),
+        onStopDismantle: () => unawaited(_pauseDismantle()),
+        refusalOf: _packRefusal,
+        onStash: _shelvesInReach()
+            ? (line) => unawaited(_quickShelve(line))
+            : null,
+        craftJob: _craftJob,
+        craftLines: _dismantling,
+        // ⚠️ What actually comes out, not what the thing is made of.
+        //
+        // Two different questions, and the difference is most of the
+        // catalogue: an axe holds 0.86 units of metal and wood, which at
+        // §18.6's forty per cent rounds to nothing. Lighting the glyph on
+        // everything with a material content lit it on axes, knives and
+        // magazines and then refused every one of them on the tap.
+        canDismantle: _worthTakingApart,
+        onRead: (line) => unawaited(_readBook(line)),
+        onDetails: (line) => unawaited(_showItemDetails(line)),
+        action: _search,
+        // Which piece, not which item: a half-eaten tin beside three whole
+        // ones is one row being used and three that are not.
+        usingLine: _usingLine,
+        onCancelAction: _cancelSearch,
+        onDevFill: kDevTools ? () => unawaited(_devFillPack()) : null,
       ),
     );
   }
@@ -2352,6 +2371,14 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         speedKmh: snapshot.speedKmh,
       );
 
+      // §15.6: the one Walker the game puts there on purpose, once.
+      _combat = _first.into(
+        _combat,
+        here,
+        ground: SpawnFilter(_world?.obstacles ?? const []),
+        seed: character.profile.rngSeed,
+      );
+
       _loop?.enemiesNear = _combat.any(here, withinM: kFightPaceM);
 
       for (final gone in vanishedNear(
@@ -2378,6 +2405,15 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
   /// What is in the hand, if it is something that fires (§5.5.1).
   ItemDefinition? get _weapon => _inHand(ItemKind.firearm);
+
+  /// §5.3, §5.6.1: the weapon in hand with whatever is bolted to it, or null.
+  /// Asked in four places and built by hand in each of them.
+  FittedWeapon? get _fitted {
+    final weapon = _weapon;
+    if (weapon == null) return null;
+
+    return FittedWeapon(weapon: weapon, attachments: _attachmentsFor(weapon));
+  }
 
   /// What is worn of one kind, or null. §5.4 and §5.5.3 ask the same question
   /// about two different things, and asked it twice in two identical loops.
@@ -2474,6 +2510,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
     final error = _aimError(target);
     if (_loaded <= 0 || error == null) return;
+
+    // §15.6: the seventh line is a number, so every round at it is counted.
+    if (target.id == kFirstFightEnemyId) unawaited(_first.shotFired());
 
     final at = GeoPoint(fix.latitude, fix.longitude);
     final outcome = fireAt(
@@ -2770,10 +2809,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         NoiseEvent(
           at: at,
           radiusM: noiseRadiusM(
-            FittedWeapon(
-              weapon: weapon,
-              attachments: _attachmentsFor(weapon),
-            ).noiseRangeM,
+            _fitted?.noiseRangeM ?? 0,
             denseUrban: _world?.denseUrban ?? false,
             night: _snapshot?.isNight ?? false,
           ),
@@ -2795,7 +2831,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final character = _character;
     if (loop == null || catalogue == null || character == null) return;
 
-    final hurt = _fight.settleAway(
+    final hurt = _fight.blowsWhileAwayAt(
       away: away,
       at: at,
       bloodMl: loop.state.bloodMl,
@@ -2806,7 +2842,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       mayGoDown: character.deathMode != DeathMode.hardcore,
       seed: character.profile.rngSeed,
     );
-    if (!hurt.any) return;
+    if (hurt == null) return;
 
     _wounded(loop, hurt);
     unawaited(_diary.add(JournalKind.hurt, subject: '${hurt.blows}'));
@@ -2820,33 +2856,30 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   void _takeBlows(GeoPoint at, DateTime now) {
     final loop = _loop;
     final catalogue = _catalogue;
-    if (loop == null || catalogue == null) return;
+    final character = _character;
+    if (loop == null || catalogue == null || character == null) return;
 
-    final inReach = enemiesInReach(_combat.enemies, at);
-    if (inReach.isEmpty) {
-      _fight.noneInReach();
-      return;
-    }
-
-    // §5.5.3: who is due a swing — what one costs is the same arithmetic the
-    // gap uses (§9.2).
-    final swinging = [
-      for (final enemy in inReach)
-        if (_fight.mayStrike(enemy.id, now, enemy.kind.attackInterval)) enemy,
-    ];
-    for (final enemy in swinging) {
-      _fight.struck(enemy.id, now);
-    }
-
-    final hurt = oneSwingEach(
-      swinging: swinging,
-      crowdSize: inReach.length,
+    final swung = _fight.swingsAt(
+      at,
+      now,
       protection: _armourNow(catalogue),
       random: Random(),
     );
-    if (!hurt.any || hurt.worst == null) return;
+    if (swung == null) return;
 
-    _wounded(loop, hurt);
+    // §15.6: the scripted Walker hurts and cannot kill. Tamed at the edge,
+    // because everything else about it is an ordinary Walker and the exception
+    // must not leak into §5.5.3's arithmetic.
+    final hurt = swung.hurt;
+    final blow = _first.tameBlow(
+      hurt,
+      swinging: swung.swinging,
+      bloodMl: loop.state.bloodMl,
+      maxMl: character.constants.bloodMaxMl,
+    );
+    if (!blow.any) return;
+
+    _wounded(loop, blow);
     _buzz(Buzz.hit);
     _say(
       L10n.of(context).combatHurtAt(
@@ -2869,13 +2902,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// pressure dressing answers — which is the whole reason to carry one, and
   /// the reason walking away from a clinch is not the end of the fight.
   void _wounded(GameLoop loop, BlowsAway hurt) {
-    loop.applyWound(
-      hurt.bloodMl,
-      bleeding:
-          hurt.worst == HitLocation.head || hurt.worst == HitLocation.torso
-          ? BleedTier.moderate
-          : BleedTier.superficial,
-    );
+    loop.applyWound(hurt.bloodMl, bleeding: hurt.opens);
     _note((stats) => stats.hurt(hurt.bloodMl));
   }
 
@@ -3495,41 +3522,39 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     await _loadShelvesOfMain();
     if (!mounted) return;
 
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => ShelterScreen(
-          shelters: _shelters,
-          standingAt: _standingAt,
-          carried: _carriedCounts(),
-          shelved: _shelvedCounts(),
-          shelvedMassKg: _stash.value.massKg(catalogue),
-          shelvedVolumeL: _stash.value.volumeL(catalogue),
-          itemNameOf: (id) {
-            final definition = catalogue[id];
-            if (definition == null) return id;
+    await _push(
+      ShelterScreen(
+        shelters: _shelters,
+        standingAt: _standingAt,
+        carried: _carriedCounts(),
+        shelved: _shelvedCounts(),
+        shelvedMassKg: _stash.value.massKg(catalogue),
+        shelvedVolumeL: _stash.value.volumeL(catalogue),
+        itemNameOf: (id) {
+          final definition = catalogue[id];
+          if (definition == null) return id;
 
-            final language = Localizations.localeOf(context).languageCode;
-            return definition.name.resolve(
-              language: language,
-              lookup: (_names ?? ItemNames.empty).forLanguage(language),
-            );
-          },
-          // §18.3: a tool on the shelf is a tool in the shelter. Making the
-          // player pick their own hammer up off their own shelf before the
-          // button lights is bookkeeping, not a decision.
-          hasTools: _atHand(kHammerId) || _atHand(kAxeId),
-          hasHammer: _atHand(kHammerId),
-          hasMultitool: _atHand('tool_multitool'),
-          onBuild: (kind) => unawaited(_buildShelter(kind)),
-          onBuildModule: (module) => unawaited(_buildModule(module)),
-          onDemolishModule: (module) => unawaited(_demolishModule(module)),
-          onShelves: (place) => unawaited(_openStash(place)),
-          onCraft: () => unawaited(_openCraft()),
-          onDisassemble: () => unawaited(_openDisassemble()),
-          craftJob: _craftJob,
-          onCancelBuild: (place) => unawaited(_cancelBuild(place)),
-          onPauseBuild: (place) => unawaited(_pauseBuild(place)),
-        ),
+          final language = Localizations.localeOf(context).languageCode;
+          return definition.name.resolve(
+            language: language,
+            lookup: (_names ?? ItemNames.empty).forLanguage(language),
+          );
+        },
+        // §18.3: a tool on the shelf is a tool in the shelter. Making the
+        // player pick their own hammer up off their own shelf before the
+        // button lights is bookkeeping, not a decision.
+        hasTools: _atHand(kHammerId) || _atHand(kAxeId),
+        hasHammer: _atHand(kHammerId),
+        hasMultitool: _atHand('tool_multitool'),
+        onBuild: (kind) => unawaited(_buildShelter(kind)),
+        onBuildModule: (module) => unawaited(_buildModule(module)),
+        onDemolishModule: (module) => unawaited(_demolishModule(module)),
+        onShelves: (place) => unawaited(_openStash(place)),
+        onCraft: () => unawaited(_openCraft()),
+        onDisassemble: () => unawaited(_openDisassemble()),
+        craftJob: _craftJob,
+        onCancelBuild: (place) => unawaited(_cancelBuild(place)),
+        onPauseBuild: (place) => unawaited(_pauseBuild(place)),
       ),
     );
     await _reloadShelters();
@@ -3784,24 +3809,22 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     await _reloadCraftJob();
     if (!mounted) return;
 
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => ValueListenableBuilder<CraftJob?>(
-          // ⚠️ The notifier, not a copy. The bench is a pushed route, and
-          // this is the sixth time in this file that reading state into a
-          // pushed screen once has meant the screen never changed again.
-          valueListenable: _craftJob,
-          builder: (_, job, _) => CraftScreen(
-            book: _recipes,
-            catalogue: catalogue,
-            bench: _bench(),
-            job: job,
-            inventory: _inventory,
-            names: _names ?? ItemNames.empty,
-            itemNameOf: _nameOfId,
-            onCraft: (recipe) => unawaited(_craft(recipe)),
-            onCancel: () => unawaited(_cancelCraft()),
-          ),
+    await _push(
+      ValueListenableBuilder<CraftJob?>(
+        // ⚠️ The notifier, not a copy. The bench is a pushed route, and
+        // this is the sixth time in this file that reading state into a
+        // pushed screen once has meant the screen never changed again.
+        valueListenable: _craftJob,
+        builder: (_, job, _) => CraftScreen(
+          book: _recipes,
+          catalogue: catalogue,
+          bench: _bench(),
+          job: job,
+          inventory: _inventory,
+          names: _names ?? ItemNames.empty,
+          itemNameOf: _nameOfId,
+          onCraft: (recipe) => unawaited(_craft(recipe)),
+          onCancel: () => unawaited(_cancelCraft()),
         ),
       ),
     );
@@ -4264,29 +4287,27 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       book: _recipes,
     );
 
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => DisassembleScreen(
-          offers: offers,
+    await _push(
+      DisassembleScreen(
+        offers: offers,
+        catalogue: catalogue,
+        nameOf: _nameOfId,
+        // §12: the sitting is watched where it was started, and stopped from
+        // the same place.
+        job: _craftJob,
+        onStop: () => unawaited(_cancelCraft()),
+        // §18.6: at this player's share. Asked here because this is where
+        // the bench is.
+        yieldsOf: (step) => yieldOf(
+          step,
+          bench: _bench(),
           catalogue: catalogue,
-          nameOf: _nameOfId,
-          // §12: the sitting is watched where it was started, and stopped from
-          // the same place.
-          job: _craftJob,
-          onStop: () => unawaited(_cancelCraft()),
-          // §18.6: at this player's share. Asked here because this is where
-          // the bench is.
-          yieldsOf: (step) => yieldOf(
-            step,
-            bench: _bench(),
-            catalogue: catalogue,
-            book: _recipes,
-          ),
-          onStart: (picked) {
-            Navigator.of(context).pop();
-            unawaited(_startSitting(picked));
-          },
+          book: _recipes,
         ),
+        onStart: (picked) {
+          Navigator.of(context).pop();
+          unawaited(_startSitting(picked));
+        },
       ),
     );
 
@@ -4682,38 +4703,30 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   /// §10.3: marks where something went down, for as long as it is worth
   /// coming back to.
   void _remember(Enemy enemy) {
+    final now = DateTime.now().toUtc();
+
     // §6.5.4: the ground it came from pays, wherever it actually fell.
-    unawaited(_fires.killed(enemy, now: DateTime.now().toUtc()));
+    unawaited(_fires.killed(enemy, now: now));
     unawaited(_diary.add(JournalKind.killed, subject: enemy.kind.name));
 
-    final body = Remains(
-      id: enemy.id,
-      kind: enemy.kind,
-      position: enemy.position,
-      diedAt: DateTime.now().toUtc(),
+    unawaited(
+      _loot
+          .rememberBody(
+            Remains(
+              id: enemy.id,
+              kind: enemy.kind,
+              position: enemy.position,
+              diedAt: now,
+            ),
+          )
+          .then((fresh) {
+            // ⚠️ Only for a body nobody had written down yet: a death is
+            // noticed from three places, and a kill is counted once.
+            if (!fresh) return;
+            _note((stats) => stats.killed());
+            unawaited(_practise(Practice.kill));
+          }),
     );
-
-    final before = _remains;
-    _loot.addBody(body);
-
-    // §10.3: and onto the disk, because the player put it there. §6.4 remakes
-    // the living every run and that is right — a Walker is not a place — but a
-    // body is, and losing it to a restart takes away their own work.
-    if (!identical(_remains, before)) {
-      // ⚠️ Here rather than at the trigger, because a death is noticed from
-      // three places — the shot, the swing, and the sweep that finds an enemy
-      // gone. [addRemains] is what settles which of them was first, so it is
-      // also the only place a kill can be counted exactly once.
-      _note((stats) => stats.killed());
-      unawaited(_practise(Practice.kill));
-
-      final character = _character;
-      if (character != null) {
-        unawaited(
-          RemainsStore(widget.session.db).add(character.profile.id, body),
-        );
-      }
-    }
   }
 
   /// §18.2: the shelves of [place], and the pack beside them.
@@ -4725,34 +4738,32 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     await _shelf.open(place, catalogue);
     if (!mounted) return;
 
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => StashScreen(
-          title: L10n.of(context).shelterShelves,
-          stash: _stash,
-          pack: _inventory,
-          catalogue: catalogue,
-          // The catalogue is what the screen has; a name is what a
-          // player can read.
-          nameOf: (itemId) {
-            final item = catalogue[itemId];
-            return item == null ? itemId : _nameOfItem(item);
-          },
-          onStore: (line) => unawaited(_leaveOnShelf(line)),
-          onTake: (index) => unawaited(_takeOffShelf(index)),
-          // One order for the pack and the shelves: they are one decision
-          // seen twice.
-          order: _packOrder,
-          onAct: (index, action) => unawaited(_shelfAct(index, action)),
-          onDetails: (index) => unawaited(_shelfDetails(index)),
-          canDismantle: _worthTakingApart,
-          refusalOf: _shelfRefusal,
-          // §18.4: what the bench is doing, said where the player is standing.
-          // They came in to put things away while a spear is being made.
-          job: _craftJob,
-          jobLabel: _jobLabel,
-          onStopJob: () => unawaited(_cancelCraft()),
-        ),
+    await _push(
+      StashScreen(
+        title: L10n.of(context).shelterShelves,
+        stash: _stash,
+        pack: _inventory,
+        catalogue: catalogue,
+        // The catalogue is what the screen has; a name is what a
+        // player can read.
+        nameOf: (itemId) {
+          final item = catalogue[itemId];
+          return item == null ? itemId : _nameOfItem(item);
+        },
+        onStore: (line) => unawaited(_leaveOnShelf(line)),
+        onTake: (index) => unawaited(_takeOffShelf(index)),
+        // One order for the pack and the shelves: they are one decision
+        // seen twice.
+        order: _packOrder,
+        onAct: (index, action) => unawaited(_shelfAct(index, action)),
+        onDetails: (index) => unawaited(_shelfDetails(index)),
+        canDismantle: _worthTakingApart,
+        refusalOf: _shelfRefusal,
+        // §18.4: what the bench is doing, said where the player is standing.
+        // They came in to put things away while a spear is being made.
+        job: _craftJob,
+        jobLabel: _jobLabel,
+        onStopJob: () => unawaited(_cancelCraft()),
       ),
     );
 
@@ -5076,7 +5087,6 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final snapshot = _snapshot;
     if (character == null || snapshot == null) return;
 
-    final weapon = _weapon;
     final runs = await _diary.pastRuns();
     if (!mounted) return;
 
@@ -5099,12 +5109,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       startedAt: character.profile.createdAt,
       catalogue: _catalogue,
       names: _names ?? ItemNames.empty,
-      weaponMoa: weapon == null
-          ? null
-          : FittedWeapon(
-              weapon: weapon,
-              attachments: _attachmentsFor(weapon),
-            ).moa,
+      weaponMoa: _fitted?.moa,
     );
   }
 
@@ -5879,19 +5884,17 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     final near = await _bestKnownPosition();
     if (!mounted) return;
 
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => RegionPickerScreen(
-          manager: packs,
-          nearLatitude: near?.latitude,
-          nearLongitude: near?.longitude,
-          onPlayStreamed: _playStreamed,
+    await _push(
+      RegionPickerScreen(
+        manager: packs,
+        nearLatitude: near?.latitude,
+        nearLongitude: near?.longitude,
+        onPlayStreamed: _playStreamed,
 
-          // A finished download is the whole reason the screen was open.
-          // Leaving it up and making the player find the back gesture reads
-          // as the download not having worked.
-          onDone: () => Navigator.of(context).popUntil((r) => r.isFirst),
-        ),
+        // A finished download is the whole reason the screen was open.
+        // Leaving it up and making the player find the back gesture reads
+        // as the download not having worked.
+        onDone: () => Navigator.of(context).popUntil((r) => r.isFirst),
       ),
     );
     if (mounted) await _resolveMap();
@@ -6383,11 +6386,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   }
 
   void _openCreator() {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => CharacterCreatorScreen(onCreate: _createCharacter),
-      ),
-    );
+    _push(CharacterCreatorScreen(onCreate: _createCharacter));
   }
 
   /// Game seconds this session has consumed. In furious time scale a minute of

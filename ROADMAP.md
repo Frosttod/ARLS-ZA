@@ -17,7 +17,7 @@ Każdy zamknięty etap dostaje sekcję **Dziennik wykonania** z decyzjami podję
 | 6 | Strefy Rozkładu z pełnym cyklem | 🟡 13/13 zadań, po testach w terenie | — | `24ef01b`, schemat v36 |
 | 7 | Audio pozycyjne i haptyka | ⬜ | — | — |
 | 8 | Schron, obóz, pętla dobowa | 🟡 9/9 zadań, po długiej passie w terenie | — | schemat v38 |
-| 9 | Onboarding i zgodność | 🟡 8/11 zadań, reszta to formularze i skryptowana walka | — | — |
+| 9 | Onboarding i zgodność | 🟡 9/11 zadań, reszta to formularze i materiały do sklepu | — | — |
 | — | Profil i statystyki postaci (§13.1) | ✅ poza etapami | 2026-08-18 | `8937688` |
 | — | Oprawa: krój pisma, odświeżanie, mapa Voyager, płynność 30 fps | ✅ scalone do `main` | 2026-08-20 | `d0d0e51` … `89bce39` |
 | — | Półki w schronie, pamięć przeszukanych miejsc, zasięgi per miejsce | ✅ poza etapami | 2026-08-20 | schemat v20 |
@@ -31,7 +31,7 @@ Każdy zamknięty etap dostaje sekcję **Dziennik wykonania** z decyzjami podję
 | — | **Reguła obecności przy warsztacie** (§2.1a.3) | ✅ poza etapami | 2026-08-30 | `c6768b3`, schemat v37 |
 | — | **Widżet 4×1 na ekran główny** (§13.1): woda, kalorie, sen, tętno, co dolega | ✅ poza etapami | 2026-09-05 | — |
 
-**Metryki:** 2771 testów · `flutter analyze` czysty · schemat bazy **v38** · `main.dart` 6407 linii
+**Metryki:** 2786 testów · `flutter analyze` czysty · schemat bazy **v38** · `main.dart` 6406 linii
 
 ✅ **`main` jest wypchnięty na `origin/main`.** Wcześniej cała gra istniała na jednym dysku i było to największe ryzyko projektu — jedyne, którego nie dawało się naprawić kodem.
 
@@ -526,7 +526,7 @@ Wiersz został z czasów, gdy policzona była sama pojemność.
 | 9.1 | ✅ Etap 0 onboardingu — bezpieczeństwo, aktywne potwierdzenie **checkboxem** (przycisk martwy, dopóki nie zaznaczony) | §15.3 |
 | 9.2 | ✅ Kreator z kontekstem + ekran wyliczonych parametrów, liczonych na żywo | §15.4 |
 | 9.3 | ✅ Podpowiedzi kontekstowe wyzwalane zdarzeniami: mapa, pierwsze 50 m, pierwszy loot, pierwszy plecak, pierwsza strefa — każda raz na postać | §15.5 |
-| 9.4 | Pierwsza walka — jedyny scenariusz skryptowany, przeciwnik nie może zabić | §15.6 |
+| 9.4 | ✅ Pierwsza walka — jeden Szwędacz 120 m stąd na gruncie, który przepuszcza §3.5; obrażenia ćwiartowane i podłoga na 80% krwi; sześć linii wyzwalanych przebiegiem walki | §15.6 |
 | 9.5 | ✅ Ekran „Zasady przetrwania" dostępny z menu | §15.7 |
 | 9.6 | ✅ Przypomnienie o widoczności po zachodzie słońca — godzinne okno po zmierzchu, raz na dobę | §3.5 |
 | 9.7 | ✅ Dostępność: wysoki kontrast (własny przełącznik **i** flaga systemowa), skalowanie czcionek sprawdzone przy 200%, wibracje przy trzech sygnałach krytycznych, każdy przycisk ikonowy nazwany | §12 |
@@ -535,12 +535,9 @@ Wiersz został z czasów, gdy policzona była sama pojemność.
 | 9.10 | ✅ Telemetria: **żadnej**. Ekran ustawień mówi to wprost, zamiast oferować przełącznik, którego nie ma czego wyłączać | §16.5 |
 | 9.11 | Ikona, nazwa w sklepie, zrzuty ekranu, opis ASO, obsługa proporcji ekranu | §16.8 |
 
-**Zrobione 4 września 2026: 9.1, 9.2, 9.3, 9.5, 9.6, 9.7, 9.10 oraz połowa 9.8
-i 9.9.** Zostają trzy rzeczy i każda z powodu, nie z zapomnienia: **9.4** to
-jedyny skryptowany fragment gry i wymaga przeciwnika, który nie może zabić — to
-projekt, nie wpięcie; **9.11** to materiały do sklepu; a druga połowa 9.8 i 9.9
-to formularze w Play Console i nagranie ekranu, czyli rzeczy spoza
-repozytorium. Odpowiedzi do tych formularzy — wyprowadzone z manifestu i z
+**Zrobione: 9.1, 9.2, 9.3, 9.4, 9.5, 9.6, 9.7, 9.10 oraz połowa 9.8 i 9.9.**
+Zostaje **9.11** (materiały do sklepu) i druga połowa 9.8 i 9.9 — formularze w
+Play Console oraz nagranie ekranu, czyli rzeczy spoza repozytorium. Odpowiedzi do tych formularzy — wyprowadzone z manifestu i z
 `pubspec.yaml`, nie z pamięci — leżą w [PLAY_CONSOLE.md](PLAY_CONSOLE.md).
 
 ⚠️ **Polityka prywatności nie działa, dopóki nie włączysz GitHub Pages.** Play

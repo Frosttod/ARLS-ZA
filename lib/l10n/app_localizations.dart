@@ -4908,6 +4908,42 @@ abstract class L10n {
   /// In en, this message translates to:
   /// **'Too far to swing.'**
   String get combatOutOfReach;
+
+  /// No description provided for @firstSpotted.
+  ///
+  /// In en, this message translates to:
+  /// **'Something has noticed you. You can hear the direction.'**
+  String get firstSpotted;
+
+  /// No description provided for @firstAim.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap it to take aim.'**
+  String get firstAim;
+
+  /// No description provided for @firstStandStill.
+  ///
+  /// In en, this message translates to:
+  /// **'Stand still. The figure above the button is your real chance of hitting — it drops several times over on the move.'**
+  String get firstStandStill;
+
+  /// No description provided for @firstNoise.
+  ///
+  /// In en, this message translates to:
+  /// **'See that circle? The shot carries {metres} m. Something may have heard it.'**
+  String firstNoise(String metres);
+
+  /// No description provided for @firstReload.
+  ///
+  /// In en, this message translates to:
+  /// **'Empty. Reload — it takes three seconds, and it is still coming.'**
+  String get firstReload;
+
+  /// No description provided for @firstBill.
+  ///
+  /// In en, this message translates to:
+  /// **'{shots} rounds for one of them. Ammunition is scarce and every shot gives you away. Sometimes the answer is not to fight.'**
+  String firstBill(int shots);
 }
 
 class _L10nDelegate extends LocalizationsDelegate<L10n> {

@@ -76,6 +76,72 @@ class CombatController extends ChangeNotifier {
   /// ⚠️ The cooldowns are cleared whatever the answer. They were taken before
   /// the gap and mean nothing after it — leaving them would let a crowd that
   /// had just been charged for five minutes swing again on the first tick.
+
+  /// §5.5.3, §9.2: what the crowd did while the screen was off.
+  ///
+  /// Null when nothing landed, so the caller has one question to ask rather
+  /// than four fields to check.
+  BlowsAway? blowsWhileAwayAt({
+    required Duration away,
+    required GeoPoint at,
+    required double bloodMl,
+    required double bloodMaxMl,
+    required double protection,
+    required bool mayGoDown,
+    required int seed,
+  }) {
+    final hurt = settleAway(
+      away: away,
+      at: at,
+      bloodMl: bloodMl,
+      bloodMaxMl: bloodMaxMl,
+      protection: protection,
+      mayGoDown: mayGoDown,
+      seed: seed,
+    );
+    return hurt.any ? hurt : null;
+  }
+
+  /// §5.2, §5.5.3: everything in reach swings, and being surrounded hurts.
+  ///
+  /// ⚠️ **The clocks were already here; the arithmetic had stayed behind.**
+  /// `mayStrike`/`struck` live in this class, and `main.dart` was reaching into
+  /// them to work out who was due — which meant the entry point owned half a
+  /// rule and this class the other half. What is still up there is the part a
+  /// player hears: the buzz, the line, the journal.
+  ///
+  /// Returns what landed and who threw it, or null when nothing did.
+  ({BlowsAway hurt, List<Enemy> swinging})? swingsAt(
+    GeoPoint at,
+    DateTime now, {
+    required double protection,
+    required Random random,
+  }) {
+    final inReach = enemiesInReach(_session.enemies, at);
+    if (inReach.isEmpty) {
+      noneInReach();
+      return null;
+    }
+
+    final swinging = [
+      for (final enemy in inReach)
+        if (mayStrike(enemy.id, now, enemy.kind.attackInterval)) enemy,
+    ];
+    for (final enemy in swinging) {
+      struck(enemy.id, now);
+    }
+
+    final hurt = oneSwingEach(
+      swinging: swinging,
+      crowdSize: inReach.length,
+      protection: protection,
+      random: random,
+    );
+    if (!hurt.any || hurt.worst == null) return null;
+
+    return (hurt: hurt, swinging: swinging);
+  }
+
   BlowsAway settleAway({
     required Duration away,
     required GeoPoint at,

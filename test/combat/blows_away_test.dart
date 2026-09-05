@@ -174,7 +174,10 @@ void main() {
     final main = File('lib/main.dart').readAsStringSync();
 
     expect(main.contains('_settleBlowsAway(elapsed'), isTrue);
-    expect(main.contains('_fight.settleAway('), isTrue);
+    // ⚠️ The controller call, whatever it is called this month: the guarantee
+    // is that the away window is charged, not the spelling. `settleAway` is
+    // still the arithmetic; `blowsWhileAwayAt` is the guard around it.
+    expect(main.contains('_fight.blowsWhileAwayAt('), isTrue);
 
     // ⚠️ The parsed mode, not the wire string. `profile.deathMode` is the text
     // on disk and comparing it to a `DeathMode` is always true — which made

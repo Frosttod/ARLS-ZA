@@ -2797,4 +2797,29 @@ class L10nEn extends L10n {
 
   @override
   String get combatOutOfReach => 'Too far to swing.';
+
+  @override
+  String get firstSpotted =>
+      'Something has noticed you. You can hear the direction.';
+
+  @override
+  String get firstAim => 'Tap it to take aim.';
+
+  @override
+  String get firstStandStill =>
+      'Stand still. The figure above the button is your real chance of hitting — it drops several times over on the move.';
+
+  @override
+  String firstNoise(String metres) {
+    return 'See that circle? The shot carries $metres m. Something may have heard it.';
+  }
+
+  @override
+  String get firstReload =>
+      'Empty. Reload — it takes three seconds, and it is still coming.';
+
+  @override
+  String firstBill(int shots) {
+    return '$shots rounds for one of them. Ammunition is scarce and every shot gives you away. Sometimes the answer is not to fight.';
+  }
 }

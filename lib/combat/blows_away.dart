@@ -24,6 +24,7 @@ library;
 import 'dart:math';
 
 import 'ballistics.dart' show HitLocation, rollHitLocation;
+import '../sim/physiology.dart';
 import 'enemy.dart';
 import 'engagement.dart' show flankingMultiplier, kMeleeM;
 import '../map/geometry.dart';
@@ -65,6 +66,13 @@ class BlowsAway {
   final HitLocation? worst;
 
   bool get any => blows > 0 && bloodMl > 0;
+
+  /// §2.6: what this leaves open. Head and torso bleed moderately; a limb is
+  /// superficial. Here rather than at the two call sites that used to ask,
+  /// because it is a fact about the blow.
+  BleedTier get opens => worst == HitLocation.head || worst == HitLocation.torso
+      ? BleedTier.moderate
+      : BleedTier.superficial;
 }
 
 /// §5.5.3: everything close enough to swing at somebody standing at [at].

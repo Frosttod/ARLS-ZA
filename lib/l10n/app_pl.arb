@@ -1693,5 +1693,25 @@
   "zoneBackToBench": "Powrót do warsztatu — robota wznowiona.",
   "journalInterrupted": "Robota przerwana",
   "useNeedsOpener": "Puszka zamknięta — nie ma czym jej otworzyć.",
-  "combatOutOfReach": "Za daleko na cios."
+  "combatOutOfReach": "Za daleko na cios.",
+  "firstSpotted": "Coś cię zauważyło. Słychać kierunek.",
+  "firstAim": "Dotknij przeciwnika, żeby go namierzyć.",
+  "firstStandStill": "Zatrzymaj się. Liczba nad przyciskiem to realna szansa trafienia — w ruchu spada kilkukrotnie.",
+  "firstNoise": "Widzisz ten okrąg? Strzał słychać na {metres} m. Coś mogło go usłyszeć.",
+  "@firstNoise": {
+    "placeholders": {
+      "metres": {
+        "type": "String"
+      }
+    }
+  },
+  "firstReload": "Pusty magazynek. Przeładuj — to trwa trzy sekundy, a on się zbliża.",
+  "firstBill": "{shots} naboi na jednego. Amunicji jest mało, a każdy strzał zdradza pozycję. Czasem lepiej nie walczyć.",
+  "@firstBill": {
+    "placeholders": {
+      "shots": {
+        "type": "int"
+      }
+    }
+  }
 }

@@ -15,7 +15,7 @@ Różnica jest istotna, bo w kilkunastu miejscach **świadomie odeszliśmy od do
 
 ⚠️ **Reguła utrzymania tego pliku:** liczba zmieniona w kodzie i nieprzeniesiona tutaj czyni ten dokument gorszym niż jego brak. Przy każdej zmianie stałej — aktualizuj sekcję.
 
-**Stan:** 2771 testów · schemat bazy **v38** · etapy 0–2 zamknięte, 3–6 i 8 przed testem w terenie.
+**Stan:** 2786 testów · schemat bazy **v38** · etapy 0–2 zamknięte, 3–6 i 8 przed testem w terenie.
 
 ---
 
@@ -1710,6 +1710,41 @@ Trzymanie ich znaczyło **dwa zapisy jednego faktu** — to jest kształt wady,
 którą ten projekt znajduje u siebie od miesięcy. Usunięte 5 września 2026;
 `ActionKind` (§4.7 — jedzenie, picie, opatrunek), który mieszkał w tym samym
 pliku i jest używany wszędzie, wyprowadzony do `lib/sim/action_kind.dart`.
+
+---
+
+## 15a. Pierwsza walka (§15.6)
+
+Jedyny skryptowany fragment gry, i dokument mówi to wprost.
+
+| | |
+| :---- | :---- |
+| Kto | jeden Szwędacz, `first.walker` |
+| Gdzie | **120 m** od gracza, na pierwszym z szesnastu kierunków, który przepuszcza §3.5 |
+| Obrażenia | ćwiartowane, i **podłoga na 80% krwi** — poniżej nie zejdzie |
+| Linie | sześć, wyzwalanych przebiegiem walki, nie zegarem |
+
+**Sekwencja:** zauważenie → „dotknij, żeby namierzyć" → **„zatrzymaj się"** →
+**okrąg hałasu po strzale** → pusty magazynek → **rachunek: ile naboi na
+jednego**.
+
+⚠️ **Dwie linie, dla których to wszystko istnieje**, i §15.6 mówi które: fala
+hałasu i rachunek po walce. Reszta jest rusztowaniem, żeby do nich dojść
+uczciwie — przez walkę, którą gracz naprawdę stoczył, a nie przez pokaz slajdów.
+
+⚠️ **Podłoga i ćwiartowanie, oba naraz.** Samo ścięcie ciosu wciąż zabija
+kogoś, kto wszedł w skrypt już krwawiąc. Ale ćwiartowanie musi zostać: postać ma
+*poczuć* cios, bo inaczej lekcją jest „Szwędacze są niegroźni", czyli
+odwrotność lekcji.
+
+⚠️ **Ułaskawienie działa tylko wtedy, gdy skryptowany Szwędacz jest jedynym,
+który uderza.** Gracz, który zaprowadził go w tłum, jest w prawdziwej walce i
+skrypt nie ma prawa czynić jej przeżywalną.
+
+⚠️ **Jeśli §3.5 odrzuci wszystkie szesnaście kierunków** — gracz stoi pośrodku
+wody albo na węźle drogowym — walka po prostu czeka, aż odejdzie kawałek.
+Samouczek stawiający Szwędacza na dwupasmówce uczy dokładnie tego jednego, czego
+§3.5 zabrania.
 
 ---
 

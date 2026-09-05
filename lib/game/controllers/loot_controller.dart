@@ -254,6 +254,25 @@ class LootController extends ChangeNotifier {
   }
 
   /// §10.3: one more body on the pavement.
+  /// §10.3, §6.5.4: something went down, and the world keeps the body.
+  ///
+  /// ⚠️ **Returns whether this was the first time.** A death is noticed from
+  /// three places — the shot, the swing, and the sweep that finds an enemy gone
+  /// — so the caller must not count a kill or hand out practice until this says
+  /// the body was actually new. That test used to live in `main.dart` beside
+  /// the list it was testing; it belongs with the list.
+  Future<bool> rememberBody(Remains body) async {
+    final before = remains.value;
+    addBody(body);
+    if (identical(remains.value, before)) return false;
+
+    final profileId = _profileId;
+    if (profileId != null) {
+      await RemainsStore(_db).add(profileId, body);
+    }
+    return true;
+  }
+
   void addBody(Remains body) {
     final before = remains.value;
     final next = addRemains(before, body);
