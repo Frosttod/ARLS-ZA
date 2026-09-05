@@ -121,6 +121,16 @@ class Vitals extends Table {
   /// from the same blackout.
   DateTimeColumn get graceUntil => dateTime().nullable()();
 
+  /// §9.2.1: where the character actually fell, or null if they are standing.
+  ///
+  /// ⚠️ **Written down rather than remembered, because the hour runs with the
+  /// app closed.** The caches stay where the body dropped (§9.2), and whether
+  /// the ten minutes of grace are owed depends on how far the player has moved
+  /// since — a question that cannot be answered by a process that was killed
+  /// halfway through the blackout.
+  RealColumn get downLat => real().nullable()();
+  RealColumn get downLon => real().nullable()();
+
   /// §5.6.2, §6.1a: a fight the player walked out of, and where.
   ///
   /// ⚠️ The enemies themselves are not written down — §6.4 remakes them every

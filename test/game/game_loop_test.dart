@@ -1562,6 +1562,66 @@ void main() {
       );
     });
 
+    test('§9.2.1: waking where you fell is being taken for dead', () async {
+      final rig = await buildLoop();
+      addTearDown(() async {
+        await rig.loop.dispose();
+        await rig.source.dispose();
+        await rig.session.close();
+      });
+
+      await rig.loop.start();
+      rig.source.jumpTo(52.4064, 16.9252);
+      rig.source.step();
+      await pump();
+
+      rig.loop.applyWound(constants.bloodMaxMl * 0.5);
+      rig.wall.advance(const Duration(seconds: 5));
+      await rig.loop.onPaused(rig.wall.nowUtc());
+      expect(rig.loop.down, DownState.unconscious);
+
+      // An hour on the ground, and the player has not gone anywhere.
+      rig.wall.advance(const Duration(minutes: 61));
+      await rig.loop.onResumed();
+      rig.source.step();
+      await pump();
+
+      expect(rig.loop.down, DownState.grace);
+    });
+
+    test('§9.2.1: but waking three kilometres away is not', () async {
+      // ⚠️ The ten minutes are what make going back for the caches a
+      // decision. A player who woke up across town has no decision to make —
+      // the kit is an hour's walk behind them — so the street does not owe
+      // them being taken for dead as well.
+      final rig = await buildLoop();
+      addTearDown(() async {
+        await rig.loop.dispose();
+        await rig.source.dispose();
+        await rig.session.close();
+      });
+
+      await rig.loop.start();
+      rig.source.jumpTo(52.4064, 16.9252);
+      rig.source.step();
+      await pump();
+
+      rig.loop.applyWound(constants.bloodMaxMl * 0.5);
+      rig.wall.advance(const Duration(seconds: 5));
+      await rig.loop.onPaused(rig.wall.nowUtc());
+
+      // A bus ride, and then the hour runs out.
+      const away = GeoPoint(52.4064, 16.9252);
+      final elsewhere = away.offsetBy(metres: 3000, bearingDeg: 90);
+      rig.wall.advance(const Duration(minutes: 61));
+      rig.source.jumpTo(elsewhere.latitude, elsewhere.longitude);
+      await rig.loop.onResumed();
+      rig.source.step();
+      await pump();
+
+      expect(rig.loop.down, DownState.none, reason: 'up, and on their own');
+    });
+
     test('and the hour survives the app being closed', () async {
       final rig = await buildLoop();
       addTearDown(() async {
@@ -1581,6 +1641,14 @@ void main() {
 
       final reopened = await GameSessionFactory(rig.session).loadActive();
       expect(reopened?.downUntil, isNotNull);
+
+      // §9.2.1: and so does where they fell — the question "did they crawl or
+      // did they travel" is asked after the process has already died once.
+      expect(reopened?.fellAt, isNotNull);
+      expect(
+        reopened!.fellAt!.distanceTo(const GeoPoint(52.4064, 16.9252)),
+        lessThan(50),
+      );
     });
   });
 

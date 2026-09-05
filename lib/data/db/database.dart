@@ -29,7 +29,7 @@ import 'tables.dart';
 part 'database.g.dart';
 
 /// Bumped only alongside a migration step in [_migration]. Never reused.
-const int kSchemaVersion = 37;
+const int kSchemaVersion = 38;
 
 /// Keys used in [MetaEntries].
 abstract final class MetaKeys {
@@ -80,7 +80,7 @@ class SaveDatabase extends _$SaveDatabase {
   /// follow a constant reference. `schema_test.dart` keeps it in step with
   /// [kSchemaVersion].
   @override
-  int get schemaVersion => 37;
+  int get schemaVersion => 38;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -328,6 +328,15 @@ class SaveDatabase extends _$SaveDatabase {
       // w tej samej migracji ma kolumnę od razu.
       if (from >= 22 && from < 37) {
         await m.addColumn(craftJobs, craftJobs.pausedAt);
+      }
+
+      // §9.2.1: where the character fell. Null on every save written before
+      // this, which reads as "nobody is on the ground" — and for a save that
+      // *was* mid-blackout it reads as "we do not know where", which the
+      // waking rule treats as the generous answer rather than the harsh one.
+      if (from < 38) {
+        await m.addColumn(vitals, vitals.downLat);
+        await m.addColumn(vitals, vitals.downLon);
       }
 
       // §2.3: the two clocks the lethal rules need. Additive with defaults of

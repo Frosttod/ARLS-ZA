@@ -124,8 +124,10 @@ import 'ui/effects.dart';
 import 'ui/hotspot_sheet.dart';
 import 'ui/game_screen.dart';
 import 'game/bench_inputs.dart';
+import 'game/away_summary.dart';
 import 'game/home_status.dart';
 import 'ui/hint_nudger.dart';
+import 'ui/away_sheet.dart';
 import 'ui/haptics.dart';
 import 'ui/home_widget.dart';
 import 'ui/hud.dart';
@@ -316,6 +318,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
   /// §12: what the game has just said. Under the HUD, never over the menu.
   final NoticeBoard _notices = NoticeBoard();
+
+  /// §16.3: what the app was left in, until the catch-up says what it cost.
+  final AwayWatch _away = AwayWatch();
 
   /// §13.1: the four numbers on the home screen. Throttled inside — see
   /// [HomeWidget.push].
@@ -1212,6 +1217,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       _tellLoopWhereWeAre();
       unawaited(_hints.nudge(L10n.of(context), snapshot));
       unawaited(_tellTheLauncher(snapshot));
+      unawaited(_tellThePlayerWhatTheyMissed(snapshot));
       unawaited(_settleDown(snapshot));
       unawaited(_spawnLoot(snapshot));
       _advanceCombat(snapshot);
@@ -5820,6 +5826,18 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     if (mounted) _notices.say(message);
   }
 
+  /// §16.3: the account of an absence, once the catch-up has actually run.
+  List<int> _zoneLevels() => [
+    for (final zone in _fires.hotspots.value) zone.level,
+  ];
+
+  Future<void> _tellThePlayerWhatTheyMissed(GameSnapshot snapshot) async {
+    final missed = _away.caughtUp(snapshot.state, _zoneLevels());
+    if (missed == null || !missed.worthShowing || !mounted) return;
+
+    await showAwaySummary(context, missed);
+  }
+
   /// §13.1: the body, on the home screen.
   ///
   /// ⚠️ Off the same snapshot the HUD draws, so the widget cannot disagree
@@ -5946,6 +5964,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         unawaited(_habit.slept());
         _sleepTickers();
       case AppLifecycleState.resumed:
+        // §16.3: the state as it stood *before* the catch-up ran. The hours
+        // are charged by the first tick after this, which is where the
+        // comparison happens.
+        _away.left(state: loop.state, zones: _zoneLevels());
         unawaited(loop.onResumed());
         _habit.woke();
         unawaited(_readPermissions());

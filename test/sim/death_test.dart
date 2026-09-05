@@ -1,3 +1,4 @@
+import 'package:arls_za/map/geometry.dart';
 import 'package:arls_za/sim/body.dart';
 import 'package:arls_za/sim/death.dart';
 import 'package:arls_za/sim/tick.dart';
@@ -126,9 +127,56 @@ void main() {
     });
   });
 
+  group('§9.2.1: the grace reaches as far as a crawl, and no further', () {
+    const fell = GeoPoint(52.4064, 16.9252);
+
+    test('waking where you fell is being taken for dead', () {
+      expect(grantsGrace(fellAt: fell, wokeAt: fell), isTrue);
+    });
+
+    test('and so is anywhere inside three hundred metres', () {
+      expect(
+        grantsGrace(
+          fellAt: fell,
+          wokeAt: fell.offsetBy(metres: kGraceWithinM - 1, bearingDeg: 90),
+        ),
+        isTrue,
+      );
+    });
+
+    test('but a bus ride is not a crawl', () {
+      // ⚠️ The rule that was missing. Ten minutes of nothing attacking is
+      // what makes going back for the caches a decision — and there is
+      // nothing to decide when they are three kilometres behind you.
+      expect(
+        grantsGrace(
+          fellAt: fell,
+          wokeAt: fell.offsetBy(metres: 3000, bearingDeg: 90),
+        ),
+        isFalse,
+      );
+      expect(
+        grantsGrace(
+          fellAt: fell,
+          wokeAt: fell.offsetBy(metres: kGraceWithinM + 1, bearingDeg: 90),
+        ),
+        isFalse,
+      );
+    });
+
+    test('and not knowing is answered generously, not harshly', () {
+      // A save from before the column existed, or a wake with no fix yet.
+      // Taking the grace away on a guess would punish somebody for a missing
+      // row rather than for having moved.
+      expect(grantsGrace(fellAt: null, wokeAt: fell), isTrue);
+      expect(grantsGrace(fellAt: fell, wokeAt: null), isTrue);
+    });
+  });
+
   test('the hour and the grace window are the ones §9.2 names', () {
     expect(kUnconsciousFor, const Duration(minutes: 60));
     expect(kGraceAfterWaking, const Duration(minutes: 10));
     expect(kWakeLossFraction, 0.50);
+    expect(kGraceWithinM, 300);
   });
 }

@@ -253,7 +253,7 @@ void main() {
       // The loop is coherent and earns its length — the clock, the zone, the
       // sampling policy and §11.1's writer all meet here. It is on the list
       // because coherent files grow too.
-      ('lib/game/game_loop.dart', 1253),
+      ('lib/game/game_loop.dart', 1224),
     ]) {
       test('$path is not the next main.dart', () {
         final lines = File(path).readAsLinesSync().length;

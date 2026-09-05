@@ -11,6 +11,7 @@
 /// die while the simulation is not being fed real positions.
 library;
 
+import '../map/geometry.dart';
 import '../sim/body.dart';
 import '../sim/tick.dart';
 
@@ -23,6 +24,40 @@ const Duration kUnconsciousFor = Duration(minutes: 60);
 /// player cannot attack either — the valve against waking up inside a level 8
 /// hotspot and going straight back down.
 const Duration kGraceAfterWaking = Duration(minutes: 10);
+
+/// §9.2.1: how far from the body the grace still reaches.
+///
+/// ⚠️ **The whole balance of §9.2.1 hangs on this one figure, and it was not
+/// implemented.** The caches stay where the character fell, so the penalty for
+/// having moved grows by itself — but the ten minutes of being taken for dead
+/// were granted to everyone, including a player who woke fifteen kilometres
+/// away on a bus. That is the wrong way round: the grace is what makes going
+/// back for the kit a *decision*, and there is nothing to decide when the kit
+/// is an hour's walk away.
+///
+/// Inside 300 m the fiction is "you crawled" — the body is still where the
+/// street last saw it. Beyond it the fiction is delirium, and delirium does
+/// not come with anybody being fooled.
+const double kGraceWithinM = 300;
+
+/// §9.2.1: how long before a wake that had to be deferred is tried again.
+///
+/// A minute, because the reasons to defer — a bus, a lost sky — end without
+/// warning, and a character lying on the ground for an extra quarter of an
+/// hour after the player got off the bus is the deferral turning into the
+/// punishment it is explicitly not.
+const Duration kWakeRetry = Duration(minutes: 1);
+
+/// §9.2.1: whether waking here still counts as having crawled.
+///
+/// A null [fellAt] or [wokeAt] reads as yes. Not generosity for its own sake:
+/// a save written before the fall position was recorded, or a wake with no fix
+/// yet, is a case where the game does not *know* the player moved — and taking
+/// the grace away on a guess would punish somebody for a missing row.
+bool grantsGrace({required GeoPoint? fellAt, required GeoPoint? wokeAt}) {
+  if (fellAt == null || wokeAt == null) return true;
+  return fellAt.distanceTo(wokeAt) <= kGraceWithinM;
+}
 
 /// §9.2: what is left in the tank on waking. Class III shock, and hungry.
 ///

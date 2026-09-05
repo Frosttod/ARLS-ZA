@@ -1,7 +1,7 @@
 # ARLS-ZA — lista kontrolna systemów
 
 Stan na dzień **2026-08-28**. Wygenerowana po przejściu pełnego zestawu
-testów: **2718 testów, `flutter analyze` czysty, schemat bazy v37**.
+testów: **2736 testów, `flutter analyze` czysty, schemat bazy v38**.
 
 ⚠️ Liczby poniżej są zliczone z suite'a, nie przepisane z pamięci. Suma
 obszarów musi się zgadzać z ogółem — jeśli się nie zgadza, ten plik jest
@@ -25,8 +25,8 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 | :---- | ----: | :---- |
 | `ui` | 505 | HUD, ekwipunek, panele, arkusze, geometria dotknięć i pierścieni, notatki stanu, dziennik, niebo w panelu, zakres przebudów, **odprawa z checkboxem i zasady przetrwania z menu (§15.3, §15.7)**, **dostępność: kontrast mierzony wobec WCAG, czcionka przy 200%, wibracje (§12)** |
 | `combat` | 491 | tabela kalibracyjna §5.1.2 wiersz po wierszu, obrażenia §5.1.5, budżet sprintu, maszyna stanów, hałas, spawn, magazynek, dodatki, **odczyt panelu ognia**, **ciosy przy zgaszonym ekranie**, **pole widzenia, słuch i cios w plecy (§6.2, §5.5.1)**, Strefy Rozkładu: punktacja, wzrost, wysyp, kronika, **dwa kanały obrażeń i zasięg broni (§5.5.3)** |
-| `sim` | 350 | tick, metabolizm, tętno, wchłanianie, **dwa zegary snu**, **masa ciała i wychudzenie**, **osiągalność zgonu z głodu i pragnienia**, **kary za stan docierające do zegarów**, **nawyk gry mierzony, nie zakładany (§16.4)**, świt i zmierzch, **drabinka kar generowana z modelu (§2.3, §2.5.4)** |
-| `game` | 260 | pętla, kontrolery, jedna para rąk, integracja pozycji, dziennik, **wiązanie kontrolerów do profilu**, **podpowiedzi pierwszego kontaktu i przypomnienie o zmroku (§15.5, §3.5)**, **widżet: ranking dolegliwości i wygasanie faktów o ulicy (§13.1)** |
+| `sim` | 355 | tick, metabolizm, tętno, wchłanianie, **dwa zegary snu**, **masa ciała i wychudzenie**, **osiągalność zgonu z głodu i pragnienia**, **kary za stan docierające do zegarów**, **nawyk gry mierzony, nie zakładany (§16.4)**, świt i zmierzch, **drabinka kar generowana z modelu (§2.3, §2.5.4)** |
+| `game` | 273 | pętla, kontrolery, jedna para rąk, integracja pozycji, dziennik, **wiązanie kontrolerów do profilu**, **podpowiedzi pierwszego kontaktu i przypomnienie o zmroku (§15.5, §3.5)**, **widżet: ranking dolegliwości i wygasanie faktów o ulicy (§13.1)** |
 | `loot` | 202 | tabele, spawner, przeszukanie, rzeczy na ziemi, rozrzut §10.2, przeszkody i czym się je otwiera, **żaden przedmiot bez realnej drogi w gęstym mieście** |
 | `inventory` | 136 | dwa limity §18.1a, sloty, porcje, dodatki, **zużycie narzędzia**, strony książki |
 | `shelter` | 104 | budowa, moduły, półka, stackowanie |
@@ -35,7 +35,7 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 | `items` | 79 | katalog jako dane: bilans, nazwy, sloty, użycia |
 | `location` | 72 | bramka dokładności, filtr Kalmana, martwa strefa, **prędkość uśredniona przeciw kłamliwej dokładności**, anty-cheat, powrót odbiornika, kadencja w schronie |
 | `skills` | 63 | §7.2.1 praktyka, §4.6 literatura, §7.2.2 krzywa, wpięcie w grę |
-| `db` | 50 | migracje v1→v37, integralność, warstwa gorąca i ciepła |
+| `db` | 50 | migracje v1→v38, integralność, warstwa gorąca i ciepła |
 | `devtools` | 44 | konsola, rejestrator sesji |
 | `safety` | 34 | §1.2, blokady na prędkości |
 | `core` | 37 | zegar gry, jeden timer |
@@ -45,7 +45,7 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 | `notes` | 14 | notatki i lektura |
 | `l10n` | 7 | kolizje kluczy, brak twardej polszczyzny w kodzie |
 
-**Razem 2718.**
+**Razem 2736.**
 
 ### Rzeczy, które testy trzymają jako liczby, a nie jako intencje
 
@@ -58,7 +58,7 @@ Dokument ma dwie części, bo są to dwa różne rodzaje pewności:
 - **§6.2** — parametry przeciwników, w tym progi śmierci.
 - **§5.6.1** — promienie hałasu i modyfikatory otoczenia.
 - **Migracje** — każda wydana wersja schematu daje się otworzyć i podnieść do
-  v37, z danymi.
+  v38, z danymi.
 - **§2.3, §2.5.4, §5.1.1** — trzy kary za stan trzymane **przy konsumencie**,
   nie przy wzorze. Wada nie była złą liczbą, tylko parametrem z nieszkodliwą
   wartością domyślną, którego nikt nie wypełniał — czego żaden test samej

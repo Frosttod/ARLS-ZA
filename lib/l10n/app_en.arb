@@ -1807,5 +1807,57 @@
   "widgetWasting": "Wasting",
   "widgetThirsty": "Thirst",
   "widgetStarving": "Hunger",
-  "widgetSleepless": "Sleep debt"
+  "widgetSleepless": "Sleep debt",
+  "awayFor": "Away for {span}",
+  "@awayFor": {
+    "placeholders": {
+      "span": {
+        "type": "String"
+      }
+    }
+  },
+  "awayWater": "Water: −{ml} ml",
+  "@awayWater": {
+    "placeholders": {
+      "ml": {
+        "type": "String"
+      }
+    }
+  },
+  "awayKcal": "Calories: −{kcal} kcal",
+  "@awayKcal": {
+    "placeholders": {
+      "kcal": {
+        "type": "String"
+      }
+    }
+  },
+  "awaySleep": "Sleep owed: {span} more",
+  "@awaySleep": {
+    "placeholders": {
+      "span": {
+        "type": "String"
+      }
+    }
+  },
+  "awaySlept": "Slept: {span} of the debt paid off",
+  "@awaySlept": {
+    "placeholders": {
+      "span": {
+        "type": "String"
+      }
+    }
+  },
+  "awayZones": "{count, plural, one{A Decay Zone grew — level {level}} other{{count} Decay Zones grew — worst is level {level}}}",
+  "@awayZones": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "level": {
+        "type": "int"
+      }
+    }
+  },
+  "awayNothingGrew": "Nothing out there grew while you were gone."
 }

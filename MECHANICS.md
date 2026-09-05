@@ -15,7 +15,7 @@ Różnica jest istotna, bo w kilkunastu miejscach **świadomie odeszliśmy od do
 
 ⚠️ **Reguła utrzymania tego pliku:** liczba zmieniona w kodzie i nieprzeniesiona tutaj czyni ten dokument gorszym niż jego brak. Przy każdej zmianie stałej — aktualizuj sekcję.
 
-**Stan:** 2718 testów · schemat bazy **v37** · etapy 0–2 zamknięte, 3–6 i 8 przed testem w terenie.
+**Stan:** 2736 testów · schemat bazy **v38** · etapy 0–2 zamknięte, 3–6 i 8 przed testem w terenie.
 
 ---
 
@@ -1331,6 +1331,35 @@ Telemetrii **nie ma żadnej** (§16.5). Ekran ustawień mówi to zwykłym wiersz
 
 ---
 
+## 11a. Powrót po przerwie (§16.3)
+
+§2.1 opisuje catch-up jako arytmetykę i na tym kończy. Dla gracza to nie jest
+arytmetyka: otwiera aplikację po nocy albo po pracy i wszystko się przesunęło.
+§16.3 nazywa ten moment najczęstszym powodem porzucenia gry — i to jest
+wiarygodne, bo alternatywne odczytanie niewyjaśnionej zmiany brzmi „gra
+zgubiła mi postęp".
+
+| | |
+| :---- | :---- |
+| Próg pokazania | **6 godzin** i coś musiało się faktycznie zmienić |
+| Co mówi | ile trwała nieobecność, ile ubyło wody i kalorii, co z długiem snu, które Strefy urosły |
+| Czego nie mówi | hord (§6.5.5 to P5 — nie istnieją), ciosów przy zgaszonym ekranie (mają własną linijkę pod HUD-em) |
+
+⚠️ **Sześć godzin, nie dwadzieścia minut i nie trzy dni.** Dwie godziny
+nieobecności kosztują jakieś osiem procent dziennej wody — to mieści się w
+szumie paska, na który ktoś rzuca okiem. Sześć to noc albo dzień pracy: pierwsza
+przerwa, po której gracz zastaje **inną** postać niż odłożył.
+
+⚠️ **Ekran musi milczeć, kiedy nic się nie stało.** Postać spała w schronie
+osiem godzin i nic jej nie ubyło — okno z informacją „nic się nie stało" to gra
+przerywająca komuś wejście do gry. Dlatego próg ma dwa warunki, nie jeden.
+
+**Sen liczy się w obie strony.** Noc w schronie spłaca dług przy zamkniętej
+aplikacji, i ekran to mówi — podsumowanie wyłącznie ze stratami czyta się jako
+nieuczciwość gry, a nie jako rachunek.
+
+---
+
 ## 12aa. Widżet na ekranie głównym (§13.1)
 
 Cztery liczby i jedna linijka, w komórce szerokiej mniej więcej na osiem słów. Co się na niej mieści, jest **decyzją**, nie tym, co zostało po przycięciu.
@@ -1607,6 +1636,7 @@ wyżej: wpiąć albo usunąć.
 | **Temperatura otoczenia** | ⬜ | `ambientTempC` i `clothingClo` nie mają źródła |
 | **Światło (`tool_flashlight`)** | ⬜ | latarka nie robi nic |
 | **Pogoda i sezonowość** | ⬜ P4 | wymaga craftingu |
+| **Horda przy schronie (§6.5.5)** | ⬜ P5 | ekran powrotu (§16.3) milczy o hordach, bo nie ma o czym mówić |
 | **Onboarding, dostępność** | 🟡 etap 9, 8/11 | publikację — zostaje skryptowana pierwsza walka (§15.6), materiały do sklepu i formularze Play Console |
 
 ---

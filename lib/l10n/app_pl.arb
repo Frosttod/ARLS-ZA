@@ -14,7 +14,7 @@
   "exportDone": "Profil zapisany.",
   "importDone": "Profil wczytany.",
   "importFailed": "Wczytywanie nie powiodło się: {reason}",
-  "awayTitle": "Kiedy Cię nie było",
+  "awayTitle": "Pod twoją nieobecność",
   "awayElapsed": "{days, plural, =0{Minęło mniej niż doba.} =1{Minęła doba.} few{Minęły {days} dni.} many{Minęło {days} dni.} other{Minęło {days} dni.}}",
   "awayAttackedBody": "Przy zgaszonym ekranie doszło {blows} ciosów i {ml} ml krwi. Opatrz to, zanim gdziekolwiek pójdziesz.",
   "awayFloored": "Organizm działał na rezerwach. Żaden zasób nie spadł poniżej progu bezpieczeństwa.",
@@ -1634,5 +1634,57 @@
   "widgetWasting": "Wychudzenie",
   "widgetThirsty": "Pragnienie",
   "widgetStarving": "Głód",
-  "widgetSleepless": "Niewyspanie"
+  "widgetSleepless": "Niewyspanie",
+  "awayFor": "Nie było cię {span}",
+  "@awayFor": {
+    "placeholders": {
+      "span": {
+        "type": "String"
+      }
+    }
+  },
+  "awayWater": "Woda: −{ml} ml",
+  "@awayWater": {
+    "placeholders": {
+      "ml": {
+        "type": "String"
+      }
+    }
+  },
+  "awayKcal": "Kalorie: −{kcal} kcal",
+  "@awayKcal": {
+    "placeholders": {
+      "kcal": {
+        "type": "String"
+      }
+    }
+  },
+  "awaySleep": "Dług senny: {span} więcej",
+  "@awaySleep": {
+    "placeholders": {
+      "span": {
+        "type": "String"
+      }
+    }
+  },
+  "awaySlept": "Sen: {span} długu spłacone",
+  "@awaySlept": {
+    "placeholders": {
+      "span": {
+        "type": "String"
+      }
+    }
+  },
+  "awayZones": "{count, plural, one{Strefa Rozkładu urosła — poziom {level}} few{{count} Strefy Rozkładu urosły — najgorsza poziom {level}} many{{count} Stref Rozkładu urosło — najgorsza poziom {level}} other{{count} Stref Rozkładu urosło — najgorsza poziom {level}}}",
+  "@awayZones": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "level": {
+        "type": "int"
+      }
+    }
+  },
+  "awayNothingGrew": "Nic tam nie urosło pod twoją nieobecność."
 }

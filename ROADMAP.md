@@ -16,7 +16,7 @@ Każdy zamknięty etap dostaje sekcję **Dziennik wykonania** z decyzjami podję
 | 5 | Walka, przeciwnicy, hałas | 🟡 14/14 zadań, po testach w terenie | — | … `6033aff` |
 | 6 | Strefy Rozkładu z pełnym cyklem | 🟡 13/13 zadań, po testach w terenie | — | `24ef01b`, schemat v36 |
 | 7 | Audio pozycyjne i haptyka | ⬜ | — | — |
-| 8 | Schron, obóz, pętla dobowa | 🟡 8/9 zadań, po testach w terenie | — | schemat v21 |
+| 8 | Schron, obóz, pętla dobowa | 🟡 9/9 zadań, po długiej passie w terenie | — | schemat v38 |
 | 9 | Onboarding i zgodność | 🟡 8/11 zadań, reszta to formularze i skryptowana walka | — | — |
 | — | Profil i statystyki postaci (§13.1) | ✅ poza etapami | 2026-08-18 | `8937688` |
 | — | Oprawa: krój pisma, odświeżanie, mapa Voyager, płynność 30 fps | ✅ scalone do `main` | 2026-08-20 | `d0d0e51` … `89bce39` |
@@ -31,7 +31,7 @@ Każdy zamknięty etap dostaje sekcję **Dziennik wykonania** z decyzjami podję
 | — | **Reguła obecności przy warsztacie** (§2.1a.3) | ✅ poza etapami | 2026-08-30 | `c6768b3`, schemat v37 |
 | — | **Widżet 4×1 na ekran główny** (§13.1): woda, kalorie, sen, tętno, co dolega | ✅ poza etapami | 2026-09-05 | — |
 
-**Metryki:** 2718 testów · `flutter analyze` czysty · schemat bazy **v37** · `main.dart` 6388 linii
+**Metryki:** 2736 testów · `flutter analyze` czysty · schemat bazy **v38** · `main.dart` 6410 linii
 
 ✅ **`main` jest wypchnięty na `origin/main`.** Wcześniej cała gra istniała na jednym dysku i było to największe ryzyko projektu — jedyne, którego nie dawało się naprawić kodem.
 
@@ -499,11 +499,15 @@ wymaga zewnętrznej paczki i pozwolenia Androida, czyli decyzji, a nie kodu.
 | 8.2 | ✅ Strefy: 50 m dla bezpieczeństwa i blokady ataku — jeden promień na oba | §8.1 |
 | 8.3 | ✅ Prywatność lokalizacji schronu: `allowBackup=false` dla całej bazy | §8.2, §11.1.3 |
 | 8.4 | ✅ Obóz: 20 m, ~40 min budowy, max 2, wygasanie po 14/21 dniach (skrzynia: pojemność bez zawartości) | §8.5 |
-| 8.5 | 🟡 Magazyn bazowy 25 kg z limitem 3 l/kg — pojemność policzona, składowanie przedmiotów jeszcze nie | §18.2, §18.1a |
+| 8.5 | ✅ Magazyn bazowy 25 kg z limitem 3 l/kg; półka trzyma przedmioty ze stanem — książkę z postępem czytania, broń z dodatkami | §18.2, §18.1a |
 | 8.6 | ✅ Sen automatyczny (strefa + noc + brak zajęcia); budowa i moduły liczą się wyłącznie w strefie | §2.1a.3–2.1a.4 |
 | 8.7 | ✅ Śmierć: Hardcore z zabezpieczeniami i Kroniką, Softcore z utratą przytomności i skrytkami | §9.1, §9.2 |
-| 8.8 | 🟡 Przebudzenie tam, gdzie gracz stoi, odroczone w pojeździe; okno łaski 10 min (bez warunku 300 m) | §9.2.1 |
-| 8.9 | Ekran powrotu po przerwie: co urosło, co stracone, czy była horda | §16.3 |
+| 8.8 | ✅ Przebudzenie tam, gdzie gracz stoi, odroczone w pojeździe; okno łaski **tylko w 300 m od miejsca upadku** | §9.2.1 |
+| 8.9 | ✅ Ekran powrotu po przerwie: ile kosztowały godziny i co urosło. Hord nie ma (P5), więc ekran o nich milczy | §16.3 |
+
+⚠️ **8.5 była zrobiona i opisana jako niezrobiona.** Półka trzyma przedmioty
+od sierpnia — z ich własnym stanem, bo `CarriedItem` wchodzi na nią w całości.
+Wiersz został z czasów, gdy policzona była sama pojemność.
 
 **Kryterium wyjścia:** pełna doba rozgrywki — wyjście, loot, walka, powrót, nocne zajęcie — przechodzi bez utraty stanu przy wymuszonym killu procesu w każdym z tych momentów.
 

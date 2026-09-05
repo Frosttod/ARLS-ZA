@@ -2737,4 +2737,43 @@ class L10nEn extends L10n {
 
   @override
   String get widgetSleepless => 'Sleep debt';
+
+  @override
+  String awayFor(String span) {
+    return 'Away for $span';
+  }
+
+  @override
+  String awayWater(String ml) {
+    return 'Water: −$ml ml';
+  }
+
+  @override
+  String awayKcal(String kcal) {
+    return 'Calories: −$kcal kcal';
+  }
+
+  @override
+  String awaySleep(String span) {
+    return 'Sleep owed: $span more';
+  }
+
+  @override
+  String awaySlept(String span) {
+    return 'Slept: $span of the debt paid off';
+  }
+
+  @override
+  String awayZones(int count, int level) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Decay Zones grew — worst is level $level',
+      one: 'A Decay Zone grew — level $level',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get awayNothingGrew => 'Nothing out there grew while you were gone.';
 }

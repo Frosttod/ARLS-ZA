@@ -36,6 +36,7 @@ class ActiveCharacter {
     this.bleeding = BleedTier.none,
     this.downUntil,
     this.graceUntil,
+    this.fellAt,
     this.pursuit,
   });
 
@@ -51,6 +52,9 @@ class ActiveCharacter {
 
   /// §9.2: when they stop being taken for dead, or null once they are.
   final DateTime? graceUntil;
+
+  /// §9.2.1: where the body fell, while it is still on the ground.
+  final GeoPoint? fellAt;
 
   /// §5.6.2: the fight the player last walked out of, or null.
   final Pursuit? pursuit;
@@ -100,6 +104,12 @@ class GameSessionFactory {
       // running while the app is dead. That is the point of it.
       downUntil: vitals.downUntil,
       graceUntil: vitals.graceUntil,
+      // §9.2.1: where they went down. Null on a save from before the column
+      // existed, which [grantsGrace] reads as "we do not know", not as "miles
+      // away".
+      fellAt: vitals.downLat == null || vitals.downLon == null
+          ? null
+          : GeoPoint(vitals.downLat!, vitals.downLon!),
       // §5.6.2: what was still after them when the app went away. Closing it
       // has to cost something, or nothing in §5 costs anything at all.
       pursuit:
@@ -266,6 +276,7 @@ class GameSessionFactory {
       deathMode: character.deathMode,
       downUntil: character.downUntil,
       graceUntil: character.graceUntil,
+      fellAt: character.fellAt,
       pursuit: character.pursuit,
       dead: character.isDead,
       clock: clock,

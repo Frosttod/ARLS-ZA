@@ -4824,6 +4824,48 @@ abstract class L10n {
   /// In en, this message translates to:
   /// **'Sleep debt'**
   String get widgetSleepless;
+
+  /// No description provided for @awayFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Away for {span}'**
+  String awayFor(String span);
+
+  /// No description provided for @awayWater.
+  ///
+  /// In en, this message translates to:
+  /// **'Water: −{ml} ml'**
+  String awayWater(String ml);
+
+  /// No description provided for @awayKcal.
+  ///
+  /// In en, this message translates to:
+  /// **'Calories: −{kcal} kcal'**
+  String awayKcal(String kcal);
+
+  /// No description provided for @awaySleep.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep owed: {span} more'**
+  String awaySleep(String span);
+
+  /// No description provided for @awaySlept.
+  ///
+  /// In en, this message translates to:
+  /// **'Slept: {span} of the debt paid off'**
+  String awaySlept(String span);
+
+  /// No description provided for @awayZones.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{A Decay Zone grew — level {level}} other{{count} Decay Zones grew — worst is level {level}}}'**
+  String awayZones(int count, int level);
+
+  /// No description provided for @awayNothingGrew.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing out there grew while you were gone.'**
+  String get awayNothingGrew;
 }
 
 class _L10nDelegate extends LocalizationsDelegate<L10n> {

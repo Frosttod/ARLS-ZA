@@ -56,7 +56,7 @@ class L10nPl extends L10n {
   }
 
   @override
-  String get awayTitle => 'Kiedy Cię nie było';
+  String get awayTitle => 'Pod twoją nieobecność';
 
   @override
   String awayElapsed(int days) {
@@ -2735,4 +2735,45 @@ class L10nPl extends L10n {
 
   @override
   String get widgetSleepless => 'Niewyspanie';
+
+  @override
+  String awayFor(String span) {
+    return 'Nie było cię $span';
+  }
+
+  @override
+  String awayWater(String ml) {
+    return 'Woda: −$ml ml';
+  }
+
+  @override
+  String awayKcal(String kcal) {
+    return 'Kalorie: −$kcal kcal';
+  }
+
+  @override
+  String awaySleep(String span) {
+    return 'Dług senny: $span więcej';
+  }
+
+  @override
+  String awaySlept(String span) {
+    return 'Sen: $span długu spłacone';
+  }
+
+  @override
+  String awayZones(int count, int level) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count Stref Rozkładu urosło — najgorsza poziom $level',
+      many: '$count Stref Rozkładu urosło — najgorsza poziom $level',
+      few: '$count Strefy Rozkładu urosły — najgorsza poziom $level',
+      one: 'Strefa Rozkładu urosła — poziom $level',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get awayNothingGrew => 'Nic tam nie urosło pod twoją nieobecność.';
 }

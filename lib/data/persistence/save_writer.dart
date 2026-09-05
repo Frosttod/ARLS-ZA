@@ -18,6 +18,7 @@ import 'package:drift/drift.dart';
 
 import '../../combat/pursuit.dart';
 import '../../location/position_fix.dart';
+import '../../map/geometry.dart';
 import '../../sim/occupation.dart';
 import '../../sim/physiology.dart';
 import '../../sim/tick.dart';
@@ -164,6 +165,10 @@ VitalsCompanion vitalsRow({
   required DateTime? downUntil,
   required DateTime? graceUntil,
   required Pursuit? pursuit,
+
+  /// §9.2.1: where the body actually dropped, for as long as it is on the
+  /// ground. Null the rest of the time.
+  GeoPoint? fellAt,
 }) => VitalsCompanion(
   profileId: Value(profileId),
   lastUpdate: Value(state.lastUpdate),
@@ -191,6 +196,8 @@ VitalsCompanion vitalsRow({
   bleedTier: Value(bleeding.name),
   downUntil: Value(downUntil),
   graceUntil: Value(graceUntil),
+  downLat: Value(fellAt?.latitude),
+  downLon: Value(fellAt?.longitude),
   huntUntil: Value(pursuit?.until),
   huntLatitude: Value(pursuit?.at.latitude),
   huntLongitude: Value(pursuit?.at.longitude),

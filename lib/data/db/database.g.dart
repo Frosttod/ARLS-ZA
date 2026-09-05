@@ -1160,6 +1160,28 @@ class $VitalsTable extends Vitals with TableInfo<$VitalsTable, Vital> {
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _downLatMeta = const VerificationMeta(
+    'downLat',
+  );
+  @override
+  late final GeneratedColumn<double> downLat = GeneratedColumn<double>(
+    'down_lat',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _downLonMeta = const VerificationMeta(
+    'downLon',
+  );
+  @override
+  late final GeneratedColumn<double> downLon = GeneratedColumn<double>(
+    'down_lon',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _huntUntilMeta = const VerificationMeta(
     'huntUntil',
   );
@@ -1328,6 +1350,8 @@ class $VitalsTable extends Vitals with TableInfo<$VitalsTable, Vital> {
     bleedTier,
     downUntil,
     graceUntil,
+    downLat,
+    downLon,
     huntUntil,
     huntLatitude,
     huntLongitude,
@@ -1461,6 +1485,18 @@ class $VitalsTable extends Vitals with TableInfo<$VitalsTable, Vital> {
       context.handle(
         _graceUntilMeta,
         graceUntil.isAcceptableOrUnknown(data['grace_until']!, _graceUntilMeta),
+      );
+    }
+    if (data.containsKey('down_lat')) {
+      context.handle(
+        _downLatMeta,
+        downLat.isAcceptableOrUnknown(data['down_lat']!, _downLatMeta),
+      );
+    }
+    if (data.containsKey('down_lon')) {
+      context.handle(
+        _downLonMeta,
+        downLon.isAcceptableOrUnknown(data['down_lon']!, _downLonMeta),
       );
     }
     if (data.containsKey('hunt_until')) {
@@ -1637,6 +1673,14 @@ class $VitalsTable extends Vitals with TableInfo<$VitalsTable, Vital> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}grace_until'],
       ),
+      downLat: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}down_lat'],
+      ),
+      downLon: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}down_lon'],
+      ),
       huntUntil: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}hunt_until'],
@@ -1745,6 +1789,16 @@ class Vital extends DataClass implements Insertable<Vital> {
   /// from the same blackout.
   final DateTime? graceUntil;
 
+  /// §9.2.1: where the character actually fell, or null if they are standing.
+  ///
+  /// ⚠️ **Written down rather than remembered, because the hour runs with the
+  /// app closed.** The caches stay where the body dropped (§9.2), and whether
+  /// the ten minutes of grace are owed depends on how far the player has moved
+  /// since — a question that cannot be answered by a process that was killed
+  /// halfway through the blackout.
+  final double? downLat;
+  final double? downLon;
+
   /// §5.6.2, §6.1a: a fight the player walked out of, and where.
   ///
   /// ⚠️ The enemies themselves are not written down — §6.4 remakes them every
@@ -1820,6 +1874,8 @@ class Vital extends DataClass implements Insertable<Vital> {
     required this.bleedTier,
     this.downUntil,
     this.graceUntil,
+    this.downLat,
+    this.downLon,
     this.huntUntil,
     this.huntLatitude,
     this.huntLongitude,
@@ -1861,6 +1917,12 @@ class Vital extends DataClass implements Insertable<Vital> {
     }
     if (!nullToAbsent || graceUntil != null) {
       map['grace_until'] = Variable<DateTime>(graceUntil);
+    }
+    if (!nullToAbsent || downLat != null) {
+      map['down_lat'] = Variable<double>(downLat);
+    }
+    if (!nullToAbsent || downLon != null) {
+      map['down_lon'] = Variable<double>(downLon);
     }
     if (!nullToAbsent || huntUntil != null) {
       map['hunt_until'] = Variable<DateTime>(huntUntil);
@@ -1913,6 +1975,12 @@ class Vital extends DataClass implements Insertable<Vital> {
       graceUntil: graceUntil == null && nullToAbsent
           ? const Value.absent()
           : Value(graceUntil),
+      downLat: downLat == null && nullToAbsent
+          ? const Value.absent()
+          : Value(downLat),
+      downLon: downLon == null && nullToAbsent
+          ? const Value.absent()
+          : Value(downLon),
       huntUntil: huntUntil == null && nullToAbsent
           ? const Value.absent()
           : Value(huntUntil),
@@ -1958,6 +2026,8 @@ class Vital extends DataClass implements Insertable<Vital> {
       bleedTier: serializer.fromJson<String>(json['bleedTier']),
       downUntil: serializer.fromJson<DateTime?>(json['downUntil']),
       graceUntil: serializer.fromJson<DateTime?>(json['graceUntil']),
+      downLat: serializer.fromJson<double?>(json['downLat']),
+      downLon: serializer.fromJson<double?>(json['downLon']),
       huntUntil: serializer.fromJson<DateTime?>(json['huntUntil']),
       huntLatitude: serializer.fromJson<double?>(json['huntLatitude']),
       huntLongitude: serializer.fromJson<double?>(json['huntLongitude']),
@@ -1994,6 +2064,8 @@ class Vital extends DataClass implements Insertable<Vital> {
       'bleedTier': serializer.toJson<String>(bleedTier),
       'downUntil': serializer.toJson<DateTime?>(downUntil),
       'graceUntil': serializer.toJson<DateTime?>(graceUntil),
+      'downLat': serializer.toJson<double?>(downLat),
+      'downLon': serializer.toJson<double?>(downLon),
       'huntUntil': serializer.toJson<DateTime?>(huntUntil),
       'huntLatitude': serializer.toJson<double?>(huntLatitude),
       'huntLongitude': serializer.toJson<double?>(huntLongitude),
@@ -2026,6 +2098,8 @@ class Vital extends DataClass implements Insertable<Vital> {
     String? bleedTier,
     Value<DateTime?> downUntil = const Value.absent(),
     Value<DateTime?> graceUntil = const Value.absent(),
+    Value<double?> downLat = const Value.absent(),
+    Value<double?> downLon = const Value.absent(),
     Value<DateTime?> huntUntil = const Value.absent(),
     Value<double?> huntLatitude = const Value.absent(),
     Value<double?> huntLongitude = const Value.absent(),
@@ -2055,6 +2129,8 @@ class Vital extends DataClass implements Insertable<Vital> {
     bleedTier: bleedTier ?? this.bleedTier,
     downUntil: downUntil.present ? downUntil.value : this.downUntil,
     graceUntil: graceUntil.present ? graceUntil.value : this.graceUntil,
+    downLat: downLat.present ? downLat.value : this.downLat,
+    downLon: downLon.present ? downLon.value : this.downLon,
     huntUntil: huntUntil.present ? huntUntil.value : this.huntUntil,
     huntLatitude: huntLatitude.present ? huntLatitude.value : this.huntLatitude,
     huntLongitude: huntLongitude.present
@@ -2102,6 +2178,8 @@ class Vital extends DataClass implements Insertable<Vital> {
       graceUntil: data.graceUntil.present
           ? data.graceUntil.value
           : this.graceUntil,
+      downLat: data.downLat.present ? data.downLat.value : this.downLat,
+      downLon: data.downLon.present ? data.downLon.value : this.downLon,
       huntUntil: data.huntUntil.present ? data.huntUntil.value : this.huntUntil,
       huntLatitude: data.huntLatitude.present
           ? data.huntLatitude.value
@@ -2154,6 +2232,8 @@ class Vital extends DataClass implements Insertable<Vital> {
           ..write('bleedTier: $bleedTier, ')
           ..write('downUntil: $downUntil, ')
           ..write('graceUntil: $graceUntil, ')
+          ..write('downLat: $downLat, ')
+          ..write('downLon: $downLon, ')
           ..write('huntUntil: $huntUntil, ')
           ..write('huntLatitude: $huntLatitude, ')
           ..write('huntLongitude: $huntLongitude, ')
@@ -2188,6 +2268,8 @@ class Vital extends DataClass implements Insertable<Vital> {
     bleedTier,
     downUntil,
     graceUntil,
+    downLat,
+    downLon,
     huntUntil,
     huntLatitude,
     huntLongitude,
@@ -2221,6 +2303,8 @@ class Vital extends DataClass implements Insertable<Vital> {
           other.bleedTier == this.bleedTier &&
           other.downUntil == this.downUntil &&
           other.graceUntil == this.graceUntil &&
+          other.downLat == this.downLat &&
+          other.downLon == this.downLon &&
           other.huntUntil == this.huntUntil &&
           other.huntLatitude == this.huntLatitude &&
           other.huntLongitude == this.huntLongitude &&
@@ -2252,6 +2336,8 @@ class VitalsCompanion extends UpdateCompanion<Vital> {
   final Value<String> bleedTier;
   final Value<DateTime?> downUntil;
   final Value<DateTime?> graceUntil;
+  final Value<double?> downLat;
+  final Value<double?> downLon;
   final Value<DateTime?> huntUntil;
   final Value<double?> huntLatitude;
   final Value<double?> huntLongitude;
@@ -2281,6 +2367,8 @@ class VitalsCompanion extends UpdateCompanion<Vital> {
     this.bleedTier = const Value.absent(),
     this.downUntil = const Value.absent(),
     this.graceUntil = const Value.absent(),
+    this.downLat = const Value.absent(),
+    this.downLon = const Value.absent(),
     this.huntUntil = const Value.absent(),
     this.huntLatitude = const Value.absent(),
     this.huntLongitude = const Value.absent(),
@@ -2311,6 +2399,8 @@ class VitalsCompanion extends UpdateCompanion<Vital> {
     this.bleedTier = const Value.absent(),
     this.downUntil = const Value.absent(),
     this.graceUntil = const Value.absent(),
+    this.downLat = const Value.absent(),
+    this.downLon = const Value.absent(),
     this.huntUntil = const Value.absent(),
     this.huntLatitude = const Value.absent(),
     this.huntLongitude = const Value.absent(),
@@ -2345,6 +2435,8 @@ class VitalsCompanion extends UpdateCompanion<Vital> {
     Expression<String>? bleedTier,
     Expression<DateTime>? downUntil,
     Expression<DateTime>? graceUntil,
+    Expression<double>? downLat,
+    Expression<double>? downLon,
     Expression<DateTime>? huntUntil,
     Expression<double>? huntLatitude,
     Expression<double>? huntLongitude,
@@ -2375,6 +2467,8 @@ class VitalsCompanion extends UpdateCompanion<Vital> {
       if (bleedTier != null) 'bleed_tier': bleedTier,
       if (downUntil != null) 'down_until': downUntil,
       if (graceUntil != null) 'grace_until': graceUntil,
+      if (downLat != null) 'down_lat': downLat,
+      if (downLon != null) 'down_lon': downLon,
       if (huntUntil != null) 'hunt_until': huntUntil,
       if (huntLatitude != null) 'hunt_latitude': huntLatitude,
       if (huntLongitude != null) 'hunt_longitude': huntLongitude,
@@ -2408,6 +2502,8 @@ class VitalsCompanion extends UpdateCompanion<Vital> {
     Value<String>? bleedTier,
     Value<DateTime?>? downUntil,
     Value<DateTime?>? graceUntil,
+    Value<double?>? downLat,
+    Value<double?>? downLon,
     Value<DateTime?>? huntUntil,
     Value<double?>? huntLatitude,
     Value<double?>? huntLongitude,
@@ -2438,6 +2534,8 @@ class VitalsCompanion extends UpdateCompanion<Vital> {
       bleedTier: bleedTier ?? this.bleedTier,
       downUntil: downUntil ?? this.downUntil,
       graceUntil: graceUntil ?? this.graceUntil,
+      downLat: downLat ?? this.downLat,
+      downLon: downLon ?? this.downLon,
       huntUntil: huntUntil ?? this.huntUntil,
       huntLatitude: huntLatitude ?? this.huntLatitude,
       huntLongitude: huntLongitude ?? this.huntLongitude,
@@ -2502,6 +2600,12 @@ class VitalsCompanion extends UpdateCompanion<Vital> {
     if (graceUntil.present) {
       map['grace_until'] = Variable<DateTime>(graceUntil.value);
     }
+    if (downLat.present) {
+      map['down_lat'] = Variable<double>(downLat.value);
+    }
+    if (downLon.present) {
+      map['down_lon'] = Variable<double>(downLon.value);
+    }
     if (huntUntil.present) {
       map['hunt_until'] = Variable<DateTime>(huntUntil.value);
     }
@@ -2562,6 +2666,8 @@ class VitalsCompanion extends UpdateCompanion<Vital> {
           ..write('bleedTier: $bleedTier, ')
           ..write('downUntil: $downUntil, ')
           ..write('graceUntil: $graceUntil, ')
+          ..write('downLat: $downLat, ')
+          ..write('downLon: $downLon, ')
           ..write('huntUntil: $huntUntil, ')
           ..write('huntLatitude: $huntLatitude, ')
           ..write('huntLongitude: $huntLongitude, ')
@@ -12831,6 +12937,8 @@ typedef $$VitalsTableCreateCompanionBuilder =
       Value<String> bleedTier,
       Value<DateTime?> downUntil,
       Value<DateTime?> graceUntil,
+      Value<double?> downLat,
+      Value<double?> downLon,
       Value<DateTime?> huntUntil,
       Value<double?> huntLatitude,
       Value<double?> huntLongitude,
@@ -12862,6 +12970,8 @@ typedef $$VitalsTableUpdateCompanionBuilder =
       Value<String> bleedTier,
       Value<DateTime?> downUntil,
       Value<DateTime?> graceUntil,
+      Value<double?> downLat,
+      Value<double?> downLon,
       Value<DateTime?> huntUntil,
       Value<double?> huntLatitude,
       Value<double?> huntLongitude,
@@ -12958,6 +13068,16 @@ class $$VitalsTableFilterComposer
 
   ColumnFilters<DateTime> get graceUntil => $composableBuilder(
     column: $table.graceUntil,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get downLat => $composableBuilder(
+    column: $table.downLat,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get downLon => $composableBuilder(
+    column: $table.downLon,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -13111,6 +13231,16 @@ class $$VitalsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<double> get downLat => $composableBuilder(
+    column: $table.downLat,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get downLon => $composableBuilder(
+    column: $table.downLon,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get huntUntil => $composableBuilder(
     column: $table.huntUntil,
     builder: (column) => ColumnOrderings(column),
@@ -13243,6 +13373,12 @@ class $$VitalsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<double> get downLat =>
+      $composableBuilder(column: $table.downLat, builder: (column) => column);
+
+  GeneratedColumn<double> get downLon =>
+      $composableBuilder(column: $table.downLon, builder: (column) => column);
+
   GeneratedColumn<DateTime> get huntUntil =>
       $composableBuilder(column: $table.huntUntil, builder: (column) => column);
 
@@ -13344,6 +13480,8 @@ class $$VitalsTableTableManager
                 Value<String> bleedTier = const Value.absent(),
                 Value<DateTime?> downUntil = const Value.absent(),
                 Value<DateTime?> graceUntil = const Value.absent(),
+                Value<double?> downLat = const Value.absent(),
+                Value<double?> downLon = const Value.absent(),
                 Value<DateTime?> huntUntil = const Value.absent(),
                 Value<double?> huntLatitude = const Value.absent(),
                 Value<double?> huntLongitude = const Value.absent(),
@@ -13373,6 +13511,8 @@ class $$VitalsTableTableManager
                 bleedTier: bleedTier,
                 downUntil: downUntil,
                 graceUntil: graceUntil,
+                downLat: downLat,
+                downLon: downLon,
                 huntUntil: huntUntil,
                 huntLatitude: huntLatitude,
                 huntLongitude: huntLongitude,
@@ -13404,6 +13544,8 @@ class $$VitalsTableTableManager
                 Value<String> bleedTier = const Value.absent(),
                 Value<DateTime?> downUntil = const Value.absent(),
                 Value<DateTime?> graceUntil = const Value.absent(),
+                Value<double?> downLat = const Value.absent(),
+                Value<double?> downLon = const Value.absent(),
                 Value<DateTime?> huntUntil = const Value.absent(),
                 Value<double?> huntLatitude = const Value.absent(),
                 Value<double?> huntLongitude = const Value.absent(),
@@ -13433,6 +13575,8 @@ class $$VitalsTableTableManager
                 bleedTier: bleedTier,
                 downUntil: downUntil,
                 graceUntil: graceUntil,
+                downLat: downLat,
+                downLon: downLon,
                 huntUntil: huntUntil,
                 huntLatitude: huntLatitude,
                 huntLongitude: huntLongitude,

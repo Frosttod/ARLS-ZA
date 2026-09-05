@@ -16,6 +16,8 @@ library;
 
 import 'dart:async';
 
+import 'blackout.dart';
+
 import '../core/game_clock.dart';
 import '../data/db/database.dart';
 import '../data/persistence/save_bootstrap.dart';
@@ -158,6 +160,10 @@ class GameLoop {
     this.deathMode = DeathMode.softcore,
     DateTime? downUntil,
     DateTime? graceUntil,
+
+    /// §9.2.1: where the body fell, for a run that was on the ground when the
+    /// process died.
+    GeoPoint? fellAt,
     Pursuit? pursuit,
     // ignore: avoid_positional_boolean_parameters
     bool dead = false,
@@ -169,14 +175,14 @@ class GameLoop {
        _body = body, // ignore: prefer_initializing_formals
        _state = initialState,
        _bleeding = initialBleeding,
-       // ignore: prefer_initializing_formals
-       _downUntil = downUntil,
-       // ignore: prefer_initializing_formals
-       _graceUntil = graceUntil,
+       _blackout = Blackout(
+         downUntil: downUntil,
+         graceUntil: graceUntil,
+         fellAt: fellAt,
+         dead: dead,
+       ),
        // ignore: prefer_initializing_formals
        _pursuit = pursuit,
-       // ignore: prefer_initializing_formals
-       _dead = dead,
        power = power ?? const ConstantPowerSource(),
        clock = clock ?? session.clock {
     this.clock.restore(initialState.lastUpdate);
@@ -767,11 +773,13 @@ class GameLoop {
   /// asleep in a pocket or has lost the sky — and both of those are reasons a
   /// character must never die.
   void _checkDown() {
-    if (_dead || _downUntil != null) return;
+    if (!_blackout.canFall) return;
 
     final cause = fatalCause(_status());
     if (cause == null) return;
 
+    // §9.1: the two refusals only the loop can answer — whether the phone is
+    // asleep in a pocket, and whether it has lost the sky.
     if (!mayDie(
       asleep: _state.zone == MetabolicZone.sleep,
       positionKnown: source.currentSignal != PositionSignal.lost,
@@ -779,17 +787,13 @@ class GameLoop {
       return;
     }
 
-    _cause = cause;
-    _wentDown = true;
-
-    if (deathMode == DeathMode.hardcore) {
-      _dead = true;
-    } else {
-      // §9.2: an hour on the ground, wall-clock, and it runs with the app
-      // closed — being unconscious cannot require watching a screen.
-      _downUntil = _state.lastUpdate.add(kUnconsciousFor);
-      _bleeding = BleedTier.none;
-    }
+    _blackout.fall(
+      because: cause,
+      mode: deathMode,
+      now: _state.lastUpdate,
+      at: _standingAt ?? _geoOf(_lastFix),
+    );
+    if (!_blackout.isDead) _bleeding = BleedTier.none;
 
     writer.stageHot(_toCompanion());
   }
@@ -801,26 +805,23 @@ class GameLoop {
   /// character somewhere the player is not, and §0 makes that the one thing
   /// this game may never do.
   void _checkWake() {
-    final until = _downUntil;
-    if (until == null || _dead) return;
-
     final now = _state.lastUpdate;
-    if (now.isBefore(until)) return;
+    if (!_blackout.isDue(now)) return;
 
     if (!mayWake(
       speedKmh: _speedKmh,
       positionKnown: source.currentSignal != PositionSignal.lost,
     )) {
-      _downUntil = now.add(const Duration(minutes: 1));
+      _blackout.deferTo(now);
       return;
     }
 
-    // Up, and the hour is over for good: the deadline is cleared in the same
-    // breath as the state is restored, so nothing can run this twice.
-    _downUntil = null;
-    _graceUntil = now.add(kGraceAfterWaking);
-    _justWoke = true;
-    _state = wokenFrom(_state, constants);
+    _state = _blackout.wake(
+      now: now,
+      at: _standingAt ?? _geoOf(_lastFix),
+      state: _state,
+      constants: constants,
+    );
 
     writer.stageHot(_toCompanion());
     _publish();
@@ -828,11 +829,9 @@ class GameLoop {
 
   /// §9.2: the ten minutes are over and the street has noticed them again.
   void _checkGrace() {
-    final grace = _graceUntil;
-    if (grace == null || _state.lastUpdate.isBefore(grace)) return;
-
-    _graceUntil = null;
-    writer.stageHot(_toCompanion());
+    if (_blackout.graceOver(_state.lastUpdate)) {
+      writer.stageHot(_toCompanion());
+    }
   }
 
   /// Whether this snapshot is the one the character woke on.
@@ -921,9 +920,10 @@ class GameLoop {
     speedKmh: _speedKmh,
     occupation: _occupation,
     bleeding: _bleeding,
-    downUntil: _downUntil,
-    graceUntil: _graceUntil,
+    downUntil: _blackout.downUntil,
+    graceUntil: _blackout.graceUntil,
     pursuit: _pursuit,
+    fellAt: _blackout.fellAt,
   );
 
   static GeoPoint? _geoOf(PositionFix? fix) =>
@@ -994,8 +994,8 @@ class GameLoop {
         clockRolledBack: _rolledBack,
         lastFlushAt: writer.lastHotFlush,
         down: down,
-        downUntil: _downUntil,
-        deathCause: _cause,
+        downUntil: _blackout.downUntil,
+        deathCause: _blackout.cause,
       ),
     );
   }
@@ -1076,36 +1076,12 @@ class GameLoop {
     writer.stageHot(_toCompanion());
   }
 
-  /// §9.2: when the hour on the ground runs out. Null once they are up.
-  DateTime? _downUntil;
-
-  /// §9.2: when they stop being taken for dead. Null once that has passed.
-  ///
-  /// ⚠️ Persisted, and not a flag in memory. Held in memory, "already woken"
-  /// was forgotten every time the process died — so reopening the app ran the
-  /// waking again, put the character back to a quarter of their blood and
-  /// announced the caches a second time. A character cannot wake up twice from
-  /// the same blackout.
-  DateTime? _graceUntil;
-
-  /// §9.1: set once, and then nothing else happens to this character.
-  bool _dead = false;
-  DeathCause? _cause;
+  /// §9.2, §9.2.1: the hour on the ground, the ten minutes after it, and
+  /// where it happened. Its own object — see [Blackout].
+  final Blackout _blackout;
 
   /// §9: what the UI has to draw, and what every action has to check.
-  DownState get down {
-    if (_dead) return DownState.dead;
-
-    final now = _state.lastUpdate;
-
-    final until = _downUntil;
-    if (until != null && now.isBefore(until)) return DownState.unconscious;
-
-    final grace = _graceUntil;
-    if (grace != null && now.isBefore(grace)) return DownState.grace;
-
-    return DownState.none;
-  }
+  DownState get down => _blackout.state;
 
   /// §9: whether the player may act at all. False on the ground and after the
   /// end; true during the grace window, which only stops the shooting.
@@ -1113,18 +1089,13 @@ class GameLoop {
 
   /// What the screen counts down to: the hour on the ground, then the ten
   /// minutes of being ignored.
-  DateTime? get downUntil => _downUntil ?? _graceUntil;
+  DateTime? get downUntil => _blackout.downUntil ?? _blackout.graceUntil;
 
-  DeathCause? get deathCause => _cause;
+  DeathCause? get deathCause => _blackout.cause;
 
   /// Raised for one snapshot when the character goes down, so the UI can say
   /// so once rather than every frame.
-  bool _wentDown = false;
-  bool takeWentDown() {
-    final was = _wentDown;
-    _wentDown = false;
-    return was;
-  }
+  bool takeWentDown() => _blackout.takeWentDown();
 
   BleedTier get bleeding => _bleeding;
 
