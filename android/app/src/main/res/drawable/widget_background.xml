@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The panel behind the widget, in the same near-black the HUD uses so that a
+  player glancing at the home screen sees the same surface they read while
+  walking. Rounded to what launchers expect of a modern widget.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="@color/widget_panel"/>
+    <corners android:radius="16dp"/>
+</shape>

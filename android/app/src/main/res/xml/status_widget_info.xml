@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  4×1. minWidth 250dp × minHeight 40dp is what Android counts as four columns
+  by one row on a phone.
+
+  ⚠️ updatePeriodMillis is 30 minutes, which is the shortest Android honours
+  and is *not* how the widget stays current: the game pushes an update on every
+  meaningful change while it runs. This exists so that a widget left on a home
+  screen with the game closed eventually refreshes how old its reading is,
+  rather than saying "5 minutes ago" for the rest of the day.
+-->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:minWidth="250dp"
+    android:minHeight="40dp"
+    android:targetCellWidth="4"
+    android:targetCellHeight="1"
+    android:updatePeriodMillis="1800000"
+    android:initialLayout="@layout/status_widget"
+    android:previewLayout="@layout/status_widget"
+    android:description="@string/widget_description"
+    android:resizeMode="horizontal"
+    android:widgetCategory="home_screen"/>

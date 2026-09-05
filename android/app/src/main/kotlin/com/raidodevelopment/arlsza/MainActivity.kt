@@ -1,5 +1,6 @@
 package com.raidodevelopment.arlsza
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.PowerManager
@@ -78,6 +79,38 @@ class MainActivity : FlutterActivity() {
                             result.error("unavailable", error.message, null)
                         }
                     }
+                }
+
+                // §13.1: the reading the home-screen widget draws. Stored
+                // rather than handed over, because the widget is redrawn by
+                // the launcher long after this process is gone — see
+                // StatusWidget.kt.
+                //
+                // ⚠️ Nothing is interpreted here. Percentages, a pulse and a
+                // line of already-translated text go in exactly as Dart sent
+                // them; deciding anything on this side would be a second copy
+                // of rules that are tested on the other.
+                "widget.push" -> {
+                    val prefs = getSharedPreferences(
+                        StatusWidget.PREFS,
+                        Context.MODE_PRIVATE,
+                    )
+                    prefs.edit().apply {
+                        putInt("water", call.argument<Int>("water") ?: 0)
+                        putInt("kcal", call.argument<Int>("kcal") ?: 0)
+                        putInt("sleep", call.argument<Int>("sleep") ?: 0)
+                        putInt("bpm", call.argument<Int>("bpm") ?: 0)
+                        putString("waterLabel", call.argument<String>("waterLabel"))
+                        putString("kcalLabel", call.argument<String>("kcalLabel"))
+                        putString("sleepLabel", call.argument<String>("sleepLabel"))
+                        putString("ailments", call.argument<String>("ailments"))
+                        putString("ok", call.argument<String>("ok"))
+                        putLong("at", call.argument<Long>("at") ?: 0L)
+                        apply()
+                    }
+
+                    StatusWidget.refresh(applicationContext)
+                    result.success(null)
                 }
 
                 else -> result.notImplemented()

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ⚠️ The only two strings on the Android side, and both are here because the
+  system asks for them before the app has ever run: the widget picker shows a
+  description and a preview with no Dart process alive to translate anything.
+  Everything the widget says about a character comes from `app_*.arb` through
+  the channel — see `lib/ui/home_widget.dart`.
+-->
+<resources>
+    <string name="widget_name">ARLS-ZA</string>
+    <string name="widget_description">Water, calories, sleep and pulse, without opening the game.</string>
+    <string name="widget_bpm_unit">BPM</string>
+</resources>

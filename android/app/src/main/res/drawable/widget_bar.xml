@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  One bar: the unfilled track, and the filled part over it.
+
+  ⚠️ The empty part is drawn, not left blank. An empty bar has to read as an
+  empty bar rather than as a missing one — the same rule the HUD's muted tone
+  follows (§12).
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@android:id/background">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/widget_track"/>
+            <corners android:radius="3dp"/>
+        </shape>
+    </item>
+    <item android:id="@android:id/progress">
+        <clip>
+            <shape android:shape="rectangle">
+                <solid android:color="@color/widget_data"/>
+                <corners android:radius="3dp"/>
+            </shape>
+        </clip>
+    </item>
+</layer-list>

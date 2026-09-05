@@ -1624,5 +1624,15 @@
   "settingsHaptics": "Wibracja przy sygnałach krytycznych",
   "settingsHapticsBody": "Trafienie, upadek i to, że coś zaczęło cię ścigać. Trzy sygnały i ani jeden więcej — telefon, który wibruje na wszystko, wyłącza się na stałe.",
   "stepMore": "O jeden więcej",
-  "stepLess": "O jeden mniej"
+  "stepLess": "O jeden mniej",
+  "widgetTitle": "ARLS-ZA — ciało",
+  "widgetNothingWrong": "Nic nie dolega",
+  "widgetBleeding": "Krwawienie",
+  "widgetShock": "Utrata krwi",
+  "widgetEnemy": "Coś jest blisko",
+  "widgetMicrosleeps": "Zasypiasz",
+  "widgetWasting": "Wychudzenie",
+  "widgetThirsty": "Pragnienie",
+  "widgetStarving": "Głód",
+  "widgetSleepless": "Niewyspanie"
 }

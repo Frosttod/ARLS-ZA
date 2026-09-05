@@ -27,9 +27,18 @@ library;
 /// both, or the two screens are inconsistent by a space.
 const String kEffectGap = '  ·  ';
 
+/// The same separator where every character is spoken for.
+///
+/// ⚠️ A second constant rather than a second opinion. The home-screen widget
+/// (§13.1) is four launcher cells wide — about eight words — and two spaces on
+/// either side of each dot is a whole word of that budget spent on air. What
+/// must not happen is a *third* spacing appearing because somebody typed the
+/// dot by hand, which is what `effects_test.dart` watches for.
+const String kTightGap = ' · ';
+
 /// Several effects on one line.
-String effects(Iterable<String> parts) =>
-    parts.where((part) => part.isNotEmpty).join(kEffectGap);
+String effects(Iterable<String> parts, {String gap = kEffectGap}) =>
+    parts.where((part) => part.isNotEmpty).join(gap);
 
 /// A label and what it is worth: `Sen ×1,15`.
 String effect(String label, String value) => '$label $value';

@@ -2707,4 +2707,34 @@ class L10nEn extends L10n {
 
   @override
   String get stepLess => 'One fewer';
+
+  @override
+  String get widgetTitle => 'ARLS-ZA — body';
+
+  @override
+  String get widgetNothingWrong => 'Nothing wrong';
+
+  @override
+  String get widgetBleeding => 'Bleeding';
+
+  @override
+  String get widgetShock => 'Blood loss';
+
+  @override
+  String get widgetEnemy => 'Something nearby';
+
+  @override
+  String get widgetMicrosleeps => 'Falling asleep';
+
+  @override
+  String get widgetWasting => 'Wasting';
+
+  @override
+  String get widgetThirsty => 'Thirst';
+
+  @override
+  String get widgetStarving => 'Hunger';
+
+  @override
+  String get widgetSleepless => 'Sleep debt';
 }

@@ -15,7 +15,7 @@ Różnica jest istotna, bo w kilkunastu miejscach **świadomie odeszliśmy od do
 
 ⚠️ **Reguła utrzymania tego pliku:** liczba zmieniona w kodzie i nieprzeniesiona tutaj czyni ten dokument gorszym niż jego brak. Przy każdej zmianie stałej — aktualizuj sekcję.
 
-**Stan:** 2701 testów · schemat bazy **v37** · etapy 0–2 zamknięte, 3–6 i 8 przed testem w terenie.
+**Stan:** 2718 testów · schemat bazy **v37** · etapy 0–2 zamknięte, 3–6 i 8 przed testem w terenie.
 
 ---
 
@@ -1328,6 +1328,30 @@ Schron główny **nigdy się nie rozpada** — to miejsce, gdzie gracz mieszka.
 ⚠️ Współrzędne schronu to w praktyce **adres domowy gracza**. Zapisane lokalnie, nigdy nie wysyłane, `allowBackup="false"` dla całej bazy.
 
 Telemetrii **nie ma żadnej** (§16.5). Ekran ustawień mówi to zwykłym wierszem, a nie przełącznikiem: przełącznik sugerowałby, że jest jakieś zbieranie do wyłączenia. Jedyne żądanie sieciowe w całej aplikacji to pobranie pakietu mapy (§16.6).
+
+---
+
+## 12aa. Widżet na ekranie głównym (§13.1)
+
+Cztery liczby i jedna linijka, w komórce szerokiej mniej więcej na osiem słów. Co się na niej mieści, jest **decyzją**, nie tym, co zostało po przycięciu.
+
+| Element | Co pokazuje | Dlaczego akurat to |
+| :---- | :---- | :---- |
+| Trzy paski | woda, kalorie, sen — w procentach | To trzy osie, które psują się **powoli**: gracz może zareagować z godzinnym wyprzedzeniem, i tylko dlatego warto zerknąć na ekran główny zamiast otwierać grę |
+| Tętno | liczba, bez paska | Jedyna wartość zmieniająca się co sekundę; własna kolumna, żeby paski nie skakały, gdy ona rośnie |
+| Linijka | co dolega, najgorsze pierwsze, maks. **3** + „+2" | Widżet wypisujący wszystko to widżet, którego nikt nie czyta |
+
+**Krwi nie ma na widżecie.** Nie ubywa jej, kiedy nikt nie gra — pasek, który rusza się wyłącznie w walce, na ekranie głównym jest zawsze pełny.
+
+**Kolejność dolegliwości** (co pierwsze położyłoby postać): krwawienie → utrata krwi → coś w pobliżu → zasypianie → wychudzenie → pragnienie → głód → niewyspanie.
+
+⚠️ **Fakty o ulicy wygasają, fakty o ciele nie.** „Coś jest blisko" znika z widżetu po **10 minutach** od ostatniego odczytu: gdzie stał Szwędacz dziesięć minut temu, to nie informacja, tylko zgadywanie w przebraniu. Pragnienie i sen po tym samym czasie są nadal prawdziwe, więc zostają — a widżet dopisuje, sprzed ilu minut jest odczyt.
+
+⚠️ **Znak zapytania to nie zero.** Bez postaci widżet rysuje pusty pasek i kreskę, nie „0%" — „nie ma jeszcze gry" i „nie ma już wody" nie mogą wyglądać tak samo, bo jedno z tego jest powodem, żeby iść się napić.
+
+**Wysyłka jest dławiona.** Pętla publikuje mniej więcej raz na sekundę; do launchera idzie tylko to, co zmienia widoczną liczbę, plus jedno odświeżenie co 5 minut — bez niego gra działająca wyglądałaby identycznie jak zamknięta.
+
+**Próg „coś jest blisko": 150 m** — to samo pasmo, w którym ostrzega §5.5.2. Dalej to już nie jest wybór gracza.
 
 ---
 

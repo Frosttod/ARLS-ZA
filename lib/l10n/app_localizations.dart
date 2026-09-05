@@ -4764,6 +4764,66 @@ abstract class L10n {
   /// In en, this message translates to:
   /// **'One fewer'**
   String get stepLess;
+
+  /// No description provided for @widgetTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'ARLS-ZA — body'**
+  String get widgetTitle;
+
+  /// No description provided for @widgetNothingWrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing wrong'**
+  String get widgetNothingWrong;
+
+  /// No description provided for @widgetBleeding.
+  ///
+  /// In en, this message translates to:
+  /// **'Bleeding'**
+  String get widgetBleeding;
+
+  /// No description provided for @widgetShock.
+  ///
+  /// In en, this message translates to:
+  /// **'Blood loss'**
+  String get widgetShock;
+
+  /// No description provided for @widgetEnemy.
+  ///
+  /// In en, this message translates to:
+  /// **'Something nearby'**
+  String get widgetEnemy;
+
+  /// No description provided for @widgetMicrosleeps.
+  ///
+  /// In en, this message translates to:
+  /// **'Falling asleep'**
+  String get widgetMicrosleeps;
+
+  /// No description provided for @widgetWasting.
+  ///
+  /// In en, this message translates to:
+  /// **'Wasting'**
+  String get widgetWasting;
+
+  /// No description provided for @widgetThirsty.
+  ///
+  /// In en, this message translates to:
+  /// **'Thirst'**
+  String get widgetThirsty;
+
+  /// No description provided for @widgetStarving.
+  ///
+  /// In en, this message translates to:
+  /// **'Hunger'**
+  String get widgetStarving;
+
+  /// No description provided for @widgetSleepless.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep debt'**
+  String get widgetSleepless;
 }
 
 class _L10nDelegate extends LocalizationsDelegate<L10n> {

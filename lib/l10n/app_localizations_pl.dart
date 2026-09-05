@@ -2705,4 +2705,34 @@ class L10nPl extends L10n {
 
   @override
   String get stepLess => 'O jeden mniej';
+
+  @override
+  String get widgetTitle => 'ARLS-ZA — ciało';
+
+  @override
+  String get widgetNothingWrong => 'Nic nie dolega';
+
+  @override
+  String get widgetBleeding => 'Krwawienie';
+
+  @override
+  String get widgetShock => 'Utrata krwi';
+
+  @override
+  String get widgetEnemy => 'Coś jest blisko';
+
+  @override
+  String get widgetMicrosleeps => 'Zasypiasz';
+
+  @override
+  String get widgetWasting => 'Wychudzenie';
+
+  @override
+  String get widgetThirsty => 'Pragnienie';
+
+  @override
+  String get widgetStarving => 'Głód';
+
+  @override
+  String get widgetSleepless => 'Niewyspanie';
 }

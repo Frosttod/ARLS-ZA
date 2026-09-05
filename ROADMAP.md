@@ -29,8 +29,9 @@ Każdy zamknięty etap dostaje sekcję **Dziennik wykonania** z decyzjami podję
 | — | **Bariery**: zużycie narzędzia, przebalansowane czasy, panel nazywa narzędzie | ✅ poza etapami | 2026-08-30 | `fdefddb` … `a64a9a5` |
 | — | **Zestaw startowy** jako drugi etap tworzenia postaci (§4, §12) | ✅ poza etapami | 2026-08-29 | `5c3e85b`, `b96b927` |
 | — | **Reguła obecności przy warsztacie** (§2.1a.3) | ✅ poza etapami | 2026-08-30 | `c6768b3`, schemat v37 |
+| — | **Widżet 4×1 na ekran główny** (§13.1): woda, kalorie, sen, tętno, co dolega | ✅ poza etapami | 2026-09-05 | — |
 
-**Metryki:** 2701 testów · `flutter analyze` czysty · schemat bazy **v37** · `main.dart` 6367 linii
+**Metryki:** 2718 testów · `flutter analyze` czysty · schemat bazy **v37** · `main.dart` 6388 linii
 
 ✅ **`main` jest wypchnięty na `origin/main`.** Wcześniej cała gra istniała na jednym dysku i było to największe ryzyko projektu — jedyne, którego nie dawało się naprawić kodem.
 

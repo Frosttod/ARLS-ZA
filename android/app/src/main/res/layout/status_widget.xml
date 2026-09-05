@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The 4×1 widget: three bars, a pulse, and one line of what is wrong.
+
+  ⚠️ Laid out for a cell that is about 250×40 dp on a phone, which is roughly
+  eight words wide. The three bars share the width evenly and the pulse takes a
+  fixed column on the right, because a heart rate is three characters and giving
+  it a share of the width would make the bars jump about as it changes.
+
+  Everything here is a launcher-drawn RemoteViews: no custom views, no
+  gradients, no ripples. What is available is text, progress bars and images.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:background="@drawable/widget_background"
+    android:padding="10dp"
+    android:gravity="center_vertical">
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/widget_water_label"
+                android:layout_width="52dp"
+                android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textSize="9sp"
+                android:letterSpacing="0.08"
+                android:textColor="@color/widget_muted"/>
+
+            <ProgressBar
+                android:id="@+id/widget_water_bar"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="0dp"
+                android:layout_height="6dp"
+                android:layout_weight="1"
+                android:max="100"
+                android:progressDrawable="@drawable/widget_bar"/>
+
+            <TextView
+                android:id="@+id/widget_water_value"
+                android:layout_width="34dp"
+                android:layout_height="wrap_content"
+                android:gravity="end"
+                android:maxLines="1"
+                android:textSize="10sp"
+                android:textColor="@color/widget_text"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/widget_kcal_label"
+                android:layout_width="52dp"
+                android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textSize="9sp"
+                android:letterSpacing="0.08"
+                android:textColor="@color/widget_muted"/>
+
+            <ProgressBar
+                android:id="@+id/widget_kcal_bar"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="0dp"
+                android:layout_height="6dp"
+                android:layout_weight="1"
+                android:max="100"
+                android:progressDrawable="@drawable/widget_bar"/>
+
+            <TextView
+                android:id="@+id/widget_kcal_value"
+                android:layout_width="34dp"
+                android:layout_height="wrap_content"
+                android:gravity="end"
+                android:maxLines="1"
+                android:textSize="10sp"
+                android:textColor="@color/widget_text"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/widget_sleep_label"
+                android:layout_width="52dp"
+                android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textSize="9sp"
+                android:letterSpacing="0.08"
+                android:textColor="@color/widget_muted"/>
+
+            <ProgressBar
+                android:id="@+id/widget_sleep_bar"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="0dp"
+                android:layout_height="6dp"
+                android:layout_weight="1"
+                android:max="100"
+                android:progressDrawable="@drawable/widget_bar"/>
+
+            <TextView
+                android:id="@+id/widget_sleep_value"
+                android:layout_width="34dp"
+                android:layout_height="wrap_content"
+                android:gravity="end"
+                android:maxLines="1"
+                android:textSize="10sp"
+                android:textColor="@color/widget_text"/>
+        </LinearLayout>
+
+        <!--
+          What is wrong, worst first, and how old the reading is. One line,
+          ellipsised: the alternative is a widget whose height depends on how
+          badly the run is going.
+        -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/widget_ailments"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:textSize="10sp"
+                android:textColor="@color/widget_alert"/>
+
+            <TextView
+                android:id="@+id/widget_age"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:maxLines="1"
+                android:textSize="9sp"
+                android:textColor="@color/widget_muted"/>
+        </LinearLayout>
+    </LinearLayout>
+
+    <!--
+      The pulse. Its own column, fixed width, because it is the one figure that
+      changes every second and the bars must not shift when it does.
+    -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:orientation="vertical"
+        android:gravity="center">
+
+        <TextView
+            android:id="@+id/widget_bpm"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:textColor="@color/widget_text"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/widget_bpm_unit"
+            android:textSize="8sp"
+            android:letterSpacing="0.14"
+            android:textColor="@color/widget_muted"/>
+    </LinearLayout>
+</LinearLayout>

@@ -52,6 +52,21 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!-- §13.1: the home-screen widget. It renders what the game last pushed and
+             owns none of the rules — see StatusWidget.kt. Exported because the launcher
+             is what binds to it; it reads nothing and accepts no data from outside. -->
+        <receiver
+            android:name=".StatusWidget"
+            android:exported="true"
+            android:label="@string/widget_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE"/>
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/status_widget_info"/>
+        </receiver>
+
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

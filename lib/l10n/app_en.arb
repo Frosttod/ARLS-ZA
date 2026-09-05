@@ -1797,5 +1797,15 @@
   "settingsHaptics": "Vibration for critical signals",
   "settingsHapticsBody": "A hit landing, going down, and something starting to hunt you. Three signals and no more, because a phone that buzzes at everything is one you switch off.",
   "stepMore": "One more",
-  "stepLess": "One fewer"
+  "stepLess": "One fewer",
+  "widgetTitle": "ARLS-ZA — body",
+  "widgetNothingWrong": "Nothing wrong",
+  "widgetBleeding": "Bleeding",
+  "widgetShock": "Blood loss",
+  "widgetEnemy": "Something nearby",
+  "widgetMicrosleeps": "Falling asleep",
+  "widgetWasting": "Wasting",
+  "widgetThirsty": "Thirst",
+  "widgetStarving": "Hunger",
+  "widgetSleepless": "Sleep debt"
 }

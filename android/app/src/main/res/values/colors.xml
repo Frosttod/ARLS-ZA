@@ -1,4 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="ic_launcher_background">#000000</color>
+
+    <!--
+      The widget's palette, taken from HudColors.dark in lib/ui/hud.dart so
+      that the home screen and the bar over the map are recognisably the same
+      surface. Duplicated rather than shared because Android cannot read Dart
+      constants — if one moves, the other has to be moved with it.
+    -->
+    <color name="widget_panel">#14181A</color>
+    <color name="widget_text">#E4E5DF</color>
+    <color name="widget_data">#17565C</color>
+    <color name="widget_alert">#A82D17</color>
+    <color name="widget_muted">#4A524F</color>
+    <color name="widget_track">#232A2C</color>
 </resources>

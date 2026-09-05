@@ -124,8 +124,10 @@ import 'ui/effects.dart';
 import 'ui/hotspot_sheet.dart';
 import 'ui/game_screen.dart';
 import 'game/bench_inputs.dart';
+import 'game/home_status.dart';
 import 'ui/hint_nudger.dart';
 import 'ui/haptics.dart';
+import 'ui/home_widget.dart';
 import 'ui/hud.dart';
 import 'ui/status_notes.dart';
 import 'ui/inventory_screen.dart';
@@ -314,6 +316,10 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
   /// §12: what the game has just said. Under the HUD, never over the menu.
   final NoticeBoard _notices = NoticeBoard();
+
+  /// §13.1: the four numbers on the home screen. Throttled inside — see
+  /// [HomeWidget.push].
+  final HomeWidget _widget = HomeWidget();
 
   /// §12: the channel that is not the screen, for the three things §5.5.3 and
   /// §9.2 make expensive.
@@ -1205,6 +1211,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       _tellLoopWhatWeAreDoing();
       _tellLoopWhereWeAre();
       unawaited(_hints.nudge(L10n.of(context), snapshot));
+      unawaited(_tellTheLauncher(snapshot));
       unawaited(_settleDown(snapshot));
       unawaited(_spawnLoot(snapshot));
       _advanceCombat(snapshot);
@@ -5812,6 +5819,20 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     if (remember) _logCombat(message);
     if (mounted) _notices.say(message);
   }
+
+  /// §13.1: the body, on the home screen.
+  ///
+  /// ⚠️ Off the same snapshot the HUD draws, so the widget cannot disagree
+  /// with the bar over the map about how thirsty somebody is.
+  Future<void> _tellTheLauncher(GameSnapshot snapshot) => _widget.push(
+    HomeStatus.of(
+      state: snapshot.state,
+      status: snapshot.status,
+      bleeding: _loop?.bleeding ?? BleedTier.none,
+      nearestEnemyM: _threat(snapshot)?.nearestM,
+    ),
+    L10n.of(context),
+  );
 
   /// Sends the player wherever the current refusal can actually be changed.
   Future<void> _fixLocation() async {
