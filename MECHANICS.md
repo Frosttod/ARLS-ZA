@@ -1554,8 +1554,9 @@ Miejsca, w których kod **świadomie** robi coś innego niż `ARLS-ZA_design_doc
 
 ### 16.1. Pomiar stylu gry (§16.4)
 
-Model gotowy, nic go jeszcze nie czyta — czeka na ogniska (§6.5), którym ma
-dyktować tempo wzrostu.
+⚠️ **Ta sekcja została w „nieużytych" o jedną zmianę za długo.** Model czeka
+już na nic: dyktuje tempo wzrostu Stref Rozkładu (§11.5), a `_habit` jest
+budzony i usypiany razem z aplikacją. Zostaje tutaj dla liczb, nie dla stanu.
 
 | | |
 | :---- | ----: |
@@ -1606,7 +1607,7 @@ wyżej: wpiąć albo usunąć.
 | **Temperatura otoczenia** | ⬜ | `ambientTempC` i `clothingClo` nie mają źródła |
 | **Światło (`tool_flashlight`)** | ⬜ | latarka nie robi nic |
 | **Pogoda i sezonowość** | ⬜ P4 | wymaga craftingu |
-| **Onboarding, dostępność** | ⬜ etap 9 | publikację |
+| **Onboarding, dostępność** | 🟡 etap 9, 8/11 | publikację — zostaje skryptowana pierwsza walka (§15.6), materiały do sklepu i formularze Play Console |
 
 ---
 
