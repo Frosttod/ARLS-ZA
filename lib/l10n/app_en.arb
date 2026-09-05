@@ -1859,5 +1859,10 @@
       }
     }
   },
-  "awayNothingGrew": "Nothing out there grew while you were gone."
+  "awayNothingGrew": "Nothing out there grew while you were gone.",
+  "zoneLeftBuild": "Shelter left — the build is on hold.",
+  "zoneBackToBuild": "Back at the shelter — the build goes on.",
+  "zoneLeftBench": "Workbench left — the work is on hold.",
+  "zoneBackToBench": "Back at the bench — the work goes on.",
+  "journalInterrupted": "Work stopped"
 }

@@ -4866,6 +4866,36 @@ abstract class L10n {
   /// In en, this message translates to:
   /// **'Nothing out there grew while you were gone.'**
   String get awayNothingGrew;
+
+  /// No description provided for @zoneLeftBuild.
+  ///
+  /// In en, this message translates to:
+  /// **'Shelter left — the build is on hold.'**
+  String get zoneLeftBuild;
+
+  /// No description provided for @zoneBackToBuild.
+  ///
+  /// In en, this message translates to:
+  /// **'Back at the shelter — the build goes on.'**
+  String get zoneBackToBuild;
+
+  /// No description provided for @zoneLeftBench.
+  ///
+  /// In en, this message translates to:
+  /// **'Workbench left — the work is on hold.'**
+  String get zoneLeftBench;
+
+  /// No description provided for @zoneBackToBench.
+  ///
+  /// In en, this message translates to:
+  /// **'Back at the bench — the work goes on.'**
+  String get zoneBackToBench;
+
+  /// No description provided for @journalInterrupted.
+  ///
+  /// In en, this message translates to:
+  /// **'Work stopped'**
+  String get journalInterrupted;
 }
 
 class _L10nDelegate extends LocalizationsDelegate<L10n> {

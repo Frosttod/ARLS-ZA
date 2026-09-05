@@ -54,45 +54,55 @@ class MapPalette {
   });
 
   /// Night, and the default.
+  ///
+  /// ⚠️ **Everything here used to sit between 1.05 and 1.94 to one against the
+  /// ground, and a major road was 1.33 from a side street.** Measured, after a
+  /// field report of the map being washed out — and the report was right: at
+  /// those figures the whole thing is one dark rectangle with slightly
+  /// different dark rectangles in it. The screen is read at arm's length, in
+  /// motion, often through rain on the glass, and this style has no casings
+  /// and no labels to fall back on. Contrast is all it has.
+  ///
+  /// The principle did not change — the streets are the light thing and the
+  /// buildings stay near the ground — only the amplitude did. A trunk road is
+  /// now 12.9 to one against the ground and 2.8 from a side street, which is
+  /// the difference between "there is a road there" and "that is the road I
+  /// want".
   static const MapPalette dark = MapPalette(
-    background: '#0b0d0e',
-    water: '#0d1b24',
-    green: '#0f1512',
-    building: '#171a1c',
-    minorRoad: '#2b3034',
-    majorRoad: '#3c4348',
-    railway: '#2a2320',
-    boundary: '#232a2e',
+    background: '#07090A',
+    water: '#16456A',
+    green: '#163220',
+    building: '#1C2226',
+    minorRoad: '#6E7C85',
+    majorRoad: '#C3D2DA',
+    railway: '#7A5340',
+    boundary: '#3E4C55',
   );
 
-  /// Daylight, after CARTO's Voyager.
+  /// Daylight — a printed street plan rather than a screen map.
   ///
-  /// ⚠️ The one inversion worth knowing: on this palette the **roads are the
-  /// light thing** and the ground is the tint, which is the opposite of the
-  /// dark map and the opposite of what the class comment above describes for
-  /// a light one. Voyager works because white streets on a warm ground read
-  /// as a street plan at any size, and because everything else can then be
-  /// pale without competing.
+  /// ⚠️ **This used to follow CARTO's Voyager, with white roads on a warm
+  /// ground, and it did not survive being measured.** Voyager's roads carry at
+  /// a desk because it separates a trunk road from a service road with *width
+  /// and a casing*; this style has neither layer. Left with colour alone the
+  /// roads came out at 1.13 and 1.16 to one against the ground — and 1.03
+  /// between a motorway and a side street, which is to say identical.
   ///
-  /// Not a copy — the layer set here is a tenth of Voyager's — but the same
-  /// four decisions: warm off-white ground, white roads, desaturated blue
-  /// water, and buildings barely separated from the ground so a block does
-  /// not read as a wall.
-  /// ⚠️ The ground is a shade deeper than Voyager's, and the trunk roads are
-  /// pure white rather than its cream. Voyager separates a trunk road from a
-  /// service road with **width and a casing**, at a desk; this style has
-  /// neither layer, and a phone held at arm's length in the rain has contrast
-  /// and nothing else. So the ground is dropped far enough to leave the white
-  /// somewhere to stand.
+  /// So the light map goes back to the principle at the top of this class,
+  /// which the Voyager borrowing had inverted: **the roads are the dark thing
+  /// on a light ground.** That is how a paper street plan is drawn, for the
+  /// same reason — it is read outdoors, in sun, by somebody who is walking.
+  /// A trunk road is 9.4 to one against the ground, a side street 3.9, and
+  /// they are 2.4 apart from each other.
   static const MapPalette light = MapPalette(
-    background: '#F2EDE6',
-    water: '#A5CBE0',
-    green: '#D7E4C4',
-    building: '#E7E0D5',
-    minorRoad: '#FDFBF7',
-    majorRoad: '#FFFFFF',
-    railway: '#CFC7BB',
-    boundary: '#DED6CA',
+    background: '#F0EBE1',
+    water: '#3E8FC0',
+    green: '#B4D189',
+    building: '#DED5C6',
+    minorRoad: '#7E7266',
+    majorRoad: '#413A33',
+    railway: '#8A6A52',
+    boundary: '#B9AF9F',
   );
 
   /// Which palette belongs with a screen is a widget's question, and this file

@@ -15,7 +15,7 @@ Różnica jest istotna, bo w kilkunastu miejscach **świadomie odeszliśmy od do
 
 ⚠️ **Reguła utrzymania tego pliku:** liczba zmieniona w kodzie i nieprzeniesiona tutaj czyni ten dokument gorszym niż jego brak. Przy każdej zmianie stałej — aktualizuj sekcję.
 
-**Stan:** 2741 testów · schemat bazy **v38** · etapy 0–2 zamknięte, 3–6 i 8 przed testem w terenie.
+**Stan:** 2753 testów · schemat bazy **v38** · etapy 0–2 zamknięte, 3–6 i 8 przed testem w terenie.
 
 ---
 
@@ -1391,6 +1391,7 @@ nieczytelny", i co za każdą stało.
 
 | Objaw | Przyczyna | Co zrobiono |
 | :---- | :---- | :---- |
+| Mapa mdła w obu trybach | wszystko siedziało 1,05–1,94 : 1 wobec tła, a droga główna 1,33 od bocznej (ciemny) i **1,03** (jasny — czyli ten sam kolor) | ciemna: ulice jasne, główna 12,9 : 1; jasna: **ulice ciemne na jasnym tle**, jak plan miasta na papierze, główna 9,4 : 1 |
 | Zawieszenie przy zmianie trybu wizualnego | mapa miała `key` na jasności, więc zmiana palety **niszczyła widok natywny** i budowała nowy — czyli czytała pakiet 235 MB od nowa | klucz zdjęty; wtyczka i tak porównuje `styleString` w `didUpdateWidget` i przeładowuje styl w miejscu |
 | Zawieszenie przy przełączaniu modułów schronu | każda akcja modułu przeładowuje schrony, a to układało Strefy od nowa: do 60 sond §3.5 na pusty slot, po dwóch kilometrach miasta, na wątku interfejsu | układanie tylko wtedy, gdy **dom się przesunął**; wzrost i tak liczy tick |
 | Ciemny tryb nieczytelny | paski, ostrzeżenia i etykiety miały wobec panelu **2,15 / 2,60 / 2,22 : 1** — poniżej nawet 3:1 dla grafiki | ton i nasycenie zostały, jasność podniesiona do ≥ 5:1; test mierzy obie palety |
@@ -1410,6 +1411,39 @@ Przy okazji: `ColorScheme.fromSeed` liczy paletę tonalną z ziarna i kosztuje
 ~1,1 ms na wywołanie (desktop). `MaterialApp` prosi o obie jasności przy każdej
 przebudowie korzenia, więc wynik jest teraz zapamiętany — zależy od dwóch
 booleanów.
+
+---
+
+## 12ac. Wyjście ze strefy (§2.1a.3, §12)
+
+Reguły były i były dobre: budowa liczy się tylko na placu (§8.3), warsztat
+tylko przy imadle (§2.1a.3), przeszukanie kończy się, gdy gracz odejdzie
+(§10.2). **Żadna z nich tego nie mówiła** — robota po prostu stawała, pasek po
+prostu zamierał, a gracz dowiadywał się później albo wcale.
+
+| Zdarzenie | Komunikat | Dziennik |
+| :---- | :---- | :---- |
+| Wyjście z placu budowy | „Opuszczono schron — budowa wstrzymana." | ✅ `przerwane` |
+| Powrót na plac | „Powrót do schronu — budowa wznowiona." | ✅ |
+| Odejście od warsztatu | „Opuszczono warsztat — robota wstrzymana." | ✅ |
+| Powrót do warsztatu | „Powrót do warsztatu — robota wznowiona." | ✅ |
+| Wyjście ze strefy przeszukania | „Opuszczono strefę przeszukania — przerwane." | ✅ |
+
+⚠️ **Pierwsza odpowiedź nigdy nie jest komunikatem.** Uruchomienie aplikacji z
+dala od domu, przy wpół postawionym schronie, to nie jest „opuszczono" — nikt
+niczego nie opuścił, gra została włączona. Komunikat przy każdym starcie to
+komunikat, którego gracz uczy się nie czytać.
+
+**Komunikaty żyją 3 sekundy**, i dlatego te, które coś znaczą, idą też do
+dziennika: linijka pod HUD-em jest dla kogoś, kto właśnie patrzy na ekran, a
+dziennik dla kogoś, kto wieczorem zastanawia się, czemu schron nie stoi.
+
+⚠️ **Wszystkie komunikaty są neutralne płciowo.** Polszczyzna każe wybrać płeć
+w chwili użycia czasu przeszłego — „opuściłeś" zakłada, że telefon trzyma
+mężczyzna. Forma bezosobowa mówi to samo i nie zakłada niczego. Pilnuje tego
+test, który przeszukuje `app_pl.arb` pod kątem końcówek `-łeś`/`-łaś`. Przy
+okazji poprawionych zostało osiem starszych zdań, w tym „Ruszyłeś się" i
+„Dostałeś".
 
 ---
 

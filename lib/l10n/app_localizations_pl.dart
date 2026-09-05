@@ -28,7 +28,7 @@ class L10nPl extends L10n {
 
   @override
   String saveRestoredBody(int minutes) {
-    return 'Plik zapisu był uszkodzony i został odtworzony z kopii. Straciłeś $minutes minut gry.';
+    return 'Plik zapisu był uszkodzony i został odtworzony z kopii. Przepadło $minutes minut gry.';
   }
 
   @override
@@ -470,7 +470,7 @@ class L10nPl extends L10n {
 
   @override
   String get downWhat =>
-      'Ockniesz się tam, gdzie będziesz, za godzinę — z ćwiercią krwi i niemal pustym żołądkiem. To, co miałeś w rękach, przepadło; około połowy noszonego sprzętu leży tam, gdzie padłeś. Przez dziesięć minut po przebudzeniu będą Cię brać za martwego — ale i Ty nie możesz walczyć.';
+      'Ocknienie nastąpi tam, gdzie będziesz, za godzinę — z ćwiercią krwi i niemal pustym żołądkiem. To, co było w rękach, przepadło; około połowy noszonego sprzętu leży w miejscu upadku. Przez dziesięć minut po przebudzeniu nikt nie zaatakuje — ale i ty nie możesz walczyć.';
 
   @override
   String downLeft(String time) {
@@ -494,7 +494,7 @@ class L10nPl extends L10n {
   String get deathSameBody => 'To samo ciało, nowe imię.';
 
   @override
-  String get downCaches => 'To, co niosłeś, leży rozrzucone tam, gdzie padłeś.';
+  String get downCaches => 'Niesiony sprzęt leży rozrzucony w miejscu upadku.';
 
   @override
   String get statusShock => 'Wstrząs';
@@ -800,7 +800,7 @@ class L10nPl extends L10n {
 
   @override
   String profileWhySleepDebt(int hours, int percent, String moa) {
-    return 'Dług senny $hours h — nie spałeś wtedy, kiedy trzeba było. Każda czynność trwa o $percent% dłużej, a rozrzut jest szerszy o $moa MOA.';
+    return 'Dług senny $hours h — brak snu wtedy, kiedy był potrzebny. Każda czynność trwa o $percent% dłużej, a rozrzut jest szerszy o $moa MOA.';
   }
 
   @override
@@ -820,7 +820,7 @@ class L10nPl extends L10n {
 
   @override
   String profileWhyWasting(int percent) {
-    return 'Straciłeś $percent% masy startowej. To już nie głód, to samo ciało — wraca wyłącznie przez jedzenie ponad dobowe zapotrzebowanie.';
+    return 'Ubyło $percent% masy startowej. To już nie głód, to samo ciało — wraca wyłącznie przez jedzenie ponad dobowe zapotrzebowanie.';
   }
 
   @override
@@ -1438,7 +1438,7 @@ class L10nPl extends L10n {
   String get searchCancel => 'Przerwij';
 
   @override
-  String get searchMoved => 'Ruszyłeś się — przeszukanie przerwane.';
+  String get searchMoved => 'Opuszczono strefę przeszukania — przerwane.';
 
   @override
   String get searchLostSignal => 'Przeszukanie przerwane: brak pewnej pozycji.';
@@ -1582,7 +1582,7 @@ class L10nPl extends L10n {
 
   @override
   String combatHurtAt(String where, int millilitres) {
-    return 'Dostałeś — $where, $millilitres ml';
+    return 'Trafienie — $where, $millilitres ml';
   }
 
   @override
@@ -2648,7 +2648,7 @@ class L10nPl extends L10n {
 
   @override
   String get rulesBodyBody =>
-      'Postać ma dokładnie tyle sił, ile naprawdę przeszedłeś. Woda, kalorie i sen liczą się także przy zamkniętej aplikacji.';
+      'Postać ma dokładnie tyle sił, ile wynika z twojego marszu. Woda, kalorie i sen liczą się także przy zamkniętej aplikacji.';
 
   @override
   String get settingsPrivacy => 'Prywatność';
@@ -2776,4 +2776,19 @@ class L10nPl extends L10n {
 
   @override
   String get awayNothingGrew => 'Nic tam nie urosło pod twoją nieobecność.';
+
+  @override
+  String get zoneLeftBuild => 'Opuszczono schron — budowa wstrzymana.';
+
+  @override
+  String get zoneBackToBuild => 'Powrót do schronu — budowa wznowiona.';
+
+  @override
+  String get zoneLeftBench => 'Opuszczono warsztat — robota wstrzymana.';
+
+  @override
+  String get zoneBackToBench => 'Powrót do warsztatu — robota wznowiona.';
+
+  @override
+  String get journalInterrupted => 'Robota przerwana';
 }

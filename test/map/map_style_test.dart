@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math' as math;
 
 import 'package:arls_za/map/map_source.dart';
 import 'package:arls_za/map/map_style.dart';
@@ -266,4 +267,75 @@ void main() {
       expect(jsonDecode(encoded), style());
     });
   });
+
+  group('§12: a map read at walking pace', () {
+    // ⚠️ **Reported from the field as washed out, and it measured washed out.**
+    // The old dark palette put everything between 1.05 and 1.94 to one against
+    // the ground, and a motorway 1.33 from a side street; the old light one was
+    // worse — 1.03 between the two roads, which is to say the same colour. This
+    // style has no casings, no widths worth the name and no labels, so contrast
+    // is the entire language it speaks.
+    for (final (name, palette) in [
+      ('dark', MapPalette.dark),
+      ('light', MapPalette.light),
+    ]) {
+      test('the $name palette separates a road from the ground', () {
+        expect(
+          _ratio(palette.majorRoad, palette.background),
+          greaterThanOrEqualTo(6.0),
+          reason: 'a trunk road is the thing being looked for',
+        );
+        expect(
+          _ratio(palette.minorRoad, palette.background),
+          greaterThanOrEqualTo(3.0),
+        );
+        expect(
+          _ratio(palette.majorRoad, palette.minorRoad),
+          greaterThanOrEqualTo(2.0),
+          reason: 'telling the two apart is the whole point of a street plan',
+        );
+        expect(
+          _ratio(palette.water, palette.background),
+          greaterThanOrEqualTo(1.9),
+          reason: 'a river is a wall, and §3.5 will not send anybody across it',
+        );
+        expect(
+          _ratio(palette.water, palette.green),
+          greaterThanOrEqualTo(1.3),
+          reason: 'water and parkland are not the same place',
+        );
+      });
+
+      test('and keeps the buildings out of the way in $name', () {
+        // The other half of the rule: a block of flats must not read as a wall
+        // of shapes competing with the streets between them.
+        expect(_ratio(palette.building, palette.background), lessThan(1.6));
+        expect(
+          _ratio(palette.minorRoad, palette.building),
+          greaterThanOrEqualTo(2.0),
+        );
+      });
+    }
+  });
+}
+
+/// WCAG 2.1 contrast between two `#rrggbb` strings.
+double _ratio(String a, String b) {
+  final first = _luminance(a);
+  final second = _luminance(b);
+  final lighter = first > second ? first : second;
+  final darker = first > second ? second : first;
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+double _luminance(String hex) {
+  final value = hex.replaceAll('#', '');
+  double channel(int offset) {
+    final raw = int.parse(value.substring(offset, offset + 2), radix: 16) / 255;
+    return raw <= 0.03928
+        ? raw / 12.92
+        : math.pow((raw + 0.055) / 1.055, 2.4).toDouble();
+  }
+
+  return 0.2126 * channel(0) + 0.7152 * channel(2) + 0.0722 * channel(4);
 }

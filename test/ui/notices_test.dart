@@ -73,4 +73,30 @@ void main() {
 
     expect(ignoring.ignoring, isTrue);
   });
+
+  testWidgets('§12: a line lasts three seconds and then it is gone', (
+    tester,
+  ) async {
+    // Asked for from the field, and safe to shorten precisely because the
+    // lines worth keeping are written to the journal now (§3.6.1).
+    final board = NoticeBoard();
+    addTearDown(board.dispose);
+
+    await pump(tester, board.lines);
+    board.say('Opuszczono schron — budowa wstrzymana.');
+    await tester.pump();
+
+    expect(find.textContaining('Opuszczono schron'), findsOneWidget);
+
+    await tester.pump(kNoticeLifetime - const Duration(milliseconds: 100));
+    expect(
+      find.textContaining('Opuszczono schron'),
+      findsOneWidget,
+      reason: 'still readable a breath before its time',
+    );
+
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(find.textContaining('Opuszczono schron'), findsNothing);
+    expect(kNoticeLifetime, const Duration(seconds: 3));
+  });
 }

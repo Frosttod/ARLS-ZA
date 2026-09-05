@@ -17,6 +17,7 @@ import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 
 import '../combat/blows_away.dart';
+import '../game/zone_watch.dart';
 import '../l10n/app_localizations.dart';
 import 'units.dart';
 
@@ -31,7 +32,12 @@ class Notice {
 }
 
 /// §12: how long a line stays before it stops being news.
-const Duration kNoticeLifetime = Duration(seconds: 4);
+///
+/// Three seconds, asked for from the field. Long enough to read one line while
+/// walking, short enough that a stack of them does not sit over the map — and
+/// the ones worth keeping are in the journal now, so nothing is lost by the
+/// line going away.
+const Duration kNoticeLifetime = Duration(seconds: 3);
 
 /// At most this many at once. Older ones are dropped rather than queued: a
 /// player who searched three places wants the last answer, not the first.
@@ -183,3 +189,16 @@ Future<void> showZoneGrew(
     ),
   );
 }
+
+/// What a change of zone says out loud (§2.1a.3, §12).
+///
+/// Impersonal on purpose: the game does not know who is holding the phone, and
+/// Polish makes you pick a gender the moment you use a past tense about them.
+/// "Opuszczono schron" is what a log says; "opuściłeś" is what a game says to
+/// somebody it has assumed something about.
+String zoneText(ZoneChange change, L10n l10n) => switch (change) {
+  ZoneChange.leftBuild => l10n.zoneLeftBuild,
+  ZoneChange.backToBuild => l10n.zoneBackToBuild,
+  ZoneChange.leftBench => l10n.zoneLeftBench,
+  ZoneChange.backToBench => l10n.zoneBackToBench,
+};

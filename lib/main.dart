@@ -126,6 +126,7 @@ import 'ui/game_screen.dart';
 import 'game/bench_inputs.dart';
 import 'game/away_summary.dart';
 import 'game/home_status.dart';
+import 'game/zone_watch.dart';
 import 'ui/hint_nudger.dart';
 import 'ui/away_sheet.dart';
 import 'ui/haptics.dart';
@@ -318,6 +319,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
   /// §12: what the game has just said. Under the HUD, never over the menu.
   final NoticeBoard _notices = NoticeBoard();
+
+  /// §2.1a.3, §12: whether the player is still standing where the work is.
+  final ZoneWatch _zones = ZoneWatch();
 
   /// §16.3: what the app was left in, until the catch-up says what it cost.
   final AwayWatch _away = AwayWatch();
@@ -3415,62 +3419,20 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     // an unanswerable question, and the alternative — losing a night's work
     // because a phone went to sleep — is the bug this exists to fix.
     if (at != null) {
-      final places = [..._shelters.value];
-      var wrote = false;
-
-      for (var i = 0; i < places.length; i++) {
-        final place = places[i];
-        if (place.buildLeft == null && place.buildingLeft == null) continue;
-        if ((place.buildLeft ?? Duration.zero) <= Duration.zero &&
-            (place.buildingLeft ?? Duration.zero) <= Duration.zero) {
-          continue;
-        }
-
-        // ⚠️ A row that has never been credited starts its clock, and does not
-        // simply fall through. Found on a phone, twice over: a shelter carried
-        // across the migration that added this column had no stamp, the gap
-        // came out as nothing, and nothing was ever written — so the gap stayed
-        // nothing and the build never moved again. A missing stamp is "start
-        // counting", not "count nothing".
-        final since = place.workedAt;
-        if (since == null) {
-          final started = place.worked(Duration.zero, at: now);
-          places[i] = started;
-          _shelters.value = [...places];
-          await ShelterStore(widget.session.db).saveWork(started);
-          continue;
-        }
-
-        final gap = now.isAfter(since) ? now.difference(since) : Duration.zero;
-        final onSite = place.atSite(at);
-
-        // In chunks rather than every tick: three hours of one-second writes
-        // is ten thousand of them for a bar nobody is watching. The stamp only
-        // moves when something is written, so nothing is lost by waiting.
-        if (gap < kBuildWriteEvery) continue;
-
-        // The stamp moves whether or not anything was earned. Without that, a
-        // walk to the shops and back would bank the whole walk.
-        final worked = place.worked(onSite ? gap : Duration.zero, at: now);
-        places[i] = worked;
-        _shelters.value = [...places];
-        await ShelterStore(widget.session.db).saveWork(worked);
-
-        // Only a finished job is worth re-reading the table for: that is when
-        // a module turns into a level and the row has to be settled.
-        final up =
-            place.building != null &&
-            (worked.buildingLeft ?? Duration.zero) <= Duration.zero;
-        if (up) {
-          unawaited(_practise(Practice.moduleBuilt));
-          unawaited(
-            _diary.add(JournalKind.built, subject: place.building!.name),
-          );
-        }
-
-        wrote = wrote || (place.isReadyAt(now) != worked.isReadyAt(now)) || up;
+      final work = await _places.creditWork(
+        at: at,
+        now: now,
+        writeEvery: kBuildWriteEvery,
+      );
+      for (final module in work.finished) {
+        unawaited(_practise(Practice.moduleBuilt));
+        unawaited(_diary.add(JournalKind.built, subject: module.name));
       }
-      if (wrote) await _reloadShelters();
+      // §2.1a.3, §12: walking away stops the work, and the game says so.
+      if (work.running) {
+        _sayZone(_zones.build(onSite: work.onSite));
+      }
+      if (work.changed) await _reloadShelters();
     }
 
     // §2.1a.3: warsztat też jest zajęciem schronowym, i to jest ta sama reguła
@@ -3481,6 +3443,12 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       now: now,
     );
     if (moved && mounted) setState(() {});
+    _sayZone(
+      _zones.bench(
+        running: _craftJob.value != null,
+        paused: _craftJob.value?.isPaused ?? false,
+      ),
+    );
 
     final finished = _shelters.value.any(
       (place) =>
@@ -5397,6 +5365,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
           next.state == SearchState.cancelledByMovement
               ? L10n.of(context).searchMoved
               : L10n.of(context).searchLostSignal,
+          note: JournalKind.interrupted,
         );
       }
     }
@@ -5821,8 +5790,9 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
   ///
   /// A notice lasts seconds. A death is exactly the moment somebody wants the
   /// last minute back, which is why [remember] exists at all.
-  void _say(String message, {bool remember = false}) {
+  void _say(String message, {bool remember = false, JournalKind? note}) {
     if (remember) _logCombat(message);
+    if (note != null) unawaited(_diary.add(note, subject: message));
     if (mounted) _notices.say(message);
   }
 
@@ -5836,6 +5806,17 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
     if (missed == null || !missed.worthShowing || !mounted) return;
 
     await showAwaySummary(context, missed);
+  }
+
+  /// §2.1a.3, §12: says what just stopped, and writes it down.
+  ///
+  /// ⚠️ Both, and that is the point of the pair. The line under the HUD is
+  /// three seconds long and a player looking at the pavement misses it; the
+  /// journal is where the same evening is read back afterwards.
+  void _sayZone(ZoneChange? change) {
+    if (change == null || !mounted) return;
+
+    _say(zoneText(change, L10n.of(context)), note: JournalKind.interrupted);
   }
 
   /// §13.1: the body, on the home screen.

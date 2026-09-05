@@ -16,6 +16,28 @@ import '../../map/geometry.dart';
 import '../../shelter/shelter.dart';
 import '../../shelter/shelter_store.dart';
 
+/// What one crediting pass did, and whether anybody was standing there for it.
+class ShelterWork {
+  const ShelterWork({
+    required this.finished,
+    required this.changed,
+    required this.running,
+    required this.onSite,
+  });
+
+  /// Modules that reached their level on this pass.
+  final List<ShelterModule> finished;
+
+  /// Whether the list moved enough to be worth re-reading.
+  final bool changed;
+
+  /// Whether anything is going up at all.
+  final bool running;
+
+  /// §2.1a.3: whether the player was on the site to be paid for it.
+  final bool onSite;
+}
+
 class ShelterController extends ChangeNotifier {
   ShelterController(this._db);
 
@@ -66,6 +88,86 @@ class ShelterController extends ChangeNotifier {
       at != null && shelters.value.any((place) => place.coversAt(at, now));
 
   // ------------------------------------------------------------- writing ---
+
+  /// §2.1a.3, §8.3: pays the hours into whatever is going up here.
+  ///
+  /// ⚠️ **Lived in `main.dart`, and belongs here**: it is a clock on a row
+  /// this class already owns. What did *not* move is the talking — the caller
+  /// still says the words, writes the journal and marks the practice, because
+  /// those are things a player is told and this class has no language.
+  ///
+  /// Returns what finished on this pass, whether anybody was on site for it,
+  /// and whether the table is worth re-reading.
+  Future<ShelterWork> creditWork({
+    required GeoPoint? at,
+    required DateTime now,
+    required Duration writeEvery,
+  }) async {
+    final places = [...shelters.value];
+    final finished = <ShelterModule>[];
+    var changed = false;
+    var working = false;
+    bool? onSiteFor;
+
+    for (var i = 0; i < places.length; i++) {
+      final place = places[i];
+      if (place.buildLeft == null && place.buildingLeft == null) continue;
+      if ((place.buildLeft ?? Duration.zero) <= Duration.zero &&
+          (place.buildingLeft ?? Duration.zero) <= Duration.zero) {
+        continue;
+      }
+
+      working = true;
+      onSiteFor ??= at != null && place.atSite(at);
+
+      // ⚠️ A row that has never been credited starts its clock, and does not
+      // simply fall through. Found on a phone, twice over: a shelter carried
+      // across the migration that added this column had no stamp, the gap
+      // came out as nothing, and nothing was ever written — so the gap stayed
+      // nothing and the build never moved again. A missing stamp is "start
+      // counting", not "count nothing".
+      final since = place.workedAt;
+      if (since == null) {
+        final started = place.worked(Duration.zero, at: now);
+        places[i] = started;
+        shelters.value = [...places];
+        await ShelterStore(_db).saveWork(started);
+        continue;
+      }
+
+      final gap = now.isAfter(since) ? now.difference(since) : Duration.zero;
+      final onSite = at != null && place.atSite(at);
+
+      // In chunks rather than every tick: three hours of one-second writes is
+      // ten thousand of them for a bar nobody is watching. The stamp only
+      // moves when something is written, so nothing is lost by waiting.
+      if (gap < writeEvery) continue;
+
+      // The stamp moves whether or not anything was earned. Without that, a
+      // walk to the shops and back would bank the whole walk.
+      final worked = place.worked(onSite ? gap : Duration.zero, at: now);
+      places[i] = worked;
+      shelters.value = [...places];
+      await ShelterStore(_db).saveWork(worked);
+
+      // Only a finished job is worth re-reading the table for: that is when a
+      // module turns into a level and the row has to be settled.
+      final up =
+          place.building != null &&
+          (worked.buildingLeft ?? Duration.zero) <= Duration.zero;
+      if (up) finished.add(place.building!);
+
+      changed =
+          changed || (place.isReadyAt(now) != worked.isReadyAt(now)) || up;
+    }
+
+    return ShelterWork(
+      finished: finished,
+      changed: changed,
+      running: working,
+      onSite: onSiteFor ?? false,
+    );
+  }
 
   Future<List<Shelter>> reload(DateTime now) async {
     final profileId = _profileId;

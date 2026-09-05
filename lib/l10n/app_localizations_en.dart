@@ -2776,4 +2776,19 @@ class L10nEn extends L10n {
 
   @override
   String get awayNothingGrew => 'Nothing out there grew while you were gone.';
+
+  @override
+  String get zoneLeftBuild => 'Shelter left — the build is on hold.';
+
+  @override
+  String get zoneBackToBuild => 'Back at the shelter — the build goes on.';
+
+  @override
+  String get zoneLeftBench => 'Workbench left — the work is on hold.';
+
+  @override
+  String get zoneBackToBench => 'Back at the bench — the work goes on.';
+
+  @override
+  String get journalInterrupted => 'Work stopped';
 }

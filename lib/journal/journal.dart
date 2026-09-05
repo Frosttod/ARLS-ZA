@@ -62,6 +62,13 @@ enum JournalKind {
   zoneGrew('wzrost strefy', wakes: false),
   zoneCleared('strefa zbita'),
 
+  /// §2.1a.3, §12: work that stopped because the player walked away from it.
+  ///
+  /// ⚠️ Worth a line precisely because it happens *off* the screen: the point
+  /// of the entry is the evening where somebody wonders why the shelter is not
+  /// finished.
+  interrupted('przerwane'),
+
   /// §7, §9.2: the two things worth remembering that nobody chose.
   learned('umiejętność', wakes: false),
   blackout('utrata przytomności', wakes: false);

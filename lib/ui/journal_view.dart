@@ -95,6 +95,10 @@ String journalLine(
     JournalKind.ate => l10n.journalAte(nameOf(entry.subject ?? '')),
     JournalKind.drank => l10n.journalDrank(nameOf(entry.subject ?? '')),
     JournalKind.treated => l10n.journalTreated(nameOf(entry.subject ?? '')),
+    // ⚠️ The subject *is* the line. Everything else here is an id turned into
+    // words; an interruption was already a sentence when it was said out loud,
+    // and rewording it would mean two versions of the same event.
+    JournalKind.interrupted => entry.subject ?? l10n.journalInterrupted,
     JournalKind.slept => l10n.journalSlept,
     JournalKind.woke => l10n.journalWoke,
     JournalKind.read => l10n.journalRead(entry.subject ?? ''),

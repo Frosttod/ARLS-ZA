@@ -6,7 +6,7 @@
   "newCharacter": "Nowa postać",
   "settings": "Ustawienia",
   "saveRestoredTitle": "Zapis odzyskany",
-  "saveRestoredBody": "Plik zapisu był uszkodzony i został odtworzony z kopii. Straciłeś {minutes} minut gry.",
+  "saveRestoredBody": "Plik zapisu był uszkodzony i został odtworzony z kopii. Przepadło {minutes} minut gry.",
   "saveLostTitle": "Nie udało się odczytać zapisu",
   "saveLostBody": "Plik zapisu jest uszkodzony i nie znaleziono sprawnej kopii. Możesz wczytać wcześniej wyeksportowany profil albo zacząć nową postać.",
   "importProfile": "Wczytaj profil",
@@ -181,7 +181,7 @@
   "causeThirst": "Odwodnienie",
   "causeStarvation": "Wyczerpanie z głodu",
   "deathWhat": "Hardcore: ta postać się skończyła. Passa trafia do Kroniki wraz ze wszystkim, co osiągnęła. Nowa zachowa Twoje ciało — ten sam wzrost, wagę i wiek — zmieni się tylko imię.",
-  "downWhat": "Ockniesz się tam, gdzie będziesz, za godzinę — z ćwiercią krwi i niemal pustym żołądkiem. To, co miałeś w rękach, przepadło; około połowy noszonego sprzętu leży tam, gdzie padłeś. Przez dziesięć minut po przebudzeniu będą Cię brać za martwego — ale i Ty nie możesz walczyć.",
+  "downWhat": "Ocknienie nastąpi tam, gdzie będziesz, za godzinę — z ćwiercią krwi i niemal pustym żołądkiem. To, co było w rękach, przepadło; około połowy noszonego sprzętu leży w miejscu upadku. Przez dziesięć minut po przebudzeniu nikt nie zaatakuje — ale i ty nie możesz walczyć.",
   "downLeft": "{time}",
   "@downLeft": {
     "placeholders": {
@@ -195,7 +195,7 @@
   "downGrace": "Wciąż biorą Cię za martwego. Nie zdradź się.",
   "deathNewCharacter": "Nowa postać",
   "deathSameBody": "To samo ciało, nowe imię.",
-  "downCaches": "To, co niosłeś, leży rozrzucone tam, gdzie padłeś.",
+  "downCaches": "Niesiony sprzęt leży rozrzucony w miejscu upadku.",
   "statusShock": "Wstrząs",
   "locationTitle": "Gra potrzebuje twojej pozycji",
   "locationBody": "ARLS-ZA mierzy prawdziwy ruch prawdziwego ciała. Bez pozycji nie ma czego mierzyć. Dane nie opuszczają telefonu.",
@@ -336,7 +336,7 @@
   },
   "profileWhy": "Co to z Tobą robi",
   "profileWhyNothing": "Nic Cię teraz nie kosztuje. Najedzony, napojony, wyspany i cały.",
-  "profileWhySleepDebt": "Dług senny {hours} h — nie spałeś wtedy, kiedy trzeba było. Każda czynność trwa o {percent}% dłużej, a rozrzut jest szerszy o {moa} MOA.",
+  "profileWhySleepDebt": "Dług senny {hours} h — brak snu wtedy, kiedy był potrzebny. Każda czynność trwa o {percent}% dłużej, a rozrzut jest szerszy o {moa} MOA.",
   "@profileWhySleepDebt": {
     "placeholders": {
       "hours": {
@@ -383,7 +383,7 @@
       }
     }
   },
-  "profileWhyWasting": "Straciłeś {percent}% masy startowej. To już nie głód, to samo ciało — wraca wyłącznie przez jedzenie ponad dobowe zapotrzebowanie.",
+  "profileWhyWasting": "Ubyło {percent}% masy startowej. To już nie głód, to samo ciało — wraca wyłącznie przez jedzenie ponad dobowe zapotrzebowanie.",
   "@profileWhyWasting": {
     "placeholders": {
       "percent": {
@@ -725,7 +725,7 @@
   "searchThorough": "Dokładnie · 90 s",
   "searchDeep": "Gruntownie · 180 s",
   "searchCancel": "Przerwij",
-  "searchMoved": "Ruszyłeś się — przeszukanie przerwane.",
+  "searchMoved": "Opuszczono strefę przeszukania — przerwane.",
   "searchLostSignal": "Przeszukanie przerwane: brak pewnej pozycji.",
   "searchNoise": "Przeszukanie słychać z około 80 m.",
   "searchFound": "Znaleziono: {items}",
@@ -806,7 +806,7 @@
   },
   "combatAiming": "Celowanie…",
   "combatOnTarget": "Namierzony",
-  "combatHurtAt": "Dostałeś — {where}, {millilitres} ml",
+  "combatHurtAt": "Trafienie — {where}, {millilitres} ml",
   "@combatHurtAt": {
     "placeholders": {
       "where": {
@@ -1608,7 +1608,7 @@
   "rulesRunTitle": "2. Nie przed wszystkim uciekniesz.",
   "rulesRunBody": "Niektóre sprintują szybciej niż ty — ale nie dłużej niż dwadzieścia pięć sekund. Dystans jest zasobem, ich wytrzymałość też.",
   "rulesBodyTitle": "3. Twoje ciało jest kontrolerem.",
-  "rulesBodyBody": "Postać ma dokładnie tyle sił, ile naprawdę przeszedłeś. Woda, kalorie i sen liczą się także przy zamkniętej aplikacji.",
+  "rulesBodyBody": "Postać ma dokładnie tyle sił, ile wynika z twojego marszu. Woda, kalorie i sen liczą się także przy zamkniętej aplikacji.",
   "settingsPrivacy": "Prywatność",
   "settingsTelemetry": "Brak telemetrii",
   "settingsTelemetryBody": "Gra nie wysyła niczego nigdzie. Bez kont, bez analityki, bez raportów awarii. Twoja pozycja, liczby twojego ciała i twój schron nie opuszczają tego telefonu.",
@@ -1686,5 +1686,10 @@
       }
     }
   },
-  "awayNothingGrew": "Nic tam nie urosło pod twoją nieobecność."
+  "awayNothingGrew": "Nic tam nie urosło pod twoją nieobecność.",
+  "zoneLeftBuild": "Opuszczono schron — budowa wstrzymana.",
+  "zoneBackToBuild": "Powrót do schronu — budowa wznowiona.",
+  "zoneLeftBench": "Opuszczono warsztat — robota wstrzymana.",
+  "zoneBackToBench": "Powrót do warsztatu — robota wznowiona.",
+  "journalInterrupted": "Robota przerwana"
 }
