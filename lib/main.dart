@@ -111,7 +111,7 @@ import 'safety/player_safety.dart';
 import 'sim/body.dart';
 import 'sim/death.dart';
 import 'sim/physiology.dart';
-import 'sim/occupation.dart';
+import 'sim/action_kind.dart';
 import 'journal/journal.dart';
 import 'sim/player_stats.dart';
 import 'sim/player_stats_store.dart';
@@ -5567,9 +5567,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
       scouting: _learned.scouting,
       // §10.2.2: half the radius in the dark, and nobody was passing it.
       darkness: _snapshot?.darkness ?? 0,
-      binoculars:
-          _inventory.value.countOf('tool_binoculars') > 0 ||
-          _inventory.value.worn.any((line) => line.itemId == 'tool_binoculars'),
+      binoculars: _hasBinoculars,
     );
 
     final found = <String>{
@@ -5807,6 +5805,21 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
 
     await showAwaySummary(context, missed);
   }
+
+  /// §5.6.1, §10.2.2: co słychać i co widać, dopóki czynność trwa.
+  List<ActionRing> _actionRings(GameSnapshot? snapshot) => ringsFor(
+    search: _search.value,
+    sightM: searchRadiusM(
+      scouting: _learned.scouting,
+      darkness: snapshot?.darkness ?? 0,
+      binoculars: _hasBinoculars,
+    ),
+  );
+
+  /// §10.2.2: lornetka w plecaku albo na szyi — jedno pytanie, dwa miejsca.
+  bool get _hasBinoculars =>
+      _inventory.value.countOf('tool_binoculars') > 0 ||
+      _inventory.value.worn.any((line) => line.itemId == 'tool_binoculars');
 
   /// §2.1a.3, §12: says what just stopped, and writes it down.
   ///
@@ -6276,6 +6289,7 @@ class _TitleScreenState extends State<TitleScreen> with WidgetsBindingObserver {
         noise: waveOf(_combat.open),
         // §5.6.1: pasek mówi „hałas 15 m", mapa mówi kto w nich stoi.
         footfallM: playerNoiseM(snapshot?.speedKmh ?? 0),
+        rings: _actionRings(snapshot),
         progress: _running(),
         searchPanel: snapshot == null
             ? null

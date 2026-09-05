@@ -12,8 +12,8 @@ library;
 
 import '../combat/attachment.dart';
 import '../l10n/app_localizations.dart';
+import '../sim/action_kind.dart';
 import '../items/item.dart';
-import '../sim/occupation.dart';
 import '../sim/physiology.dart';
 import '../sim/tick.dart';
 

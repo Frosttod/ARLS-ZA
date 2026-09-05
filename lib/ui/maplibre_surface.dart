@@ -98,6 +98,7 @@ TileSurfaceBuilder tilesFrom(MapSource source, {GeoPoint? fallbackCentre}) =>
       noise,
       footfallM,
       darkness = 0.0,
+      rings = const [],
     }) => MapLibreSurface(
       source: source,
       centre: centre,
@@ -105,6 +106,7 @@ TileSurfaceBuilder tilesFrom(MapSource source, {GeoPoint? fallbackCentre}) =>
       economy: economy,
       onMarkerTap: onMarkerTap,
       footfallM: footfallM,
+      rings: rings,
       noise: noise,
       darkness: darkness,
       fallbackCentre: fallbackCentre,
@@ -123,6 +125,7 @@ class MapLibreSurface extends StatefulWidget {
     required this.markers,
     this.noise,
     this.footfallM,
+    this.rings = const [],
     this.onMarkerTap,
     this.darkness = 0,
     required this.economy,
@@ -167,6 +170,10 @@ class MapLibreSurface extends StatefulWidget {
   /// pytanie brzmi „czy ten Szwędacz stoi w środku, czy poza". Okrąg odpowiada
   /// na nie bez liczenia.
   final double? footfallM;
+
+  /// §5.6.1, §10.2.2: circles held for as long as an action runs — how far it
+  /// is heard, and how far the player is looking. See [ActionRing].
+  final List<ActionRing> rings;
 
   /// What to do when the player taps one, or taps nothing — the empty tap
   /// arrives as null, because letting go of a target is a thing a player does
@@ -572,6 +579,27 @@ class _MapLibreSurfaceState extends State<MapLibreSurface>
                       radiusPx:
                           widget.footfallM! /
                           metresPerPixel(_zoom, centre.latitude),
+                    ),
+                  ),
+                ),
+              ),
+
+            // §5.6.1, §10.2.2: co słychać i co widać, dopóki trwa czynność.
+            if (widget.rings.isNotEmpty)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: CustomPaint(
+                    painter: _ActionRingPainter(
+                      rings: [
+                        for (final ring in widget.rings)
+                          (
+                            radiusPx:
+                                ring.radiusM /
+                                metresPerPixel(_zoom, centre.latitude),
+                            kind: ring.kind,
+                            breath: ring.breathAt(_frameClock()),
+                          ),
+                      ],
                     ),
                   ),
                 ),
@@ -1226,6 +1254,52 @@ class _FootfallPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_FootfallPainter old) => old.radiusPx != radiusPx;
+}
+
+/// §5.6.1, §10.2.2: the circle an action holds while it runs.
+///
+/// ⚠️ **A breath, not a blink.** The radius is the fact — a hundred and fifty
+/// metres of forced door is a hundred and fifty metres — so it never moves;
+/// what moves is the opacity. A ring that changed size would read as a wave
+/// spreading, and the whole point of holding this one is that it is *not*
+/// over.
+class _ActionRingPainter extends CustomPainter {
+  const _ActionRingPainter({required this.rings});
+
+  final List<({double radiusPx, ActionRingKind kind, double breath})> rings;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final middle = Offset(size.width / 2, size.height / 2);
+
+    for (final ring in rings) {
+      if (ring.radiusPx < 8 || ring.radiusPx > size.longestSide * 1.5) continue;
+
+      // The two colours the HUD already uses for these two facts: the alert
+      // tone for what carries, the data tone for what is seen.
+      final colour = ring.kind == ActionRingKind.noise
+          ? const Color(0xFFE55B42)
+          : const Color(0xFF2895A0);
+
+      canvas
+        ..drawCircle(
+          middle,
+          ring.radiusPx,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 2
+            ..color = colour.withValues(alpha: 0.35 + 0.45 * ring.breath),
+        )
+        ..drawCircle(
+          middle,
+          ring.radiusPx,
+          Paint()..color = colour.withValues(alpha: 0.05 + 0.05 * ring.breath),
+        );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_ActionRingPainter old) => old.rings != rings;
 }
 
 /// The rings that say what is within reach, drawn around the middle.

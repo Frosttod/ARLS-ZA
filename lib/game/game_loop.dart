@@ -5,7 +5,7 @@
 /// it closes is short and is the whole game underneath the UI:
 ///
 /// ```
-/// PositionSource → speed → MET → TickEngine → SaveWriter → database
+/// PositionSource → speed → MET → advance() → SaveWriter → database
 /// ```
 ///
 /// Responsibilities kept out of here on purpose: the tick function stays pure
@@ -36,7 +36,6 @@ import '../sim/action_pace.dart';
 import '../sim/body.dart';
 import '../combat/pursuit.dart';
 import '../sim/death.dart';
-import '../sim/occupation.dart';
 import 'blind_gap.dart';
 import '../sim/physiology.dart';
 import '../sim/tick.dart';
@@ -58,7 +57,6 @@ class GameSnapshot {
     required this.isNight,
     this.darkness = 0,
     this.sky = const (dusk: null, dawn: null),
-    required this.occupation,
     this.sleepCountdown,
     this.fix,
     this.displayFix,
@@ -107,7 +105,6 @@ class GameSnapshot {
   /// again on each tick — which is how two of them drift apart.
   final ({DateTime? dusk, DateTime? dawn}) sky;
 
-  final Occupation? occupation;
   final Duration? sleepCountdown;
 
   /// The smoothed position the simulation trusts, or null while nothing has
@@ -222,8 +219,6 @@ class GameLoop {
   SaveWriter get writer => session.writer;
 
   SimState _state;
-  Occupation? _occupation;
-  Occupation? _suspendedByShelterExit;
 
   /// §8: what the player has built. Handed in from outside rather than read
   /// here, because the loop must not depend on the save layer — the tick
@@ -346,8 +341,6 @@ class GameLoop {
 
   SimState get state => _state;
 
-  Occupation? get occupation => _occupation;
-
   /// §8.1: which of them the player is inside, or null out in the open.
   Shelter? get insideShelter => _inside;
 
@@ -392,10 +385,11 @@ class GameLoop {
     // sleep. A character who chose to read at midnight is reading, and paying
     // for it — and so is one halfway through a bandage.
     //
-    // Both kinds count. An *occupation* is the long one the loop owns; an
-    // *action* is the short one the interface owns (§4.7: eating, drinking,
-    // dressing a wound, turning a place over). The loop cannot see the second
-    // kind on its own, which is why it is told.
+    // Both kinds are told to the loop rather than owned by it: the short ones
+    // of §4.7 through [setActing], the long ones through [setWorking]. There
+    // was a third way — an `Occupation` model the loop kept for itself — and
+    // it was deleted for being a second copy of the same fact that nothing
+    // ever wrote to.
     if (_acting && _actingStartedAt != null) {
       if (now.difference(_actingStartedAt!) > const Duration(minutes: 5)) {
         _acting = false;
@@ -403,10 +397,7 @@ class GameLoop {
       }
     }
 
-    final busy =
-        _acting ||
-        _working ||
-        (_occupation != null && !_occupation!.kind.isDefault);
+    final busy = _acting || _working;
 
     // How long they have been under this roof with nothing on. Reset by
     // leaving and by starting anything — those are the two ways a person stops
@@ -415,13 +406,6 @@ class GameLoop {
       _settledAt = null;
     } else {
       _settledAt ??= now;
-    }
-
-    if (inside != null &&
-        _suspendedByShelterExit != null &&
-        _occupation == null) {
-      _occupation = _suspendedByShelterExit;
-      _suspendedByShelterExit = null;
     }
 
     final settled =
@@ -559,7 +543,6 @@ class GameLoop {
 
     _state = outcome.state;
     _reweigh();
-    _advanceOccupation(elapsed);
 
     // Again, now that the clock has moved. The pass in [_buildInput] decided
     // what this step was, and this one decides what the *next* one is — which
@@ -886,28 +869,6 @@ class GameLoop {
     }
   }
 
-  void _advanceOccupation(Duration elapsed) {
-    final current = _occupation;
-    if (current == null) return;
-
-    final progress = advanceOccupation(
-      occupation: current,
-      elapsed: elapsed,
-      appOpen: _appForeground || _tracking,
-      inShelterZone: _state.zone.isSheltered,
-      gpsHealthy: source.currentSignal != PositionSignal.lost,
-    );
-
-    if (progress.endReason == OccupationEndReason.zoneSuspended) {
-      _suspendedByShelterExit = current;
-    } else if (progress.endReason != null &&
-        progress.endReason != OccupationEndReason.completed) {
-      _suspendedByShelterExit = null;
-    }
-
-    _occupation = progress.occupation;
-  }
-
   Future<void> _maybeSnapshot(DateTime now) async {
     if (!await session.snapshots.isDue(session.db, now)) return;
     await session.snapshots.capture(session.db, now: now);
@@ -918,7 +879,6 @@ class GameLoop {
     state: _state,
     fix: _lastFix,
     speedKmh: _speedKmh,
-    occupation: _occupation,
     bleeding: _bleeding,
     downUntil: _blackout.downUntil,
     graceUntil: _blackout.graceUntil,
@@ -973,7 +933,6 @@ class GameLoop {
                 longitude: under.longitude,
               ),
         sky: _skyTimes(under),
-        occupation: _occupation,
         sleepCountdown: countdown,
         fix: fix,
         // The smoothed one when there is one: it is the same position with
@@ -998,19 +957,6 @@ class GameLoop {
         deathCause: _blackout.cause,
       ),
     );
-  }
-
-  /// Starts an occupation, cancelling whatever was running (§2.1a.1).
-  OccupationEndReason? beginOccupation(Occupation next) {
-    final result = startOccupation(next: next, current: _occupation);
-    _occupation = result.started;
-
-    // §2.1a.1: picking up a hammer is how somebody stops being asleep, and it
-    // has to take effect now rather than at the next tick — otherwise the
-    // screen shows a character building in their sleep.
-    _applyShelter();
-    _publish();
-    return result.previousEnded;
   }
 
   void setZone(MetabolicZone zone) {

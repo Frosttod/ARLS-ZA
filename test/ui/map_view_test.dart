@@ -22,7 +22,8 @@ void main() {
   );
 
   /// Records what the screen asked the surface to draw.
-  late List<({List<MapMarker> markers, bool economy})> asked;
+  late List<({List<MapMarker> markers, bool economy, List<ActionRing> rings})>
+  asked;
 
   setUp(() {
     asked = [];
@@ -37,8 +38,9 @@ void main() {
     NoiseWave? noise,
     double? footfallM,
     double darkness = 0,
+    List<ActionRing> rings = const [],
   }) {
-    asked.add((markers: markers, economy: economy));
+    asked.add((markers: markers, economy: economy, rings: rings));
     return const ColoredBox(color: Color(0xFF0B0D0E));
   }
 

@@ -15,7 +15,7 @@ Różnica jest istotna, bo w kilkunastu miejscach **świadomie odeszliśmy od do
 
 ⚠️ **Reguła utrzymania tego pliku:** liczba zmieniona w kodzie i nieprzeniesiona tutaj czyni ten dokument gorszym niż jego brak. Przy każdej zmianie stałej — aktualizuj sekcję.
 
-**Stan:** 2756 testów · schemat bazy **v38** · etapy 0–2 zamknięte, 3–6 i 8 przed testem w terenie.
+**Stan:** 2761 testów · schemat bazy **v38** · etapy 0–2 zamknięte, 3–6 i 8 przed testem w terenie.
 
 ---
 
@@ -1416,6 +1416,36 @@ booleanów.
 
 ---
 
+## 12ad. Okręgi czynności (§5.6.1, §10.2.2)
+
+Strzał ma falę: jedno zdarzenie, półtorej sekundy, koniec. Wyważanie drzwi jest
+**stanem** — dwanaście sekund, przez które słyszy to dwieście metrów ulicy, a
+gracz właśnie decyduje, czy ciągnąć dalej. Dlatego czynności dostają okrąg
+trzymany na cały swój czas.
+
+| Czynność | Okrąg | Promień |
+| :---- | :---- | ----: |
+| Wyważanie drzwi ramieniem | hałas | 200 m |
+| Łom albo siekiera | hałas | 150 m |
+| Wytrychy | hałas | 20 m |
+| Nożyce do kłódek | hałas | 60 m |
+| Przeszukanie miejsca | hałas | 80 m |
+| Rozpoznanie okolicy | **wzrok** | wg §10.2.2 |
+
+⚠️ **Promienie są tymi samymi liczbami, na których stoi gra**, a nie ilustracją:
+hałas bierze się z `Search.noiseM`, wzrok z `searchRadiusM` (ze wprawą, lornetką
+i ciemnością w środku). Okrąg pokazujący co innego niż realny zasięg uczy gracza
+nieufności wobec wszystkich okręgów.
+
+⚠️ **Oddech, nie miganie.** Promień się nie rusza — rosnący okrąg czytałby się
+jako fala, która się rozchodzi, a cała rzecz w tym, że ta czynność **trwa**.
+Zmienia się krycie, w rytmie 1,8 s.
+
+Dwa kolory, te same, co w HUD-zie: alarmowy dla tego, co niesie, i danych dla
+tego, co widać.
+
+---
+
 ## 12ac. Wyjście ze strefy (§2.1a.3, §12)
 
 Reguły były i były dobre: budowa liczy się tylko na placu (§8.3), warsztat
@@ -1666,22 +1696,20 @@ razy szybciej**. Zostawiony test pilnuje kierunku.
 
 Wpięty w §11.5: dyktuje tempo wzrostu Stref Rozkładu.
 
-### 16.2. Zajęcia jako model (§2.1a.3, §2.1a.4)
+### 16.2. Zajęcia i `TickEngine` — usunięte
 
-`Occupation`, `advanceOccupation`, `zoneSuspended`, wznowienie po powrocie —
-model kompletny, przetestowany, i **`beginOccupation` nie ma w grze ani jednego
-wołającego** poza testami.
+⚠️ **Były kompletne, przetestowane i nikt ich nie wołał.** `Occupation`,
+`OccupationKind`, `advanceOccupation`, `startOccupation` i osobny `TickEngine`
+opisywały długie czynności; `beginOccupation` przez cały projekt nie miał ani
+jednego wołającego poza własnymi testami. Oba fakty, dla których powstały, są
+trzymane gdzie indziej i lepiej: pętla dowiaduje się o zajętych rękach przez
+`setWorking`/`setActing`, warsztat ma własny zegar (§2.1a.3), a budowa płaci
+się staniem na placu (§8.3).
 
-Nie wpięty świadomie: „zajętość" (postać przy imadle nie zasypia) loop ma już
-przez `setWorking`, a zegar roboty dostał własną regułę obecności (§12.2).
-Wpięcie zajęcia dołożyłoby **drugi zapis tego samego faktu**. Decyzja do
-podjęcia: albo crafting, budowa i lektura przechodzą na `Occupation` jako jedno
-źródło prawdy, albo model znika.
-
-### 16.3. `TickEngine`
-
-Osobny silnik tickowy obok `GameLoop`. Nic go nie woła. Ta sama decyzja co
-wyżej: wpiąć albo usunąć.
+Trzymanie ich znaczyło **dwa zapisy jednego faktu** — to jest kształt wady,
+którą ten projekt znajduje u siebie od miesięcy. Usunięte 5 września 2026;
+`ActionKind` (§4.7 — jedzenie, picie, opatrunek), który mieszkał w tym samym
+pliku i jest używany wszędzie, wyprowadzony do `lib/sim/action_kind.dart`.
 
 ---
 

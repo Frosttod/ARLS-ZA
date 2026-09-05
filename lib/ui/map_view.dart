@@ -42,6 +42,9 @@ typedef TileSurfaceBuilder =
       double? footfallM,
       // §17.4: zero w południe, jeden w nocy.
       double darkness,
+      // §5.6.1, §10.2.2: okręgi trzymane na czas czynności — jak daleko ją
+      // słychać i jak daleko sięga wzrok.
+      List<ActionRing> rings,
     });
 
 class MapScreen extends StatefulWidget {
@@ -54,6 +57,7 @@ class MapScreen extends StatefulWidget {
     this.onMarkerTap,
     this.noise,
     this.footfallM,
+    this.rings = const [],
     this.notices,
     this.economy = false,
     this.hasPack = true,
@@ -88,6 +92,9 @@ class MapScreen extends StatefulWidget {
 
   /// §5.6.1: jak daleko niesie się własny krok gracza, albo null w bezruchu.
   final double? footfallM;
+
+  /// §5.6.1, §10.2.2: okręgi trzymane na czas czynności.
+  final List<ActionRing> rings;
 
   /// §3.3 economy mode: no animations. The camera jumps instead of gliding.
   final bool economy;
@@ -191,6 +198,7 @@ class _MapScreenState extends State<MapScreen> {
               noise: widget.noise,
               footfallM: widget.footfallM,
               darkness: widget.darkness,
+              rings: widget.rings,
             ),
           ),
 

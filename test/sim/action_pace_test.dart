@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:arls_za/sim/action_pace.dart';
 import 'package:arls_za/sim/metabolism.dart';
-import 'package:arls_za/sim/occupation.dart';
+import 'package:arls_za/sim/action_kind.dart';
 import 'package:test/test.dart';
 
 /// TEMPO AKCJI (§2.1a, §4.7, §10.2).
@@ -167,14 +167,6 @@ void main() {
         ActionKind.shooting,
       ]) {
         expect(kind.pace, ActionPace.onTheSpot, reason: kind.name);
-      }
-    });
-
-    test('every occupation runs unattended (§2.1a.3)', () {
-      // Sleeping, reading, building, crafting: the character sets them going
-      // and comes back. That is what makes them occupations.
-      for (final kind in OccupationKind.values) {
-        expect(kind.pace, ActionPace.unattended, reason: kind.name);
       }
     });
 

@@ -14,7 +14,7 @@
 library;
 
 import '../items/item.dart';
-import '../sim/occupation.dart';
+import '../sim/action_kind.dart';
 import '../sim/physiology.dart';
 
 /// What using one of something does.

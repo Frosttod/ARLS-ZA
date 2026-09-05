@@ -13,7 +13,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../data/db/database.dart';
 import '../../craft/salvage_batch.dart';
-import '../../sim/occupation.dart';
+import '../../sim/action_kind.dart';
 import '../../sim/tick.dart';
 import '../../journal/chronicle.dart';
 import '../../journal/chronicle_store.dart';

@@ -21,7 +21,7 @@ import 'dart:convert';
 
 import '../map/geometry.dart';
 import 'action_pace.dart';
-import 'occupation.dart';
+import 'action_kind.dart';
 
 /// Things that are done but are not one of §4.7's short actions.
 ///

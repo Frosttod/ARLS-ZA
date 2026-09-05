@@ -663,6 +663,79 @@ NoiseWave? waveOf(NoiseEvent? open) => open == null
         startedAt: open.startedAt.toLocal(),
       );
 
+/// A circle held around the player for as long as an action runs (§5.6.1,
+/// §10.2.2).
+///
+/// ⚠️ **Not a [NoiseWave].** A shot is an event: one ring, a second and a half
+/// of spreading, gone. Forcing a door is a *state* — twelve seconds during
+/// which a hundred and fifty metres of street can hear it, and the player is
+/// deciding whether to keep going. The wave answers "what did I just wake up";
+/// this answers "what am I waking up, right now, still".
+///
+/// Two of them exist and they say opposite things, which is why they are
+/// drawn in the two colours the HUD already uses for exactly that: how far
+/// this carries (alert), and how far the player can see (data).
+class ActionRing {
+  const ActionRing({
+    required this.radiusM,
+    required this.kind,
+    required this.startedAt,
+  });
+
+  final double radiusM;
+  final ActionRingKind kind;
+
+  /// When the action began — the pulse counts from here, so the ring breathes
+  /// in step with the thing that is happening rather than with the frame
+  /// clock.
+  final DateTime startedAt;
+
+  /// 0–1 and back again, once every [pulse].
+  double breathAt(DateTime now) {
+    final elapsed = now.difference(startedAt).inMilliseconds;
+    final phase = (elapsed % pulse.inMilliseconds) / pulse.inMilliseconds;
+    return phase < 0.5 ? phase * 2 : (1 - phase) * 2;
+  }
+
+  /// Slow enough to read as breathing rather than as blinking. A ring that
+  /// flashes is an alarm, and this is a measurement.
+  static const Duration pulse = Duration(milliseconds: 1800);
+}
+
+/// §5.6.1, §10.2.2: the circles a running action is owed.
+///
+/// Both come off figures the game already computes — the noise a search or a
+/// breach makes, and how far reconnaissance reaches — so the ring and the rule
+/// cannot disagree. A circle that shows something other than the real reach
+/// teaches a player to distrust every circle.
+List<ActionRing> ringsFor({required Search? search, required double sightM}) {
+  if (search == null || !search.isRunning) return const [];
+
+  final startedAt = search.startedAt.toLocal();
+  return [
+    if (search.noiseM > 0)
+      ActionRing(
+        radiusM: search.noiseM,
+        kind: ActionRingKind.noise,
+        startedAt: startedAt,
+      ),
+    if (search.isArea)
+      ActionRing(
+        radiusM: sightM,
+        kind: ActionRingKind.sight,
+        startedAt: startedAt,
+      ),
+  ];
+}
+
+enum ActionRingKind {
+  /// §5.6.1: how far what is being done can be heard.
+  noise,
+
+  /// §10.2.2: how far the player is looking.
+  sight,
+}
+
 class NoiseWave {
   const NoiseWave({
     required this.at,

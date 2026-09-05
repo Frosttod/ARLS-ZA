@@ -12,14 +12,11 @@
 /// back rather than leaving a half-updated row (§11.1.2).
 library;
 
-import 'dart:convert';
-
 import 'package:drift/drift.dart';
 
 import '../../combat/pursuit.dart';
 import '../../location/position_fix.dart';
 import '../../map/geometry.dart';
-import '../../sim/occupation.dart';
 import '../../sim/physiology.dart';
 import '../../sim/tick.dart';
 import '../db/database.dart';
@@ -160,7 +157,6 @@ VitalsCompanion vitalsRow({
   required SimState state,
   required PositionFix? fix,
   required double speedKmh,
-  required Occupation? occupation,
   required BleedTier bleeding,
   required DateTime? downUntil,
   required DateTime? graceUntil,
@@ -190,9 +186,6 @@ VitalsCompanion vitalsRow({
   longitude: Value(fix?.longitude),
   accuracyM: Value(fix?.accuracyM),
   speedKmh: Value(speedKmh),
-  occupationJson: Value(
-    occupation == null ? null : jsonEncode(occupation.toJson()),
-  ),
   bleedTier: Value(bleeding.name),
   downUntil: Value(downUntil),
   graceUntil: Value(graceUntil),

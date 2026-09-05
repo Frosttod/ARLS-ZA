@@ -17,7 +17,6 @@ import 'package:arls_za/map/geometry.dart';
 import 'package:arls_za/shelter/shelter.dart';
 import 'package:arls_za/safety/player_safety.dart';
 import 'package:arls_za/sim/body.dart';
-import 'package:arls_za/sim/occupation.dart';
 import 'package:arls_za/sim/tick.dart';
 import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:test/test.dart';
@@ -523,66 +522,6 @@ void main() {
   });
 
   group('occupations (§2.1a)', () {
-    test('starting one cancels the previous and says so', () async {
-      final rig = await buildLoop();
-      addTearDown(() async {
-        await rig.loop.dispose();
-        await rig.source.dispose();
-        await rig.session.close();
-      });
-
-      rig.loop.setZone(MetabolicZone.shelter);
-
-      final firstEnd = rig.loop.beginOccupation(
-        Occupation(
-          kind: OccupationKind.reading,
-          startedAt: t0,
-          requiredWork: const Duration(hours: 3),
-        ),
-      );
-      expect(firstEnd, isNull);
-
-      final secondEnd = rig.loop.beginOccupation(
-        Occupation(
-          kind: OccupationKind.building,
-          startedAt: t0,
-          requiredWork: const Duration(hours: 3),
-        ),
-      );
-
-      expect(secondEnd, OccupationEndReason.replaced);
-      expect(rig.loop.occupation?.kind, OccupationKind.building);
-    });
-
-    test('leaving the shelter cancels a shelter occupation', () async {
-      final rig = await buildLoop();
-      addTearDown(() async {
-        await rig.loop.dispose();
-        await rig.source.dispose();
-        await rig.session.close();
-      });
-
-      await rig.loop.start();
-      rig.loop.setZone(MetabolicZone.shelter);
-      rig.loop.beginOccupation(
-        Occupation(
-          kind: OccupationKind.reading,
-          startedAt: t0,
-          requiredWork: const Duration(hours: 5),
-        ),
-      );
-
-      rig.loop.setZone(MetabolicZone.open);
-      rig.wall.advance(const Duration(minutes: 5));
-      await rig.loop.onPaused(rig.wall.nowUtc());
-
-      expect(
-        rig.loop.occupation,
-        isNull,
-        reason: 'reading in the street is not reading (§2.1a.4)',
-      );
-    });
-
     test('sleeping under a roof at night pays the debt down (§2.5.1)', () async {
       // Nobody presses anything. Sleep is the default state of somebody who is
       // in their shelter in the dark with nothing else on — which is exactly
@@ -894,13 +833,11 @@ void main() {
         rig.source.step();
         await pump();
 
-        rig.loop.beginOccupation(
-          Occupation(
-            kind: OccupationKind.reading,
-            startedAt: midnight,
-            requiredWork: const Duration(hours: 3),
-          ),
-        );
+        // ⚠️ Through the live path. This used to start an `Occupation`, a
+        // model the game never started outside these tests and which is gone;
+        // the rule it was checking is not, and the loop hears about work the
+        // same way the interface tells it (§2.1a.1).
+        rig.loop.setWorking(working: true);
         rig.loop.setShelters([
           Shelter(
             id: 1,
@@ -1738,13 +1675,7 @@ void main() {
       await rig.loop.onPaused(rig.wall.nowUtc());
       expect(rig.loop.state.zone, MetabolicZone.sleep);
 
-      rig.loop.beginOccupation(
-        Occupation(
-          kind: OccupationKind.building,
-          startedAt: rig.wall.nowUtc(),
-          requiredWork: const Duration(hours: 3),
-        ),
-      );
+      rig.loop.setWorking(working: true);
       await rig.loop.onPaused(rig.wall.nowUtc());
 
       expect(rig.loop.state.zone, MetabolicZone.shelter);

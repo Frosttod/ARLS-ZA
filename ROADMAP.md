@@ -31,7 +31,7 @@ Każdy zamknięty etap dostaje sekcję **Dziennik wykonania** z decyzjami podję
 | — | **Reguła obecności przy warsztacie** (§2.1a.3) | ✅ poza etapami | 2026-08-30 | `c6768b3`, schemat v37 |
 | — | **Widżet 4×1 na ekran główny** (§13.1): woda, kalorie, sen, tętno, co dolega | ✅ poza etapami | 2026-09-05 | — |
 
-**Metryki:** 2756 testów · `flutter analyze` czysty · schemat bazy **v38** · `main.dart` 6391 linii
+**Metryki:** 2761 testów · `flutter analyze` czysty · schemat bazy **v38** · `main.dart` 6405 linii
 
 ✅ **`main` jest wypchnięty na `origin/main`.** Wcześniej cała gra istniała na jednym dysku i było to największe ryzyko projektu — jedyne, którego nie dawało się naprawić kodem.
 
@@ -43,7 +43,11 @@ Wszystkie pięć ma komplet zadań i przeszło testy w terenie. Blokada, którą
 
 Do formalnego zamknięcia brakuje **jednej długiej passy w terenie**: trzydziestu dni z rzędu, ze zbiciem strefy z poziomu wyższego niż pierwszy, bez utraty zapisu. To jest test, którego nie da się przyspieszyć symulatorem — wzrost strefy liczy się teraz w dobach realnego czasu (§11.5 w MECHANICS).
 
-Promień spawnu lootu stoi nadal na 1200 m zamiast 2000 m i **jest do przeliczenia**: powód tej figury — „daleki znacznik, do którego nikt nie pójdzie" — właśnie przestał obowiązywać.
+⚠️ **Ten akapit mówił, że promień spawnu lootu stoi na 1200 m. Stoi na 2000 od
+czasu, gdy ogniska dały dalekim punktom powód istnienia** — wpis został po
+zmianie, którą sam zapowiadał. Sprawdzone i potwierdzone 5 września 2026:
+zostaje 2000 m, a bliski pierścień (§10.1) gwarantuje pięć miejsc w sześciuset
+metrach, żeby szersze koło nie zrobiło z okolicy pustyni.
 
 ### Zablokowane na użytkowniku
 

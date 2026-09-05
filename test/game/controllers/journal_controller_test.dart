@@ -1,7 +1,7 @@
 import 'package:arls_za/data/db/database.dart';
 import 'package:arls_za/game/controllers/journal_controller.dart';
 import 'package:arls_za/journal/journal.dart';
-import 'package:arls_za/sim/occupation.dart';
+import 'package:arls_za/sim/action_kind.dart';
 import 'package:arls_za/sim/tick.dart';
 import 'package:test/test.dart';
 

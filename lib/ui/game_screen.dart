@@ -29,6 +29,7 @@ class GameScreen extends StatelessWidget {
     required this.onMarkerTap,
     required this.noise,
     this.footfallM,
+    this.rings = const [],
     required this.progress,
     required this.searchPanel,
     required this.economy,
@@ -56,6 +57,9 @@ class GameScreen extends StatelessWidget {
 
   /// §5.6.1: jak daleko niesie się własny krok gracza, albo null w bezruchu.
   final double? footfallM;
+
+  /// §5.6.1, §10.2.2: okręgi trzymane na czas czynności.
+  final List<ActionRing> rings;
 
   /// §2.1a, §12: everything with a clock on it, and every line with a way out.
   ///
@@ -88,6 +92,7 @@ class GameScreen extends StatelessWidget {
         onMarkerTap: onMarkerTap,
         noise: noise,
         footfallM: footfallM,
+        rings: rings,
         progress: progress,
         searchPanel: searchPanel,
         headingDeg: fix?.headingDeg,
